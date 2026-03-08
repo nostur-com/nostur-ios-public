@@ -86,6 +86,9 @@ class RepostsFeedModel: ObservableObject {
             
             DispatchQueue.main.async {
                 self.reposts = reposts
+                if !reposts.isEmpty {
+                    self.nothingHere = false
+                }
                 if let completion {
                     completion(mostRecentRepostCreatedAt)
                 }

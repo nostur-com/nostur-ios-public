@@ -131,6 +131,9 @@ class ZapsFeedModel: ObservableObject {
             
             DispatchQueue.main.async {
                 self.postOrProfileZaps = postOrProfileZaps
+                if !postOrProfileZaps.isEmpty {
+                    self.nothingHere = false
+                }
                 if let completion {
                     completion(mostRecentZapCreatedAt)
                 }

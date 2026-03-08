@@ -96,6 +96,9 @@ class GroupedReactionsFeedModel: ObservableObject {
             
             DispatchQueue.main.async {
                 self.groupedReactions = groupedReactions
+                if !groupedReactions.isEmpty {
+                    self.nothingHere = false
+                }
                 if let completion {
                     completion(mostRecentReactionCreatedAt)
                 }

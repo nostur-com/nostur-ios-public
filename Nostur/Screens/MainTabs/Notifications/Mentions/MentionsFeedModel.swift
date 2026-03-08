@@ -118,6 +118,9 @@ class MentionsFeedModel: ObservableObject {
             
             DispatchQueue.main.async {
                 self.mentions = mentions
+                if !mentions.isEmpty {
+                    self.nothingHere = false
+                }
                 if let completion {
                     completion(mostRecentMentionCreatedAt)
                 }
