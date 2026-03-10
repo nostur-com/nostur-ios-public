@@ -567,6 +567,21 @@ struct UpgradeDMsSheet: View {
             account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey })
             didLoad = true
         }
+        .task {
+            // Pre-select already configured DM relays (from kind 10050 event) and ensure they appear in the list
+            let existingDMRelays = await getDMrelays(for: accountPubkey)
+            for dmRelayUrl in existingDMRelays {
+                let relayData = RelayData.new(url: dmRelayUrl, read: true, write: false, search: false, auth: true, excludedPubkeys: [])
+                if !relayOptions.contains(where: { $0.url == dmRelayUrl }) {
+                    relayOptions.append(relayData)
+                }
+                if let existing = relayOptions.first(where: { $0.url == dmRelayUrl }) {
+                    selectedRelays.insert(existing)
+                } else {
+                    selectedRelays.insert(relayData)
+                }
+            }
+        }
     }
     
     @State private var didLoad = false
