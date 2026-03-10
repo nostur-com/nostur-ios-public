@@ -326,6 +326,11 @@ struct DMStateRow: View {
                     
                     Spacer()
                     Menu {
+                        if let profileContact = nrContact ?? nrContacts.first {
+                            Button("Profile", systemImage: "person.circle") {
+                                navigateTo(ContactPath(key: profileContact.pubkey), context: containerID)
+                            }
+                        }
                         Button(dmState.isPinned ? "Unpin" : "Pin", systemImage: dmState.isPinned ? "pin.slash" : "pin") {
                             dmState.isPinned.toggle()
                             withAnimation {
