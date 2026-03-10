@@ -264,7 +264,8 @@ struct DMStateRow: View {
     @State var nrContact: NRContact?
     private let accountPubkey: String
     private let vm: DMsVM
-    
+    @Environment(\.containerID) private var containerID
+
     init(dmState: CloudDMState, accountPubkey: String, vm: DMsVM) {
         self.dmState = dmState
         self.accountPubkey = accountPubkey
@@ -279,7 +280,9 @@ struct DMStateRow: View {
 
     var body: some View {
         HStack(alignment: .top) {
-            MultiPFPs(nrContacts: nrContacts)
+            MultiPFPs(nrContacts: nrContacts, onTap: { nrContact in
+                navigateTo(ContactPath(key: nrContact.pubkey), context: containerID)
+            })
                 .overlay(alignment: .topTrailing) {
                     if dmState.cachedViewUnread > 0 {
                         Text("\(dmState.cachedViewUnread)")
