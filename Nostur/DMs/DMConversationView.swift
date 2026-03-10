@@ -206,6 +206,17 @@ struct DMConversationView: View {
                     }
                 }
                 .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        Button {
+                            if let receiver = vm.receivers.first {
+                                navigateTo(ContactPath(key: receiver), context: "Messages")
+                            }
+                        } label: {
+                            Text("To: \(vm.receiverContacts.map { $0.anyName }.formatted(.list(type: .and)))")
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                        }
+                    }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Conversation details", systemImage: "info.circle") {
                             showConversationInfoSheet = true
@@ -234,7 +245,7 @@ struct DMConversationView: View {
             }
         }
         .background(theme.listBackground)
-        .navigationTitle("To: \(vm.receiverContacts.map { $0.anyName }.formatted(.list(type: .and)))")
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             await vm.load()
         }
