@@ -141,9 +141,20 @@ struct MainTabs26: View {
 #endif
         VStack {
             NoInternetConnectionBanner()
-            TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
-                tabTapped(newTab, oldTab: oldTab)
-            }) {
+            TabView(selection: Binding(
+                get: { selectedTab },
+                set: { newValue in
+                    let oldTab = selectedTab
+                    if newValue == "New Post" {
+                        // Don't actually switch to the "New Post" tab. The brief tab switch
+                        // deactivates the NavigationStack, corrupting its safe area state
+                        // for all subsequently pushed views. See: nostur-com/nostur-ios-public#48
+                    } else {
+                        selectedTab = newValue
+                    }
+                    tabTapped(newValue, oldTab: oldTab)
+                }
+            )) {
                 Tab(value: "Main") {
                     HomeTab()
                         .environment(\.horizontalSizeClass, horizontalSizeClass)
@@ -179,7 +190,6 @@ struct MainTabs26: View {
                 
                 Tab(value: "New Post", role: .search) {
                     Spacer()
-                        .onAppear { selectedTab = "Main" }
                 } label: {
                     Label(String(localized:"New post", comment: "Button to create a new post"), systemImage: "plus")
 //                        .font(.title)
@@ -239,9 +249,9 @@ struct MainTabs26: View {
     
     private func tabTapped(_ tabName: String, oldTab: String) {
         if tabName == "New Post" {
-            selectedTab = oldTab
+            // No need to revert selectedTab - binding already prevents the switch
             guard isFullAccount() else { showReadOnlyMessage(); return }
-            
+
             if oldTab == "Main" && selectedSubTab == "Picture" {
                 AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .picture)
             }
@@ -251,8 +261,9 @@ struct MainTabs26: View {
             else {
                 AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .textNote)
             }
+            return // Don't process double-tap logic for "New Post"
         }
-        
+
         // Only do something if we are already on same the tab
         guard oldTab == tabName else { return }
 
