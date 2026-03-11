@@ -10,18 +10,16 @@ var Action = function() {};
 Action.prototype = {
     
     run: function(arguments) {
-        // Here, you can run code that modifies the document and/or prepares
-        // things to pass to your action's native code.
-        
-        // We will not modify anything, but will pass the body's background
-        // style to the native code.
-        
         let title = encodeURIComponent(document.title)
         let text = encodeURIComponent(document.getSelection().toString())
         let url = encodeURIComponent(document.URL)
-        location.href="nostur:highlight:" + text + ":url:" + url + ":title:" + title
-        
-//        arguments.completionFunction({ "currentBackgroundColor" : document.body.style.backgroundColor })
+        let nosturURL = "nostur:highlight:" + text + ":url:" + url + ":title:" + title
+
+        // On iOS, location.href opens the URL scheme directly via Safari.
+        // On macOS, location.href doesn't work for custom schemes, so we also
+        // pass the URL via completionFunction for the native handler to open.
+        location.href = nosturURL
+        arguments.completionFunction({ "nosturURL": nosturURL })
     },
     
     finalize: function(arguments) {

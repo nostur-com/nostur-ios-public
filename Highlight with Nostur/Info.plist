@@ -33,7 +33,7 @@
 			<string>NSActionTemplate</string>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>
-		<string>com.apple.services</string>
+		<string>com.apple.ui-services</string>
 		<key>NSExtensionPrincipalClass</key>
 		<string>$(PRODUCT_MODULE_NAME).ActionRequestHandler</string>
 	</dict>
