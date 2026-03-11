@@ -179,11 +179,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     var blocked: Bool {
         get { postRowDeletableAttributes.blocked }
-        set {
-            DispatchQueue.main.async { [weak self] in
-                self?.postRowDeletableAttributes.blocked = newValue
-            }
-        }
+        set { postRowDeletableAttributes.blocked = newValue }
     }
 
     
