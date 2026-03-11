@@ -29,9 +29,28 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
     
     private var allowAuth: Bool
     
-    init(_ urlString: String, allowAuth: Bool = false, signNEventHandler: @escaping (NEvent) async throws -> NEvent) {
+    init(_ urlString: String, allowAuth: Bool = false, signNEventHandler: @escaping (NEvent) async throws -> NEvent) throws {
         self.allowAuth = allowAuth
-        self.url = URL(string: urlString)!
+        guard let parsedUrl = URL(string: urlString) else {
+            throw SendMessageError.notConnected
+        }
+        // URLSession.webSocketTask requires ws:// or wss:// scheme; convert http/https if needed
+        var components = URLComponents(url: parsedUrl, resolvingAgainstBaseURL: false)
+        if let scheme = components?.scheme {
+            if scheme == "http" {
+                components?.scheme = "ws"
+            } else if scheme == "https" {
+                components?.scheme = "wss"
+            } else if scheme != "ws" && scheme != "wss" {
+                throw SendMessageError.notConnected
+            }
+        } else {
+            throw SendMessageError.notConnected
+        }
+        guard let validUrl = components?.url else {
+            throw SendMessageError.notConnected
+        }
+        self.url = validUrl
         self.signNEventHandler = signNEventHandler
         super.init()
         self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)

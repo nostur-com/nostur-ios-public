@@ -18,7 +18,7 @@ struct OneOffEventPublisherTests {
 
     @available(iOS 16.0, *)
     @Test func testSendEventToRelay() async throws {
-        let connection = OneOffEventPublisher("ws://localhost:49201", signNEventHandler: { unsignedAuthResponse in
+        let connection = try OneOffEventPublisher("ws://localhost:49201", signNEventHandler: { unsignedAuthResponse in
             L.og.debug("🔑 Signing auth response")
             return try localSignNEvent(unsignedAuthResponse, pk: testPk)
         })
@@ -37,7 +37,7 @@ struct OneOffEventPublisherTests {
 
     
     @Test func testSendEventToOfflineRelay() async throws {
-        let connection = OneOffEventPublisher("ws://localhost:11111", signNEventHandler: { unsignedAuthResponse in
+        let connection = try OneOffEventPublisher("ws://localhost:11111", signNEventHandler: { unsignedAuthResponse in
             L.og.debug("🔑 Signing auth response")
             return try localSignNEvent(unsignedAuthResponse, pk: testPk)
         })

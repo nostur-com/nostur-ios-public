@@ -196,7 +196,7 @@ struct RepublishRestrictedPostSheet: View {
             for relay in selectedRelays {
                 group.addTask {
                     do {
-                        let connection = OneOffEventPublisher(relay.url, allowAuth: true, signNEventHandler: { unsignedEvent in
+                        let connection = try OneOffEventPublisher(relay.url, allowAuth: true, signNEventHandler: { unsignedEvent in
                             guard let signingAccountPubkey else { throw SignError.accountNotFound }
                             // sign with same key as post.pubkey if we have it, else sign with logged in account key
                             return try await sign(nEvent: unsignedEvent, accountPubkey: signingAccountPubkey)

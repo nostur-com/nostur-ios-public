@@ -220,7 +220,7 @@ struct RepublishPostSheet: View {
                     do {
                         // TODO: don't need OneOffEventPublisher for already connected write relays
                         
-                        let connection = OneOffEventPublisher(relay.url, allowAuth: allowAuth || relay.auth, signNEventHandler: { unsignedEvent in
+                        let connection = try OneOffEventPublisher(relay.url, allowAuth: allowAuth || relay.auth, signNEventHandler: { unsignedEvent in
                             guard let signingAccountPubkey else { throw SignError.accountNotFound }
                             // sign with same key as post.pubkey if we have it, else sign with logged in account key
                             return try await sign(nEvent: unsignedEvent, accountPubkey: signingAccountPubkey)
