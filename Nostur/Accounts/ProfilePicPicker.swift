@@ -19,6 +19,9 @@ struct ProfileImage: View {
         switch imageState {
         case .success(let image):
             image.resizable()
+        case .gifData(let data):
+            GIFImage(data: data, isPlaying: .constant(true))
+                .scaledToFill()
         case .loading:
             ProgressView()
         case .empty:
@@ -86,10 +89,12 @@ class ProfileModel: ObservableObject {
     
     @Binding var picture:String
     @Binding var newPicture:UIImage?
+    @Binding var newPictureData:Data?
 
-    init(_ picture:Binding<String>, newPicture:Binding<UIImage?>) {
+    init(_ picture:Binding<String>, newPicture:Binding<UIImage?>, newPictureData:Binding<Data?>) {
         _picture = picture
         _newPicture = newPicture
+        _newPictureData = newPictureData
         if (picture.wrappedValue != "") {
             loadExistingImage(picture.wrappedValue)
         }
@@ -109,6 +114,7 @@ class ProfileModel: ObservableObject {
         case empty
         case loading(Progress)
         case success(Image)
+        case gifData(Data)
         case failure(Error)
     }
 
@@ -119,6 +125,7 @@ class ProfileModel: ObservableObject {
     struct ProfileImage: Transferable {
         let image: Image
         let uiImage: UIImage
+        let rawData: Data
 
         static var transferRepresentation: some TransferRepresentation {
             DataRepresentation(importedContentType: .image) { data in
@@ -127,7 +134,7 @@ class ProfileModel: ObservableObject {
                     throw TransferError.importFailed
                 }
                 let image = Image(uiImage: uiImage)
-                return ProfileImage(image: image, uiImage: uiImage)
+                return ProfileImage(image: image, uiImage: uiImage, rawData: data)
             #else
                 throw TransferError.importFailed
             #endif
@@ -159,8 +166,13 @@ class ProfileModel: ObservableObject {
                 }
                 switch result {
                 case .success(let profileImage?):
-                    self.imageState = .success(profileImage.image)
                     self.newPicture = profileImage.uiImage
+                    self.newPictureData = profileImage.rawData
+                    if isAnimatedGIF(profileImage.rawData) {
+                        self.imageState = .gifData(profileImage.rawData)
+                    } else {
+                        self.imageState = .success(profileImage.image)
+                    }
                 case .success(nil):
                     self.imageState = .empty
                 case .failure(let error):
@@ -176,8 +188,8 @@ struct ProfilePicPicker: View {
 
     @StateObject var viewModel:ProfileModel
 
-    init(_ picture:Binding<String>, newPicture:Binding<UIImage?>) {
-        _viewModel = StateObject(wrappedValue: ProfileModel(picture, newPicture: newPicture))
+    init(_ picture:Binding<String>, newPicture:Binding<UIImage?>, newPictureData:Binding<Data?>) {
+        _viewModel = StateObject(wrappedValue: ProfileModel(picture, newPicture: newPicture, newPictureData: newPictureData))
     }
 
     var body: some View {
@@ -189,9 +201,10 @@ struct ProfilePicPicker: View {
 struct MediaPicker_Previews: PreviewProvider {
     @State static var picture = "https://nostur.com/fabian/profile.jpg"
     @State static var newPicture:UIImage?
+    @State static var newPictureData:Data?
     static var previews: some View {
         PreviewContainer {
-            ProfilePicPicker($picture, newPicture:$newPicture)
+            ProfilePicPicker($picture, newPicture:$newPicture, newPictureData:$newPictureData)
                 .hCentered()
                 .listRowBackground(Color(.systemGroupedBackground))
         }

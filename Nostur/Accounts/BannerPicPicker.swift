@@ -84,12 +84,14 @@ class BannerModel: ObservableObject {
     
     @Binding var picture:String
     @Binding var newPicture:UIImage?
+    @Binding var newPictureData:Data?
     let width:CGFloat
 
-    init(_ picture:Binding<String>, newPicture:Binding<UIImage?>, width:CGFloat) {
+    init(_ picture:Binding<String>, newPicture:Binding<UIImage?>, newPictureData:Binding<Data?>, width:CGFloat) {
         self.width = width
         _picture = picture
         _newPicture = newPicture
+        _newPictureData = newPictureData
         if (picture.wrappedValue != "") {
             loadExistingImage(picture.wrappedValue)
         }
@@ -119,6 +121,7 @@ class BannerModel: ObservableObject {
     struct BannerImage: Transferable {
         let image: Image
         let uiImage: UIImage
+        let rawData: Data
 
         static var transferRepresentation: some TransferRepresentation {
             DataRepresentation(importedContentType: .image) { data in
@@ -127,7 +130,7 @@ class BannerModel: ObservableObject {
                     throw TransferError.importFailed
                 }
                 let image = Image(uiImage: uiImage)
-                return BannerImage(image: image, uiImage: uiImage)
+                return BannerImage(image: image, uiImage: uiImage, rawData: data)
             #else
                 throw TransferError.importFailed
             #endif
@@ -161,6 +164,7 @@ class BannerModel: ObservableObject {
                 case .success(let profileImage?):
                     self.imageState = .success(profileImage.image)
                     self.newPicture = profileImage.uiImage
+                    self.newPictureData = profileImage.rawData
                 case .success(nil):
                     self.imageState = .empty
                 case .failure(let error):
@@ -177,9 +181,9 @@ struct BannerPicPicker: View {
     @StateObject var viewModel:BannerModel
     let width:CGFloat
 
-    init(_ picture:Binding<String>, newPicture:Binding<UIImage?>, width:CGFloat) {
+    init(_ picture:Binding<String>, newPicture:Binding<UIImage?>, newPictureData:Binding<Data?>, width:CGFloat) {
         self.width = width
-        _viewModel = StateObject(wrappedValue: BannerModel(picture, newPicture: newPicture, width: width))
+        _viewModel = StateObject(wrappedValue: BannerModel(picture, newPicture: newPicture, newPictureData: newPictureData, width: width))
     }
 
     var body: some View {
@@ -192,9 +196,10 @@ struct BannerPicPicker_Previews: PreviewProvider {
 //    @State static var picture = "https://nostur.com/fabian/banner.jpg"
     @State static var picture = "https://profilepics.nostur.com/062daf266de13f0195f611675d4b7309b32f743012f539979c104b803591dc86/banner.jpg"
     @State static var newPicture:UIImage?
+    @State static var newPictureData:Data?
     static var previews: some View {
         GeometryReader { geo in
-            BannerPicPicker($picture, newPicture:$newPicture, width: geo.size.width)
+            BannerPicPicker($picture, newPicture:$newPicture, newPictureData:$newPictureData, width: geo.size.width)
                 .frame(height: 150)
                 .clipped()
                 .hCentered()

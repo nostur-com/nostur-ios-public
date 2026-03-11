@@ -27,7 +27,9 @@ struct AccountEditView: View {
     @State private var uploadError:String?
     @State private var subscriptions = Set<AnyCancellable>()
     @State private var newPicture: UIImage?
+    @State private var newPictureData: Data?
     @State private var newBanner: UIImage?
+    @State private var newBannerData: Data?
     @State private var anyLud = ""
     
     init(account: CloudAccount) {
@@ -40,13 +42,13 @@ struct AccountEditView: View {
             VStack {
                 ZStack {
                     if #available(iOS 16.0, *) {
-                        BannerPicPicker($account.banner, newPicture: $newBanner, width: geo.size.width)
+                        BannerPicPicker($account.banner, newPicture: $newBanner, newPictureData: $newBannerData, width: geo.size.width)
                             .frame(height: 150)
                             .clipped()
                     }
                     HStack {
                         if #available(iOS 16.0, *) {
-                            ProfilePicPicker($account.picture, newPicture: $newPicture)
+                            ProfilePicPicker($account.picture, newPicture: $newPicture, newPictureData: $newPictureData)
                                 .offset(x: 20, y: 60)
                         }
                         else {
