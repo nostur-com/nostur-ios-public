@@ -6940,6 +6940,9 @@
         }
       }
     },
+    "No active Nostr account found. Please log in to Nostur first." : {
+
+    },
     "No articles found from your follow list in selected time frame." : {
       "localizations" : {
         "nl" : {
@@ -7749,6 +7752,9 @@
         }
       }
     },
+    "Post ${postText} to Nostr" : {
+
+    },
     "Post actions" : {
       "comment" : "Title of sheet showing actions to perform on post",
       "extractionState" : "stale",
@@ -7813,6 +7819,9 @@
           }
         }
       }
+    },
+    "Post Text" : {
+
     },
     "Post.noun" : {
       "comment" : "Navigation title when viewing a Post",
@@ -8329,6 +8338,9 @@
           }
         }
       }
+    },
+    "Publishes a new post to the Nostr network using your active account." : {
+
     },
     "Purple" : {
       "localizations" : {
@@ -9774,6 +9786,9 @@
         }
       }
     },
+    "Send Nostr Post" : {
+
+    },
     "Send payment test" : {
       "localizations" : {
         "nl" : {
@@ -10875,6 +10890,9 @@
         }
       }
     },
+    "The active account cannot post (it may be a read-only or remote signer account)." : {
+
+    },
     "The article feed shows articles from people you follow in the selected time frame" : {
       "localizations" : {
         "nl" : {
@@ -10978,6 +10996,9 @@
           }
         }
       }
+    },
+    "The text content of the post to publish." : {
+
     },
     "The Zapped feed shows posts from anyone which are most zapped by people you follow in the last %lld hours" : {
       "localizations" : {
