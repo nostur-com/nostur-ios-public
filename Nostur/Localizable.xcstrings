@@ -5410,6 +5410,9 @@
         }
       }
     },
+    "Images" : {
+
+    },
     "Impersonation" : {
       "comment" : "Menu item in choice list",
       "localizations" : {
@@ -6953,6 +6956,9 @@
         }
       }
     },
+    "No Blossom server configured. Please configure a Blossom server in Nostur settings to upload images." : {
+
+    },
     "No comments found." : {
       "localizations" : {
         "nl" : {
@@ -7014,6 +7020,9 @@
           }
         }
       }
+    },
+    "Nostr Account" : {
+
     },
     "Nostr address (NIP-05)" : {
       "comment" : "Label for entering a NIP-05 username on Edit Profile screen",
@@ -7409,6 +7418,9 @@
           }
         }
       }
+    },
+    "Optional images to attach to the post. Requires a Blossom server to be configured in Nostur settings." : {
+
     },
     "Or, skip and try as guest first" : {
       "comment" : "Button to skip creating account and login as guest",
@@ -10890,6 +10902,9 @@
         }
       }
     },
+    "The account to post from. Defaults to the currently active account if not specified." : {
+
+    },
     "The active account cannot post (it may be a read-only or remote signer account)." : {
 
     },
@@ -10996,6 +11011,9 @@
           }
         }
       }
+    },
+    "The selected account could not be found. It may have been removed." : {
+
     },
     "The text content of the post to publish." : {
 
