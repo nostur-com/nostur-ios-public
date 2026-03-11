@@ -9,6 +9,7 @@ import Foundation
 import CryptoKit
 import SwiftUI
 import Combine
+import NostrEssentials
 
 func uploadBannerOrProfilePic(pfp: UIImage?, banner:UIImage?) -> AnyPublisher<[String], Error> {
     var imagePublishers:[AnyPublisher<String, Error>] = []
@@ -207,6 +208,100 @@ func uploadBannerImage(image: UIImage) -> AnyPublisher<String, Error> {
             return url
         }
         .eraseToAnyPublisher()
+}
+
+// Returns true if the raw data is an animated GIF (starts with GIF magic bytes).
+func isAnimatedGIF(_ data: Data) -> Bool {
+    guard data.count >= 6 else { return false }
+    // GIF87a or GIF89a
+    return data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46
+}
+
+// Upload profile pic and/or banner via Blossom.
+// If raw data is provided and is an animated GIF it is uploaded as-is without resizing.
+// Returns (pfpUrl, bannerUrl) — either may be nil if that image was not provided.
+@MainActor
+func uploadBannerOrProfilePicViaBlossom(pfp: UIImage?, pfpData: Data? = nil, banner: UIImage?, bannerData: Data? = nil, account: CloudAccount) async throws -> (pfpUrl: String?, bannerUrl: String?) {
+    guard let blossomServerString = SettingsStore.shared.blossomServerList.first,
+          let blossomServerURL = URL(string: blossomServerString) else {
+        throw BlossomUploadError.error("Blossom server list is empty")
+    }
+
+    var pfpUrl: String? = nil
+    var bannerUrl: String? = nil
+
+    if let pfp {
+        let imageData: Data
+        let contentType: String
+
+        if let raw = pfpData, isAnimatedGIF(raw) {
+            // Animated GIF — upload original data unchanged
+            imageData = raw
+            contentType = "image/gif"
+        } else {
+            // Static image — crop and scale to 150×150
+            let SIDE: CGFloat = 150
+            let size = CGSize(width: SIDE, height: SIDE)
+            UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+            if pfp.size.width < pfp.size.height && pfp.size.width < SIDE {
+                let upscaleFactor = SIDE / pfp.size.width
+                let newHeight = pfp.size.height * upscaleFactor
+                pfp.draw(in: CGRect(x: 0, y: -((newHeight - SIDE) / 2).rounded(.down), width: SIDE, height: newHeight))
+            } else if pfp.size.height < pfp.size.width && pfp.size.height < SIDE {
+                let upscaleFactor = SIDE / pfp.size.height
+                let newWidth = pfp.size.width * upscaleFactor
+                pfp.draw(in: CGRect(x: -((newWidth - SIDE) / 2).rounded(.down), y: 0, width: newWidth, height: SIDE))
+            } else if pfp.size.width < pfp.size.height && pfp.size.width > SIDE {
+                let downscaleFactor = pfp.size.width / SIDE
+                let newHeight = pfp.size.height / downscaleFactor
+                pfp.draw(in: CGRect(x: 0, y: -((newHeight - SIDE) / 2).rounded(.down), width: SIDE, height: newHeight))
+            } else if pfp.size.height < pfp.size.width && pfp.size.height > SIDE {
+                let downscaleFactor = pfp.size.height / SIDE
+                let newWidth = pfp.size.width / downscaleFactor
+                pfp.draw(in: CGRect(x: -((newWidth - SIDE) / 2).rounded(.down), y: 0, width: newWidth, height: SIDE))
+            } else {
+                pfp.draw(in: CGRect(x: 0, y: 0, width: SIDE, height: SIDE))
+            }
+            let scaledImage = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            guard let jpegData = scaledImage?.jpegData(compressionQuality: 0.8) else {
+                throw BlossomUploadError.error("Failed to convert profile picture to JPEG")
+            }
+            imageData = jpegData
+            contentType = "image/jpeg"
+        }
+
+        let blossomFile = BlossomUploadFile(data: imageData, contentType: contentType)
+        let authHeader = try await getBlossomAuthHeader(account: account, blossomFile: blossomFile)
+        pfpUrl = try await blossomUpload(authHeader: authHeader, blossomFile: blossomFile, contentType: contentType, blossomServer: blossomServerURL)
+    }
+
+    if let banner {
+        let imageData: Data
+        let contentType: String
+
+        if let raw = bannerData, isAnimatedGIF(raw) {
+            // Animated GIF — upload original data unchanged
+            imageData = raw
+            contentType = "image/gif"
+        } else {
+            // Static image — scale to 600×150
+            guard let scaledImage = scaleImageToFill(image: banner, height: 150, width: 600) else {
+                throw BlossomUploadError.error("Failed to scale banner image")
+            }
+            guard let jpegData = scaledImage.jpegData(compressionQuality: 0.8) else {
+                throw BlossomUploadError.error("Failed to convert banner to JPEG")
+            }
+            imageData = jpegData
+            contentType = "image/jpeg"
+        }
+
+        let blossomFile = BlossomUploadFile(data: imageData, contentType: contentType)
+        let authHeader = try await getBlossomAuthHeader(account: account, blossomFile: blossomFile)
+        bannerUrl = try await blossomUpload(authHeader: authHeader, blossomFile: blossomFile, contentType: contentType, blossomServer: blossomServerURL)
+    }
+
+    return (pfpUrl: pfpUrl, bannerUrl: bannerUrl)
 }
 
 func signedImageProof(imageData:Data) -> (signature: String, message: String, publicKey: String)? {

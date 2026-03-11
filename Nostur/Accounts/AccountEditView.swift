@@ -179,32 +179,52 @@ struct AccountEditView: View {
                 Button {
                     if newPicture != nil || newBanner != nil {
                         uploading = true
-                        uploadBannerOrProfilePic(pfp: newPicture, banner: newBanner)
-                            .receive(on: RunLoop.main)
-                            .sink(receiveCompletion: { result in
-                                switch result {
-                                case .failure(let error):
-                                    L.og.error("Error uploading images: \(error.localizedDescription)")
+                        if SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
+                            Task { @MainActor in
+                                do {
+                                    let result = try await uploadBannerOrProfilePicViaBlossom(pfp: newPicture, pfpData: newPictureData, banner: newBanner, bannerData: newBannerData, account: account)
+                                    if let pfpUrl = result.pfpUrl {
+                                        account.picture = pfpUrl
+                                    }
+                                    if let bannerUrl = result.bannerUrl {
+                                        account.banner = bannerUrl
+                                    }
+                                    save()
+                                } catch {
+                                    L.og.error("Error uploading images via Blossom: \(error.localizedDescription)")
                                     uploadError = "Image upload error"
                                     sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
-                                    uploading = false
-                                case .finished:
-                                    L.og.info("PFP uploaded successfully")
                                 }
-                            }, receiveValue: { urls in
-//                                print(urls)
-                                for url in urls {
-                                    if url.contains("/banner.") {
-                                        account.banner = url
-                                    }
-                                    if url.contains("/profilepic.") {
-                                        account.picture = url
-                                    }
-                                }
-                                save()
                                 uploading = false
-                            })
-                            .store(in: &subscriptions)
+                            }
+                        } else {
+                            uploadBannerOrProfilePic(pfp: newPicture, banner: newBanner)
+                                .receive(on: RunLoop.main)
+                                .sink(receiveCompletion: { result in
+                                    switch result {
+                                    case .failure(let error):
+                                        L.og.error("Error uploading images: \(error.localizedDescription)")
+                                        uploadError = "Image upload error"
+                                        sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                                        uploading = false
+                                    case .finished:
+                                        L.og.info("PFP uploaded successfully")
+                                    }
+                                }, receiveValue: { urls in
+//                                    print(urls)
+                                    for url in urls {
+                                        if url.contains("/banner.") {
+                                            account.banner = url
+                                        }
+                                        if url.contains("/profilepic.") {
+                                            account.picture = url
+                                        }
+                                    }
+                                    save()
+                                    uploading = false
+                                })
+                                .store(in: &subscriptions)
+                        }
                     }
                     else {
                         save()
