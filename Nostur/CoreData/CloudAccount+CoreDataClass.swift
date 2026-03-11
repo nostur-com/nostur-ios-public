@@ -14,10 +14,10 @@ public class CloudAccount: NSManagedObject {
     var noPrivateKey = false
  
     public func loadFollowingCache() -> [String: FollowCache] {
-        return Dictionary(grouping: follows) { contact in
+        var cache = Dictionary(grouping: follows) { contact in
             contact.pubkey
         }
-        .compactMapValues({ contacts in
+        .compactMapValues({ contacts -> FollowCache? in
             guard let contact = contacts.first else { return nil }
             let pfpURL: URL? = if let picture = contact.picture, picture.prefix(7) != "http://" {
                 URL(string: picture)
@@ -30,6 +30,32 @@ public class CloudAccount: NSManagedObject {
                 pfpURL: pfpURL,
                 bgContact: contact)
         })
+        
+        // Always include entries for all accounts in AccountsState.accounts
+        let missingAccountPubkeys = AccountsState.shared.bgAccountPubkeys.subtracting(cache.keys)
+        if !missingAccountPubkeys.isEmpty {
+            let bgContext = bg()
+            let bgAccounts = CloudAccount.fetchAccounts(context: bgContext).filter { missingAccountPubkeys.contains($0.publicKey) }
+            for bgAccount in bgAccounts {
+                let pfpURL: URL? = if let picture = bgAccount.picture_, picture.prefix(7) != "http://" {
+                    URL(string: picture)
+                }
+                else {
+                    nil
+                }
+                cache[bgAccount.publicKey] = FollowCache(
+                    anyName: bgAccount.anyName,
+                    pfpURL: pfpURL,
+                    bgContact: nil)
+            }
+            // For accounts with no CloudAccount record yet, add a minimal entry using the pubkey
+            let foundPubkeys = Set(bgAccounts.map { $0.publicKey })
+            for pubkey in missingAccountPubkeys.subtracting(foundPubkeys) {
+                cache[pubkey] = FollowCache(anyName: pubkey, pfpURL: nil, bgContact: nil)
+            }
+        }
+        
+        return cache
     }
     
     public func getFollowingPublicKeys(includeBlocked: Bool = false) -> Set<String> {
