@@ -20,7 +20,7 @@ class ConversionVM: ObservableObject {
     public var receivers: Set<String> {
         participants.subtracting([ourAccountPubkey])
     }
-    private var conversationId: String
+    public var conversationId: String
     
     @Published var viewState: ConversionVMViewState = .initializing
     @Published var lastMessageId: String? = nil

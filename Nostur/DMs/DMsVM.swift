@@ -38,6 +38,9 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     }
     var lastNotificationReceivedAt: Date? = nil
     
+    // Tracks the conversationId currently visible to the user (Mac only)
+    var activeConversationId: String? = nil
+    
     // Shared is for the main / currently logged in account
     static let shared = DMsVM()
     
@@ -302,7 +305,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     private func listenForNewMessages() {
         Importer.shared.importedDMSub // (conversationId: groupId, event: savedEvent, nEvent: nEvent)
             .filter { $0.nEvent.pTags().contains(self.accountPubkey) || $0.nEvent.publicKey == self.accountPubkey }
-            .sink { (_, event, nEvent, newDMStateCreated) in
+            .sink { (conversationId, event, nEvent, newDMStateCreated) in
                 
                 if newDMStateCreated {
                     Task { @MainActor in
@@ -339,9 +342,10 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 // Don't create notification if blocked
                 guard !blocks().contains(nEvent.publicKey) else { return }
         
-                // Show notification on Mac: ALWAYS
+                // Show notification on Mac: Only if the conversation is not currently in view
                 // On iOS: Only if app is in background
-                if (IS_CATALYST || AppState.shared.appIsInBackground)  {
+                let conversationIsActive = IS_CATALYST && !AppState.shared.appIsInBackground && self.activeConversationId == conversationId
+                if !conversationIsActive && (IS_CATALYST || AppState.shared.appIsInBackground) {
                     let name = contactUsername(fromPubkey: nEvent.publicKey, event: event)
                     scheduleDMNotification(name: name)
                 }

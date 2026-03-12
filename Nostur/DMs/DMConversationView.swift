@@ -248,6 +248,14 @@ struct DMConversationView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await vm.load()
+#if targetEnvironment(macCatalyst)
+            parentDMsVM.activeConversationId = vm.conversationId
+#endif
+        }
+        .onDisappear {
+#if targetEnvironment(macCatalyst)
+            parentDMsVM.activeConversationId = nil
+#endif
         }
         .environmentObject(ViewingContext(availableWidth: DIMENSIONS.articleRowImageWidth(UIScreen.main.bounds.width), fullWidthImages: false, viewType: .row))
         .sheet(item: $selectedContact) { selectedContact in
