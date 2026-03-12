@@ -14,6 +14,34 @@ func accountSpecificKey(_ accountPubkey: String, forKey: String) -> String {
     return ("as_" + accountPubkey + "_" + forKey)
 }
 
+// One-time migration: move legacy (non-account-specific) notification timestamps to the active account's keys
+func migrateNotificationTimestampsIfNeeded() {
+    let migrationKey = "did_migrate_notification_timestamps_v1"
+    guard !UserDefaults.standard.bool(forKey: migrationKey) else { return }
+    
+    let pubkey = AccountsState.shared.activeAccountPublicKey
+    guard !pubkey.isEmpty else { return }
+    
+    let defaults = UserDefaults.standard
+    
+    if let existingMentionTs = defaults.object(forKey: "last_local_notification_timestamp") as? Double, existingMentionTs > 0 {
+        let accountKey = accountSpecificKey(pubkey, forKey: "last_local_notification_timestamp")
+        // Only migrate if the account-specific key doesn't already have a value
+        if defaults.object(forKey: accountKey) == nil {
+            defaults.setValue(existingMentionTs, forKey: accountKey)
+        }
+    }
+    
+    if let existingDMTs = defaults.object(forKey: "last_dm_local_notification_timestamp") as? Double, existingDMTs > 0 {
+        let accountKey = accountSpecificKey(pubkey, forKey: "last_dm_local_notification_timestamp")
+        if defaults.object(forKey: accountKey) == nil {
+            defaults.setValue(existingDMTs, forKey: accountKey)
+        }
+    }
+    
+    defaults.setValue(true, forKey: migrationKey)
+}
+
 class NotificationsViewModel: ObservableObject {
     
     @Published public var tab = "Mentions" // This is for per column tabs. Use @AppStorage("selected_notifications_tab") for pre-Desktop columns
@@ -35,8 +63,14 @@ class NotificationsViewModel: ObservableObject {
     private var pubkey: String?
     
     private var lastLocalNotificationAt: Int {
-        get { UserDefaults.standard.integer(forKey: "last_local_notification_timestamp") }
-        set { UserDefaults.standard.setValue(newValue, forKey: "last_local_notification_timestamp") }
+        get {
+            let key = pubkey.map { accountSpecificKey($0, forKey: "last_local_notification_timestamp") } ?? "last_local_notification_timestamp"
+            return UserDefaults.standard.integer(forKey: key)
+        }
+        set {
+            let key = pubkey.map { accountSpecificKey($0, forKey: "last_local_notification_timestamp") } ?? "last_local_notification_timestamp"
+            UserDefaults.standard.setValue(newValue, forKey: key)
+        }
     }
     
     // Shared is for the main / currently logged in account
@@ -534,7 +568,7 @@ class NotificationsViewModel: ObservableObject {
                     // Show notification on Mac: ALWAYS (but only for main account)
                     // On iOS: Only if app is in background
                     if isMain && (IS_CATALYST || AppState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
-                        scheduleMentionNotification(mentionsForNotification)
+                        scheduleMentionNotification(mentionsForNotification, pubkey: self.pubkey ?? AccountsState.shared.activeAccountPublicKey)
                     }
                 }
                 
@@ -612,7 +646,7 @@ class NotificationsViewModel: ObservableObject {
                             // Show notification on Mac: ALWAYS
                             // On iOS: Only if app is in background
                             if (IS_CATALYST || AppState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
-                                scheduleMentionNotification(mentionsForNotification)
+                                scheduleMentionNotification(mentionsForNotification, pubkey: self.pubkey ?? AccountsState.shared.activeAccountPublicKey)
                             }
                         }
                         
@@ -625,6 +659,7 @@ class NotificationsViewModel: ObservableObject {
     }
     
     private func checkForUnreadNewPosts() {
+        guard self.isMain else { return } // New Posts is not account based
         shouldBeBg()
         let fetchRequest = q.unreadNewPostsQuery()
         let unreadNewPosts = (try? bg().count(for: fetchRequest)) ?? 0
@@ -758,6 +793,7 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markNewPostsAsRead() {
+        guard self.isMain else { return } // New Posts is not account based
         self.unreadNewPosts_ = 0
         
         bg().perform { [weak self] in

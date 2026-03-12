@@ -33,8 +33,14 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     
     // Only for main
     private var lastDMLocalNotifcationAt: Int {
-        get { UserDefaults.standard.integer(forKey: "last_dm_local_notification_timestamp") }
-        set { UserDefaults.standard.setValue(newValue, forKey: "last_dm_local_notification_timestamp") }
+        get {
+            let key = accountSpecificKey(accountPubkey, forKey: "last_dm_local_notification_timestamp")
+            return UserDefaults.standard.integer(forKey: key)
+        }
+        set {
+            let key = accountSpecificKey(accountPubkey, forKey: "last_dm_local_notification_timestamp")
+            UserDefaults.standard.setValue(newValue, forKey: key)
+        }
     }
     var lastNotificationReceivedAt: Date? = nil
     
@@ -347,7 +353,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 let conversationIsActive = IS_CATALYST && !AppState.shared.appIsInBackground && self.activeConversationId == conversationId
                 if !conversationIsActive && (IS_CATALYST || AppState.shared.appIsInBackground) {
                     let name = contactUsername(fromPubkey: nEvent.publicKey, event: event)
-                    scheduleDMNotification(name: name)
+                    scheduleDMNotification(name: name, pubkey: self.accountPubkey)
                 }
             }
             .store(in: &subscriptions)

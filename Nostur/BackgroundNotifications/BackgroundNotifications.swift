@@ -187,13 +187,13 @@ func requestNotificationPermission(redirectToSettings:Bool = false) {
 }
 
 // Schedule a local notification for 1 or more mentions
-func scheduleMentionNotification(_ mentions: [Mention]) {
+func scheduleMentionNotification(_ mentions: [Mention], pubkey: String) {
 #if DEBUG
     L.og.debug("scheduleMentionNotification()")
 #endif
     
     // Remember timestamp so we only show newer notifications next time
-    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_local_notification_timestamp")
+    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: accountSpecificKey(pubkey, forKey: "last_local_notification_timestamp"))
     
     // Create the notificatgion
     let content = UNMutableNotificationContent()
@@ -213,13 +213,13 @@ struct Mention {
 }
 
 // Schedule a local notification for 1 direct message
-func scheduleDMNotification(name: String) {
+func scheduleDMNotification(name: String, pubkey: String) {
 #if DEBUG
     L.og.debug("scheduleDMNotification()")
 #endif
     
     // Remember timestamp so we only show newer notifications next time
-    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_dm_local_notification_timestamp")
+    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: accountSpecificKey(pubkey, forKey: "last_dm_local_notification_timestamp"))
     
     let content = UNMutableNotificationContent()
     content.title = name // "John"

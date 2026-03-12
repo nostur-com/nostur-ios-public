@@ -65,6 +65,8 @@ struct AppView: View {
             if DataProvider.shared().databaseProblem {
                 viewState = .databaseError; return
             }
+            
+            migrateNotificationTimestampsIfNeeded()
 
             await startNosturing() // Need stuff to be ready before NosturMainView() appears
             
@@ -139,8 +141,9 @@ extension AppView {
                 if account.lastSeenPostCreatedAt == 0 {
                     account.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
                 }
-                UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_dm_local_notification_timestamp")
-                UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_local_notification_timestamp")
+                let pubkey = account.publicKey
+                UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: accountSpecificKey(pubkey, forKey: "last_dm_local_notification_timestamp"))
+                UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: accountSpecificKey(pubkey, forKey: "last_local_notification_timestamp"))
                 UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_new_posts_local_notification_timestamp")
                 scheduleAppRefresh()
             }
