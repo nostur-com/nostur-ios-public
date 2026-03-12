@@ -400,17 +400,25 @@ struct MediaPlaceholder: View {
                 }
             }
         case .gif(let gifInfo):
+            // gifInfo.gifData may contain either a GIF or an animated WebP
+            let isWebP = isAnimatedWebPData(gifInfo.gifData)
             if fullScreen {
-                // Create a touch-responsive wrapper around the GIF
+                // Create a touch-responsive wrapper around the animated image
                 ZStack {
                     // Black background to maintain visual consistency during gestures
                     Color.black.edgesIgnoringSafeArea(.all)
                     
-                    // GIF content with hit testing disabled
-                    GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
-                        .animation(.smooth(duration: 0.5), value: vm.state)
-                        .aspectRatio(contentMode: .fit)
+                    // Animated image content with hit testing disabled
+                    if isWebP {
+                        AnimatedWebPImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
+                            .animation(.smooth(duration: 0.5), value: vm.state)
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
+                            .animation(.smooth(duration: 0.5), value: vm.state)
+                            .aspectRatio(contentMode: .fit)
 //                        .debugDimensions(".gif fullscreen", alignment: .top)
+                    }
                 }
                 .onAppear {
                     // Communicate back to set container frame
@@ -432,6 +440,19 @@ struct MediaPlaceholder: View {
                             .scaledToFit()
                             .frame(width: availableWidth, height: height)
                             .contentShape(Rectangle())
+                    }
+                    else if isWebP {
+                        AnimatedWebPImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
+                            .animation(.smooth(duration: 0.5), value: vm.state)
+                            .aspectRatio(contentMode: .fit)
+                            .contentShape(Rectangle())
+                            .task(id: galleryItem.url.absoluteString) {
+                                try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                                gifIsPlaying = true
+                            }
+                            .onDisappear {
+                                gifIsPlaying = false
+                            }
                     }
                     else {
                         GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
@@ -480,6 +501,20 @@ struct MediaPlaceholder: View {
                             .scaledToFill()
                             .frame(width: availableWidth, height: height)
                             .contentShape(Rectangle())
+                    }
+                    else if isWebP {
+                        AnimatedWebPImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
+                            .animation(.smooth(duration: 0.5), value: vm.state)
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: availableWidth, height: height, alignment: .center)
+                            .contentShape(Rectangle())
+                            .task(id: galleryItem.url.absoluteString) {
+                                try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                                gifIsPlaying = true
+                            }
+                            .onDisappear {
+                                gifIsPlaying = false
+                            }
                     }
                     else {
                         GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)

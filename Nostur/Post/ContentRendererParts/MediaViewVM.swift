@@ -64,6 +64,28 @@ class MediaViewVM: ObservableObject {
     
         do {
             let response = try await task.response
+            // WebP: After the resize processor runs, Nuke reports type as PNG, not WebP.
+            // Detect WebP by URL extension instead, then fetch raw bytes from the data cache.
+            if url.pathExtension.lowercased() == "webp" {
+                let request = ImageRequest(url: url)
+                let cacheKey = ImageProcessing.shared.content.cache.makeDataCacheKey(for: request)
+                let rawData = ImageProcessing.shared.content.configuration.dataCache?.cachedData(for: cacheKey)
+                    ?? response.container.data
+                if let rawData, isAnimatedWebPData(rawData) {
+                    Task { @MainActor in
+                        state = .gif(GifInfo(gifData: rawData, realDimensions: response.container.image.size))
+                        if generateIMeta {
+                            let blurhash: String? = response.container.image.blurHash(numberOfComponents: (4, 3))
+                            let pixelSize = CGSize(width: response.container.image.size.width * UIScreen.main.scale, height: response.container.image.size.height * UIScreen.main.scale)
+                            let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
+                            Task { @MainActor in
+                                sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
+                            }
+                        }
+                    }
+                    return
+                }
+            }
             if response.container.type == .gif, let gifData = response.container.data {
                 Task { @MainActor in
                     // Can't use withAnimation. Bug keeps sometimes stuck at loading %0

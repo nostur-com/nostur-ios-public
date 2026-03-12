@@ -80,7 +80,10 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 104_857_600, countLimit: 1000)
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .automatic
+            // storeOriginalData ensures raw bytes are always preserved in the data cache,
+            // even when processors (e.g. resize) run. This is required so animated WebP
+            // detection can read the original bytes via the data cache.
+            $0.dataCachePolicy = .storeOriginalData
         }
         
         communities = ImagePipeline {
@@ -177,11 +180,12 @@ func makeImageRequest(_ url: URL, label: String = "", overrideLowDataMode: Bool 
 #if DEBUG
     L.og.debug("ImageRequest: \(url.absoluteString), \(label) -[LOG]-")
 #endif
+    let options: ImageRequest.Options = (!overrideLowDataMode && SettingsStore.shared.lowDataMode) ? [.returnCacheDataDontLoad] : []
     return ImageRequest(url: url,
                  processors: [
                     .resize(size: CGSize(width: size ?? ScreenSpace.shared.screenSize.width, height: size ?? ScreenSpace.shared.screenSize.height), contentMode: .aspectFit, upscale: false)
                  ],
-                options: (!overrideLowDataMode && SettingsStore.shared.lowDataMode) ? [.returnCacheDataDontLoad] : [],
+                options: options,
                 userInfo: [.scaleKey: UIScreen.main.scale]
     )
 }
