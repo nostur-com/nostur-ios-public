@@ -206,6 +206,9 @@ class HotViewModel: ObservableObject {
                         // Skip param replaceable events
                         continue
                     }
+                    guard !firstQuoteId.isEmpty else { // should have id
+                        continue
+                    }
                     if self.posts[firstQuoteId] != nil {
                         self.posts[firstQuoteId]!.insert(item.pubkey)
                     }
@@ -215,6 +218,9 @@ class HotViewModel: ObservableObject {
                 case 7:
                     guard let reactionToId = item.reactionToId, !reactionToId.contains(":") else {
                         // Skip param replaceable events
+                        continue
+                    }
+                    guard !reactionToId.isEmpty else { // should have id
                         continue
                     }
                     if self.posts[reactionToId] != nil {
@@ -280,6 +286,9 @@ class HotViewModel: ObservableObject {
                 debounceTime: 0.5,
                 subscriptionId: "HOT-POSTS",
                 reqCommand: { taskId in
+#if DEBUG
+                        L.og.debug("Hot feed: ids: \(ids)")
+#endif
                     if let cm = NostrEssentials
                                 .ClientMessage(type: .REQ,
                                                subscriptionId: taskId,

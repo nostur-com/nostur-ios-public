@@ -222,6 +222,7 @@ class EmojiFeedViewModel: ObservableObject {
             }
             for item in reactions {
                 guard let reactionToId = item.reactionToId else { continue }
+                guard !reactionToId.isEmpty else { continue } // should have id
                 guard let reactionEmoji = item.content else { continue }
                 guard emojiSet.contains(reactionEmoji) else { continue }
                 if self.posts[reactionToId] != nil {

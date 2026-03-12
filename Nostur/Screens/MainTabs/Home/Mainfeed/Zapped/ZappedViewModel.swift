@@ -200,6 +200,9 @@ class ZappedViewModel: ObservableObject {
                     // Skip param replaceable events
                     continue
                 }
+                guard !zappedEventId.isEmpty else { // should have id
+                    continue
+                }
                 if self.posts[zappedEventId] != nil {
                     self.posts[zappedEventId]! = (self.posts[zappedEventId]!.0 + item.naiveSats, self.posts[zappedEventId]!.1 + 1)
                 }
