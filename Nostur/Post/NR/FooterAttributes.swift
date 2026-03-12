@@ -290,7 +290,7 @@ class FooterAttributes: ObservableObject {
         return []
     }
     
-    static private func isReplied(_ event:Event) -> Bool {
+    static private func isReplied(_ event: Event) -> Bool {
         if let accountCache = accountCache() {
             return accountCache.isRepliedTo(event.id)
         }
@@ -305,7 +305,7 @@ class FooterAttributes: ObservableObject {
         return false
     }
     
-    static private func isReposted(_ event:Event) -> Bool {
+    static private func isReposted(_ event: Event) -> Bool {
         if let accountCache = accountCache() {
             return accountCache.isReposted(event.id)
         }
@@ -322,7 +322,7 @@ class FooterAttributes: ObservableObject {
         return false
     }
     
-    static private func hasZapReceipt(_ event:Event) -> Bool {
+    static private func hasZapReceipt(_ event: Event) -> Bool {
         if let accountCache = accountCache() {
             return accountCache.isZapped(event.id)
         }

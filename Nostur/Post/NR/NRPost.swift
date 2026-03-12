@@ -1012,17 +1012,21 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         _ = Unpublisher.shared.cancel(cancellationId)
         self.ownPostAttributes.objectWillChange.send()
         self.ownPostAttributes.cancellationId = nil
+        let postKind = self.kind
+        let postPubkey = self.pubkey
+        let postReplyToId = self.replyToId
         bg().perform { [weak self] in
             guard let self, let event = self.event else { return }
             bg().delete(event)
             DataProvider.shared().saveToDiskNow(.bgContext)
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 sendNotification(.unpublishedNRPost, self)
-            }
-            if let accountCache = accountCache(), accountCache.pubkey == self.pubkey {
-                if Set([1,1111,1244]).contains(self.kind), let replyToId = self.replyToId {
-                    accountCache.removeRepliedTo(replyToId)
-                    sendNotification(.postAction, PostActionNotification(type: .unreplied, eventId: replyToId))
+                if let accountCache = accountCache(), accountCache.pubkey == postPubkey {
+                    if Set([1,1111,1244]).contains(postKind), let replyToId = postReplyToId {
+                        accountCache.removeRepliedTo(replyToId)
+                        sendNotification(.postAction, PostActionNotification(type: .unreplied, eventId: replyToId))
+                    }
                 }
             }
         }

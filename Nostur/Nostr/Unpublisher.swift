@@ -190,13 +190,23 @@ class Unpublisher {
                 if nEvent.kind == .reaction {
                     Event.updateReactionTo(savedEvent, context: bgContext)
                     
-                    if let accountCache = accountCache(), accountCache.pubkey == nEvent.publicKey {
-                        accountCache.addReaction(nEvent.id, reactionType: nEvent.content)
+                    let reactionEventId = nEvent.id
+                    let reactionContent = nEvent.content
+                    let reactionPublicKey = nEvent.publicKey
+                    Task { @MainActor in
+                        if let accountCache = accountCache(), accountCache.pubkey == reactionPublicKey {
+                            accountCache.addReaction(reactionEventId, reactionType: reactionContent)
+                        }
                     }
                 }
                 
                 DataProvider.shared().saveToDiskNow(.bgContext)
                 if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
+                    // Extract plain scalar values from managed object while on bg thread
+                    let savedKind = savedEvent.kind
+                    let savedPubkey = savedEvent.pubkey
+                    let savedFirstQuoteId = savedEvent.firstQuoteId
+                    let savedReplyToId = savedEvent.replyToId
                     DispatchQueue.main.async {
                         if let singleRelay = lockToThisRelay {
                             sendNotification(.newSingleRelayPostSaved, (savedEvent, singleRelay))
@@ -205,14 +215,16 @@ class Unpublisher {
                             sendNotification(.newPostSaved, savedEvent)
                         }
                     }
-                    if savedEvent.kind == 6 {
-                        if let accountCache = accountCache(), accountCache.pubkey == savedEvent.pubkey, let firstquoteId = savedEvent.firstQuoteId  {
-                            accountCache.addReposted(firstquoteId)
+                    Task { @MainActor in
+                        if savedKind == 6 {
+                            if let accountCache = accountCache(), accountCache.pubkey == savedPubkey, let firstquoteId = savedFirstQuoteId {
+                                accountCache.addReposted(firstquoteId)
+                            }
                         }
-                    }
-                    else if Set([1,1111,1244]).contains(savedEvent.kind) {
-                        if let accountCache = accountCache(), accountCache.pubkey == savedEvent.pubkey, let replyToId = savedEvent.replyToId  {
-                            accountCache.addRepliedTo(replyToId)
+                        else if Set([1,1111,1244]).contains(savedKind) {
+                            if let accountCache = accountCache(), accountCache.pubkey == savedPubkey, let replyToId = savedReplyToId {
+                                accountCache.addRepliedTo(replyToId)
+                            }
                         }
                     }
                 }

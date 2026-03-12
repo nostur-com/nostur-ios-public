@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os.lock
 
 typealias EventId = String
 
@@ -51,6 +52,10 @@ class LinkPreviewCache {
 class AccountCache {
     
     // For every post render we need to hit the database to see if we have bookmarked, reacted, replied or zapped. Better cache that here.
+    // Reads happen from bg threads (NRPost.init), writes always happen on @MainActor.
+    // Lock protects against concurrent read-during-write races on the CoW value types.
+    
+    private var _lock = os_unfair_lock()
     
     public let pubkey: String
     private var bookmarkedIds: [String: Color] = [:]
@@ -71,98 +76,133 @@ class AccountCache {
     }
     
     public var cacheIsReady: Bool {
-        initializedCaches.count == 5
+        os_unfair_lock_lock(&_lock)
+        let count = initializedCaches.count
+        os_unfair_lock_unlock(&_lock)
+        return count == 5
     }
     
     
     public func getBookmarkColor(_ eventId: String) -> Color? {
-        return bookmarkedIds[eventId]
+        os_unfair_lock_lock(&_lock)
+        let result = bookmarkedIds[eventId]
+        os_unfair_lock_unlock(&_lock)
+        return result
     }
     
     @MainActor
     public func addBookmark(_ eventId: String, color: Color) {
+        os_unfair_lock_lock(&_lock)
         bookmarkedIds[eventId] = color
+        os_unfair_lock_unlock(&_lock)
     }
     
     @MainActor
     public func removeBookmark(_ eventId: String) {
+        os_unfair_lock_lock(&_lock)
         bookmarkedIds[eventId] = nil
+        os_unfair_lock_unlock(&_lock)
     }
     
     public func getOurReactions(_ eventId: String) -> Set<String> {
-        if let ourReactions = reactions[eventId] {
-            return ourReactions
-        }
-        return []
+        os_unfair_lock_lock(&_lock)
+        let result = reactions[eventId] ?? []
+        os_unfair_lock_unlock(&_lock)
+        return result
     }
         
     public func hasReaction(_ eventId: String, reactionType: String) -> Bool {
-        return reactionIds[reactionType]?.contains(eventId) ?? false
+        os_unfair_lock_lock(&_lock)
+        let result = reactionIds[reactionType]?.contains(eventId) ?? false
+        os_unfair_lock_unlock(&_lock)
+        return result
     }
     
     @MainActor
     public func addReaction(_ eventId: String, reactionType: String) {
+        os_unfair_lock_lock(&_lock)
         if reactionIds[reactionType] == nil {
             reactionIds[reactionType] = [eventId]
-        }
-        else {
+        } else {
             reactionIds[reactionType]?.insert(eventId)
         }
-        
         if reactions[eventId] == nil {
             reactions[eventId] = [reactionType]
+        } else {
+            reactions[eventId]?.insert(reactionType)
         }
-        else {
-            reactions[eventId]?.insert(reactionType) // Task 10633: EXC_BAD_ACCESS (code=1, address=0x10)
-        }
+        os_unfair_lock_unlock(&_lock)
     }
     
     @MainActor
     public func removeReaction(_ eventId: String, reactionType: String) {
+        os_unfair_lock_lock(&_lock)
         reactionIds[reactionType]?.remove(eventId)
         reactions[eventId] = nil
+        os_unfair_lock_unlock(&_lock)
     }
     
     public func isRepliedTo(_ eventId: String) -> Bool {
-        return repliedToIds.contains(eventId)
+        os_unfair_lock_lock(&_lock)
+        let result = repliedToIds.contains(eventId)
+        os_unfair_lock_unlock(&_lock)
+        return result
     }
     
     @MainActor
     public func addRepliedTo(_ eventId: String) {
+        os_unfair_lock_lock(&_lock)
         repliedToIds.insert(eventId)
+        os_unfair_lock_unlock(&_lock)
     }
     
     @MainActor
     public func removeRepliedTo(_ eventId: String) {
+        os_unfair_lock_lock(&_lock)
         repliedToIds.remove(eventId)
+        os_unfair_lock_unlock(&_lock)
     }
     
     public func isReposted(_ eventId: String) -> Bool {
-        return repostedIds.contains(eventId)
+        os_unfair_lock_lock(&_lock)
+        let result = repostedIds.contains(eventId)
+        os_unfair_lock_unlock(&_lock)
+        return result
     }
     
     @MainActor
     public func addReposted(_ eventId: String) {
+        os_unfair_lock_lock(&_lock)
         repostedIds.insert(eventId)
+        os_unfair_lock_unlock(&_lock)
     }
     
     @MainActor
     public func removeReposted(_ eventId: String) {
+        os_unfair_lock_lock(&_lock)
         repostedIds.remove(eventId)
+        os_unfair_lock_unlock(&_lock)
     }
     
     public func isZapped(_ eventId: String) -> Bool {
-        return zappedIds.contains(eventId)
+        os_unfair_lock_lock(&_lock)
+        let result = zappedIds.contains(eventId)
+        os_unfair_lock_unlock(&_lock)
+        return result
     }
     
     @MainActor
     public func addZapped(_ eventId: String) {
+        os_unfair_lock_lock(&_lock)
         zappedIds.insert(eventId)
+        os_unfair_lock_unlock(&_lock)
     }
     
     @MainActor
     public func removeZapped(_ eventId: String) {
+        os_unfair_lock_lock(&_lock)
         zappedIds.remove(eventId)
+        os_unfair_lock_unlock(&_lock)
     }
     
     
@@ -176,10 +216,12 @@ class AccountCache {
             return (eventId: eventId, color: $0.color)
         }
         Task { @MainActor in
+            os_unfair_lock_lock(&self._lock)
             for bookmark in bookmarks {
                 self.bookmarkedIds[bookmark.eventId] = bookmark.color
             }
             self.initializedCaches.insert("bookmarks")
+            os_unfair_lock_unlock(&self._lock)
         }
     }
     
@@ -213,9 +255,11 @@ class AccountCache {
         }
 
         Task { @MainActor in
+            os_unfair_lock_lock(&self._lock)
             self.reactions = reactions
             self.reactionIds = reactionIds
             self.initializedCaches.insert("reactions")
+            os_unfair_lock_unlock(&self._lock)
         }
     }
     
@@ -224,8 +268,10 @@ class AccountCache {
         fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,1111,1244}", pubkey)
         let allRepliedIds = Set(((try? bg().fetch(fr)) ?? []).compactMap { $0.replyToId })
         Task { @MainActor in
+            os_unfair_lock_lock(&self._lock)
             self.repliedToIds = allRepliedIds
             self.initializedCaches.insert("replies")
+            os_unfair_lock_unlock(&self._lock)
         }
     }
     
@@ -235,8 +281,10 @@ class AccountCache {
         let allRepostedIds = Set(((try? bg().fetch(fr)) ?? []).compactMap { $0.firstQuoteId })
     
         Task { @MainActor in
+            os_unfair_lock_lock(&self._lock)
             self.repostedIds = allRepostedIds
             self.initializedCaches.insert("reposts")
+            os_unfair_lock_unlock(&self._lock)
         }
     }
     
@@ -246,8 +294,10 @@ class AccountCache {
         let allZappedIds = Set(((try? bg().fetch(fr)) ?? []).compactMap { $0.firstE() })
 
         Task { @MainActor in
+            os_unfair_lock_lock(&self._lock)
             self.zappedIds = allZappedIds
             self.initializedCaches.insert("zaps")
+            os_unfair_lock_unlock(&self._lock)
         }
     }
     
