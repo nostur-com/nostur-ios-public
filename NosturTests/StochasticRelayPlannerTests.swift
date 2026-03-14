@@ -234,4 +234,99 @@ struct StochasticRelayPlannerTests {
         let relayUrls = Set(result.map { $0.relayUrl })
         #expect(relayUrls.contains("wss://hidden.onion"), ".onion relays should be preserved regardless of liveness data")
     }
+
+    // MARK: - Commit 3: Thompson Sampling
+
+    @Test func testSampleBetaOutputClamped() {
+        // sampleBeta should always return values in [0.01, 1.0]
+        let edgeCases: [(Int, Int)] = [(0, 0), (1, 0), (0, 1), (1000, 1), (1, 1000)]
+        for (s, f) in edgeCases {
+            for _ in 0..<100 {
+                let sample = RelayScoreStore.sampleBeta(successes: s, failures: f)
+                #expect(sample >= 0.01, "sampleBeta(\(s),\(f)) returned \(sample) < 0.01")
+                #expect(sample <= 1.0, "sampleBeta(\(s),\(f)) returned \(sample) > 1.0")
+            }
+        }
+    }
+
+    @Test func testSampleBetaMean() {
+        // Beta(51, 51) (with +1 prior) should have mean ~0.5
+        let n = 10000
+        var sum = 0.0
+        for _ in 0..<n {
+            sum += RelayScoreStore.sampleBeta(successes: 50, failures: 50)
+        }
+        let mean = sum / Double(n)
+        #expect(abs(mean - 0.5) < 0.05, "Mean of Beta(51,51) samples should be ~0.5, got \(mean)")
+    }
+
+    @Test func testSampleBetaSkew() {
+        // Beta(101, 11) should have much higher mean than Beta(11, 101)
+        let n = 5000
+        var sumHigh = 0.0
+        var sumLow = 0.0
+        for _ in 0..<n {
+            sumHigh += RelayScoreStore.sampleBeta(successes: 100, failures: 10)
+            sumLow += RelayScoreStore.sampleBeta(successes: 10, failures: 100)
+        }
+        let meanHigh = sumHigh / Double(n)
+        let meanLow = sumLow / Double(n)
+        #expect(meanHigh > meanLow + 0.3, "Beta(101,11) mean \(meanHigh) should be much higher than Beta(11,101) mean \(meanLow)")
+    }
+
+    @Test func testScoreDecay() {
+        let store = RelayScoreStore()
+        // Manually test the decay logic: scores with sum > 1000 should be halved
+        // We test indirectly by verifying the struct behavior
+        let score = RelayScoreStore.RelayScore(successes: 800, failures: 400)
+        #expect(score.successes + score.failures > 1000, "Precondition: sum should be > 1000")
+        let decayed = RelayScoreStore.RelayScore(successes: score.successes / 2, failures: score.failures / 2)
+        #expect(decayed.successes == 400)
+        #expect(decayed.failures == 200)
+    }
+
+    @Test func testScorePersistRoundTrip() throws {
+        // Test that RelayScore encodes and decodes correctly
+        let original: [String: RelayScoreStore.RelayScore] = [
+            "wss://relay-a.com": .init(successes: 42, failures: 8),
+            "wss://relay-b.com": .init(successes: 100, failures: 50),
+        ]
+
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode([String: RelayScoreStore.RelayScore].self, from: data)
+
+        #expect(decoded["wss://relay-a.com"]?.successes == 42)
+        #expect(decoded["wss://relay-a.com"]?.failures == 8)
+        #expect(decoded["wss://relay-b.com"]?.successes == 100)
+        #expect(decoded["wss://relay-b.com"]?.failures == 50)
+    }
+
+    @Test func testThompsonScoresInfluencePlanner() {
+        // A relay with excellent scores should be favored over one with terrible scores
+        let findEventsRelays: [String: Set<String>] = [
+            "wss://good-relay.com": Set(["pk1", "pk2", "pk3"]),
+            "wss://bad-relay.com": Set(["pk1", "pk2", "pk3"]),
+        ]
+        let relayScores: [String: RelayScoreStore.RelayScore] = [
+            "wss://good-relay.com": .init(successes: 500, failures: 5),
+            "wss://bad-relay.com": .init(successes: 5, failures: 500),
+        ]
+
+        var goodFirstCount = 0
+        let runs = 100
+        for _ in 0..<runs {
+            let result = stochasticRelayAssignment(
+                findEventsRelays: findEventsRelays,
+                pubkeys: Set(["pk1", "pk2", "pk3"]),
+                ourReadRelays: [],
+                relayScores: relayScores
+            )
+            if result.first?.relayUrl == "wss://good-relay.com" {
+                goodFirstCount += 1
+            }
+        }
+
+        // Good relay should be picked first the vast majority of the time
+        #expect(goodFirstCount > 70, "Good relay should be first in most runs, was first \(goodFirstCount)/\(runs) times")
+    }
 }

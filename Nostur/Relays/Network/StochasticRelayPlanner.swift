@@ -27,12 +27,14 @@ struct RelayAssignment {
 ///   - pubkeys: The set of pubkeys we want events from
 ///   - ourReadRelays: Our own read relay URLs (excluded from outbox assignments)
 ///   - aliveRelays: Optional set of relays known to be online (NIP-66). When provided, dead relays are filtered out.
+///   - relayScores: Optional Thompson sampling scores per relay. When provided, beta-sampled quality multiplies the score.
 /// - Returns: Array of `RelayAssignment` — relay URL + the pubkeys assigned to it
 func stochasticRelayAssignment(
     findEventsRelays: [String: Set<String>],
     pubkeys: Set<String>,
     ourReadRelays: Set<String>,
-    aliveRelays: Set<String>? = nil
+    aliveRelays: Set<String>? = nil,
+    relayScores: [String: RelayScoreStore.RelayScore]? = nil
 ) -> [RelayAssignment] {
     guard !pubkeys.isEmpty else { return [] }
 
@@ -82,7 +84,16 @@ func stochasticRelayAssignment(
     let scored: [(relay: String, relevantPubkeys: Set<String>, score: Double)] = candidates.map { candidate in
         let intersectionCount = Double(candidate.relevantPubkeys.count)
         let randomFactor = Double.random(in: 0.01...1.0)
-        let score = intersectionCount * randomFactor
+
+        // Thompson sampling multiplier (when scores are available)
+        let thompsonFactor: Double
+        if let relayScores, let score = relayScores[candidate.relay] {
+            thompsonFactor = RelayScoreStore.sampleBeta(successes: score.successes, failures: score.failures)
+        } else {
+            thompsonFactor = 1.0
+        }
+
+        let score = intersectionCount * randomFactor * thompsonFactor
         return (candidate.relay, candidate.relevantPubkeys, score)
     }
     .sorted { $0.score > $1.score }

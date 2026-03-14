@@ -51,6 +51,9 @@ public class OutboxLoader {
         // Fetch NIP-66 alive relay set (async, best-effort)
         NIP66LivenessFilter.shared.loadOrFetch()
 
+        // Load Thompson sampling scores from disk
+        RelayScoreStore.shared.load()
+
         // include pubkeys from contact feeds (.type == "pubkeys" or nil) with .useOutbox enabled, and are active (.showAsTab)
         let contactFeedsPubkeys: Set<String> = Set(
             CloudFeed.fetchAll(context: Nostur.context())
@@ -69,7 +72,7 @@ public class OutboxLoader {
                 self?.cp.setPreferredRelays(using: kind10002s)
                 self?.cp.aliveRelays = NIP66LivenessFilter.shared.aliveRelays
             }
-            
+
 #if DEBUG
             L.sockets.debug("📤📤 Outbox: loaded \(kind10002s.count) from db")
 #endif

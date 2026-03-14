@@ -101,6 +101,9 @@ public class ConnectionPool: ObservableObject {
     // NIP-66 liveness: set of relay URLs known to be online (nil = no data, skip filtering)
     public var aliveRelays: Set<String>? = nil
 
+    // Thompson sampling: tracks which pubkeys were requested from each relay in the current cycle
+    public var requestedPubkeysPerRelay: [CanonicalRelayUrl: Set<String>] = [:]
+        
     @MainActor
     public var anyConnected: Bool = false
     
@@ -269,6 +272,10 @@ public class ConnectionPool: ObservableObject {
                         // Periodically clean up stale connections (every 5 minutes)
                         if Int.random(in: 1...10) == 1 { // 10% chance = ~3 minutes average
                             self?.cleanupStaleConnections()
+                        }
+                        // Periodically update Thompson sampling scores (~5 min avg interval)
+                        if Int.random(in: 1...10) == 1 {
+                            self?.updateThompsonScores()
                         }
                     }
                 }
@@ -761,13 +768,17 @@ public class ConnectionPool: ObservableObject {
             findEventsRelays: preferredRelays.findEventsRelays,
             pubkeys: pubkeys,
             ourReadRelays: ourReadRelays,
-            aliveRelays: self.aliveRelays
+            aliveRelays: self.aliveRelays,
+            relayScores: RelayScoreStore.shared.scoresSnapshot()
         )
 
         for assignment in assignments
             .sorted(by: { $0.pubkeys.count > $1.pubkeys.count })
             .prefix(self.maxPreferredRelays) // SANITY
         {
+            // Record only assignments we actually send for Thompson scoring
+            self.requestedPubkeysPerRelay[assignment.relayUrl, default: []].formUnion(assignment.pubkeys)
+
             // Build filters with this assignment's pubkeys as authors
             let assignmentFilters = filtersWithoutHashtags.map { filter in
                 var scopedFilter = filter
@@ -887,6 +898,25 @@ public class ConnectionPool: ObservableObject {
         return relays
     }
     
+    // Update Thompson sampling scores by comparing requested pubkeys vs actually received pubkeys
+    public func updateThompsonScores() {
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            let requested = self.requestedPubkeysPerRelay
+            guard !requested.isEmpty else { return }
+
+            RelayScoreStore.shared.updateScores(
+                requestedPubkeysPerRelay: requested,
+                connectionStats: self.connectionStats
+            )
+            self.requestedPubkeysPerRelay = [:]
+
+#if DEBUG
+            L.sockets.debug("📊 Thompson: updated scores for \(requested.count) relays")
+#endif
+        }
+    }
+
     // Clean up stale connections periodically to prevent memory leaks
     public func cleanupStaleConnections() {
         queue.async(flags: .barrier) { [weak self] in

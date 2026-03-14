@@ -17,8 +17,11 @@ public class RelayConnectionStats: Identifiable {
     public var lastErrorMessages: [String] = []
     public var lastNoticeMessages: [String] = []
     
-    // Pubkeys actually received from this relay
+    // Pubkeys actually received from this relay (lifetime, used by resolveRelayHint)
     public var receivedPubkeys: Set<String> = []
+
+    // Pubkeys received since last Thompson scoring cycle (cleared after each update)
+    public var receivedPubkeysThisCycle: Set<String> = []
     
     init(id: String) {
         self.id = id
@@ -41,5 +44,6 @@ func updateConnectionStats(receivedPubkey pubkey: String, fromRelay relay: Strin
     ConnectionPool.shared.queue.async(flags: .barrier) {
         guard let relayStats = ConnectionPool.shared.connectionStats[relay] else { return }
         relayStats.receivedPubkeys.insert(pubkey)
+        relayStats.receivedPubkeysThisCycle.insert(pubkey)
     }
 }
