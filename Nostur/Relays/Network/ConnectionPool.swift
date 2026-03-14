@@ -97,7 +97,10 @@ public class ConnectionPool: ObservableObject {
     
     // .connectionStats should only be accessed from connection ConnectionPool.queue
     public var connectionStats: [CanonicalRelayUrl: RelayConnectionStats] = [:]
-        
+
+    // NIP-66 liveness: set of relay URLs known to be online (nil = no data, skip filtering)
+    public var aliveRelays: Set<String>? = nil
+
     @MainActor
     public var anyConnected: Bool = false
     
@@ -757,7 +760,8 @@ public class ConnectionPool: ObservableObject {
         let assignments = stochasticRelayAssignment(
             findEventsRelays: preferredRelays.findEventsRelays,
             pubkeys: pubkeys,
-            ourReadRelays: ourReadRelays
+            ourReadRelays: ourReadRelays,
+            aliveRelays: self.aliveRelays
         )
 
         for assignment in assignments

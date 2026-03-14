@@ -26,11 +26,13 @@ struct RelayAssignment {
 ///   - findEventsRelays: From `PreferredRelays.findEventsRelays` — `[relayUrl: Set<pubkey>]`
 ///   - pubkeys: The set of pubkeys we want events from
 ///   - ourReadRelays: Our own read relay URLs (excluded from outbox assignments)
+///   - aliveRelays: Optional set of relays known to be online (NIP-66). When provided, dead relays are filtered out.
 /// - Returns: Array of `RelayAssignment` — relay URL + the pubkeys assigned to it
 func stochasticRelayAssignment(
     findEventsRelays: [String: Set<String>],
     pubkeys: Set<String>,
-    ourReadRelays: Set<String>
+    ourReadRelays: Set<String>,
+    aliveRelays: Set<String>? = nil
 ) -> [RelayAssignment] {
     guard !pubkeys.isEmpty else { return [] }
 
@@ -53,7 +55,7 @@ func stochasticRelayAssignment(
     // Multi-pubkey: stochastic scoring
 
     // Step 1: Build candidate list (exclude our own read relays, keep only relays with relevant pubkeys)
-    let candidates: [(relay: String, relevantPubkeys: Set<String>)] = findEventsRelays
+    var candidates: [(relay: String, relevantPubkeys: Set<String>)] = findEventsRelays
         .filter { !ourReadRelays.contains($0.key) }
         .compactMap { (relay, relayPubkeys) in
             let intersection = relayPubkeys.intersection(pubkeys)
@@ -61,7 +63,22 @@ func stochasticRelayAssignment(
             return (relay, intersection)
         }
 
-    // Step 2: Score and sort stochastically
+    // Step 2: NIP-66 liveness filter (when available)
+    if let aliveRelays, !aliveRelays.isEmpty {
+        let filtered = candidates.filter { candidate in
+            // Preserve .onion relays (can't validate without Tor)
+            if candidate.relay.contains(".onion") { return true }
+            return aliveRelays.contains(candidate.relay)
+        }
+
+        // Safety valve: if filtering would remove >80% of candidates, skip it
+        let removalRatio = 1.0 - (Double(filtered.count) / Double(max(candidates.count, 1)))
+        if removalRatio <= 0.8 {
+            candidates = filtered
+        }
+    }
+
+    // Step 3: Score and sort stochastically
     let scored: [(relay: String, relevantPubkeys: Set<String>, score: Double)] = candidates.map { candidate in
         let intersectionCount = Double(candidate.relevantPubkeys.count)
         let randomFactor = Double.random(in: 0.01...1.0)
@@ -70,7 +87,7 @@ func stochasticRelayAssignment(
     }
     .sorted { $0.score > $1.score }
 
-    // Step 3: Greedy assignment with dedup
+    // Step 4: Greedy assignment with dedup
     var pubkeysAccountedFor: Set<String> = []
     var assignments: [RelayAssignment] = []
 

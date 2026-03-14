@@ -157,4 +157,81 @@ struct StochasticRelayPlannerTests {
         #expect(coveredPubkeys.contains("pk1"))
         #expect(!coveredPubkeys.contains("pk_orphan"), "Unroutable pubkey should not appear in assignments")
     }
+
+    // MARK: - Commit 2: NIP-66 Liveness Filter
+
+    @Test func testAliveRelaysFiltersCandidates() {
+        let findEventsRelays: [String: Set<String>] = [
+            "wss://alive-relay.com": Set(["pk1", "pk2"]),
+            "wss://dead-relay.com": Set(["pk1", "pk3"]),
+            "wss://also-alive.com": Set(["pk3"]),
+        ]
+        let aliveRelays: Set<String> = Set(["wss://alive-relay.com", "wss://also-alive.com"])
+
+        let result = stochasticRelayAssignment(
+            findEventsRelays: findEventsRelays,
+            pubkeys: Set(["pk1", "pk2", "pk3"]),
+            ourReadRelays: [],
+            aliveRelays: aliveRelays
+        )
+
+        let relayUrls = Set(result.map { $0.relayUrl })
+        #expect(!relayUrls.contains("wss://dead-relay.com"), "Dead relay should be filtered out")
+    }
+
+    @Test func testNilAliveRelaysSkipsFilter() {
+        let findEventsRelays: [String: Set<String>] = [
+            "wss://relay-a.com": Set(["pk1"]),
+            "wss://relay-b.com": Set(["pk2"]),
+        ]
+
+        let result = stochasticRelayAssignment(
+            findEventsRelays: findEventsRelays,
+            pubkeys: Set(["pk1", "pk2"]),
+            ourReadRelays: [],
+            aliveRelays: nil
+        )
+
+        let coveredPubkeys = result.reduce(into: Set<String>()) { $0.formUnion($1.pubkeys) }
+        #expect(coveredPubkeys == Set(["pk1", "pk2"]), "With nil aliveRelays, all relays should be used")
+    }
+
+    @Test func testSafetyValveSkipsOverAggressiveFilter() {
+        // 10 relays, but aliveRelays only contains 1 → would remove >80%, so safety valve should skip filtering
+        var findEventsRelays: [String: Set<String>] = [:]
+        for i in 1...10 {
+            findEventsRelays["wss://relay-\(i).com"] = Set(["pk\(i)"])
+        }
+        let requestedPubkeys = Set((1...10).map { "pk\($0)" })
+        let aliveRelays: Set<String> = Set(["wss://relay-1.com"]) // Only 1 of 10 alive
+
+        let result = stochasticRelayAssignment(
+            findEventsRelays: findEventsRelays,
+            pubkeys: requestedPubkeys,
+            ourReadRelays: [],
+            aliveRelays: aliveRelays
+        )
+
+        let coveredPubkeys = result.reduce(into: Set<String>()) { $0.formUnion($1.pubkeys) }
+        // Safety valve should preserve all relays since >80% would be removed
+        #expect(coveredPubkeys == requestedPubkeys, "Safety valve should skip over-aggressive filtering")
+    }
+
+    @Test func testOnionRelaysPreservedByLivenessFilter() {
+        let findEventsRelays: [String: Set<String>] = [
+            "wss://normal-relay.com": Set(["pk1"]),
+            "wss://hidden.onion": Set(["pk2"]),
+        ]
+        let aliveRelays: Set<String> = Set(["wss://normal-relay.com"]) // onion not in alive set
+
+        let result = stochasticRelayAssignment(
+            findEventsRelays: findEventsRelays,
+            pubkeys: Set(["pk1", "pk2"]),
+            ourReadRelays: [],
+            aliveRelays: aliveRelays
+        )
+
+        let relayUrls = Set(result.map { $0.relayUrl })
+        #expect(relayUrls.contains("wss://hidden.onion"), ".onion relays should be preserved regardless of liveness data")
+    }
 }

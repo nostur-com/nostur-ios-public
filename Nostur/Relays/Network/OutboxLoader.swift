@@ -47,8 +47,10 @@ public class OutboxLoader {
 
     public func load() {
         // TODO: Skip if outbox disabled, track didLoad, run on toggle on + !didLoad
-        
-        
+
+        // Fetch NIP-66 alive relay set (async, best-effort)
+        NIP66LivenessFilter.shared.loadOrFetch()
+
         // include pubkeys from contact feeds (.type == "pubkeys" or nil) with .useOutbox enabled, and are active (.showAsTab)
         let contactFeedsPubkeys: Set<String> = Set(
             CloudFeed.fetchAll(context: Nostur.context())
@@ -65,6 +67,7 @@ public class OutboxLoader {
             self.mostRecentKind10002At = kind10002s.sorted(by: { $0.created_at > $1.created_at }).first?.created_at
             self.cp.queue.async(flags: .barrier) { [weak self] in
                 self?.cp.setPreferredRelays(using: kind10002s)
+                self?.cp.aliveRelays = NIP66LivenessFilter.shared.aliveRelays
             }
             
 #if DEBUG
