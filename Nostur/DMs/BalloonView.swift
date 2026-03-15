@@ -71,7 +71,7 @@ struct BalloonView17: View {
                 if vm.conversationVersion == 17 {
                     Menu {
                         Button("Copy text", systemImage: "doc.on.doc") {
-                            UIPasteboard.general.string = nrChatMessage.nEvent.content
+                            UIPasteboard.general.string = nrChatMessage.content ?? nrChatMessage.nEvent.content
                         }
                         Button("Reply...", systemImage: "arrowshape.turn.up.left") {
                             withAnimation {
