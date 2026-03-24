@@ -152,7 +152,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         self.following = isFollowing(nEvent.publicKey)
         
         self.missingPs = missingPs
-        self.content = nEvent.content
+        self.content = content
         self.isNSFW = self.hasNSFWContent()
         self.loadEmbeddedContent(keyPair)
     }

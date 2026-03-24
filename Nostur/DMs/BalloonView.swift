@@ -68,11 +68,11 @@ struct BalloonView17: View {
             }
             .padding(10)
             .overlay(alignment: .topTrailing) {
-                if vm.conversationVersion == 17 {
-                    Menu {
-                        Button("Copy text", systemImage: "doc.on.doc") {
-                            UIPasteboard.general.string = nrChatMessage.nEvent.content
-                        }
+                Menu {
+                    Button("Copy text", systemImage: "doc.on.doc") {
+                        UIPasteboard.general.string = nrChatMessage.content ?? nrChatMessage.nEvent.content
+                    }
+                    if vm.conversationVersion == 17 {
                         Button("Reply...", systemImage: "arrowshape.turn.up.left") {
                             withAnimation {
                                 vm.replyingNow = nrChatMessage
@@ -84,14 +84,14 @@ struct BalloonView17: View {
                             }
                         }
     //                    Button("React...", systemImage: "smiley") { }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .padding(5)
-                            .contentShape(Rectangle())
-                            .foregroundStyle(isSentByCurrentUser ? Color.white : theme.accent)
                     }
-                    .offset(x: -7, y: 4)
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .padding(5)
+                        .contentShape(Rectangle())
+                        .foregroundStyle(isSentByCurrentUser ? Color.white : theme.accent)
                 }
+                .offset(x: -7, y: 4)
             }
             .background(
                 RoundedRectangle(cornerRadius: 14)
