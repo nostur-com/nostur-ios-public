@@ -95,6 +95,8 @@ struct DMChatInputField: View {
     @ObservedObject var vm: ConversionVM
     var startWithFocus: Bool = true
     var onSubmit: (() -> Void)?
+    var onPickPhotos: (() -> Void)?
+    var onPickFiles: (() -> Void)?
 
     enum FocusedField {
         case message
@@ -102,8 +104,33 @@ struct DMChatInputField: View {
     
     @FocusState private var focusedField: FocusedField?
     
+    private var showAttachmentButton: Bool {
+        vm.conversationVersion == 17 && SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL
+    }
+    
+    private var canSend: Bool {
+        !message.isEmpty || vm.pendingFileAttachment != nil
+    }
+    
     var body: some View {
         HStack(alignment: .center) {
+            if showAttachmentButton && vm.pendingFileAttachment == nil {
+                Menu {
+                    Button("Photos", systemImage: "photo") {
+                        onPickPhotos?()
+                    }
+                    Button("Files", systemImage: "doc") {
+                        onPickFiles?()
+                    }
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
+                        .foregroundStyle(theme.accent)
+                }
+                .padding(.leading, 4)
+            }
             VStack(alignment: .center) {
                 
                 if let replyingNow = vm.replyingNow {
@@ -118,6 +145,13 @@ struct DMChatInputField: View {
                             .labelStyle(.iconOnly)
                             .offset(x: -3, y: 3)
                         }
+                        .padding(.horizontal, 10)
+                        .padding(.top, 10)
+                }
+                
+                // File attachment preview
+                if let pending = vm.pendingFileAttachment {
+                    filePreview(pending)
                         .padding(.horizontal, 10)
                         .padding(.top, 10)
                 }
@@ -167,7 +201,7 @@ struct DMChatInputField: View {
                 .tint(theme.accent)
                 .fontWeightBold()
                 .keyboardShortcut(.defaultAction)
-                .disabled(message.isEmpty)
+                .disabled(!canSend)
                 .onSubmit {
                     if let onSubmit {
                         onSubmit()
@@ -176,7 +210,7 @@ struct DMChatInputField: View {
                         focusedField = .message
                     }
                 }
-                .opacity(message.isEmpty ? 0.5 : 1.0)
+                .opacity(canSend ? 1.0 : 0.5)
                 .padding(.trailing, 5)
                 .padding(.bottom, 5)
             }
@@ -201,6 +235,68 @@ struct DMChatInputField: View {
             if oldValue == nil && newValue != nil { // auto focus after adding quote
                 focusedField = .message
             }
+        }
+    }
+    
+    @ViewBuilder
+    private func filePreview(_ pending: PendingFileAttachment) -> some View {
+        HStack(spacing: 8) {
+            if pending.isImage, let thumb = pending.thumbnailImage {
+                Image(uiImage: thumb)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+                    .clipShape(.rect(cornerRadius: 8))
+            } else {
+                Image(systemName: iconForMimeType(pending.mimeType))
+                    .font(.title)
+                    .frame(width: 44, height: 44)
+                    .foregroundStyle(theme.accent)
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(pending.fileName ?? pending.fileExtension)
+                    .font(.footnote.bold())
+                    .lineLimit(1)
+                Text(pending.formattedFileSize)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Spacer(minLength: 0)
+        }
+        .padding(6)
+        .background(theme.background.opacity(0.5))
+        .clipShape(.rect(cornerRadius: 10))
+        .overlay(alignment: .topTrailing) {
+            Button("Remove", systemImage: "xmark.circle.fill") {
+                withAnimation {
+                    vm.pendingFileAttachment = nil
+                }
+            }
+            .labelStyle(.iconOnly)
+            .offset(x: 5, y: -5)
+        }
+    }
+    
+    private func iconForMimeType(_ mimeType: String) -> String {
+        switch mimeType {
+        case let t where t.contains("pdf"):
+            return "doc.richtext"
+        case let t where t.contains("spreadsheet") || t.contains("excel") || t.contains("csv"):
+            return "tablecells"
+        case let t where t.contains("word") || t.contains("document"):
+            return "doc.text"
+        case let t where t.contains("zip") || t.contains("archive") || t.contains("compressed"):
+            return "doc.zipper"
+        case let t where t.contains("text"):
+            return "doc.plaintext"
+        case let t where t.contains("audio"):
+            return "waveform"
+        case let t where t.contains("video"):
+            return "film"
+        default:
+            return "doc"
         }
     }
     

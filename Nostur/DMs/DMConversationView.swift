@@ -8,6 +8,8 @@
 import SwiftUI
 import NavigationBackport
 import NostrEssentials
+import PhotosUI
+import UniformTypeIdentifiers
 
 struct DMConversationView: View {
     @Environment(\.theme) private var theme
@@ -21,6 +23,10 @@ struct DMConversationView: View {
     @State private var didLoad = false
     @State private var selectedContact: NRContact?
     @State private var showConversationInfoSheet = false
+    
+    // File attachment state
+    @State private var showFileImporter = false
+    @State private var showPhotosPicker = false
     
     @Namespace private var bottomAnchor
     
@@ -140,6 +146,10 @@ struct DMConversationView: View {
                                 VStack {
                                     DMChatInputField(message: $text, vm: vm, startWithFocus: false) {
                                         self.sendMessage()
+                                    } onPickPhotos: {
+                                        showPhotosPicker = true
+                                    } onPickFiles: {
+                                        showFileImporter = true
                                     }
                                     .overlay(alignment: .topTrailing) {
                                         if showThereIsMore {
@@ -160,6 +170,16 @@ struct DMConversationView: View {
                                                 }
                                                 .offset(x: -20, y: -50)
                                         }
+                                    }
+                                    .disabled(vm.isUploadingFile)
+                                    if vm.isUploadingFile {
+                                        HStack(spacing: 8) {
+                                            ProgressView()
+                                            Text("Encrypting and uploading...")
+                                                .font(.footnote)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        .padding(.bottom, 4)
                                     }
                                     if vm.conversationVersion == 4 {
                                         if #available(iOS 16.0, *) {
@@ -274,10 +294,53 @@ struct DMConversationView: View {
                 }
             }
         }
+        .sheet(isPresented: $showPhotosPicker) {
+            if #available(iOS 16.0, *) {
+                DMPhotoPickerSheet { data, mimeType, dimensions in
+                    showPhotosPicker = false
+                    let thumbnail = UIImage(data: data)
+                    vm.pendingFileAttachment = PendingFileAttachment(
+                        data: data,
+                        mimeType: mimeType,
+                        imageDimensions: dimensions,
+                        fileName: nil,
+                        thumbnailImage: thumbnail
+                    )
+                }
+            }
+        }
+        .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.item], allowsMultipleSelection: false) { result in
+            switch result {
+            case .success(let urls):
+                guard let url = urls.first else { return }
+                handleSelectedFile(url)
+            case .failure(let error):
+                errorText = error.localizedDescription
+            }
+        }
     }
     
     private func sendMessage() {
         Task { @MainActor in
+            // If there's a pending file attachment, send that first
+            if let pending = vm.pendingFileAttachment {
+                vm.pendingFileAttachment = nil
+                do {
+                    errorText = nil
+                    try await vm.sendFileMessage17(fileData: pending.data, mimeType: pending.mimeType, imageDimensions: pending.imageDimensions)
+                }
+                catch DMError.PrivateKeyMissing {
+                    AppSheetsModel.shared.readOnlySheetVisible = true
+                    vm.pendingFileAttachment = pending
+                    return
+                }
+                catch {
+                    errorText = error.localizedDescription
+                    vm.pendingFileAttachment = pending
+                    return
+                }
+            }
+            
             guard !text.isEmpty else { return }
             let textToSend = text
             let replyingNow = vm.replyingNow
@@ -303,6 +366,42 @@ struct DMConversationView: View {
                 vm.quotingNow = quotingNow
             }
         }
+    }
+    
+    private func handleSelectedFile(_ url: URL) {
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if accessing { url.stopAccessingSecurityScopedResource() }
+        }
+        
+        guard let data = try? Data(contentsOf: url) else {
+            errorText = "Could not read file"
+            return
+        }
+        
+        let mimeType: String
+        if let utType = UTType(filenameExtension: url.pathExtension) {
+            mimeType = utType.preferredMIMEType ?? "application/octet-stream"
+        } else {
+            mimeType = "application/octet-stream"
+        }
+        
+        let fileName = url.lastPathComponent
+        
+        // For images, create a thumbnail
+        let thumbnail: UIImage? = if mimeType.hasPrefix("image/") {
+            UIImage(data: data)
+        } else {
+            nil
+        }
+        
+        vm.pendingFileAttachment = PendingFileAttachment(
+            data: data,
+            mimeType: mimeType,
+            imageDimensions: nil,
+            fileName: fileName,
+            thumbnailImage: thumbnail
+        )
     }
 }
 

@@ -103,6 +103,7 @@ public enum NEventKind: Codable, Equatable, Hashable {
     case contactList
     case legacyDirectMessage
     case directMessage
+    case fileMessage
     case delete
     case repost
     case chatMessage
@@ -146,6 +147,7 @@ public enum NEventKind: Codable, Equatable, Hashable {
         case     3: self = .contactList
         case     4: self = .legacyDirectMessage
         case    14: self = .directMessage
+        case    15: self = .fileMessage
         case     5: self = .delete
         case     6: self = .repost
         case     7: self = .reaction
@@ -195,6 +197,7 @@ public enum NEventKind: Codable, Equatable, Hashable {
         case .contactList:              return 3
         case .legacyDirectMessage:      return 4
         case .directMessage:            return 14
+        case .fileMessage:              return 15
         case .delete:                   return 5
         case .repost:                   return 6
         case .chatMessage:              return 1311

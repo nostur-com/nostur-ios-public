@@ -1808,6 +1808,7 @@
       }
     },
     "Add/remove from Highlights" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3817,6 +3818,9 @@
         }
       }
     },
+    "Decrypting..." : {
+
+    },
     "default" : {
       "localizations" : {
         "nl" : {
@@ -4351,6 +4355,12 @@
         }
       }
     },
+    "Encrypted Image" : {
+
+    },
+    "Encrypting and uploading..." : {
+
+    },
     "End test" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4807,6 +4817,9 @@
         }
       }
     },
+    "Files" : {
+
+    },
     "Filter" : {
       "localizations" : {
         "nl" : {
@@ -4853,17 +4866,6 @@
       }
     },
     "finished" : {
-      "shouldTranslate" : false
-    },
-    "First: %lf Final: %lf" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "First: %1$lf Final: %2$lf"
-          }
-        }
-      },
       "shouldTranslate" : false
     },
     "Follow" : {
@@ -6037,6 +6039,9 @@
           }
         }
       }
+    },
+    "Loading..." : {
+
     },
     "Lock post to %@" : {
       "localizations" : {
@@ -7668,6 +7673,7 @@
       }
     },
     "Pin this post" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7678,6 +7684,7 @@
       }
     },
     "Pin to your profile" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9735,6 +9742,9 @@
         }
       }
     },
+    "Select Photo or Video" : {
+
+    },
     "Select relay(s)" : {
       "localizations" : {
         "nl" : {
@@ -9810,6 +9820,9 @@
           }
         }
       }
+    },
+    "Send Photo" : {
+
     },
     "Send sats" : {
       "comment" : "Title of sheet showing zap options when sending sats (satoshis)",
@@ -11210,6 +11223,7 @@
       }
     },
     "This will appear at the top of your profile and replace any previously pinned post." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -11772,6 +11786,7 @@
       }
     },
     "Unpin from your profile" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

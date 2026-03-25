@@ -9,15 +9,15 @@ import Foundation
 import CoreData
 import NostrEssentials
 
-// Kind 4 handling, for now we can reuse for kind 14
+// Kind 4 handling, for now we can reuse for kind 14 and kind 15 (file messages)
 func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext) {
-    guard nEvent.kind == .legacyDirectMessage || nEvent.kind == .directMessage else { return }
+    guard nEvent.kind == .legacyDirectMessage || nEvent.kind == .directMessage || nEvent.kind == .fileMessage else { return }
     
     // needed to fetch contact in DMS: so event.firstP is in event.contacts
     
     guard let receiverPubkey = nEvent.firstP() else { return } // if we have no p, something is wrong
     let sender = nEvent.publicKey
-    let participants = if nEvent.kind == .directMessage {
+    let participants = if nEvent.kind == .directMessage || nEvent.kind == .fileMessage {
         allDMparticipants(nEvent) // including sender (.pubkey)
     } else { // .legacyDirectMessage
         Set([sender,receiverPubkey]) // just 1 sender and 1 receveiver
@@ -26,7 +26,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
     
     savedEvent.otherPubkey = receiverPubkey // TODO: Check do we still need this here?
     
-    let groupId = if nEvent.kind == .directMessage {
+    let groupId = if nEvent.kind == .directMessage || nEvent.kind == .fileMessage {
         dmConversationId(nEvent: nEvent) // based on all participants
     } else { // .legacyDirectMessage
         CloudDMState.getConversationId(for: [sender,receiverPubkey]) // just 1 sender and 1 receveiver
@@ -134,6 +134,10 @@ func updateBlurb(_ dmState: CloudDMState, event: Event, context: NSManagedObject
             dmState.blurb = "\(fromName)\(content)"
         }
     }
+    else if event.kind == 15 { // kind 15 file message
+        let fromName = dmState.accountPubkey_ == event.pubkey ? "You: " : ""
+        dmState.blurb = "\(fromName)📎 Sent a file"
+    }
     else { // kind 14 is already decrypted rumor
         // prefix blurb with "You: " if we sent it
         let fromName = dmState.accountPubkey_ == event.pubkey ? "You: " : ""
@@ -157,6 +161,10 @@ func updateBlurb(_ dmState: CloudDMState, nEvent: NEvent, context: NSManagedObje
             let fromName = accountPubkey == nEvent.publicKey ? "You: " : ""
             dmState.blurb = "\(fromName)\(content)"
         }
+    }
+    else if nEvent.kind == .fileMessage { // kind 15 file message
+        let fromName = dmState.accountPubkey_ == nEvent.publicKey ? "You: " : ""
+        dmState.blurb = "\(fromName)📎 Sent a file"
     }
     else { // kind 14 is already decrypted rumor
         // prefix blurb with "You: " if we sent it

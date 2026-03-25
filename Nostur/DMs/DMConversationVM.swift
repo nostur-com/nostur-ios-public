@@ -10,6 +10,38 @@ import CoreData
 import NostrEssentials
 import Combine
 
+struct PendingFileAttachment {
+    let data: Data
+    let mimeType: String
+    let imageDimensions: String?
+    let fileName: String?
+    let thumbnailImage: UIImage?
+    
+    var isImage: Bool { mimeType.hasPrefix("image/") }
+    
+    var fileExtension: String {
+        switch mimeType {
+        case "image/jpeg": return "JPG"
+        case "image/png": return "PNG"
+        case "image/gif": return "GIF"
+        case "image/webp": return "WEBP"
+        case "application/pdf": return "PDF"
+        default:
+            if let sub = mimeType.split(separator: "/").last {
+                return String(sub).uppercased()
+            }
+            return "FILE"
+        }
+    }
+    
+    var formattedFileSize: String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: Int64(data.count))
+    }
+}
+
 class ConversionVM: ObservableObject {
     public var participants: Set<String> // all participants (including sender)
     public var ourAccountPubkey: String {
@@ -56,6 +88,13 @@ class ConversionVM: ObservableObject {
             if quotingNow != nil {
                 quotingNow = nil
             }
+        }
+    }
+    @Published var pendingFileAttachment: PendingFileAttachment? = nil {
+        didSet {
+            if pendingFileAttachment == nil { return }
+            replyingNow = nil
+            quotingNow = nil
         }
     }
     
@@ -267,7 +306,7 @@ class ConversionVM: ObservableObject {
         
         let dmEvents = await withBgContext { bgContext in
             let request = NSFetchRequest<Event>(entityName: "Event")
-            request.predicate = NSPredicate(format: "groupId = %@ AND kind IN {4,14}", conversationId)
+            request.predicate = NSPredicate(format: "groupId = %@ AND kind IN {4,14,15}", conversationId)
             request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
             
             
@@ -490,6 +529,111 @@ class ConversionVM: ObservableObject {
             catch {
 #if DEBUG
                 L.og.debug("🔴🔴 💌💌 error while trying to wrap \(error)")
+#endif
+            }
+        }
+        
+        addedChatMessage?.dmSendResult = sendJobs.reduce(into: [:]) { dmSendJobs, sendJob in
+            dmSendJobs[sendJob.receiver] = RecipientResult(
+                recipientPubkey: sendJob.receiver,
+                relayResults: sendJob.relays.reduce(into: [:]) { relays, relay in
+                    relays[relay] = .sending
+                }
+            )
+        }
+        
+        guard let addedChatMessage else { return }
+        
+        for job in sendJobs {
+            sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: job.relays, rumorId: rumorEvent.id, addedChatMessage: addedChatMessage)
+        }
+    }
+    
+    // MARK: - File Message Sending (Kind 15)
+    
+    @Published var isUploadingFile = false
+    
+    @MainActor
+    public func sendFileMessage17(fileData: Data, mimeType: String, imageDimensions: String? = nil) async throws {
+        guard SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL else {
+            throw DMFileError.blossomNotConfigured
+        }
+        guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: ourAccountPubkey), let ourkeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { throw DMError.PrivateKeyMissing }
+        guard let blossomServerUrl = SettingsStore.shared.blossomServerList.first, let blossomServer = URL(string: blossomServerUrl) else {
+            throw DMFileError.blossomNotConfigured
+        }
+        
+        isUploadingFile = true
+        defer { isUploadingFile = false }
+        
+        // 1. Encrypt the file with AES-GCM
+        let encrypted = try encryptFileForDM(data: fileData)
+        
+        // 2. Upload encrypted data to Blossom
+        let blossomFile = BlossomUploadFile(data: encrypted.encryptedData, contentType: "application/octet-stream")
+        let authHeader = try await getBlossomAuthHeader(keys: Keys(privateKeyHex: privKey), blossomFile: blossomFile)
+        let downloadUrl = try await blossomUpload(authHeader: authHeader, blossomFile: blossomFile, contentType: "application/octet-stream", blossomServer: blossomServer, timeout: 60.0)
+        
+        // 3. Build kind 15 rumor tags
+        var tags: [Tag] = participants.map { Tag(["p", $0]) }
+        tags.append(Tag(["file-type", mimeType]))
+        tags.append(Tag(["encryption-algorithm", "aes-gcm"]))
+        tags.append(Tag(["decryption-key", encrypted.key.map { String(format: "%02x", $0) }.joined()]))
+        tags.append(Tag(["decryption-nonce", encrypted.nonce.map { String(format: "%02x", $0) }.joined()]))
+        tags.append(Tag(["x", encrypted.encryptedHash]))
+        tags.append(Tag(["ox", encrypted.originalHash]))
+        tags.append(Tag(["size", String(encrypted.fileSize)]))
+        
+        if let imageDimensions {
+            tags.append(Tag(["dim", imageDimensions]))
+        }
+        
+        // 4. Create kind 15 rumor event
+        let messageDate = Date()
+        let message = NostrEssentials.Event(
+            pubkey: ourAccountPubkey,
+            content: downloadUrl,
+            kind: 15,
+            created_at: Int(messageDate.timeIntervalSince1970),
+            tags: tags
+        )
+        let rumorEvent = createRumor(message)
+        
+        let rumorNEvent = NEvent.fromNostrEssentialsEvent(rumorEvent)
+        let addedChatMessage = addToView(rumorNEvent, ourkeys, messageDate)
+        
+        // 5. Gift wrap and send to all participants (same as sendMessage17)
+        sendJobs = []
+        for (n, receiverPubkey) in participants.enumerated() {
+            do {
+                let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
+                if receiverPubkey == ourAccountPubkey {
+                    await bg().perform {
+                        _ = Event.saveEvent(event: rumorEvent, wrapId: giftWrap.id, context: bg())
+                        MessageParser.shared.pendingOkWrapIds.insert(giftWrap.id)
+                    }
+                }
+                
+                let relays = await getDMrelays(for: receiverPubkey)
+#if DEBUG
+                L.og.debug("📎💌 1. (\(n+1)/\(self.participants.count)) Preparing file sendJobs. To: \(nameOrPubkey(receiverPubkey)) relays: \(relays)")
+#endif
+                
+                let relaysWithFallback = if relays.isEmpty {
+                    await getDMrelays(for: ourAccountPubkey)
+                } else {
+                    relays
+                }
+                
+                if relaysWithFallback.isEmpty {
+                    addedChatMessage?.dmSendResult[receiverPubkey] = RecipientResult(recipientPubkey: receiverPubkey, relayResults: [:])
+                }
+                
+                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relaysWithFallback))
+            }
+            catch {
+#if DEBUG
+                L.og.debug("🔴🔴 📎💌 error while trying to wrap file message \(error)")
 #endif
             }
         }

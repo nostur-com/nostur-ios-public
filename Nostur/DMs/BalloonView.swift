@@ -44,9 +44,15 @@ struct BalloonView17: View {
                         }
                         .padding(.trailing, 15)
                 }
-                 
-                DMContentRenderer(pubkey: nrChatMessage.pubkey, contentElements: nrChatMessage.contentElementsDetail, availableWidth: availableWidth, isSentByCurrentUser: isSentByCurrentUser)
-                    .padding(.trailing, 16) // space for menu button
+                
+                if let fileInfo = nrChatMessage.fileMessageInfo {
+                    DMFileMessageView(fileInfo: fileInfo, isSentByCurrentUser: isSentByCurrentUser, isAccepted: vm.isAccepted)
+                        .padding(.trailing, 16)
+                }
+                else {
+                    DMContentRenderer(pubkey: nrChatMessage.pubkey, contentElements: nrChatMessage.contentElementsDetail, availableWidth: availableWidth, isSentByCurrentUser: isSentByCurrentUser)
+                        .padding(.trailing, 16) // space for menu button
+                }
                 
                 if let quotedEvent = nrChatMessage.quotedEvent {
                     EmbeddedChatMessage(nrChatMessage: quotedEvent, isSentByCurrentUser: isSentByCurrentUser)

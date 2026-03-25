@@ -14,6 +14,7 @@ struct GalleryFullScreenSwiper: View {
 
     public var initialIndex: Int
     public var items: [GalleryItem]
+    public var isEncrypted: Bool = false
     public var usePFPpipeline: Bool = false // set true to load fixed PFP from cache (else nothing in cache)
     
     @State private var activeIndex: Int?
@@ -208,7 +209,7 @@ struct GalleryFullScreenSwiper: View {
             }
             .foregroundColor(theme.accent)
             
-            if let activeIndex = activeIndex, activeIndex < items.count {
+            if !isEncrypted, let activeIndex = activeIndex, activeIndex < items.count {
                 Button("Copy image URL") {
                     UIPasteboard.general.string = items[activeIndex].url.absoluteString
                     sendNotification(.anyStatus, ("Image URL copied to clipboard", "APP_NOTICE"))

@@ -53,6 +53,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     var galleryItems: [GalleryItem] = []
     
     var plainTextOnly = false
+    var fileMessageInfo: FileMessageInfo? = nil
     
     var anyName: String {
         nrContact.anyName
@@ -105,6 +106,10 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         
         self.inWoT = WebOfTrust.shared.isAllowed(nEvent.publicKey)
         
+        // Parse kind 15 file message metadata
+        if nEvent.kind == .fileMessage {
+            self.fileMessageInfo = FileMessageInfo.from(nEvent: nEvent)
+        }
         
         // Show if ["client", "Name", ""31990:..." ...]
         // Hide if ["client", ""31990:..." ..]
