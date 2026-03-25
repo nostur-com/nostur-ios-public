@@ -51,7 +51,8 @@ struct BalloonView17: View {
                 }
                 else {
                     DMContentRenderer(pubkey: nrChatMessage.pubkey, contentElements: nrChatMessage.contentElementsDetail, availableWidth: availableWidth, isSentByCurrentUser: isSentByCurrentUser)
-                        .padding(.trailing, 16) // space for menu button
+                        .environment(\.nxViewingContext, [.chatMessage])
+                        .padding(.trailing, 22) // space for menu button
                 }
                 
                 if let quotedEvent = nrChatMessage.quotedEvent {

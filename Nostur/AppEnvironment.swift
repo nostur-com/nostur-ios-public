@@ -112,6 +112,7 @@ enum NXViewingContextOptions {
     case screenshot // hide 'Sent to 0 relays' in preview footer, disable animated gifs, Text instead of NRText
     
     case feedPreview // to enable Follow button on every post for follow pack previews
+    case chatMessage // DM chat bubble — don't expand text to full width
 }
 
 struct AvailableWidthEnvironmentKey: EnvironmentKey {

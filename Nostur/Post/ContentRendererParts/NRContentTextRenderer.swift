@@ -99,7 +99,7 @@ struct NRContentTextRendererInner: View {
                 .tint(accentColor)
                 .accentColor(accentColor)
                 .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: nxViewingContext.contains(.chatMessage) ? nil : .infinity, alignment: .leading)
                 .onTapGesture {
                     onTap?()
                 }
