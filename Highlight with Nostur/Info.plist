@@ -19,10 +19,12 @@
 				<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
 				<integer>1</integer>
 			</dict>
-			<key>NSExtensionJavaScriptPreprocessingFile</key>
-			<string>Action</string>
-			<key>NSExtensionServiceAllowsFinderPreviewItem</key>
-			<true/>
+				<key>NSExtensionJavaScriptPreprocessingFile</key>
+				<string>Action</string>
+				<key>NSExtensionServiceRoleType</key>
+				<string>NSExtensionServiceRoleTypeViewer</string>
+				<key>NSExtensionServiceAllowsFinderPreviewItem</key>
+				<true/>
 			<key>NSExtensionServiceAllowsTouchBarItem</key>
 			<true/>
 			<key>NSExtensionServiceFinderPreviewIconName</key>
