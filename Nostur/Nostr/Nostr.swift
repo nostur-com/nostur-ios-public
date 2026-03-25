@@ -295,16 +295,30 @@ struct NSerializableEvent: Encodable {
 
 public struct NEvent: Codable {
     
-    public var id: String
+    public var id: String = ""
     public var publicKey: String
     public var createdAt: NTimestamp
     public var kind: NEventKind
     public var tags: [NostrTag]
     public var content: String
     public var signature: String? = ""
+    
+    public func fallbackId() -> String {
+        if id != "" { return id }
+        else {
+            let serializableEvent = NSerializableEvent(publicKey: self.publicKey, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
+
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            let serializedEvent = try! encoder.encode(serializableEvent)
+            let sha256Serialized = SHA256.hash(data: serializedEvent)
+
+            return String(bytes:sha256Serialized.bytes)
+        }
+    }
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "id"
         case publicKey = "pubkey"
         case createdAt = "created_at"
         case kind
@@ -623,7 +637,7 @@ extension NEvent {
     
     static public func fromNostrEssentialsEvent(_ event: NostrEssentials.Event) -> NEvent {
         return NEvent(
-            id: event.id,
+            id: event.id ?? "",
             publicKey: event.pubkey,
             createdAt: NTimestamp(timestamp: event.created_at),
             content: event.content,

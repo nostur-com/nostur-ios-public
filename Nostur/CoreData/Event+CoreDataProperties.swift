@@ -815,7 +815,7 @@ extension Event {
             let uniqueRelays = Set(relays)
             savedEvent.relays = uniqueRelays.joined(separator: " ")
         }
-        updateEventCache(wrapId ?? event.id, status: .SAVED, relays: relays)
+        updateEventCache(wrapId ?? event.fallbackId(), status: .SAVED, relays: relays)
         
         if (event.kind == .shortVoiceMessage || event.kind == .textNote || NIP22_COMMENT_KINDS.contains(event.kind.id)) {
             EventCache.shared.setObject(for: event.id, value: savedEvent)
@@ -883,7 +883,7 @@ extension Event {
     static func fromNEvent(nEvent: NEvent, flags: String = "", context: NSManagedObjectContext) -> Event {
         let savedEvent = Event(context: context)
         savedEvent.insertedAt = Date.now
-        savedEvent.id = nEvent.id
+        savedEvent.id = nEvent.fallbackId()
         savedEvent.kind = Int64(nEvent.kind.id)
         savedEvent.created_at = Int64(nEvent.createdAt.timestamp)
         savedEvent.content = nEvent.content

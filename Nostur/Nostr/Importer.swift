@@ -250,7 +250,11 @@ class Importer {
                             
                 
                             // Unwrap then handle rumor like normal event
-                            let (rumor, _) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
+                            var (rumor, _) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
+                            
+                            if rumor.id == nil { // some clients don't add rumor id, but we need them
+                                rumor.id = rumor.fallbackId()
+                            }
                             
                             // Do we support the rumor kind?
                             guard SUPPORTED_RUMOR_KINDS.contains(rumor.kind) else { continue }
@@ -372,7 +376,11 @@ class Importer {
                             
                 
                             // Unwrap then handle rumor like normal event
-                            let (rumor, seal) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
+                            var (rumor, seal) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
+                            
+                            if rumor.id == nil { // some clients don't add rumor id, but we need them
+                                rumor.id = rumor.fallbackId()
+                            }
 
                             // Do we support the rumor kind?
                             guard SUPPORTED_RUMOR_KINDS.contains(rumor.kind) else { continue }

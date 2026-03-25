@@ -499,11 +499,12 @@ class ConversionVM: ObservableObject {
             // wrap message
             do {
                 let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
+                let giftWrapId = giftWrap.fallbackId()
                 if receiverPubkey == ourAccountPubkey {
                     // save message to local db and giftwrap to ourselve (relay backup)  (we can't unwrap sent to receipents, can only unwrap received to our pubkey)
                     await bg().perform {
-                        _ = Event.saveEvent(event: rumorEvent, wrapId: giftWrap.id, context: bg())
-                        MessageParser.shared.pendingOkWrapIds.insert(giftWrap.id) // When "OK" comes back, "relays" on rumor need to be updated, not on wrap.
+                        _ = Event.saveEvent(event: rumorEvent, wrapId: giftWrapId, context: bg())
+                        MessageParser.shared.pendingOkWrapIds.insert(giftWrapId) // When "OK" comes back, "relays" on rumor need to be updated, not on wrap.
                     }
                 }
 
@@ -543,9 +544,10 @@ class ConversionVM: ObservableObject {
         }
         
         guard let addedChatMessage else { return }
+        let rumorEventId = rumorEvent.fallbackId()
         
         for job in sendJobs {
-            sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: job.relays, rumorId: rumorEvent.id, addedChatMessage: addedChatMessage)
+            sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: job.relays, rumorId: rumorEventId, addedChatMessage: addedChatMessage)
         }
     }
     
@@ -607,10 +609,11 @@ class ConversionVM: ObservableObject {
         for (n, receiverPubkey) in participants.enumerated() {
             do {
                 let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
+                let giftWrapId = giftWrap.fallbackId()
                 if receiverPubkey == ourAccountPubkey {
                     await bg().perform {
-                        _ = Event.saveEvent(event: rumorEvent, wrapId: giftWrap.id, context: bg())
-                        MessageParser.shared.pendingOkWrapIds.insert(giftWrap.id)
+                        _ = Event.saveEvent(event: rumorEvent, wrapId: giftWrapId, context: bg())
+                        MessageParser.shared.pendingOkWrapIds.insert(giftWrapId)
                     }
                 }
                 
@@ -648,9 +651,10 @@ class ConversionVM: ObservableObject {
         }
         
         guard let addedChatMessage else { return }
+        let rumorEventId = rumorEvent.fallbackId()
         
         for job in sendJobs {
-            sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: job.relays, rumorId: rumorEvent.id, addedChatMessage: addedChatMessage)
+            sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: job.relays, rumorId: rumorEventId, addedChatMessage: addedChatMessage)
         }
     }
     
