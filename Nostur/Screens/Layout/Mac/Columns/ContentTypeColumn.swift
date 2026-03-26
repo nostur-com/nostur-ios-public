@@ -77,6 +77,13 @@ struct ContentTypeColumn: View {
                     AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .shortVoiceMessage)
                 }
             }
+            
+            if case .vine(_) = config.columnType {
+                Button("New Short Video", systemImage: "square.and.pencil") {
+                    guard isFullAccount() else { showReadOnlyMessage(); return }
+                    AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .shortVideos)
+                }
+            }
         }
     }
     

@@ -66,17 +66,14 @@ func compressVideo(inputURL: URL, outputURL: URL, handler:@escaping (AVAssetExpo
     }
 }
 
-func compressVideoSynchronously(inputURL: URL, outputURL: URL) -> URL? {
-    let semaphore = DispatchSemaphore(value: 0)
-    var resultURL: URL? = nil
-    
-    compressVideo(inputURL: inputURL, outputURL: outputURL) { status in
-        if status == .completed {
-            resultURL = outputURL
+func compressVideoAsync(inputURL: URL, outputURL: URL) async -> URL? {
+    await withCheckedContinuation { continuation in
+        compressVideo(inputURL: inputURL, outputURL: outputURL) { status in
+            if status == .completed {
+                continuation.resume(returning: outputURL)
+            } else {
+                continuation.resume(returning: nil)
+            }
         }
-        semaphore.signal()
     }
-    
-    semaphore.wait()
-    return resultURL
 }

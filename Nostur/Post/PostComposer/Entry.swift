@@ -35,6 +35,8 @@ struct Entry: View {
             String(localized:"Add a caption", comment: "Placeholder text for adding a caption")
             case .highlight:
             String(localized:"Add comment", comment: "Placeholder text for adding a comment")
+            case .shortVideos:
+            String(localized:"Add a caption", comment: "Placeholder text for adding a caption to a vine")
             default:
             String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
         }
@@ -45,6 +47,8 @@ struct Entry: View {
     
     private var shouldDisablePostButton: Bool {
         if (kind == .picture && typingTextModel.pastedImages.isEmpty) { return true }
+        
+        if (kind == .shortVideos && typingTextModel.pastedVideos.isEmpty) { return true }
             
         if (typingTextModel.sending || typingTextModel.uploading) { return true }
         
@@ -306,7 +310,7 @@ struct Entry: View {
         
         ToolbarItem(placement: .primaryAction) {
             HStack {
-                if kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
+                if kind != .shortVideos && kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
                     self.privateReplyButton
                     
                     if showVoiceRecorderButton {
@@ -359,7 +363,7 @@ struct Entry: View {
         }
         
         ToolbarItemGroup(placement: .primaryAction) {
-            if  kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
+            if kind != .shortVideos && kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
                 
                 self.privateReplyButton
                 
@@ -409,7 +413,7 @@ struct Entry: View {
             Button("Cancel", systemImage: "xmark") { onDismiss() }
         }
         
-        if kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
+        if kind != .shortVideos && kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
             ToolbarItemGroup(placement: .primaryAction) {
                 
                 self.privateReplyButton

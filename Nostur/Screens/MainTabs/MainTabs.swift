@@ -199,7 +199,7 @@ struct MainTabs26: View {
                         .foregroundStyle(theme.accent)
                         .tint(theme.accent)
                 }
-                .hidden((selectedTab != "Main") || (selectedTab == "Main" && selectedSubTab == "Vine"))
+                .hidden(selectedTab != "Main")
 
             }
             .tabBarMinimizeBehavior(.onScrollDown)
@@ -257,6 +257,9 @@ struct MainTabs26: View {
             }
             else if oldTab == "Main" && selectedSubTab == "Yak" {
                 AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .shortVoiceMessage)
+            }
+            else if oldTab == "Main" && selectedSubTab == "Vine" {
+                AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .shortVideos)
             }
             else {
                 AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .textNote)

@@ -567,6 +567,9 @@
         }
       }
     },
+    "/ %@ max" : {
+
+    },
     "%@" : {
       "localizations" : {
         "nl" : {
@@ -1539,7 +1542,7 @@
       "shouldTranslate" : false
     },
     "Add a caption" : {
-      "comment" : "Placeholder text for adding a caption",
+      "comment" : "Placeholder text for adding a caption\nPlaceholder text for adding a caption to a vine",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3561,6 +3564,9 @@
         }
       }
     },
+    "Create a short video" : {
+
+    },
     "Create new account" : {
       "comment" : "Button to create a new account\nButton to start creating a new account\nNavigation title of create new account screen",
       "localizations" : {
@@ -4178,6 +4184,9 @@
           }
         }
       }
+    },
+    "Drag handles to trim video" : {
+
     },
     "Drop image..." : {
       "localizations" : {
@@ -5776,6 +5785,9 @@
         }
       }
     },
+    "Library" : {
+
+    },
     "Lightning Address (LUD-06/16)" : {
       "comment" : "Label for entering a Lightning Address on Edit Profile screen",
       "localizations" : {
@@ -6049,6 +6061,9 @@
         }
       }
     },
+    "Loading video..." : {
+
+    },
     "Loading..." : {
 
     },
@@ -6224,6 +6239,9 @@
           }
         }
       }
+    },
+    "Max 6 seconds" : {
+
     },
     "May be required to access special features on this relay" : {
       "localizations" : {
@@ -6912,6 +6930,9 @@
           }
         }
       }
+    },
+    "New Short Video" : {
+
     },
     "New Voice Message" : {
       "localizations" : {
@@ -8688,6 +8709,9 @@
           }
         }
       }
+    },
+    "Record" : {
+
     },
     "Record audio" : {
       "extractionState" : "stale",
@@ -11490,6 +11514,9 @@
         }
       }
     },
+    "Trim Video" : {
+
+    },
     "Try again" : {
       "comment" : "Button try again",
       "localizations" : {
@@ -11928,6 +11955,9 @@
         }
       }
     },
+    "Use Video" : {
+
+    },
     "User does not have a lightning address set" : {
       "shouldTranslate" : false
     },
@@ -11991,6 +12021,9 @@
     },
     "Verifying... Done." : {
       "shouldTranslate" : false
+    },
+    "Video ready" : {
+
     },
     "Videos" : {
       "localizations" : {

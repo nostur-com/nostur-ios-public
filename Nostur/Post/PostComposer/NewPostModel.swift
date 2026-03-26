@@ -39,6 +39,8 @@ public final class TypingTextModel: ObservableObject {
     
     @Published var voiceRecording: VoiceRecording?
     
+    var vineVideoDuration: Double? // Duration in seconds for vine (short video) posts
+    
     public var compressedVideoFiles: [URL] = [] // need a place to track tmp files created so we can clean up after upload
     @Published var selectedMentions: Set<NRContact> = [] // will become p-tags in the final post
     @Published var unselectedMentions: Set<NRContact> = [] // unselected from reply-p's, but maybe mentioned as nostr:npub, so should not be put back in p
@@ -179,7 +181,7 @@ public final class NewPostModel: ObservableObject {
                 // TODO: remove hashing same data over and over, clean up a bit
                 
                 // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
-                let uploadItems: [(Data, String, String?, Int, NEvent)] = prepareUploadItems(
+                let uploadItems: [(Data, String, String?, Int, NEvent)] = await prepareUploadItems(
                     pubkey: pubkey,
                     images: typingTextModel.pastedImages,
                     videos: typingTextModel.pastedVideos,
@@ -321,7 +323,7 @@ public final class NewPostModel: ObservableObject {
                 let boundary = UUID().uuidString
                 
                 // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
-                let uploadItems: [(Data, String, String?, Int, NEvent)] = prepareUploadItems(
+                let uploadItems: [(Data, String, String?, Int, NEvent)] = await prepareUploadItems(
                     pubkey: pubkey,
                     images: typingTextModel.pastedImages,
                     videos: typingTextModel.pastedVideos,
@@ -456,7 +458,7 @@ public final class NewPostModel: ObservableObject {
             bgContext.perform {
                 let savedEvent = Event.saveEvent(event: finalEvent, flags: "nsecbunker_unsigned", context: bgContext)
                 savedEvent.cancellationId = cancellationId
-                if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
+                if ([1,1111,1222,1244,6,20,22,9802,30023,34235,34236].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         if let lockToThisRelay = lockToThisRelay, self.lockToSingleRelay {
                             sendNotification(.newSingleRelayPostSaved, (savedEvent, lockToThisRelay))
@@ -504,7 +506,7 @@ public final class NewPostModel: ObservableObject {
                 }
                 
                 DataProvider.shared().saveToDiskNow(.bgContext)
-                if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
+                if ([1,1111,1222,1244,6,20,22,9802,30023,34235,34236].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         if let lockToThisRelay = lockToThisRelay, self.lockToSingleRelay {
                             sendNotification(.newSingleRelayPostSaved, (savedEvent, lockToThisRelay))
@@ -578,6 +580,48 @@ public final class NewPostModel: ObservableObject {
                 imetaParts.append("sha256 \(hash)")
             }
 
+            nEvent.tags.append(NostrTag(imetaParts))
+        }
+        
+        // Handle short video (vine)
+        else if nEvent.kind == .shortVideos, let imeta = imetas.first {
+            // title tag holds the caption, content is left empty (openvine convention)
+            let caption = content
+            content = ""
+            
+            // d tag - use hash as identifier
+            let dValue = imeta.hash ?? UUID().uuidString
+            nEvent.tags.append(NostrTag(["d", dValue]))
+            
+            // title tag (caption)
+            nEvent.tags.append(NostrTag(["title", caption]))
+            
+            // published_at
+            let publishedAt = String(Int(Date().timeIntervalSince1970))
+            nEvent.tags.append(NostrTag(["published_at", publishedAt]))
+            
+            // duration tag
+            if let videoDuration = typingTextModel.vineVideoDuration {
+                nEvent.tags.append(NostrTag(["duration", String(Int(videoDuration))]))
+            }
+            
+            // alt tag
+            nEvent.tags.append(NostrTag(["alt", caption.isEmpty ? "Vertical Video" : caption]))
+            
+            // client tag
+            nEvent.tags.append(NostrTag(["client", "nostur"]))
+            
+            // imeta tag
+            var imetaParts: [String] = ["imeta", "url \(imeta.url)", "m video/mp4"]
+            if let dim = imeta.dim, !dim.isEmpty {
+                imetaParts.append("dim \(dim)")
+            }
+            if let hash = imeta.hash, !hash.isEmpty {
+                imetaParts.append("x \(hash)")
+            }
+            if let blurhash = imeta.blurhash, !blurhash.isEmpty {
+                imetaParts.append("blurhash \(blurhash)")
+            }
             nEvent.tags.append(NostrTag(imetaParts))
         }
         
@@ -1036,7 +1080,7 @@ public func getUnsignedAuthorizationHeaderEvent96(pubkey: String, sha256hex: Str
 }
 
 
-public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], videos: [PostedVideoMeta] = [], voiceMessage: VoiceRecording? = nil, typingTextModel: TypingTextModel, uploadMethod: UploadMethod) -> [(Data, String, String?, Int, NEvent)] {
+public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], videos: [PostedVideoMeta] = [], voiceMessage: VoiceRecording? = nil, typingTextModel: TypingTextModel, uploadMethod: UploadMethod) async -> [(Data, String, String?, Int, NEvent)] {
     if let voiceMessage = voiceMessage {
         guard let recordingData = try? Data(contentsOf: voiceMessage.localFileURL) else { return [] }
         
@@ -1059,7 +1103,7 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
             
             let boundary = UUID().uuidString
             
-            return images
+            var result: [(Data, String, String?, Int, NEvent)] = images
                 .compactMap({ (imageMeta: PostedImageMeta) -> (Data, String, String?, Int, NEvent)? in // Resize images
                     
                     // .GIF
@@ -1108,30 +1152,27 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
                         return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
                     }
                     return nil
-                }) + videos
-                .compactMap({ (videoMeta: PostedVideoMeta) -> (Data, String, String?, Int, NEvent)? in // compress
-                    let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
-                    typingTextModel.compressedVideoFiles.append(compressedURL)
-                    if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
-                        
-                        let filename = "media.mp4"
-                        let contentType = contentType(for: filename)
-                        let httpBody = makeHttpBody(mediaData: compressedVideoData, contentType: contentType, boundary: boundary)
-                        let sha256hex = httpBody.sha256().hexEncodedString()
-                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
-                        
-                        return (compressedVideoData, "video/mp4", nil, (typingTextModel.pastedImages.count + videoMeta.index), unsignedAuthHeaderEvent)
-                    }
-                    
-                    // Version without compression: TODO: Add toggle for compression ON/OFF
-//                        if let compressedVideoData = try? Data(contentsOf: videoMeta.videoURL) {
-//                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
-//                        }
-                    return nil
                 })
+            
+            for videoMeta in videos {
+                let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
+                typingTextModel.compressedVideoFiles.append(compressedURL)
+                if let url = await compressVideoAsync(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
+                    
+                    let filename = "media.mp4"
+                    let contentType = contentType(for: filename)
+                    let httpBody = makeHttpBody(mediaData: compressedVideoData, contentType: contentType, boundary: boundary)
+                    let sha256hex = httpBody.sha256().hexEncodedString()
+                    let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
+                    
+                    result.append((compressedVideoData, "video/mp4", nil, (typingTextModel.pastedImages.count + videoMeta.index), unsignedAuthHeaderEvent))
+                }
+            }
+            
+            return result
         }
         else { // case == .blossom
-            return images
+            var result: [(Data, String, String?, Int, NEvent)] = images
                 .compactMap { imageMeta in // Resize images
                     
                     // .GIF
@@ -1173,23 +1214,20 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
                         return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
                     }
                     return nil
-                } + videos
-                .compactMap { videoMeta in // compress
-                    let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
-                    //                typingTextModel.compressedVideoFiles.append(compressedURL)
-                    if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
-                        
-                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: compressedVideoData.sha256().hexEncodedString())
-                        
-                        return (compressedVideoData, "video/mp4", nil, images.count + videoMeta.index, unsignedAuthHeaderEvent)
-                    }
-                    
-                    // Version without compression: TODO: Add toggle for compression ON/OFF
-                    //                        if let compressedVideoData = try? Data(contentsOf: videoMeta.videoURL) {
-                    //                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
-                    //                        }
-                    return nil
                 }
+            
+            for videoMeta in videos {
+                let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
+                //                typingTextModel.compressedVideoFiles.append(compressedURL)
+                if let url = await compressVideoAsync(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
+                    
+                    let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: compressedVideoData.sha256().hexEncodedString())
+                    
+                    result.append((compressedVideoData, "video/mp4", nil, images.count + videoMeta.index, unsignedAuthHeaderEvent))
+                }
+            }
+            
+            return result
         }
     }
 }

@@ -406,6 +406,8 @@ struct MainFeedsScreen: View {
                                 .picture
                             } else if selectedSubTab == "Yak" {
                                 .shortVoiceMessage
+                            } else if selectedSubTab == "Vine" {
+                                .shortVideos
                             } else {
                                 .textNote
                             }

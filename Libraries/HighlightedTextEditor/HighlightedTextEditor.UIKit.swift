@@ -281,7 +281,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             barButtons.append(voiceRecording)
         }
         
-        if kind != .picture && kind != .highlight {
+        if kind != .shortVideos && kind != .picture && kind != .highlight {
             let nestsButton = UIButton(type: .system)
             nestsButton.setImage(UIImage(systemName: "dot.radiowaves.left.and.right"), for: .normal)
             nestsButton.tintColor = UIColor(Themes.default.theme.accent)
@@ -304,7 +304,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         let photos = UIBarButtonItem(customView: photoButton)
         barButtons.append(photos)
         
-        if kind != .picture {
+        if kind != .shortVideos && kind != .picture {
             let videoButton = UIButton(type: .system)
             videoButton.setImage(UIImage(systemName: "video"), for: .normal)
             videoButton.tintColor = UIColor(Themes.default.theme.accent)
@@ -368,7 +368,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             barButtons.append(voiceRecording)
         }
         
-        if kind != .picture && kind != .highlight {
+        if kind != .shortVideos && kind != .picture && kind != .highlight {
             let nestsButton = UIButton(type: .system)
             nestsButton.setImage(UIImage(systemName: "dot.radiowaves.left.and.right"), for: .normal)
             nestsButton.tintColor = UIColor(Themes.default.theme.accent)
@@ -402,7 +402,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             barButtons.append(fixedSpace)
             barButtons.append(photos)
             
-            if kind != .picture {
+            if kind != .shortVideos && kind != .picture {
                 let videoButton = UIButton(type: .system)
                 videoButton.setImage(UIImage(systemName: "video"), for: .normal)
                 videoButton.tintColor = UIColor(Themes.default.theme.accent)
@@ -414,7 +414,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             }
         }
         
-        if kind != .picture {
+        if kind != .shortVideos && kind != .picture {
             let gifButton = UIButton(type: .system)
             gifButton.setImage(UIImage(named: "GifButton"), for: .normal)
             gifButton.tintColor = UIColor(Themes.default.theme.accent)

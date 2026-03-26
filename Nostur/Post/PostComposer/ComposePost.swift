@@ -46,6 +46,15 @@ struct ComposePost: View {
     @State private var showAudioRecorder: Bool = false
     @State private var showSwitchBackButton: Bool = true
     
+    // Vine (short video) states
+    @State private var vineVideoSourceURL: URL? // URL from picker or camera before trimming
+    @State private var vineTrimmedVideoURL: URL? // URL after trimming
+    @State private var vineTrimmedDuration: Double = 0
+    @State private var vineShowCamera: Bool = false
+    @State private var vineShowTrimmer: Bool = false
+    @State private var vineVideoPickerShown: Bool = false
+    @State private var vineLoadingVideo: Bool = false
+    
     private var showAutoPilotPreview: Bool {
         guard !SettingsStore.shared.lowDataMode, SettingsStore.shared.enableOutboxPreview else { return false } // Don't continue with additional outbox relays on low data mode, or settings toggle
         guard SettingsStore.shared.enableOutboxRelays, vpnGuardOK() else { return false } // Check if Enhanced Relay Routing toggle is turned on
@@ -263,6 +272,135 @@ struct ComposePost: View {
                                             }
                                         }
                                     }
+                                
+                                case .shortVideos:
+                                    VStack(alignment: .leading) {
+                                        if let vineTrimmedVideoURL {
+                                            // Video is trimmed and ready - show preview + caption
+                                            HStack(alignment: .top) {
+                                                InlineAccountSwitcher(activeAccount: account, onChange: { account in
+                                                    vm.activeAccount = account
+                                                }).equatable()
+                                                
+                                                VStack(alignment: .leading, spacing: 0) {
+                                                    PostHeaderView(pubkey: account.publicKey, name: account.anyName, via: NIP89_APP_NAME, createdAt: Date.now, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: false)
+                                                }
+                                            }
+                                            .padding(.top, 10)
+                                            .zIndex(200)
+                                            
+                                            // Video thumbnail preview
+                                            VineVideoPreview(videoURL: vineTrimmedVideoURL, duration: vineTrimmedDuration, onRemove: {
+                                                try? FileManager.default.removeItem(at: vineTrimmedVideoURL)
+                                                self.vineTrimmedVideoURL = nil
+                                                self.vineTrimmedDuration = 0
+                                                vm.typingTextModel.pastedVideos = []
+                                            })
+                                            .padding(.vertical, 8)
+                                            
+                                            textEntry
+                                                .id(textfield)
+                                        } else {
+                                            // No video yet - show source selection or loading
+                                            VStack(spacing: 20) {
+                                                Spacer()
+                                                
+                                                if vineLoadingVideo {
+                                                    ProgressView()
+                                                        .scaleEffect(1.5)
+                                                    Text("Loading video...")
+                                                        .font(.subheadline)
+                                                        .foregroundStyle(.secondary)
+                                                } else {
+                                                    Text("Create a short video")
+                                                        .font(.headline)
+                                                        .foregroundStyle(.secondary)
+                                                    
+                                                    HStack(spacing: 30) {
+                                                        Button {
+                                                            vineShowCamera = true
+                                                        } label: {
+                                                            VStack(spacing: 8) {
+                                                                Image(systemName: "video.fill")
+                                                                    .font(.largeTitle)
+                                                                Text("Record")
+                                                                    .font(.subheadline)
+                                                            }
+                                                        }
+                                                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
+                                                        
+                                                        Button {
+                                                            vineVideoPickerShown = true
+                                                        } label: {
+                                                            VStack(spacing: 8) {
+                                                                Image(systemName: "photo.on.rectangle")
+                                                                    .font(.largeTitle)
+                                                                Text("Library")
+                                                                    .font(.subheadline)
+                                                            }
+                                                        }
+                                                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
+                                                    }
+                                                    
+                                                    Text("Max 6 seconds")
+                                                        .font(.caption)
+                                                        .foregroundStyle(.secondary)
+                                                }
+                                                
+                                                Spacer()
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                        }
+                                    }
+                                    .padding(10)
+                                    .sheet(isPresented: $vineShowCamera) {
+                                        VideoCameraView(
+                                            onRecorded: { url in
+                                                vineShowCamera = false
+                                                // Camera already limits to 6s, so go straight to ready
+                                                vineVideoSourceURL = url
+                                                // Duration check happens in onChange(of: vineVideoSourceURL)
+                                            },
+                                            onCancel: {
+                                                vineShowCamera = false
+                                            }
+                                        )
+                                    }
+                                    .sheet(isPresented: $vineVideoPickerShown) {
+                                        VineVideoPicker(selectedVideoURL: $vineVideoSourceURL, isLoading: $vineLoadingVideo)
+                                    }
+                                    .onChange(of: vineVideoSourceURL) { url in
+                                        if url != nil && !vineShowTrimmer {
+                                            vineShowTrimmer = true
+                                        }
+                                    }
+                                    .sheet(isPresented: $vineShowTrimmer) {
+                                        if let sourceURL = vineVideoSourceURL {
+                                            NBNavigationStack {
+                                                VideoTrimmerView(
+                                                    sourceURL: sourceURL,
+                                                    onTrimmed: { trimmedURL, duration in
+                                                        vineShowTrimmer = false
+                                                        vineTrimmedVideoURL = trimmedURL
+                                                        vineTrimmedDuration = duration
+                                                        // Add to pastedVideos for upload pipeline
+                                                        vm.typingTextModel.pastedVideos = [
+                                                            PostedVideoMeta(index: 0, videoURL: trimmedURL)
+                                                        ]
+                                                        vm.typingTextModel.vineVideoDuration = duration
+                                                    },
+                                                    onCancel: {
+                                                        vineShowTrimmer = false
+                                                        vineVideoSourceURL = nil
+                                                    }
+                                                )
+                                                .navigationTitle("Trim Video")
+                                                .navigationBarTitleDisplayMode(.inline)
+                                            }
+                                            .nbUseNavigationStack(.never)
+                                            .presentationBackgroundCompat(theme.listBackground)
+                                        }
+                                    }
                                     
                                 default: // (.textNote)
                                     VStack {
@@ -437,6 +575,11 @@ struct ComposePost: View {
                 var pictureEvent = NEvent(content: "")
                 pictureEvent.kind = .picture
                 vm.nEvent = pictureEvent
+            }
+            else if kind == .shortVideos {
+                var vineEvent = NEvent(content: "")
+                vineEvent.kind = .shortVideos
+                vm.nEvent = vineEvent
             }
             else if kind == .highlight, let highlight {
                 var highlightEvent = NEvent(content: highlight.selectedText)
