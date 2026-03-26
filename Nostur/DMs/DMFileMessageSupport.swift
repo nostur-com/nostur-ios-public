@@ -7,6 +7,7 @@
 
 import Foundation
 import CryptoKit
+import CryptoSwift
 
 // MARK: - File Message Info (parsed from kind 15 event tags)
 
@@ -75,7 +76,7 @@ struct FileMessageInfo {
         guard let keyHex = tags.first(where: { $0.type == "decryption-key" })?.value,
               let key = Data(hexString: keyHex), key.count == 32 else { return nil }
         guard let nonceHex = tags.first(where: { $0.type == "decryption-nonce" })?.value,
-              let nonce = Data(hexString: nonceHex), nonce.count == 12 else { return nil }
+              let nonce = Data(hexString: nonceHex), (nonce.count == 12 || nonce.count == 16) else { return nil }
         
         let url = nEvent.content
         guard !url.isEmpty, url.hasPrefix("http") else { return nil }
@@ -111,9 +112,9 @@ struct EncryptedFileResult {
 /// Encrypt file data with AES-256-GCM using a random key and nonce
 func encryptFileForDM(data: Data) throws -> EncryptedFileResult {
     let key = SymmetricKey(size: .bits256)
-    let nonce = AES.GCM.Nonce()
+    let nonce = CryptoKit.AES.GCM.Nonce()
     
-    let sealedBox = try AES.GCM.seal(data, using: key, nonce: nonce)
+    let sealedBox = try CryptoKit.AES.GCM.seal(data, using: key, nonce: nonce)
     
     // sealedBox.ciphertext + tag = the encrypted payload to upload
     let encryptedData = sealedBox.ciphertext + sealedBox.tag
@@ -136,18 +137,28 @@ func encryptFileForDM(data: Data) throws -> EncryptedFileResult {
 
 /// Decrypt file data received from a kind 15 file message
 func decryptFileFromDM(encryptedData: Data, key: Data, nonce: Data) throws -> Data {
-    let symmetricKey = SymmetricKey(data: key)
-    let gcmNonce = try AES.GCM.Nonce(data: nonce)
-    
     // encryptedData = ciphertext + tag (last 16 bytes)
     guard encryptedData.count > 16 else {
         throw DMFileError.invalidData
     }
+    
     let ciphertext = encryptedData.prefix(encryptedData.count - 16)
     let tag = encryptedData.suffix(16)
     
-    let sealedBox = try AES.GCM.SealedBox(nonce: gcmNonce, ciphertext: ciphertext, tag: tag)
-    return try AES.GCM.open(sealedBox, using: symmetricKey)
+    if nonce.count == 12 {
+        // Standard 12-byte nonce: use CryptoKit (fast, hardware-accelerated)
+        let symmetricKey = SymmetricKey(data: key)
+        let gcmNonce = try CryptoKit.AES.GCM.Nonce(data: nonce)
+        let sealedBox = try CryptoKit.AES.GCM.SealedBox(nonce: gcmNonce, ciphertext: ciphertext, tag: tag)
+        return try CryptoKit.AES.GCM.open(sealedBox, using: symmetricKey)
+    } else {
+        // Non-standard nonce (e.g. Amethyst uses 16 bytes): use CryptoSwift which
+        // supports arbitrary nonce lengths, matching Java's GCMParameterSpec behavior
+        let gcm = GCM(iv: Array(nonce), authenticationTag: Array(tag))
+        let aes = try CryptoSwift.AES(key: Array(key), blockMode: gcm, padding: .noPadding)
+        let decrypted = try aes.decrypt(Array(ciphertext))
+        return Data(decrypted)
+    }
 }
 
 enum DMFileError: Error, LocalizedError {
