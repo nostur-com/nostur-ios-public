@@ -1808,7 +1808,6 @@
       }
     },
     "Add/remove from Highlights" : {
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4868,6 +4867,16 @@
     "finished" : {
       "shouldTranslate" : false
     },
+    "First: %lf Final: %lf" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "First: %1$lf Final: %2$lf"
+          }
+        }
+      }
+    },
     "Follow" : {
       "comment" : "Button to follow someone",
       "localizations" : {
@@ -7673,7 +7682,6 @@
       }
     },
     "Pin this post" : {
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7684,7 +7692,6 @@
       }
     },
     "Pin to your profile" : {
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -11223,7 +11230,6 @@
       }
     },
     "This will appear at the top of your profile and replace any previously pinned post." : {
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -11786,7 +11792,6 @@
       }
     },
     "Unpin from your profile" : {
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
