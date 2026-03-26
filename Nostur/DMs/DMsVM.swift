@@ -352,8 +352,11 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 // On iOS: Only if app is in background
                 let conversationIsActive = IS_CATALYST && !AppState.shared.appIsInBackground && self.activeConversationId == conversationId
                 if !conversationIsActive && (IS_CATALYST || AppState.shared.appIsInBackground) {
-                    let name = contactUsername(fromPubkey: nEvent.publicKey, event: event)
-                    scheduleDMNotification(name: name, pubkey: self.accountPubkey)
+                    let accountPubkey = self.accountPubkey
+                    bg().perform { [weak self] in // contactUsername() needs access to event from bg
+                        let name = contactUsername(fromPubkey: nEvent.publicKey, event: event)
+                        scheduleDMNotification(name: name, pubkey: accountPubkey)
+                    }
                 }
             }
             .store(in: &subscriptions)
