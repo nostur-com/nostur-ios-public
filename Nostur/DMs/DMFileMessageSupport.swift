@@ -62,7 +62,7 @@ struct FileMessageInfo {
     var formattedFileSize: String? {
         guard let fileSize else { return nil }
         let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.allowedUnits = [.useBytes, .useKB, .useMB, .useGB]
         formatter.countStyle = .file
         return formatter.string(fromByteCount: Int64(fileSize))
     }
