@@ -308,7 +308,7 @@ struct ComposePost: View {
                                                 if vineLoadingVideo {
                                                     ProgressView()
                                                         .scaleEffect(1.5)
-                                                    Text("Loading video...")
+                                                    Text("Preparing video...")
                                                         .font(.subheadline)
                                                         .foregroundStyle(.secondary)
                                                 } else {
@@ -316,31 +316,33 @@ struct ComposePost: View {
                                                         .font(.headline)
                                                         .foregroundStyle(.secondary)
                                                     
-                                                    HStack(spacing: 30) {
+                                                    HStack(alignment: .top) {
+                                                        Spacer()
+                                                        
                                                         Button {
                                                             vineShowCamera = true
                                                         } label: {
-                                                            VStack(spacing: 8) {
-                                                                Image(systemName: "video.fill")
-                                                                    .font(.largeTitle)
-                                                                Text("Record")
-                                                                    .font(.subheadline)
-                                                            }
+                                                            Image(systemName: "video.fill")
+                                                                .frame(height: 50.0)
                                                         }
+                                                        .accessibilityHint(Text("Record a video"))
                                                         .buttonStyle(NRButtonStyle(style: .borderedProminent))
+                                                        
+                                                        .padding()
                                                         
                                                         Button {
                                                             vineVideoPickerShown = true
                                                         } label: {
-                                                            VStack(spacing: 8) {
-                                                                Image(systemName: "photo.on.rectangle")
-                                                                    .font(.largeTitle)
-                                                                Text("Library")
-                                                                    .font(.subheadline)
-                                                            }
+                                                            Image(systemName: "photo.on.rectangle")
+                                                                .frame(height: 50.0)
                                                         }
+                                                        .accessibilityHint(Text("Choose from library"))
                                                         .buttonStyle(NRButtonStyle(style: .borderedProminent))
+                                                        .padding()
+                                                        
+                                                        Spacer()
                                                     }
+                                                    .font(.largeTitle)
                                                     
                                                     Text("Max 6 seconds")
                                                         .font(.caption)

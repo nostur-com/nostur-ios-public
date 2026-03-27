@@ -1811,6 +1811,7 @@
       }
     },
     "Add/remove from Highlights" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2709,6 +2710,9 @@
           }
         }
       }
+    },
+    "Choose from library" : {
+
     },
     "Choose one or more public relays you read from so you can receive notifications when others mention you." : {
       "localizations" : {
@@ -4876,16 +4880,6 @@
     "finished" : {
       "shouldTranslate" : false
     },
-    "First: %lf Final: %lf" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "First: %1$lf Final: %2$lf"
-          }
-        }
-      }
-    },
     "Follow" : {
       "comment" : "Button to follow someone",
       "localizations" : {
@@ -5785,9 +5779,6 @@
         }
       }
     },
-    "Library" : {
-
-    },
     "Lightning Address (LUD-06/16)" : {
       "comment" : "Label for entering a Lightning Address on Edit Profile screen",
       "localizations" : {
@@ -6060,9 +6051,6 @@
           }
         }
       }
-    },
-    "Loading video..." : {
-
     },
     "Loading..." : {
 
@@ -7703,6 +7691,7 @@
       }
     },
     "Pin this post" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7713,6 +7702,7 @@
       }
     },
     "Pin to your profile" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8071,6 +8061,9 @@
           }
         }
       }
+    },
+    "Preparing video..." : {
+
     },
     "Preview" : {
       "comment" : "Heading when entering Report details\nNavigation title for Post Preview screen\nPreview button when creating a new post",
@@ -8710,7 +8703,7 @@
         }
       }
     },
-    "Record" : {
+    "Record a video" : {
 
     },
     "Record audio" : {
@@ -11254,6 +11247,7 @@
       }
     },
     "This will appear at the top of your profile and replace any previously pinned post." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -11819,6 +11813,7 @@
       }
     },
     "Unpin from your profile" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

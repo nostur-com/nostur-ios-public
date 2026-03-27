@@ -52,7 +52,7 @@ struct VideoTrimmerView: View {
                     .padding(.horizontal)
             }
             
-            Spacer().frame(height: 20)
+            Spacer().frame(height: 14)
             
             // Duration info
             HStack {
@@ -104,30 +104,52 @@ struct VideoTrimmerView: View {
             
             Spacer()
             
-            // Action buttons
-            HStack(spacing: 20) {
-                Button("Cancel") {
+//            // Action buttons
+//            HStack(spacing: 20) {
+//                Button("Cancel") {
+//                    cleanup()
+//                    onCancel()
+//                }
+//                .buttonStyle(.bordered)
+//                
+//                Button {
+//                    exportTrimmedVideo()
+//                } label: {
+//                    if isExporting {
+//                        ProgressView()
+//                            .frame(width: 100)
+//                    } else {
+//                        Text("Use Video")
+//                            .frame(width: 100)
+//                    }
+//                }
+//                .buttonStyle(.borderedProminent)
+//                .disabled(isExporting || selectedDuration > maxDuration || selectedDuration < 0.5)
+//            }
+//            .padding(.bottom, 20)
+        }
+        
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel", systemImage: "xmark") {
                     cleanup()
                     onCancel()
                 }
-                .buttonStyle(.bordered)
-                
-                Button {
-                    exportTrimmedVideo()
-                } label: {
-                    if isExporting {
-                        ProgressView()
-                            .frame(width: 100)
-                    } else {
-                        Text("Use Video")
-                            .frame(width: 100)
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isExporting || selectedDuration > maxDuration || selectedDuration < 0.5)
             }
-            .padding(.bottom, 20)
+            
+            ToolbarItem(placement: .confirmationAction) {
+                if !isExporting {
+                    Button("Use Video", systemImage: "checkmark") {
+                        exportTrimmedVideo()
+                    }
+                    .disabled(isExporting || selectedDuration > maxDuration || selectedDuration < 0.5)
+                }
+                else {
+                    ProgressView()
+                }
+            }
         }
+        
         .onAppear { loadVideo() }
         .onDisappear { cleanup() }
         .onChange(of: startTime) { _ in seekToStart() }
