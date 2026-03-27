@@ -193,12 +193,13 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         textView.backgroundColor = UIColor.clear
         textView.delegate = context.coordinator
         textView.pastedMediaDelegate = context.coordinator
-        
-        if #available(iOS 26.0, *) {
-            makeToolbar26(textView, context: context)
-        }
-        else {
-            makeToolbar(textView, context: context)
+        if kind != .shortVideos {
+            if #available(iOS 26.0, *) {
+                makeToolbar26(textView, context: context)
+            }
+            else {
+                makeToolbar(textView, context: context)
+            }
         }
         textView.font = UIFont.systemFont(ofSize: UIFont.systemFontSize + 4.0)
         
