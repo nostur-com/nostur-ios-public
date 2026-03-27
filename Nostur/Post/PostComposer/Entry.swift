@@ -222,7 +222,7 @@ struct Entry: View {
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
             
-            if kind != .picture {
+            if kind != .picture && kind != .shortVideos {
                 if !typingTextModel.pastedImages.isEmpty {
                     HStack(spacing: 5) {
                         ImagePreviews(pastedImages: $typingTextModel.pastedImages)
