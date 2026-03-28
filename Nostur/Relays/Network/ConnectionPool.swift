@@ -97,6 +97,12 @@ public class ConnectionPool: ObservableObject {
     
     // .connectionStats should only be accessed from connection ConnectionPool.queue
     public var connectionStats: [CanonicalRelayUrl: RelayConnectionStats] = [:]
+
+    // NIP-66 liveness: set of relay URLs known to be online (nil = no data, skip filtering)
+    public var aliveRelays: Set<String>? = nil
+
+    // Thompson sampling: tracks which pubkeys were requested from each relay in the current cycle
+    public var requestedPubkeysPerRelay: [CanonicalRelayUrl: Set<String>] = [:]
         
     @MainActor
     public var anyConnected: Bool = false
@@ -266,6 +272,10 @@ public class ConnectionPool: ObservableObject {
                         // Periodically clean up stale connections (every 5 minutes)
                         if Int.random(in: 1...10) == 1 { // 10% chance = ~3 minutes average
                             self?.cleanupStaleConnections()
+                        }
+                        // Periodically update Thompson sampling scores (~5 min avg interval)
+                        if Int.random(in: 1...10) == 1 {
+                            self?.updateThompsonScores()
                         }
                     }
                 }
@@ -754,21 +764,29 @@ public class ConnectionPool: ObservableObject {
                 .filter { !$0.hasHashtags } // If other filter has hashtags we just remove it (remove entire filter, not just hashtags
         }
         
-        let plan: RequestPlan = createRequestPlan(pubkeys: pubkeys, reqFilters: filtersWithoutHashtags, ourReadRelays: ourReadRelays, preferredRelays: preferredRelays, skipTopRelays: 3)
-        
-        for req in plan.findEventsRequests
-            .filter({ (relay: String, findEventsRequest: FindEventsRequest) in
-                // Only requests that have .authors > 0
-                // Requests can have multiple filters, we can count the authors on just the first one, all others should be the same (for THIS relay)
-                findEventsRequest.pubkeys.count > 0
-                
-            })
-            .sorted(by: {
-                $0.value.pubkeys.count > $1.value.pubkeys.count
-            })
+        let assignments = stochasticRelayAssignment(
+            findEventsRelays: preferredRelays.findEventsRelays,
+            pubkeys: pubkeys,
+            ourReadRelays: ourReadRelays,
+            aliveRelays: self.aliveRelays,
+            relayScores: RelayScoreStore.shared.scoresSnapshot()
+        )
+
+        for assignment in assignments
+            .sorted(by: { $0.pubkeys.count > $1.pubkeys.count })
             .prefix(self.maxPreferredRelays) // SANITY
         {
-            if let conn = self.outboxConnections[req.key] {
+            // Record only assignments we actually send for Thompson scoring
+            self.requestedPubkeysPerRelay[assignment.relayUrl, default: []].formUnion(assignment.pubkeys)
+
+            // Build filters with this assignment's pubkeys as authors
+            let assignmentFilters = filtersWithoutHashtags.map { filter in
+                var scopedFilter = filter
+                scopedFilter.authors = assignment.pubkeys
+                return scopedFilter
+            }
+
+            if let conn = self.outboxConnections[assignment.relayUrl] {
                 if !conn.relayData.read {
                     conn.relayData.setRead(true)
                 }
@@ -782,28 +800,28 @@ public class ConnectionPool: ObservableObject {
                 guard let message = NostrEssentials.ClientMessage(
                     type: .REQ,
                     subscriptionId: subscriptionId,
-                    filters: req.value.filters
+                    filters: assignmentFilters
                 ).json()
                 else { return }
 #if DEBUG
-            L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
+            L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(assignment.pubkeys.count): \(assignment.relayUrl) - \(assignmentFilters.description) -[LOG]-")
 #endif
                 conn.sendMessage(message)
             }
             else {
-                ConnectionPool.shared.addOutboxConnection(RelayData(read: true, write: false, search: false, auth: false, url: req.key, excludedPubkeys: [])) { connection in
+                ConnectionPool.shared.addOutboxConnection(RelayData(read: true, write: false, search: false, auth: false, url: assignment.relayUrl, excludedPubkeys: [])) { connection in
                     if !connection.isConnected {
                         connection.connect()
                     }
-                    
+
                     guard let message = NostrEssentials.ClientMessage(
                         type: .REQ,
                         subscriptionId: subscriptionId,
-                        filters: req.value.filters
+                        filters: assignmentFilters
                     ).json()
                     else { return }
 #if DEBUG
-            L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
+            L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(assignment.pubkeys.count): \(assignment.relayUrl) - \(assignmentFilters.description) -[LOG]-")
 #endif
                     connection.sendMessage(message)
                 }
@@ -880,6 +898,25 @@ public class ConnectionPool: ObservableObject {
         return relays
     }
     
+    // Update Thompson sampling scores by comparing requested pubkeys vs actually received pubkeys
+    public func updateThompsonScores() {
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            let requested = self.requestedPubkeysPerRelay
+            guard !requested.isEmpty else { return }
+
+            RelayScoreStore.shared.updateScores(
+                requestedPubkeysPerRelay: requested,
+                connectionStats: self.connectionStats
+            )
+            self.requestedPubkeysPerRelay = [:]
+
+#if DEBUG
+            L.sockets.debug("📊 Thompson: updated scores for \(requested.count) relays")
+#endif
+        }
+    }
+
     // Clean up stale connections periodically to prevent memory leaks
     public func cleanupStaleConnections() {
         queue.async(flags: .barrier) { [weak self] in
