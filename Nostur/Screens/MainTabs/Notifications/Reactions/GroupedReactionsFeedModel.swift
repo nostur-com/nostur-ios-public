@@ -52,7 +52,9 @@ class GroupedReactionsFeedModel: ObservableObject {
     public func load(limit: Int?, includeSpam: Bool = false, completion: ((Int64) -> Void)? = nil) {
         guard let pubkey else { return }
         let bgContext = bg()
-        self.nothingHere = false
+        Task { @MainActor in
+            self.nothingHere = false
+        }
         bgContext.perform { [weak self] in
             guard let self else { return }
             let r1 = Event.fetchRequest()
