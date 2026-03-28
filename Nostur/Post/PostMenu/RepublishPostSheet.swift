@@ -134,7 +134,7 @@ struct RepublishPostSheet: View {
             }
         }
         
-        .navigationTitle("Republish to relays")
+        .navigationTitle(nrPost.isPrivate ? "Republish to DM relays" : "Republish to relays")
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark") {
@@ -145,17 +145,30 @@ struct RepublishPostSheet: View {
         
         .task {
             guard viewState == .loading else { return }
-            let cloudRelays: [RelayData] = await bg().perform {
-                return CloudRelay.fetchAll(context: bg()).map { $0.toStruct() }
-            }
             
-            self.relays = cloudRelays
-            self.relayStates = Dictionary(uniqueKeysWithValues: cloudRelays.map { relay in
-                if relay.write {
-                    return (relay, .selected)
+            if nrPost.isPrivate, let recipientPubkey = nrPost.fastTags.first(where: { $0.0 == "p" })?.1 {
+                // For private posts: load DM relays of recipient + own
+                let recipientRelays = await getDMrelays(for: recipientPubkey)
+                let ownRelays = await getDMrelays(for: account()?.publicKey ?? "")
+                let allDMRelays = recipientRelays.union(ownRelays)
+                let dmRelayDatas = allDMRelays.map { RelayData(read: false, write: true, search: false, auth: false, url: $0, excludedPubkeys: []) }
+                
+                self.relays = dmRelayDatas
+                self.relayStates = Dictionary(uniqueKeysWithValues: dmRelayDatas.map { ($0, RelayState.selected) })
+            }
+            else {
+                let cloudRelays: [RelayData] = await bg().perform {
+                    return CloudRelay.fetchAll(context: bg()).map { $0.toStruct() }
                 }
-                return (relay, .unselected)
-            })
+                
+                self.relays = cloudRelays
+                self.relayStates = Dictionary(uniqueKeysWithValues: cloudRelays.map { relay in
+                    if relay.write {
+                        return (relay, .selected)
+                    }
+                    return (relay, .unselected)
+                })
+            }
             viewState = .selecting
         }
         
@@ -192,17 +205,11 @@ struct RepublishPostSheet: View {
     }
     
     private func republish(allowAuth: Bool = false) async {
-        let nEvent: NEvent? = await withBgContext { _ in
-            return nrPost.event?.toNEvent()
-        }
-        guard let nEvent else { return }
-        
-        
-        let selectedRelays = if allowAuth { // try only once that failed with auth required
+        let selectedRelays = if allowAuth {
             relayStates.compactMap { (relay, state) in
                 state == .authRequired ? relay : nil
             }
-        } else { // try normal selection
+        } else {
             relayStates.compactMap { (relay, state) in
                 state == .selected ? relay : nil
             }
@@ -212,6 +219,17 @@ struct RepublishPostSheet: View {
         for relay in selectedRelays {
             relayStates[relay] = .publishing
         }
+        
+        // Private post: re-giftwrap and send to DM relays
+        if nrPost.isPrivate, let recipientPubkey = nrPost.fastTags.first(where: { $0.0 == "p" })?.1 {
+            await republishPrivate(selectedRelays: selectedRelays, recipientPubkey: recipientPubkey)
+            return
+        }
+        
+        let nEvent: NEvent? = await withBgContext { _ in
+            return nrPost.event?.toNEvent()
+        }
+        guard let nEvent else { return }
         
         // Publish to all relays simultaneously
         await withTaskGroup(of: (RelayData, RelayState).self) { group in
@@ -260,6 +278,87 @@ struct RepublishPostSheet: View {
         else {
             viewState = .selecting
         }
+    }
+    
+    private func republishPrivate(selectedRelays: [RelayData], recipientPubkey: String) async {
+        guard let accountPubkey = account()?.publicKey,
+              let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: accountPubkey),
+              let ourkeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else {
+            for relay in selectedRelays {
+                relayStates[relay] = .error
+            }
+            viewState = .selecting
+            return
+        }
+        
+        let nEvent: NEvent? = await withBgContext { _ in
+            return nrPost.event?.toNEvent()
+        }
+        guard let nEvent else { return }
+        
+        let neEvent = nEvent.toNostrEssentialsEvent()
+        let rumorEvent = createRumor(neEvent)
+        
+        // Giftwrap for recipient and send to selected relays
+        do {
+            let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: recipientPubkey, keys: ourkeys)
+            
+            for relay in selectedRelays {
+                if ConnectionPool.shared.connections[relay.url] != nil {
+                    ConnectionPool.shared.sendMessage(
+                        NosturClientMessage(
+                            clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: giftWrap),
+                            relayType: .WRITE,
+                            nEvent: NEvent.fromNostrEssentialsEvent(giftWrap)
+                        ),
+                        relays: [relay]
+                    )
+                }
+                else {
+                    if let msg = NostrEssentials.ClientMessage(type: .EVENT, event: giftWrap).json() {
+                        ConnectionPool.shared.sendEphemeralMessage(msg, relay: relay.url, write: true)
+                    }
+                }
+                relayStates[relay] = .published
+            }
+        }
+        catch {
+            for relay in selectedRelays {
+                relayStates[relay] = .error
+            }
+            logs += "Error giftwrapping: \(error.localizedDescription)\n"
+        }
+        
+        // Also giftwrap for self and send to own DM relays
+        do {
+            let selfWrap = try createGiftWrap(rumorEvent, receiverPubkey: accountPubkey, keys: ourkeys)
+            let ownRelays = await getDMrelays(for: accountPubkey)
+            let selectedRelayUrls = Set(selectedRelays.map { $0.url })
+            let additionalOwnRelays = ownRelays.subtracting(selectedRelayUrls) // Don't double-send to already selected relays
+            
+            for relay in additionalOwnRelays {
+                if ConnectionPool.shared.connections[relay] != nil {
+                    ConnectionPool.shared.sendMessage(
+                        NosturClientMessage(
+                            clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: selfWrap),
+                            relayType: .WRITE,
+                            nEvent: NEvent.fromNostrEssentialsEvent(selfWrap)
+                        ),
+                        relays: [RelayData(read: false, write: true, search: false, auth: false, url: relay, excludedPubkeys: [])]
+                    )
+                }
+                else {
+                    if let msg = NostrEssentials.ClientMessage(type: .EVENT, event: selfWrap).json() {
+                        ConnectionPool.shared.sendEphemeralMessage(msg, relay: relay, write: true)
+                    }
+                }
+            }
+        }
+        catch {
+            logs += "Error giftwrapping for self: \(error.localizedDescription)\n"
+        }
+        
+        viewState = .selecting
     }
 }
 

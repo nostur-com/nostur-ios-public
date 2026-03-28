@@ -8155,6 +8155,9 @@
         }
       }
     },
+    "Private reply required (replying to a private post)" : {
+
+    },
     "Problem parsing NWC connection URI" : {
       "comment" : "Error message during NWC setup",
       "localizations" : {
@@ -9120,6 +9123,9 @@
         }
       }
     },
+    "Reply in private" : {
+
+    },
     "Reply..." : {
       "localizations" : {
         "nl" : {
@@ -9370,6 +9376,9 @@
           }
         }
       }
+    },
+    "Republish to DM relays" : {
+
     },
     "Republish to relays" : {
       "localizations" : {

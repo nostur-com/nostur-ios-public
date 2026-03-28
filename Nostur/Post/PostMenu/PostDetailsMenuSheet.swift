@@ -69,7 +69,7 @@ struct PostDetailsMenuSheet: View {
                             .foregroundColor(theme.accent)
                     }
                 }
-                else if !nrPost.isRestricted {
+                else if !nrPost.isRestricted && !(nrPost.isPrivate && !isOwnPost) {
                     NavigationLink {
                         RepublishPostSheet(nrPost: nrPost, rootDismiss: rootDismiss)
                             .environmentObject(la)

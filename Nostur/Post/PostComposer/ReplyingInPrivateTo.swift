@@ -10,9 +10,21 @@ import SwiftUI
 struct ReplyingInPrivateTo: View {
     @Environment(\.theme) private var theme
     @StateObject var nrContact: NRContact
+    var recipientDMRelays: Set<String> = []
+    var ownDMRelays: Set<String> = []
     
-    init(pubkey: String) {
+    init(pubkey: String, recipientDMRelays: Set<String> = [], ownDMRelays: Set<String> = []) {
         _nrContact = StateObject(wrappedValue: NRContact.instance(of: pubkey))
+        self.recipientDMRelays = recipientDMRelays
+        self.ownDMRelays = ownDMRelays
+    }
+    
+    private var relayList: String {
+        let allRelays = recipientDMRelays.union(ownDMRelays)
+        return allRelays
+            .map { $0.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").trimmingCharacters(in: CharacterSet(charactersIn: "/")) }
+            .sorted()
+            .joined(separator: ", ")
     }
     
     var body: some View {
@@ -30,7 +42,7 @@ struct ReplyingInPrivateTo: View {
                     .cornerRadius(8)
                     .padding(.top, 3)
                     .layoutPriority(2)
-                    .infoText("Your reply will be sent in private, only to \(nrContact.anyName). Uploading private videos or images is not yet supported.")
+                    .infoText("Your reply will be sent in private to \(nrContact.anyName).\nUsing relays: \(relayList)")
             }
             .font(.body)
             .fontWeightLight()

@@ -266,12 +266,14 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         var barButtons: [UIBarButtonItem] = []
         
-//        let privateReplyButton = UIButton(type: .system)
-//        privateReplyButton.setImage(UIImage(systemName: "lock.rectangle.on.rectangle"), for: .normal)
-//        privateReplyButton.tintColor = UIColor(Themes.default.theme.accent)
-//        privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
-//        let privateReply = UIBarButtonItem(customView: privateReplyButton)
-//        barButtons.append(privateReply)
+        if privateReplyTapped != nil {
+            let privateReplyButton = UIButton(type: .system)
+            privateReplyButton.setImage(UIImage(systemName: "lock.open"), for: .normal)
+            privateReplyButton.tintColor = UIColor(Themes.default.theme.accent)
+            privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
+            let privateReply = UIBarButtonItem(customView: privateReplyButton)
+            barButtons.append(privateReply)
+        }
         
         if showVoiceRecorderButton {
             let voiceRecordingButton = UIButton(type: .system)
@@ -345,16 +347,14 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         var barButtons: [UIBarButtonItem] = []
         
-//        let privateReplyButton = UIButton(type: .system)
-//        privateReplyButton.setImage(UIImage(systemName: "lock.rectangle.on.rectangle"), for: .normal)
-//        privateReplyButton.tintColor = UIColor(Themes.default.theme.accent)
-//        privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
-//        let privateReply = UIBarButtonItem(customView: privateReplyButton)
-        
-        if barButtons.count != 0 {
-            barButtons.append(fixedSpace)
+        if privateReplyTapped != nil {
+            let privateReplyButton = UIButton(type: .system)
+            privateReplyButton.setImage(UIImage(systemName: "lock.open"), for: .normal)
+            privateReplyButton.tintColor = UIColor(Themes.default.theme.accent)
+            privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
+            let privateReply = UIBarButtonItem(customView: privateReplyButton)
+            barButtons.append(privateReply)
         }
-//        barButtons.append(privateReply)
         
         if showVoiceRecorderButton {
             let voiceRecordingButton = UIButton(type: .system)

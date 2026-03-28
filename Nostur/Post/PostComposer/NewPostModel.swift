@@ -100,6 +100,14 @@ public final class NewPostModel: ObservableObject {
     @Published var previewNRPost: NRPost?
     @Published var gifSheetShown = false
     @Published var replyInPrivate: Bool = false
+    @Published var replyingToPrivatePost: Bool = false // Locks private reply on when replying to a private post
+    @Published var recipientDMRelays: Set<String> = []
+    @Published var ownDMRelays: Set<String> = []
+    
+    var canReplyInPrivate: Bool {
+        !recipientDMRelays.isEmpty && !(activeAccount?.isNC ?? false)
+    }
+    
     @Published var contactSearchResults: [NRContact] = []
     @Published var activeAccount: CloudAccount? = nil {
         didSet {
@@ -446,6 +454,86 @@ public final class NewPostModel: ObservableObject {
         
         // Need draft here because it might be cleared before we need it because async later
         self.typingTextModel.restoreDraft = self.typingTextModel.draft
+        
+        // MARK: - Private Reply (giftwrapped kind 1/1111/1244)
+        if replyInPrivate, let requiredP = requiredP, !recipientDMRelays.isEmpty {
+            guard !account.isNC else {
+                sendNotification(.anyStatus, ("Private replies not yet supported with remote signer", "NewPost"))
+                return
+            }
+            guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: account.publicKey),
+                  let ourkeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else {
+                sendNotification(.anyStatus, ("Could not access private key for giftwrapping", "NewPost"))
+                return
+            }
+            
+            // Build the NEvent normally, convert to NostrEssentials.Event, create rumor
+            finalEvent.publicKey = account.publicKey
+            let neEvent = finalEvent.toNostrEssentialsEvent()
+            let rumorEvent = createRumor(neEvent)
+            
+            let recipientPubkey = requiredP
+            let ourPubkey = account.publicKey
+            let recipientRelays = self.recipientDMRelays
+            let ownRelays = self.ownDMRelays
+            
+            Task {
+                // Wrap and send to recipient
+                do {
+                    let recipientWrap = try createGiftWrap(rumorEvent, receiverPubkey: recipientPubkey, keys: ourkeys)
+                    let relaysForRecipient = recipientRelays.isEmpty ? ownRelays : recipientRelays
+                    self.sendGiftWrapToRelays(wrappedEvent: recipientWrap, relays: relaysForRecipient)
+                }
+                catch {
+                    L.og.error("Error wrapping private reply for recipient: \(error)")
+                }
+                
+                // Wrap and send to self (backup)
+                do {
+                    let selfWrap = try createGiftWrap(rumorEvent, receiverPubkey: ourPubkey, keys: ourkeys)
+                    let selfWrapId = selfWrap.fallbackId()
+                    let relaysForSelf = ownRelays.isEmpty ? recipientRelays : ownRelays
+                    
+                    // Save rumor locally
+                    await bg().perform {
+                        _ = Event.saveEvent(event: rumorEvent, wrapId: selfWrapId, context: bg())
+                        MessageParser.shared.pendingOkWrapIds.insert(selfWrapId)
+                    }
+                    
+                    self.sendGiftWrapToRelays(wrappedEvent: selfWrap, relays: relaysForSelf)
+                }
+                catch {
+                    L.og.error("Error wrapping private reply for self: \(error)")
+                }
+                
+                await MainActor.run {
+                    // Notify that this reply was saved
+                    bg().perform {
+                        if let savedEvent = try? Event.fetchEvent(id: rumorEvent.fallbackId(), context: bg()) {
+                            if ([1,1111,1222,1244].contains(savedEvent.kind)) {
+                                DispatchQueue.main.async {
+                                    sendNotification(.newPostSaved, savedEvent)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if let replyTo, !replyTo.nrPost.isRestricted {
+                bg().perform {
+                    guard let bgEvent = replyTo.nrPost.event else { return }
+                    let replyToId = bgEvent.id
+                    DispatchQueue.main.async {
+                        sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
+                    }
+                }
+            }
+            
+            onDismiss()
+            sendNotification(.didSend)
+            return
+        }
         
         let lockToThisRelay: RelayData? = Drafts.shared.lockToThisRelay
         
@@ -809,6 +897,32 @@ public final class NewPostModel: ObservableObject {
         return nEvent
     }
     
+    private func sendGiftWrapToRelays(wrappedEvent: NostrEssentials.Event, relays: Set<String>) {
+        for relay in relays {
+            if ConnectionPool.shared.connections[relay] != nil {
+                ConnectionPool.shared.sendMessage(
+                    NosturClientMessage(
+                        clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: wrappedEvent),
+                        relayType: .WRITE,
+                        nEvent: NEvent.fromNostrEssentialsEvent(wrappedEvent)
+                    ),
+                    relays: [RelayData(read: false, write: true, search: false, auth: false, url: relay, excludedPubkeys: [])]
+                )
+            }
+            else {
+                if let msg = NostrEssentials.ClientMessage(type: .EVENT, event: wrappedEvent).json() {
+                    Task { @MainActor in
+                        ConnectionPool.shared.sendEphemeralMessage(
+                            msg,
+                            relay: relay,
+                            write: true
+                        )
+                    }
+                }
+            }
+        }
+    }
+    
     func showPreview(quotePost: QuotePost? = nil, replyTo: ReplyTo? = nil) {
         
         guard let finalNEvent = buildFinalEvent(imetas: [], replyTo: replyTo, quotePost: quotePost, isPreviewContext: true) else { return }
@@ -934,6 +1048,7 @@ public final class NewPostModel: ObservableObject {
         nEvent = newQuoteRepost
     }
     
+    @MainActor
     func loadReplyTo(_ replyTo: ReplyTo) {
         requiredP = replyTo.nrPost.pubkey
         var newReply = NEvent(content: typingTextModel.text)
@@ -947,6 +1062,22 @@ public final class NewPostModel: ObservableObject {
         else {
             newReply.kind = .textNote // 1
         }
+        
+        // If replying to a private post, force private reply mode
+        if replyTo.nrPost.isPrivate {
+            replyInPrivate = true
+            replyingToPrivatePost = true
+        }
+        
+        // Fetch DM relays for recipient to enable private reply option
+        let recipientPubkey = replyTo.nrPost.pubkey
+        Task { @MainActor in
+            let recipientRelays = await getDMrelays(for: recipientPubkey)
+            let ownRelays = await getDMrelays(for: account()?.publicKey ?? "")
+            self.recipientDMRelays = recipientRelays
+            self.ownDMRelays = ownRelays
+        }
+        
         bg().perform {
             guard let replyToEvent = replyTo.nrPost.event else { return }
             let existingPtags = replyToEvent.pTags()

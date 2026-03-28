@@ -126,7 +126,7 @@ struct Entry: View {
                     }
                     else {
                         if replyInPrivate, let requiredP = vm.requiredP {
-                            ReplyingInPrivateTo(pubkey: requiredP)
+                            ReplyingInPrivateTo(pubkey: requiredP, recipientDMRelays: vm.recipientDMRelays, ownDMRelays: vm.ownDMRelays)
                                 .offset(x: 5.0, y: 4.0)
                         }
                         else {
@@ -171,9 +171,9 @@ struct Entry: View {
                 voiceMessageTapped: {
                     showAudioRecorder = true
                 },
-                privateReplyTapped: {
+                privateReplyTapped: vm.canReplyInPrivate ? {
                     replyInPrivate.toggle()
-                }
+                } : nil
             )
             .introspect { editor in
                 // Needed so we can update cursors position on @mention autocomplete
@@ -552,13 +552,15 @@ struct Entry: View {
     
     @ViewBuilder
     private var privateReplyButton: some View {
-        EmptyView()
-//        Button("Reply in private", systemImage: replyInPrivate ? "lock.rectangle.on.rectangle.fill" : "lock.rectangle.on.rectangle") {
-//            replyInPrivate.toggle()
-//        }
-//        .buttonStyle(.borderless)
-//        .disabled(typingTextModel.uploading)
-//        .help("Reply in private")
+        if replyTo != nil && vm.canReplyInPrivate {
+            Button("Reply in private", systemImage: replyInPrivate ? "lock.fill" : "lock.open") {
+                guard !vm.replyingToPrivatePost else { return } // Can't turn off when replying to a private post
+                replyInPrivate.toggle()
+            }
+            .buttonStyle(.borderless)
+            .disabled(typingTextModel.uploading || vm.replyingToPrivatePost)
+            .help(vm.replyingToPrivatePost ? "Private reply required (replying to a private post)" : "Reply in private")
+        }
     }
     
     @ViewBuilder

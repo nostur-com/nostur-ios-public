@@ -104,6 +104,12 @@ struct ReactionButtonInner: View {
                 likeNEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
             }
             
+            // Private reaction: giftwrap instead of publishing normally
+            if nrPost.isPrivate {
+                sendPrivateInteraction(likeNEvent, recipientPubkey: nrPost.pubkey)
+                return
+            }
+            
             if account.isNC {
                 likeNEvent = likeNEvent.withId()
                 RemoteSignerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
@@ -199,6 +205,12 @@ struct VideoReactionButton: View {
             
             if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(likeNEvent.publicKey)) {
                 likeNEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
+            }
+            
+            // Private reaction: giftwrap instead of publishing normally
+            if nrPost.isPrivate {
+                sendPrivateInteraction(likeNEvent, recipientPubkey: nrPost.pubkey)
+                return
             }
             
             if account.isNC {

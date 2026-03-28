@@ -25,7 +25,7 @@ struct NRPostHeaderContainer: View {
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(pubkey: nrPost.pubkey, name: nrContact.anyName, onTap: nameTapped, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted, nrContact: nrContact, isDetail: isDetail)
+            PostHeaderView(pubkey: nrPost.pubkey, name: nrContact.anyName, onTap: nameTapped, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted, isPrivate: nrPost.isPrivate, nrContact: nrContact, isDetail: isDetail)
                 .onDisappear {
                     if nrContact.metadata_created_at == 0 {
                         QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
@@ -193,6 +193,7 @@ struct PrivateLabel: View {
         Image(systemName: "lock.fill")
             .font(.system(size: 12.0))
             .padding(.horizontal, 8)
+            .padding(.vertical, 2)
             .background(theme.accent)
             .foregroundColor(.white)
             .cornerRadius(8)

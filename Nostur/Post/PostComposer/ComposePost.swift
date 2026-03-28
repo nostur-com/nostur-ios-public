@@ -93,7 +93,7 @@ struct ComposePost: View {
                             VStack(alignment: .leading, spacing: 3) {
                                 if replyTo != nil {
                                     if vm.replyInPrivate, let requiredP = vm.requiredP {
-                                        ReplyingInPrivateTo(pubkey: requiredP)
+                                        ReplyingInPrivateTo(pubkey: requiredP, recipientDMRelays: vm.recipientDMRelays, ownDMRelays: vm.ownDMRelays)
                                     }
                                     else {
                                         ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $vm.typingTextModel.selectedMentions, unselected: $vm.typingTextModel.unselectedMentions)

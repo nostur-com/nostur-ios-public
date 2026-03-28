@@ -370,7 +370,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self._repliesToRoot = []
         self.threadPostsCount = 1 + event.parentEvents.count
         self.isRepost = event.kind == 6 || (event.kind == 1 && event.content == "#[0]" && event.firstE() != nil)
-        self.isRumor = event.otherId != nil && event.sig == nil
+        self.isRumor = event.otherId != nil && (event.sig == nil || event.sig == "")
         
         self.firstQuoteId = event.firstQuoteId
 

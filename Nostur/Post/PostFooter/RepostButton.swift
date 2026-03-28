@@ -26,7 +26,7 @@ struct RepostButton: View {
     
     var body: some View {
         Image(systemName: "arrow.2.squarepath")
-            .foregroundColor(footerAttributes.reposted ? .green : theme.footerButtons)
+            .foregroundColor(nrPost.isPrivate ? theme.footerButtons.opacity(0.3) : (footerAttributes.reposted ? .green : theme.footerButtons))
             .overlay(alignment: .leading) {
                 AnimatedNumber(number: footerAttributes.repostsAndMentionsCount)
                     .opacity(footerAttributes.repostsAndMentionsCount == 0 ? 0 : 1.0)
@@ -37,6 +37,7 @@ struct RepostButton: View {
             .padding(.vertical, 5)
             .contentShape(Rectangle())
             .onTapGesture {
+                guard !nrPost.isPrivate else { return }
                 if isItem {
                     sendNotification(.createNewQuotePost, QuotePost(nrPost: nrPost))
                 }
@@ -75,7 +76,9 @@ struct VideoRepostButton: View {
                 .opacity(footerAttributes.repostsAndMentionsCount == 0 ? 0 : 1.0)
         }
         .contentShape(Rectangle())
+        .opacity(nrPost.isPrivate ? 0.3 : 1.0)
         .onTapGesture {
+            guard !nrPost.isPrivate else { return }
             if isItem {
                 sendNotification(.createNewQuotePost, QuotePost(nrPost: nrPost))
             }
