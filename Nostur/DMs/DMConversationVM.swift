@@ -257,6 +257,11 @@ class ConversionVM: ObservableObject {
             return 17 // NIP-17
         }
         
+        // Last message is kind 15? = NIP17
+        if messages.last?.nEvent.kind == .fileMessage {
+            return 17 // NIP-17
+        }
+        
         // no messages yet, but has DM relay (both us and them)? NIP-17
         if messages.isEmpty, let receiverPubkey = participants.subtracting([ourAccountPubkey]).first {
             let receiverHasDMRelays = await hasDMrelays(pubkey: receiverPubkey)
