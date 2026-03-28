@@ -73,10 +73,10 @@ struct FileMessageInfo {
         
         guard let fileType = tags.first(where: { $0.type == "file-type" })?.value else { return nil }
         guard let algorithm = tags.first(where: { $0.type == "encryption-algorithm" })?.value, algorithm == "aes-gcm" else { return nil }
-        guard let keyHex = tags.first(where: { $0.type == "decryption-key" })?.value,
-              let key = Data(hexString: keyHex), key.count == 32 else { return nil }
-        guard let nonceHex = tags.first(where: { $0.type == "decryption-nonce" })?.value,
-              let nonce = Data(hexString: nonceHex), (nonce.count == 12 || nonce.count == 16) else { return nil }
+        guard let keyString = tags.first(where: { $0.type == "decryption-key" })?.value,
+              let key = Data(hexOrBase64: keyString), key.count == 32 else { return nil }
+        guard let nonceString = tags.first(where: { $0.type == "decryption-nonce" })?.value,
+              let nonce = Data(hexOrBase64: nonceString), (nonce.count == 12 || nonce.count == 16) else { return nil }
         
         let url = nEvent.content
         guard !url.isEmpty, url.hasPrefix("http") else { return nil }
@@ -179,9 +179,20 @@ enum DMFileError: Error, LocalizedError {
     }
 }
 
-// MARK: - Data hex init helper
+// MARK: - Data decoding helpers
 
 extension Data {
+    /// Try hex first, then base64 (some clients encode key/nonce as base64 instead of hex)
+    init?(hexOrBase64 string: String) {
+        if let hex = Data(hexString: string) {
+            self = hex
+        } else if let b64 = Data(base64Encoded: string) {
+            self = b64
+        } else {
+            return nil
+        }
+    }
+    
     init?(hexString: String) {
         let hex = hexString.dropFirst(hexString.hasPrefix("0x") ? 2 : 0)
         guard hex.count % 2 == 0 else { return nil }
