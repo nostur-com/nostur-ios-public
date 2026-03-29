@@ -303,6 +303,8 @@ struct RepublishPostSheet: View {
         do {
             let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: recipientPubkey, keys: ourkeys)
             
+            MessageParser.shared.pendingOkWrapToRumorIdMap[giftWrap.fallbackId()] = rumorEvent.fallbackId()
+            
             for relay in selectedRelays {
                 if ConnectionPool.shared.connections[relay.url] != nil {
                     ConnectionPool.shared.sendMessage(
@@ -335,6 +337,8 @@ struct RepublishPostSheet: View {
             let ownRelays = await getDMrelays(for: accountPubkey)
             let selectedRelayUrls = Set(selectedRelays.map { $0.url })
             let additionalOwnRelays = ownRelays.subtracting(selectedRelayUrls) // Don't double-send to already selected relays
+            
+            MessageParser.shared.pendingOkWrapToRumorIdMap[selfWrap.fallbackId()] = rumorEvent.fallbackId()
             
             for relay in additionalOwnRelays {
                 if ConnectionPool.shared.connections[relay] != nil {
