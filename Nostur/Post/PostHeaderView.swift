@@ -89,7 +89,7 @@ struct PostHeaderView: View {
             if isPrivate {
                 PrivateLabel()
                     .lineLimit(1)
-                    .infoText("This is a private post. Only you can see it.")
+                    .infoText("This is a private post. Only you or the intented recipients can see it.")
             }
             else if restricted {
                 RestrictedLabel()
