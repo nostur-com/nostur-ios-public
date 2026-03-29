@@ -530,8 +530,8 @@ public final class NewPostModel: ObservableObject {
                 }
             }
             
-            if let replyTo, !replyTo.nrPost.isRestricted {
-                bg().perform {
+            if let replyTo {
+                bg().perform { // update ui
                     guard let bgEvent = replyTo.nrPost.event else { return }
                     let replyToId = bgEvent.id
                     DispatchQueue.main.async {
@@ -618,27 +618,39 @@ public final class NewPostModel: ObservableObject {
             _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
         }
         
-        if let replyTo, !replyTo.nrPost.isRestricted { // Republish if not restricted
+        if let replyTo {
+            let shouldRepublish = !replyTo.nrPost.isRestricted && !replyTo.nrPost.isPrivate
+            
             bg().perform {
                 guard let bgEvent = replyTo.nrPost.event else { return }
                 let replyToNEvent = bgEvent.toNEvent()
                 let replyToId = bgEvent.id
                 DispatchQueue.main.async {
+                    // update ui
                     sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
+                    
                     // Republish post being replied to
-                    Unpublisher.shared.publishNow(replyToNEvent)
+                    if shouldRepublish {
+                        Unpublisher.shared.publishNow(replyToNEvent)
+                    }
                 }
             }
         }
-        if let quotePost, !quotePost.nrPost.isRestricted { // Republish if not restricted
+        
+        if let quotePost {
+            let shouldRepublish = !quotePost.nrPost.isRestricted && !quotePost.nrPost.isPrivate
             bg().perform {
                 guard let bgEvent = quotePost.nrPost.event else { return }
                 let quotingNEvent = bgEvent.toNEvent()
                 let quotingEventId = bgEvent.id
                 DispatchQueue.main.async {
+                    // update ui
                     sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEventId))
+                    
                     // Republish post being quoted
-                    Unpublisher.shared.publishNow(quotingNEvent)
+                    if shouldRepublish {
+                        Unpublisher.shared.publishNow(quotingNEvent)
+                    }
                 }
             }
         }
