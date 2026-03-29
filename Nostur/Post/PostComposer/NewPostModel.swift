@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import AVFoundation
 import NostrEssentials
 
 public final class TypingTextModel: ObservableObject {
@@ -40,6 +41,7 @@ public final class TypingTextModel: ObservableObject {
     @Published var voiceRecording: VoiceRecording?
     
     var vineVideoDuration: Double? // Duration in seconds for vine (short video) posts
+    var vineVideoDim: String? // Dimensions string "WxH" for vine (short video) posts
     
     public var compressedVideoFiles: [URL] = [] // need a place to track tmp files created so we can clean up after upload
     @Published var selectedMentions: Set<NRContact> = [] // will become p-tags in the final post
@@ -704,6 +706,9 @@ public final class NewPostModel: ObservableObject {
             if let dim = imeta.dim, !dim.isEmpty {
                 imetaParts.append("dim \(dim)")
             }
+            else if let dim = typingTextModel.vineVideoDim, !dim.isEmpty {
+                imetaParts.append("dim \(dim)")
+            }
             if let hash = imeta.hash, !hash.isEmpty {
                 imetaParts.append("x \(hash)")
             }
@@ -1289,17 +1294,22 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
                 let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
                 typingTextModel.compressedVideoFiles.append(compressedURL)
                 if let url = await compressVideoAsync(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
-                    
+
+                    // Get video dimensions from compressed file for imeta
+                    if let dimensions = await getVideoDimensions(asset: AVAsset(url: url)) {
+                        typingTextModel.vineVideoDim = "\(Int(dimensions.width))x\(Int(dimensions.height))"
+                    }
+
                     let filename = "media.mp4"
                     let contentType = contentType(for: filename)
                     let httpBody = makeHttpBody(mediaData: compressedVideoData, contentType: contentType, boundary: boundary)
                     let sha256hex = httpBody.sha256().hexEncodedString()
                     let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
-                    
+
                     result.append((compressedVideoData, "video/mp4", nil, (typingTextModel.pastedImages.count + videoMeta.index), unsignedAuthHeaderEvent))
                 }
             }
-            
+
             return result
         }
         else { // case == .blossom
@@ -1351,13 +1361,18 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
                 let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
                 //                typingTextModel.compressedVideoFiles.append(compressedURL)
                 if let url = await compressVideoAsync(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
-                    
+
+                    // Get video dimensions from compressed file for imeta
+                    if let dimensions = await getVideoDimensions(asset: AVAsset(url: url)) {
+                        typingTextModel.vineVideoDim = "\(Int(dimensions.width))x\(Int(dimensions.height))"
+                    }
+
                     let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: compressedVideoData.sha256().hexEncodedString())
-                    
+
                     result.append((compressedVideoData, "video/mp4", nil, images.count + videoMeta.index, unsignedAuthHeaderEvent))
                 }
             }
-            
+
             return result
         }
     }
