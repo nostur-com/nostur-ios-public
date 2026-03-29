@@ -28,16 +28,6 @@ func sendPrivateInteraction(_ nEvent: NEvent, recipientPubkey: String) {
         
         guard !recipientRelays.isEmpty || !ownRelays.isEmpty else { return }
         
-        // Wrap and send to recipient
-        do {
-            let recipientWrap = try createGiftWrap(rumorEvent, receiverPubkey: recipientPubkey, keys: ourkeys)
-            let relaysForRecipient = recipientRelays.isEmpty ? ownRelays : recipientRelays
-            sendGiftWrapToRelays(wrappedEvent: recipientWrap, relays: relaysForRecipient)
-        }
-        catch {
-            L.og.error("Error wrapping private interaction for recipient: \(error)")
-        }
-        
         // Wrap and send to self (backup)
         do {
             let selfWrap = try createGiftWrap(rumorEvent, receiverPubkey: ourPubkey, keys: ourkeys)
@@ -45,7 +35,7 @@ func sendPrivateInteraction(_ nEvent: NEvent, recipientPubkey: String) {
             
             await bg().perform {
                 _ = Event.saveEvent(event: rumorEvent, wrapId: selfWrapId, context: bg())
-                MessageParser.shared.pendingOkWrapIds.insert(selfWrapId)
+                MessageParser.shared.pendingOkWrapToRumorIdMap[selfWrapId] = rumorEvent.fallbackId()
             }
             
             let relaysForSelf = ownRelays.isEmpty ? recipientRelays : ownRelays
@@ -53,6 +43,17 @@ func sendPrivateInteraction(_ nEvent: NEvent, recipientPubkey: String) {
         }
         catch {
             L.og.error("Error wrapping private interaction for self: \(error)")
+        }
+        
+        // Wrap and send to recipient
+        do {
+            let recipientWrap = try createGiftWrap(rumorEvent, receiverPubkey: recipientPubkey, keys: ourkeys)
+            let relaysForRecipient = recipientRelays.isEmpty ? ownRelays : recipientRelays
+            MessageParser.shared.pendingOkWrapToRumorIdMap[recipientWrap.fallbackId()] = rumorEvent.fallbackId()
+            sendGiftWrapToRelays(wrappedEvent: recipientWrap, relays: relaysForRecipient)
+        }
+        catch {
+            L.og.error("Error wrapping private interaction for recipient: \(error)")
         }
     }
 }

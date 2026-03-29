@@ -50,6 +50,9 @@ class MessageParser {
     // if "OK" comes back, .updateRelays should update the rumor (.otherId), not the wrap
     public var pendingOkWrapIds: Set<String> = []
     
+    // map OKs to rumor id, to update sent relays
+    public var pendingOkWrapToRumorIdMap = [String: String]() // [wrapid : rumor id]
+    
     init() {
         tagSerializer = TagSerializer.shared
         bgQueue.perform {
@@ -74,14 +77,20 @@ class MessageParser {
 #endif
                     if message.success ?? false {
                         if let id = message.id {
-                            okSub.send((id: id, relay: relayUrl))
-                            
                             // if "OK" comes back, .updateRelays should update the rumor (.otherId), not the wrap
                             if pendingOkWrapIds.contains(id) {
                                 Event.updateRelays(id, relays: message.relays, isWrapId: true, context: bgQueue)
                                 pendingOkWrapIds.remove(id)
+                                okSub.send((id: id, relay: relayUrl))
+                            }
+                            else if pendingOkWrapToRumorIdMap.keys.contains(id) {
+                                let rumorId = pendingOkWrapToRumorIdMap[id]!
+                                Event.updateRelays(rumorId, relays: message.relays, isWrapId: false, context: bgQueue)
+                                pendingOkWrapToRumorIdMap.removeValue(forKey: id)
+                                okSub.send((id: rumorId, relay: relayUrl))
                             }
                             else {
+                                okSub.send((id: id, relay: relayUrl))
                                 Event.updateRelays(id, relays: message.relays, context: bgQueue)
                             }
                         }

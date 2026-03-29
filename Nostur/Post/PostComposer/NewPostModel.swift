@@ -480,16 +480,6 @@ public final class NewPostModel: ObservableObject {
             let ownRelays = self.ownDMRelays
             
             Task {
-                // Wrap and send to recipient
-                do {
-                    let recipientWrap = try createGiftWrap(rumorEvent, receiverPubkey: recipientPubkey, keys: ourkeys)
-                    let relaysForRecipient = recipientRelays.isEmpty ? ownRelays : recipientRelays
-                    self.sendGiftWrapToRelays(wrappedEvent: recipientWrap, relays: relaysForRecipient)
-                }
-                catch {
-                    L.og.error("Error wrapping private reply for recipient: \(error)")
-                }
-                
                 // Wrap and send to self (backup)
                 do {
                     let selfWrap = try createGiftWrap(rumorEvent, receiverPubkey: ourPubkey, keys: ourkeys)
@@ -499,13 +489,27 @@ public final class NewPostModel: ObservableObject {
                     // Save rumor locally
                     await bg().perform {
                         _ = Event.saveEvent(event: rumorEvent, wrapId: selfWrapId, context: bg())
-                        MessageParser.shared.pendingOkWrapIds.insert(selfWrapId)
+                        MessageParser.shared.pendingOkWrapToRumorIdMap[selfWrapId] = rumorEvent.fallbackId()
                     }
                     
                     self.sendGiftWrapToRelays(wrappedEvent: selfWrap, relays: relaysForSelf)
+                    
                 }
                 catch {
                     L.og.error("Error wrapping private reply for self: \(error)")
+                }
+                
+                // Wrap and send to recipient
+                do {
+                    let recipientWrap = try createGiftWrap(rumorEvent, receiverPubkey: recipientPubkey, keys: ourkeys)
+                    let relaysForRecipient = recipientRelays.isEmpty ? ownRelays : recipientRelays
+                    
+                    MessageParser.shared.pendingOkWrapToRumorIdMap[recipientWrap.fallbackId()] = rumorEvent.fallbackId()
+                    
+                    self.sendGiftWrapToRelays(wrappedEvent: recipientWrap, relays: relaysForRecipient)
+                }
+                catch {
+                    L.og.error("Error wrapping private reply for recipient: \(error)")
                 }
                 
                 await MainActor.run {
