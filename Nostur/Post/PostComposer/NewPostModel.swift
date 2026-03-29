@@ -1084,6 +1084,9 @@ public final class NewPostModel: ObservableObject {
         else if NIP22_ROOT_KINDS.contains(Int(replyTo.nrPost.kind)) {
             newReply.kind = .comment // 1111
         }
+        else if Int(replyTo.nrPost.kind) == 1111 { // comment on comment should also be 1111
+            newReply.kind = .comment // 1111
+        }
         else {
             newReply.kind = .textNote // 1
         }
