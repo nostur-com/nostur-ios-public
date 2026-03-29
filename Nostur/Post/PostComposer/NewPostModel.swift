@@ -513,6 +513,10 @@ public final class NewPostModel: ObservableObject {
                 }
                 
                 await MainActor.run {
+                    // Clear draft
+                    Drafts.shared.draft = ""
+                    Drafts.shared.restoreDraft = ""
+                    
                     // Notify that this reply was saved
                     bg().perform {
                         if let savedEvent = try? Event.fetchEvent(id: rumorEvent.fallbackId(), context: bg()) {
