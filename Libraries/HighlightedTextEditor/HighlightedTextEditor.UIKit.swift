@@ -137,6 +137,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     var nestsTapped: NestsTappedCallback?
     var voiceMessageTapped: VoiceMessageTappedCallback?
     var privateReplyTapped: PrivateReplyTappedCallback?
+    var isPrivateReplyActive: Bool
+    var isPrivateReplyLocked: Bool
     var kind: NEventKind?
     
     private(set) var onEditingChanged: OnEditingChangedCallback?
@@ -157,7 +159,9 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         cameraTapped: CameraTappedCallback? = nil,
         nestsTapped: NestsTappedCallback? = nil,
         voiceMessageTapped: VoiceMessageTappedCallback? = nil,
-        privateReplyTapped: PrivateReplyTappedCallback? = nil
+        privateReplyTapped: PrivateReplyTappedCallback? = nil,
+        isPrivateReplyActive: Bool = false,
+        isPrivateReplyLocked: Bool = false
     ) {
         _text = text
         _showVoiceRecorderButton = showVoiceRecorderButton
@@ -172,6 +176,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         self.nestsTapped = nestsTapped
         self.voiceMessageTapped = voiceMessageTapped
         self.privateReplyTapped = privateReplyTapped
+        self.isPrivateReplyActive = isPrivateReplyActive
+        self.isPrivateReplyLocked = isPrivateReplyLocked
         self.kind = kind
     }
     
@@ -213,6 +219,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     public func updateUIView(_ uiView: UITextView, context: Context) {
         uiView.isScrollEnabled = false
         context.coordinator.updatingUIView = true
+        context.coordinator.parent = self
         
         uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Themes.default.theme.listBackground)
         
@@ -227,6 +234,27 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             context.coordinator.isShowingVoiceRecorderButton = false
             
             // Force the text view to reload its input accessory view or button doesn't go away
+            uiView.reloadInputViews()
+        }
+
+        let hasPrivateReplyAction = privateReplyTapped != nil
+        let didPrivateReplyActionChange = context.coordinator.lastHasPrivateReplyAction != hasPrivateReplyAction
+        let didPrivateReplyStateChange =
+            context.coordinator.lastPrivateReplyActive != isPrivateReplyActive ||
+            context.coordinator.lastPrivateReplyLocked != isPrivateReplyLocked
+
+        if didPrivateReplyActionChange || didPrivateReplyStateChange {
+            if #available(iOS 26.0, *) {
+                makeToolbar26(uiView, context: context)
+            }
+            else {
+                makeToolbar(uiView, context: context)
+            }
+            context.coordinator.lastHasPrivateReplyAction = hasPrivateReplyAction
+            context.coordinator.lastPrivateReplyActive = isPrivateReplyActive
+            context.coordinator.lastPrivateReplyLocked = isPrivateReplyLocked
+
+            // Refresh toolbar button icon and enabled state when private reply availability changes.
             uiView.reloadInputViews()
         }
         
@@ -268,8 +296,9 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         if privateReplyTapped != nil {
             let privateReplyButton = UIButton(type: .system)
-            privateReplyButton.setImage(UIImage(systemName: "lock.open"), for: .normal)
+            privateReplyButton.setImage(UIImage(systemName: isPrivateReplyActive ? "lock.fill" : "lock.open"), for: .normal)
             privateReplyButton.tintColor = UIColor(Themes.default.theme.accent)
+            privateReplyButton.isEnabled = !isPrivateReplyLocked
             privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
             let privateReply = UIBarButtonItem(customView: privateReplyButton)
             barButtons.append(privateReply)
@@ -349,8 +378,9 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         if privateReplyTapped != nil {
             let privateReplyButton = UIButton(type: .system)
-            privateReplyButton.setImage(UIImage(systemName: "lock.open"), for: .normal)
+            privateReplyButton.setImage(UIImage(systemName: isPrivateReplyActive ? "lock.fill" : "lock.open"), for: .normal)
             privateReplyButton.tintColor = UIColor(Themes.default.theme.accent)
+            privateReplyButton.isEnabled = !isPrivateReplyLocked
             privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
             let privateReply = UIBarButtonItem(customView: privateReplyButton)
             barButtons.append(privateReply)
@@ -444,6 +474,9 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     public final class Coordinator: NSObject, UITextViewDelegate, PastedMediaDelegate {
         
         var isShowingVoiceRecorderButton = true
+        var lastHasPrivateReplyAction: Bool?
+        var lastPrivateReplyActive: Bool?
+        var lastPrivateReplyLocked: Bool?
         
         func didPasteImage(_ image: UIImage) {
             if let gifData = image.gifData() {
@@ -522,6 +555,9 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         init(_ markdownEditorView: HighlightedTextEditor) {
             self.parent = markdownEditorView
+            self.lastHasPrivateReplyAction = markdownEditorView.privateReplyTapped != nil
+            self.lastPrivateReplyActive = markdownEditorView.isPrivateReplyActive
+            self.lastPrivateReplyLocked = markdownEditorView.isPrivateReplyLocked
         }
         
         

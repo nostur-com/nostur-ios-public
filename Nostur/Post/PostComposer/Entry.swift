@@ -172,8 +172,11 @@ struct Entry: View {
                     showAudioRecorder = true
                 },
                 privateReplyTapped: vm.canReplyInPrivate ? {
+                    guard !vm.replyingToPrivatePost else { return }
                     replyInPrivate.toggle()
-                } : nil
+                } : nil,
+                isPrivateReplyActive: replyInPrivate,
+                isPrivateReplyLocked: vm.replyingToPrivatePost
             )
             .introspect { editor in
                 // Needed so we can update cursors position on @mention autocomplete
