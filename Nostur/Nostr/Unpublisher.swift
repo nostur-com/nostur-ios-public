@@ -163,7 +163,7 @@ class Unpublisher {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     
                     // Clear draft
-                    if Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment, .shortVideos]).contains(nEvent.kind) {
+                    if Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment, .shortVideos, .comment]).contains(nEvent.kind) {
                         Drafts.shared.draft = ""
                         Drafts.shared.restoreDraft = ""
                     }
