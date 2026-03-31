@@ -262,6 +262,16 @@ class Importer {
                             // check if rumor id matches computed id and sig should be empty
                             guard rumor.isRumor() else { continue }
                             
+                            let rumorId = rumor.fallbackId()
+
+                            // A locally saved DM rumor can later come back from relays inside a self-wrap.
+                            // Mark the wrap as seen and merge relay metadata instead of importing the rumor again.
+                            if Event.fetchEvent(id: rumorId, context: bgContext) != nil {
+                                updateEventCache(event.id, status: .SAVED, relays: message.relays)
+                                Event.updateRelays(rumorId, relays: message.relays, isWrapId: false, context: bgContext)
+                                continue
+                            }
+
                             // Import rumor
                             _ = try importEvent(event: NEvent.fromNostrEssentialsEvent(rumor), wrapId: event.id, message: message)
                         }
@@ -388,6 +398,16 @@ class Importer {
                             // check if rumor id matches computed id and sig should be empty
                             guard rumor.isRumor() else { continue }
                             
+                            let rumorId = rumor.fallbackId()
+
+                            // A locally saved DM rumor can later come back from relays inside a self-wrap.
+                            // Mark the wrap as seen and merge relay metadata instead of importing the rumor again.
+                            if Event.fetchEvent(id: rumorId, context: bgContext) != nil {
+                                updateEventCache(event.id, status: .SAVED, relays: message.relays)
+                                Event.updateRelays(rumorId, relays: message.relays, isWrapId: false, context: bgContext)
+                                continue
+                            }
+
                             // Import rumor
                             let savedEvent = try importEvent(event: NEvent.fromNostrEssentialsEvent(rumor), wrapId: event.id, message: message)
                             

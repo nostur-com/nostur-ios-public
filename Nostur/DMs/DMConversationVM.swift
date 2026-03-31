@@ -129,6 +129,8 @@ class ConversionVM: ObservableObject {
     
     private var didLoad = false
     
+    private var onScreenIds: Set<String> = []
+    
     @MainActor
     public func load(force: Bool = false) async {
         guard force || !didLoad else { return }
@@ -148,6 +150,8 @@ class ConversionVM: ObservableObject {
             }
             
             let visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair)
+            
+            self.onScreenIds = Set(visibleMessages.map { $0.id })
             
             let calendar = Calendar.current
             
@@ -231,6 +235,7 @@ class ConversionVM: ObservableObject {
         Importer.shared.importedDMSub
             .filter { $0.conversationId == self.conversationId }
             .sink { (_, event, nEvent, newDMStateCreated) in
+                guard !self.onScreenIds.contains(nEvent.id) else { return }
 #if DEBUG
                     L.og.debug("💌💌 Calling self.addToView from importedDMsub: rumor.id: \(nEvent.id)")
 #endif
@@ -339,6 +344,7 @@ class ConversionVM: ObservableObject {
     private var lastAddedIds: RecentSet<String> = .init(capacity: 10)
     
     private func addToView(_ rumorNEvent: NEvent, _ ourkeys: Keys? = nil, _ messageDate: Date) -> NRChatMessage? {
+        guard !self.onScreenIds.contains(rumorNEvent.id) else { return nil }
         if lastAddedIds.contains(rumorNEvent.id) {
             // rumorId (if added from local submit, don't add again when receiving from relay)
 #if DEBUG
@@ -347,6 +353,7 @@ class ConversionVM: ObservableObject {
             return nil
         }
         lastAddedIds.insert(rumorNEvent.id)
+        self.onScreenIds.insert(rumorNEvent.id)
         
         let keyPair: (publicKey: String, privateKey: String)? = if let ourkeys {
             (publicKey: ourkeys.publicKeyHex, privateKey: ourkeys.privateKeyHex)
