@@ -70,7 +70,22 @@ extension Event {
     // Can be used for anything
     // Now we use it for:
     // - "is_update": to not show same article over and over in feed when it gets updates
+    // - "nsecbunker_unsigned":
+    // - "awaiting_send": waiting for response/signature from remote signer
+    // - "sent":
+    // - "zpk_mismatch_event":
+    // - "zpk_verified"
+    // - "tmp": event should not be in database anymore after view is finished. add a flag just in case, so we can still clean up later.
     @NSManaged public var flags: String
+    
+    var flagsSet: Set<String> {
+        get {
+            return Set(flags.split(separator: " ").map { String($0) })
+        }
+        set {
+            flags = newValue.joined(separator: " ")
+        }
+    }
     
     // Calculate this events aTag
     var aTag: String { (String(kind) + ":" + pubkey  + ":" + dTag) }

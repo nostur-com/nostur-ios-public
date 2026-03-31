@@ -111,7 +111,7 @@ struct PostDetailsMenuSheet: View {
                         Text("Posted via \(via)", comment: "Showing from which app this post was posted")
                             .lineLimit(1)
                     }
-                    if AccountsState.shared.activeAccountPublicKey == nrPost.pubkey {
+                    if AccountsState.shared.activeAccountPublicKey == nrPost.pubkey || nrPost.flags == "sent" {
                         Text("Sent to:", comment:"Heading for list of relays sent to")
                     }
                     else {

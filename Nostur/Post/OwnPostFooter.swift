@@ -129,7 +129,9 @@ struct OwnPostFooter: View {
                 else if own.relaysCount == 0 {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.yellow)
                 }
-                Text("Sent to \(own.relaysCount) relays", comment:"Message shown in footer of sent post")
+                if nrPost.flags == "sent" {
+                    Text("Sent to \(own.relaysCount) relays", comment:"Message shown in footer of sent post")
+                }
                 Spacer()
             }
             .padding(.bottom, 5)

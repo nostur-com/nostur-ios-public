@@ -179,13 +179,14 @@ class Unpublisher {
                     accountPubkey: nEvent.publicKey
                 )
                 
-                dbEvent.flags = ""
+                dbEvent.flags = "sent"
                 dbEvent.cancellationId = nil
                 ViewUpdates.shared.updateNRPost.send(dbEvent)
             }
             else {
                 // Event not in db yet
                 let savedEvent = Event.saveEvent(event: nEvent, context: bgContext)
+                
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                 if nEvent.kind == .reaction {
                     Event.updateReactionTo(savedEvent, context: bgContext)
@@ -200,7 +201,6 @@ class Unpublisher {
                     }
                 }
                 
-                DataProvider.shared().saveToDiskNow(.bgContext)
                 if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
                     // Extract plain scalar values from managed object while on bg thread
                     let savedKind = savedEvent.kind
@@ -246,6 +246,8 @@ class Unpublisher {
                     relays: lockToThisRelay != nil ? Set([lockToThisRelay!]) : [],
                     accountPubkey: nEvent.publicKey
                 )
+                savedEvent.flags = "sent"
+                DataProvider.shared().saveToDiskNow(.bgContext)
             }
         }
     }
