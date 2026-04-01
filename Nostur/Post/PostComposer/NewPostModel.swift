@@ -116,6 +116,20 @@ public final class NewPostModel: ObservableObject {
             if lockToSingleRelay {
                 enableAuthAndSendChallengeOnSingleRelay(usingAccount: activeAccount)
             }
+            else {
+                // Update DM relays
+                Task { @MainActor in
+                    if let activeAccount {
+                        let ownRelays = await getDMrelays(for: activeAccount.publicKey)
+                        if ownRelays.isEmpty {
+                            self.replyInPrivate = false
+                        }
+                        else {
+                            self.ownDMRelays = ownRelays
+                        }
+                    }
+                }
+            }
         }
     }
     
