@@ -521,6 +521,7 @@ public final class NewPostModel: ObservableObject {
                     bg().perform {
                         if let savedEvent = try? Event.fetchEvent(id: rumorEvent.fallbackId(), context: bg()) {
                             if ([1,1111,1222,1244].contains(savedEvent.kind)) {
+                                savedEvent.flags = "sent"
                                 DispatchQueue.main.async {
                                     sendNotification(.newPostSaved, savedEvent)
                                 }

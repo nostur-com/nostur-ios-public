@@ -775,7 +775,7 @@ extension Event {
                     freshEvent.relays = uniqueRelays.joined(separator: " ")
                 }
                 if freshEvent.flags == "awaiting_send" && uniqueRelays.count > 0  {
-                    freshEvent.flags = ""
+                    freshEvent.flags = "sent"
                 }
             } catch {
                 print("Failed to update relays: \(error)")
