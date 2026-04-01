@@ -488,7 +488,8 @@ public final class NewPostModel: ObservableObject {
                     
                     // Save rumor locally
                     await bg().perform {
-                        _ = Event.saveEvent(event: rumorEvent, wrapId: selfWrapId, context: bg())
+                        let savedRumor = Event.saveEvent(event: rumorEvent, wrapId: selfWrapId, context: bg())
+                        Importer.shared.existingIds[savedRumor.id] = EventState(status: .SAVED)
                         MessageParser.shared.pendingOkWrapToRumorIdMap[selfWrapId] = rumorEvent.fallbackId()
                     }
                     

@@ -78,16 +78,22 @@ class MessageParser {
                     if message.success ?? false {
                         if let id = message.id {
                             // if "OK" comes back, .updateRelays should update the rumor (.otherId), not the wrap
-                            if pendingOkWrapIds.contains(id) {
+                            if let rumorId = pendingOkWrapToRumorIdMap[id] {
+                                Event.updateRelays(rumorId, relays: message.relays, isWrapId: false, context: bgQueue)
+                                // Don't remove mapping immediately - same wrap may be sent to multiple relays
+                                // Clean up after delay to allow all relay OKs to arrive
+                                let wrapId = id
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 15) { [weak self] in
+                                    self?.bgQueue.perform {
+                                        self?.pendingOkWrapToRumorIdMap.removeValue(forKey: wrapId)
+                                    }
+                                }
+                                okSub.send((id: rumorId, relay: relayUrl))
+                            }
+                            else if pendingOkWrapIds.contains(id) {
                                 Event.updateRelays(id, relays: message.relays, isWrapId: true, context: bgQueue)
                                 pendingOkWrapIds.remove(id)
                                 okSub.send((id: id, relay: relayUrl))
-                            }
-                            else if pendingOkWrapToRumorIdMap.keys.contains(id) {
-                                let rumorId = pendingOkWrapToRumorIdMap[id]!
-                                Event.updateRelays(rumorId, relays: message.relays, isWrapId: false, context: bgQueue)
-                                pendingOkWrapToRumorIdMap.removeValue(forKey: id)
-                                okSub.send((id: rumorId, relay: relayUrl))
                             }
                             else {
                                 okSub.send((id: id, relay: relayUrl))

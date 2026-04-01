@@ -115,8 +115,15 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
             throw NXRelayMessageError.FAILED_TO_PARSE
         }
         if result.success {
+            
+            let messageId = if MessageParser.shared.pendingOkWrapToRumorIdMap.keys.contains(result.id) {
+                MessageParser.shared.pendingOkWrapToRumorIdMap[result.id]!
+            } else {
+                result.id
+            }
+            
             ViewUpdates.shared.eventStatChanged.send(EventStatChange(
-                id: result.id,
+                id: messageId,
                 detectedRelay: relay
             ))
         }
@@ -145,13 +152,24 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
         }
 
         updateConnectionStats(receivedPubkey: mMessage.pubkey, fromRelay: relay)
-
-        if let eventState = Importer.shared.existingIds[mMessage.id] {
+        
+        let messageId = if MessageParser.shared.pendingOkWrapToRumorIdMap.keys.contains(mMessage.id) {
+            MessageParser.shared.pendingOkWrapToRumorIdMap[mMessage.id]!
+        } else {
+            mMessage.id
+        }
+        
+        if let eventState = Importer.shared.existingIds[messageId] {
 
             if eventState.status == .SAVED {
                 let bgContext = bg()
                 if mMessage.subscriptionId.hasPrefix("prio-") {
                     if let savedEvent = Event.fetchEvent(id: mMessage.id, isWrapId: mMessage.kind == 1059, context: bgContext) {
+                        Importer.shared.importedPrioMessagesFromSubscriptionId.send(
+                            ImportedPrioNotification(subscriptionId: mMessage.subscriptionId, event: savedEvent)
+                        )
+                    }
+                    else if let savedEvent = Event.fetchEvent(id: messageId, isWrapId: false, context: bgContext) {
                         Importer.shared.importedPrioMessagesFromSubscriptionId.send(
                             ImportedPrioNotification(subscriptionId: mMessage.subscriptionId, event: savedEvent)
                         )
@@ -165,8 +183,8 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
 
                 // update from which relays an event id was received, or relay feeds won't work.
                 if let relays = eventState.relays, !relays.contains(relay) {
-                    updateEventCache(mMessage.id, status: .SAVED, relays: relay)
-                    Event.updateRelays(mMessage.id, relays: relay, isWrapId: mMessage.kind == 1059, context: bgContext)
+                    updateEventCache(messageId, status: .SAVED, relays: relay)
+                    Event.updateRelays(messageId, relays: relay, isWrapId: false, context: bgContext)
                 }
             }
 
@@ -177,7 +195,7 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
 
                 if let relays = sameMessageInQueue?.relays {
                     sameMessageInQueue?.setRelays(relays + " " + relay)
-                    updateEventCache(mMessage.id, status: .PARSED, relays: sameMessageInQueue?.relays)
+                    updateEventCache(messageId, status: .PARSED, relays: sameMessageInQueue?.relays)
                 }
             }
 
@@ -200,7 +218,7 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
             }
             throw NXRelayMessageError.DUPLICATE_UNKNOWN
         } else {
-            updateEventCache(mMessage.id, status: .RECEIVED, relays: relay)
+            updateEventCache(messageId, status: .RECEIVED, relays: relay)
         }
     }
     
