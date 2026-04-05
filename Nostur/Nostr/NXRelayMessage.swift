@@ -189,14 +189,7 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
             }
 
             if eventState.status == .PARSED {
-                var sameMessageInQueue = MessageParser.shared.messageBucket.first(where: {
-                    mMessage.id == $0.event?.id && $0.type == .EVENT
-                })
-
-                if let relays = sameMessageInQueue?.relays {
-                    sameMessageInQueue?.setRelays(relays + " " + relay)
-                    updateEventCache(messageId, status: .PARSED, relays: sameMessageInQueue?.relays)
-                }
+                MessageParser.shared.mergeRelaysForParsedDuplicate(eventId: messageId, relay: relay)
             }
 
             // We should always notify if we received a contact list this session, to enable Follow button

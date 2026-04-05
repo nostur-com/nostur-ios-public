@@ -40,6 +40,10 @@ class MessageParser {
     private var poolQueue = ConnectionPool.shared.queue
     public var messageBucket = Deque<NXRelayMessage>()
     public var priorityBucket = Deque<NXRelayMessage>()
+    private var queuedMessageIds: Set<String> = []
+    private var queuedPriorityIds: Set<String> = []
+    private var messageRelaysByEventId: [String: Set<String>] = [:]
+    private var priorityRelaysByEventId: [String: Set<String>] = [:]
     public var isSignatureVerificationEnabled = true
     
     public let tagSerializer: TagSerializer
@@ -444,39 +448,108 @@ class MessageParser {
     }
     
     func handlePrioMessage(message: NXRelayMessage, nEvent: NEvent, relayUrl: String) {
-        var sameMessageInQueue = self.priorityBucket.first(where: {
-             nEvent.id == $0.event?.id && $0.type == .EVENT
-        })
-        
-        if let relays = sameMessageInQueue?.relays {
-            sameMessageInQueue?.setRelays(relays + " " + message.relays)
-            return
-        }
-        else {
-            self.priorityBucket.append(message)
-            guard let event = message.event else { return }
-            updateEventCache(event.id, status: .PARSED, relays: relayUrl)
-            Importer.shared.addedPrioRelayMessage.send()
-        }
+        enqueuePrioMessage(message, eventId: nEvent.id, relayUrl: relayUrl)
     }
     
     
     
     // MARK: Goes to importer/db
     func handleNormalMessage(message: NXRelayMessage, nEvent: NEvent, relayUrl: String) {
-        var sameMessageInQueue = self.messageBucket.first(where: { // TODO: Instruments: slow here...
-             nEvent.id == $0.event?.id && $0.type == .EVENT
-        })
+        enqueueNormalMessage(message, eventId: nEvent.id, relayUrl: relayUrl)
+    }
+    
+    var messageBucketCount: Int {
+        messageBucket.count
+    }
+    
+    var priorityBucketCount: Int {
+        priorityBucket.count
+    }
+    
+    func popFirstNormalMessage() -> NXRelayMessage? {
+        guard var message = messageBucket.popFirst() else {
+            return nil
+        }
         
-        if let relays = sameMessageInQueue?.relays {
-            sameMessageInQueue?.setRelays(relays + " " + message.relays)
+        if let eventId = message.event?.id {
+            if let mergedRelays = mergedRelays(for: eventId, queuedRelaysByEventId: &messageRelaysByEventId) {
+                message.relays = mergedRelays
+            }
+            queuedMessageIds.remove(eventId)
+        }
+        return message
+    }
+    
+    func popFirstPrioMessage() -> NXRelayMessage? {
+        guard var message = priorityBucket.popFirst() else {
+            return nil
+        }
+        
+        if let eventId = message.event?.id {
+            if let mergedRelays = mergedRelays(for: eventId, queuedRelaysByEventId: &priorityRelaysByEventId) {
+                message.relays = mergedRelays
+            }
+            queuedPriorityIds.remove(eventId)
+        }
+        return message
+    }
+    
+    func mergeRelaysForParsedDuplicate(eventId: String, relay: String) {
+        var merged = false
+        
+        if queuedMessageIds.contains(eventId) {
+            messageRelaysByEventId[eventId, default: []].insert(relay)
+            merged = true
+        }
+        
+        if queuedPriorityIds.contains(eventId) {
+            priorityRelaysByEventId[eventId, default: []].insert(relay)
+            merged = true
+        }
+        
+        if merged {
+            updateEventCache(eventId, status: .PARSED, relays: relay)
+        }
+    }
+    
+    private func enqueueNormalMessage(_ message: NXRelayMessage, eventId: String, relayUrl: String) {
+        let relaySet = relaySetFromString(message.relays)
+        if queuedMessageIds.contains(eventId) {
+            messageRelaysByEventId[eventId, default: []].formUnion(relaySet)
+            updateEventCache(eventId, status: .PARSED, relays: relayUrl)
             return
         }
-        else {
-            self.messageBucket.append(message)
-            guard let event = message.event else { return }
-            updateEventCache(event.id, status: .PARSED, relays: relayUrl)
-            Importer.shared.addedRelayMessage.send()
+        
+        messageBucket.append(message)
+        queuedMessageIds.insert(eventId)
+        messageRelaysByEventId[eventId] = relaySet
+        updateEventCache(eventId, status: .PARSED, relays: relayUrl)
+        Importer.shared.addedRelayMessage.send()
+    }
+    
+    private func enqueuePrioMessage(_ message: NXRelayMessage, eventId: String, relayUrl: String) {
+        let relaySet = relaySetFromString(message.relays)
+        if queuedPriorityIds.contains(eventId) {
+            priorityRelaysByEventId[eventId, default: []].formUnion(relaySet)
+            updateEventCache(eventId, status: .PARSED, relays: relayUrl)
+            return
         }
+        
+        priorityBucket.append(message)
+        queuedPriorityIds.insert(eventId)
+        priorityRelaysByEventId[eventId] = relaySet
+        updateEventCache(eventId, status: .PARSED, relays: relayUrl)
+        Importer.shared.addedPrioRelayMessage.send()
+    }
+    
+    private func relaySetFromString(_ relays: String) -> Set<String> {
+        Set(relays.split(separator: " ").map { String($0) })
+    }
+    
+    private func mergedRelays(for eventId: String, queuedRelaysByEventId: inout [String: Set<String>]) -> String? {
+        guard let relays = queuedRelaysByEventId.removeValue(forKey: eventId), !relays.isEmpty else {
+            return nil
+        }
+        return relays.joined(separator: " ")
     }
 }

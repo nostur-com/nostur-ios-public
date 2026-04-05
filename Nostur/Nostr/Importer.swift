@@ -164,7 +164,7 @@ class Importer {
         }
         bgContext.perform { [unowned self] in
             if (self.isImporting) {
-                let itemsCount = MessageParser.shared.messageBucket.count
+                let itemsCount = MessageParser.shared.messageBucketCount
                 self.needsImport = true
                 if itemsCount > 0 {
                     self.listStatus.send("Processing \(itemsCount) items...")
@@ -178,7 +178,7 @@ class Importer {
             }
             
             self.isImporting = true
-            let forImportsCount = MessageParser.shared.messageBucket.count
+            let forImportsCount = MessageParser.shared.messageBucketCount
             guard forImportsCount != 0 else {
 #if DEBUG
                 L.importing.debug("🏎️🏎️ importEvents() nothing to import.")
@@ -197,7 +197,7 @@ class Importer {
                 // We send a notification every .save with the saved subscriptionIds
                 // so other parts of the system can start fetching from local db
                 var subscriptionIds = Set<String>()
-                while let message = MessageParser.shared.messageBucket.popFirst() {
+                while let message = MessageParser.shared.popFirstNormalMessage() {
                     count = count + 1
                     guard let event = message.event else {
                         L.importing.error("🔴🔴 message.event is nil \(message.message)")
@@ -333,7 +333,7 @@ class Importer {
     
     public func importPrioEvents() {
         bgContext.perform { [unowned self] in
-            let forImportsCount = MessageParser.shared.priorityBucket.count
+            let forImportsCount = MessageParser.shared.priorityBucketCount
             guard forImportsCount != 0 else {
 #if DEBUG
                 L.importing.debug("🏎️🏎️ importPrioEvents() nothing to import.")
@@ -346,7 +346,7 @@ class Importer {
                 var alreadyInDBskipped = 0
                 var saved = 0
                 
-                while let message = MessageParser.shared.priorityBucket.popFirst() {
+                while let message = MessageParser.shared.popFirstPrioMessage() {
                     count = count + 1
                     guard let event = message.event else {
 #if DEBUG
