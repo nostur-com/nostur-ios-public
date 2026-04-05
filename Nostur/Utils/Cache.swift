@@ -30,7 +30,7 @@ struct NRContactCache {
 
 struct EventCache {
     static let shared: LRUCache2<String, Event> = {
-        let cache = LRUCache2<String, Event>(countLimit: IS_CATALYST ? 5000 : 500)
+        let cache = LRUCache2<String, Event>(countLimit: IS_CATALYST ? 8000 : 2000)
         return cache
     }()
 }
