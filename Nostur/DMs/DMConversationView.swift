@@ -10,6 +10,7 @@ import NavigationBackport
 import NostrEssentials
 import PhotosUI
 import UniformTypeIdentifiers
+import ImageIO
 
 struct DMConversationView: View {
     @Environment(\.theme) private var theme
@@ -298,14 +299,13 @@ struct DMConversationView: View {
             if #available(iOS 16.0, *) {
                 DMPhotoPickerSheet { data, mimeType, dimensions in
                     showPhotosPicker = false
-                    let thumbnail = UIImage(data: data)
-                    vm.pendingFileAttachment = PendingFileAttachment(
-                        data: data,
-                        mimeType: mimeType,
-                        imageDimensions: dimensions,
-                        fileName: nil,
-                        thumbnailImage: thumbnail
-                    )
+                    do {
+                        let pending = try buildPendingAttachment(from: data, mimeType: mimeType, imageDimensions: dimensions)
+                        vm.pendingFileAttachment = pending
+                    }
+                    catch {
+                        errorText = error.localizedDescription
+                    }
                 }
             }
         }
@@ -327,7 +327,8 @@ struct DMConversationView: View {
                 vm.pendingFileAttachment = nil
                 do {
                     errorText = nil
-                    try await vm.sendFileMessage17(fileData: pending.data, mimeType: pending.mimeType, imageDimensions: pending.imageDimensions)
+                    try await vm.sendFileMessage17(fileURL: pending.fileURL, mimeType: pending.mimeType, imageDimensions: pending.imageDimensions)
+                    removePendingAttachmentFile(at: pending.fileURL)
                 }
                 catch DMError.PrivateKeyMissing {
                     AppSheetsModel.shared.readOnlySheetVisible = true
@@ -374,34 +375,128 @@ struct DMConversationView: View {
             if accessing { url.stopAccessingSecurityScopedResource() }
         }
         
-        guard let data = try? Data(contentsOf: url) else {
-            errorText = "Could not read file"
-            return
-        }
-        
         let mimeType: String
         if let utType = UTType(filenameExtension: url.pathExtension) {
             mimeType = utType.preferredMIMEType ?? "application/octet-stream"
         } else {
             mimeType = "application/octet-stream"
         }
-        
-        let fileName = url.lastPathComponent
-        
-        // For images, create a thumbnail
-        let thumbnail: UIImage? = if mimeType.hasPrefix("image/") {
-            UIImage(data: data)
-        } else {
-            nil
+
+        do {
+            vm.pendingFileAttachment = try buildPendingAttachment(fromFileAt: url, mimeType: mimeType)
         }
-        
-        vm.pendingFileAttachment = PendingFileAttachment(
-            data: data,
+        catch {
+            errorText = "Could not read file"
+        }
+    }
+
+    private func buildPendingAttachment(from data: Data, mimeType: String, imageDimensions: String?) throws -> PendingFileAttachment {
+        let temporaryFileURL = try persistPendingAttachment(data: data, mimeType: mimeType)
+        let thumbnail = thumbnailImage(from: data, mimeType: mimeType)
+        let fileName = temporaryFileURL.lastPathComponent
+
+        return PendingFileAttachment(
+            fileURL: temporaryFileURL,
+            fileSize: Int64(data.count),
             mimeType: mimeType,
-            imageDimensions: nil,
+            imageDimensions: imageDimensions,
             fileName: fileName,
             thumbnailImage: thumbnail
         )
+    }
+
+    private func buildPendingAttachment(fromFileAt url: URL, mimeType: String) throws -> PendingFileAttachment {
+        let temporaryFileURL = try copyPendingAttachment(from: url, mimeType: mimeType)
+        let values = try temporaryFileURL.resourceValues(forKeys: [.fileSizeKey])
+        let fileSize = Int64(values.fileSize ?? 0)
+
+        return PendingFileAttachment(
+            fileURL: temporaryFileURL,
+            fileSize: fileSize,
+            mimeType: mimeType,
+            imageDimensions: imageDimensions(from: temporaryFileURL, mimeType: mimeType),
+            fileName: url.lastPathComponent,
+            thumbnailImage: thumbnailImage(from: temporaryFileURL, mimeType: mimeType)
+        )
+    }
+
+    private func pendingAttachmentDirectory() throws -> URL {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("dm-attachments", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: nil)
+        return directory
+    }
+
+    private func persistPendingAttachment(data: Data, mimeType: String) throws -> URL {
+        let fileExtension = UTType(mimeType: mimeType)?.preferredFilenameExtension ?? "bin"
+        let destinationURL = try pendingAttachmentDirectory().appendingPathComponent(UUID().uuidString).appendingPathExtension(fileExtension)
+        try data.write(to: destinationURL, options: [.atomic])
+        return destinationURL
+    }
+
+    private func copyPendingAttachment(from sourceURL: URL, mimeType: String) throws -> URL {
+        let fileExtension = sourceURL.pathExtension.isEmpty
+            ? (UTType(mimeType: mimeType)?.preferredFilenameExtension ?? "bin")
+            : sourceURL.pathExtension
+        let destinationURL = try pendingAttachmentDirectory().appendingPathComponent(UUID().uuidString).appendingPathExtension(fileExtension)
+        try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+        return destinationURL
+    }
+
+    private func removePendingAttachmentFile(at fileURL: URL) {
+        try? FileManager.default.removeItem(at: fileURL)
+    }
+
+    private func imageDimensions(from fileURL: URL, mimeType: String) -> String? {
+        guard mimeType.hasPrefix("image/"),
+              let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? Int,
+              let height = properties[kCGImagePropertyPixelHeight] as? Int
+        else {
+            return nil
+        }
+
+        return "\(width)x\(height)"
+    }
+
+    private func thumbnailImage(from fileURL: URL, mimeType: String) -> UIImage? {
+        guard mimeType.hasPrefix("image/"),
+              let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil)
+        else {
+            return nil
+        }
+
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 240
+        ]
+
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+
+        return UIImage(cgImage: cgImage)
+    }
+
+    private func thumbnailImage(from data: Data, mimeType: String) -> UIImage? {
+        guard mimeType.hasPrefix("image/"),
+              let source = CGImageSourceCreateWithData(data as CFData, nil)
+        else {
+            return nil
+        }
+
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 240
+        ]
+
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+
+        return UIImage(cgImage: cgImage)
     }
 }
 

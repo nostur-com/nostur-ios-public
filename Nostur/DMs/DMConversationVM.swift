@@ -11,7 +11,8 @@ import NostrEssentials
 import Combine
 
 struct PendingFileAttachment {
-    let data: Data
+    let fileURL: URL
+    let fileSize: Int64
     let mimeType: String
     let imageDimensions: String?
     let fileName: String?
@@ -38,7 +39,7 @@ struct PendingFileAttachment {
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useKB, .useMB, .useGB]
         formatter.countStyle = .file
-        return formatter.string(fromByteCount: Int64(data.count))
+        return formatter.string(fromByteCount: fileSize)
     }
 }
 
@@ -568,7 +569,7 @@ class ConversionVM: ObservableObject {
     @Published var isUploadingFile = false
     
     @MainActor
-    public func sendFileMessage17(fileData: Data, mimeType: String, imageDimensions: String? = nil) async throws {
+    public func sendFileMessage17(fileURL: URL, mimeType: String, imageDimensions: String? = nil) async throws {
         guard SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL else {
             throw DMFileError.blossomNotConfigured
         }
@@ -580,8 +581,11 @@ class ConversionVM: ObservableObject {
         isUploadingFile = true
         defer { isUploadingFile = false }
         
-        // 1. Encrypt the file with AES-GCM
-        let encrypted = try encryptFileForDM(data: fileData)
+        // Read and encrypt off the main actor so large attachments don't block the UI.
+        let encrypted = try await Task.detached(priority: .userInitiated) {
+            let fileData = try Data(contentsOf: fileURL, options: [.mappedIfSafe])
+            return try encryptFileForDM(data: fileData)
+        }.value
         
         // 2. Upload encrypted data to Blossom
         let blossomFile = BlossomUploadFile(data: encrypted.encryptedData, contentType: "application/octet-stream")
