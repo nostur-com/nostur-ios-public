@@ -246,9 +246,9 @@ public class ConnectionPool: ObservableObject {
         queue.async { [unowned self] in
             for (_, connection) in self.connections {
                 if (connection.isConnected) { continue }
-                guard connection.relayData.shouldConnect else { return }
-                guard !connection.isSocketConnected else { return }
-                guard !connection.isSocketConnecting else { return }
+                guard connection.relayData.shouldConnect else { continue }
+                guard !connection.isSocketConnected else { continue }
+                guard !connection.isSocketConnecting else { continue }
                 if resetExpBackOff {
                     connection.resetExponentialBackOff()
                 }
@@ -276,8 +276,8 @@ public class ConnectionPool: ObservableObject {
     public func connectAllWrite() {
         queue.async { [unowned self] in
             for (_, connection) in self.connections {
-                guard connection.relayData.write else { return }
-                guard !connection.isSocketConnected else { return }
+                guard connection.relayData.write else { continue }
+                guard !connection.isSocketConnected else { continue }
                 connection.connect()
             }
         }
@@ -294,7 +294,7 @@ public class ConnectionPool: ObservableObject {
     private func stayConnectedPing() {
         queue.async { [unowned self] in
             for (_, connection) in self.connections {
-                guard connection.isConnected else { return }
+                guard connection.isConnected else { continue }
                 
                 if let lastReceivedMessageAt = connection.lastMessageReceivedAt {
                     if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
