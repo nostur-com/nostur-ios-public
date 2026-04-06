@@ -90,6 +90,19 @@ extension Event {
     // Calculate this events aTag
     var aTag: String { (String(kind) + ":" + pubkey  + ":" + dTag) }
     
+    var isPrivateZapReceipt: Bool {
+        if flagsSet.contains("private_zap") { return true }
+        if fastTags.contains(where: { $0.0 == "anon" }) { return true }
+        
+        guard kind == 9735,
+              let descriptionTag = fastTags.first(where: { $0.0 == "description" })?.1,
+              let data = descriptionTag.data(using: .utf8),
+              let zapRequest = try? JSONDecoder().decode(NEvent.self, from: data)
+        else { return false }
+        
+        return zapRequest.tags.contains(where: { $0.type == "anon" })
+    }
+    
     public var contact: Contact? {
         guard let ctx = managedObjectContext else { return nil }
         return Contact.fetchByPubkey(pubkey, context: ctx)
@@ -744,6 +757,64 @@ extension Event {
             }
         }
         return nil
+    }
+    
+    struct ExtractedZapRequest {
+        let event: NEvent
+        let isPrivate: Bool
+    }
+    
+    static func extractZapRequest(zapReceipt: NEvent, context: NSManagedObjectContext) -> ExtractedZapRequest? {
+        if let zapRequest = extractZapRequest(tags: zapReceipt.tags) {
+            return ExtractedZapRequest(event: zapRequest, isPrivate: false)
+        }
+        
+        if let privateZapRequest = extractPrivateZapRequest(zapReceipt: zapReceipt, context: context) {
+            return ExtractedZapRequest(event: privateZapRequest, isPrivate: true)
+        }
+        
+        return nil
+    }
+    
+    private static func extractPrivateZapRequest(zapReceipt: NEvent, context: NSManagedObjectContext) -> NEvent? {
+        guard let anonTag = zapReceipt.tags.first(where: { $0.type == "anon" })?.value else { return nil }
+        
+        let parts = anonTag.split(separator: "_", maxSplits: 1).map(String.init)
+        guard parts.count == 2 else { return nil }
+        
+        guard
+            let (ciphertextHrp, ciphertext) = try? Bech32.decode(other: parts[0]),
+            let (ivHrp, iv) = try? Bech32.decode(other: parts[1]),
+            ciphertextHrp == "pzap",
+            ivHrp == "iv"
+        else { return nil }
+        
+        guard
+            let receiverPubkey = zapReceipt.firstP(),
+            let account = try? CloudAccount.fetchAccount(publicKey: receiverPubkey, context: context),
+            let receiverPrivateKey = account.privateKey
+        else { return nil }
+        
+        let encryptedContent = "\(ciphertext.base64EncodedString())?iv=\(iv.base64EncodedString())"
+        guard
+            let decryptedPrivateZap = Keys.decryptDirectMessageContent(
+                withPrivateKey: receiverPrivateKey,
+                pubkey: zapReceipt.publicKey,
+                content: encryptedContent
+            ),
+            let privateZapRequest = try? JSONDecoder().decode(NEvent.self, from: Data(decryptedPrivateZap.utf8))
+        else { return nil }
+        
+        do {
+            guard try (!MessageParser.shared.isSignatureVerificationEnabled) || privateZapRequest.verified() else { return nil }
+            return privateZapRequest
+        }
+        catch {
+#if DEBUG
+            L.og.error("extractPrivateZapRequest \(error)")
+#endif
+            return nil
+        }
     }
     
     static func safeUpdateRelays(for event: Event, relays: String) {

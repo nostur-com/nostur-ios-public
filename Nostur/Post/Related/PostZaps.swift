@@ -160,8 +160,16 @@ struct NxZapReceipt: View {
     var body: some View { // Copy pasta from Kind1Default, remove all non 9735 stuff, removed footer, removed thread connecting lines
         HStack(alignment: .top) {
             VStack(alignment: .center) {
-                Image(systemName: "bolt.fill")
-                    .foregroundColor(theme.accent)
+                HStack(spacing: 4) {
+                    Image(systemName: "bolt.fill")
+                        .foregroundColor(theme.accent)
+                    if nrPost.isPrivateZap {
+                        Image(systemName: "lock.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .infoText("This is a private zap, the sender is not revealed in public.")
+                    }
+                }
                 Text(nrPost.sats, format: .number.notation((.compactName)))
                     .font(.title3)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {

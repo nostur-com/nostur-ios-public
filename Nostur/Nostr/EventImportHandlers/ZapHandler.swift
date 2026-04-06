@@ -12,7 +12,13 @@ func handleZap(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContex
     guard nEvent.kind == .zapNote else { return }
     
     // Cache details from zap request on 9735 event
-    guard let nZapRequest = Event.extractZapRequest(tags: nEvent.tags) else { return }
+    guard let extractedZapRequest = Event.extractZapRequest(zapReceipt: nEvent, context: context) else { return }
+    let nZapRequest = extractedZapRequest.event
+    if extractedZapRequest.isPrivate {
+        var flags = savedEvent.flagsSet
+        flags.insert("private_zap")
+        savedEvent.flagsSet = flags
+    }
     
     if let firstE = nEvent.firstE() {
         savedEvent.zappedEventId = firstE

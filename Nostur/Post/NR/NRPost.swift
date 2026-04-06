@@ -241,6 +241,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var receiptPubkey: String? // Zapper (not from, or receiver)
     var fromPubkey: String? // zap sent from
     var verified = false
+    var isPrivateZap = false
     
     init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil) {
         var isAwaiting = false
@@ -469,6 +470,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             self.receiptPubkey = event.pubkey
             self.fromPubkey = fromPubkey
             self.verified = event.flags != "zpk_mismatch_event"
+            self.isPrivateZap = event.isPrivateZapReceipt
             self.via = event.cache1
             
         case 9802:
