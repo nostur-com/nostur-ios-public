@@ -434,8 +434,7 @@ struct AddExistingAccountSheet: View {
         account.ncRemoteSignerPubkey_ = pubkey
         account.ncRelay = bunkerManager.ncRelay
         bunkerManager.connect(account, token: token)
- 
-        accountsState.changeAccount(account)
+
         showSidebar = false
         loading = true
         onDismiss?()

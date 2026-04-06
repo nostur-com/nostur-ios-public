@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 import Combine
 import NostrEssentials
 
@@ -57,6 +58,26 @@ class NewOnboardingTracker {
     }
 
     public func start(pubkey: String) throws {
+        try self.startInternal(pubkey: pubkey) {
+            if let account = try? CloudAccount.fetchAccount(publicKey: pubkey, context: self.bg) {
+                self.account = account
+            }
+            else {
+                throw "No account in database"
+            }
+        }
+    }
+
+    public func start(accountObjectID: NSManagedObjectID, pubkey: String) throws {
+        try self.startInternal(pubkey: pubkey) {
+            guard let account = try? self.bg.existingObject(with: accountObjectID) as? CloudAccount else {
+                throw "No account in database"
+            }
+            self.account = account
+        }
+    }
+
+    private func startInternal(pubkey: String, accountResolver: () throws -> Void) throws {
         if pubkey == GUEST_ACCOUNT_PUBKEY {
             if guestAlreadyStarted { return }
             guestAlreadyStarted = true
@@ -82,12 +103,7 @@ class NewOnboardingTracker {
         
         L.onboarding.info("✈️✈️ OnboardingTracker.start(\(pubkey.short))")
         try self.bg.performAndWait {
-            if let account = try? CloudAccount.fetchAccount(publicKey: pubkey, context: self.bg) {
-                self.account = account
-            }
-            else {
-                throw "No account in database"
-            }
+            try accountResolver()
         }
         self.fetchedOwnProfileTask = false
         self.fetchedFollowsTask = false
