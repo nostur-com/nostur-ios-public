@@ -110,7 +110,7 @@ struct ProfileZapButton: View {
                                        guard customZapId != nil && customZap.customZapId == customZapId else { return }
                                        
                                        let point = CGPoint(x: geo.frame(in: .global).origin.x + 55, y: geo.frame(in: .global).origin.y + 10)
-                                       self.triggerZap(strikeLocation: point, nrContact: nrContact, zapMessage: customZap.publicNote, amount: customZap.amount)
+                                       self.triggerZap(strikeLocation: point, nrContact: nrContact, zapMessage: customZap.publicNote, amount: customZap.amount, privateZap: customZap.privateZap, anonymousZap: customZap.anonymousZap)
                                    }
                         }
                     )
@@ -124,7 +124,7 @@ struct ProfileZapButton: View {
         }
     }
     
-    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil) {
+    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil, privateZap: Bool = false, anonymousZap: Bool = false) {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
         let isNC = account.isNC
@@ -143,7 +143,7 @@ struct ProfileZapButton: View {
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
             guard let cancellationId = cancellationId else { return }
-            let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), nrContact: nrContact, eventId: zapEtag, cancellationId: cancellationId, zapMessage: zapMessage)
+            let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), nrContact: nrContact, eventId: zapEtag, cancellationId: cancellationId, zapMessage: zapMessage, isPrivateZap: privateZap, isAnonymousZap: anonymousZap)
             NWCZapQueue.shared.sendZap(zap)
             nrContact.zapState = .initiated
         }

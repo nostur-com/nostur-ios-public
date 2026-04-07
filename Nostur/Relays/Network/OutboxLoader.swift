@@ -276,6 +276,16 @@ public func resolveRelayHint(forPubkey pubkey: String, receivedFromRelays: Set<S
     return []
 }
 
+// Takes a pubkey and tries to return inbox relays
+public func getInboxRelays(forPubkey pubkey: String) -> Set<String> {
+    let kind10002: Event? = Event.fetchReplacableEvent(10002, pubkey: pubkey, context: context())
+    
+    let readRelays: Set<String> = Set( kind10002?.fastTags.filter({ relay in
+        relay.0 == "r" && (relay.2 == nil || relay.2 == "read")
+    }).map { normalizeRelayUrl($0.1) } ?? [] )
+                
+    return []
+}
 
 extension Event {
     func toNostrEssentialsEvent() -> NostrEssentials.Event {

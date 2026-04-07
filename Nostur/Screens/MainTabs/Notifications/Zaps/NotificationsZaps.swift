@@ -219,8 +219,16 @@ struct PostZapsView: View {
     var body: some View {
         HStack(alignment: .top) {
             VStack {
-                Image(systemName: "bolt.fill")
-                    .foregroundColor(theme.accent)
+                HStack(spacing: 4) {
+                    Image(systemName: "bolt.fill")
+                        .foregroundColor(theme.accent)
+                    if postZaps.zaps.contains(where: { $0.isPrivateZap }) {
+                        Image(systemName: "lock.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .infoText("This is a private zap, the sender is not revealed in public.")
+                    }
+                }
 //                Text(Double(footerAttributes.zapTally).satsFormatted)
 //                    .font(.title2)
                 Text(postZaps.zaps.reduce(0, { $0 + $1.sats }), format: .number.notation((.compactName)))
@@ -256,8 +264,16 @@ struct ProfileZap: View {
     var body: some View {
         HStack(alignment: .top) {
             VStack {
-                Image(systemName: "bolt.fill")
-                    .foregroundColor(theme.accent)
+                HStack(spacing: 4) {
+                    Image(systemName: "bolt.fill")
+                        .foregroundColor(theme.accent)
+                    if zap.isPrivateZap {
+                        Image(systemName: "lock.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .infoText("This is a private zap, the sender is not revealed in public.")
+                    }
+                }
                 Text(zap.sats, format: .number.notation((.compactName)))
                     .font(.title2)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {

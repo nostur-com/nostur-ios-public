@@ -84,25 +84,36 @@ class ZapsFeedModel: ObservableObject {
                 GroupedPostZaps(
                     zaps: self.allZapEvents
                         .filter { $0.zappedEventId == zappedEvent.id }
-                        .reduce(into: [String: (fromPubkey: String, amount: Int64, zap: Event)]()) { (result, zap) in
+                        .reduce(into: [String: (fromPubkey: String, amount: Int64, zap: Event, isPrivateZap: Bool)]()) { (result, zap) in
                             if let fromPubkey = zap.fromPubkey {
                                 if let zapInfo = result[fromPubkey] {
-                                    result[fromPubkey] = (fromPubkey: fromPubkey, amount: zapInfo.zap.amount + zap.amount, zap: zap) // add
+                                    result[fromPubkey] = (
+                                        fromPubkey: fromPubkey,
+                                        amount: zapInfo.amount + zap.amount,
+                                        zap: zap,
+                                        isPrivateZap: zapInfo.isPrivateZap || zap.isPrivateZapReceipt
+                                    )
                                 }
                                 else {
-                                    result[fromPubkey] = (fromPubkey: fromPubkey, amount: zap.amount, zap: zap) // create
+                                    result[fromPubkey] = (
+                                        fromPubkey: fromPubkey,
+                                        amount: zap.amount,
+                                        zap: zap,
+                                        isPrivateZap: zap.isPrivateZapReceipt
+                                    )
                                 }
                             }
                         }
                         .values
                         .sorted(by: { $0.zap.created_at > $1.zap.created_at })
-                        .map { (fromPubkey, amount, zap) in
+                        .map { (fromPubkey, amount, zap, isPrivateZap) in
                             return SingleZap(
                                 id: fromPubkey,
                                 fromNRContact: NRContact.instance(of: fromPubkey),
                                 createdAt: zap.created_at,
                                 sats: Double(amount),
-                                content: zap.content ?? "")
+                                content: zap.zapDisplayContent,
+                                isPrivateZap: isPrivateZap)
                         },
                     nrPost: NRPost(event: zappedEvent)
                 )
@@ -123,7 +134,8 @@ class ZapsFeedModel: ObservableObject {
                         fromNRContact: NRContact.instance(of: zapFromPubkey),
                         createdAt: zapEvent.created_at,
                         sats: Double(zapEvent.amount),
-                        content: zapEvent.content ?? ""
+                        content: zapEvent.zapDisplayContent,
+                        isPrivateZap: zapEvent.isPrivateZapReceipt
                     )
                 }
             
@@ -200,6 +212,7 @@ struct SingleZap: Identifiable {
     public let createdAt: Int64
     public let sats: Double
     public let content: String // zap message
+    public let isPrivateZap: Bool
 }
 
 class GroupedPostZaps: ObservableObject, Identifiable {

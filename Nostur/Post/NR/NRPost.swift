@@ -603,7 +603,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.004"); isAwaiting = true
         }
         
-        if let content = event.content {
+        if kind == 9735 {
+            self.content = event.zapDisplayContent
+        }
+        else if let content = event.content {
             self.content = content
         }
         

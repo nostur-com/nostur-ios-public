@@ -21,6 +21,8 @@ struct NestParticipantView: View {
     @State private var triggerStrike = false
     @State private var customAmount: Double? = nil
     @State private var zapMessage: String = ""
+    @State private var privateZap = false
+    @State private var anonymousZap = false
     
     var body: some View {
         VStack(spacing: 2.0) {
@@ -32,6 +34,8 @@ struct NestParticipantView: View {
                     guard customZap.customZapId == "LIVE-\(nrContact.pubkey)" else { return }
                     customAmount = customZap.amount
                     zapMessage = customZap.publicNote
+                    privateZap = customZap.privateZap
+                    anonymousZap = customZap.anonymousZap
                     triggerStrike = true
                 }
                 .overlay {
@@ -40,7 +44,7 @@ struct NestParticipantView: View {
                             Color.clear
                                 .onAppear {
                                     guard !isZapped else { return }
-                                    self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrContact, zapMessage: zapMessage, amount: customAmount)
+                                    self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrContact, zapMessage: zapMessage, amount: customAmount, privateZap: privateZap, anonymousZap: anonymousZap)
                                 }
                         }
                     }
@@ -79,7 +83,7 @@ struct NestParticipantView: View {
         }
     }
     
-    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil) {
+    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil, privateZap: Bool = false, anonymousZap: Bool = false) {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
         let isNC = account.isNC
@@ -100,13 +104,15 @@ struct NestParticipantView: View {
 
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
-            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), nrContact: nrContact, aTag: aTag, cancellationId: cancellationId, zapMessage: zapMessage, withPending: true)
+            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), nrContact: nrContact, aTag: aTag, cancellationId: cancellationId, zapMessage: zapMessage, isPrivateZap: privateZap, isAnonymousZap: anonymousZap, withPending: true)
             NWCZapQueue.shared.sendZap(zap)
             Task { @MainActor in
                 self.isZapped = false
                 self.triggerStrike = false
                 self.customAmount = nil
                 self.zapMessage = ""
+                self.privateZap = false
+                self.anonymousZap = false
             }
         }
     }

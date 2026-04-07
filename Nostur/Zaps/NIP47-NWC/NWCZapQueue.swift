@@ -41,13 +41,13 @@ class NWCZapQueue {
                         zap.value.error = "Time out (receiver wallet service down or not reachable?)"
                         timeoutZaps.append(zap.value)
 #if DEBUG
-        L.og.info("⚡️ Zap clean up timer. now in queue: \(self.waitingZaps.count) - ADDING TIMEOUT ZAP")
+        L.og.info("⚡️⚡️ Zap clean up timer. now in queue: \(self.waitingZaps.count) - ADDING TIMEOUT ZAP")
 #endif
                     }
                     else {
                         failedZaps.append(zap.value)
 #if DEBUG
-        L.og.info("⚡️ Zap clean up timer. now in queue: \(self.waitingZaps.count) - ADDING FAILED ZAP")
+        L.og.info("⚡️⚡️ Zap clean up timer. now in queue: \(self.waitingZaps.count) - ADDING FAILED ZAP")
 #endif
                     }
                 }
@@ -57,7 +57,7 @@ class NWCZapQueue {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
 #if DEBUG
-                        L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
+                        L.og.info("⚡️⚡️ Creating notification for \(failedZaps.count) failed zaps")
 #endif
                         let notification = PersistentNotification.createFailedNWCZaps(pubkey: AccountsState.shared.activeAccountPublicKey, message: serializedFails, context: bg())
                         FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
@@ -70,7 +70,7 @@ class NWCZapQueue {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
 #if DEBUG
-                        L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
+                        L.og.info("⚡️⚡️ Creating notification for \(failedZaps.count) failed zaps")
 #endif
                         let notification = PersistentNotification.createFailedNWCZaps(pubkey: AccountsState.shared.activeAccountPublicKey, message: serializedFails, context: bg())
                         FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
@@ -91,7 +91,7 @@ class NWCZapQueue {
 #endif
         self.waitingZaps[zap.id] = zap
 #if DEBUG
-        L.og.info("⚡️ NWC: sendZap. now in queue: \(self.waitingZaps.count) -- \(debugInfo ?? "")")
+        L.og.info("⚡️⚡️ NWC: sendZap. now in queue: \(self.waitingZaps.count) -- \(debugInfo ?? "")")
 #endif
     }
     
@@ -134,6 +134,8 @@ class Zap {
     var lud16:String?
     var lud06:String?
     var zapMessage:String = ""
+    var isPrivateZap = false
+    var isAnonymousZap = false
     var isNC = false
     var amount:Int64
     var eventId:String?
@@ -150,7 +152,7 @@ class Zap {
     var fromAccountPubkey:String
     var withPending = false
     
-    init(isNC: Bool = false, amount: Int64, nrContact: NRContact, eventId: String? = nil, aTag: String? = nil, event: Event? = nil, cancellationId: UUID, zapMessage: String = "", withPending: Bool = false) {
+    init(isNC: Bool = false, amount: Int64, nrContact: NRContact, eventId: String? = nil, aTag: String? = nil, event: Event? = nil, cancellationId: UUID, zapMessage: String = "", isPrivateZap: Bool = false, isAnonymousZap: Bool = false, withPending: Bool = false) {
         self.isNC = isNC
         self.fromAccountPubkey = AccountsState.shared.activeAccountPublicKey
         self.queuedAt = .now
@@ -164,6 +166,8 @@ class Zap {
         self.lud16 = nrContact.lud16
         self.lud06 = nrContact.lud06
         self.zapMessage = zapMessage
+        self.isPrivateZap = isPrivateZap
+        self.isAnonymousZap = isAnonymousZap
         self.withPending = withPending
         next()
     }
@@ -179,7 +183,7 @@ class Zap {
     
     private func next() {
 #if DEBUG
-        L.og.debug("⚡️ Zap.next() \(self.state.rawValue) - \(self.id.uuidString) - \(self.callbackUrl ?? "") - supportsZap: \(self.supportsZap) - lud \(self.lud16 ?? self.lud06 ?? "") - eventId: \(self.eventId ?? "") - aTag: \(self.aTag ?? "") - \(self.pr ?? "")")
+        L.og.debug("⚡️⚡️ Zap.next() \(self.state.rawValue) - \(self.id.uuidString) - \(self.callbackUrl ?? "") - supportsZap: \(self.supportsZap) - lud \(self.lud16 ?? self.lud06 ?? "") - eventId: \(self.eventId ?? "") - aTag: \(self.aTag ?? "") - \(self.pr ?? "")")
 #endif
         switch state {
         case .INIT: //1. fetch callback from ln pay end point
@@ -210,19 +214,19 @@ class Zap {
                         NeedsUpdateInfo(persistentNotification: notification)
                     )
 #if DEBUG
-                    L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
+                    L.og.info("⚡️⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
 #endif
                     
                     // Revert zap state
                     if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: eventId) {
 #if DEBUG
-                        L.og.info("Revert from queue")
+                        L.og.info("⚡️⚡️ Revert from queue")
 #endif
                         event.zapState = nil
                     }
                     else if let event = Event.fetchEvent(id: eventId, context: bg()) {
 #if DEBUG
-                        L.og.info("Revert from DB")
+                        L.og.info("⚡️⚡️ Revert from DB")
 #endif
                         event.zapState = nil
                     }
@@ -234,7 +238,7 @@ class Zap {
                         NeedsUpdateInfo(persistentNotification: notification)
                     )
 #if DEBUG
-                    L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(self.contactPubkey)). \(self.error ?? "")")
+                    L.og.info("⚡️⚡️ Created notification: Zap failed for [contact](nostur:p:\(self.contactPubkey)). \(self.error ?? "")")
 #endif
                 }
                 DataProvider.shared().saveToDiskNow(.bgContext)
@@ -268,7 +272,7 @@ class Zap {
             }
             catch {
 #if DEBUG
-                L.og.error("🔴🔴🔴🔴 problem in lnurlp \(error)")
+                L.og.error("⚡️⚡️ 🔴🔴🔴🔴 problem in lnurlp \(error)")
 #endif
                 self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                 self.state = .ERROR
@@ -283,7 +287,7 @@ class Zap {
         let accountPubkey = account.publicKey
         
         // Try to use NIP-65 kind 10002 relays first
-        let relays = if !account.accountRelays.filter({ $0.write }).isEmpty {
+        var relays = if !account.accountRelays.filter({ $0.write }).isEmpty {
             account.accountRelays.filter({ $0.write }).map({ $0.url })
         } else { // else fall back to app confired relays
             ConnectionPool.shared.connections.values
@@ -297,8 +301,83 @@ class Zap {
     
         
         if (self.supportsZap) {
+            let senderPubkey = account.publicKey
+            var senderPrivateKey: String? = nil
+            if self.isPrivateZap {
+                senderPrivateKey = if self.isAnonymousZap {
+                    nil
+                } else {
+                    account.privateKey // can't set from bg so do here
+                }
+                
+            }
             bg().perform { [weak self] in
                 guard let self = self else { return }
+                
+                if self.isPrivateZap {
+                    // for private zap, the relays tag leaks identifiable info, so try to always use inbox relays of recipient
+                    let inboxRelays = getInboxRelays(forPubkey: self.contactPubkey)
+                    if !inboxRelays.isEmpty {
+                        relays = inboxRelays.map { $0 }
+                        
+#if DEBUG
+                        L.og.debug("⚡️⚡️ using inbox relays: \(relays) -[LOG]-")
+#endif
+                    }
+                    
+                    guard let signedPrivateZapRequest = privateZapRequest(
+                        forPubkey: self.contactPubkey,
+                        senderPrivateKey: senderPrivateKey,
+                        senderPubkey: senderPubkey,
+                        andEvent: self.eventId,
+                        andATag: self.aTag,
+                        withMessage: zapMessage,
+                        relays: relays
+                    ) else {
+                        self.error = String(localized:"Could not create private zap request", comment: "Error message")
+                        self.state = .ERROR
+                        return
+                    }
+                    
+#if DEBUG
+                    L.og.debug("⚡️⚡️ 9734: \(signedPrivateZapRequest.eventJson())")
+#endif
+                    
+                    let content = NRContentElementBuilder.shared.buildElements(input: zapMessage, fastTags: signedPrivateZapRequest.fastTags, primaryColor: Themes.default.theme.primary).0
+                    
+                    Task { [weak self] in
+                        guard let self else { return }
+                        
+                        if self.withPending, let aTag = self.aTag {
+                            DispatchQueue.main.async {
+                                sendNotification(.receivedPendingZap, NRChatPendingZap(
+                                    id: signedPrivateZapRequest.id,
+                                    pubkey: signedPrivateZapRequest.publicKey,
+                                    createdAt: Date(
+                                        timeIntervalSince1970: Double(signedPrivateZapRequest.createdAt.timestamp)
+                                    ),
+                                    aTag: aTag,
+                                    amount: self.amount,
+                                    nxEvent: NXEvent(pubkey: signedPrivateZapRequest.publicKey, kind: signedPrivateZapRequest.kind.id),
+                                    content: content,
+                                    via: via(signedPrivateZapRequest)
+                                ))
+                            }
+                        }
+                        if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedPrivateZapRequest), let pr = response.pr {
+                            self.pr = pr
+                            self.state = .INVOICE_FETCHED
+                        }
+                        else {
+#if DEBUG
+                            L.fetching.notice("⚡️⚡️ problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+#endif
+                            self.error = String(localized:"Could not fetch invoice", comment: "Error message")
+                            self.state = .ERROR
+                        }
+                    }
+                    return
+                }
                 
                 if isNC {
                     var zapRequestNote = if let aTag = self.aTag {
@@ -344,7 +423,7 @@ class Zap {
                                     }
                                     else {
 #if DEBUG
-                                        L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                                        L.fetching.notice("⚡️⚡️ problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
 #endif
                                         self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                                         self.state = .ERROR
@@ -352,7 +431,7 @@ class Zap {
                                 }
                                 else {
 #if DEBUG
-                                    L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                                    L.fetching.notice("⚡️⚡️ problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
 #endif
                                     self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                                     self.state = .ERROR
@@ -400,7 +479,7 @@ class Zap {
                                 }
                                 else {
 #if DEBUG
-                                    L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                                    L.fetching.notice("⚡️⚡️ problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
 #endif
                                     self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                                     self.state = .ERROR
@@ -408,7 +487,7 @@ class Zap {
                             }
                             else {
 #if DEBUG
-                                L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                                L.fetching.notice("⚡️⚡️ problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
 #endif
                                 self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                                 self.state = .ERROR
@@ -416,7 +495,7 @@ class Zap {
                         }
                         else {
 #if DEBUG
-                            L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                            L.fetching.notice("⚡️⚡️ problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
 #endif
                             self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                             self.state = .ERROR
@@ -439,7 +518,7 @@ class Zap {
                 }
                 catch {
 #if DEBUG
-                    L.fetching.notice("problem fetching ln invoice. callback:\(self.callbackUrl ?? "") \(error)")
+                    L.fetching.notice("⚡️⚡️ problem fetching ln invoice. callback:\(self.callbackUrl ?? "") \(error)")
 #endif
                     self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                     self.state = .ERROR
@@ -457,7 +536,7 @@ class Zap {
                 self.state = .NWC_PAY_REQUEST_SENT
             }
             else {
-                self.error = String(localized:"Could not send NWC request", comment: "Error message")
+                self.error = String(localized:"⚡️⚡️ Could not send NWC request", comment: "Error message")
                 state = .ERROR
             }
         }
@@ -472,7 +551,7 @@ class Zap {
 
 func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? = nil) -> Bool {
 #if DEBUG
-    L.og.debug("⚡️ nwcSendPayInvoiceRequest called \(pr)")
+    L.og.debug("⚡️⚡️ nwcSendPayInvoiceRequest called \(pr) -[LOG]-")
 #endif
     var pk:String?
     var walletPubkey:String?
@@ -480,7 +559,7 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
     if Thread.isMainThread {
         guard !SettingsStore.shared.activeNWCconnectionId.isEmpty else {
 #if DEBUG
-            L.og.error("⚡️ No activeNWCConnectionId")
+            L.og.error("⚡️⚡️ No activeNWCConnectionId")
 #endif
             return false
         }
@@ -488,7 +567,7 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
         
         guard let mainPK = nwc.privateKey else {
 #if DEBUG
-            L.og.error("⚡️ Problem with private key or nwcConnection")
+            L.og.error("⚡️⚡️ Problem with private key or nwcConnection")
 #endif
             return false
         }
@@ -498,13 +577,13 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
     else {
         guard let bgPK = NWCRequestQueue.shared.nwcConnection?.privateKey else {
 #if DEBUG
-            L.og.error("⚡️ Problem with private key or nwcConnection")
+            L.og.error("⚡️⚡️ Problem with private key or nwcConnection")
 #endif
             return false
         }
         guard let bgWalletPubkey = NWCRequestQueue.shared.nwcConnection?.walletPubkey else {
 #if DEBUG
-            L.og.error("⚡️ Problem with private key or nwcConnection")
+            L.og.error("⚡️⚡️ Problem with private key or nwcConnection")
 #endif
             return false
         }
@@ -526,12 +605,12 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
                 nwcReq.tags.append(NostrTag(["p",walletPubkey]))
                 
 #if DEBUG
-                L.og.debug("⚡️ Going to encrypt and send: \(nwcReq.eventJson())")
+                L.og.debug("⚡️⚡️ Going to encrypt and send: \(nwcReq.eventJson()) -[LOG]-")
 #endif
                 
                 guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: walletPubkey, content: nwcReq.content) else {
 #if DEBUG
-                    L.og.error("⚡️ Problem encrypting request")
+                    L.og.error("⚡️⚡️ Problem encrypting request")
 #endif
                     return false
                 }
@@ -559,7 +638,7 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
                 }
                 else {
 #if DEBUG
-                    L.og.error("⚡️ Problem signing: \(nwcReq.eventJson())")
+                    L.og.error("⚡️⚡️ Problem signing: \(nwcReq.eventJson())")
 #endif
                     return false
                 }
@@ -567,12 +646,12 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
         }
         
 #if DEBUG
-        L.og.error("⚡️ Problem encoding request")
+        L.og.error("⚡️⚡️ Problem encoding request")
 #endif
         return false
     }
 #if DEBUG
-    L.og.error("⚡️ Problem with NWC private key")
+    L.og.error("⚡️⚡️ Problem with NWC private key")
 #endif
     return false
 }

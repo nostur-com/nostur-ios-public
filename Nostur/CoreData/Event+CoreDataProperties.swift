@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 import CoreData
 import NostrEssentials
 
@@ -209,8 +210,8 @@ extension Event {
     var isSpam: Bool {
         // combine all the checks here
         
-        if kind == 9735, amount >= 250 { // TODO: Make amount configurable
-            // Never consider zaps of more than 250 sats as spam
+        if kind == 9735, amount >= 20 { // TODO: Make amount configurable
+            // Never consider zaps of more than 20 sats as spam
             return false
         }
         
@@ -765,56 +766,227 @@ extension Event {
     }
     
     static func extractZapRequest(zapReceipt: NEvent, context: NSManagedObjectContext) -> ExtractedZapRequest? {
-        if let zapRequest = extractZapRequest(tags: zapReceipt.tags) {
-            return ExtractedZapRequest(event: zapRequest, isPrivate: false)
-        }
-        
         if let privateZapRequest = extractPrivateZapRequest(zapReceipt: zapReceipt, context: context) {
+#if DEBUG
+            L.og.debug("extractZapRequest: using private zap request for receipt \(zapReceipt.id) -[LOG]-")
+#endif
             return ExtractedZapRequest(event: privateZapRequest, isPrivate: true)
         }
         
+        if let zapRequest = extractZapRequest(tags: zapReceipt.tags) {
+#if DEBUG
+            L.og.debug("extractZapRequest: using description zap request for receipt \(zapReceipt.id) -[LOG]-")
+#endif
+            return ExtractedZapRequest(event: zapRequest, isPrivate: false)
+        }
+        
+#if DEBUG
+        L.og.debug("extractZapRequest: failed for receipt \(zapReceipt.id)")
+#endif
         return nil
+    }
+
+    var zapDisplayContent: String {
+        guard kind == 9735 else { return content ?? "" }
+        guard let context = managedObjectContext else { return content ?? "" }
+        guard let extracted = Event.extractZapRequest(zapReceipt: toNEvent(), context: context) else {
+            return content ?? ""
+        }
+        return extracted.event.content
     }
     
     private static func extractPrivateZapRequest(zapReceipt: NEvent, context: NSManagedObjectContext) -> NEvent? {
-        guard let anonTag = zapReceipt.tags.first(where: { $0.type == "anon" })?.value else { return nil }
+        let logPrefix = "extractPrivateZapRequest[\(zapReceipt.id)]"
+        let outerZapRequest = extractZapRequest(tags: zapReceipt.tags)
+        let anonTag = outerZapRequest?.tags.first(where: { $0.type == "anon" })?.value
+            ?? zapReceipt.tags.first(where: { $0.type == "anon" })?.value
+        
+        guard let anonTag else {
+#if DEBUG
+            L.og.debug("\(logPrefix): missing anon tag (neither in description->9734 nor on 9735)")
+#endif
+            return nil
+        }
         
         let parts = anonTag.split(separator: "_", maxSplits: 1).map(String.init)
-        guard parts.count == 2 else { return nil }
+        guard parts.count == 2 else {
+#if DEBUG
+            L.og.debug("\(logPrefix): invalid anon tag format")
+#endif
+            return nil
+        }
         
         guard
             let (ciphertextHrp, ciphertext) = try? Bech32.decode(other: parts[0]),
             let (ivHrp, iv) = try? Bech32.decode(other: parts[1]),
             ciphertextHrp == "pzap",
             ivHrp == "iv"
-        else { return nil }
+        else {
+#if DEBUG
+            L.og.debug("\(logPrefix): bech32 decode failed or invalid hrp")
+#endif
+            return nil
+        }
         
-        guard
-            let receiverPubkey = zapReceipt.firstP(),
-            let account = try? CloudAccount.fetchAccount(publicKey: receiverPubkey, context: context),
-            let receiverPrivateKey = account.privateKey
-        else { return nil }
+        let receiverPubkey = outerZapRequest?.firstP() ?? zapReceipt.firstP()
+        guard let receiverPubkey else {
+#if DEBUG
+            L.og.debug("\(logPrefix): missing first p tag on receipt")
+#endif
+            return nil
+        }
         
+        guard let account = try? CloudAccount.fetchAccount(publicKey: receiverPubkey, context: context) else {
+#if DEBUG
+            L.og.debug("\(logPrefix): no local account for receiver pubkey \(receiverPubkey) -[LOG]-")
+#endif
+            // Fall through to sender-side deterministic key recovery.
+            return extractPrivateZapRequestAsSender(
+                logPrefix: logPrefix,
+                outerZapRequest: outerZapRequest,
+                receiverPubkey: receiverPubkey,
+                encryptionSenderPubkey: outerZapRequest?.publicKey ?? zapReceipt.publicKey,
+                ciphertext: ciphertext,
+                iv: iv,
+                context: context
+            )
+        }
+        
+        guard let receiverPrivateKey = account.privateKey else {
+#if DEBUG
+            L.og.debug("\(logPrefix): local account has no private key for receiver pubkey \(receiverPubkey) -[LOG]-")
+#endif
+            // Fall through to sender-side deterministic key recovery.
+            return extractPrivateZapRequestAsSender(
+                logPrefix: logPrefix,
+                outerZapRequest: outerZapRequest,
+                receiverPubkey: receiverPubkey,
+                encryptionSenderPubkey: outerZapRequest?.publicKey ?? zapReceipt.publicKey,
+                ciphertext: ciphertext,
+                iv: iv,
+                context: context
+            )
+        }
+        
+        let encryptionSenderPubkey = outerZapRequest?.publicKey ?? zapReceipt.publicKey
         let encryptedContent = "\(ciphertext.base64EncodedString())?iv=\(iv.base64EncodedString())"
-        guard
-            let decryptedPrivateZap = Keys.decryptDirectMessageContent(
-                withPrivateKey: receiverPrivateKey,
-                pubkey: zapReceipt.publicKey,
-                content: encryptedContent
-            ),
-            let privateZapRequest = try? JSONDecoder().decode(NEvent.self, from: Data(decryptedPrivateZap.utf8))
-        else { return nil }
+        guard let decryptedPrivateZap = Keys.decryptDirectMessageContent(
+            withPrivateKey: receiverPrivateKey,
+            pubkey: encryptionSenderPubkey,
+            content: encryptedContent
+        ) else {
+#if DEBUG
+            L.og.debug("\(logPrefix): decrypt failed with sender pubkey \(encryptionSenderPubkey)")
+#endif
+            return nil
+        }
+        
+        guard let privateZapRequest = try? JSONDecoder().decode(NEvent.self, from: Data(decryptedPrivateZap.utf8)) else {
+#if DEBUG
+            L.og.debug("\(logPrefix): decrypted payload is not valid NEvent JSON")
+#endif
+            return nil
+        }
         
         do {
-            guard try (!MessageParser.shared.isSignatureVerificationEnabled) || privateZapRequest.verified() else { return nil }
+            guard try (!MessageParser.shared.isSignatureVerificationEnabled) || privateZapRequest.verified() else {
+#if DEBUG
+                L.og.debug("\(logPrefix): signature verification failed for decrypted 9733 id \(privateZapRequest.id)")
+#endif
+                return nil
+            }
+#if DEBUG
+            L.og.debug("\(logPrefix): success -> decrypted id \(privateZapRequest.id), pubkey \(privateZapRequest.publicKey), content length \(privateZapRequest.content.count) -[LOG]-")
+#endif
             return privateZapRequest
         }
         catch {
 #if DEBUG
-            L.og.error("extractPrivateZapRequest \(error)")
+            L.og.error("\(logPrefix): verification error \(error)")
+#endif
+            return extractPrivateZapRequestAsSender(
+                logPrefix: logPrefix,
+                outerZapRequest: outerZapRequest,
+                receiverPubkey: receiverPubkey,
+                encryptionSenderPubkey: encryptionSenderPubkey,
+                ciphertext: ciphertext,
+                iv: iv,
+                context: context
+            )
+        }
+    }
+    
+    private static func extractPrivateZapRequestAsSender(
+        logPrefix: String,
+        outerZapRequest: NEvent?,
+        receiverPubkey: String,
+        encryptionSenderPubkey: String,
+        ciphertext: Data,
+        iv: Data,
+        context: NSManagedObjectContext
+    ) -> NEvent? {
+        guard let outerZapRequest else {
+#if DEBUG
+            L.og.debug("\(logPrefix): sender fallback skipped, missing outer zap request")
 #endif
             return nil
         }
+        
+        let targetId = outerZapRequest.firstE() ?? outerZapRequest.firstA() ?? receiverPubkey
+        let createdAt = outerZapRequest.createdAt.timestamp
+        let encryptedContent = "\(ciphertext.base64EncodedString())?iv=\(iv.base64EncodedString())"
+        
+        let request = CloudAccount.fetchRequest()
+        request.predicate = NSPredicate(format: "privateKey != nil")
+        guard let accounts = try? context.fetch(request) else {
+#if DEBUG
+            L.og.debug("\(logPrefix): sender fallback failed to fetch local accounts")
+#endif
+            return nil
+        }
+        
+        for account in accounts {
+            guard let senderPrivateKey = account.privateKey else { continue }
+            guard let deterministicKeys = deterministicPrivateZapRequestKeys(
+                senderPrivateKey: senderPrivateKey,
+                targetId: targetId,
+                createdAt: createdAt
+            ) else { continue }
+            guard deterministicKeys.publicKeyHex == encryptionSenderPubkey else { continue }
+            
+            guard let decrypted = Keys.decryptDirectMessageContent(
+                withPrivateKey: deterministicKeys.privateKeyHex,
+                pubkey: receiverPubkey,
+                content: encryptedContent
+            ) else { continue }
+            guard let privateZapRequest = try? JSONDecoder().decode(NEvent.self, from: Data(decrypted.utf8)) else { continue }
+            
+            do {
+                guard try (!MessageParser.shared.isSignatureVerificationEnabled) || privateZapRequest.verified() else { continue }
+#if DEBUG
+                L.og.debug("\(logPrefix): sender fallback success -> decrypted id \(privateZapRequest.id), pubkey \(privateZapRequest.publicKey)")
+#endif
+                return privateZapRequest
+            }
+            catch {
+                continue
+            }
+        }
+        
+#if DEBUG
+        L.og.debug("\(logPrefix): sender fallback failed, no deterministic key match")
+#endif
+        return nil
+    }
+    
+    private static func deterministicPrivateZapRequestKeys(
+        senderPrivateKey: String,
+        targetId: String,
+        createdAt: Int
+    ) -> Keys? {
+        let toHash = senderPrivateKey + targetId + String(createdAt)
+        let hashed = SHA256.hash(data: Data(toHash.utf8))
+        return try? Keys(privateKeyHex: String(bytes: hashed.bytes))
     }
     
     static func safeUpdateRelays(for event: Event, relays: String) {

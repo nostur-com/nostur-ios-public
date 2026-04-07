@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 
 struct ZapButton: View {
@@ -22,6 +23,8 @@ struct ZapButton: View {
     @State private var triggerStrike = false
     @State private var customAmount: Double? = nil
     @State private var zapMessage: String = ""
+    @State private var privateZap = false
+    @State private var anonymousZap = false
     
     @State private var isZapped = false
     
@@ -98,6 +101,8 @@ struct ZapButton: View {
             guard customZapId != nil && customZap.customZapId == customZapId else { return }
             customAmount = customZap.amount
             zapMessage = customZap.publicNote
+            privateZap = customZap.privateZap
+            anonymousZap = customZap.anonymousZap
             triggerStrike = true
         }
         .overlay {
@@ -107,7 +112,7 @@ struct ZapButton: View {
                         .onAppear {
                             guard !isZapped else { return }
                             guard cancellationId == nil else { return }
-                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount)
+                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount, privateZap: privateZap, anonymousZap: anonymousZap)
                         }
                 }
             }
@@ -140,14 +145,21 @@ struct ZapButton: View {
     
     private func longTap() {
         guard isFullAccount() else { showReadOnlyMessage(); return }
+        
+        // prefetch 10002 inbox relays needed for "relays" tag on zap req later
+        let filters = [Filters(authors: [nrPost.pubkey], kinds: [10002], limit: 1)]
+        outboxReq(NostrEssentials.ClientMessage(type: .REQ, filters: filters))
+        
         // Trigger custom zap
         customZapId = UUID().uuidString
+        isZapped = false
+        cancellationId = nil
         if let customZapId {
             sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
         }
     }
     
-    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil) {
+    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil, privateZap: Bool = false, anonymousZap: Bool = false) {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
         let isNC = account.isNC
@@ -167,7 +179,7 @@ struct ZapButton: View {
         
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
-            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), nrContact: nrContact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId, zapMessage: zapMessage)
+            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), nrContact: nrContact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId, zapMessage: zapMessage, isPrivateZap: privateZap, isAnonymousZap: anonymousZap)
             NWCZapQueue.shared.sendZap(zap)
             accountCache()?.addZapped(nrPost.id)
         }
@@ -179,6 +191,8 @@ struct ZapButton: View {
         isZapped = false
         customAmount = nil
         zapMessage = ""
+        privateZap = false
+        anonymousZap = false
         activeColor = theme.footerButtons
         L.og.info("⚡️ Zap cancelled")
         bg().perform {
@@ -271,6 +285,8 @@ struct VideoZapButton: View {
     @State private var triggerStrike = false
     @State private var customAmount: Double? = nil
     @State private var zapMessage: String = ""
+    @State private var privateZap = false
+    @State private var anonymousZap = false
     
     @State private var isZapped = false
     
@@ -341,6 +357,8 @@ struct VideoZapButton: View {
             guard customZapId != nil && customZap.customZapId == customZapId else { return }
             customAmount = customZap.amount
             zapMessage = customZap.publicNote
+            privateZap = customZap.privateZap
+            anonymousZap = customZap.anonymousZap
             triggerStrike = true
         }
         .overlay {
@@ -350,7 +368,7 @@ struct VideoZapButton: View {
                         .onAppear {
                             guard !isZapped else { return }
                             guard cancellationId == nil else { return }
-                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount)
+                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount, privateZap: privateZap, anonymousZap: anonymousZap)
                         }
                 }
             }
@@ -390,7 +408,7 @@ struct VideoZapButton: View {
         }
     }
     
-    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil) {
+    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil, privateZap: Bool = false, anonymousZap: Bool = false) {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
         let isNC = account.isNC
@@ -410,7 +428,7 @@ struct VideoZapButton: View {
         
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
-            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), nrContact: nrContact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId, zapMessage: zapMessage)
+            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), nrContact: nrContact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId, zapMessage: zapMessage, isPrivateZap: privateZap, isAnonymousZap: anonymousZap)
             NWCZapQueue.shared.sendZap(zap)
             accountCache()?.addZapped(nrPost.id)
         }
@@ -422,6 +440,8 @@ struct VideoZapButton: View {
         isZapped = false
         customAmount = nil
         zapMessage = ""
+        privateZap = false
+        anonymousZap = false
         activeColor = theme.footerButtons
         L.og.info("⚡️ Zap cancelled")
         bg().perform {

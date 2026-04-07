@@ -1054,6 +1054,9 @@
     "⚠️ Error: %@" : {
       "shouldTranslate" : false
     },
+    "⚡️⚡️ Could not send NWC request" : {
+      "comment" : "Error message"
+    },
     "✅ Downloaded: %@" : {
       "shouldTranslate" : false
     },
@@ -1701,6 +1704,9 @@
           }
         }
       }
+    },
+    "Add private note (optional)" : {
+
     },
     "Add private note to post" : {
       "comment" : "Post context menu button",
@@ -3461,6 +3467,9 @@
         }
       }
     },
+    "Could not create private zap request" : {
+      "comment" : "Error message"
+    },
     "Could not fetch invoice" : {
       "comment" : "Error message",
       "localizations" : {
@@ -3527,6 +3536,7 @@
     },
     "Could not send NWC request" : {
       "comment" : "Error message",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8158,6 +8168,9 @@
     "Private reply required (replying to a private post)" : {
 
     },
+    "Private zap" : {
+
+    },
     "Problem parsing NWC connection URI" : {
       "comment" : "Error message during NWC setup",
       "localizations" : {
@@ -9828,6 +9841,9 @@
           }
         }
       }
+    },
+    "Send anonymously" : {
+
     },
     "Send DM to" : {
       "comment" : "Navigation title for screen to select a contact to send a Direct Message to",

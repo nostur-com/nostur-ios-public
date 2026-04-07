@@ -23,6 +23,9 @@ struct ZapCustomizerSheet: View {
     @State private var customAmount: Double = 0.0
     @State private var showCustomAmountsheet = false
     @State private var setAmountAsDefault = false
+    @State private var privateZap = false
+    @State private var sendAnonymously = false
+    @State private var anonymousPfpColor = randomColor(seed: UUID().uuidString)
     
     var body: some View {
         NBNavigationStack {
@@ -168,16 +171,21 @@ struct ZapCustomizerSheet: View {
                 
                 if supportsZap, let account = account() {
                     HStack(alignment: .center) {
-                        PFP(pubkey: account.publicKey, account: account)
+                        if privateZap && sendAnonymously {
+                            InnerPFP(pubkey: account.publicKey, pictureUrl: nil, color: anonymousPfpColor, forceFlat: true)
+                        }
+                        else {
+                            PFP(pubkey: account.publicKey, account: account)
+                        }
                         if #available(iOS 16, *) {
-                            TextField("Add public note (optional)", text: $zapMessage)
+                            TextField(privateZap ? "Add private note (optional)" : "Add public note (optional)", text: $zapMessage)
                                 .multilineTextAlignment(.leading)
                                 .lineLimit(5, reservesSpace: true)
                                 .textFieldStyle(.roundedBorder)
                                 .border(theme.lineColor.opacity(0.5))
                         }
                         else {
-                            TextField("Add public note (optional)", text: $zapMessage)
+                            TextField(privateZap ? "Add private note (optional)" : "Add public note (optional)", text: $zapMessage)
                                 .multilineTextAlignment(.leading)
                                 .lineLimit(5)
                                 .textFieldStyle(.roundedBorder)
@@ -192,7 +200,9 @@ struct ZapCustomizerSheet: View {
                         sendAction?(CustomZap(
                             publicNote: zapMessage,
                             customZapId: customZapId,
-                            amount: selectedAmount
+                            amount: selectedAmount,
+                            privateZap: privateZap,
+                            anonymousZap: sendAnonymously
                         ))
                     }
                     else {
@@ -200,7 +210,9 @@ struct ZapCustomizerSheet: View {
                                          CustomZap(
                                             publicNote: zapMessage,
                                             customZapId: customZapId,
-                                            amount: selectedAmount
+                                            amount: selectedAmount,
+                                            privateZap: privateZap,
+                                            anonymousZap: sendAnonymously
                                          ))
                     }
                     if setAmountAsDefault {
@@ -223,6 +235,19 @@ struct ZapCustomizerSheet: View {
                     Text("Remember this amount for all zaps", comment:"Toggle on zap screen to set selected amount as default for all zaps")
                 }
                 .padding(.horizontal, 20)
+                
+                if let account = account(), !account.isNC {
+                    Toggle(isOn: $privateZap) {
+                        Text("Private zap")
+                    }
+                    .padding(.horizontal, 20)
+                    
+                    Toggle(isOn: $sendAnonymously) {
+                        Text("Send anonymously")
+                    }
+                    .disabled(!privateZap)
+                    .padding(.horizontal, 20)
+                }
                 Spacer()
             }
             .navigationTitle(String(localized:"Send sats", comment:"Title of sheet showing zap options when sending sats (satoshis)"))
@@ -243,6 +268,20 @@ struct ZapCustomizerSheet: View {
             }
             .onAppear {
                 selectedAmount = SettingsStore.shared.defaultZapAmount
+                if account()?.isNC == true {
+                    privateZap = false
+                    sendAnonymously = false
+                }
+            }
+            .onChange(of: privateZap) { isPrivateZap in
+                if !isPrivateZap {
+                    sendAnonymously = false
+                }
+            }
+            .onChange(of: sendAnonymously) { isAnonymousZap in
+                if isAnonymousZap {
+                    anonymousPfpColor = randomColor(seed: UUID().uuidString)
+                }
             }
         }
         .nbUseNavigationStack(.never)
@@ -262,6 +301,8 @@ struct CustomZap: Identifiable {
     var publicNote = ""
     var customZapId: String?
     let amount: Double
+    var privateZap = false
+    var anonymousZap = false
 }
 
 #Preview("ZapCustomizerSheet") {
