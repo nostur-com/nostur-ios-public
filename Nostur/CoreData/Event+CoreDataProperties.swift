@@ -836,7 +836,9 @@ extension Event {
             return nil
         }
         
-        guard let account = try? CloudAccount.fetchAccount(publicKey: receiverPubkey, context: context) else {
+        
+        
+        guard AccountsState.shared.bgFullAccountPubkeys.contains(receiverPubkey) else {
 #if DEBUG
             L.og.debug("\(logPrefix): no local account for receiver pubkey \(receiverPubkey) -[LOG]-")
 #endif
@@ -852,7 +854,7 @@ extension Event {
             )
         }
         
-        guard let receiverPrivateKey = account.privateKey else {
+        guard let receiverPrivateKey = AccountManager.shared.getPrivateKeyHex(pubkey: receiverPubkey) else {
 #if DEBUG
             L.og.debug("\(logPrefix): local account has no private key for receiver pubkey \(receiverPubkey) -[LOG]-")
 #endif
@@ -937,7 +939,7 @@ extension Event {
         let encryptedContent = "\(ciphertext.base64EncodedString())?iv=\(iv.base64EncodedString())"
         
         let request = CloudAccount.fetchRequest()
-        request.predicate = NSPredicate(format: "privateKey != nil")
+        request.predicate = NSPredicate(format: "publicKey_ IN %@", AccountsState.shared.bgFullAccountPubkeys)
         guard let accounts = try? context.fetch(request) else {
 #if DEBUG
             L.og.debug("\(logPrefix): sender fallback failed to fetch local accounts")
