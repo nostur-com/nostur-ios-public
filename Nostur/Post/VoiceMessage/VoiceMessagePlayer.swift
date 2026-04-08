@@ -171,20 +171,11 @@ struct VoiceMessagePlayer: View {
 
                         let playerItem: AVPlayerItem
                         
-                        if processedFileURL.pathExtension.isEmpty { // AVPlayer doesn't play files without extension, so just try appending .m4a and it works.
-                            
-                            
-                            // For files without extension, create a copy with guessed extension
-                            let tempURL = switch detectAudioFormat(processedFileURL) {
-                            case .opus:
-                                processedFileURL.appendingPathExtension("opus")
-                            case .flac:
-                                processedFileURL.appendingPathExtension("flac")
-                            case .mobile3GPP:
-                                processedFileURL.appendingPathExtension("3gp")
-                            default:
-                                processedFileURL.appendingPathExtension("m4a")
-                            }
+                        if processedFileURL.pathExtension.isEmpty {
+                            // AVPlayer is unreliable for extensionless local files.
+                            // Create a sibling file with an inferred extension based on file signature.
+                            let inferredExtension = inferAudioFileExtension(processedFileURL)
+                            let tempURL = processedFileURL.appendingPathExtension(inferredExtension)
                             
                             // Try to create a symbolic link or copy the file with the correct extension
                             do {
@@ -203,7 +194,7 @@ struct VoiceMessagePlayer: View {
                                     try FileManager.default.copyItem(at: processedFileURL, to: tempURL)
                                     playerItem = AVPlayerItem(url: tempURL)
 #if DEBUG
-                                    L.a0.debug("VoiceMessagePlayer: Copied file with .m4a extension")
+                                    L.a0.debug("VoiceMessagePlayer: Copied file with .\(inferredExtension) extension")
 #endif
                                 }
                             } catch {
@@ -417,4 +408,64 @@ class AudioPlayerObserver: NSObject {
 func detectAudioFormat(_ url: URL) -> CMFormatDescription.MediaSubType? {
     guard let audioFile = try? AVAudioFile(forReading: url) else { return nil }
     return audioFile.fileFormat.formatDescription.mediaSubType
+}
+func inferAudioFileExtension(_ url: URL) -> String {
+    if let signatureBased = detectAudioFileExtensionFromSignature(url) {
+        return signatureBased
+    }
+
+    switch detectAudioFormat(url) {
+    case .opus:
+        return "opus"
+    case .flac:
+        return "flac"
+    case .mobile3GPP:
+        return "3gp"
+    default:
+        return "m4a"
+    }
+}
+
+func detectAudioFileExtensionFromSignature(_ url: URL) -> String? {
+    guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+    defer { try? handle.close() }
+    let data = handle.readData(ofLength: 64)
+    guard !data.isEmpty else { return nil }
+    let bytes = [UInt8](data)
+
+    if bytes.count >= 12,
+       bytes[4] == 0x66, bytes[5] == 0x74, bytes[6] == 0x79, bytes[7] == 0x70 {
+        let brand = String(bytes: bytes[8..<12], encoding: .ascii)?.lowercased() ?? ""
+        if brand.hasPrefix("3gp") {
+            return "3gp"
+        }
+        if brand == "m4a " || brand == "m4b " {
+            return "m4a"
+        }
+        return "mp4"
+    }
+
+    if bytes.count >= 4,
+       bytes[0] == 0x1A, bytes[1] == 0x45, bytes[2] == 0xDF, bytes[3] == 0xA3 {
+        return "webm"
+    }
+
+    if bytes.starts(with: [0x4F, 0x67, 0x67, 0x53]) {
+        return "ogg"
+    }
+
+    if bytes.starts(with: [0x66, 0x4C, 0x61, 0x43]) {
+        return "flac"
+    }
+
+    if bytes.starts(with: [0x52, 0x49, 0x46, 0x46]), bytes.count >= 12,
+       bytes[8] == 0x57, bytes[9] == 0x41, bytes[10] == 0x56, bytes[11] == 0x45 {
+        return "wav"
+    }
+
+    if bytes.starts(with: [0x49, 0x44, 0x33]) {
+        return "mp3"
+    }
+
+    return nil
 }
