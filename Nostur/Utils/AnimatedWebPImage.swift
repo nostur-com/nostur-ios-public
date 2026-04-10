@@ -9,7 +9,7 @@ import SwiftUI
 import ImageIO
 import Combine
 
-// Returns true if data is an animated WebP (RIFF/WEBP header + more than one frame via ImageIO)
+// Returns true if data is an animated WebP by scanning RIFF chunks for ANIM/ANMF.
 func isAnimatedWebPData(_ data: Data) -> Bool {
     guard data.count >= 20 else { return false }
 
@@ -49,7 +49,7 @@ func isAnimatedWebPData(_ data: Data) -> Bool {
     return false
 }
 
-// Renders animated WebP data using ImageIO frame extraction, mirroring GIFImage.
+// Renders animated WebP data with buffered frame playback.
 public struct AnimatedWebPImage: View {
     private let data: Data
     @Binding var isPlaying: Bool
@@ -196,7 +196,6 @@ private final class WebPAnimatedImageView: UIImageView {
     private var source: CGImageSource?
     private var playbackFrameIndices: [Int] = []
     private var playbackDurations: [Double] = []
-    private var frameCount = 0
     private var currentPlaybackIndex = 0
     private var currentFrameElapsed: TimeInterval = 0
     private var playbackGeneration = 0
@@ -224,7 +223,6 @@ private final class WebPAnimatedImageView: UIImageView {
             self.source = nil
             self.playbackFrameIndices.removeAll(keepingCapacity: false)
             self.playbackDurations.removeAll(keepingCapacity: false)
-            self.frameCount = 0
             self.currentPlaybackIndex = 0
             self.currentFrameElapsed = 0
             self.bufferedFrames.removeAll(keepingCapacity: false)
@@ -265,7 +263,6 @@ private final class WebPAnimatedImageView: UIImageView {
 
             guard generation == self.playbackGeneration else { return }
             self.source = source
-            self.frameCount = frameCount
             self.playbackFrameIndices = playbackIndices
             self.playbackDurations = playbackDurations
             self.currentPlaybackIndex = 0
@@ -328,7 +325,6 @@ private final class WebPAnimatedImageView: UIImageView {
             self.source = nil
             self.playbackFrameIndices.removeAll(keepingCapacity: false)
             self.playbackDurations.removeAll(keepingCapacity: false)
-            self.frameCount = 0
             self.currentPlaybackIndex = 0
             self.currentFrameElapsed = 0
         }
