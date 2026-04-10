@@ -33,7 +33,13 @@ struct PaymentAmountSelector: View {
         let pubkey = paymentInfo.nrContact!.pubkey
         let eventId = (paymentInfo.nrPost?.id ?? paymentInfo.zapEtag) ?? nil
         let aTag = paymentInfo.zapAtag ?? nil
-   
+
+        if let strikeLocation = paymentInfo.strikeLocation {
+            sendNotification(.lightningStrike, LightningStrike(location: strikeLocation, amount: amount, sideStrikeWidth: paymentInfo.sideStrikeWidth))
+            SoundManager.shared.playThunderzap()
+        }
+        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: pubkey, eTag: eventId, aTag: aTag, zapState: .initiated))
+
         // Try to use NIP-65 kind 10002 relays first
         let relays = if !account.accountRelays.filter({ $0.write }).isEmpty {
             account.accountRelays.filter({ $0.write }).map({ $0.url })

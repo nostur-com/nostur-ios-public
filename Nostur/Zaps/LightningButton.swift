@@ -52,8 +52,10 @@ class PaymentInfo: Identifiable {
     var zapEtag: String?
     var zapAtag: String?
     var withPending = false
+    var strikeLocation: CGPoint?
+    var sideStrikeWidth: CGFloat?
     
-    init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, nrPost: NRPost? = nil, nrContact: NRContact? = nil, zapEtag: String? = nil, zapAtag: String? = nil, withPending: Bool = false) {
+    init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, nrPost: NRPost? = nil, nrContact: NRContact? = nil, zapEtag: String? = nil, zapAtag: String? = nil, withPending: Bool = false, strikeLocation: CGPoint? = nil, sideStrikeWidth: CGFloat? = nil) {
         self.min = min
         self.max = max
         self.callback = callback
@@ -63,6 +65,8 @@ class PaymentInfo: Identifiable {
         self.zapEtag = zapEtag
         self.zapAtag = zapAtag
         self.withPending = withPending
+        self.strikeLocation = strikeLocation
+        self.sideStrikeWidth = sideStrikeWidth
     }
 }
 

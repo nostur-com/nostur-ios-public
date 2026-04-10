@@ -247,7 +247,7 @@ struct ProfileView: View {
     @ViewBuilder
     var pfpView: some View {
         ZoomableItem({
-            PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
+            ZappablePFP(pubkey: nrContact.pubkey, contact: nrContact, size: DIMENSIONS.PFP_BIG)
                 .overlay(
                     Circle()
                         .strokeBorder(theme.listBackground, lineWidth: 3)
@@ -347,7 +347,14 @@ struct ProfileView: View {
             }
             
             if nrContact.anyLud {
-                ProfileLightningButton(nrContact: nrContact)
+                ProfileLightningButton(
+                    nrContact: nrContact,
+                    strikeLocation: scrollPosition.position == .zero ? nil : CGPoint(
+                        x: scrollPosition.position.x + (DIMENSIONS.PFP_BIG / 2),
+                        y: scrollPosition.position.y + (DIMENSIONS.PFP_BIG / 2)
+                    ),
+                    sideStrikeWidth: max(0, availableWidth - (DIMENSIONS.PFP_BIG + 20.0))
+                )
             }
             
             if nrContact.pubkey == AccountsState.shared.activeAccountPublicKey {

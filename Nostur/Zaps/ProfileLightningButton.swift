@@ -12,6 +12,8 @@ struct ProfileLightningButton: View {
     
     public var nrContact: NRContact?
     public var zapEtag: String?
+    public var strikeLocation: CGPoint?
+    public var sideStrikeWidth: CGFloat?
     
     @State private var isLoading = false
     @State private var payAmountSelectorShown = false
@@ -62,7 +64,7 @@ struct ProfileLightningButton: View {
                                 }
                                 nrContact!.zapperPubkeys.insert(zapperPubkey)
                             }
-                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapEtag: zapEtag)
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapEtag: zapEtag, strikeLocation: strikeLocation, sideStrikeWidth: sideStrikeWidth)
                             payAmountSelectorShown = true
                             isLoading = false
                         }
@@ -91,7 +93,7 @@ struct ProfileLightningButton: View {
                                 Contact.addZapperPubkey(contactPubkey: nrContact!.pubkey, zapperPubkey: zapperPubkey)
                                 nrContact!.zapperPubkeys.insert(zapperPubkey)
                             }
-                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapEtag: zapEtag)
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapEtag: zapEtag, strikeLocation: strikeLocation, sideStrikeWidth: sideStrikeWidth)
                             payAmountSelectorShown = true
                             isLoading = false
                         }

@@ -84,13 +84,17 @@ struct ZappablePFP: View {
             .onReceive(ViewUpdates.shared.zapStateChanged.receive(on: RunLoop.main)) { zapStateChange in
                 if let thisEtag = self.zapEtag {
                     guard thisEtag == zapStateChange.eTag else { return }
-                    guard zapStateChange.pubkey == pubkey else { return}
-                    isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
+                    guard zapStateChange.pubkey == pubkey else { return }
+                    isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapStateChange.zapState)
                 }
                 else if let thisAtag = self.zapAtag {
-                    guard zapStateChange.pubkey == pubkey else { return}
+                    guard zapStateChange.pubkey == pubkey else { return }
                     guard thisAtag == zapStateChange.aTag else { return }
-                    isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
+                    isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapStateChange.zapState)
+                }
+                else {
+                    guard zapStateChange.pubkey == pubkey else { return }
+                    isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapStateChange.zapState)
                 }
             }
     }
