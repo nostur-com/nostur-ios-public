@@ -24,6 +24,9 @@ func isAnimatedWebPData(_ data: Data) -> Bool {
 public struct AnimatedWebPImage: View {
     private let data: Data
     @Binding var isPlaying: Bool
+    @State private var replayToken = 0
+    @State private var hasReachedLoopLimit = false
+    @State private var stopTask: Task<Void, Never>?
 
     public init(data: Data, isPlaying: Binding<Bool>) {
         self.data = data
@@ -31,13 +34,54 @@ public struct AnimatedWebPImage: View {
     }
 
     public var body: some View {
-        _AnimatedWebPImage(data: data, isPlaying: $isPlaying)
+        _AnimatedWebPImage(data: data, isPlaying: .constant(isPlaying && !hasReachedLoopLimit), replayToken: replayToken)
+            .contentShape(Rectangle())
+            .onAppear {
+                scheduleLoopLimitStop()
+            }
+            .onChange(of: isPlaying) { newValue in
+                if newValue {
+                    hasReachedLoopLimit = false
+                    scheduleLoopLimitStop()
+                }
+                else {
+                    stopTask?.cancel()
+                    stopTask = nil
+                }
+            }
+            .onDisappear {
+                stopTask?.cancel()
+                stopTask = nil
+            }
+            .modifier(GIFReplayModifier(isStopped: hasReachedLoopLimit) {
+                restartPlayback()
+            })
+    }
+    
+    private func restartPlayback() {
+        hasReachedLoopLimit = false
+        replayToken += 1
+        scheduleLoopLimitStop()
+    }
+    
+    private func scheduleLoopLimitStop() {
+        stopTask?.cancel()
+        guard isPlaying else { return }
+        
+        let duration = animatedWebPDuration(data) * 5.0
+        stopTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            hasReachedLoopLimit = true
+        }
     }
 }
 
 private struct _AnimatedWebPImage: UIViewRepresentable {
+    private let maxLoopCount = 5
     let data: Data
     @Binding var isPlaying: Bool
+    let replayToken: Int
 
     func makeUIView(context: Context) -> UIImageView {
         let imageView = UIImageView()
@@ -64,6 +108,14 @@ private struct _AnimatedWebPImage: UIViewRepresentable {
     }
 
     func updateUIView(_ imageView: UIImageView, context: Context) {
+        if replayToken != context.coordinator.lastReplayToken {
+            context.coordinator.lastReplayToken = replayToken
+            guard isPlaying else { return }
+            imageView.stopAnimating()
+            imageView.startAnimating()
+            return
+        }
+
         if isPlaying {
             if !imageView.isAnimating { imageView.startAnimating() }
         } else {
@@ -78,6 +130,7 @@ private struct _AnimatedWebPImage: UIViewRepresentable {
     }
 
     class Coordinator: NSObject {
+        var lastReplayToken = 0
         var subscriptions = Set<AnyCancellable>()
     }
 
@@ -104,7 +157,7 @@ private struct _AnimatedWebPImage: UIViewRepresentable {
 
         imageView.animationImages = frames
         imageView.animationDuration = totalDuration > 0 ? totalDuration : Double(frameCount) * 0.1
-        imageView.animationRepeatCount = 0 // loop forever
+        imageView.animationRepeatCount = maxLoopCount
     }
 }
 
@@ -117,4 +170,16 @@ private func frameDuration(source: CGImageSource, index: Int) -> Double {
         if let d = webpDict[kCGImagePropertyWebPDelayTime] as? Double, d > 0 { return d }
     }
     return 0.1
+}
+
+private func animatedWebPDuration(_ data: Data) -> TimeInterval {
+    guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return 0.1 }
+    let frameCount = CGImageSourceGetCount(source)
+    guard frameCount > 0 else { return 0.1 }
+    
+    var totalDuration: TimeInterval = 0
+    for index in 0..<frameCount {
+        totalDuration += frameDuration(source: source, index: index)
+    }
+    return max(totalDuration, 0.1)
 }
