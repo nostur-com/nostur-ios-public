@@ -17,7 +17,9 @@ struct PaymentAmountSelector: View {
         self.paymentInfo = paymentInfo
     }
     
-    private func amountSelected(amount: Double, zapMessage: String) {
+    private func amountSelected(customZap: CustomZap) {
+        let amount = customZap.amount
+        let zapMessage = customZap.publicNote
         
         // Fix: #0    (null) in Swift runtime failure: Double value cannot be converted to UInt64 because the result would be greater than UInt64.max ()
         guard (amount * 1000) <= Double(UInt64.max) else {
@@ -56,6 +58,73 @@ struct PaymentAmountSelector: View {
         
         if (paymentInfo.supportsZap) {
             do {
+                if customZap.privateZap {
+                    guard !isNC else {
+                        DispatchQueue.main.async {
+                            sendNotification(.anyStatus, ("Private zaps require local signing key", "APP_NOTICE"))
+                        }
+                        return
+                    }
+                    guard let accountPrivateKey = account.privateKey else {
+                        DispatchQueue.main.async {
+                            sendNotification(.anyStatus, ("Private zaps require local signing key", "APP_NOTICE"))
+                        }
+                        return
+                    }
+                    
+                    guard let signedZapRequestNote = privateZapRequest(
+                        forPubkey: pubkey,
+                        senderPrivateKey: customZap.anonymousZap ? nil : accountPrivateKey,
+                        senderPubkey: account.publicKey,
+                        andEvent: eventId,
+                        andATag: aTag,
+                        withMessage: zapMessage,
+                        relays: relays
+                    ) else {
+                        DispatchQueue.main.async {
+                            sendNotification(.anyStatus, ("Could not create private zap request", "APP_NOTICE"))
+                        }
+                        return
+                    }
+                    
+                    if paymentInfo.withPending, let aTag = paymentInfo.zapAtag {
+                        DispatchQueue.main.async {
+                            sendNotification(.receivedPendingZap,
+                                             NRChatPendingZap(
+                                                id: signedZapRequestNote.id,
+                                                pubkey: signedZapRequestNote.publicKey,
+                                                createdAt: Date(timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)),
+                                                aTag: aTag,
+                                                amount: Int64(amount),
+                                                nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734),
+                                                content: NRContentElementBuilder.shared.buildElements(input: zapMessage, fastTags: signedZapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0,
+                                                via: via(signedZapRequestNote)
+                                             ))
+                        }
+                    }
+                    
+                    Task {
+                        let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount: UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
+                        
+                        if response.pr != nil {
+                            await MainActor.run {
+                                if SettingsStore.shared.nwcReady {
+                                    if nwcSendPayInvoiceRequest(response.pr!) {
+                                        dismiss()
+                                    }
+                                    else {
+                                        errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
+                                    }
+                                }
+                                else {
+                                    openURL(URL(string: "\(SettingsStore.shared.defaultLightningWallet.scheme)\(response.pr!)")!)
+                                }
+                            }
+                        }
+                    }
+                    return
+                }
+                
                 var zapRequestNote = if let aTag {
                     zapRequest(forPubkey: pubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
                 }
@@ -198,7 +267,7 @@ struct PaymentAmountSelector: View {
                 Text(errorMessage).fontWeight(.bold).foregroundColor(.red)
             }
             ZapCustomizerSheet(name: (paymentInfo.nrPost?.anyName ?? paymentInfo.nrContact?.anyName) ?? "", supportsZap: paymentInfo.supportsZap, sendAction: { customZap in
-                amountSelected(amount:customZap.amount, zapMessage:customZap.publicNote)
+                amountSelected(customZap: customZap)
             })
         }
     }
@@ -227,4 +296,3 @@ func mapExponentialToLinear(value: Float, min: Float, max: Float, exponent: Floa
     let linearValue = pow(normalizedValue, 1/exponent)
     return min + (max - min) * linearValue
 }
-
