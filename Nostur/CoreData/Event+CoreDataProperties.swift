@@ -774,9 +774,6 @@ extension Event {
         }
         
         if let zapRequest = extractZapRequest(tags: zapReceipt.tags) {
-#if DEBUG
-            L.og.debug("extractZapRequest: using description zap request for receipt \(zapReceipt.id) -[LOG]-")
-#endif
             return ExtractedZapRequest(event: zapRequest, isPrivate: false)
         }
         
@@ -802,9 +799,6 @@ extension Event {
             ?? zapReceipt.tags.first(where: { $0.type == "anon" })?.value
         
         guard let anonTag else {
-#if DEBUG
-            L.og.debug("\(logPrefix): missing anon tag (neither in description->9734 nor on 9735)")
-#endif
             return nil
         }
         
