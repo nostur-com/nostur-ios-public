@@ -1060,6 +1060,9 @@
     "✅ Downloaded: %@" : {
       "shouldTranslate" : false
     },
+    "❤️" : {
+
+    },
     "📸" : {
       "comment" : "Tab title for Olas/Picture feed",
       "localizations" : {
@@ -1115,6 +1118,9 @@
     },
     "🧩" : {
       "shouldTranslate" : false
+    },
+    "🫥" : {
+
     },
     "😂" : {
       "localizations" : {

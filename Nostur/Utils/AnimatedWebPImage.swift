@@ -186,7 +186,7 @@ private struct _AnimatedWebPImage: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 }
 
-private final class WebPAnimatedImageView: UIImageView {
+final class WebPAnimatedImageView: UIImageView {
     private let decodeQueue = DispatchQueue(label: "Nostur.WebPAnimatedImage.decode", qos: .utility)
     private let sourceOptions: [CFString: Any] = [kCGImageSourceShouldCache: false]
     private let maxRenderableFrames = 120

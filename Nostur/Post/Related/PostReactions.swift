@@ -36,7 +36,7 @@ struct PostReactions: View {
                                     }
                                 VStack(alignment: .leading) {
                                     NRPostHeaderContainer(nrPost: nrPost)
-                                    Text(nrPost.content == "+" ? "❤️" : nrPost.content ?? "")
+                                    NIP30ReactionContentView(content: nrPost.content, fastTags: nrPost.fastTags)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                             }

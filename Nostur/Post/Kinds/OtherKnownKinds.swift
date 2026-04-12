@@ -35,6 +35,11 @@ struct OtherKnownKinds: View {
             Text(fallbackDescription(for: nrPost))
                 .fontWeightBold()
             
+            if nrPost.kind == 7 {
+                NIP30ReactionContentView(content: nrPost.content, fastTags: nrPost.fastTags)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            
             
             HStack {
                 Spacer()

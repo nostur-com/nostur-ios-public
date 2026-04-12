@@ -168,7 +168,7 @@ struct ReactionsForThisNote: View {
                         PFP(pubkey: reactions[index].pubkey, pictureUrl: reactions[index].pictureUrl, forceFlat: true)
                             .id(reactions[index].id)
                             .zIndex(-Double(index))
-                        Text(reactions[index].content == "+" ? "❤️" : reactions[index].content ?? "❤️")
+                        NIP30ReactionContentView(content: reactions[index].content, fastTags: reactions[index].fastTags, size: 16)
                             .offset(x: 5, y: 15)
                             .zIndex(20)
                         

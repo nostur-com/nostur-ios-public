@@ -7,6 +7,149 @@
 
 import SwiftUI
 import RepresentableKit
+import Gifu
+
+private final class NIP30InlineEmojiTextView: UITextView {
+    private var overlayViews: [UIView] = []
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        updateCustomEmojiOverlays()
+    }
+
+    func updateCustomEmojiOverlays() {
+        overlayViews.forEach { $0.removeFromSuperview() }
+        overlayViews.removeAll()
+
+        guard let attributedText, attributedText.length > 0 else { return }
+
+        let fullRange = NSRange(location: 0, length: attributedText.length)
+        attributedText.enumerateAttribute(.nosturCustomEmojiURL, in: fullRange) { value, range, _ in
+            guard let urlString = value as? String, let url = URL(string: urlString) else { return }
+            guard let rect = self.customEmojiRect(forCharacterRange: range) else { return }
+            let emojiView = NIP30InlineEmojiOverlayView(url: url)
+            emojiView.frame = rect
+            emojiView.isUserInteractionEnabled = false
+            self.addSubview(emojiView)
+            self.overlayViews.append(emojiView)
+        }
+    }
+
+    private func customEmojiRect(forCharacterRange range: NSRange) -> CGRect? {
+        guard range.location != NSNotFound, range.length > 0 else { return nil }
+        guard let layoutManager = self.layoutManager as NSLayoutManager?,
+              let textContainer = self.textContainer as NSTextContainer? else { return nil }
+
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+        guard glyphRange.length > 0 else { return nil }
+
+        var rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+        rect.origin.x += textContainerInset.left
+        rect.origin.y += textContainerInset.top
+        guard rect.width > 0, rect.height > 0 else { return nil }
+        
+        #if targetEnvironment(macCatalyst)
+        let font = (attributedText?.attribute(.font, at: range.location, effectiveRange: nil) as? UIFont) ?? UIFont.preferredFont(forTextStyle: .body)
+        let size = min(rect.height, font.pointSize)
+        let y = rect.minY + ((rect.height - size) / 2.0)
+        return CGRect(x: rect.minX, y: y, width: size, height: size).integral
+        #else
+        return rect.integral
+        #endif
+    }
+}
+
+private final class NIP30InlineEmojiOverlayView: UIView {
+    private let url: URL
+    private var contentView: UIView?
+    private var loadTask: Task<Void, Never>?
+    private static let cache = NSCache<NSString, NSData>()
+
+    init(url: URL) {
+        self.url = url
+        super.init(frame: .zero)
+        self.backgroundColor = .clear
+        loadAndRender()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    deinit {
+        loadTask?.cancel()
+        if let webp = contentView as? WebPAnimatedImageView {
+            webp.prepareForReuse()
+        }
+        if let gif = contentView as? GIFImageView {
+            gif.prepareForReuse()
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        contentView?.frame = bounds
+    }
+
+    private func loadAndRender() {
+        let key = url.absoluteString as NSString
+        if let cached = Self.cache.object(forKey: key) {
+            render(Data(referencing: cached))
+            return
+        }
+
+        loadTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let (data, _) = try await URLSession.shared.data(from: self.url)
+                guard !Task.isCancelled else { return }
+                Self.cache.setObject(data as NSData, forKey: key)
+                await MainActor.run {
+                    self.render(data)
+                }
+            }
+            catch { }
+        }
+    }
+
+    private func render(_ data: Data) {
+        let rect = bounds.isEmpty ? CGRect(x: 0, y: 0, width: 18, height: 18) : bounds
+        if isAnimatedWebPData(data) {
+            let webpView = WebPAnimatedImageView(frame: rect)
+            webpView.prepareForAnimation(withWebPData: data)
+            webpView.startAnimatingWebP()
+            setContentView(webpView)
+            return
+        }
+
+        if data.count >= 6 {
+            let header = Array(data.prefix(6))
+            if header == [0x47, 0x49, 0x46, 0x38, 0x37, 0x61] || header == [0x47, 0x49, 0x46, 0x38, 0x39, 0x61] {
+                let gifView = GIFImageView(frame: rect)
+                gifView.contentMode = .scaleAspectFit
+                gifView.prepareForAnimation(withGIFData: data, loopCount: 0)
+                gifView.startAnimatingGIF()
+                setContentView(gifView)
+                return
+            }
+        }
+
+        if let image = UIImage(data: data) {
+            let imageView = UIImageView(frame: rect)
+            imageView.image = image
+            imageView.contentMode = .scaleAspectFit
+            setContentView(imageView)
+        }
+    }
+
+    private func setContentView(_ view: UIView) {
+        contentView?.removeFromSuperview()
+        contentView = view
+        view.isUserInteractionEnabled = false
+        view.frame = bounds
+        addSubview(view)
+    }
+}
 
 struct NRTextDynamic: View {
     @Environment(\.theme) private var theme
@@ -83,7 +226,7 @@ struct NRTextDynamic: View {
 //    89.00 ms    0.8%    0 s  NRTextDynamic.makeUITextView()
 //    48.00 ms    0.4%    0 s  UITextView.__allocating_init()
     func makeUITextView() -> UITextView {
-        let view = UITextView()
+        let view = NIP30InlineEmojiTextView()
 //        _ = view.layoutManager
         view.isScrollEnabled = false
         view.adjustsFontForContentSizeCategory = true
@@ -97,6 +240,7 @@ struct NRTextDynamic: View {
         view.textContainerInset = .zero
         
         view.attributedText = attributedString
+        view.updateCustomEmojiOverlays()
         
         return view
     }
@@ -176,7 +320,7 @@ struct NRTextFixed: UIViewRepresentable {
 //        105.00 ms    0.9%    0 s           protocol witness for UIViewRepresentable.makeUIView(context:) in conformance NRTextFixed
 //        105.00 ms    0.9%    50.00 ms            NRTextFixed.makeUIView(context:)
 
-        let view = UITextView()
+        let view = NIP30InlineEmojiTextView()
         _ = view.layoutManager // Maybe this fixes: <NSTextViewportLayoutController: 0x132c14eb0>: -[NSTextViewportLayoutController textViewportElementsInRect:] cannot be called during layout. Seems to fix crash also. (still crash without this as of 24/05/2025)
         view.isScrollEnabled = false
         view.textColor = UIColor(fontColor)
@@ -191,6 +335,7 @@ struct NRTextFixed: UIViewRepresentable {
         view.textContainerInset = .zero
         view.textContainer.lineBreakMode = .byWordWrapping
         view.attributedText = attributedString
+        view.updateCustomEmojiOverlays()
         
         view.translatesAutoresizingMaskIntoConstraints = false
         
@@ -242,10 +387,12 @@ struct NRTextFixed: UIViewRepresentable {
             )
             uiView.linkTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor(accentColor)]
             uiView.attributedText = attributedString
+            (uiView as? NIP30InlineEmojiTextView)?.updateCustomEmojiOverlays()
         }
         
         if (self.attributedString != uiView.attributedText) {
             uiView.attributedText = self.attributedString
+            (uiView as? NIP30InlineEmojiTextView)?.updateCustomEmojiOverlays()
         
             if #available(iOS 16.0, *) {
                 DispatchQueue.main.async {
@@ -333,6 +480,45 @@ extension NSAttributedString {
 }
 
 extension NSMutableAttributedString {
+    
+    func addNIP30CustomEmojis(emojiMap: [String: URL]) {
+        guard !emojiMap.isEmpty else { return }
+        
+        let matches = NIP30CustomEmoji.shortcodeRegex.matches(in: string, options: [], range: NSRange(location: 0, length: length))
+        for match in matches.reversed() {
+            guard let shortcodeRange = Range(match.range(at: 1), in: string) else { continue }
+            let shortcode = String(string[shortcodeRange])
+            guard let url = emojiMap[shortcode] else { continue }
+            
+            let font = (attribute(.font, at: max(0, match.range.location), effectiveRange: nil) as? UIFont) ?? UIFont.preferredFont(forTextStyle: .body)
+            guard let emojiImage = NIP30CustomEmojiImageCache.shared.image(for: url, pointSize: font.pointSize) else { continue }
+            
+            #if targetEnvironment(macCatalyst)
+            // Keep text glyphs on Catalyst to avoid pointer turning into a hand over attachment glyphs.
+            self.addAttribute(.foregroundColor, value: UIColor.clear, range: match.range)
+            self.addAttribute(.nosturCustomEmojiURL, value: url.absoluteString, range: match.range)
+            #else
+            let yOffset = (font.capHeight - font.pointSize).rounded() / 2
+            let attachment = NSTextAttachment()
+            attachment.image = emojiImage
+            attachment.bounds = CGRect(x: 0, y: yOffset, width: font.pointSize, height: font.pointSize)
+            
+            let replacement = NSMutableAttributedString(attachment: attachment)
+            self.replaceCharacters(in: match.range, with: replacement)
+            self.addAttribute(.nosturCustomEmojiURL, value: url.absoluteString, range: NSRange(location: match.range.location, length: 1))
+            #endif
+        }
+    }
+    
+    func concealNIP30CustomEmojiShortcodesIfNeeded() {
+        #if targetEnvironment(macCatalyst)
+        let fullRange = NSRange(location: 0, length: length)
+        enumerateAttribute(.nosturCustomEmojiURL, in: fullRange) { value, range, _ in
+            guard value != nil else { return }
+            self.addAttribute(.foregroundColor, value: UIColor.clear, range: range)
+        }
+        #endif
+    }
     
     func addHashtagIcons() {
         let matches = NRTextParser.htRegex.matches(in: string, options: [], range: NSRange(location: 0, length: length))

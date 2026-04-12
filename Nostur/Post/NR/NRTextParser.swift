@@ -74,18 +74,23 @@ class NRTextParser { // TEXT things
         // Hashtag (or other url) at the end makes the whole empty space at end of view recognized as hashtag url, so tap to navigate to detail becomes tap to hashtag instead
         // Workaround by adding a space on the end. Also see NRNTextFixed.Coordinator.tapResponse(tapGesture: UITapGestureRecognizer).
         newerTextWithPs.text = newerTextWithPs.text + " "
+        
+        let emojiMap = NIP30CustomEmoji.emojiMap(from: fastTags)
+        let hasCustomEmoji = NIP30CustomEmoji.containsRenderableShortcode(in: newerTextWithPs.text, emojiMap: emojiMap)
 
         do {
             let matches = NRTextParser.htRegex.matches(in: newerTextWithPs.text, options: [], range: NSRange(location: 0, length: newerTextWithPs.text.utf16.count))
-            if matches.count > 0 {
+            if matches.count > 0 || hasCustomEmoji {
                 let mutableAttributedString = try NSMutableAttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
                 
+                mutableAttributedString.addNIP30CustomEmojis(emojiMap: emojiMap)
                 mutableAttributedString.addHashtagIcons()
                 
                 mutableAttributedString.addAttributes(
                     attributes,
                     range: NSRange(location: 0, length: mutableAttributedString.length)
                 )
+                mutableAttributedString.concealNIP30CustomEmojiShortcodesIfNeeded()
                             
                 return AttributedStringWithPs(input: text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
             }

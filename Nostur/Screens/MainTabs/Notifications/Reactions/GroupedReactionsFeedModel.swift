@@ -86,7 +86,15 @@ class GroupedReactionsFeedModel: ObservableObject {
                         .values
                         .sorted(by: { $0.created_at > $1.created_at })
                         .map { event in
-                            return Reaction(id: event.id, pubkey: event.pubkey, pictureUrl: event.contact?.pictureUrl, authorName: event.contact?.authorName, createdAt: event.created_at, content: event.content)
+                            return Reaction(
+                                id: event.id,
+                                pubkey: event.pubkey,
+                                pictureUrl: event.contact?.pictureUrl,
+                                authorName: event.contact?.authorName,
+                                createdAt: event.created_at,
+                                content: event.content,
+                                fastTags: event.fastTags
+                            )
                         },
                     nrPost: reactedTo.kind != 14 ? NRPost(event: reactedTo) : nil,
                     nrChatMessage: reactedTo.kind == 14 ? NRChatMessage(nEvent: reactedTo.toNEvent()) : nil
@@ -137,6 +145,7 @@ struct Reaction: Identifiable {
     public var authorName: String?
     public let createdAt: Int64
     public let content: String?
+    public let fastTags: [FastTag]
 }
 
 class GroupedReactions: ObservableObject, Identifiable {
