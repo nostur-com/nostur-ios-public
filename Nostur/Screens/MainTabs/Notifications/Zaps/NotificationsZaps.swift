@@ -58,7 +58,7 @@ struct NotificationsZaps: View {
 #endif
         ScrollViewReader { proxy in
             if model.nothingHere && model.postOrProfileZaps.isEmpty {
-                Text("Reposts of your posts will show up here")
+                Text("Zaps you received will show up here")
                     .centered()
             }
             else if model.postOrProfileZaps.isEmpty {
