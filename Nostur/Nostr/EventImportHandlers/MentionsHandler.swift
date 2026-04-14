@@ -32,8 +32,7 @@ func handleMentions(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectC
     
     // Then check if this is a post that is mentioned by events we already have in DB, to set mentionsCount
     if SUPPORTED_KINDS_CAN_BE_MENTIONED.contains(nEvent.kind) {
-        let mentions = Event.fetchMentions(id: nEvent.id, after: nEvent.createdAt.timestamp, context: context)
-        let mentionsCount = Int64(mentions.count)
+        let mentionsCount = Event.fetchMentionsCount(id: nEvent.id, after: nEvent.createdAt.timestamp, context: context)
         
         if let mentionedEvent = Event.fetchEvent(id: nEvent.id, context: context) {
             mentionedEvent.mentionsCount = mentionsCount

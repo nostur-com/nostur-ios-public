@@ -182,9 +182,7 @@ struct PostAndParent: View {
         
         // Get reposts, return related contact
         let mentionsCount: Int64 = await withBgContext { bg in
-            let mentions = Event.fetchMentions(id: nrPost.id)
-            let mentionsCount = Int64(mentions.count)
-            return mentionsCount
+            Event.fetchMentionsCount(id: nrPost.id, context: bg)
         }
         
         Task { @MainActor in

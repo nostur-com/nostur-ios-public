@@ -665,13 +665,32 @@ extension Event {
     
     static func fetchMentions(id: String, after: Int? = nil, context: NSManagedObjectContext = bg()) -> [Event] {
         let fr = Event.fetchRequest()
+        fr.predicate = mentionsPredicate(id: id, after: after)
+        fr.fetchBatchSize = 64
+        return (try? context.fetch(fr)) ?? []
+    }
+
+    static func fetchMentionsCount(id: String, after: Int? = nil, context: NSManagedObjectContext = bg()) -> Int64 {
+        let fr = Event.fetchRequest()
+        fr.predicate = mentionsPredicate(id: id, after: after)
+        fr.includesSubentities = false
+        return Int64((try? context.count(for: fr)) ?? 0)
+    }
+
+    private static func mentionsPredicate(id: String, after: Int?) -> NSPredicate {
         if let after {
-            fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {1,1111,30023} AND mostRecentId = nil AND tagsSerialized CONTAINS %@", after, serializedQ(id))
+            return NSPredicate(
+                format: "created_at > %i AND kind IN {1,1111,30023} AND mostRecentId = nil AND tagsSerialized CONTAINS %@",
+                after,
+                serializedQ(id)
+            )
         }
         else {
-            fr.predicate = NSPredicate(format: "kind IN {1,1111,30023} AND mostRecentId = nil AND tagsSerialized CONTAINS %@", serializedQ(id))
+            return NSPredicate(
+                format: "kind IN {1,1111,30023} AND mostRecentId = nil AND tagsSerialized CONTAINS %@",
+                serializedQ(id)
+            )
         }
-        return (try? context.fetch(fr)) ?? []
     }
     
     static func fetchReplies(replyToId: String, context: NSManagedObjectContext = bg()) -> [Event] {
