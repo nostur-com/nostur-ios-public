@@ -12741,6 +12741,9 @@
           }
         }
       }
+    },
+    "Zaps you received will show up here" : {
+
     }
   },
   "version" : "1.0"
