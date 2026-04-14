@@ -237,6 +237,17 @@ class AccountManager {
         ))
     }
     
+    // kind:10050 relay metadata for new first time user created in app
+    static func createDMRelayListMetadataEvent(account: CloudAccount) -> NEvent? {
+        return try? account.signEvent(NEvent(
+            kind: .dmRelayList,
+            tags: [
+                NostrTag(["relay", "wss://nos.lol"]),
+                NostrTag(["relay", "wss://relay.damus.io"])
+            ]
+        ))
+    }
+    
     static func createContactListEvent(account: CloudAccount) -> NEvent? {
         guard let ctx = account.managedObjectContext else {
             L.og.error("🔴🔴 createContactListEvent: account does not have managedObjectContext")

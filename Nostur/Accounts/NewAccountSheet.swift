@@ -77,7 +77,8 @@ struct NewAccountSheet: View {
     func createAccount() {
         guard let newAccount = AccountManager.shared.generateAccount(name: name, about: about, context: viewContext),
               let newKind0EventSigned = AccountManager.createUserMetadataEvent(account: newAccount),
-              let newKind10002Eventsigned = AccountManager.createRelayListMetadataEvent(account: newAccount)
+              let newKind10002EventSigned = AccountManager.createRelayListMetadataEvent(account: newAccount),
+              let newKind10050EventSigned = AccountManager.createDMRelayListMetadataEvent(account: newAccount)
         else { L.og.error("🔴🔴 could not createAccount()"); return }
         
         let bgContext = bg()
@@ -87,13 +88,19 @@ struct NewAccountSheet: View {
             Contact.saveOrUpdateContact(event: newKind0EventSigned, context: bgContext)
             
             // create relays kind:10002
-            _ = Event.saveEvent(event: newKind10002Eventsigned, context: bgContext)
+            _ = Event.saveEvent(event: newKind10002EventSigned, context: bgContext)
             
             DataProvider.shared().saveToDiskNow(.bgContext)
             
-            // Publish kind:0 and kind:10002
+            // Publish kind:0 and kind:10002 and kind:10050 + avoid rate limited
             Unpublisher.shared.publishNow(newKind0EventSigned)
-            Unpublisher.shared.publishNow(newKind10002Eventsigned)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                Unpublisher.shared.publishNow(newKind10002EventSigned)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                Unpublisher.shared.publishNow(newKind10050EventSigned)
+            }
         }
         dismiss()
         AccountsState.shared.changeAccount(newAccount)
