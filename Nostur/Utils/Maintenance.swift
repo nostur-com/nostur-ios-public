@@ -45,40 +45,51 @@ struct Maintenance {
 #endif
     }
 
-    static let BOOTSTRAP_RELAYS = ["wss://relay.damus.io", "wss://relay.nostr.band", "wss://nos.lol", "wss://nostr.wine", "wss://purplepag.es"]
-    
-    // Removed: wss://relay.damus.io // shows only cameri bug
-    // Removed: time out... "wss://nostr.fmt.wiz.biz"
-    // Removed: too many subscriptions "wss://relay.snort.social"
-    // Removed: always connection fail "wss://relayable.org"
-    
     @MainActor
-    static func ensureBootstrapRelaysExist(context:NSManagedObjectContext) async {
+    static func ensureBootstrapRelaysExist(context: NSManagedObjectContext) async {
         await context.perform {
             let r = CloudRelay.fetchRequest()
             if let relaysCount = try? context.fetch(r).count {
-                var relays:[RelayData] = []
-                
                 if (relaysCount == 0) {
-                    for url in BOOTSTRAP_RELAYS {
-                        let bootstrapRelay = CloudRelay(context: context)
-                        
-                        
-                        bootstrapRelay.read = ["wss://relay.nostr.band","wss://relay.damus.io"].contains(url) ? false : true // write only bootstrap
-                        
-                        // don't try to write if payment is required for new first-time user
-                        bootstrapRelay.write = ["wss://nostr.wine"].contains(url) ? false : true
-                        
-                        bootstrapRelay.createdAt = Date.now
-                        bootstrapRelay.url_ = url
-                        if ["wss://relay.nostr.band","wss://relay.damus.io"].contains(url) {
-                            bootstrapRelay.search = true
-                        }
-                        if (url == "wss://nostr.wine") {
-                            bootstrapRelay.auth = true
-                        }
-                        relays.append(bootstrapRelay.toStruct())
-                    }
+                    let bootstrapRelay1 = CloudRelay(context: context)
+                    bootstrapRelay1.url_ = "wss://nos.lol"
+                    bootstrapRelay1.read = true
+                    bootstrapRelay1.write = true
+                    bootstrapRelay1.search = true
+                    bootstrapRelay1.auth = true
+                    bootstrapRelay1.createdAt = Date.now
+                    
+                    let bootstrapRelay2 = CloudRelay(context: context)
+                    bootstrapRelay2.url_ = "wss://relay.damus.io"
+                    bootstrapRelay2.read = false
+                    bootstrapRelay2.write = true
+                    bootstrapRelay2.search = true
+                    bootstrapRelay2.auth = true
+                    bootstrapRelay2.createdAt = Date.now
+                                     
+                    let bootstrapRelay3 = CloudRelay(context: context)
+                    bootstrapRelay3.url_ = "wss://relay.primal.net"
+                    bootstrapRelay3.read = false
+                    bootstrapRelay3.write = true
+                    bootstrapRelay3.search = true
+                    bootstrapRelay3.auth = false
+                    bootstrapRelay3.createdAt = Date.now
+                    
+                    let bootstrapRelay4 = CloudRelay(context: context)
+                    bootstrapRelay4.url_ = "wss://nostr.wine"
+                    bootstrapRelay4.read = true
+                    bootstrapRelay4.write = false // paid to write
+                    bootstrapRelay4.search = true
+                    bootstrapRelay4.auth = false
+                    bootstrapRelay4.createdAt = Date.now
+
+                    let bootstrapRelay5 = CloudRelay(context: context)
+                    bootstrapRelay5.url_ = "wss://purplepag.es"
+                    bootstrapRelay5.read = true
+                    bootstrapRelay5.write = true
+                    bootstrapRelay5.search = true
+                    bootstrapRelay5.auth = false
+                    bootstrapRelay5.createdAt = Date.now
                 }
             }
             
