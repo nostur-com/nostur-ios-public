@@ -197,7 +197,8 @@ func scheduleMentionNotification(_ mentions: [Mention], pubkey: String) {
     
     // Create the notificatgion
     let content = UNMutableNotificationContent()
-    content.title = Set(mentions.map { $0.name }).formatted(.list(type: .and)) // "John and Jim"
+    let title = Set(mentions.map { $0.name }).formatted(.list(type: .and)) // "John and Jim"
+    content.title = if title.isEmpty { "New reply" } else { title } // if title == "" then iOS will show the App title instead, which makes it look like there is a message from "Nostur", so we change the title to "New reply"
     content.body = mentions.count == 1 ? (mentions.first?.message ?? "Message") : "\(mentions.count) messages" // "What's up" or "2 messages"
     content.sound = .default
     content.userInfo = ["tapDestination": "Mentions"] // For navigating to the Notifications->Mentions tab
