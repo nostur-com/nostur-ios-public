@@ -247,17 +247,54 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     }
     
     public func fetchGiftWraps() {
+        let accountPubkey = self.accountPubkey
         let reqFilters = Filters(
             kinds: [1059],
             tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
             since: lastGiftWrapAt
         )
-        nxReq(
-            reqFilters,
-            subscriptionId: "-OPEN-59-" + self.id,
-            isActiveSubscription: true,
-            relayType: .READ
-        )
+        let subscriptionId = "-OPEN-59-" + self.id
+        Task { [weak self] in
+            guard let self else { return }
+            let dmRelays = await self.giftWrapReadRelays(accountPubkey: accountPubkey)
+            await MainActor.run {
+                guard !dmRelays.isEmpty else {
+                    nxReq(
+                        reqFilters,
+                        subscriptionId: subscriptionId,
+                        isActiveSubscription: true,
+                        relayType: .READ
+                    )
+                    return
+                }
+
+                let dmRelayData: Set<RelayData> = Set(dmRelays.map {
+                    RelayData.new(url: $0, read: false, write: false, search: false, auth: false)
+                })
+
+                // Ensure explicit relay-limited REQs can use DM relays even if they are not global read relays.
+                dmRelayData.forEach { relay in
+                    ConnectionPool.shared.addConnection(relay)
+                }
+
+                nxReq(
+                    reqFilters,
+                    subscriptionId: subscriptionId,
+                    isActiveSubscription: true,
+                    relays: dmRelayData,
+                    relayType: .READ
+                )
+            }
+        }
+    }
+
+    private func giftWrapReadRelays(accountPubkey: String) async -> Set<String> {
+        let accountDMRelays: Set<String> = await MainActor.run {
+            guard let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) else { return [] }
+            return Set(account.accountRelays.filter { $0.dm }.map { $0.url })
+        }
+        let kind10050Relays = await getDMrelays(for: accountPubkey)
+        return accountDMRelays.union(kind10050Relays)
     }
     
     public func fetchNip04DMs() {
