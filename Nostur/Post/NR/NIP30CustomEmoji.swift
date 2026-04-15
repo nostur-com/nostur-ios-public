@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import UIKit
+import ImageIO
 
 extension NSAttributedString.Key {
     static let nosturCustomEmojiURL = NSAttributedString.Key("nostur.customEmojiURL")
@@ -126,12 +127,16 @@ struct NIP30ReactionContentView: View {
 struct NIP30EmojiImage: View {
     let url: URL
     let size: CGFloat
+    var animate: Bool = true
+    var onLoadedBytes: ((Int) -> Void)? = nil
     @State private var data: Data? = nil
     @State private var staticImage: UIImage? = nil
     @State private var loadFailed = false
     
     private static let gifHeader87a: [UInt8] = [0x47, 0x49, 0x46, 0x38, 0x37, 0x61]
     private static let gifHeader89a: [UInt8] = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]
+    private static let maxEmojiBytes = 500_000
+    private static let maxEmojiPixelDimension = 2048
     
     private var isAnimatedWebP: Bool {
         guard let data else { return false }
@@ -146,10 +151,10 @@ struct NIP30EmojiImage: View {
 
     var body: some View {
         Group {
-            if let data, isAnimatedWebP {
+            if animate, let data, isAnimatedWebP {
                 AnimatedWebPImage(data: data, isPlaying: .constant(true))
             }
-            else if let data, isGIF {
+            else if animate, let data, isGIF {
                 GIFImage(data: data, isPlaying: .constant(true))
             }
             else if let staticImage {
@@ -172,18 +177,69 @@ struct NIP30EmojiImage: View {
         .clipped()
     }
     
-    @MainActor
     private func loadEmojiData() async {
         guard data == nil, !loadFailed else { return }
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            self.data = data
-            if !isAnimatedWebP && !isGIF {
-                self.staticImage = UIImage(data: data)
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 10
+            request.cachePolicy = .returnCacheDataElseLoad
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard Self.isValidEmojiPayload(data: data, response: response) else {
+                await MainActor.run {
+                    self.loadFailed = true
+                }
+                return
+            }
+
+            let preview = await Self.makeThumbnailPreview(from: data, pointSize: size)
+            await MainActor.run {
+                self.data = data
+                self.staticImage = preview
+                self.onLoadedBytes?(data.count)
             }
         }
         catch {
-            self.loadFailed = true
+            await MainActor.run {
+                self.loadFailed = true
+            }
         }
+    }
+
+    private static func isValidEmojiPayload(data: Data, response: URLResponse) -> Bool {
+        guard !data.isEmpty, data.count <= maxEmojiBytes else { return false }
+
+        if let httpResponse = response as? HTTPURLResponse,
+           let mimeType = httpResponse.mimeType?.lowercased() {
+            let isImage = mimeType.hasPrefix("image/")
+            let isBinaryOctetStream = mimeType == "application/octet-stream"
+            if !isImage && !isBinaryOctetStream { return false }
+        }
+
+        guard let imageSource = CGImageSourceCreateWithData(data as CFData, nil) else { return false }
+        guard CGImageSourceGetCount(imageSource) > 0 else { return false }
+        guard let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any] else { return false }
+
+        let width = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue ?? 0
+        let height = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue ?? 0
+        guard width > 0, height > 0 else { return false }
+        guard width <= maxEmojiPixelDimension, height <= maxEmojiPixelDimension else { return false }
+        return true
+    }
+
+    private static func makeThumbnailPreview(from data: Data, pointSize: CGFloat) async -> UIImage? {
+        let screenScale = UIScreen.main.scale
+        return await Task.detached(priority: .utility) { () -> UIImage? in
+            guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+            let pixelSize = max(Int(pointSize * screenScale * 2.0), 1)
+            let options: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceShouldCacheImmediately: false,
+                kCGImageSourceThumbnailMaxPixelSize: pixelSize
+            ]
+            guard let imageRef = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+            return UIImage(cgImage: imageRef)
+        }.value
     }
 }

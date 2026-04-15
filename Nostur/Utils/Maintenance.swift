@@ -493,7 +493,7 @@ struct Maintenance {
         // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
         let frOther = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
         
-        frOther.predicate = NSPredicate(format: "created_at < %i AND NOT kind IN {0,1,1111,1222,1244,3,4,14,5,6,7,8,20,9734,9735,9802,10002,10050,30311,30023,34235,34236} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
+        frOther.predicate = NSPredicate(format: "created_at < %i AND NOT kind IN {0,1,1111,1222,1244,3,4,14,5,6,7,8,20,9734,9735,9802,10002,10050,30030,30311,30023,34235,34236} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
         
         let frOtherbatchDelete = NSBatchDeleteRequest(fetchRequest: frOther)
         frOtherbatchDelete.resultType = .resultTypeCount

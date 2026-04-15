@@ -130,6 +130,9 @@
         }
       }
     },
+    ":%@:" : {
+
+    },
     "!" : {
       "shouldTranslate" : false
     },
@@ -643,6 +646,9 @@
         }
       }
     },
+    "%@ by" : {
+
+    },
     "%@ by %@" : {
       "localizations" : {
         "en" : {
@@ -871,6 +877,9 @@
           }
         }
       }
+    },
+    "%lld emojis" : {
+
     },
     "%lld Following" : {
       "comment" : "Label for Following count",
@@ -2701,6 +2710,9 @@
           }
         }
       }
+    },
+    "Choose custom emoji:" : {
+
     },
     "Choose existing list" : {
       "localizations" : {
@@ -4893,6 +4905,9 @@
         }
       }
     },
+    "Find more Emoji sets" : {
+
+    },
     "finished" : {
       "shouldTranslate" : false
     },
@@ -5221,6 +5236,9 @@
           }
         }
       }
+    },
+    "Hide keyboard" : {
+
     },
     "Hide posts you have already seen (beta)" : {
       "comment" : "Setting on settings screen",
@@ -5679,6 +5697,9 @@
     "Landscape" : {
       "shouldTranslate" : false
     },
+    "Largest emoji loaded: %@" : {
+
+    },
     "Last 10 error messages" : {
       "localizations" : {
         "nl" : {
@@ -6045,6 +6066,9 @@
           }
         }
       }
+    },
+    "Loading emoji sets…" : {
+
     },
     "Loading indicator" : {
       "comment" : "Setting on settings screen",
@@ -7007,6 +7031,9 @@
           }
         }
       }
+    },
+    "No custom emoji tags found in this set." : {
+
     },
     "No DM relays found for" : {
       "localizations" : {
@@ -9638,6 +9665,12 @@
           }
         }
       }
+    },
+    "Save to picker" : {
+
+    },
+    "Saved to picker" : {
+
     },
     "Scanning relays for messages %lld/12 months ago..." : {
       "extractionState" : "stale",

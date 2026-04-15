@@ -61,6 +61,78 @@ public final class TypingTextModel: ObservableObject {
     }
 }
 
+struct SavedCustomEmojiSet: Codable, Hashable {
+    let ownerPubkey: String
+    let dTag: String
+    let eventId: String
+
+    var setKey: String {
+        SavedCustomEmojiSetsStore.setKey(ownerPubkey: ownerPubkey, dTag: dTag, eventId: eventId)
+    }
+}
+
+final class SavedCustomEmojiSetsStore {
+    static let shared = SavedCustomEmojiSetsStore()
+
+    private init() {}
+
+    func savedSets(for accountPubkey: String) -> [SavedCustomEmojiSet] {
+        guard !accountPubkey.isEmpty else { return [] }
+        guard let data = UserDefaults.standard.data(forKey: defaultsKey(for: accountPubkey)) else { return [] }
+        return (try? JSONDecoder().decode([SavedCustomEmojiSet].self, from: data)) ?? []
+    }
+
+    func savedSetKeys(for accountPubkey: String) -> Set<String> {
+        Set(savedSets(for: accountPubkey).map { $0.setKey })
+    }
+
+    func savedOwnerPubkeys(for accountPubkey: String) -> Set<String> {
+        Set(savedSets(for: accountPubkey).map { $0.ownerPubkey })
+    }
+
+    func isSaved(ownerPubkey: String, dTag: String, eventId: String, for accountPubkey: String) -> Bool {
+        guard !accountPubkey.isEmpty else { return false }
+        let key = Self.setKey(ownerPubkey: ownerPubkey, dTag: dTag, eventId: eventId)
+        return savedSetKeys(for: accountPubkey).contains(key)
+    }
+
+    func save(ownerPubkey: String, dTag: String, eventId: String, for accountPubkey: String) {
+        guard !accountPubkey.isEmpty else { return }
+        var sets = savedSets(for: accountPubkey)
+        let newSet = SavedCustomEmojiSet(ownerPubkey: ownerPubkey, dTag: normalizedTag(dTag), eventId: eventId)
+        guard !sets.contains(where: { $0.setKey == newSet.setKey }) else { return }
+        sets.insert(newSet, at: 0)
+        persist(sets, for: accountPubkey)
+    }
+
+    func remove(ownerPubkey: String, dTag: String, eventId: String, for accountPubkey: String) {
+        guard !accountPubkey.isEmpty else { return }
+        let key = Self.setKey(ownerPubkey: ownerPubkey, dTag: dTag, eventId: eventId)
+        let filtered = savedSets(for: accountPubkey).filter { $0.setKey != key }
+        persist(filtered, for: accountPubkey)
+    }
+
+    private func persist(_ sets: [SavedCustomEmojiSet], for accountPubkey: String) {
+        if let data = try? JSONEncoder().encode(sets) {
+            UserDefaults.standard.set(data, forKey: defaultsKey(for: accountPubkey))
+        }
+    }
+
+    private func defaultsKey(for accountPubkey: String) -> String {
+        "saved_custom_emoji_sets_\(accountPubkey)"
+    }
+
+    private func normalizedTag(_ dTag: String) -> String {
+        dTag.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static func setKey(ownerPubkey: String, dTag: String, eventId: String) -> String {
+        let normalizedDTag = dTag.trimmingCharacters(in: .whitespacesAndNewlines)
+        let setIdentifier = normalizedDTag.isEmpty ? eventId : normalizedDTag
+        return "\(ownerPubkey):\(setIdentifier)"
+    }
+}
+
 func enableAuthAndSendChallengeOnSingleRelay(usingAccount: CloudAccount? = nil) {
     guard let singleRelay = Drafts.shared.lockToThisRelay else { return }
     if ( !(ConnectionPool.shared.connections[singleRelay.id]?.isConnected ?? true) ) {
@@ -111,8 +183,12 @@ public final class NewPostModel: ObservableObject {
     }
     
     @Published var contactSearchResults: [NRContact] = []
+    @Published var showCustomEmojiPicker = false
+    @Published var customEmojiSearchResults: [ComposerCustomEmoji] = []
+    @Published var isFindingMoreEmojiSets = false
     @Published var activeAccount: CloudAccount? = nil {
         didSet {
+            loadCustomEmojisFromFollowedSets()
             if lockToSingleRelay {
                 enableAuthAndSendChallengeOnSingleRelay(usingAccount: activeAccount)
             }
@@ -136,6 +212,29 @@ public final class NewPostModel: ObservableObject {
     @Published var selectedAuthor: Contact? // To include in 9802 highlight
     
     private var subscriptions = Set<AnyCancellable>()
+    private var emojiTypingTerm: String = ""
+    private var availableCustomEmojis: [ComposerCustomEmoji] = []
+    private var customEmojiURLByShortcode: [String: URL] = [:]
+    private var selectedCustomEmojiURLByShortcode: [String: URL] = [:]
+    private var recentCustomEmojiIds: [String] = []
+    private var didAutoFetchEmptyEmojiPickerForAccountPubkeys = Set<String>()
+
+    var isCustomEmojiFiltering: Bool {
+        !emojiTypingTerm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var customEmojiShouldGroupResults: Bool {
+        if !isCustomEmojiFiltering { return true }
+        return Set(customEmojiSearchResults.map { $0.setId }).count <= 1
+    }
+
+    var isAutoFetchingInitialEmojiSets: Bool {
+        guard let activeAccount else { return false }
+        return showCustomEmojiPicker
+            && isFindingMoreEmojiSets
+            && customEmojiSearchResults.isEmpty
+            && didAutoFetchEmptyEmojiPickerForAccountPubkeys.contains(activeAccount.publicKey)
+    }
     
     public init(dueTime: TimeInterval = 0.2) {
         self.typingTextModel.$text
@@ -913,6 +1012,18 @@ public final class NewPostModel: ObservableObject {
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             content = replaceNsecWithHunter2(content)
         }
+
+        let usedEmojiShortcodes = extractCustomEmojiShortcodes(from: content)
+        for shortcode in usedEmojiShortcodes {
+            guard let emojiURL = selectedCustomEmojiURLByShortcode[shortcode] ?? customEmojiURLByShortcode[shortcode] else { continue }
+            let emojiTag = NostrTag(["emoji", shortcode, emojiURL.absoluteString])
+            let alreadyPresent = nEvent.tags.contains(where: {
+                $0.type == "emoji" && $0.tag[safe: 1] == shortcode && $0.tag[safe: 2] == emojiURL.absoluteString
+            })
+            if !alreadyPresent {
+                nEvent.tags.append(emojiTag)
+            }
+        }
         
         let lockToThisRelay: RelayData? = Drafts.shared.lockToThisRelay
         
@@ -1042,6 +1153,26 @@ public final class NewPostModel: ObservableObject {
     
     public func textChanged(_ newText:String) {
         guard textView != nil else { return }
+        if let emojiTerm = customEmojiTerm(newText, textView: textView) {
+            mentioning = false
+            term = ""
+            emojiTypingTerm = emojiTerm
+            refreshCustomEmojiSearchResults(for: emojiTerm)
+            let shouldShow = true
+            if shouldShow != showCustomEmojiPicker {
+                showCustomEmojiPicker = shouldShow
+            }
+            maybeAutoFetchEmojiSetsIfNeeded()
+            if showMentioning {
+                showMentioning = false
+            }
+            return
+        }
+        else if showCustomEmojiPicker {
+            showCustomEmojiPicker = false
+            emojiTypingTerm = ""
+        }
+
         if let mentionTerm = mentionTerm(newText, textView: textView) {
             if mentionTerm == lastHit {
                 mentioning = false
@@ -1066,6 +1197,44 @@ public final class NewPostModel: ObservableObject {
             self.showMentioning = showMentioning
         }
     }
+
+    func dismissCustomEmojiPicker() {
+        showCustomEmojiPicker = false
+        emojiTypingTerm = ""
+    }
+
+    func selectCustomEmoji(_ customEmoji: ComposerCustomEmoji) {
+        guard let textView = textView else { return }
+        guard let selectedRange = textView.selectedTextRange else { return }
+
+        let cursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
+        var currentText = textView.text ?? ""
+        let textBeforeCursor = currentText.prefix(cursorPosition)
+        let textAfterCursor = currentText.suffix(max(0, currentText.count - cursorPosition))
+        let replacement = ":\(customEmoji.shortcode): "
+        let replaceLength = emojiTypingTerm.count + 1 // + ":" trigger
+
+        let trimmedPrefix = textBeforeCursor.count >= replaceLength
+            ? textBeforeCursor.dropLast(replaceLength)
+            : Substring("")
+
+        currentText = "\(trimmedPrefix)\(replacement)\(textAfterCursor)"
+        textView.text = currentText
+        typingTextModel.text = currentText
+
+        let delta = replacement.count - replaceLength
+        if let newPosition = textView.position(from: selectedRange.end, offset: delta) {
+            textView.selectedTextRange = textView.textRange(from: newPosition, to: newPosition)
+        }
+        else {
+            let end = textView.endOfDocument
+            textView.selectedTextRange = textView.textRange(from: end, to: end)
+        }
+
+        selectedCustomEmojiURLByShortcode[customEmoji.shortcode] = customEmoji.url
+        markCustomEmojiAsRecentlyUsed(customEmoji)
+        dismissCustomEmojiPicker()
+    }
     
     private func searchContacts(_ mentionTerm: String) {
         Importer.shared.delayProcessing()
@@ -1081,6 +1250,196 @@ public final class NewPostModel: ObservableObject {
                 self?.contactSearchResults = contactSearchResults
             }
         }
+    }
+
+    private func loadCustomEmojisFromFollowedSets() {
+        guard let activeAccount else {
+            availableCustomEmojis = []
+            customEmojiURLByShortcode = [:]
+            customEmojiSearchResults = []
+            return
+        }
+
+        let accountPubkey = activeAccount.publicKey
+        loadRecentCustomEmojiIds(for: accountPubkey)
+        let followedPubkeys = activeAccount.followingPubkeys.union(activeAccount.privateFollowingPubkeys)
+        let savedSetKeys = SavedCustomEmojiSetsStore.shared.savedSetKeys(for: accountPubkey)
+        let savedSetOwnerPubkeys = SavedCustomEmojiSetsStore.shared.savedOwnerPubkeys(for: accountPubkey)
+        let candidatePubkeys = Array(followedPubkeys.union(savedSetOwnerPubkeys))
+
+        guard !candidatePubkeys.isEmpty else {
+            availableCustomEmojis = []
+            customEmojiURLByShortcode = [:]
+            customEmojiSearchResults = []
+            return
+        }
+
+        bg().perform {
+            let fr = Event.fetchRequest()
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            fr.predicate = NSPredicate(format: "kind == 30030 AND mostRecentId == nil AND pubkey IN %@", candidatePubkeys)
+            fr.fetchLimit = 1500
+
+            let events = (try? bg().fetch(fr)) ?? []
+            var seen = Set<String>()
+            var loaded: [ComposerCustomEmoji] = []
+            var urlMap: [String: URL] = [:]
+
+            for event in events {
+                let setKey = SavedCustomEmojiSetsStore.setKey(ownerPubkey: event.pubkey, dTag: event.dTag, eventId: event.id)
+                let isFromFollow = followedPubkeys.contains(event.pubkey)
+                let isSavedSet = savedSetKeys.contains(setKey)
+                guard isFromFollow || isSavedSet else { continue }
+
+                let setTitle = self.customEmojiSetTitle(for: event)
+                let setId = "\(event.pubkey):\(event.dTag.isEmpty ? event.id : event.dTag)"
+                let setAuthor = self.customEmojiSetAuthor(forPubkey: event.pubkey)
+                for tag in event.fastTags where tag.0 == "emoji" {
+                    let shortcode = tag.1
+                    guard NIP30CustomEmoji.isValidShortcode(shortcode) else { continue }
+                    guard let rawURL = tag.2, let url = URL(string: rawURL) else { continue }
+                    let id = "\(setId)|\(ComposerCustomEmoji.id(shortcode: shortcode, url: url))"
+                    guard !seen.contains(id) else { continue }
+                    seen.insert(id)
+                    loaded.append(ComposerCustomEmoji(shortcode: shortcode, url: url, pubkey: event.pubkey, createdAt: event.created_at, setId: setId, setTitle: setTitle, setAuthor: setAuthor))
+                    if urlMap[shortcode] == nil {
+                        urlMap[shortcode] = url
+                    }
+                }
+            }
+
+            Task { @MainActor in
+                self.availableCustomEmojis = loaded
+                self.customEmojiURLByShortcode = urlMap
+                self.refreshCustomEmojiSearchResults(for: self.emojiTypingTerm)
+            }
+        }
+    }
+
+    func findMoreEmojiSetsFromRelays() {
+        guard !isFindingMoreEmojiSets else { return }
+        guard let activeAccount else { return }
+        let followedPubkeys = activeAccount.followingPubkeys.union(activeAccount.privateFollowingPubkeys)
+            .union([activeAccount.publicKey])
+        guard !followedPubkeys.isEmpty else { return }
+
+        isFindingMoreEmojiSets = true
+        let authors = Set(followedPubkeys)
+        let filters = Filters(authors: authors, kinds: [30030], limit: 500)
+
+        let reqTask = ReqTask(
+            debounceTime: 2.5,
+            timeout: 8.0,
+            prefix: "EMOJISETS-",
+            reqCommand: { taskId in
+                nxReq(filters, subscriptionId: taskId, isActiveSubscription: false, useOutbox: true)
+                nxReq(filters, subscriptionId: "\(taskId)-S", isActiveSubscription: false, relayType: .SEARCH_ONLY)
+            },
+            processResponseCommand: { [weak self] _, _, _ in
+                Task { @MainActor [weak self] in
+                    self?.isFindingMoreEmojiSets = false
+                    self?.loadCustomEmojisFromFollowedSets()
+                }
+            },
+            timeoutCommand: { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.isFindingMoreEmojiSets = false
+                    self?.loadCustomEmojisFromFollowedSets()
+                }
+            }
+        )
+
+        Backlog.shared.add(reqTask)
+        reqTask.fetch()
+    }
+
+    private func maybeAutoFetchEmojiSetsIfNeeded() {
+        guard showCustomEmojiPicker else { return }
+        guard customEmojiSearchResults.isEmpty else { return }
+        guard !isFindingMoreEmojiSets else { return }
+        guard let activeAccount else { return }
+
+        let accountPubkey = activeAccount.publicKey
+        guard !didAutoFetchEmptyEmojiPickerForAccountPubkeys.contains(accountPubkey) else { return }
+
+        let followedPubkeys = activeAccount.followingPubkeys
+            .union(activeAccount.privateFollowingPubkeys)
+            .union([accountPubkey])
+        guard !followedPubkeys.isEmpty else { return }
+
+        didAutoFetchEmptyEmojiPickerForAccountPubkeys.insert(accountPubkey)
+        findMoreEmojiSetsFromRelays()
+    }
+
+    private func refreshCustomEmojiSearchResults(for searchTerm: String) {
+        let normalizedTerm = searchTerm.lowercased()
+        let filtered: [ComposerCustomEmoji] = if normalizedTerm.isEmpty {
+            availableCustomEmojis
+        }
+        else {
+            availableCustomEmojis.filter { $0.shortcode.lowercased().contains(normalizedTerm) }
+        }
+
+        let recentIndex = Dictionary(uniqueKeysWithValues: recentCustomEmojiIds.enumerated().map { ($1, $0) })
+        customEmojiSearchResults = filtered.sorted { lhs, rhs in
+            let lhsId = ComposerCustomEmoji.id(shortcode: lhs.shortcode, url: lhs.url)
+            let rhsId = ComposerCustomEmoji.id(shortcode: rhs.shortcode, url: rhs.url)
+            let lhsRecent = recentIndex[lhsId]
+            let rhsRecent = recentIndex[rhsId]
+            if lhsRecent != nil || rhsRecent != nil {
+                return (lhsRecent ?? Int.max) < (rhsRecent ?? Int.max)
+            }
+            if lhs.shortcode != rhs.shortcode {
+                return lhs.shortcode.localizedCaseInsensitiveCompare(rhs.shortcode) == .orderedAscending
+            }
+            return lhs.createdAt > rhs.createdAt
+        }
+    }
+
+    private func markCustomEmojiAsRecentlyUsed(_ customEmoji: ComposerCustomEmoji) {
+        guard let activeAccount else { return }
+        let id = ComposerCustomEmoji.id(shortcode: customEmoji.shortcode, url: customEmoji.url)
+        recentCustomEmojiIds.removeAll(where: { $0 == id })
+        recentCustomEmojiIds.insert(id, at: 0)
+        if recentCustomEmojiIds.count > 120 {
+            recentCustomEmojiIds = Array(recentCustomEmojiIds.prefix(120))
+        }
+        UserDefaults.standard.set(recentCustomEmojiIds, forKey: recentCustomEmojiDefaultsKey(pubkey: activeAccount.publicKey))
+    }
+
+    private func loadRecentCustomEmojiIds(for pubkey: String) {
+        recentCustomEmojiIds = UserDefaults.standard.stringArray(forKey: recentCustomEmojiDefaultsKey(pubkey: pubkey)) ?? []
+    }
+
+    private func recentCustomEmojiDefaultsKey(pubkey: String) -> String {
+        "recent_custom_emojis_\(pubkey)"
+    }
+
+    private func extractCustomEmojiShortcodes(from content: String) -> Set<String> {
+        let range = NSRange(content.startIndex..<content.endIndex, in: content)
+        var shortcodes = Set<String>()
+        for match in NIP30CustomEmoji.shortcodeRegex.matches(in: content, options: [], range: range) {
+            guard let shortcodeRange = Range(match.range(at: 1), in: content) else { continue }
+            shortcodes.insert(String(content[shortcodeRange]))
+        }
+        return shortcodes
+    }
+
+    private func customEmojiSetTitle(for event: Event) -> String {
+        if let titleTag = event.fastTags.first(where: { $0.0 == "title" })?.1.trimmingCharacters(in: .whitespacesAndNewlines), !titleTag.isEmpty {
+            return titleTag
+        }
+        if !event.dTag.isEmpty {
+            return event.dTag
+        }
+        return "Emoji set"
+    }
+
+    private func customEmojiSetAuthor(forPubkey pubkey: String) -> String {
+        if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
+            return contact.anyName
+        }
+        return String(pubkey.prefix(12))
     }
     
     func loadQuotingEvent() {
@@ -1205,6 +1564,29 @@ func mentionTerm(_ text: String, textView: SystemTextView?) -> String? {
         }
     }
     return nil
+}
+
+func customEmojiTerm(_ text: String, textView: SystemTextView?) -> String? {
+    guard let textView else { return nil }
+    guard let selectedRange = textView.selectedTextRange else { return nil }
+
+    let cursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
+    guard cursorPosition >= 0, cursorPosition <= text.count else { return nil }
+    let textUntilCursor = String(text.prefix(cursorPosition))
+    guard let colonRange = textUntilCursor.range(of: ":", options: .backwards) else { return nil }
+
+    if colonRange.lowerBound != textUntilCursor.startIndex {
+        let previousIndex = textUntilCursor.index(before: colonRange.lowerBound)
+        let previousCharacter = textUntilCursor[previousIndex]
+        guard previousCharacter.isWhitespace else { return nil }
+    }
+
+    let textAfterColon = String(textUntilCursor[colonRange.upperBound...])
+    if textAfterColon.contains(":") { return nil }
+    if textAfterColon.range(of: #"^[A-Za-z0-9_-]*$"#, options: .regularExpression) == nil {
+        return nil
+    }
+    return textAfterColon
 }
 
 struct Imeta {

@@ -17,9 +17,21 @@ struct MentionChoices: View {
                     Text("Choose to tag:")
                         .font(.caption)
                     Spacer()
-                    Button("Cancel") {
-                        vm.showMentioning = false
+                    HStack(spacing: 12) {
+#if os(iOS) || targetEnvironment(macCatalyst)
+                        Button {
+                            hideKeyboard()
+                        } label: {
+                            Label("Hide keyboard", systemImage: "keyboard.chevron.compact.down")
+                        }
+                        .labelStyle(.iconOnly)
+#endif
+                        Button("Cancel", systemImage: "xmark") {
+                            vm.showMentioning = false
+                        }
+                        .labelStyle(.iconOnly)
                     }
+                    .font(.body)
                 }
                 .padding(10)
                 ScrollView {
@@ -39,5 +51,11 @@ struct MentionChoices: View {
                 .padding([.top,.leading,.trailing])
             }
         }
+    }
+
+    private func hideKeyboard() {
+#if os(iOS) || targetEnvironment(macCatalyst)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+#endif
     }
 }

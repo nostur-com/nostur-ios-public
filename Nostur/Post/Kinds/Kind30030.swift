@@ -22,9 +22,14 @@ struct Kind30030: View {
     private let isEmbedded: Bool
     private let fullWidth: Bool
     private let forceAutoload: Bool
+    @State private var isSavedForPicker = false
 
     private var title: String {
         (nrPost.eventTitle?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? nrPost.dTag?.nilIfEmpty) ?? "Emoji set"
+    }
+
+    private var activeAccountPubkey: String {
+        AccountsState.shared.activeAccountPublicKey
     }
 
     private var emojiItems: [EmojiSetItem] {
@@ -88,6 +93,7 @@ struct Kind30030: View {
             isDetail: isDetail,
             fullWidth: fullWidth,
             forceAutoload: forceAutoload,
+            isItem: true,
             nxViewingContext: nxViewingContext,
             containerID: containerID,
             theme: theme,
@@ -100,10 +106,17 @@ struct Kind30030: View {
                     .font(.title3)
                     .fontWeight(.bold)
                     .lineLimit(2)
-                Text("\(emojiItems.count) emojis")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                HStack(spacing: 8) {
+                    Text("\(emojiItems.count) emojis")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    saveButton
+                }
             }
+        }
+        .onAppear {
+            refreshSavedState()
         }
     }
 
@@ -114,11 +127,18 @@ struct Kind30030: View {
                 Text(title)
                     .fontWeight(.bold)
                     .lineLimit(2)
-                Text("\(emojiItems.count) emojis")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                HStack(spacing: 8) {
+                    Text("\(emojiItems.count) emojis")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    saveButton
+                }
                 content
             }
+        }
+        .onAppear {
+            refreshSavedState()
         }
     }
 
@@ -147,6 +167,53 @@ struct Kind30030: View {
             }
             .padding(.top, 2)
         }
+    }
+
+    @ViewBuilder
+    private var saveButton: some View {
+        if !activeAccountPubkey.isEmpty {
+            Button(isSavedForPicker ? "Saved to picker" : "Save to picker") {
+                toggleSavedForPicker()
+            }
+            .font(.caption)
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+    }
+
+    private func refreshSavedState() {
+        guard !activeAccountPubkey.isEmpty else {
+            isSavedForPicker = false
+            return
+        }
+        isSavedForPicker = SavedCustomEmojiSetsStore.shared.isSaved(
+            ownerPubkey: nrPost.pubkey,
+            dTag: nrPost.dTag ?? "",
+            eventId: nrPost.id,
+            for: activeAccountPubkey
+        )
+    }
+
+    private func toggleSavedForPicker() {
+        guard !activeAccountPubkey.isEmpty else { return }
+
+        if isSavedForPicker {
+            SavedCustomEmojiSetsStore.shared.remove(
+                ownerPubkey: nrPost.pubkey,
+                dTag: nrPost.dTag ?? "",
+                eventId: nrPost.id,
+                for: activeAccountPubkey
+            )
+        }
+        else {
+            SavedCustomEmojiSetsStore.shared.save(
+                ownerPubkey: nrPost.pubkey,
+                dTag: nrPost.dTag ?? "",
+                eventId: nrPost.id,
+                for: activeAccountPubkey
+            )
+        }
+        isSavedForPicker.toggle()
     }
 }
 
