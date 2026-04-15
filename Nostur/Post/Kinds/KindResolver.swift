@@ -134,6 +134,10 @@ struct KindResolver: View {
             Kind30023(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
+        case 30030:
+            Kind30030(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
+                .onAppear { self.enqueue() }
+                .onDisappear { self.dequeue() }
         case 1063:
             if canRender1063(nrPost), let fileMetadata = nrPost.fileMetadata {
                 Kind1063(nrPost: nrPost, fileMetadata: fileMetadata, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)

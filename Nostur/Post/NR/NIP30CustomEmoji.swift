@@ -115,7 +115,7 @@ struct NIP30ReactionContentView: View {
             Text("❤️")
         }
         else if let emojiURL = NIP30CustomEmoji.exactShortcodeURL(content: trimmedContent, fastTags: fastTags) {
-            NIP30ReactionEmojiImage(url: emojiURL, size: size)
+            NIP30EmojiImage(url: emojiURL, size: size)
         }
         else {
             Text(trimmedContent)
@@ -123,7 +123,7 @@ struct NIP30ReactionContentView: View {
     }
 }
 
-private struct NIP30ReactionEmojiImage: View {
+struct NIP30EmojiImage: View {
     let url: URL
     let size: CGFloat
     @State private var data: Data? = nil
