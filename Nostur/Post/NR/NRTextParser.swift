@@ -313,10 +313,105 @@ class NRTextParser { // TEXT things
     }
 
     static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {
-        return string
-            .replacingOccurrences(of: ###"(?<![/\?]|\b)(\#)([^\s#\]\[]\S{1,})\b"###,
-                                  with: "[$0](nostur:t:$2)",
-                                  options: .regularExpression)
+        guard string.contains("#") else {
+            return string
+        }
+        
+        guard string.contains("`") else {
+            return replaceHashtags(in: string)
+        }
+        
+        let codeRanges = markdownCodeRanges(in: string)
+        guard !codeRanges.isEmpty else {
+            return replaceHashtags(in: string)
+        }
+        
+        var output = ""
+        var cursor = string.startIndex
+        
+        for codeRange in codeRanges {
+            if cursor < codeRange.lowerBound {
+                output += replaceHashtags(in: String(string[cursor..<codeRange.lowerBound]))
+            }
+            output += String(string[codeRange])
+            cursor = codeRange.upperBound
+        }
+        
+        if cursor < string.endIndex {
+            output += replaceHashtags(in: String(string[cursor..<string.endIndex]))
+        }
+        
+        return output
+    }
+    
+    private static func replaceHashtags(in text: String) -> String {
+        let nsRange = NSRange(location: 0, length: text.utf16.count)
+        return hashtagRegex.stringByReplacingMatches(in: text, options: [], range: nsRange, withTemplate: "[$0](nostur:t:$2)")
+    }
+    
+    private static func markdownCodeRanges(in string: String) -> [Range<String.Index>] {
+        var ranges: [Range<String.Index>] = []
+        var index = string.startIndex
+        
+        while index < string.endIndex {
+            guard string[index] == "`" else {
+                index = string.index(after: index)
+                continue
+            }
+            
+            let openingStart = index
+            let openingTickCount = backtickRunLength(in: string, from: index)
+            let contentStart = string.index(index, offsetBy: openingTickCount)
+            var searchIndex = contentStart
+            var closingEnd: String.Index?
+            
+            while searchIndex < string.endIndex {
+                guard string[searchIndex] == "`" else {
+                    searchIndex = string.index(after: searchIndex)
+                    continue
+                }
+                
+                let closingTickCount = backtickRunLength(in: string, from: searchIndex)
+                let isClosingMatch: Bool
+                
+                if openingTickCount >= 3 {
+                    isClosingMatch = closingTickCount >= openingTickCount
+                }
+                else {
+                    isClosingMatch = closingTickCount == openingTickCount
+                }
+                
+                if isClosingMatch {
+                    closingEnd = string.index(searchIndex, offsetBy: closingTickCount)
+                    break
+                }
+                
+                searchIndex = string.index(searchIndex, offsetBy: closingTickCount)
+            }
+            
+            if let closingEnd {
+                ranges.append(openingStart..<closingEnd)
+                index = closingEnd
+            }
+            else {
+                ranges.append(openingStart..<string.endIndex)
+                break
+            }
+        }
+        
+        return ranges
+    }
+    
+    private static func backtickRunLength(in string: String, from index: String.Index) -> Int {
+        var runLength = 0
+        var cursor = index
+        
+        while cursor < string.endIndex, string[cursor] == "`" {
+            runLength += 1
+            cursor = string.index(after: cursor)
+        }
+        
+        return runLength
     }
     
     // hashtag -> image name
@@ -387,6 +482,7 @@ class NRTextParser { // TEXT things
     
     // Cached regex that is used in NSMutableAttributedString.addHashtagIcons()
     static let htRegex = try! NSRegularExpression(pattern: "\\b\(hashtags.keys.joined(separator: "\\b|"))\\b", options: [.caseInsensitive])
+    static let hashtagRegex = try! NSRegularExpression(pattern: ###"(?<![/\?]|\b)(\#)([^\s#\]\[]\S{1,})\b"###, options: [])
     
     // Build NSAttributedString hashtag icons once for reuse in NSMutableAttributedString.addHashtagIcons()
     public var hashtagIcons: [String: NSAttributedString]
