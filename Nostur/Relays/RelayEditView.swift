@@ -29,6 +29,98 @@ struct RelayEditView: View {
     
     @State private var isConnected: Bool = false
     @State private var connectedSub: AnyCancellable? = nil
+    @State private var connectionStatus: RelayStatus = .disconnected
+    @State private var connectTimeoutTask: Task<Void, Never>? = nil
+
+    private enum RelayStatus: Equatable {
+        case connected
+        case disconnected
+        case connecting
+        case failed(String)
+    }
+
+    private var statusText: String {
+        switch connectionStatus {
+        case .connected:
+            return String(localized: "Connected", comment: "Relay status when connected")
+        case .disconnected:
+            return String(localized: "Disconnected", comment: "Relay status when disconnected")
+        case .connecting:
+            return String(localized: "Connecting...", comment: "Relay status while connecting")
+        case .failed(let message):
+            return message
+        }
+    }
+
+    private var statusColor: Color {
+        switch connectionStatus {
+        case .connected:
+            return .green
+        case .connecting:
+            return .orange
+        case .failed:
+            return .red
+        case .disconnected:
+            return .gray
+        }
+    }
+
+    private var statusOpacity: Double {
+        connectionStatus == .disconnected ? 0.2 : 1.0
+    }
+
+    @MainActor
+    private func setConnectionState(_ connected: Bool) {
+        isConnected = connected
+        if connected {
+            connectTimeoutTask?.cancel()
+            connectionStatus = .connected
+        }
+        else if connectionStatus != .connecting, case .failed = connectionStatus {
+            // Keep explicit failure feedback visible until the next user action.
+        }
+        else if connectionStatus != .connecting {
+            connectionStatus = .disconnected
+        }
+    }
+
+    @MainActor
+    private func startConnectionAttempt() {
+        connectTimeoutTask?.cancel()
+        connectionStatus = .connecting
+        connectTimeoutTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 10_000_000_000)
+            guard !Task.isCancelled, !isConnected, connectionStatus == .connecting else { return }
+            connectionStatus = .failed(String(localized: "Connection timed out", comment: "Relay connection timeout status"))
+        }
+    }
+
+    private func relayMessageMatchesCurrentRelay(_ message: String) -> Bool {
+        let candidates = [connection?.url, relayUrl]
+            .compactMap { $0 }
+            .map { normalizeRelayUrl($0).lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "/")) }
+            .filter { !$0.isEmpty }
+        let lowerMessage = message.lowercased()
+
+        for candidate in candidates {
+            if lowerMessage.contains(candidate) {
+                return true
+            }
+            if let host = URL(string: candidate)?.host?.lowercased(), lowerMessage.contains(host) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func errorText(fromSocketNotification message: String) -> String {
+        let raw = message.replacingOccurrences(of: "Error:", with: "").trimmingCharacters(in: .whitespaces)
+        let parts = raw.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+        guard parts.count == 2 else {
+            return String(localized: "Connection failed", comment: "Relay connection failed status")
+        }
+        return String(parts[1])
+    }
     
     private func toggleAccount(_ account: CloudAccount) {
         if excludedPubkeys.contains(account.publicKey) {
@@ -92,25 +184,30 @@ struct RelayEditView: View {
             
             Section(header: Text("Status", comment: "Connection status header") ) {
                 HStack {
+                    Image(systemName: "circle.fill")
+                        .foregroundColor(statusColor)
+                        .opacity(statusOpacity)
+                    Text(statusText)
+                    Spacer()
                     if (isConnected) {
-                        Image(systemName: "circle.fill")
-                            .foregroundColor(.green)
-                            .opacity(1)
-                        Text("Connected", comment: "Relay status when connected")
-                        Spacer()
                         Button {
+                            connectTimeoutTask?.cancel()
+                            connectionStatus = .disconnected
                             connection?.disconnect()
                         } label: {
                             Text("Disconnect", comment: "Button to disconnect from relay")
                         }
+                        .padding(.trailing, 8)
                     }
                     else {
-                        Image(systemName: "circle.fill")
-                            .foregroundColor(.gray)
-                            .opacity(0.2)
-                        Text("Disconnected", comment: "Relay status when disconnected")
-                        Spacer()
                         Button {
+                            if !NetworkMonitor.shared.isConnected {
+                                connectionStatus = .failed(String(localized: "No internet connection", comment: "Relay no internet status"))
+                                return
+                            }
+                            Task { @MainActor in
+                                startConnectionAttempt()
+                            }
                             let correctedRelayUrl = normalizeRelayUrl(relayUrl)
                             relayUrl = correctedRelayUrl
                             if (connection?.url != correctedRelayUrl) { // url change?
@@ -129,11 +226,11 @@ struct RelayEditView: View {
                                         // Then connect (force)
                                         connection?.connect(forceConnectionAttempt: true)
                                         
-                                        isConnected = replacedConnection.isConnected
+                                        setConnectionState(replacedConnection.isConnected)
                                         connectedSub?.cancel()
                                         connectedSub = replacedConnection.objectWillChange.sink { _ in
                                             Task { @MainActor in
-                                                isConnected = replacedConnection.isConnected
+                                                setConnectionState(replacedConnection.isConnected)
                                             }
                                         }
                                     }
@@ -143,11 +240,10 @@ struct RelayEditView: View {
                                 // Then connect (force)
                                 connection?.connect(forceConnectionAttempt: true)
                             }
-                            
-                            
                         } label: {
                             Text("Connect", comment: "Button to connect to relay")
                         }
+                        .padding(.trailing, 8)
                     }
                 }
             }
@@ -213,11 +309,11 @@ struct RelayEditView: View {
                                 Task { @MainActor in
                                     connection = relayConnection
                                     
-                                    isConnected = relayConnection.isConnected
+                                    setConnectionState(relayConnection.isConnected)
                                     connectedSub?.cancel()
                                     connectedSub = relayConnection.objectWillChange.sink { _ in
                                         Task { @MainActor in
-                                            isConnected = relayConnection.isConnected
+                                            setConnectionState(relayConnection.isConnected)
                                         }
                                     }
                                 }
@@ -232,11 +328,11 @@ struct RelayEditView: View {
                             connection?.relayData.setExcludedPubkeys(relay.excludedPubkeys)
                             
                             if let connection {
-                                isConnected = connection.isConnected
+                                setConnectionState(connection.isConnected)
                                 connectedSub?.cancel()
                                 connectedSub = connection.objectWillChange.sink { _ in
                                     Task { @MainActor in
-                                        isConnected = connection.isConnected
+                                        setConnectionState(connection.isConnected)
                                     }
                                 }
                             }
@@ -273,11 +369,11 @@ struct RelayEditView: View {
                     Task { @MainActor in
                         connection = conn
                         
-                        isConnected = conn.isConnected
+                        setConnectionState(conn.isConnected)
                         connectedSub?.cancel()
                         connectedSub = conn.objectWillChange.sink { _ in
                             Task { @MainActor in
-                                isConnected = conn.isConnected
+                                setConnectionState(conn.isConnected)
                             }
                         }
                     }
@@ -290,17 +386,43 @@ struct RelayEditView: View {
                     Task { @MainActor in
                         connection = conn
                         
-                        isConnected = conn.isConnected
+                        setConnectionState(conn.isConnected)
                         connectedSub?.cancel()
                         connectedSub = conn.objectWillChange.sink { _ in
                             Task { @MainActor in
-                                isConnected = conn.isConnected
+                                setConnectionState(conn.isConnected)
                             }
                         }
                     }
                 }
             }
         })
+        .onReceive(receiveNotification(.socketNotification)) { notification in
+            guard let message = notification.object as? String else { return }
+            guard relayMessageMatchesCurrentRelay(message) else { return }
+            if message.starts(with: "Error:") {
+                connectTimeoutTask?.cancel()
+                connectionStatus = .failed(errorText(fromSocketNotification: message))
+            }
+            else if !isConnected {
+                if connectionStatus == .connecting {
+                    connectionStatus = .failed(String(localized: "Connection failed", comment: "Relay generic connection failed status"))
+                }
+                else {
+                    connectionStatus = .disconnected
+                }
+            }
+        }
+        .onReceive(receiveNotification(.socketConnected)) { notification in
+            guard let message = notification.object as? String else { return }
+            guard relayMessageMatchesCurrentRelay(message) else { return }
+            Task { @MainActor in
+                setConnectionState(true)
+            }
+        }
+        .onDisappear {
+            connectTimeoutTask?.cancel()
+        }
     }
 }
 

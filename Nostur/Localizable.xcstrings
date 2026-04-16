@@ -3174,6 +3174,9 @@
     "connecting" : {
       "shouldTranslate" : false
     },
+    "Connecting..." : {
+      "comment" : "Relay status while connecting"
+    },
     "Connection" : {
       "localizations" : {
         "nl" : {
@@ -3183,6 +3186,12 @@
           }
         }
       }
+    },
+    "Connection failed" : {
+      "comment" : "Relay connection failed status\nRelay generic connection failed status"
+    },
+    "Connection timed out" : {
+      "comment" : "Relay connection timeout status"
     },
     "contact" : {
       "comment" : "The word \"contact\" when used as contact #1, contact #2 and contact #3.",
@@ -7059,6 +7068,9 @@
           }
         }
       }
+    },
+    "No internet connection" : {
+      "comment" : "Relay no internet status"
     },
     "No message requests" : {
       "comment" : "Shown on the DM requests view when there aren't any message requests to show",
