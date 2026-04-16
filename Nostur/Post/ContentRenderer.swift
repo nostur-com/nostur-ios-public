@@ -24,12 +24,15 @@ struct ContentRenderer: View { // VIEW things
     private var zoomableId: String
     @Binding var showMore: Bool
     @State private var contentElements: [ContentElement]
+    @State private var revealedMutedEmbeddedPostIds: Set<String> = []
+    @State private var mutedWords: [String]
     
     init(nrPost: NRPost, showMore: Binding<Bool>, isDetail: Bool = false, fullWidth: Bool = false, forceAutoload: Bool = false, zoomableId: String = "Default") {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
         _contentElements = State(wrappedValue: isDetail ? nrPost.contentElementsDetail : nrPost.contentElements)
+        _mutedWords = State(initialValue: AppState.shared.bgAppState.mutedWords)
         _showMore = showMore
         self.forceAutoload = forceAutoload
         self.zoomableId = zoomableId
@@ -44,8 +47,27 @@ struct ContentRenderer: View { // VIEW things
             ForEach(contentElements) { element in
                 switch element {
                 case .nrPost(let nrPost):
-                    KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
+                    if !notMutedWords(in: nrPost.plainText, mutedWords: mutedWords),
+                       !revealedMutedEmbeddedPostIds.contains(nrPost.id) {
+                        HStack {
+                            Text("_Muted post hidden_", comment: "Message shown when an embedded post is hidden because it matches muted words")
+                            Button(String(localized: "Reveal", comment: "Button to reveal an embedded post hidden by muted words")) {
+                                revealedMutedEmbeddedPostIds.insert(nrPost.id)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        .padding(.leading, 8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        )
+                        .hCentered()
                         .padding(.vertical, 10)
+                    }
+                    else {
+                        KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
+                            .padding(.vertical, 10)
+                    }
 
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, fullWidth: fullWidth, forceAutoload: shouldAutoload)
@@ -249,6 +271,10 @@ struct ContentRenderer: View { // VIEW things
                     self.contentElements = self.nrPost.contentElementsDetail
                 }
             }
+        }
+        .onReceive(receiveNotification(.mutedWordsChanged)) { _ in
+            revealedMutedEmbeddedPostIds.removeAll()
+            mutedWords = AppState.shared.bgAppState.mutedWords
         }
     }
 }

@@ -85,6 +85,9 @@
         }
       }
     },
+    "_Muted post hidden_" : {
+      "comment" : "Message shown when a post is muted\nMessage shown when a quoted post is hidden because it matches muted words\nMessage shown when an embedded post is hidden because it matches muted words"
+    },
     "_Post deleted by %@_" : {
       "comment" : "Message shown when a post is deleted by (name)",
       "extractionState" : "stale",
@@ -1482,6 +1485,9 @@
         }
       }
     },
+    "Active" : {
+
+    },
     "Add" : {
       "localizations" : {
         "nl" : {
@@ -1697,6 +1703,9 @@
           }
         }
       }
+    },
+    "Add muted word" : {
+      "comment" : "Navigation title for screen to add muted word"
     },
     "Add new relay..." : {
       "localizations" : {
@@ -4045,6 +4054,9 @@
           }
         }
       }
+    },
+    "Disabled" : {
+
     },
     "Disconnect" : {
       "comment" : "Button to disconnect NWC (Nostr Wallet Connection)\nButton to disconnect from relay",
@@ -6634,6 +6646,9 @@
         }
       }
     },
+    "Muted words" : {
+      "comment" : "Title of tab where muted words are listed"
+    },
     "Name" : {
       "comment" : "Label for input field for badge name on Badge creation screen\nLabel of Name text field on Create new account screen",
       "localizations" : {
@@ -7393,6 +7408,9 @@
         }
       }
     },
+    "Off" : {
+
+    },
     "OK" : {
       "localizations" : {
         "nl" : {
@@ -7402,6 +7420,9 @@
           }
         }
       }
+    },
+    "On" : {
+
     },
     "Only connect to additional relays when a VPN is active" : {
       "localizations" : {
@@ -9592,7 +9613,7 @@
       }
     },
     "Reveal" : {
-      "comment" : "Button to reveal a blocked a post",
+      "comment" : "Button to reveal a blocked a post\nButton to reveal an embedded post hidden by muted words",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -10904,6 +10925,9 @@
           }
         }
       }
+    },
+    "Tap to edit..." : {
+
     },
     "Tap to load media" : {
       "comment" : "An image placeholder the user can tap to load media (usually an image or gif)",

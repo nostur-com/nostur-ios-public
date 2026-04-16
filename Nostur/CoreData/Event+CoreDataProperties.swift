@@ -237,6 +237,14 @@ extension Event {
         return false
     }
     
+    var isMutedByWords: Bool {
+        let mutedWords = AppState.shared.bgAppState.mutedWords
+        guard !mutedWords.isEmpty else { return false }
+        guard !plainText.isEmpty else { return false }
+        let plainTextLower = plainText.lowercased()
+        return mutedWords.contains(where: { plainTextLower.contains($0) })
+    }
+    
     var inWoT: Bool {
         if kind == 9735, let fromPubkey {
             return WebOfTrust.shared.isAllowed(fromPubkey)

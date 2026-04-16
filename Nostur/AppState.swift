@@ -139,11 +139,20 @@ class AppState: ObservableObject {
     // App wide blocking of words, pubkeys, hashtags, threads
     @MainActor
     public func loadMutedWords() {
-        return // TODO: FIXME
         let fr = MutedWords.fetchRequest()
         fr.predicate = NSPredicate(format: "enabled == true")
         guard let mutedWords = try? viewContext().fetch(fr) else { return }
-        self.bgAppState.mutedWords = mutedWords.map { $0.words }.compactMap { $0 }.filter { $0 != "" }
+        let normalizedMutedWords = Array(
+            Set(
+                mutedWords
+                    .compactMap { $0.words }
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+                    .filter { !$0.isEmpty }
+            )
+        ).sorted()
+        guard normalizedMutedWords != self.bgAppState.mutedWords else { return }
+        self.bgAppState.mutedWords = normalizedMutedWords
+        sendNotification(.mutedWordsChanged, normalizedMutedWords)
     }
     
     @MainActor

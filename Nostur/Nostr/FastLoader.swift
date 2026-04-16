@@ -40,9 +40,31 @@ class FastLoader: ObservableObject {
             .store(in: &subscriptions)
         
         receiveNotification(.muteListUpdated)
-            .sink { [weak self] _ in
+            .sink { [weak self] notification in
                 guard let self = self else { return }
-                self.nrPosts = self.nrPosts.filter(notMuted)
+                let mutedRootIds = notification.object as! Set<String>
+                let nrPosts = self.nrPosts
+                nrPosts.forEach { nrPost in
+                    nrPost.muted = mutedRootIds.contains(nrPost.id)
+                        || mutedRootIds.contains(nrPost.replyToRootId ?? "!")
+                        || (nrPost.isRepost && mutedRootIds.contains(nrPost.firstQuoteId ?? "!"))
+                }
+                self.nrPosts = nrPosts
+            }
+            .store(in: &subscriptions)
+        
+        receiveNotification(.mutedWordsChanged)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let mutedWords = (notification.object as? [String]) ?? AppState.shared.bgAppState.mutedWords
+                if mutedWords.isEmpty {
+                    self.reset()
+                    self.loadMore(self.limit)
+                    return
+                }
+                self.nrPosts = self.nrPosts.filter { nrPost in
+                    notMutedWords(in: nrPost.plainText, mutedWords: mutedWords)
+                }
             }
             .store(in: &subscriptions)
         
@@ -99,6 +121,7 @@ class FastLoader: ObservableObject {
             }
             let nextItems: [NRPost] = onlyUnrendered
                 .filter { includeSpam || !$0.isSpam }
+                .filter { !$0.isMutedByWords }
                 .compactMap { [weak self] in
                     guard let self else { return nil }
                     return self.transformer($0)
@@ -144,6 +167,7 @@ class FastLoader: ObservableObject {
             }
             let nextItems: [NRPost] = onlyUnrendered
                 .filter { includeSpam || !$0.isSpam }
+                .filter { !$0.isMutedByWords }
                 .compactMap { [weak self] in
                     guard let self else { return nil }
                     return self.transformer($0)

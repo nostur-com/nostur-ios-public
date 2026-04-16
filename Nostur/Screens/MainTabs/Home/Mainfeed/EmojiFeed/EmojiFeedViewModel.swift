@@ -131,9 +131,26 @@ class EmojiFeedViewModel: ObservableObject {
             .sink { [weak self] notification in
                 guard let self else { return }
                 let mutedRootIds = notification.object as! Set<String>
+                let feedPosts = self.feedPosts
+                feedPosts.forEach { nrPost in
+                    nrPost.muted = mutedRootIds.contains(nrPost.id)
+                        || mutedRootIds.contains(nrPost.replyToRootId ?? "!")
+                        || (nrPost.isRepost && mutedRootIds.contains(nrPost.firstQuoteId ?? "!"))
+                }
+                self.feedPosts = feedPosts
+            }
+            .store(in: &self.subscriptions)
+        
+        receiveNotification(.mutedWordsChanged)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                let mutedWords = (notification.object as? [String]) ?? AppState.shared.bgAppState.mutedWords
+                if mutedWords.isEmpty {
+                    self.reload()
+                    return
+                }
                 self.feedPosts = self.feedPosts.filter { nrPost in
-                    return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "!") // id not blocked
-                        && !(nrPost.isRepost && mutedRootIds.contains(nrPost.firstQuoteId ?? "!")) // is not: repost + muted reposted id
+                    notMutedWords(in: nrPost.plainText, mutedWords: mutedWords)
                 }
             }
             .store(in: &self.subscriptions)
@@ -354,6 +371,7 @@ class EmojiFeedViewModel: ObservableObject {
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
                     guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
                     guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
+                    guard !event.isMutedByWords else { continue }
                     
                     // withReplies for miniPFPs
                     nrPosts.append(NRPost(event: event, withParents: true, withReplies: true))

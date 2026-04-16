@@ -21,9 +21,9 @@ struct BlockListScreen: View {
                 TabButton(action: {
                     tab = "Muted"
                 }, title: String(localized:"Muted conversations", comment:"Title of tab where Muted conversations are listed"), selected: tab == "Muted")
-                //                TabButton(action: {
-                //                        tab = "Muted words"
-                //                }, title: "Muted words", selected: tab == "Muted words")
+                TabButton(action: {
+                    tab = "Muted words"
+                }, title: String(localized: "Muted words", comment: "Title of tab where muted words are listed"), selected: tab == "Muted words")
             }
             switch tab {
             case "Blocked":
@@ -31,8 +31,8 @@ struct BlockListScreen: View {
                 
             case "Muted":
                 MutedConversationsView()
-                //                case "Muted words":
-                //                    MutedWordsView()
+            case "Muted words":
+                MutedWordsView()
             default:
                 BlockedContactsView()
             }

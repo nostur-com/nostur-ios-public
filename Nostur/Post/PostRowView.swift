@@ -41,10 +41,18 @@ struct PostRowDeletable: View {
 //#if DEBUG
 //        let _ = nxLogChanges(of: Self.self)
 //#endif
-        if !ignoreBlock && postRowDeletableAttributes.blocked {
+        if !ignoreBlock && (postRowDeletableAttributes.blocked || postRowDeletableAttributes.muted) {
             HStack {
-                Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
-                Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
+                if postRowDeletableAttributes.blocked {
+                    Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                }
+                else {
+                    Text("_Muted post hidden_", comment: "Message shown when a post is muted")
+                }
+                Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) {
+                    nrPost.blocked = false
+                    nrPost.muted = false
+                }
                     .buttonStyle(.bordered)
             }
             .padding(.leading, 8)

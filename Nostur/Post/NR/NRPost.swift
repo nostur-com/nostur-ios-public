@@ -181,6 +181,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         get { postRowDeletableAttributes.blocked }
         set { postRowDeletableAttributes.blocked = newValue }
     }
+    
+    var muted: Bool {
+        get { postRowDeletableAttributes.muted }
+        set { postRowDeletableAttributes.muted = newValue }
+    }
 
     
     var linkPreviewURLs: [URL] = []
@@ -247,7 +252,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         var isAwaiting = false
         
         self.event = event // Only touch this in BG context!!!
-        self.postRowDeletableAttributes = PostRowDeletableAttributes(blocked: Self.isBlocked(pubkey: event.pubkey), deletedById: event.deletedById)
+        self.postRowDeletableAttributes = PostRowDeletableAttributes(
+            blocked: Self.isBlocked(pubkey: event.pubkey),
+            muted: Self.isMuted(id: event.id, replyToRootId: event.replyToRootId, replyToId: event.replyToId),
+            deletedById: event.deletedById
+        )
         self.id = event.id
         self.shortId = String(event.id.prefix(8))
         self.pubkey = event.pubkey
@@ -615,6 +624,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     private static func isBlocked(pubkey:String) -> Bool {
         return Nostur.blocks().contains(pubkey)
+    }
+    
+    private static func isMuted(id: String, replyToRootId: String?, replyToId: String?) -> Bool {
+        let mutedRootIds = CloudBlocked.mutedRootIds()
+        return mutedRootIds.contains(id)
+            || mutedRootIds.contains(replyToRootId ?? "NIL")
+            || mutedRootIds.contains(replyToId ?? "NIL")
     }
     
     private var profileUpdatedSubscription: AnyCancellable?
@@ -1065,6 +1081,16 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.firstQuote!.blocked = false
     }
     
+    @MainActor public func unmuteFirstQuote() {
+        guard firstQuote != nil else { return }
+        self.objectWillChange.send()
+        self.noteRowAttributes.objectWillChange.send()
+        self.noteRowAttributes.firstQuote?.objectWillChange.send()
+        self.noteRowAttributes.firstQuote?.muted = false
+        self.firstQuote!.objectWillChange.send()
+        self.firstQuote!.muted = false
+    }
+    
     private var renderedReplyIds: Set<NRPostID> = []
     
     deinit {
@@ -1341,10 +1367,12 @@ class PostOrThreadAttributes: ObservableObject {
 
 class PostRowDeletableAttributes: ObservableObject {
     @Published var blocked = false
+    @Published var muted = false
     @Published var deletedById: String? = nil
 
-    init(blocked: Bool = false, deletedById: String? = nil) {
+    init(blocked: Bool = false, muted: Bool = false, deletedById: String? = nil) {
         self.blocked = blocked
+        self.muted = muted
         self.deletedById = deletedById
     }
 }

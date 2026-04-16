@@ -114,9 +114,26 @@ class ZappedViewModel: ObservableObject {
             .sink { [weak self] notification in
                 guard let self else { return }
                 let mutedRootIds = notification.object as! Set<String>
+                let zappedPosts = self.zappedPosts
+                zappedPosts.forEach { nrPost in
+                    nrPost.muted = mutedRootIds.contains(nrPost.id)
+                        || mutedRootIds.contains(nrPost.replyToRootId ?? "!")
+                        || (nrPost.isRepost && mutedRootIds.contains(nrPost.firstQuoteId ?? "!"))
+                }
+                self.zappedPosts = zappedPosts
+            }
+            .store(in: &self.subscriptions)
+        
+        receiveNotification(.mutedWordsChanged)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                let mutedWords = (notification.object as? [String]) ?? AppState.shared.bgAppState.mutedWords
+                if mutedWords.isEmpty {
+                    self.reload()
+                    return
+                }
                 self.zappedPosts = self.zappedPosts.filter { nrPost in
-                    return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "!") // id not blocked
-                        && !(nrPost.isRepost && mutedRootIds.contains(nrPost.firstQuoteId ?? "!")) // is not: repost + muted reposted id
+                    notMutedWords(in: nrPost.plainText, mutedWords: mutedWords)
                 }
             }
             .store(in: &self.subscriptions)
@@ -321,6 +338,7 @@ class ZappedViewModel: ObservableObject {
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
                     guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
                     guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
+                    guard !event.isMutedByWords else { continue }
                     
                     // fix tally
                     event.zapsCount = Int64(zapStats.1) < event.zapsCount ? Int64(zapStats.1) : event.zapsCount

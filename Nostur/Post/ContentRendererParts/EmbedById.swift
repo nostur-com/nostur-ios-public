@@ -15,8 +15,11 @@ struct EmbedById: View {
     public var forceAutoload: Bool = false
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05, backlogDebugName: "EmbedById")
     @State private var note1: String? = nil
+    @State private var revealMutedEmbeddedPost = false
+    @State private var mutedWords = AppState.shared.bgAppState.mutedWords
     
     var body: some View {
+        Group {
         switch vm.state {
         case .initializing, .loading, .altLoading:
             CenteredProgressView()
@@ -31,7 +34,24 @@ struct EmbedById: View {
                         .stroke(theme.lineColor, lineWidth: 1)
                 )
         case .ready(let nrPost):
-            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
+            if !notMutedWords(in: nrPost.plainText, mutedWords: mutedWords) && !revealMutedEmbeddedPost {
+                HStack {
+                    Text("_Muted post hidden_", comment: "Message shown when an embedded post is hidden because it matches muted words")
+                    Button(String(localized: "Reveal", comment: "Button to reveal an embedded post hidden by muted words")) {
+                        revealMutedEmbeddedPost = true
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(.leading, 8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+                .hCentered()
+            }
+            else {
+                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
+            }
             
         case .timeout:
             VStack {
@@ -65,6 +85,11 @@ struct EmbedById: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(theme.lineColor, lineWidth: 1)
                 )
+        }
+        }
+        .onReceive(receiveNotification(.mutedWordsChanged)) { _ in
+            revealMutedEmbeddedPost = false
+            mutedWords = AppState.shared.bgAppState.mutedWords
         }
     }
     

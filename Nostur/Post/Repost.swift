@@ -22,6 +22,8 @@ struct Repost: View {
     
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     @State private var relayHint: String?
+    @State private var revealMutedFirstQuoteByWords = false
+    @State private var mutedWords: [String]
 //#if DEBUG
 //    @State private var kind6Source: String?
 //#endif
@@ -36,6 +38,7 @@ struct Repost: View {
         self.isReply = isReply
         self.isDetail = isDetail
         self.grouped = grouped
+        _mutedWords = State(initialValue: AppState.shared.bgAppState.mutedWords)
     }
     
     private var shouldForceAutoLoad: Bool { // To override auto download of the reposted post
@@ -50,11 +53,21 @@ struct Repost: View {
             
             if let firstQuote = noteRowAttributes.firstQuote {
                 // CASE - WE HAVE REPOSTED POST ALREADY
-                if firstQuote.blocked {
+                if firstQuote.blocked || firstQuote.muted || (!notMutedWords(in: firstQuote.plainText, mutedWords: mutedWords) && !revealMutedFirstQuoteByWords) {
                     HStack {
-                        Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                        if firstQuote.blocked {
+                            Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                        }
+                        else if firstQuote.muted {
+                            Text("_Muted post hidden_", comment: "Message shown when a post is muted")
+                        }
+                        else {
+                            Text("_Muted post hidden_", comment: "Message shown when a quoted post is hidden because it matches muted words")
+                        }
                         Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) {
                             nrPost.unblockFirstQuote()
+                            nrPost.unmuteFirstQuote()
+                            revealMutedFirstQuoteByWords = true
                         }
                         .buttonStyle(.bordered)
                     }
@@ -154,6 +167,10 @@ struct Repost: View {
                         vm.fetch()
                     }
             }
+        }
+        .onReceive(receiveNotification(.mutedWordsChanged)) { _ in
+            revealMutedFirstQuoteByWords = false
+            mutedWords = AppState.shared.bgAppState.mutedWords
         }
     }
     

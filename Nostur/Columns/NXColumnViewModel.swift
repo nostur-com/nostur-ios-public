@@ -328,6 +328,7 @@ class NXColumnViewModel: ObservableObject {
         onAppearSubjectSub?.cancel()
         saveLocalStateSub?.cancel()
         muteListUpdatedSub?.cancel()
+        mutedWordsChangedSub?.cancel()
         blockListUpdatedSub?.cancel()
         followsChangedSub?.cancel()
         resumeFeedSub?.cancel()
@@ -434,6 +435,10 @@ class NXColumnViewModel: ObservableObject {
         muteListUpdatedSub?.cancel()
         muteListUpdatedSub = nil
         listenForMuteListUpdatedSub(config)
+        
+        mutedWordsChangedSub?.cancel()
+        mutedWordsChangedSub = nil
+        listenForMutedWordsChangedSub(config)
         
         nextTickSub?.cancel()
         nextTickSub = nil
@@ -545,10 +550,12 @@ class NXColumnViewModel: ObservableObject {
                         vmInner.updateIsAtTopSubject.send()
                     }
                     
-                    viewState = .posts(existingPosts.filter { nrPost in
-                        return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "!") // id not blocked
-                            && !(nrPost.isRepost && mutedRootIds.contains(nrPost.firstQuoteId ?? "!")) // is not: repost + muted reposted id
-                    })
+                    for nrPost in existingPosts {
+                        nrPost.muted = mutedRootIds.contains(nrPost.id)
+                            || mutedRootIds.contains(nrPost.replyToRootId ?? "!")
+                            || (nrPost.isRepost && mutedRootIds.contains(nrPost.firstQuoteId ?? "!"))
+                    }
+                    viewState = .posts(existingPosts)
                 }
             }
     }
@@ -574,6 +581,36 @@ class NXColumnViewModel: ObservableObject {
                             && !(nrPost.isRepost && blocks.contains(nrPost.firstQuote?.pubkey ?? "!")) // is not: repost + blocked reposted pubkey
                     })
                 }
+            }
+    }
+    
+    private var mutedWordsChangedSub: AnyCancellable?
+    
+    @MainActor
+    private func listenForMutedWordsChangedSub(_ config: NXColumnConfig) {
+        guard mutedWordsChangedSub == nil else { return }
+        mutedWordsChangedSub = receiveNotification(.mutedWordsChanged)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                guard case .posts(let existingPosts) = viewState else { return }
+                let mutedWords = (notification.object as? [String]) ?? AppState.shared.bgAppState.mutedWords
+                if mutedWords.isEmpty {
+                    reload(config)
+                    return
+                }
+                
+                var removedAny = false
+                for nrPost in existingPosts where !notMutedWords(in: nrPost.plainText, mutedWords: mutedWords) {
+                    vmInner.unreadIds[nrPost.id] = nil
+                    removedAny = true
+                }
+                if removedAny {
+                    vmInner.updateIsAtTopSubject.send()
+                }
+                
+                viewState = .posts(existingPosts.filter { nrPost in
+                    notMutedWords(in: nrPost.plainText, mutedWords: mutedWords)
+                })
             }
     }
     
@@ -902,6 +939,7 @@ class NXColumnViewModel: ObservableObject {
                         // transform Event to NRPost
                         var eventsMap: [String: NRPost] = [:]
                         for event in events {
+                            guard !event.isMutedByWords else { continue }
                             eventsMap[event.id] = NRPost(event: event, withParents: repliesEnabled, withReplies: !repliesEnabled, withRepliesCount: true, cancellationId: event.cancellationId)
                         }
                         
@@ -2448,6 +2486,8 @@ extension NXColumnViewModel {
         let transformedNrPosts = events
             // Don't transform again what is already on screen
             .filter { !currentIdsOnScreen.contains($0.id) }
+            // Skip spam-filtered events (includes muted words)
+            .filter { !$0.isMutedByWords }
             // transform Event to NRPost
             .map {
                 NRPost(event: $0, withParents: repliesEnabled, withReplies: !repliesEnabled, withRepliesCount: true, cancellationId: $0.cancellationId)
@@ -3318,7 +3358,10 @@ extension Event {
 }
 
 func notMutedWords(in text: String, mutedWords: [String]) -> Bool {
-    return mutedWords.first(where: { text.localizedCaseInsensitiveContains($0) }) == nil
+    guard !mutedWords.isEmpty else { return true }
+    guard !text.isEmpty else { return true }
+    let textLower = text.lowercased()
+    return mutedWords.first(where: { textLower.contains($0) }) == nil
 }
 
 func notMuted(_ nrPost: NRPost) -> Bool {
