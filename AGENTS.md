@@ -93,6 +93,14 @@ xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
   3. Add handling in the relevant feature module
   4. Update relay communication logic as needed
 
+## Path Canonicalization For File Edits
+
+- Never pass Xcode navigator paths directly to `apply_patch` or shell edit commands.
+- Always resolve the real filesystem path before patching.
+- Prefer `XcodeRead` / `XcodeUpdate` / `XcodeWrite` for files already in the Xcode project tree.
+- If patching with `apply_patch`, verify the path exists on disk first.
+- If a patch fails with path mismatch or file-not-found, stop and re-resolve path; do not retry the same path.
+
 ## Notes about Core Data
 - Different Core Data managed object contexts are used, leading to crashes when accessing attributes from the wrong context. 
 - Usually there is a main context and a bg context. 
