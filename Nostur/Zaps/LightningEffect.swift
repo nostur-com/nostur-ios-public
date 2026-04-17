@@ -16,11 +16,19 @@ struct LightningStrikeShape: Shape {
     func path(in rect: CGRect) -> Path {
         let endLocation = CGPoint(x: endLocation.x + 12, y: endLocation.y - 32) // Small correction or the strike is off a bit
         var path = Path()
+
+        guard rect.width > 0, rect.height > 0 else { return path }
+        guard startX.isFinite, endLocation.x.isFinite, endLocation.y.isFinite, lineWidth.isFinite, lineWidth > 0 else {
+            return path
+        }
+
         let startX = startX
         let startY = rect.minY
-        let segments = Int(((endLocation.y - startY) / 80)) // number of segments in the lightning strike
+        let segments = max(1, Int(((endLocation.y - startY) / 80))) // number of segments in the lightning strike
         let segmentWidth = (endLocation.x - startX) / CGFloat(segments)
         let segmentHeight = (endLocation.y - startY) / CGFloat(segments) // height of each segmentY
+
+        guard segmentWidth.isFinite, segmentHeight.isFinite else { return path }
         
         path.move(to: CGPoint(x: startX, y: rect.minY))
         //        var segmentX = startX
@@ -51,11 +59,19 @@ struct SideStrikeShape: Shape {
         let endLocation = CGPoint(x: rect.width, y: rect.height/2)
 //        let _ = print(rect)
         var path = Path()
+
+        guard rect.width > 0, rect.height > 0 else { return path }
+        guard endLocation.x.isFinite, endLocation.y.isFinite, lineWidth.isFinite, lineWidth > 0 else {
+            return path
+        }
+
         let startX = 0.0
         let startY = rect.height
-        let segments = Int(endLocation.x / 40) // number of segments in the lightning strike
+        let segments = max(1, Int(endLocation.x / 40)) // number of segments in the lightning strike
         let segmentWidth = (endLocation.x - startX) / CGFloat(segments)
         let segmentHeight = (endLocation.y - startY) / CGFloat(segments) // height of each segmentY
+
+        guard segmentWidth.isFinite, segmentHeight.isFinite else { return path }
         
         path.move(to: CGPoint(x: startX, y: startY))
         
@@ -189,7 +205,7 @@ private struct WithLightningEffect: ViewModifier {
                             .stroke(Color.yellow, lineWidth: boltWidth)
                             .opacity(bolt != .awaiting ? 1 : 0)
 
-                            .frame(width: endLocation.x - 50, height: 50.0)
+                            .frame(width: max(0, endLocation.x - 50), height: 50.0)
                             .offset(x: 60.0, y: endLocation.y - 57)
                     }
                     
