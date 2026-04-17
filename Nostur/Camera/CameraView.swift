@@ -115,6 +115,14 @@ struct CameraView: View {
                         .foregroundColor(.white))
         })
     }
+
+    private var shouldShowFlipCameraButton: Bool {
+#if targetEnvironment(macCatalyst)
+        false
+#else
+        true
+#endif
+    }
     
     var body: some View {
         GeometryReader { reader in
@@ -205,7 +213,9 @@ struct CameraView: View {
                             
                             Spacer()
                             
-                            flipCameraButton
+                            if shouldShowFlipCameraButton {
+                                flipCameraButton
+                            }
                         }
                         .padding(.horizontal, 20)
                     }
