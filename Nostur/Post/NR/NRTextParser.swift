@@ -171,11 +171,17 @@ class NRTextParser { // TEXT things
         var pTags = [Ptag]()
         var eTags = [String]()
         var newText = text
+        let codeRanges = Self.markdownCodeNSRanges(in: text)
 
         let nsRange = NSRange(text.startIndex..<text.endIndex, in: text)
         let matches = NEvent.indexedMentionRegex15.matches(in: text, options: [], range: nsRange)
 
         for match in matches.prefix(150).reversed() { // 100 limit for sanity
+            let entireMatchRange = match.range(at: 0)
+            if Self.intersectsCodeRange(entireMatchRange, codeRanges: codeRanges) {
+                continue
+            }
+            
             let range = match.range(at: 1)
             guard let swiftRange = Range(range, in: text),
                   let tagIndex = Int(text[swiftRange]),
@@ -190,7 +196,6 @@ class NRTextParser { // TEXT things
                 let replacementString = !plainText ?
                     "[@\(contactUsername(fromPubkey: tag.1, event: event).escapeMD())](nostur:p:\(tag.1))" :
                     "@\(contactUsername(fromPubkey: tag.1, event: event))"
-                let entireMatchRange = match.range(at: 0)
                 if let entireSwiftRange = Range(entireMatchRange, in: newText) {
                     newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
                 }
@@ -199,7 +204,6 @@ class NRTextParser { // TEXT things
                 let replacementString = !plainText ?
                     "[@\(String(key.displayString).prefix(11))](nostur:e:\(tag.1))" :
                     "@\(String(key.displayString).prefix(11))"
-                let entireMatchRange = match.range(at: 0)
                 if let entireSwiftRange = Range(entireMatchRange, in: newText) {
                     newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
                     eTags.append(tag.1)
@@ -218,12 +222,16 @@ class NRTextParser { // TEXT things
     private func parseUserMentions(event: Event? = nil, text: String, plainText: Bool = false) -> TextWithPs {
         var replacedString = text
         let nsRange = NSRange(replacedString.startIndex..<replacedString.endIndex, in: text)
+        let codeRanges = Self.markdownCodeNSRanges(in: replacedString)
         var pTags = [Ptag]()
 
         var sanityIndex = 0
         for match in Self.npubNprofRegex.matches(in: replacedString, range: nsRange).reversed() {
             if sanityIndex > 600 { break }
             sanityIndex += 1
+            if Self.intersectsCodeRange(match.range, codeRanges: codeRanges) {
+                continue
+            }
             var replacement = (replacedString as NSString).substring(with: match.range)
             
             let pub1OrProfile1 = replacement.prefix(11) == "nostr:npub1" || replacement.prefix(6) == "@npub1"
@@ -400,6 +408,20 @@ class NRTextParser { // TEXT things
         }
         
         return ranges
+    }
+    
+    private static func markdownCodeNSRanges(in string: String) -> [NSRange] {
+        markdownCodeRanges(in: string).map { NSRange($0, in: string) }
+    }
+    
+    private static func intersectsCodeRange(_ range: NSRange, codeRanges: [NSRange]) -> Bool {
+        guard range.location != NSNotFound, range.length > 0 else {
+            return false
+        }
+        
+        return codeRanges.contains { codeRange in
+            NSIntersectionRange(range, codeRange).length > 0
+        }
     }
     
     private static func backtickRunLength(in string: String, from index: String.Index) -> Int {
