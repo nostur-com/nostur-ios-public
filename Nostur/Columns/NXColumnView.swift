@@ -30,6 +30,49 @@ struct NXColumnView<HeaderContent: View>: View {
 
     @State private var feedSettingsFeed: CloudFeed?
     @State private var didLoad = false
+    @State private var relayInfoHiddenForFeed = false
+
+    private var relayInfoDismissKey: String? {
+        guard case .relays(let feed) = config.columnType,
+              let feedId = feed.id?.uuidString
+        else {
+            return nil
+        }
+        return "relay_info_hidden_\(feedId)"
+    }
+
+    private var relayInfoUrl: String? {
+        switch config.columnType {
+        case .relayPreview(let relayData):
+            return relayData.url
+        case .relays(let feed):
+            return feed.relaysData.count == 1 ? feed.relaysData.first?.url : nil
+        default:
+            return nil
+        }
+    }
+
+    private var shouldShowRelayInfoCard: Bool {
+        guard relayInfoUrl != nil else { return false }
+        if case .relays(_) = config.columnType {
+            return !relayInfoHiddenForFeed
+        }
+        return true
+    }
+
+    private func loadRelayInfoHiddenState() {
+        guard let relayInfoDismissKey else {
+            relayInfoHiddenForFeed = false
+            return
+        }
+        relayInfoHiddenForFeed = UserDefaults.standard.bool(forKey: relayInfoDismissKey)
+    }
+
+    private func dismissRelayInfoCard() {
+        guard let relayInfoDismissKey else { return }
+        relayInfoHiddenForFeed = true
+        UserDefaults.standard.setValue(true, forKey: relayInfoDismissKey)
+    }
     
     var body: some View {
 #if DEBUG
@@ -45,6 +88,13 @@ struct NXColumnView<HeaderContent: View>: View {
             case .posts(let nrPosts):
                 VStack(spacing: 0) {
                     header
+                    if let relayInfoUrl, shouldShowRelayInfoCard {
+                        RelayInformationCard(
+                            relayUrl: relayInfoUrl,
+                            showDismissButton: relayInfoDismissKey != nil,
+                            onDismiss: dismissRelayInfoCard
+                        )
+                    }
                     if case .vine(_) = config.columnType {
                         NXVinesFeed(vm: viewModel, posts: nrPosts, isVisible: isVisible)
                             .modifier {
@@ -113,6 +163,7 @@ struct NXColumnView<HeaderContent: View>: View {
             L.og.debug("☘️☘️ \(config.name) .onAppear -[LOG]-")
 #endif
             viewModel.isVisible = isVisible
+            loadRelayInfoHiddenState()
             
             if isVisible {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { // This should always be a bit delayed else it will be cancelled out by other feeds .onChange(of: isVisible)
@@ -149,6 +200,9 @@ struct NXColumnView<HeaderContent: View>: View {
             }
             viewModel.initialize(config, speedTest: speedTest)
         }
+        .onChange(of: config.id) { _ in
+            loadRelayInfoHiddenState()
+        }
         .onChange(of: isVisible) { newValue in
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) .onChange(of: isVisible) newValue: \(newValue) -[LOG]-")
@@ -180,6 +234,7 @@ struct NXColumnView<HeaderContent: View>: View {
             L.og.debug("☘️☘️ \(oldConfig.name) .onChange(of: config) -[LOG]-")
 #endif
             guard viewModel.config != newConfig else { return }
+            loadRelayInfoHiddenState()
             if let relaysData = newConfig.feed?.relaysData {
                 for relay in relaysData {
                     ConnectionPool.shared.addConnection(relay) { conn in
@@ -237,7 +292,6 @@ struct NXColumnView<HeaderContent: View>: View {
         pe.loadContacts()
         pe.loadPosts()
         pe.loadCloudFeeds(1)
-        Themes.default.loadOrange()
     }) {
         
         if let list = PreviewFetcher.fetchCloudFeed() {

@@ -31,6 +31,7 @@ struct RelayEditView: View {
     @State private var connectedSub: AnyCancellable? = nil
     @State private var connectionStatus: RelayStatus = .disconnected
     @State private var connectTimeoutTask: Task<Void, Never>? = nil
+    @State private var relayInformation: RelayInformationDocument? = nil
 
     private enum RelayStatus: Equatable {
         case connected
@@ -133,6 +134,19 @@ struct RelayEditView: View {
     
     private func isExcluded(_ account: CloudAccount) -> Bool {
         return excludedPubkeys.contains(account.publicKey)
+    }
+
+    private var relayInfoLookupUrl: String? {
+        let raw = relayUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty, raw != "wss://", raw != "ws://" else { return nil }
+
+        let normalized = normalizeRelayUrl(raw)
+        guard let components = URLComponents(string: normalized),
+              components.host != nil
+        else {
+            return nil
+        }
+        return normalized
     }
     
     var body: some View {
@@ -248,6 +262,13 @@ struct RelayEditView: View {
                 }
             }
             .listRowBackground(theme.background)
+
+            if let relayInfoLookupUrl, relayInformation != nil {
+                Section(header: Text("Relay information")) {
+                    RelayInformationCard(relayUrl: relayInfoLookupUrl)
+                }
+                .listRowBackground(theme.background)
+            }
             
             Section(header: Text("")) {
                 Text("Remove")
@@ -267,9 +288,13 @@ struct RelayEditView: View {
                         dismiss()
                         do {
                             try viewContext.save()
+#if DEBUG
                             L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
+#endif
                         } catch {
+#if DEBUG
                             L.og.error("could not save after removing relay")
+#endif
                         }
                     }
                 }
@@ -292,7 +317,9 @@ struct RelayEditView: View {
                         relay.excludedPubkeys = excludedPubkeys
                         relay.updatedAt = .now
                         try viewContext.save()
+#if DEBUG
                         L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
+#endif
                         // Update existing connections
                         // url change?
                         if (connection?.url != correctedRelayUrl) {
@@ -339,7 +366,9 @@ struct RelayEditView: View {
                         }
                     }
                     catch {
+#if DEBUG
                         L.og.error("problem ")
+#endif
                     }
                     dismiss()
                 }
@@ -379,6 +408,13 @@ struct RelayEditView: View {
                     }
                 }
             }
+        }
+        .task(id: relayInfoLookupUrl) {
+            guard let relayInfoLookupUrl else {
+                relayInformation = nil
+                return
+            }
+            relayInformation = await fetchRelayInformationDocument(for: relayInfoLookupUrl)
         }
         .onReceive(cp.objectWillChange, perform: { _ in
             Task {

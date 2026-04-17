@@ -91,6 +91,16 @@ struct RelayFeedPreviewSheet: View {
                 previewTitle = relayData.url
             }
         }
+        .task(id: relayData?.url) {
+            guard let relayData,
+                  let relayInformation = await fetchRelayInformationDocument(for: relayData.url),
+                  let relayName = relayInformation.name?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !relayName.isEmpty
+            else {
+                return
+            }
+            previewTitle = relayName
+        }
     }
     
     private var previewFeedActionsMenu: some View {
