@@ -16,10 +16,6 @@ struct Settings: View {
     @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     
-    private var fiatPrice:String {
-        String(format: "$%.02f", (ceil(Double(settings.defaultZapAmount)) / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
-    }
-    
     @State var deleteAccountIsShown = false
     
 

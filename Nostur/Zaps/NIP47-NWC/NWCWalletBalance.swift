@@ -15,8 +15,7 @@ struct NWCWalletBalance: View {
     public var noIcon = false
     
     private func fiatPrice(_ amount:Double) -> String? {
-        guard ExchangeRateModel.shared.bitcoinPrice > 0 else { return nil }
-        return String(format: "($%.02f)",(amount / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
+        ExchangeRateModel.shared.formattedFiatValue(sats: amount, includeParentheses: true)
     }
 
     var body: some View {

@@ -18,9 +18,8 @@ struct CustomZapAmountEntry: View {
     }
 
     private var fiatPrice:String? {
-        guard ExchangeRateModel.shared.bitcoinPrice > 0 else { return nil }
         guard let d = Double(enteredAmount), d > 0 else { return nil }
-        return String(format: "$%.02f",(d / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
+        return ExchangeRateModel.shared.formattedFiatValue(sats: d)
     }
     
     private var isValidAmount:Bool {

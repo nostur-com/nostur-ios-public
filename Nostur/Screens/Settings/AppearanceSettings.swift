@@ -74,7 +74,7 @@ struct AppearanceSettings: View {
                         Toggle(isOn: $settings.showFiat) {
                             VStack(alignment: .leading) {
                                 Text("Show zaps fiat value", comment: "Setting on settings screen")
-                                Text("Show USD value next to sats on post", comment:"Setting on settings screen")
+                                Text("Show local fiat value next to sats on post", comment:"Setting on settings screen")
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                             }

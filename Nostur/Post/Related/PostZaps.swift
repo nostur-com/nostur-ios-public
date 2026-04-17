@@ -172,9 +172,7 @@ struct NxZapReceipt: View {
                 }
                 Text(nrPost.sats, format: .number.notation((.compactName)))
                     .font(.title3)
-                if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
-                    let fiatPrice = String(format: "$%.02f",(Double(nrPost.sats) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
-
+                if let fiatPrice = ExchangeRateModel.shared.formattedFiatValue(sats: Double(nrPost.sats)) {
                     Text("\(fiatPrice)")
                         .font(.caption)
                         .opacity(nrPost.sats != 0 ? 0.5 : 0)

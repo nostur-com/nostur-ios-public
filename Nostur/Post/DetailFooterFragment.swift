@@ -133,8 +133,7 @@ struct DetailFooterFragment: View {
     }
     
     private func loadTally(_ tally: Int64) {
-        if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
-            let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
+        if let fiatPrice = ExchangeRateModel.shared.formattedFiatValue(sats: Double(tally)) {
             guard fiatPrice != tallyString else { return }
             tallyString = fiatPrice
         }

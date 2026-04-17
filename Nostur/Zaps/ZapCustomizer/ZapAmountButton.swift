@@ -18,8 +18,7 @@ struct ZapAmountButton: View {
     }
     
     private var fiatPrice:String? {
-        guard ExchangeRateModel.shared.bitcoinPrice > 0 else { return nil }
-        return String(format: "$%.02f",(amount / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
+        ExchangeRateModel.shared.formattedFiatValue(sats: amount)
     }
     
     var body: some View {

@@ -233,9 +233,7 @@ struct PostZapsView: View {
 //                    .font(.title2)
                 Text(postZaps.zaps.reduce(0, { $0 + $1.sats }), format: .number.notation((.compactName)))
                     .font(.title2)
-                if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
-                    let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
-
+                if let fiatPrice = ExchangeRateModel.shared.formattedFiatValue(sats: Double(footerAttributes.zapTally)) {
                     Text("\(fiatPrice)")
                         .font(.caption)
                         .opacity(footerAttributes.zapTally != 0 ? 0.5 : 0)
@@ -276,9 +274,7 @@ struct ProfileZap: View {
                 }
                 Text(zap.sats, format: .number.notation((.compactName)))
                     .font(.title2)
-                if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
-                    let fiatPrice = String(format: "$%.02f",(Double(zap.sats) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
-
+                if let fiatPrice = ExchangeRateModel.shared.formattedFiatValue(sats: Double(zap.sats)) {
                     Text("\(fiatPrice)")
                         .font(.caption)
                         .opacity(zap.sats != 0 ? 0.5 : 0)

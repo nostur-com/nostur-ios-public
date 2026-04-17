@@ -72,8 +72,7 @@ struct CashuTokenView: View {
                     self.cashuToken = cashuToken
                     
                     let sats = Double(cashuToken.totalAmount)
-                    let btcPrice = ExchangeRateModel.shared.bitcoinPrice
-                    self.fiatPrice = String(format: "($%.02f)", sats / 100_000_000 * btcPrice)
+                    self.fiatPrice = ExchangeRateModel.shared.formattedFiatValue(sats: sats, includeParentheses: true) ?? ""
                 }
             } catch {
                 print("Invalid Cashu token: \(error)")

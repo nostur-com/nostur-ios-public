@@ -7,27 +7,26 @@
 
 import Foundation
 
-// TODO: Create settings toggle on/off and selection from usd/euro/fiat/etc
-struct KrakenApiResponse: Codable {
-    
-    //    https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD
-    //    {
-    //        "result": {
-    //            "XXBTZUSD": {
-    //                "c": [
-    //                    "21921.00000",
-    //                    "0.00062338"
-    //                ]
-    //            }
-    //        }
-    //    }
-    
-    struct Result: Codable {
-        struct XXBTZUSD: Codable {
-            var c: [String]
-        }
-        var XXBTZUSD:XXBTZUSD
+struct KrakenTickerResponse: Codable {
+    struct Ticker: Codable {
+        let c: [String]
     }
-    
-    var result:Result
+
+    let result: [String: Ticker]
+}
+
+struct KrakenAssetPairsResponse: Codable {
+    struct AssetPair: Codable {
+        let altname: String
+        let wsname: String?
+        let base: String
+        let quote: String
+    }
+
+    let result: [String: AssetPair]
+}
+
+struct KrakenBitcoinFiatPair {
+    let pairCode: String
+    let fiatCode: String
 }

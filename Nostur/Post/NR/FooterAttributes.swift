@@ -253,11 +253,10 @@ class FooterAttributes: ObservableObject {
     }
     
     public func loadTallyString(_ tally: Int64) {
-        if (tally != 0 && ExchangeRateModel.shared.bitcoinPrice != 0.0) {
-            let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
-            guard fiatPrice != zapTallyString else { return }
-            zapTallyString = fiatPrice
-        }
+        guard tally != 0 else { return }
+        guard let fiatPrice = ExchangeRateModel.shared.formattedFiatValue(sats: Double(tally)) else { return }
+        guard fiatPrice != zapTallyString else { return }
+        zapTallyString = fiatPrice
     }
     
     static private func getBookmarkColor(_ event: Event) -> Color? {

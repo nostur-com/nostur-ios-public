@@ -4860,6 +4860,9 @@
         }
       }
     },
+    "Fiat currency" : {
+      "comment" : "Setting on settings screen"
+    },
     "File Storage Server address" : {
       "comment" : "File Storage Server address",
       "localizations" : {
@@ -10350,6 +10353,12 @@
         }
       }
     },
+    "Show local fiat value next to sats on post" : {
+      "comment" : "Setting on settings screen"
+    },
+    "Show local fiat value next to sats on posts" : {
+      "comment" : "Setting on settings screen"
+    },
     "Show more" : {
       "localizations" : {
         "nl" : {
@@ -10435,6 +10444,7 @@
     },
     "Show USD value next to sats on post" : {
       "comment" : "Setting on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -10446,6 +10456,7 @@
     },
     "Show USD value next to sats on posts" : {
       "comment" : "Setting on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

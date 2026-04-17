@@ -12,10 +12,25 @@ struct ZapsSettings: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
     @ObservedObject private var settings: SettingsStore = .shared
+    @ObservedObject private var exchangeRateModel: ExchangeRateModel = .shared
     
     @State private var albyNWCsheetShown = false
     @State private var customNWCsheetShown = false
     @State private var showDefaultZapAmountSheet = false
+
+    private var fiatCurrencyPickerSelection: Binding<String> {
+        Binding(
+            get: {
+                if settings.preferredFiatCurrency == SettingsStore.deviceDefaultFiatCurrency {
+                    return exchangeRateModel.activeFiatCurrencyCode
+                }
+                return settings.preferredFiatCurrency
+            },
+            set: { newValue in
+                settings.preferredFiatCurrency = newValue
+            }
+        )
+    }
     
     var body: some View {
         NXForm {
@@ -78,10 +93,23 @@ struct ZapsSettings: View {
                 Toggle(isOn: $settings.showFiat) {
                     VStack(alignment: .leading) {
                         Text("Show fiat value", comment: "Setting on settings screen")
-                        Text("Show USD value next to sats on posts", comment:"Setting on settings screen")
+                        Text("Show local fiat value next to sats on posts", comment:"Setting on settings screen")
                             .font(.footnote)
                             .foregroundColor(.secondary)
                     }
+                }
+
+                if settings.showFiat {
+                    Picker(selection: fiatCurrencyPickerSelection) {
+                        ForEach(exchangeRateModel.supportedFiatCurrencyCodes, id: \.self) { code in
+                            Text(code).tag(code)
+                        }
+                    } label: {
+                        VStack(alignment: .leading) {
+                            Text("Fiat currency", comment: "Setting on settings screen")
+                        }
+                    }
+                    .pickerStyleCompatNavigationLink()
                 }
             }
         }

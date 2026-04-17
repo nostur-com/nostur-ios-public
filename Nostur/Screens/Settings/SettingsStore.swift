@@ -12,6 +12,7 @@ import Combine
 final class SettingsStore: ObservableObject {
     
     public static let shared = SettingsStore()
+    static let deviceDefaultFiatCurrency = "__device_default__"
     
     public enum Keys {
         static let lastMaintenanceTimestamp:String = "last_maintenance_timestamp"
@@ -21,6 +22,7 @@ final class SettingsStore: ObservableObject {
         
         static let defaultZapAmount:String = "default_zap_amount"
         static let showFiat:String = "show_fiat"
+        static let preferredFiatCurrency:String = "preferred_fiat_currency"
         static let defaultLightningWallet:String = "default_lightning_wallet"
 //        static let hideEmojisInNames:String = "hide_emojis_in_names"
         static let hideBadges:String = "hide_badges"
@@ -162,6 +164,7 @@ final class SettingsStore: ObservableObject {
             Keys.replaceNsecWithHunter2: true,
             Keys.defaultZapAmount: 21,
             Keys.showFiat: true,
+            Keys.preferredFiatCurrency: Self.deviceDefaultFiatCurrency,
 //            Keys.hideEmojisInNames: false,
             Keys.hideBadges: defaultZapAmount,
             Keys.autoDownloadFrom: AutodownloadLevel.onlyWoT.rawValue,
@@ -485,8 +488,20 @@ final class SettingsStore: ObservableObject {
             objectWillChange.send()
             _showFiat = newValue
             defaults.set(newValue, forKey: Keys.showFiat);
+            if newValue {
+                ExchangeRateModel.shared.refreshNow()
+            }
         }
         get { _showFiat }
+    }
+    
+    var preferredFiatCurrency: String {
+        set {
+            objectWillChange.send()
+            defaults.set(newValue, forKey: Keys.preferredFiatCurrency)
+            ExchangeRateModel.shared.refreshNow()
+        }
+        get { defaults.string(forKey: Keys.preferredFiatCurrency) ?? Self.deviceDefaultFiatCurrency }
     }
     
     private var _showFiat:Bool = true

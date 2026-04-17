@@ -132,8 +132,8 @@ struct LightningInvoice: View {
                 }
             
                 guard let amount = bolt11.amount else { return }
-               
-                self.fiatPrice = String(format: "($%.02f)",(Double(amount.int64) / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
+
+                self.fiatPrice = ExchangeRateModel.shared.formattedFiatValue(sats: Double(amount.int64), includeParentheses: true) ?? ""
             }
         }
         
