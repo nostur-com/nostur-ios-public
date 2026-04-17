@@ -53,7 +53,11 @@ struct ThemePicker: View {
             Label("Black & White", systemImage: "circle.fill")
                 .foregroundColor(Color("bwAccentColor"))
                 .tag("bw")
-            
+
+            Label("Dark Garnet", systemImage: "circle.fill")
+                .foregroundColor(Color("oledGarnetAccentColor"))
+                .tag("dark_garnet")
+
         } label: {
             Text("App theme")
         }
@@ -80,6 +84,8 @@ struct ThemePicker: View {
                 Themes.default.loadOrange()
             case "bw":
                 Themes.default.loadBlackAndWhite()
+            case "dark_garnet":
+                Themes.default.loadDarkGarnet()
             default:
                 Themes.default.loadDefault()
             }

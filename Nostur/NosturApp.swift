@@ -88,6 +88,7 @@ struct iOSApp: App {
                 .environmentObject(themes)
                 .environmentObject(accountsState)
                 .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
+                .preferredColorScheme(themes.preferredColorScheme)
                 .onAppear {
                     enableAudioPlayback()
                     hideTitleBarOnCatalyst()

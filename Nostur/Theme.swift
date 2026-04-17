@@ -38,6 +38,19 @@ class Themes: ObservableObject {
         get { UserDefaults.standard.string(forKey: "app_theme") ?? "default" }
         set { UserDefaults.standard.setValue(newValue, forKey: "app_theme") }
     }
+
+    public var preferredColorScheme: ColorScheme? {
+        isOledTheme ? .dark : nil
+    }
+
+    private var isOledTheme: Bool {
+        switch selectedTheme {
+        case "dark_garnet":
+            return true
+        default:
+            return false
+        }
+    }
         
     private init() {
         switch selectedTheme {
@@ -59,6 +72,8 @@ class Themes: ObservableObject {
             loadOrange()
         case "bw":
             loadBlackAndWhite()
+        case "dark_garnet":
+            loadDarkGarnet()
         default:
             loadDefault()
         }
@@ -213,6 +228,24 @@ class Themes: ObservableObject {
     public func loadBlackAndWhite() {
         selectedTheme = "bw"
         theme = Self.BLACK_AND_WHITE
+    }
+
+    static let DARK_GARNET = Theme(
+        id: "Dark Garnet",
+        primary: Color.white,
+        secondary: Color(red: 0.82, green: 0.82, blue: 0.82),
+        accent: Color("oledGarnetAccentColor"),
+        background: Color("oledGarnetBackground"),
+        secondaryBackground: Color.black,
+        listBackground: Color("oledGarnetListBackground"),
+        badge: Color.red,
+        lineColor: Color("oledGarnetLineColor"),
+        footerButtons: Color("oledGarnetAccentColor")
+    )
+
+    public func loadDarkGarnet() {
+        selectedTheme = "dark_garnet"
+        theme = Self.DARK_GARNET
     }
 }
 
