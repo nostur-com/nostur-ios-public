@@ -77,6 +77,7 @@ struct AppView: View {
                 .onboarding
             }
         }
+        .preferredColorScheme(themes.preferredColorScheme)
     }
 }
 
