@@ -116,6 +116,9 @@ class MessageParser {
                         }
                     }
                 case .CLOSED:
+                    if let subscriptionId = message.subscriptionId {
+                        client.completeReqSubscription(subscriptionId)
+                    }
                     if message.message.prefix(14) == "auth-required:" {
 #if DEBUG
                         L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED) (auth-required)")
@@ -188,6 +191,7 @@ class MessageParser {
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
+                    client.completeReqSubscription(subscriptionId)
                     // TODO: Make generic -OPEN-, instead of "Following-" and "List-" etc..
                     if !Self.ACTIVE_SUBSCRIPTIONS
                         .contains(subscriptionId) && String(subscriptionId.prefix(6)) != "-OPEN-" && String(subscriptionId.prefix(10)) != "Following-" && String(subscriptionId.prefix(5)) != "List-"

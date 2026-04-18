@@ -42,6 +42,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     private var webSocketTask: URLSessionWebSocketTask?
     private var subscriptions = Set<AnyCancellable>()
     private var outQueue: [SocketMessage] = []
+    private var inFlightReqSubscriptionIds: Set<String> = []
+    private var reqDrainScheduled = false
+    private let maxConcurrentReqsPerRelay = 12
+    private let reqDrainDelay: TimeInterval = 0.20
     
     public func resetExponentialBackOff() {
         self.exponentialReconnectBackOff = 0
@@ -261,11 +265,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     //            }
                 }
                 
-                guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
+                guard self.webSocketTask != nil, !outQueue.isEmpty else { return }
                 
-                if self.relayData.auth {
+                if self.relayData.auth && !self.didAuth && !(self.didWaitCount > 5) {
+                    self.didWaitCount += 1
 #if DEBUG
-                    L.sockets.debug("\(self.url) relayData.auth == true")
+                    L.sockets.debug("\(self.url) relayData.auth == true - didWaitCount: \(self.didWaitCount)")
 #endif
                     self.sendAfterAuthSubject.send()
                     return
@@ -281,17 +286,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty, self.isSocketConnected else { return }
-            for out in self.outQueue {
-#if DEBUG
-                L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE (AFTER AUTH) \(self.url): \(out.text.prefix(155))")
-#endif
-                webSocketTask.send(.string(out.text)) { error in
-                    if let error {
-                        self.didReceiveError(error)
-                    }
-                }
-                self.outQueue.removeAll(where: { $0.id == out.id })
-            }
+            self.flushOutQueue(using: webSocketTask)
         }
     }
     
@@ -338,30 +333,82 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 return
             }
             
-            if self.relayData.auth && !self.didAuth {
+            if self.relayData.auth && !self.didAuth && !(self.didWaitCount > 5) {
+                self.didWaitCount += 1
 #if DEBUG
-                L.sockets.debug("\(self.url) relayData.auth == true. Waiting 0.25 sec for: \(text.prefix(155))")
+                L.sockets.debug("\(self.url) relayData.auth == true. Waiting 0.25 sec - didWaitCount: \(self.didWaitCount) - : \(text.prefix(155))")
 #endif
                 self.sendAfterAuthSubject.send()
                 return
             }
             
-
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
-            
-            for out in outQueue {
-#if DEBUG
-                L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE (A) \(self.url): \(out.text.prefix(255)) -[LOG]-")
-#endif
-                webSocketTask.send(.string(out.text)) { error in
-                    if let error {
-                        self.didReceiveError(error)
-                        self.connect(andSend: out.text)
-                    }
-                }
-                self.outQueue.removeAll(where: { $0.id == out.id })
-            }
+            self.flushOutQueue(using: webSocketTask)
         }
+    }
+    
+    public func completeReqSubscription(_ subscriptionId: String) {
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            self.inFlightReqSubscriptionIds.remove(subscriptionId)
+            guard let webSocketTask = self.webSocketTask, self.isSocketConnected else { return }
+            self.flushOutQueue(using: webSocketTask)
+        }
+    }
+    
+    private func flushOutQueue(using webSocketTask: URLSessionWebSocketTask) {
+        guard !outQueue.isEmpty else { return }
+        var shouldRetryDrain = false
+        
+        for out in outQueue {
+            if let subId = Self.reqSubscriptionId(from: out.text) {
+                if inFlightReqSubscriptionIds.contains(subId) {
+                    self.outQueue.removeAll(where: { $0.id == out.id })
+                    continue
+                }
+                if inFlightReqSubscriptionIds.count >= maxConcurrentReqsPerRelay {
+                    shouldRetryDrain = true
+                    continue
+                }
+                inFlightReqSubscriptionIds.insert(subId)
+            }
+#if DEBUG
+            L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text.prefix(255)) -[LOG]-")
+#endif
+            webSocketTask.send(.string(out.text)) { error in
+                if let error {
+                    self.didReceiveError(error)
+                    self.connect(andSend: out.text)
+                }
+            }
+            self.outQueue.removeAll(where: { $0.id == out.id })
+        }
+        
+        if shouldRetryDrain {
+            scheduleReqDrain()
+        }
+    }
+    
+    private func scheduleReqDrain() {
+        guard !reqDrainScheduled else { return }
+        reqDrainScheduled = true
+        queue.asyncAfter(deadline: .now() + reqDrainDelay) { [weak self] in
+            guard let self = self else { return }
+            self.reqDrainScheduled = false
+            guard let webSocketTask = self.webSocketTask, self.isSocketConnected else { return }
+            self.flushOutQueue(using: webSocketTask)
+        }
+    }
+    
+    private static func reqSubscriptionId(from message: String) -> String? {
+        let text = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text.hasPrefix("[\"REQ\"") else { return nil }
+        guard let data = text.data(using: .utf8),
+              let payload = try? JSONSerialization.jsonObject(with: data) as? [Any],
+              payload.count > 1,
+              (payload[0] as? String) == "REQ",
+              let subscriptionId = payload[1] as? String else { return nil }
+        return subscriptionId
     }
     
     // (Planned) disconnect, so exponetional backoff and skipped is reset
@@ -380,6 +427,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self?.skipped = 0
             self?.firstConnection = true
             self?.nreqSubscriptions = []
+            self?.inFlightReqSubscriptionIds = []
             self?.lastMessageReceivedAt = nil
             self?.isSocketConnected = false
             self?.outQueue = [] // Clear any pending messages
@@ -398,6 +446,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         subscriptions.removeAll()
         outQueue.removeAll()
         nreqSubscriptions.removeAll()
+        inFlightReqSubscriptionIds.removeAll()
     }
     
     public func ping() {
@@ -634,9 +683,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
             
-            if self.relayData.auth && !self.didAuth {
+            if self.relayData.auth && !self.didAuth && !(self.didWaitCount > 5) {
+                self.didWaitCount += 1
 #if DEBUG
-                L.sockets.debug("relayData.auth == true but did not auth yet, waiting 0.25 secs")
+                L.sockets.debug("relayData.auth == true but did not auth yet, waiting 0.25 secs - didWaitCount: \(self.didWaitCount)")
 #endif
                 self.sendAfterAuthSubject.send()
                 return
@@ -700,6 +750,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     private var lastAuthChallenge: String?
     public var recentAuthAttempts: Int = 0
     private var didAuth: Bool = false
+    private var didWaitCount: Int = 0 // relayData.auth == true. Waiting 0.25 sec (if this happens too much, we don't wait anymore)
     
     public func handleAuth(_ message: String) {
         queue.async(flags: .barrier) { [weak self] in
