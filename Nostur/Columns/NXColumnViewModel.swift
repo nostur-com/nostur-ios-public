@@ -3371,13 +3371,6 @@ func notMutedWords(in text: String, mutedWords: [String]) -> Bool {
     return mutedWords.first(where: { textLower.contains($0) }) == nil
 }
 
-func notMuted(_ nrPost: NRPost) -> Bool {
-    let mutedRootIds: Set<String> = CloudBlocked.mutedRootIds()
-    return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "NIL") && !mutedRootIds.contains(nrPost.replyToId ?? "NIL")
-}
-
-
-
 func threadCount(_ nrPosts: [NRPost]) -> Int {
     nrPosts.reduce(0) { partialResult, nrPost in
         (partialResult + nrPost.threadPostsCount) //  Data race in Nostur.NRPost.threadPostsCount.setter : Swift.Int at 0x10fbe9680 - thread 1
