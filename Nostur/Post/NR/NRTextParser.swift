@@ -221,7 +221,7 @@ class NRTextParser { // TEXT things
     // NIP-27 handle nostr:npub or nostr:nprofile
     private func parseUserMentions(event: Event? = nil, text: String, plainText: Bool = false) -> TextWithPs {
         var replacedString = text
-        let nsRange = NSRange(replacedString.startIndex..<replacedString.endIndex, in: text)
+        let nsRange = NSRange(replacedString.startIndex..<replacedString.endIndex, in: replacedString)
         let codeRanges = Self.markdownCodeNSRanges(in: replacedString)
         var pTags = [Ptag]()
 
@@ -288,36 +288,59 @@ class NRTextParser { // TEXT things
 
 
     private func removeImageLinks(text:String) -> String {
-        text.replacingOccurrences(of: #"(?i)https?:\/\/\S+?\.(?:png#?|jpe?g#?|heic#?|gif#?|webp#?|bmp#?|avif#?)(\??\S+){0,1}\b"#,
-                                  with: "",
-                                  options: .regularExpression)
+        guard text.contains("http") else {
+            return text
+        }
+        
+        return Self.replaceRegexOutsideMarkdownCode(
+            in: text,
+            regex: Self.imageLinkRegex,
+            template: ""
+        )
     }
 
     // Takes a string and replaces any link with a markdown link. Also handles subdomains
     static func replaceURLsWithMarkdownLinks(in string: String) -> String {
-        return string
+        guard string.contains("ws://") || string.contains("wss://") else {
+            return string
+        }
+        
+        return replaceRegexOutsideMarkdownCode(
+            in: string,
+            regex: relayURLRegex,
+            template: "[$0](nostur:add_relay:$0)"
+        )
 //            .replacingOccurrences(of: #"(?!.*\.\.)(?<!(https?:\/\/|wss?:\/\/))(?<!\S)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\.]\@?[\w-]+)*\/?"#,
 //                                  with: "[$0](https://$0)",
 //                                  options: .regularExpression) // REPLACE ALL DOMAINS WITHOUT PROTOCOL, WITH MARKDOWN LINK AND ADD PROTOCOL
-            .replacingOccurrences(of: #"(wss?:\/\/)([a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*)(?::\d+)?(?:\/[\w\-\/]*)*(?:\?[\w=&\-]*)?"#,
-                                  with: "[$0](nostur:add_relay:$0)",
-                                  options: .regularExpression)
 //            .replacingOccurrences(of: #"(?!.*\.\.)(?<!\S)([\w+]+\:\/\/)?[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?"#,
 //                                  with: "[$0]($0)",
 //                                  options: .regularExpression) // REPLACE THE REMAINING URLS THAT HAVE PROTOCOL, BUT IGNORE ALREADY MARKDOWNED LINKS
     }
     
     static func replaceNaddrWithMarkdownLinks(in string: String) -> String {
-        return string
-            .replacingOccurrences(of: ###"(?:nostr:)?(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###,
-                                  with: "[naddr1...](nostur:nostr:$1)",
-                                  options: .regularExpression)
+        guard string.contains("naddr1") else {
+            return string
+        }
+        
+        return replaceRegexOutsideMarkdownCode(
+            in: string,
+            regex: naddrRegex,
+            template: "[naddr1...](nostur:nostr:$1)"
+        )
     }
     
     // Special version for markdown, replace [..](nostr:...) with [..](nostur:..)
     static func replaceNaddrWithMarkdownLinksMD(in string: String) -> String {
-        return string
-            .replacingOccurrences(of: ###"](nostr:"###, with: ###"](nostur:"###)
+        guard string.contains("](nostr:") else {
+            return string
+        }
+        
+        return replaceRegexOutsideMarkdownCode(
+            in: string,
+            regex: nostrMarkdownLinkRegex,
+            template: "](nostur:"
+        )
     }
 
     static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {
@@ -325,36 +348,11 @@ class NRTextParser { // TEXT things
             return string
         }
         
-        guard string.contains("`") else {
-            return replaceHashtags(in: string)
-        }
-        
-        let codeRanges = markdownCodeRanges(in: string)
-        guard !codeRanges.isEmpty else {
-            return replaceHashtags(in: string)
-        }
-        
-        var output = ""
-        var cursor = string.startIndex
-        
-        for codeRange in codeRanges {
-            if cursor < codeRange.lowerBound {
-                output += replaceHashtags(in: String(string[cursor..<codeRange.lowerBound]))
-            }
-            output += String(string[codeRange])
-            cursor = codeRange.upperBound
-        }
-        
-        if cursor < string.endIndex {
-            output += replaceHashtags(in: String(string[cursor..<string.endIndex]))
-        }
-        
-        return output
-    }
-    
-    private static func replaceHashtags(in text: String) -> String {
-        let nsRange = NSRange(location: 0, length: text.utf16.count)
-        return hashtagRegex.stringByReplacingMatches(in: text, options: [], range: nsRange, withTemplate: "[$0](nostur:t:$2)")
+        return replaceRegexOutsideMarkdownCode(
+            in: string,
+            regex: hashtagRegex,
+            template: "[$0](nostur:t:$2)"
+        )
     }
     
     private static func markdownCodeRanges(in string: String) -> [Range<String.Index>] {
@@ -412,6 +410,41 @@ class NRTextParser { // TEXT things
     
     private static func markdownCodeNSRanges(in string: String) -> [NSRange] {
         markdownCodeRanges(in: string).map { NSRange($0, in: string) }
+    }
+    
+    private static func replaceRegexOutsideMarkdownCode(in string: String, regex: NSRegularExpression, template: String) -> String {
+        guard string.contains("`") else {
+            let nsRange = NSRange(location: 0, length: string.utf16.count)
+            return regex.stringByReplacingMatches(in: string, options: [], range: nsRange, withTemplate: template)
+        }
+        
+        let codeRanges = markdownCodeRanges(in: string)
+        guard !codeRanges.isEmpty else {
+            let nsRange = NSRange(location: 0, length: string.utf16.count)
+            return regex.stringByReplacingMatches(in: string, options: [], range: nsRange, withTemplate: template)
+        }
+        
+        var output = ""
+        var cursor = string.startIndex
+        
+        for codeRange in codeRanges {
+            if cursor < codeRange.lowerBound {
+                output += replaceRegex(regex, in: String(string[cursor..<codeRange.lowerBound]), template: template)
+            }
+            output += String(string[codeRange])
+            cursor = codeRange.upperBound
+        }
+        
+        if cursor < string.endIndex {
+            output += replaceRegex(regex, in: String(string[cursor..<string.endIndex]), template: template)
+        }
+        
+        return output
+    }
+    
+    private static func replaceRegex(_ regex: NSRegularExpression, in text: String, template: String) -> String {
+        let nsRange = NSRange(location: 0, length: text.utf16.count)
+        return regex.stringByReplacingMatches(in: text, options: [], range: nsRange, withTemplate: template)
     }
     
     private static func intersectsCodeRange(_ range: NSRange, codeRanges: [NSRange]) -> Bool {
@@ -504,7 +537,11 @@ class NRTextParser { // TEXT things
     
     // Cached regex that is used in NSMutableAttributedString.addHashtagIcons()
     static let htRegex = try! NSRegularExpression(pattern: "\\b\(hashtags.keys.joined(separator: "\\b|"))\\b", options: [.caseInsensitive])
-    static let hashtagRegex = try! NSRegularExpression(pattern: ###"(?<![/\?]|\b)(\#)([^\s#\]\[]\S{1,})\b"###, options: [])
+    static let hashtagRegex = try! NSRegularExpression(pattern: ###"(?<![/\?]|[\p{L}\p{N}_])(\#)([\p{L}\p{N}_]+)(?=$|[^\p{L}\p{N}_])"###, options: [])
+    static let imageLinkRegex = try! NSRegularExpression(pattern: #"(?i)https?:\/\/\S+?\.(?:png#?|jpe?g#?|heic#?|gif#?|webp#?|bmp#?|avif#?)(\??\S+){0,1}\b"#, options: [])
+    static let relayURLRegex = try! NSRegularExpression(pattern: #"(wss?:\/\/)([a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*)(?::\d+)?(?:\/[\w\-\/]*)*(?:\?[\w=&\-]*)?"#, options: [])
+    static let naddrRegex = try! NSRegularExpression(pattern: ###"(?:nostr:)?(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###, options: [])
+    static let nostrMarkdownLinkRegex = try! NSRegularExpression(pattern: ###"]\(nostr:"###, options: [])
     
     // Build NSAttributedString hashtag icons once for reuse in NSMutableAttributedString.addHashtagIcons()
     public var hashtagIcons: [String: NSAttributedString]
