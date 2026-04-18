@@ -6122,9 +6122,6 @@
         }
       }
     },
-    "Loading relay information…" : {
-
-    },
     "Loading..." : {
 
     },
@@ -11806,9 +11803,6 @@
           }
         }
       }
-    },
-    "Unable to load relay information" : {
-
     },
     "Unable to load stream" : {
       "extractionState" : "stale",

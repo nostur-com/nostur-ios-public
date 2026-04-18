@@ -23,19 +23,6 @@ struct RelayInformationCard: View {
         VStack(alignment: .leading, spacing: 0) {
             if let info {
                 VStack(alignment: .leading, spacing: 8) {
-                    if showDismissButton {
-                        HStack {
-                            Spacer()
-                            Button {
-                                onDismiss?()
-                            } label: {
-                                Image(systemName: "xmark")
-                            }
-                            .buttonStyle(.plain)
-                            .foregroundStyle(.secondary)
-                        }
-                    }
-
                     if let title = sanitized(info.name), !title.isEmpty {
                         Text(title)
                             .font(.headline)
@@ -60,6 +47,20 @@ struct RelayInformationCard: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.trailing, showDismissButton ? 22 : 0)
+                .overlay(alignment: .topTrailing) {
+                    if showDismissButton {
+                        Button {
+                            onDismiss?()
+                        } label: {
+                            Image(systemName: "xmark")
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 1)
+                        .padding(.trailing, 1)
+                    }
+                }
                 .padding(12)
                 .background(theme.background)
                 .overlay {
@@ -71,23 +72,10 @@ struct RelayInformationCard: View {
                 .padding(.vertical, 8)
             }
             else if loadFailed {
-                Text("Unable to load relay information")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                EmptyView()
             }
             else {
-                HStack {
-                    ProgressView()
-                    Text("Loading relay information…")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                EmptyView()
             }
         }
         .task(id: relayUrl) {
@@ -106,7 +94,9 @@ struct RelayInformationCard: View {
         }
         guard !Task.isCancelled else { return }
 
-        info = document
+        withAnimation {
+            info = document
+        }
         onInfoLoaded?(document)
     }
 
