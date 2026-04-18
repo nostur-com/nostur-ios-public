@@ -1077,11 +1077,14 @@ public final class NewPostModel: ObservableObject {
     
     func showPreview(quotePost: QuotePost? = nil, replyTo: ReplyTo? = nil) {
         
-        guard let finalNEvent = buildFinalEvent(imetas: [], replyTo: replyTo, quotePost: quotePost, isPreviewContext: true) else { return }
-        
+        guard var finalNEventWithId = buildFinalEvent(imetas: [], replyTo: replyTo, quotePost: quotePost, isPreviewContext: true) else { return }
+        if finalNEventWithId.id.isEmpty {
+            finalNEventWithId = finalNEventWithId.withId()
+        }
+
         bg().perform { [weak self] in
             guard let self else { return }
-            let previewEvent = createPreviewEvent(finalNEvent)
+            let previewEvent = createPreviewEvent(finalNEventWithId)
             if (!self.typingTextModel.pastedImages.isEmpty) {
                 previewEvent.previewImages = self.typingTextModel.pastedImages
             }
@@ -1090,7 +1093,7 @@ public final class NewPostModel: ObservableObject {
             }
             let nrPost = NRPost(event: previewEvent, withFooter: false)
             DispatchQueue.main.async { [weak self] in
-                self?.previewNEvent = finalNEvent
+                self?.previewNEvent = finalNEventWithId
                 self?.previewNRPost = nrPost
             }
             bg().delete(previewEvent)
