@@ -365,9 +365,8 @@ class Backlog {
             // Clear the set first while still on bg() context
             self.tasks.removeAll(keepingCapacity: false)
             
-            // Stop the timer synchronously to ensure it's invalidated before we continue
-            // Using sync here is safe because we're going from bg() -> main, not the reverse
-            DispatchQueue.main.sync { [weak self] in
+            // Invalidate timer asynchronously on main to avoid bg <-> main deadlock cycles.
+            DispatchQueue.main.async { [weak self] in
                 self?.timer?.invalidate()
                 self?.timer = nil
             }
@@ -492,10 +491,17 @@ class ReqTask: Identifiable, Hashable {
             .debounce(for: .seconds(debounceTime), scheduler: DispatchQueue.main)
             .sink { [weak self] message in
                 guard let self = self else { return }
-                guard !didProcess else { isRunning = false; return }
+                guard !didProcess else {
+                    bg().perform { [weak self] in
+                        self?.isRunning = false;
+                    }
+                    return
+                }
                 didProcess = true
                 processResponseCommand(self.subscriptionId, message, nil)
-                isRunning = false
+                bg().perform { [weak self] in
+                    self?.isRunning = false;
+                }
             }
             .store(in: &subscriptions)
     }

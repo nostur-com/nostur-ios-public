@@ -25,13 +25,14 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     @Published var similarToPubkey: String? 
     
     @Published var nip05verified: Bool = false
+    @Published var metadata_created_at: Int64 = 0
     
     // Internal state
     private var didRunImposterCheck: Bool = false
     
     public var nip05: String?
     public var nip05nameOnly: String?
-    public var metadata_created_at: Int64 = 0
+    public var bg_metadata_created_at: Int64 = 0
     
     @Published var anyLud = false
     public var lud06: String?
@@ -130,8 +131,9 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     @Published public var volume: CGFloat = 0.0
     @Published public var isMuted: Bool = true
     
+    @MainActor
     private func configureFromProfileInfo(_ profileInfo: ProfileInfo, animate: Bool = false) {
-        if animate && Thread.isMainThread {
+        if animate {
             withAnimation {
                 self.anyName = profileInfo.anyName ?? String(pubkey.suffix(11))
                 self.pictureUrl = profileInfo.pfpUrl
@@ -154,11 +156,14 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         self.nip05nameOnly = Nostur.nip05nameOnly(nip05veried: profileInfo.nip05verified, nip05: profileInfo.nip05)
 
         self.metadata_created_at = profileInfo.metadata_created_at
-        
         self.anyLud = profileInfo.anyLud
         self.lud06 = profileInfo.lud06
         self.lud16 = profileInfo.lud16
         self.zapperPubkeys = profileInfo.zapperPubkeys
+        
+        bg().perform { [weak self] in
+            self?.bg_metadata_created_at = profileInfo.metadata_created_at
+        }
     }
     
     private func configureFromBgContact(_ bgContact: Contact, animate: Bool = false) {
@@ -174,6 +179,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         if Thread.isMainThread {
             bg().perform { [weak self] in
                 if let bgContact = (contact ?? Contact.fetchByPubkey(pubkey, context: bg())) {
+                    self?.bg_metadata_created_at = contact?.metadata_created_at ?? 0
                     self?.configureFromBgContact(bgContact)
                 }
             }

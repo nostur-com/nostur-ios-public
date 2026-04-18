@@ -59,7 +59,7 @@ struct NewFollowersNotificationView: View {
             let nrContacts = notificationPubkeys.prefix(10)
                 .map { NRContact.instance(of: $0) }
             
-            let missingPs = nrContacts.filter { $0.metadata_created_at == 0 }.map { $0.pubkey }
+            let missingPs = nrContacts.filter { $0.bg_metadata_created_at == 0 }.map { $0.pubkey }
             QueuedFetcher.shared.enqueue(pTags: missingPs)
             Task { @MainActor in
                 self.nrContacts = nrContacts

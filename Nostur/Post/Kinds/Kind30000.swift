@@ -280,15 +280,15 @@ struct Kind30000: View {
                     .lineLimit(1)
                     .id(nrContact.pubkey)
                     .onAppear {
-                        bg().perform {
-                            if nrContact.metadata_created_at == 0 {
+                        if nrContact.metadata_created_at == 0 {
+                            bg().perform {
                                 QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
                             }
                         }
                     }
                     .onDisappear {
-                        bg().perform {
-                            if nrContact.metadata_created_at == 0 {
+                        if nrContact.metadata_created_at == 0 {
+                            bg().perform {
                                 QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
                             }
                         }

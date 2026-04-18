@@ -39,17 +39,13 @@ struct PFPandName: View {
             }
         }
         .onAppear {
-            bg().perform {
-                if nrContact.metadata_created_at == 0 {
-                    QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
-                }
+            if nrContact.metadata_created_at == 0 {
+                QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
             }
         }
         .onDisappear {
-            bg().perform {
-                if nrContact.metadata_created_at == 0 {
-                    QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
-                }
+            if nrContact.metadata_created_at == 0 {
+                QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
             }
         }
     }

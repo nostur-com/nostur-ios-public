@@ -265,7 +265,7 @@ class LiveKitVoiceSession: ObservableObject {
                     }
                 }
                 
-                if nrContact.metadata_created_at == 0 {
+                if nrContact.bg_metadata_created_at == 0 {
                     QueuedFetcher.shared.enqueue(pTag: participantPubkey)
                 }
             }
