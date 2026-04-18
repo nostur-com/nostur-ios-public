@@ -3280,12 +3280,21 @@ extension Event {
 
 // LVM relays
 extension Event {
+    private static func relayTokenRegex(_ relays: Set<RelayData>) -> String {
+        let escapedRelayUrls = relays.compactMap { relay in
+            let url = relay.url
+            return url.isEmpty ? nil : NSRegularExpression.escapedPattern(for: url)
+        }
+
+        guard !escapedRelayUrls.isEmpty else { return "$^" }
+
+        // relays is a space-separated field, match selected relay URLs as whole tokens.
+        return ".*(^|\\s)(" + escapedRelayUrls.joined(separator: "|") + ")(\\s|$).*"
+    }
 
     static func postsByRelays(_ relays: Set<RelayData>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, fetchLimit: Int = 50, force: Bool = false, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
-        let regex = "(" + relays.compactMap { $0.url }.map {
-            NSRegularExpression.escapedPattern(for: $0)
-        }.joined(separator: "|") + ")"
+        let regex = relayTokenRegex(relays)
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - 28_800 // 8 hours ago
         
         // Take oldest timestamp: 8 hours ago OR lastAppearedCreatedAt
@@ -3335,9 +3344,7 @@ extension Event {
     
     static func postsByRelays(_ relays: Set<RelayData>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
-        let regex = "(" + relays.compactMap { $0.url }.map {
-            NSRegularExpression.escapedPattern(for: $0)
-        }.joined(separator: "|") + ")"
+        let regex = relayTokenRegex(relays)
         
         let cutOffNotInFuture: Int64 = min(cutOffPoint, Int64(Date().timeIntervalSince1970) + 10800) // Never show posts too far into the future (fake timestamp)
         
