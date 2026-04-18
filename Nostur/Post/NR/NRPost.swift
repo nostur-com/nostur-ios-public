@@ -81,10 +81,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             .map { String($0) }
             .joined(separator: " -> ")
 
-        L.og.debug("NRPost recurse source=\(source) depth=\(depth) parent=\(parentId) child=\(event.id) dupInPath=\(duplicateCountInPath) pathTail=[\(stackPreview)]")
+#if DEBUG
+//        L.og.debug("NRPost recurse source=\(source) depth=\(depth) parent=\(parentId) child=\(event.id) dupInPath=\(duplicateCountInPath) pathTail=[\(stackPreview)]")
+#endif
 
         if source.hasPrefix("content."), depth > maxEmbeddedDepth {
-            L.og.debug("NRPost recurse capped source=\(source) depth=\(depth) maxEmbeddedDepth=\(maxEmbeddedDepth) parent=\(parentId) child=\(event.id)")
+#if DEBUG
+//            L.og.debug("NRPost recurse capped source=\(source) depth=\(depth) maxEmbeddedDepth=\(maxEmbeddedDepth) parent=\(parentId) child=\(event.id)")
+#endif
             return nil
         }
 
