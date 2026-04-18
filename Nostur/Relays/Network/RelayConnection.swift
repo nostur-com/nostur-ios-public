@@ -44,7 +44,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     private var outQueue: [SocketMessage] = []
     private var inFlightReqSubscriptionIds: Set<String> = []
     private var reqDrainScheduled = false
-    private let maxConcurrentReqsPerRelay = 12
+    private let maxConcurrentReqsPerRelay = 6
     private let reqDrainDelay: TimeInterval = 0.20
     
     public func resetExponentialBackOff() {
