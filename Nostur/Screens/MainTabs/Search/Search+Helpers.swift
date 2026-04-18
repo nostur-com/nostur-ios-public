@@ -432,8 +432,10 @@ extension Search {
         contacts = []
         nrPosts = []
         
-        bg().perform {
-            guard let event = Event.fetchEvent(id: term, context: bg()) else { return }
+        let bgContext = bg()
+        
+        bgContext.perform {
+            guard let event = Event.fetchEvent(id: term, context: bgContext) else { return }
             let nrPost = NRPost(event: event)
             Task { @MainActor in
                 self.nrPosts = [nrPost]

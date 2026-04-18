@@ -276,7 +276,7 @@ struct ContactFeedSettings: View {
                     wasShared = feed.sharedList
                     let aTag = feed.aTag
                     bg().perform {
-                        let listNRContacts: [NRContact] = Contact.fetchByPubkeys(feedContactPubkeys)
+                        let listNRContacts: [NRContact] = Contact.fetchByPubkeys(feedContactPubkeys, context: bg())
                             .map { NRContact.instance(of: $0.pubkey, contact: $0) }
                         
                         Task { @MainActor in
@@ -345,7 +345,7 @@ struct ContactFeedSettings: View {
                     addContactsSheetShown = false
                     let feedContactPubkeys = feed.contactPubkeys
                     bg().perform {
-                        let listNRContacts: [NRContact] = Contact.fetchByPubkeys(feedContactPubkeys)
+                        let listNRContacts: [NRContact] = Contact.fetchByPubkeys(feedContactPubkeys, context: bg())
                             .map { NRContact.instance(of: $0.pubkey, contact: $0) }
                         Task { @MainActor in
                             self.listNRContacts = listNRContacts

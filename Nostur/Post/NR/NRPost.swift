@@ -627,7 +627,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     }
     
     private static func isMuted(id: String, replyToRootId: String?, replyToId: String?) -> Bool {
-        let mutedRootIds = CloudBlocked.mutedRootIds()
+        let mutedRootIds = AppState.shared.bgAppState.mutedRootIds
         return mutedRootIds.contains(id)
             || mutedRootIds.contains(replyToRootId ?? "NIL")
             || mutedRootIds.contains(replyToId ?? "NIL")
