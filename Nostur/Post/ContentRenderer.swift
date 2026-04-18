@@ -44,224 +44,242 @@ struct ContentRenderer: View { // VIEW things
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(contentElements) { element in
-                switch element {
-                case .nrPost(let nrPost):
-                    if !notMutedWords(in: nrPost.plainText, mutedWords: mutedWords),
-                       !revealedMutedEmbeddedPostIds.contains(nrPost.id) {
-                        HStack {
-                            Text("_Muted post hidden_", comment: "Message shown when an embedded post is hidden because it matches muted words")
-                            Button(String(localized: "Reveal", comment: "Button to reveal an embedded post hidden by muted words")) {
-                                revealedMutedEmbeddedPostIds.insert(nrPost.id)
+            if availableWidth < 220 {
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.white)
+                    .padding(5)
+                    .padding(.top, 5)
+                    .background {
+                        RoundedRectangle(cornerRadius: 5)
+                            .foregroundColor(theme.accent)
+                    }
+                    .contentShape(Rectangle())
+                    .highPriorityGesture(TapGesture().onEnded {
+                        guard !nxViewingContext.contains(.preview) else { return }
+                        guard !isDetail else { return }
+                        navigateTo(nrPost, context: containerID)
+                    })
+            }
+            else {
+                ForEach(contentElements) { element in
+                    switch element {
+                    case .nrPost(let nrPost):
+                        if !notMutedWords(in: nrPost.plainText, mutedWords: mutedWords),
+                           !revealedMutedEmbeddedPostIds.contains(nrPost.id) {
+                            HStack {
+                                Text("_Muted post hidden_", comment: "Message shown when an embedded post is hidden because it matches muted words")
+                                Button(String(localized: "Reveal", comment: "Button to reveal an embedded post hidden by muted words")) {
+                                    revealedMutedEmbeddedPostIds.insert(nrPost.id)
+                                }
+                                .buttonStyle(.bordered)
                             }
-                            .buttonStyle(.bordered)
+                            .padding(.leading, 8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                            )
+                            .hCentered()
+                            .padding(.vertical, 10)
                         }
-                        .padding(.leading, 8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                        )
-                        .hCentered()
-                        .padding(.vertical, 10)
-                    }
-                    else {
-                        KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
-                            .padding(.vertical, 10)
-                    }
+                        else {
+                            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
+                                .padding(.vertical, 10)
+                        }
 
-                case .nevent1(let identifier):
-                    NEventView(identifier: identifier, fullWidth: fullWidth, forceAutoload: shouldAutoload)
-//                        .debugDimensions("NEventView")
-                        .padding(.vertical, 10)
-//                        .withoutAnimation()
-//                        .transaction { t in t.animation = nil }
-                    
-                case .naddr1(let identifier):
-                    NaddrView(naddr1: identifier.bech32string, fullWidth: fullWidth)
-//                        .frame(minHeight: 75)
-//                        .debugDimensions("NEventView")
-                        .padding(.vertical, 10)
-//                        .withoutAnimation()
-//                        .transaction { t in t.animation = nil }
-                    
-                case .npub1(let npub):
-                    if let pubkey = hex(npub) {
-                        ProfileCardByPubkey(pubkey: pubkey)
+                    case .nevent1(let identifier):
+                        NEventView(identifier: identifier, fullWidth: fullWidth, forceAutoload: shouldAutoload)
+    //                        .debugDimensions("NEventView")
                             .padding(.vertical, 10)
-//                            .withoutAnimation()
-//                            .transaction { t in t.animation = nil }
-                    }
-                    else {
+    //                        .withoutAnimation()
+    //                        .transaction { t in t.animation = nil }
+                        
+                    case .naddr1(let identifier):
+                        NaddrView(naddr1: identifier.bech32string, fullWidth: fullWidth)
+    //                        .frame(minHeight: 75)
+    //                        .debugDimensions("NEventView")
+                            .padding(.vertical, 10)
+    //                        .withoutAnimation()
+    //                        .transaction { t in t.animation = nil }
+                        
+                    case .npub1(let npub):
+                        if let pubkey = hex(npub) {
+                            ProfileCardByPubkey(pubkey: pubkey)
+                                .padding(.vertical, 10)
+    //                            .withoutAnimation()
+    //                            .transaction { t in t.animation = nil }
+                        }
+                        else {
+                            EmptyView()
+                        }
+                        
+                    case .nprofile1(let identifier):
+                        NProfileView(identifier: identifier)
+                        
+                    case .note1(let noteId):
+                        if let noteHex = hex(noteId) {
+                            EmbedById(id: noteHex, fullWidth: fullWidth, forceAutoload: shouldAutoload)
+    //                            .frame(minHeight: 75)
+    //                            .debugDimensions("QuoteById.note1")
+                                .padding(.vertical, 10)
+    //                            .withoutAnimation()
+    //                            .transaction { t in t.animation = nil }
+                                .onTapGesture {
+                                    guard !nxViewingContext.contains(.preview) else { return }
+                                    guard !isDetail else { return }
+                                    navigateTo(nrPost, context: containerID)
+                                }
+                        }
+                        else {
+                            EmptyView()
+                        }
+                        
+                    case .noteHex(let hex):
+                        EmbedById(id: hex, fullWidth: fullWidth, forceAutoload: shouldAutoload)
+    //                        .frame(minHeight: 75)
+    //                        .debugDimensions("QuoteById.noteHex")
+                            .padding(.vertical, 10)
+    //                        .withoutAnimation()
+    //                        .transaction { t in t.animation = nil }
+                            .onTapGesture {
+                                guard !nxViewingContext.contains(.preview) else { return }
+                                guard !isDetail else { return }
+                                navigateTo(nrPost, context: containerID)
+                            }
+                        
+                    case .code(let code): // For text notes
+                        Text(verbatim: code)
+                            .font(.system(.body, design: .monospaced))
+                            .onTapGesture {
+                                guard !nxViewingContext.contains(.preview) else { return }
+                                guard !isDetail else { return }
+                                navigateTo(nrPost, context: containerID)
+                            }
+                        
+                    case .text(let attributedStringWithPs): // For text notes
+    //                    Color.red
+    //                        .frame(height: 50)
+    //                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
+    //                    Text(verbatim: attributedStringWithPs.input)
+    //                        .font(.system(.body, design: .monospaced))
+    //                        .onTapGesture {
+    //                            guard !isDetail else { return }
+    //                            navigateTo(nrPost, context: childDIM.id)
+    //                        }
+                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: $showMore, availableWidth: availableWidth, isDetail: isDetail, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
+                                guard !nxViewingContext.contains(.preview) else { return }
+                                guard !isDetail else { return }
+                                navigateTo(nrPost, context: containerID)
+                        }, theme: theme, nxViewingContext: nxViewingContext)
+                        .equatable()
+                        
+                    case .md(let markdownContentWithPs): // For long form articles
+                        NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, maxWidth: availableWidth)
+                            .onTapGesture {
+                                guard !nxViewingContext.contains(.preview) else { return }
+                                guard !isDetail else { return }
+                                navigateTo(nrPost, context: containerID)
+                            }
+                        
+                    case .lnbc(let text):
+                        LightningInvoice(invoice: text)
+                            .padding(.vertical, 10)
+                        
+                    case .cashu(let text):
+                        CashuTokenView(token: text)
+                            .padding(.vertical, 10)
+                        
+                    case .video(let mediaContent):
+                        EmbeddedVideoView(
+                            url: mediaContent.url,
+                            pubkey: nrPost.pubkey,
+                            nrPost: nrPost,
+                            autoload: shouldAutoload
+                        )
+                        .environment(\.availableWidth, availableWidth + (fullWidth ? 20 : 0))
+                        .padding(.horizontal, fullWidth ? -10 : 0)
+                        .padding(.vertical, 10)
+                        
+                    case .image(let galleryItem):
+    //                    Color.red
+    //                        .frame(height: 30)
+    //                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
+                        MediaContentView(
+                            galleryItem: galleryItem,
+                            availableWidth: availableWidth + (fullWidth ? +20 : 0),
+                            placeholderAspect: 4/3,
+                            maxHeight: isDetail ? 4000 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                            contentMode: .fit,
+                            galleryItems: nrPost.galleryItems,
+                            autoload: shouldAutoload,
+                            isNSFW: nrPost.isNSFW,
+                            generateIMeta: nxViewingContext.contains(.preview),
+                            zoomableId: zoomableId
+                        )
+                        .padding(.horizontal, fullWidth ? -10 : 0)
+                        .padding(.vertical, 10)
+                        // Todo: scale: UIScreen.main.scale ?
+                        // fullWidth || isDetail --->
+                        // .padding(.horizontal, fullWidth ? -10 : 0)
+                        // nrPost.pubkey autoload
+                        //  contentPadding: nrPost.kind == 30023 ? 10 : 0
+                        //  imageUrls: nrPost.imageUrls
+                        // no full width no detial -> .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
+                        
+                    case .linkPreview(let url):
+                        LinkPreviewView(url: url, autoload: shouldAutoload)
+                            .padding(.vertical, 10)
+    //                        .withoutAnimation()
+    //                        .transaction { t in t.animation = nil }
+                        
+                    case .postPreviewImage(let postedImageMeta): // no full width for previews, its broken
+                        if postedImageMeta.type == .gif {
+                            GIFImage(data: postedImageMeta.data, isPlaying: .constant(true))
+                                .scaledToFill()
+                                .frame(width: availableWidth, height: availableWidth / postedImageMeta.aspect, alignment: .center)
+                                .contentShape(Rectangle())
+                                .padding(.vertical, 10)
+                        }
+                        else if let imageData = postedImageMeta.uiImage {
+                            Image(uiImage: imageData)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: availableWidth, height: availableWidth / postedImageMeta.aspect, alignment: .center)
+                                .padding(.vertical, 10)
+                        }
+                        else {
+                            Color.secondary
+                                .frame(width: availableWidth)
+                                .padding(.vertical, 10)
+                        }
+                        
+                    case .postPreviewVideo(let postedVideoMeta):
+                        if let thumbnail = postedVideoMeta.thumbnail {
+                            Image(uiImage: thumbnail)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 600)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .overlay(alignment: .center) {
+                                    Image(systemName:"play.circle")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 80, height: 80)
+    //                                        .centered()
+                                        .contentShape(Rectangle())
+                                }
+                        }
+                        else {
+                            EmptyView()
+                        }
+                    default:
                         EmptyView()
-                    }
-                    
-                case .nprofile1(let identifier):
-                    NProfileView(identifier: identifier)
-                    
-                case .note1(let noteId):
-                    if let noteHex = hex(noteId) {
-                        EmbedById(id: noteHex, fullWidth: fullWidth, forceAutoload: shouldAutoload)
-//                            .frame(minHeight: 75)
-//                            .debugDimensions("QuoteById.note1")
-                            .padding(.vertical, 10)
-//                            .withoutAnimation()
-//                            .transaction { t in t.animation = nil }
                             .onTapGesture {
                                 guard !nxViewingContext.contains(.preview) else { return }
                                 guard !isDetail else { return }
                                 navigateTo(nrPost, context: containerID)
                             }
                     }
-                    else {
-                        EmptyView()
-                    }
-                    
-                case .noteHex(let hex):
-                    EmbedById(id: hex, fullWidth: fullWidth, forceAutoload: shouldAutoload)
-//                        .frame(minHeight: 75)
-//                        .debugDimensions("QuoteById.noteHex")
-                        .padding(.vertical, 10)
-//                        .withoutAnimation()
-//                        .transaction { t in t.animation = nil }
-                        .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
-                            guard !isDetail else { return }
-                            navigateTo(nrPost, context: containerID)
-                        }
-                    
-                case .code(let code): // For text notes
-                    Text(verbatim: code)
-                        .font(.system(.body, design: .monospaced))
-                        .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
-                            guard !isDetail else { return }
-                            navigateTo(nrPost, context: containerID)
-                        }
-                    
-                case .text(let attributedStringWithPs): // For text notes
-//                    Color.red
-//                        .frame(height: 50)
-//                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
-//                    Text(verbatim: attributedStringWithPs.input)
-//                        .font(.system(.body, design: .monospaced))
-//                        .onTapGesture {
-//                            guard !isDetail else { return }
-//                            navigateTo(nrPost, context: childDIM.id)
-//                        }
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: $showMore, availableWidth: availableWidth, isDetail: isDetail, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
-                            guard !nxViewingContext.contains(.preview) else { return }
-                            guard !isDetail else { return }
-                            navigateTo(nrPost, context: containerID)
-                    }, theme: theme, nxViewingContext: nxViewingContext)
-                    .equatable()
-                    
-                case .md(let markdownContentWithPs): // For long form articles
-                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, maxWidth: availableWidth)
-                        .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
-                            guard !isDetail else { return }
-                            navigateTo(nrPost, context: containerID)
-                        }
-                    
-                case .lnbc(let text):
-                    LightningInvoice(invoice: text)
-                        .padding(.vertical, 10)
-                    
-                case .cashu(let text):
-                    CashuTokenView(token: text)
-                        .padding(.vertical, 10)
-                    
-                case .video(let mediaContent):
-                    EmbeddedVideoView(
-                        url: mediaContent.url,
-                        pubkey: nrPost.pubkey,
-                        nrPost: nrPost,
-                        autoload: shouldAutoload
-                    )
-                    .environment(\.availableWidth, availableWidth + (fullWidth ? 20 : 0))
-                    .padding(.horizontal, fullWidth ? -10 : 0)
-                    .padding(.vertical, 10)
-                    
-                case .image(let galleryItem):
-//                    Color.red
-//                        .frame(height: 30)
-//                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
-                    MediaContentView(
-                        galleryItem: galleryItem,
-                        availableWidth: availableWidth + (fullWidth ? +20 : 0),
-                        placeholderAspect: 4/3,
-                        maxHeight: isDetail ? 4000 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
-                        contentMode: .fit,
-                        galleryItems: nrPost.galleryItems,
-                        autoload: shouldAutoload,
-                        isNSFW: nrPost.isNSFW,
-                        generateIMeta: nxViewingContext.contains(.preview),
-                        zoomableId: zoomableId
-                    )
-                    .padding(.horizontal, fullWidth ? -10 : 0)
-                    .padding(.vertical, 10)
-                    // Todo: scale: UIScreen.main.scale ?
-                    // fullWidth || isDetail --->
-                    // .padding(.horizontal, fullWidth ? -10 : 0)
-                    // nrPost.pubkey autoload
-                    //  contentPadding: nrPost.kind == 30023 ? 10 : 0
-                    //  imageUrls: nrPost.imageUrls
-                    // no full width no detial -> .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
-                    
-                case .linkPreview(let url):
-                    LinkPreviewView(url: url, autoload: shouldAutoload)
-                        .padding(.vertical, 10)
-//                        .withoutAnimation()
-//                        .transaction { t in t.animation = nil }
-                    
-                case .postPreviewImage(let postedImageMeta): // no full width for previews, its broken
-                    if postedImageMeta.type == .gif {
-                        GIFImage(data: postedImageMeta.data, isPlaying: .constant(true))
-                            .scaledToFill()
-                            .frame(width: availableWidth, height: availableWidth / postedImageMeta.aspect, alignment: .center)
-                            .contentShape(Rectangle())
-                            .padding(.vertical, 10)
-                    }
-                    else if let imageData = postedImageMeta.uiImage {
-                        Image(uiImage: imageData)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: availableWidth, height: availableWidth / postedImageMeta.aspect, alignment: .center)
-                            .padding(.vertical, 10)
-                    }
-                    else {
-                        Color.secondary
-                            .frame(width: availableWidth)
-                            .padding(.vertical, 10)
-                    }
-                    
-                case .postPreviewVideo(let postedVideoMeta):
-                    if let thumbnail = postedVideoMeta.thumbnail {
-                        Image(uiImage: thumbnail)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: 600)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .overlay(alignment: .center) {
-                                Image(systemName:"play.circle")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 80, height: 80)
-//                                        .centered()
-                                    .contentShape(Rectangle())
-                            }
-                    }
-                    else {
-                        EmptyView()
-                    }
-                default:
-                    EmptyView()
-                        .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
-                            guard !isDetail else { return }
-                            navigateTo(nrPost, context: containerID)
-                        }
                 }
             }
         }

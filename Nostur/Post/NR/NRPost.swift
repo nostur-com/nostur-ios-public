@@ -36,6 +36,80 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
+
+    private static let recursiveDebugStackKey = "NRPost.recursiveDebugStackKey"
+    private static let recursiveDebugStackPreviewLimit = 8
+    static let defaultEmbeddedDepthLimit = 10
+
+    private static func buildNestedNRPost(
+        event: Event,
+        parentId: String,
+        source: String,
+        withFooter: Bool = true,
+        withReplyTo: Bool = false,
+        withParents: Bool = false,
+        withReplies: Bool = false,
+        plainText: Bool = false,
+        withRepliesCount: Bool = false,
+        isPreview: Bool = false,
+        cancellationId: UUID? = nil,
+        rNRContacts: [NRContact] = [],
+        maxEmbeddedDepth: Int = defaultEmbeddedDepthLimit
+    ) -> NRPost? {
+        let threadDictionary = Thread.current.threadDictionary
+        let stack: NSMutableArray
+
+        if let existingStack = threadDictionary[recursiveDebugStackKey] as? NSMutableArray {
+            stack = existingStack
+        }
+        else {
+            stack = NSMutableArray()
+            threadDictionary[recursiveDebugStackKey] = stack
+        }
+
+        let childId = event.id as NSString
+        let depth = stack.count + 1
+        var duplicateCountInPath = 0
+        for item in stack {
+            if let item = item as? NSString, item == childId {
+                duplicateCountInPath += 1
+            }
+        }
+
+        let stackPreviewStart = max(0, stack.count - recursiveDebugStackPreviewLimit)
+        let stackPreview = (stack.subarray(with: NSRange(location: stackPreviewStart, length: stack.count - stackPreviewStart)) as? [NSString] ?? [])
+            .map { String($0) }
+            .joined(separator: " -> ")
+
+        L.og.debug("NRPost recurse source=\(source) depth=\(depth) parent=\(parentId) child=\(event.id) dupInPath=\(duplicateCountInPath) pathTail=[\(stackPreview)]")
+
+        if source.hasPrefix("content."), depth > maxEmbeddedDepth {
+            L.og.debug("NRPost recurse capped source=\(source) depth=\(depth) maxEmbeddedDepth=\(maxEmbeddedDepth) parent=\(parentId) child=\(event.id)")
+            return nil
+        }
+
+        stack.add(childId)
+        defer {
+            stack.removeLastObject()
+            if stack.count == 0 {
+                threadDictionary.removeObject(forKey: recursiveDebugStackKey)
+            }
+        }
+
+        return NRPost(
+            event: event,
+            withFooter: withFooter,
+            withReplyTo: withReplyTo,
+            withParents: withParents,
+            withReplies: withReplies,
+            plainText: plainText,
+            withRepliesCount: withRepliesCount,
+            isPreview: isPreview,
+            cancellationId: cancellationId,
+            rNRContacts: rNRContacts,
+            maxEmbeddedDepth: maxEmbeddedDepth
+        )
+    }
     
     let createdAt: Date
     let created_at: Int64
@@ -221,6 +295,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     private var withReplies = false // Will listen for replies from import save, and process for rendering in bg
     private var withRepliesCount = false // Will listen for replies but only for counter, no processing for rendering
     private var withParents = false
+    private var maxEmbeddedDepth: Int = defaultEmbeddedDepthLimit
     
     private var groupRepliesToRoot = PassthroughSubject<[NRPost], Never>()
     
@@ -248,10 +323,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var verified = false
     var isPrivateZap = false
     
-    init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil) {
+    init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil, rNRContacts: [NRContact] = [], maxEmbeddedDepth: Int = NRPost.defaultEmbeddedDepthLimit) {
         var isAwaiting = false
         
         self.event = event // Only touch this in BG context!!!
+        let bgContext = event.managedObjectContext ?? bg()
         self.postRowDeletableAttributes = PostRowDeletableAttributes(
             blocked: Self.isBlocked(pubkey: event.pubkey),
             muted: Self.isMuted(id: event.id, replyToRootId: event.replyToRootId, replyToId: event.replyToId),
@@ -261,6 +337,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.shortId = String(event.id.prefix(8))
         self.pubkey = event.pubkey
         self.kind = event.kind
+        self.maxEmbeddedDepth = maxEmbeddedDepth
         
         // Process tags
         for tag in event.fastTags {
@@ -358,11 +435,15 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.createdAt = event.date
         self.created_at = event.created_at
         self.ago = event.ago
-        let parentPosts = withParents ? event.parentEvents.map { NRPost(event: $0) } : []
-        self.postOrThreadAttributes = PostOrThreadAttributes(parentPosts: parentPosts)
-        self._parentPosts = parentPosts
         
-        let replies = withReplies && withFooter ? event.replies.map { NRPost(event: $0) } : []
+        let replies = withReplies && withFooter ? event.replies.map {
+            Self.buildNestedNRPost(
+                event: $0,
+                parentId: event.id,
+                source: "replies",
+                maxEmbeddedDepth: maxEmbeddedDepth
+            )
+        }.compactMap { $0 } : []
         self._replies = replies
         self.ownPostAttributes = OwnPostAttributes(id: event.id, isOwnPost: AccountsState.shared.bgFullAccountPubkeys.contains(pubkey), relays: event.relays, cancellationId: cancellationId, flags: event.flags)
         
@@ -384,8 +465,19 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         self.firstQuoteId = event.firstQuoteId
 
-        if let firstQuoteId = event.firstQuoteId, let firstQuote = Event.fetchEvent(id: firstQuoteId, context: bg()) {
-            self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount))
+        if let firstQuoteId = event.firstQuoteId, let firstQuote = Event.fetchEvent(id: firstQuoteId, context: bgContext) {
+            self.noteRowAttributes = NoteRowAttributes(
+                firstQuote: Self.buildNestedNRPost(
+                    event: firstQuote,
+                    parentId: event.id,
+                    source: "firstQuote",
+                    withFooter: withFooter && event.kind == 6,
+                    withReplies: withReplies,
+                    withRepliesCount: withRepliesCount,
+                    isPreview: isPreview,
+                    maxEmbeddedDepth: maxEmbeddedDepth
+                )
+            )
         }
         else if !isAwaiting && event.firstQuoteId != nil {
             self.noteRowAttributes = NoteRowAttributes()
@@ -424,24 +516,38 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.isRestricted = event.isRestricted
         
         let pTags = event.fastPs.map { $0.1 }
-        let cachedContacts = pTags.compactMap { NRContactCache.shared.retrieveObject(at: $0) }
+        let cachedContacts: [NRContact] = if pTags.isEmpty {
+            []
+        } else {
+            pTags.compactMap { pTag in
+                return (rNRContacts.first(where: { $0.pubkey == pTag }) ?? NRContactCache.shared.retrieveObject(at: pTag))
+            }
+        }
         let cachedContactPubkeys = Set(cachedContacts.map { $0.pubkey })
         let uncachedPtags = pTags.filter { !cachedContactPubkeys.contains($0)  }
         
-        let contactsFromDb = Contact.fetchByPubkeys(uncachedPtags).map { contact in
-            return NRContact.instance(of: contact.pubkey, contact: contact)
+        let contactsFromDb: [NRContact] = if uncachedPtags.isEmpty {
+            []
+        } else {
+            Contact.fetchByPubkeys(uncachedPtags, context: bgContext).map { contact in
+                return NRContact.instance(of: contact.pubkey, contact: contact)
+            }
         }
         
-        let referencedContacts = cachedContacts + contactsFromDb
+        let referencedContacts: [NRContact] = cachedContacts + contactsFromDb
+        
+        let parentPosts = withParents ? event.parentEvents.map { NRPost(event: $0, isPreview: isPreview, rNRContacts: referencedContacts) } : []
+        self.postOrThreadAttributes = PostOrThreadAttributes(parentPosts: parentPosts)
+        self._parentPosts = parentPosts
         
         self.contact = NRContact.instance(of: pubkey)
 
         var missingPs = Set<String>()
-        if contact.metadata_created_at == 0 {
+        if contact.bg_metadata_created_at == 0 {
             missingPs.insert(event.pubkey)
         }
         let eventContactPs = (referencedContacts.compactMap({ contact in
-            if contact.metadata_created_at != 0 {
+            if contact.bg_metadata_created_at != 0 {
                 return contact.pubkey
             }
             return nil
@@ -497,7 +603,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 nil
             }
             
-            if let highlightContact, highlightContact.metadata_created_at == 0 {
+            if let highlightContact, highlightContact.bg_metadata_created_at == 0 {
                 missingPs.insert(highlightContact.pubkey)
             }
             self.highlightAttributes = HighlightAttributes(contact: highlightContact, authorPubkey: highlightAuthorPubkey, url: highlightUrl)
@@ -572,15 +678,42 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 switch self.contentElements[index] {
                 case .nevent1(let identifier):
                     guard let id = identifier.eventId else { continue }
-                    guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
-                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
+                    guard let event = Event.fetchEvent(id: id, context: bgContext) else { continue }
+                    guard let nested = Self.buildNestedNRPost(
+                        event: event,
+                        parentId: self.id,
+                        source: "content.nevent1",
+                        withFooter: false,
+                        isPreview: isPreview,
+                        rNRContacts: referencedContacts,
+                        maxEmbeddedDepth: maxEmbeddedDepth
+                    ) else { continue }
+                    self.contentElements[index] = ContentElement.nrPost(nested)
                 case .note1(let noteId):
                     guard let id = hex(noteId) else { continue }
-                    guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
-                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
+                    guard let event = Event.fetchEvent(id: id, context: bgContext) else { continue }
+                    guard let nested = Self.buildNestedNRPost(
+                            event: event,
+                            parentId: self.id,
+                            source: "content.note1",
+                            withFooter: false,
+                            isPreview: isPreview,
+                            rNRContacts: referencedContacts,
+                            maxEmbeddedDepth: maxEmbeddedDepth
+                        ) else { continue }
+                    self.contentElements[index] = ContentElement.nrPost(nested)
                 case .noteHex(let id):
-                    guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
-                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
+                    guard let event = Event.fetchEvent(id: id, context: bgContext) else { continue }
+                    guard let nested = Self.buildNestedNRPost(
+                            event: event,
+                            parentId: self.id,
+                            source: "content.noteHex",
+                            withFooter: false,
+                            isPreview: isPreview,
+                            rNRContacts: referencedContacts,
+                            maxEmbeddedDepth: maxEmbeddedDepth
+                        ) else { continue }
+                    self.contentElements[index] = ContentElement.nrPost(nested)
                 default:
                     continue
                 }
@@ -598,7 +731,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         self.replyToId = event.replyToId
         if withReplyTo, let replyTo = event.replyTo {
-            self.replyTo = NRPost(event: replyTo)
+            self.replyTo = Self.buildNestedNRPost(
+                event: replyTo,
+                parentId: event.id,
+                source: "replyTo",
+                maxEmbeddedDepth: maxEmbeddedDepth
+            )
         }
         else if !isAwaiting && withReplyTo && event.replyToId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.003"); isAwaiting = true
@@ -606,7 +744,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         self.replyToRootId = event.replyToRootId
         if withReplyTo, let replyToRoot = event.replyToRoot {
-            self.replyToRoot = NRPost(event: replyToRoot)
+            self.replyToRoot = Self.buildNestedNRPost(
+                event: replyToRoot,
+                parentId: event.id,
+                source: "replyToRoot",
+                isPreview: isPreview,
+                rNRContacts: referencedContacts,
+                maxEmbeddedDepth: maxEmbeddedDepth
+            )
         }
         else if !isAwaiting && withReplyTo && event.replyToRootId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.004"); isAwaiting = true
@@ -1005,6 +1150,37 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 self?.objectWillChange.send()
                 self?.parentPosts = parentPosts
                 self?.threadPostsCount = threadPostsCount
+            }
+        }
+    }
+
+    @MainActor public func loadDeeper() {
+        bg().perform { [weak self] in
+            guard let self, let event = self.event else { return }
+
+            let deeper = NRPost(
+                event: event,
+                withFooter: false,
+                withReplyTo: false,
+                withParents: false,
+                withReplies: false,
+                plainText: self.plainTextOnly,
+                withRepliesCount: false,
+                isPreview: false,
+                cancellationId: self.ownPostAttributes.cancellationId,
+                rNRContacts: [],
+                maxEmbeddedDepth: self.maxEmbeddedDepth
+            )
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.objectWillChange.send()
+                self.contentElements = deeper.contentElements
+                self.contentElementsDetail = deeper.contentElementsDetail
+                self.linkPreviewURLs = deeper.linkPreviewURLs
+                self.galleryItems = deeper.galleryItems
+                self.previewWeights = deeper.previewWeights
+                self.noteRowAttributes.firstQuote = deeper.noteRowAttributes.firstQuote
             }
         }
     }

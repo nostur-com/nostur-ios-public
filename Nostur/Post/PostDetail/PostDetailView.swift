@@ -75,6 +75,8 @@ struct PostDetailView: View {
                     nrPost.footerAttributes.loadFooter()
                     // And maybe we don't have parents so:
                     nrPost.loadParents()
+                    // Expand embedded chain one chunk deeper for detail context.
+                    nrPost.loadDeeper()
                     
                 }
                 .onReceive(receiveNotification(.scrollToDetail)) { notification in
