@@ -26,14 +26,14 @@ public actor NamecoinService {
     /// Resolve a .bit identifier, using the cache when available.
     /// Returns nil if the name doesn't exist or can't be resolved.
     public func resolve(_ identifier: String) async -> NamecoinNostrResult? {
-        NSLog("[Namecoin] Service.resolve enter identifier=%{public}@", identifier)
+        NSLog("%@", "[Namecoin] Service.resolve enter identifier=\(identifier)")
         if let cached = await cache.get(identifier) {
-            NSLog("[Namecoin] Service.resolve cache HIT identifier=%{public}@ hasResult=%d", identifier, cached.result != nil ? 1 : 0)
+            NSLog("%@", "[Namecoin] Service.resolve cache HIT identifier=\(identifier) hasResult=\(cached.result != nil ? 1 : 0)")
             return cached.result
         }
-        NSLog("[Namecoin] Service.resolve cache MISS -> resolver.resolve")
+        NSLog("%@", "[Namecoin] Service.resolve cache MISS -> resolver.resolve")
         let result = await resolver.resolve(identifier)
-        NSLog("[Namecoin] Service.resolve resolver returned %{public}@", result.map { "pubkey=\($0.pubkey.prefix(16))…" } ?? "nil")
+        NSLog("%@", "[Namecoin] Service.resolve resolver returned \(result.map { "pubkey=\($0.pubkey.prefix(16))…" } ?? "nil")")
         await cache.put(identifier, result: result)
         return result
     }

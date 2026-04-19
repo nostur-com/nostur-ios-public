@@ -36,18 +36,18 @@ public final class NamecoinResolver: @unchecked Sendable {
     /// Simple resolver — returns nil if anything goes wrong.
     public func resolve(_ identifier: String) async -> NamecoinNostrResult? {
         guard let parsed = Self.parseIdentifier(identifier) else {
-            NSLog("[Namecoin] Resolver.resolve parseIdentifier=nil for %{public}@", identifier)
+            NSLog("%@", "[Namecoin] Resolver.resolve parseIdentifier=nil for \(identifier)")
             return nil
         }
-        NSLog("[Namecoin] Resolver.resolve parsed name=%{public}@ localPart=%{public}@", parsed.namecoinName, parsed.localPart)
+        NSLog("%@", "[Namecoin] Resolver.resolve parsed name=\(parsed.namecoinName) localPart=\(parsed.localPart)")
         let r = await withTimeout(ns: lookupTimeoutNs) {
             do { return try await self.performLookup(parsed: parsed) }
             catch {
-                NSLog("[Namecoin] Resolver.performLookup threw: %{public}@", String(describing: error))
+                NSLog("%@", "[Namecoin] Resolver.performLookup threw: \(error)")
                 return nil
             }
         } ?? nil
-        NSLog("[Namecoin] Resolver.resolve returning %{public}@", r.map { "pubkey=\($0.pubkey.prefix(16))…" } ?? "nil")
+        NSLog("%@", "[Namecoin] Resolver.resolve returning \(r.map { "pubkey=\($0.pubkey.prefix(16))…" } ?? "nil")")
         return r
     }
 
@@ -117,12 +117,12 @@ public final class NamecoinResolver: @unchecked Sendable {
             servers: serverListProvider()
         )
         guard let result = result else {
-            NSLog("[Namecoin] performLookup got nil NameShowResult for %{public}@", parsed.namecoinName)
+            NSLog("%@", "[Namecoin] performLookup got nil NameShowResult for \(parsed.namecoinName)")
             return nil
         }
-        NSLog("[Namecoin] performLookup got NameShowResult name=%{public}@ value.len=%d", result.name, result.value.count)
+        NSLog("%@", "[Namecoin] performLookup got NameShowResult name=\(result.name) value.len=\(result.value.count)")
         guard let json = Self.tryParseJSON(result.value) else {
-            NSLog("[Namecoin] performLookup JSON parse failed, raw[:200]=%{public}@", String(result.value.prefix(200)))
+            NSLog("%@", "[Namecoin] performLookup JSON parse failed, raw[:200]=\(String(result.value.prefix(200)))")
             return nil
         }
         let extracted: NamecoinNostrResult?
@@ -130,9 +130,7 @@ public final class NamecoinResolver: @unchecked Sendable {
         case .domain: extracted = Self.extractFromDomainValue(json: json, parsed: parsed)
         case .identity: extracted = Self.extractFromIdentityValue(json: json, parsed: parsed)
         }
-        NSLog("[Namecoin] performLookup extract namespace=%{public}@ -> %{public}@",
-              parsed.namespace == .domain ? "domain" : "identity",
-              extracted.map { "pubkey=\($0.pubkey.prefix(16))… localPart=\($0.localPart)" } ?? "nil")
+        NSLog("%@", "[Namecoin] performLookup extract namespace=\(parsed.namespace == .domain ? "domain" : "identity") -> \(extracted.map { "pubkey=\($0.pubkey.prefix(16))… localPart=\($0.localPart)" } ?? "nil")")
         return extracted
     }
 
