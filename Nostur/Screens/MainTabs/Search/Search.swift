@@ -283,6 +283,8 @@ struct Search: View {
                     hexIdSearch(term, searchID: newSearchID)
                 case .nip05(let nip05parts):
                     nip05Search(nip05parts, searchID: newSearchID)
+                case .namecoin(let parts):
+                    namecoinSearch(parts, searchID: newSearchID)
                 case .url(let term):
                     urlSearch(term, searchID: newSearchID)
                 case .other(let term):
