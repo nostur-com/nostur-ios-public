@@ -554,8 +554,10 @@ extension Search {
         }
     }
 
-    /// Resolve a .bit / Namecoin identifier via ElectrumX, then pivot to
-    /// the normal hexId search pipeline so relays get queried for kind:0.
+    /// Resolve a .bit / Namecoin identifier via ElectrumX, then surface the
+    /// pubkey immediately as an NRContact (so the user gets a result row even
+    /// if no relay in their READ pool has kind:0 metadata for that pubkey),
+    /// and kick off a background kind:0 fetch to fill in profile details.
     func namecoinSearch(_ parts: NamecoinParts) {
         NSLog("%@", "[Namecoin] namecoinSearch enter identifier=\(parts.identifier)")
         searching = true
@@ -569,9 +571,59 @@ extension Search {
                 return
             }
             NSLog("%@", "[Namecoin] namecoinSearch resolved \(identifier) -> \(String(result.pubkey.prefix(16)))")
-            await MainActor.run {
-                self.hexIdSearch(result.pubkey)
+
+            // Step 1: show a contact row for the resolved pubkey immediately.
+            // NRContact.instance(...) creates a placeholder if no metadata exists yet;
+            // when kind:0 metadata arrives from relays it will be wired into the same
+            // NRContact and the row will update live.
+            let pubkey = result.pubkey
+            let nrContact: NRContact? = await withCheckedContinuation { (cont: CheckedContinuation<NRContact?, Never>) in
+                bg().perform {
+                    let c = NRContact.instance(of: pubkey)
+                    cont.resume(returning: c)
+                }
             }
+            await MainActor.run {
+                if let nrContact {
+                    NSLog("%@", "[Namecoin] namecoinSearch surfacing NRContact for pubkey=\(String(pubkey.prefix(16)))…")
+                    self.contacts = [nrContact]
+                } else {
+                    NSLog("%@", "[Namecoin] namecoinSearch NRContact.instance returned nil (unexpected)")
+                }
+            }
+
+            // Step 2: kick off relay queries for kind:0 metadata. We can't
+            // call hexIdSearch here because it resets `contacts = []` at entry,
+            // which would wipe the placeholder row we just showed. Inline the
+            // REQ dispatch instead; when metadata arrives it's imported into
+            // Core Data + the NRContactCache entry we created above, so the
+            // already-visible NRContact row will update live.
+            await MainActor.run {
+                let searchTask = ReqTask(prefix: "NMC-", reqCommand: { taskId in
+                    NSLog("%@", "[Namecoin] namecoinSearch dispatching REQ taskId=\(taskId) for kind:0 pubkey=\(String(pubkey.prefix(16)))…")
+                    req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .READ)
+                    req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .SEARCH_ONLY)
+                }, processResponseCommand: { taskId, _, _ in
+                    NSLog("%@", "[Namecoin] namecoinSearch relay response for taskId=\(taskId)")
+                    bg().perform {
+                        guard let refreshed = NRContact.fetch(pubkey) else {
+                            NSLog("%@", "[Namecoin] namecoinSearch NRContact.fetch after response: nil")
+                            return
+                        }
+                        Task { @MainActor in
+                            self.contacts = [refreshed]
+                            self.searching = false
+                        }
+                    }
+                })
+                self.backlog.add(searchTask)
+                searchTask.fetch()
+            }
+
+            // Stop the spinner after a short grace period even if no metadata arrives;
+            // the placeholder row is already visible and usable.
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            await MainActor.run { self.searching = false }
         }
     }
     
