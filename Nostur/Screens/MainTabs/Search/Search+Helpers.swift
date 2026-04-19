@@ -748,81 +748,82 @@ extension Search {
     /// pubkey immediately as an NRContact (so the user gets a result row even
     /// if no relay in their READ pool has kind:0 metadata for that pubkey),
     /// and kick off a background kind:0 fetch to fill in profile details.
+    /// On failure, sets `namecoinError` with a user-facing message that is
+    /// shown as a banner above the results.
     func namecoinSearch(_ parts: NamecoinParts, searchID: UUID) {
         NSLog("%@", "[Namecoin] namecoinSearch enter identifier=\(parts.identifier)")
         searching = true
         contacts = []
         nrPosts = []
+        namecoinError = nil
         let identifier = parts.identifier
         searchTask = Task {
-            guard let result = await NamecoinService.shared.resolve(identifier) else {
-                NSLog("%@", "[Namecoin] namecoinSearch resolve returned nil for \(identifier)")
-                guard !Task.isCancelled, self.searchID == searchID else { return }
-                searching = false
-                return
-            }
-            NSLog("%@", "[Namecoin] namecoinSearch resolved \(identifier) -> \(String(result.pubkey.prefix(16)))")
+            let outcome = await NamecoinService.shared.resolveDetailed(identifier)
             guard !Task.isCancelled, self.searchID == searchID else { return }
 
-            // Step 1: show a contact row for the resolved pubkey immediately.
-            // NRContact.instance(...) creates a placeholder if no metadata exists yet;
-            // when kind:0 metadata arrives from relays it will be wired into the same
-            // NRContact and the row will update live.
-            let pubkey = result.pubkey
-            let nrContact: NRContact? = await withCheckedContinuation { (cont: CheckedContinuation<NRContact?, Never>) in
+            switch outcome {
+            case .success(let result):
+                NSLog("%@", "[Namecoin] namecoinSearch resolved \(identifier) -> \(String(result.pubkey.prefix(16)))")
+                await self.surfaceResolvedPubkey(result.pubkey, searchID: searchID)
+            case .nameNotFound, .noNostrField, .serversUnreachable, .invalidIdentifier, .timeout:
+                let msg = namecoinErrorMessage(for: outcome, identifier: identifier) ?? "Unknown error."
+                NSLog("%@", "[Namecoin] namecoinSearch FAILED \(identifier): \(msg)")
+                await MainActor.run {
+                    guard !Task.isCancelled, self.searchID == searchID else { return }
+                    self.namecoinError = msg
+                    self.searching = false
+                }
+            }
+        }
+    }
+
+    /// Show the resolved pubkey in the results immediately (via a placeholder
+    /// NRContact) and fire a kind:0 REQ to READ+SEARCH_ONLY relays so the
+    /// profile fields fill in live when metadata arrives.
+    private func surfaceResolvedPubkey(_ pubkey: String, searchID: UUID) async {
+        let nrContact: NRContact? = await withCheckedContinuation { (cont: CheckedContinuation<NRContact?, Never>) in
+            bg().perform {
+                let c = NRContact.instance(of: pubkey)
+                cont.resume(returning: c)
+            }
+        }
+        await MainActor.run {
+            guard !Task.isCancelled, self.searchID == searchID else { return }
+            if let nrContact {
+                NSLog("%@", "[Namecoin] namecoinSearch surfacing NRContact for pubkey=\(String(pubkey.prefix(16)))…")
+                self.contacts = [nrContact]
+            }
+        }
+
+        await MainActor.run {
+            guard !Task.isCancelled, self.searchID == searchID else { return }
+            let searchTask = ReqTask(prefix: "NMC-", reqCommand: { taskId in
+                NSLog("%@", "[Namecoin] namecoinSearch dispatching REQ taskId=\(taskId) for kind:0 pubkey=\(String(pubkey.prefix(16)))…")
+                req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .READ)
+                req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .SEARCH_ONLY)
+            }, processResponseCommand: { taskId, _, _ in
+                NSLog("%@", "[Namecoin] namecoinSearch relay response for taskId=\(taskId)")
+                guard self.searchID == searchID else { return }
                 bg().perform {
-                    let c = NRContact.instance(of: pubkey)
-                    cont.resume(returning: c)
-                }
-            }
-            await MainActor.run {
-                guard !Task.isCancelled, self.searchID == searchID else { return }
-                if let nrContact {
-                    NSLog("%@", "[Namecoin] namecoinSearch surfacing NRContact for pubkey=\(String(pubkey.prefix(16)))…")
-                    self.contacts = [nrContact]
-                } else {
-                    NSLog("%@", "[Namecoin] namecoinSearch NRContact.instance returned nil (unexpected)")
-                }
-            }
-
-            // Step 2: kick off relay queries for kind:0 metadata. We can't
-            // call hexIdSearch here because it resets `contacts = []` at entry,
-            // which would wipe the placeholder row we just showed. Inline the
-            // REQ dispatch instead; when metadata arrives it's imported into
-            // Core Data + the NRContactCache entry we created above, so the
-            // already-visible NRContact row will update live.
-            await MainActor.run {
-                guard !Task.isCancelled, self.searchID == searchID else { return }
-                let searchTask = ReqTask(prefix: "NMC-", reqCommand: { taskId in
-                    NSLog("%@", "[Namecoin] namecoinSearch dispatching REQ taskId=\(taskId) for kind:0 pubkey=\(String(pubkey.prefix(16)))…")
-                    req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .READ)
-                    req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .SEARCH_ONLY)
-                }, processResponseCommand: { taskId, _, _ in
-                    NSLog("%@", "[Namecoin] namecoinSearch relay response for taskId=\(taskId)")
-                    guard self.searchID == searchID else { return }
-                    bg().perform {
-                        guard let refreshed = NRContact.fetch(pubkey) else {
-                            NSLog("%@", "[Namecoin] namecoinSearch NRContact.fetch after response: nil")
-                            return
-                        }
-                        Task { @MainActor in
-                            guard self.searchID == searchID else { return }
-                            self.contacts = [refreshed]
-                            self.searching = false
-                        }
+                    guard let refreshed = NRContact.fetch(pubkey) else {
+                        NSLog("%@", "[Namecoin] namecoinSearch NRContact.fetch after response: nil")
+                        return
                     }
-                })
-                self.backlog.add(searchTask)
-                searchTask.fetch()
-            }
+                    Task { @MainActor in
+                        guard self.searchID == searchID else { return }
+                        self.contacts = [refreshed]
+                        self.searching = false
+                    }
+                }
+            })
+            self.backlog.add(searchTask)
+            searchTask.fetch()
+        }
 
-            // Stop the spinner after a short grace period even if no metadata arrives;
-            // the placeholder row is already visible and usable.
-            try? await Task.sleep(nanoseconds: 4_000_000_000)
-            await MainActor.run {
-                guard !Task.isCancelled, self.searchID == searchID else { return }
-                self.searching = false
-            }
+        try? await Task.sleep(nanoseconds: 4_000_000_000)
+        await MainActor.run {
+            guard !Task.isCancelled, self.searchID == searchID else { return }
+            self.searching = false
         }
     }
 
