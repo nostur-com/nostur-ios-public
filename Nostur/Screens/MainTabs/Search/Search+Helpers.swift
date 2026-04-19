@@ -68,6 +68,7 @@ func typeOfSearch(_ searchInput: String) -> TypeOfSearch {
     }
     // Bare .bit domain or d/*/id/* namespace
     else if NamecoinResolver.isNamecoinIdentifier(searchTrimmed) {
+        NSLog("[Namecoin] typeOfSearch routing to .namecoin for %{public}@", searchTrimmed)
         return .namecoin(NamecoinParts(identifier: searchTrimmed, domain: searchTrimmed, name: "_"))
     }
 
@@ -724,16 +725,19 @@ extension Search {
     /// Resolve a .bit / Namecoin identifier via ElectrumX, then pivot to
     /// the normal hexId search pipeline so relays get queried for kind:0.
     func namecoinSearch(_ parts: NamecoinParts, searchID: UUID) {
+        NSLog("[Namecoin] namecoinSearch enter identifier=%{public}@", parts.identifier)
         searching = true
         contacts = []
         nrPosts = []
         let identifier = parts.identifier
         searchTask = Task {
             guard let result = await NamecoinService.shared.resolve(identifier) else {
+                NSLog("[Namecoin] namecoinSearch resolve returned nil for %{public}@", identifier)
                 guard !Task.isCancelled, self.searchID == searchID else { return }
                 searching = false
                 return
             }
+            NSLog("[Namecoin] namecoinSearch resolved %{public}@ -> %{public}@", identifier, String(result.pubkey.prefix(16)))
             guard !Task.isCancelled, self.searchID == searchID else { return }
             hexIdSearch(result.pubkey, searchID: searchID)
         }
