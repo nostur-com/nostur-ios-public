@@ -27,9 +27,14 @@ func typeOfSearch(_ searchInput: String) -> TypeOfSearch {
         if searchTrimmed.contains(".") {
             let domain = String(searchTrimmed.dropFirst(1))
             let name = "_"
-            
+
+            // Namecoin (.bit) — route to ElectrumX instead of HTTPS
+            if NamecoinResolver.isNamecoinIdentifier(domain) {
+                return .namecoin(NamecoinParts(identifier: domain, domain: domain, name: name))
+            }
+
             let url = URL(string: "https://\(domain)/.well-known/nostr.json?name=\(name)")
-            
+
             return .nip05(Nip05Parts(nip05url: url, domain: domain, name: name))
         }
         return .nametag(String(searchTrimmed.dropFirst(1)))
@@ -48,13 +53,22 @@ func typeOfSearch(_ searchInput: String) -> TypeOfSearch {
     }
     else if searchTrimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true).count == 2 {
         let nip05parts = searchTrimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true)
-        
+
         let domain = String(nip05parts[1])
         let name = String(nip05parts[0])
-        
+
+        // Namecoin (.bit) — route to ElectrumX instead of HTTPS
+        if NamecoinResolver.isNamecoinIdentifier(domain) {
+            return .namecoin(NamecoinParts(identifier: searchTrimmed, domain: domain, name: name))
+        }
+
         let url = URL(string: "https://\(domain)/.well-known/nostr.json?name=\(name)")
-        
+
         return .nip05(Nip05Parts(nip05url: url, domain: domain, name: name))
+    }
+    // Bare .bit domain or d/*/id/* namespace
+    else if NamecoinResolver.isNamecoinIdentifier(searchTrimmed) {
+        return .namecoin(NamecoinParts(identifier: searchTrimmed, domain: searchTrimmed, name: "_"))
     }
     
     
@@ -71,8 +85,15 @@ public enum TypeOfSearch {
     case note1(String)
     case hexId(String)
     case nip05(Nip05Parts)
+    case namecoin(NamecoinParts)
     case url(String)
     case other(String)
+}
+
+public struct NamecoinParts {
+    let identifier: String // full user input (e.g. "alice@example.bit" or "example.bit")
+    let domain: String
+    let name: String
 }
 
 public struct Nip05Parts {
@@ -507,6 +528,24 @@ extension Search {
             guard let pubkey = nostrJson.names[nip05parts.name], !pubkey.isEmpty else { return }
             
             hexIdSearch(pubkey)
+        }
+    }
+
+    /// Resolve a .bit / Namecoin identifier via ElectrumX, then pivot to
+    /// the normal hexId search pipeline so relays get queried for kind:0.
+    func namecoinSearch(_ parts: NamecoinParts) {
+        searching = true
+        contacts = []
+        nrPosts = []
+        let identifier = parts.identifier
+        Task {
+            guard let result = await NamecoinService.shared.resolve(identifier) else {
+                await MainActor.run { self.searching = false }
+                return
+            }
+            await MainActor.run {
+                self.hexIdSearch(result.pubkey)
+            }
         }
     }
     

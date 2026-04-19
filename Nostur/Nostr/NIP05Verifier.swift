@@ -31,8 +31,17 @@ class NIP05Verifier {
             .filter { contact in
                 return (contact.nip05verifiedAt == nil || (contact.nip05verifiedAt != nil) && (contact.nip05verifiedAt! < Self.fourWeeksAgo))
             }
+            .handleEvents(receiveOutput: { [weak self] contact in
+                // Namecoin (.bit) verification path — sidecar; does not affect the
+                // HTTP pipeline below. Dispatched async so it doesn't block.
+                guard let nip05 = contact.nip05?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      NamecoinResolver.isNamecoinIdentifier(nip05) else { return }
+                self?.verifyNamecoin(contact: contact, nip05: nip05)
+            })
             .filter { contact in
                 let nip05trimmed = contact.nip05!.trimmingCharacters(in: .whitespacesAndNewlines)
+                // Namecoin identifiers are handled in the sidecar above.
+                if NamecoinResolver.isNamecoinIdentifier(nip05trimmed) { return false }
                 let nip05parts = nip05trimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true)
                 return nip05parts.count == 2
             }
@@ -77,6 +86,39 @@ class NIP05Verifier {
             .store(in: &cancellables)
     }
     
+    /// Namecoin (.bit) verification sidecar. Resolves via ElectrumX and, if
+    /// the resolved pubkey matches, marks nip05verifiedAt on the Contact.
+    /// Captures only value types into the Task to stay Sendable-clean.
+    private func verifyNamecoin(contact: Contact, nip05: String) {
+        let pubkey = contact.pubkey
+        Task.detached {
+            guard let result = await NamecoinService.shared.resolve(nip05) else { return }
+            guard result.pubkey == pubkey else {
+                #if DEBUG
+                print("[Namecoin] nip05 \(nip05) resolved to \(result.pubkey.prefix(8))… but contact pubkey is \(pubkey.prefix(8))…")
+                #endif
+                return
+            }
+            await Self.persistNamecoinVerified(pubkey: pubkey, nip05: nip05)
+        }
+    }
+
+    private static func persistNamecoinVerified(pubkey: String, nip05: String) async {
+        await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+            let ctx = bg()
+            ctx.perform {
+                if let bgContact = Contact.fetchByPubkey(pubkey, context: ctx) {
+                    bgContact.nip05verifiedAt = Date.now
+                    ViewUpdates.shared.nip05updated.send((pubkey, true, nip05, "_"))
+                    #if DEBUG
+                    L.fetching.debug("verifySubject: 👍 namecoin nip05 verified \(nip05)")
+                    #endif
+                }
+                cont.resume()
+            }
+        }
+    }
+
     public func verify(_ contact: Contact) {
 #if DEBUG
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
