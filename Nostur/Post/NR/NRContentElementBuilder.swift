@@ -290,7 +290,7 @@ class NRContentElementBuilder {
     static let nprofilePattern = ###"(?:\n@?)(?<!/)(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
     static let npubPattern = ###"(?:\n@?)(?<!/)(npub1[023456789acdefghjklmnpqrstuvwxyz]{58})"### // no nostr: here, because we do that in TextParser
     
-    static let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)\.,]"###
+    static let otherUrlsPattern = ###"(?i)https?:\/\/(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}(?::\d{1,5})?(?:\/[\S]*)?(?<![\.,:;!?])"###
     
     // For kind 1 or similar text notes
     static let pattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(naddrPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
