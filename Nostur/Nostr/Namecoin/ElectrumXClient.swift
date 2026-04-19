@@ -59,17 +59,25 @@ public actor ElectrumXClient: IElectrumXClient {
     // MARK: - Public API
 
     public func nameShowWithFallback(identifier: String, servers: [ElectrumXServer]) async throws -> NameShowResult? {
+        NSLog("[Namecoin] nameShowWithFallback identifier=%{public}@ servers=%d", identifier, servers.count)
         var lastError: Error?
         for server in servers {
+            NSLog("[Namecoin] trying server %{public}@:%d", server.host, server.port)
             do {
                 if let result = try await nameShow(identifier: identifier, server: server) {
+                    NSLog("[Namecoin] nameShow SUCCESS via %{public}@:%d name=%{public}@ value.len=%d", server.host, server.port, result.name, result.value.count)
                     return result
+                } else {
+                    NSLog("[Namecoin] nameShow returned nil (no matching vout) via %{public}@:%d", server.host, server.port)
                 }
             } catch NamecoinLookupError.nameNotFound(let n) {
+                NSLog("[Namecoin] nameNotFound via %{public}@:%d for %{public}@", server.host, server.port, n)
                 throw NamecoinLookupError.nameNotFound(n)
             } catch NamecoinLookupError.nameExpired(let n) {
+                NSLog("[Namecoin] nameExpired via %{public}@:%d for %{public}@", server.host, server.port, n)
                 throw NamecoinLookupError.nameExpired(n)
             } catch {
+                NSLog("[Namecoin] server %{public}@:%d FAILED: %{public}@", server.host, server.port, String(describing: error))
                 lastError = error
             }
         }
@@ -79,7 +87,9 @@ public actor ElectrumXClient: IElectrumXClient {
     }
 
     public func nameShow(identifier: String, server: ElectrumXServer) async throws -> NameShowResult? {
+        NSLog("[Namecoin] nameShow connecting %{public}@:%d", server.host, server.port)
         let conn = try await openConnection(server: server)
+        NSLog("[Namecoin] nameShow connected")
         defer { conn.cancel() }
 
         let io = LineIO(connection: conn, rpcTimeout: rpcTimeout)
@@ -87,7 +97,8 @@ public actor ElectrumXClient: IElectrumXClient {
         // 1. Version handshake
         let versionReq = try buildRpcRequest(method: "server.version", params: [.string("Nostur/1.0"), .string(Self.PROTOCOL_VERSION)])
         try await io.writeLine(versionReq)
-        _ = try await io.readLine()
+        let verLine = try await io.readLine()
+        NSLog("[Namecoin] version resp len=%d", verLine?.count ?? -1)
 
         // 2. Build scripthash for the name
         guard let nameBytes = identifier.data(using: .utf8) else {
@@ -95,14 +106,21 @@ public actor ElectrumXClient: IElectrumXClient {
         }
         let script = Self.buildNameIndexScript(nameBytes: [UInt8](nameBytes))
         let scriptHash = Self.electrumScriptHash(script: script)
+        NSLog("[Namecoin] scripthash=%{public}@ (for %{public}@)", scriptHash, identifier)
 
         // 3. Get history for this scripthash
         let historyReq = try buildRpcRequest(method: "blockchain.scripthash.get_history", params: [.string(scriptHash)])
         try await io.writeLine(historyReq)
-        guard let historyLine = try await io.readLine() else { return nil }
+        guard let historyLine = try await io.readLine() else {
+            NSLog("[Namecoin] history EOF/nil")
+            return nil
+        }
+        NSLog("[Namecoin] history resp len=%d", historyLine.count)
         guard let history = Self.parseHistoryResponse(historyLine) else {
+            NSLog("[Namecoin] bad history response: %{public}@", String(historyLine.prefix(300)))
             throw NamecoinLookupError.invalidResponse("bad history response")
         }
+        NSLog("[Namecoin] history entries=%d", history.count)
         guard !history.isEmpty else {
             throw NamecoinLookupError.nameNotFound(identifier)
         }
@@ -111,27 +129,36 @@ public actor ElectrumXClient: IElectrumXClient {
         let latest = history.last!
         let txHash = latest.txHash
         let height = latest.height
+        NSLog("[Namecoin] latest tx=%{public}@ height=%d", txHash, height)
 
         let txReq = try buildRpcRequest(method: "blockchain.transaction.get", params: [.string(txHash), .bool(true)])
         try await io.writeLine(txReq)
-        guard let txLine = try await io.readLine() else { return nil }
+        guard let txLine = try await io.readLine() else {
+            NSLog("[Namecoin] tx EOF/nil")
+            return nil
+        }
+        NSLog("[Namecoin] tx resp len=%d", txLine.count)
 
         // 5. Current block height for expiry check
         let hdrsReq = try buildRpcRequest(method: "blockchain.headers.subscribe", params: [])
         try await io.writeLine(hdrsReq)
         let hdrsLine = try await io.readLine()
         let currentHeight = Self.parseBlockHeight(hdrsLine)
+        NSLog("[Namecoin] hdrs currentHeight=%d", currentHeight ?? -1)
 
         // 6. Check expiry
         if let currentHeight = currentHeight, height > 0 {
             let blocksSince = currentHeight - height
             if blocksSince >= Self.NAME_EXPIRE_DEPTH {
+                NSLog("[Namecoin] EXPIRED blocksSince=%d (depth=%d)", blocksSince, Self.NAME_EXPIRE_DEPTH)
                 throw NamecoinLookupError.nameExpired(identifier)
             }
         }
 
         // 7. Parse the name/value from the tx
-        return Self.parseNameFromTransaction(identifier: identifier, txHash: txHash, height: height, raw: txLine)
+        let parsed = Self.parseNameFromTransaction(identifier: identifier, txHash: txHash, height: height, raw: txLine)
+        NSLog("[Namecoin] parseNameFromTransaction -> %{public}@", parsed.map { "name=\($0.name) value.len=\($0.value.count)" } ?? "nil")
+        return parsed
     }
 
     // MARK: - Connection
@@ -282,22 +309,42 @@ public actor ElectrumXClient: IElectrumXClient {
     private static func parseNameFromTransaction(identifier: String, txHash: String, height: Int, raw: String) -> NameShowResult? {
         guard let data = raw.data(using: .utf8),
               let envelope = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else { return nil }
-        if let err = envelope["error"], !(err is NSNull) { return nil }
+        else {
+            NSLog("[Namecoin] parseNameFromTransaction: envelope parse failed")
+            return nil
+        }
+        if let err = envelope["error"], !(err is NSNull) {
+            NSLog("[Namecoin] parseNameFromTransaction: envelope has error=%{public}@", String(describing: err))
+            return nil
+        }
         guard let result = envelope["result"] as? [String: Any],
               let vouts = result["vout"] as? [[String: Any]]
-        else { return nil }
-
-        for vout in vouts {
+        else {
+            NSLog("[Namecoin] parseNameFromTransaction: no result.vout")
+            return nil
+        }
+        NSLog("[Namecoin] parseNameFromTransaction: vouts=%d", vouts.count)
+        for (i, vout) in vouts.enumerated() {
             guard let spk = vout["scriptPubKey"] as? [String: Any],
                   let hex = spk["hex"] as? String else { continue }
-            if !hex.hasPrefix("53") { continue }
-            guard let bytes = hexToBytes(hex) else { continue }
-            guard let (name, value) = parseNameScript(bytes) else { continue }
+            if !hex.hasPrefix("53") {
+                NSLog("[Namecoin] vout[%d] no 53 prefix (hex[:10]=%{public}@)", i, String(hex.prefix(10)))
+                continue
+            }
+            guard let bytes = hexToBytes(hex) else {
+                NSLog("[Namecoin] vout[%d] hexToBytes failed", i)
+                continue
+            }
+            guard let (name, value) = parseNameScript(bytes) else {
+                NSLog("[Namecoin] vout[%d] parseNameScript failed", i)
+                continue
+            }
+            NSLog("[Namecoin] vout[%d] parsed name=%{public}@ valueLen=%d (want %{public}@)", i, name, value.count, identifier)
             if name == identifier {
                 return NameShowResult(name: name, value: value, txid: txHash, height: height)
             }
         }
+        NSLog("[Namecoin] parseNameFromTransaction: no matching name found")
         return nil
     }
 
