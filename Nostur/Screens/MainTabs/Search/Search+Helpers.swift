@@ -30,6 +30,7 @@ func typeOfSearch(_ searchInput: String) -> TypeOfSearch {
 
             // Namecoin (.bit) — route to ElectrumX instead of HTTPS
             if NamecoinResolver.isNamecoinIdentifier(domain) {
+                NSLog("%@", "[Namecoin] typeOfSearch routing to .namecoin for @\(domain) (bare @domain form)")
                 return .namecoin(NamecoinParts(identifier: domain, domain: domain, name: name))
             }
 
@@ -59,6 +60,7 @@ func typeOfSearch(_ searchInput: String) -> TypeOfSearch {
 
         // Namecoin (.bit) — route to ElectrumX instead of HTTPS
         if NamecoinResolver.isNamecoinIdentifier(domain) {
+            NSLog("%@", "[Namecoin] typeOfSearch routing to .namecoin for \(searchTrimmed) (user@domain form, name=\(name) domain=\(domain))")
             return .namecoin(NamecoinParts(identifier: searchTrimmed, domain: domain, name: name))
         }
 
@@ -68,7 +70,7 @@ func typeOfSearch(_ searchInput: String) -> TypeOfSearch {
     }
     // Bare .bit domain or d/*/id/* namespace
     else if NamecoinResolver.isNamecoinIdentifier(searchTrimmed) {
-        NSLog("[Namecoin] typeOfSearch routing to .namecoin for %{public}@", searchTrimmed)
+        NSLog("%@", "[Namecoin] typeOfSearch routing to .namecoin for \(searchTrimmed)")
         return .namecoin(NamecoinParts(identifier: searchTrimmed, domain: searchTrimmed, name: "_"))
     }
 
@@ -725,19 +727,19 @@ extension Search {
     /// Resolve a .bit / Namecoin identifier via ElectrumX, then pivot to
     /// the normal hexId search pipeline so relays get queried for kind:0.
     func namecoinSearch(_ parts: NamecoinParts, searchID: UUID) {
-        NSLog("[Namecoin] namecoinSearch enter identifier=%{public}@", parts.identifier)
+        NSLog("%@", "[Namecoin] namecoinSearch enter identifier=\(parts.identifier)")
         searching = true
         contacts = []
         nrPosts = []
         let identifier = parts.identifier
         searchTask = Task {
             guard let result = await NamecoinService.shared.resolve(identifier) else {
-                NSLog("[Namecoin] namecoinSearch resolve returned nil for %{public}@", identifier)
+                NSLog("%@", "[Namecoin] namecoinSearch resolve returned nil for \(identifier)")
                 guard !Task.isCancelled, self.searchID == searchID else { return }
                 searching = false
                 return
             }
-            NSLog("[Namecoin] namecoinSearch resolved %{public}@ -> %{public}@", identifier, String(result.pubkey.prefix(16)))
+            NSLog("%@", "[Namecoin] namecoinSearch resolved \(identifier) -> \(String(result.pubkey.prefix(16)))")
             guard !Task.isCancelled, self.searchID == searchID else { return }
             hexIdSearch(result.pubkey, searchID: searchID)
         }
