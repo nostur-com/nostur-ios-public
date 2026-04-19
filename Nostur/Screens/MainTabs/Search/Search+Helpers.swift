@@ -459,8 +459,13 @@ extension Search {
     }
 
     func hexIdSearch(_ term: String, searchID: UUID) {
+        NSLog("%@", "[Namecoin] hexIdSearch enter term=\(term.prefix(16))… len=\(term.count)")
         guard NostrRegexes.default.matchingStrings(term, regex: NostrRegexes.default.cache[.hexId]!).count == 1
-        else { return }
+        else {
+            NSLog("%@", "[Namecoin] hexIdSearch regex FAILED for term=\(term.prefix(16))…")
+            return
+        }
+        NSLog("%@", "[Namecoin] hexIdSearch regex ok, dispatching local + relay queries")
 
         searching = true
         contacts = []
@@ -469,7 +474,11 @@ extension Search {
         let bgContext = bg()
 
         bgContext.perform {
-            guard let event = Event.fetchEvent(id: term, context: bgContext) else { return }
+            guard let event = Event.fetchEvent(id: term, context: bgContext) else {
+                NSLog("%@", "[Namecoin] hexIdSearch local Event.fetchEvent: not found")
+                return
+            }
+            NSLog("%@", "[Namecoin] hexIdSearch local Event.fetchEvent: FOUND")
             let nrPost = NRPost(event: event)
             Task { @MainActor in
                 guard self.searchID == searchID else { return }
@@ -479,7 +488,11 @@ extension Search {
         }
 
         bg().perform {
-            guard let nrContact = NRContact.fetch(term) else { return }
+            guard let nrContact = NRContact.fetch(term) else {
+                NSLog("%@", "[Namecoin] hexIdSearch local NRContact.fetch: not found")
+                return
+            }
+            NSLog("%@", "[Namecoin] hexIdSearch local NRContact.fetch: FOUND")
             Task { @MainActor in
                 guard self.searchID == searchID else { return }
                 self.contacts = [nrContact]
@@ -488,14 +501,17 @@ extension Search {
         }
 
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+            NSLog("%@", "[Namecoin] hexIdSearch dispatching REQ taskId=\(taskId) to READ+SEARCH_ONLY relays")
             req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .READ)
             req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .SEARCH_ONLY)
 
             req(RM.getUserMetadata(pubkey: term, subscriptionId: taskId), relayType: .READ)
             req(RM.getUserMetadata(pubkey: term, subscriptionId: taskId), relayType: .SEARCH_ONLY)
         }, processResponseCommand: { taskId, _, _ in
+            NSLog("%@", "[Namecoin] hexIdSearch response received for taskId=\(taskId)")
             bg().perform {
                 guard let event = Event.fetchEvent(id: term, context: bg()) else { return }
+                NSLog("%@", "[Namecoin] hexIdSearch response: Event.fetchEvent FOUND")
                 let nrPost = NRPost(event: event)
                 Task { @MainActor in
                     guard self.searchID == searchID else { return }
@@ -504,7 +520,11 @@ extension Search {
                 }
             }
             bg().perform {
-                guard let nrContact = NRContact.fetch(term) else { return }
+                guard let nrContact = NRContact.fetch(term) else {
+                    NSLog("%@", "[Namecoin] hexIdSearch response: NRContact.fetch still nil")
+                    return
+                }
+                NSLog("%@", "[Namecoin] hexIdSearch response: NRContact.fetch FOUND -> setting contacts")
                 Task { @MainActor in
                     guard self.searchID == searchID else { return }
                     self.contacts = [nrContact]
