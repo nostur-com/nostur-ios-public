@@ -18,9 +18,13 @@ struct Search: View {
     @State var nrPosts: [NRPost] = []
     @State var contacts: [NRContact] = []
     @State var searching = false
+    /// User-facing error message set by `namecoinSearch` when a .bit lookup
+    /// fails. Shown as a banner above the results. Cleared on every new
+    /// search input.
+    @State var namecoinError: String? = nil
     @State private var navPath = NBNavigationPath()
 
-    @State private var searchText = ""
+    @State var searchText = ""
     @State var searchTask: Task<Void, Never>? = nil
     @State var backlog = Backlog(timeout: 12, backlogDebugName: "Search")
     @ObservedObject var settings: SettingsStore = .shared
@@ -46,6 +50,10 @@ struct Search: View {
                     ScrollView {
                         if isSearchingHashtag {
                             FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:la.account)
+                                .padding([.top, .horizontal], 10)
+                        }
+                        if let namecoinError {
+                            NamecoinErrorBanner(message: namecoinError)
                                 .padding([.top, .horizontal], 10)
                         }
                         if (contacts.isEmpty && nrPosts.isEmpty && searching) {
@@ -148,6 +156,7 @@ struct Search: View {
             .onChange(of: searchText) { searchInput in
                 nrPosts = []
                 contacts = []
+                namecoinError = nil
 
                 navPath.removeLast(navPath.count)
                 switch typeOfSearch(searchInput) {
