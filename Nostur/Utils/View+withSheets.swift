@@ -121,6 +121,7 @@ struct WithSheets: ViewModifier {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(la)
                         .environment(\.theme, theme)
+                        .environmentObject(VideoPostPlaybackCoordinator())
                         .presentationBackgroundCompat(theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
@@ -341,6 +342,7 @@ struct WithSheets: ViewModifier {
                         .environment(\.colorScheme, colorScheme)
                         .environment(\.theme, theme)
                         .environment(\.nxViewingContext, [.screenshot, .postDetail]) // Will hide 'Sent to X relays' in footer + Use Text instead of NRText
+                        .environmentObject(VideoPostPlaybackCoordinator())
                     )
                     
                     
