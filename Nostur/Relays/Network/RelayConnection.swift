@@ -42,9 +42,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     private var webSocketTask: URLSessionWebSocketTask?
     private var subscriptions = Set<AnyCancellable>()
     private var outQueue: [SocketMessage] = []
-    private var inFlightReqSubscriptionIds: Set<String> = []
     private var reqDrainScheduled = false
-    private let maxConcurrentReqsPerRelay = 6
+    private var reqSentAt: [Date] = []
+    private let maxReqPerSecond = 6
+    private let maxOutQueueSize = 20
     private let reqDrainDelay: TimeInterval = 0.20
     
     public func resetExponentialBackOff() {
@@ -350,7 +351,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public func completeReqSubscription(_ subscriptionId: String) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
-            self.inFlightReqSubscriptionIds.remove(subscriptionId)
             guard let webSocketTask = self.webSocketTask, self.isSocketConnected else { return }
             self.flushOutQueue(using: webSocketTask)
         }
@@ -358,57 +358,67 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     private func flushOutQueue(using webSocketTask: URLSessionWebSocketTask) {
         guard !outQueue.isEmpty else { return }
-        var shouldRetryDrain = false
-        
-        for out in outQueue {
-            if let subId = Self.reqSubscriptionId(from: out.text) {
-                if inFlightReqSubscriptionIds.contains(subId) {
-                    self.outQueue.removeAll(where: { $0.id == out.id })
-                    continue
-                }
-                if inFlightReqSubscriptionIds.count >= maxConcurrentReqsPerRelay {
-                    shouldRetryDrain = true
-                    continue
-                }
-                inFlightReqSubscriptionIds.insert(subId)
+
+        if outQueue.count > maxOutQueueSize {
+            let dropped = outQueue.count - maxOutQueueSize
+            outQueue = Array(outQueue.suffix(maxOutQueueSize))
+#if DEBUG
+            L.sockets.debug("🟠🟠🏎️🔌🔌 \(self.url): outQueue overflow, dropped oldest \(dropped), keeping latest \(self.maxOutQueueSize) -[LOG]-")
+#endif
+        }
+
+        while let out = outQueue.first {
+            let now = Date()
+            trimReqSendHistory(now: now)
+
+            if Self.isReqMessage(out.text), reqSentAt.count >= maxReqPerSecond {
+                let delay = nextReqDrainDelay(now: now)
+#if DEBUG
+                L.sockets.debug("🟠🟠🏎️🔌🔌 \(self.url): req rate limited \(self.reqSentAt.count)/\(self.maxReqPerSecond) (outQueue: \(self.outQueue.count)) -[LOG]-")
+#endif
+                scheduleReqDrain(after: delay)
+                break
             }
+
 #if DEBUG
             L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text.prefix(255)) -[LOG]-")
 #endif
+            if Self.isReqMessage(out.text) {
+                reqSentAt.append(now)
+            }
+
             webSocketTask.send(.string(out.text)) { error in
                 if let error {
                     self.didReceiveError(error)
                     self.connect(andSend: out.text)
                 }
             }
-            self.outQueue.removeAll(where: { $0.id == out.id })
-        }
-        
-        if shouldRetryDrain {
-            scheduleReqDrain()
+            outQueue.removeFirst()
         }
     }
-    
-    private func scheduleReqDrain() {
+
+    private func scheduleReqDrain(after delay: TimeInterval = 0.20) {
         guard !reqDrainScheduled else { return }
         reqDrainScheduled = true
-        queue.asyncAfter(deadline: .now() + reqDrainDelay) { [weak self] in
+        queue.asyncAfter(deadline: .now() + max(0.05, delay)) { [weak self] in
             guard let self = self else { return }
             self.reqDrainScheduled = false
             guard let webSocketTask = self.webSocketTask, self.isSocketConnected else { return }
             self.flushOutQueue(using: webSocketTask)
         }
     }
-    
-    private static func reqSubscriptionId(from message: String) -> String? {
-        let text = message.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard text.hasPrefix("[\"REQ\"") else { return nil }
-        guard let data = text.data(using: .utf8),
-              let payload = try? JSONSerialization.jsonObject(with: data) as? [Any],
-              payload.count > 1,
-              (payload[0] as? String) == "REQ",
-              let subscriptionId = payload[1] as? String else { return nil }
-        return subscriptionId
+
+    private func trimReqSendHistory(now: Date) {
+        reqSentAt.removeAll(where: { now.timeIntervalSince($0) >= 1.0 })
+    }
+
+    private func nextReqDrainDelay(now: Date) -> TimeInterval {
+        guard let oldest = reqSentAt.first else { return reqDrainDelay }
+        return max(reqDrainDelay, 1.0 - now.timeIntervalSince(oldest))
+    }
+
+    private static func isReqMessage(_ message: String) -> Bool {
+        message.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[\"REQ\"")
     }
     
     // (Planned) disconnect, so exponetional backoff and skipped is reset
@@ -427,7 +437,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self?.skipped = 0
             self?.firstConnection = true
             self?.nreqSubscriptions = []
-            self?.inFlightReqSubscriptionIds = []
+            self?.reqSentAt = []
+            self?.reqDrainScheduled = false
             self?.lastMessageReceivedAt = nil
             self?.isSocketConnected = false
             self?.outQueue = [] // Clear any pending messages
@@ -446,7 +457,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         subscriptions.removeAll()
         outQueue.removeAll()
         nreqSubscriptions.removeAll()
-        inFlightReqSubscriptionIds.removeAll()
+        reqSentAt.removeAll()
     }
     
     public func ping() {
