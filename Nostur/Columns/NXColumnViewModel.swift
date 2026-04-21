@@ -2204,8 +2204,15 @@ class NXColumnViewModel: ObservableObject {
                     .filter { $0.createdAt.timeIntervalSince1970 > (Date.now.timeIntervalSince1970 - 172_800) }
                     .compactMap { $0.replyToId }
                     .filter { postId in
-                        Importer.shared.existingIds[postId] == nil && postId.range(of: ":") == nil // @TODO: <-- Workaround for aTag instead of e here, need to handle some other way
+                        Importer.shared.existingIds[postId] == nil && postId.range(of: ":") == nil
                     }
+                
+//                let danglerATags = danglers
+//                    .filter { $0.createdAt.timeIntervalSince1970 > (Date.now.timeIntervalSince1970 - 172_800) }
+//                    .compactMap { $0.replyToId }
+//                    .filter { postId in
+//                        Importer.shared.existingIds[postId] == nil && postId.range(of: ":") != nil
+//                    }
                 
                 if !danglerIds.isEmpty {
 #if DEBUG
@@ -2213,6 +2220,10 @@ class NXColumnViewModel: ObservableObject {
 #endif
                     req(RM.getEvents(ids: danglerIds, subscriptionId: taskId)) // TODO: req or outboxReq?
                 }
+//                for aTagString in danglerATags {
+//                    guard let aTag = try? ATag(aTagString) else { continue }
+//                    req(RM.getArticle(pubkey: aTag.pubkey, kind: Int(aTag.kind), definition: aTag.definition, subscriptionId: taskId))
+//                }
             },
             processResponseCommand: { (taskId, _, _) in
                 bg().perform { [weak self] in

@@ -63,28 +63,37 @@ func handleAddressableReplacableEvent(nEvent: NEvent, savedEvent: Event, context
             
             // Find existing replies referencing this event (can only be replyToRootId = "3XXXX:pubkey:dTag", or replyToRootId = "<older article ids>")
             // also do for replyToId
-            if Set([30023, 34236]).contains(savedEvent.kind) { // Only do this for articles, diVines
+            if Set([30023, 34235, 34236]).contains(savedEvent.kind) { // Only do this for PRE kinds we thread against
                 existingEventIds.insert(savedEvent.aTag)
                 let fr = Event.fetchRequest()
                 fr.predicate = NSPredicate(format: "kind IN {1,1111,1244} AND replyToRootId IN %@", existingEventIds)
                 if let existingReplies = try? context.fetch(fr) {
                     for existingReply in existingReplies {
                         existingReply.replyToRootId = first.id
+                        ViewUpdates.shared.eventRelationUpdate.send(
+                            EventRelationUpdate(relationType: .replyToRoot, id: existingReply.id, event: first)
+                        )
+                        ViewUpdates.shared.eventRelationUpdate.send(
+                            EventRelationUpdate(relationType: .replyToRootInverse, id: first.id, event: existingReply)
+                        )
                     }
                 }
                 
                 let fr2 = Event.fetchRequest()
                 fr2.predicate = NSPredicate(format: "kind IN {1,1111,1244} AND replyToId IN %@", existingEventIds)
-                if let existingReplies = try? context.fetch(fr) {
+                if let existingReplies = try? context.fetch(fr2) {
                     for existingReply in existingReplies {
                         existingReply.replyToId = first.id
+                        ViewUpdates.shared.eventRelationUpdate.send(
+                            EventRelationUpdate(relationType: .replyTo, id: existingReply.id, event: first)
+                        )
                     }
                 }
             }
         }
     }
 
-    if Set([30311]).contains(savedEvent.kind) { // Only update views for kinds that need it (so far: 30311)
+    if Set([30311,34235,34236]).contains(savedEvent.kind) { // Only update views for kinds that need it (so far: 30311)
         ViewUpdates.shared.replacableEventUpdate.send(savedEvent)
     }
 }

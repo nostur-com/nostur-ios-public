@@ -1125,12 +1125,16 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         bg().perform { [weak self] in
             guard let self = self else { return }
             guard self.replyTo == nil else { return }
-            guard let replyToId = self.replyToId else { return }
+            if self.replyToId == nil {
+                self.replyToId = self.event?.replyToId
+            }
             
-            if let replyTo = Event.fetchEvent(id: replyToId, context: bg()) {
+            if let replyTo = self.event?.replyTo {
                 let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
+                let replyToId = replyTo.id
                 DispatchQueue.main.async { [weak self] in
                     self?.objectWillChange.send()
+                    self?.replyToId = replyToId
                     self?.replyTo = nrReplyTo
                 }
             }

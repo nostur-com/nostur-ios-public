@@ -115,14 +115,26 @@ extension Event {
     
     var replyTo: Event? {
         if let replyToId {
-            return Event.fetchEvent(id: replyToId, context: self.managedObjectContext ?? bg())
+            let context = self.managedObjectContext ?? bg()
+            if replyToId.contains(":") {
+                return Event.fetchReplacableEvent(aTag: replyToId, context: context)
+            }
+            if let event = Event.fetchEvent(id: replyToId, context: context) {
+                return event
+            }
         }
         return nil
     }
     
     var replyToRoot: Event? {
         if let replyToRootId {
-            return Event.fetchEvent(id: replyToRootId, context: self.managedObjectContext ?? bg())
+            let context = self.managedObjectContext ?? bg()
+            if replyToRootId.contains(":") {
+                return Event.fetchReplacableEvent(aTag: replyToRootId, context: context)
+            }
+            if let event = Event.fetchEvent(id: replyToRootId, context: context) {
+                return event
+            }
         }
         return nil
     }
@@ -645,13 +657,8 @@ extension Event {
     }
     
     static func fetchReplacableEvent(aTag: String, context: NSManagedObjectContext) -> Event? {
-        let elements = aTag.split(separator: ":")
-        guard elements.count >= 3 else { return nil }
-        guard let kindString = elements[safe: 0], let kind = Int64(kindString) else { return nil }
-        guard let pubkey = elements[safe: 1] else { return nil }
-        guard let definition = elements[safe: 2] else { return nil }
-        
-        return Self.fetchReplacableEvent(kind, pubkey: String(pubkey), definition: String(definition), context: context)
+        guard let parsedATag = try? ATag(aTag) else { return nil }
+        return Self.fetchReplacableEvent(parsedATag.kind, pubkey: parsedATag.pubkey, definition: parsedATag.definition, context: context)
     }
     
     static func fetchEvents(_ ids: [String], context: NSManagedObjectContext = bg()) -> [Event] {
@@ -1226,7 +1233,7 @@ struct ATag {
     let definition: String
     
     init(_ aTag: String) throws {
-        let elements = aTag.split(separator: ":")
+        let elements = aTag.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
         guard elements.count >= 3 else { throw NSError(domain: "", code: 0, userInfo: nil) }
         
         guard let kindString = elements[safe: 0], let kind = Int64(kindString) else { throw NSError(domain: "", code: 0, userInfo: nil) }

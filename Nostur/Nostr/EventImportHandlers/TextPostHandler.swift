@@ -170,8 +170,8 @@ func handleRepostInKind1(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Eve
 }
 
 func handlePostRelations(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = nil, context: NSManagedObjectContext) {
-    guard nEvent.kind == .textNote || nEvent.kind == .shortVoiceMessage else { return }
-    
+    guard Set([.textNote, .shortVoiceMessage, .picture, .comment, .shortVoiceMessageComment, .highlight, .article, .video, .shortVideos]).contains(nEvent.kind) else { return }
+
     // IF we already have replies, need to link them to this root or parent:
     // or link post to embeded post (.firstQuote)
     let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
@@ -179,12 +179,12 @@ func handlePostRelations(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Eve
     for waitingEvent in awaitingEvents {
         
         // Handle replies we already have, but parent arrived just now
-        if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
+        if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id || waitingEvent.replyToId == savedEvent.aTag) {
             ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyTo, id: waitingEvent.id, event: savedEvent)))
         }
         
         // Handle replies we already have, but root arrived just now
-        if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
+        if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id || waitingEvent.replyToRootId == savedEvent.aTag) {
             ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRoot, id: waitingEvent.id, event: savedEvent)))
             ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRootInverse, id: savedEvent.id, event: waitingEvent)))
         }
@@ -192,6 +192,7 @@ func handlePostRelations(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Eve
         
         // handle post with missing quoted post, and quoted post arrived just now
         // but not relevant for voice messsages
+        // TODO: .firstQuote is only used for old reposts (forgot)? Need to remove or fix
         if nEvent.kind == .shortVoiceMessage { continue }
         if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
             ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .firstQuote, id: waitingEvent.id, event: savedEvent)))

@@ -263,7 +263,12 @@ func fetchDetailStuff(kind: Int, pTags: Set<String> = [], rootE: String? = nil, 
         if let replyToRootId = nrPost.replyToRootId {
             // Fetch all that reference the root note
             // to build the thread, maybe kind=1 is enough, or all...?
-            req(RM.getEventReferences(ids: [replyToRootId], subscriptionId: "ROOT-"+UUID().uuidString, kinds:[1]))
+            if replyToRootId.contains(":") {
+                req(RM.getPREventReferences(aTag: replyToRootId, subscriptionId: "ROOT-"+UUID().uuidString, kinds:[1]))
+            }
+            else {
+                req(RM.getEventReferences(ids: [replyToRootId], subscriptionId: "ROOT-"+UUID().uuidString, kinds:[1]))
+            }
         }
     }
 }
