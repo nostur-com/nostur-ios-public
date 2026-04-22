@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NavigationBackport
+import NostrEssentials
 
 enum RelayStatsSortMode: String, CaseIterable, Identifiable {
     case activity = "Activity"
@@ -22,6 +23,7 @@ struct RelayStatsView: View {
     
     @State private var statsSorted: [RelayConnectionStats] = []
     @State private var sortMode: RelayStatsSortMode = .activity
+    @State private var disabledRelayCount: Int = 0
     
     var body: some View {
         NXForm {
@@ -45,6 +47,14 @@ struct RelayStatsView: View {
                         Text("(Re)connects/Messages/Errors")
                             .font(.footnote)
                             .foregroundColor(.secondary)
+                    }
+                }
+            }
+
+            if disabledRelayCount > 0 {
+                Section {
+                    NavigationLink(destination: DisabledRelaysView()) {
+                        Text("\(disabledRelayCount) relays disabled")
                     }
                 }
             }
@@ -73,9 +83,13 @@ struct RelayStatsView: View {
         }
         .onAppear {
             refreshSortedStats()
+            refreshDisabledRelayCount()
         }
         .onChange(of: sortMode) { _ in
             refreshSortedStats()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .disabledRelaysDidChange)) { _ in
+            refreshDisabledRelayCount()
         }
         .sheet(item: $showingStats, content: { relayConnectionStats in
             NBNavigationStack {
@@ -120,6 +134,10 @@ struct RelayStatsView: View {
                 self.statsSorted = sorted
             }
         }
+    }
+
+    private func refreshDisabledRelayCount() {
+        disabledRelayCount = DisabledRelaysStore.count()
     }
 }
 
@@ -232,6 +250,7 @@ struct RelayStatsDetails: View {
     @State private var noticeMessages: [String] = []
     @State private var foundAccountRows: [(pubkey: String, pfp: URL?, name: String)] = []
     @State private var latencyAverages: RelayLatencyAverages? = nil
+    @State private var neverConnectToRelay: Bool = false
  
     var body: some View {
         NXForm {
@@ -316,8 +335,24 @@ struct RelayStatsDetails: View {
                         .foregroundColor(.secondary)
                 }
             }
+
+            if shouldShowNeverConnectToggle {
+                Section {
+                    Toggle("Never connect to this relay", isOn: Binding(
+                        get: { neverConnectToRelay },
+                        set: { newValue in
+                            neverConnectToRelay = newValue
+                            DisabledRelaysStore.setDisabled(stats.id, isDisabled: newValue)
+                            if newValue {
+                                ConnectionPool.shared.disconnectRelay(stats.id)
+                            }
+                        }
+                    ))
+                }
+            }
         }
         .onAppear {
+            neverConnectToRelay = DisabledRelaysStore.isDisabled(stats.id)
             ConnectionPool.shared.queue.async {
                 let lastErrorMessages = stats.lastErrorMessages
                 let lastNoticeMessages = stats.lastNoticeMessages
@@ -331,9 +366,51 @@ struct RelayStatsDetails: View {
         }
     }
 
+    private var cannotEnableNeverConnect: Bool {
+        let relayId = normalizeRelayUrl(stats.id)
+        let inConnections = ConnectionPool.shared.connections[relayId] != nil
+        let inCloudRelays = CloudRelay.fetchAll().contains(where: { relay in
+            guard let relayUrl = relay.url_ else { return false }
+            return normalizeRelayUrl(relayUrl) == relayId
+        })
+        return inConnections || inCloudRelays
+    }
+
+    private var shouldShowNeverConnectToggle: Bool {
+        neverConnectToRelay || !cannotEnableNeverConnect
+    }
+
     private static func formatLatency(_ value: Double?) -> String {
         guard let value else { return "-" }
         return String(format: "%.1f ms", value)
+    }
+}
+
+private struct DisabledRelaysView: View {
+    @State private var disabledRelays: [CanonicalRelayUrl] = []
+
+    var body: some View {
+        List {
+            ForEach(disabledRelays, id: \.self) { relay in
+                Text(relay)
+            }
+            .onDelete(perform: removeRelays)
+        }
+        .navigationTitle("Disabled relays")
+        .onAppear(perform: refresh)
+        .onReceive(NotificationCenter.default.publisher(for: .disabledRelaysDidChange)) { _ in
+            refresh()
+        }
+    }
+
+    private func refresh() {
+        disabledRelays = DisabledRelaysStore.all()
+    }
+
+    private func removeRelays(at offsets: IndexSet) {
+        for index in offsets {
+            DisabledRelaysStore.setDisabled(disabledRelays[index], isDisabled: false)
+        }
     }
 }
 

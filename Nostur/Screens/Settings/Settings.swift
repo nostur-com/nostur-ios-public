@@ -189,6 +189,8 @@ struct RelaysLink: View {
 
 struct RelaysStatsLink: View {
     @Environment(\.theme) private var theme
+    @State private var disabledRelayCount: Int = 0
+
     var body: some View {
         NavigationLink(destination: {
             RelayStatsView(stats: ConnectionPool.shared.connectionStats)
@@ -196,7 +198,22 @@ struct RelaysStatsLink: View {
         }, label: {
             VStack(alignment: .leading) {
                 Text("Relay connection stats")
+                if disabledRelayCount > 0 {
+                    Text("(\(disabledRelayCount) relays disabled)")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
             }
         })
+        .onAppear {
+            refreshDisabledRelayCount()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .disabledRelaysDidChange)) { _ in
+            refreshDisabledRelayCount()
+        }
+    }
+
+    private func refreshDisabledRelayCount() {
+        disabledRelayCount = DisabledRelaysStore.count()
     }
 }

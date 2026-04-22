@@ -245,6 +245,10 @@ public class ConnectionPool: ObservableObject {
         
         queue.async { [unowned self] in
             for (_, connection) in self.connections {
+                guard !self.isDisabledRelay(connection.url) else {
+                    connection.disconnect()
+                    continue
+                }
                 if (connection.isConnected) { continue }
                 guard connection.relayData.shouldConnect else { continue }
                 guard !connection.isSocketConnected else { continue }
@@ -276,6 +280,10 @@ public class ConnectionPool: ObservableObject {
     public func connectAllWrite() {
         queue.async { [unowned self] in
             for (_, connection) in self.connections {
+                guard !self.isDisabledRelay(connection.url) else {
+                    connection.disconnect()
+                    continue
+                }
                 guard connection.relayData.write else { continue }
                 guard !connection.isSocketConnected else { continue }
                 connection.connect()
@@ -294,6 +302,10 @@ public class ConnectionPool: ObservableObject {
     private func stayConnectedPing() {
         queue.async { [unowned self] in
             for (_, connection) in self.connections {
+                guard !self.isDisabledRelay(connection.url) else {
+                    connection.disconnect()
+                    continue
+                }
                 guard connection.isConnected else { continue }
                 
                 if let lastReceivedMessageAt = connection.lastMessageReceivedAt {
@@ -319,6 +331,7 @@ public class ConnectionPool: ObservableObject {
         
             for relay in relays {
                 guard !relay.url.isEmpty else { continue }
+                guard !self.isDisabledRelay(relay.id) else { continue }
                 
                 if !existingConnections.contains(relay.id) {
                     // Add connection socket if we don't already have it from our normal connections
@@ -349,6 +362,20 @@ public class ConnectionPool: ObservableObject {
             if let connection = self.outboxConnections[relayId] {
                 connection.disconnect()
                 self.outboxConnections.removeValue(forKey: relayId)
+            }
+        }
+    }
+
+    func disconnectRelay(_ relayId: String) {
+        let normalizedRelayId = normalizeRelayUrl(relayId)
+        queue.async(flags: .barrier) { [unowned self] in
+            if let connection = self.connections[normalizedRelayId] {
+                connection.disconnect()
+                self.connections.removeValue(forKey: normalizedRelayId)
+            }
+            if let outboxConnection = self.outboxConnections[normalizedRelayId] {
+                outboxConnection.disconnect()
+                self.outboxConnections.removeValue(forKey: normalizedRelayId)
             }
         }
     }
@@ -520,6 +547,10 @@ public class ConnectionPool: ObservableObject {
         let requestSubscriptionId = subscriptionId ?? message.clientMessage.subscriptionId
         
         for (_, connection) in self.connections {
+            if self.isDisabledRelay(connection.url) {
+                connection.disconnect()
+                continue
+            }
             if connection.isNWC || connection.isNC { // Logic for N(W)C relay is a bit different, no read/write difference
                 if connection.isNWC && !message.onlyForNWCRelay { continue }
                 if connection.isNC && !message.onlyForNCRelay { continue }
@@ -674,6 +705,7 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     func sendEphemeralMessage(_ message: String, relay: String, write: Bool = false) {
+        guard !isDisabledRelay(relay) else { return }
         guard vpnGuardOK() else {
 #if DEBUG
             L.sockets.debug("📡📡 No VPN: Connection cancelled (\(relay)")
@@ -765,6 +797,7 @@ public class ConnectionPool: ObservableObject {
             })
             .prefix(self.maxPreferredRelays) // SANITY
         {
+            guard !isDisabledRelay(req.key) else { continue }
             if let conn = self.outboxConnections[req.key] {
                 if !conn.relayData.read {
                     conn.relayData.setRead(true)
@@ -825,6 +858,7 @@ public class ConnectionPool: ObservableObject {
             .sorted(by: {
                 $0.value.count > $1.value.count
             }) {
+            guard !isDisabledRelay(relay) else { continue }
             
 #if DEBUG
             L.sockets.debug("📤📤 Outbox 🟩 SENDING EVENT -- \(relay): \(pubkeys.joined(separator: ","))")
@@ -875,6 +909,10 @@ public class ConnectionPool: ObservableObject {
         }
         
         return relays
+    }
+
+    private func isDisabledRelay(_ relay: String) -> Bool {
+        DisabledRelaysStore.isDisabled(relay)
     }
     
     // Clean up stale connections periodically to prevent memory leaks
