@@ -420,7 +420,9 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     // pull to refresh
     public func refresh(showLoading: Bool = false) async {
         if showLoading { // Pull to refresh has own spinner (in the pull thing) so no need to loading screen
-            self.state = .loading
+            Task { @MainActor in
+                self.state = .loading
+            }
         }
         self.lastFetch = nil
         self.posts = [PostID: RecommendedBy<Pubkey>]()
