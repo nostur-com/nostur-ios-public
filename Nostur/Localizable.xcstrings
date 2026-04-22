@@ -123,6 +123,9 @@
         }
       }
     },
+    "-" : {
+
+    },
     "- Choose a relay that requires authentication to receive private messages.\n- You can choose public relays, messages will be scrambled and anonymized." : {
       "localizations" : {
         "nl" : {
@@ -158,6 +161,9 @@
           }
         }
       }
+    },
+    "(%lld relays disabled)" : {
+
     },
     "(Re)connects/Messages/Errors" : {
       "localizations" : {
@@ -934,6 +940,9 @@
           }
         }
       }
+    },
+    "%lld relays disabled" : {
+
     },
     "%lld requests not shown" : {
       "extractionState" : "stale",
@@ -2659,6 +2668,9 @@
         }
       }
     },
+    "Checking what your follows shared..." : {
+
+    },
     "Checking what your follows zapped..." : {
       "localizations" : {
         "nl" : {
@@ -4068,6 +4080,9 @@
       }
     },
     "Disabled" : {
+
+    },
+    "Disabled relays" : {
 
     },
     "Disconnect" : {
@@ -5727,6 +5742,12 @@
     "Largest emoji loaded: %@" : {
 
     },
+    "Last 1 hour" : {
+
+    },
+    "Last 5 minutes" : {
+
+    },
     "Last 10 error messages" : {
       "localizations" : {
         "nl" : {
@@ -5746,6 +5767,9 @@
           }
         }
       }
+    },
+    "Last 15 minutes" : {
+
     },
     "Last optimize: %@" : {
       "comment" : "Last run: (date) of maintanace",
@@ -6752,6 +6776,9 @@
           }
         }
       }
+    },
+    "Never connect to this relay" : {
+
     },
     "New contacts list feed" : {
       "localizations" : {
@@ -8853,6 +8880,7 @@
       }
     },
     "Refresh" : {
+      "comment" : "Toolbar action to refresh the emoji feed\nToolbar action to refresh the gallery feed\nToolbar action to refresh the hot feed\nToolbar action to refresh the zapped feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9484,6 +9512,9 @@
         }
       }
     },
+    "REQ response latency" : {
+
+    },
     "Request delete" : {
       "localizations" : {
         "nl" : {
@@ -9657,6 +9688,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "s"
+          }
+        }
+      }
+    },
+    "Samples (5m/15m/1h): %lld/%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Samples (5m/15m/1h): %1$lld/%2$lld/%3$lld"
           }
         }
       }
