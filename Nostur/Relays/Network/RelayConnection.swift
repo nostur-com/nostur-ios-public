@@ -211,6 +211,19 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     }
                     return
                 }
+                guard Self.isValidRelayWebSocketURL(self.relayData.url) else {
+#if DEBUG
+                    L.sockets.notice("Skipping malformed relay URL: \(self.relayData.url)")
+#endif
+                    self.isSocketConnecting = false
+                    self.isSocketConnected = false
+                    self.webSocketTask?.cancel()
+                    self.webSocketTask = nil
+                    self.urlSession?.invalidateAndCancel()
+                    self.urlSession = nil
+                    self.outQueue = []
+                    return
+                }
                 self.nreqSubscriptions = []
                 self.isSocketConnecting = true
                 
@@ -419,6 +432,34 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 
     private static func isReqMessage(_ message: String) -> Bool {
         message.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[\"REQ\"")
+    }
+
+    // Guard against malformed relay hints being treated as a single URL
+    // (for example concatenated strings containing multiple ws/wss prefixes).
+    private static func isValidRelayWebSocketURL(_ relayUrl: String) -> Bool {
+        let trimmed = relayUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+
+        let lower = trimmed.lowercased()
+        guard lower.hasPrefix("wss://") || lower.hasPrefix("ws://") else { return false }
+
+        let schemeOccurrences = lower.components(separatedBy: "wss://").count - 1
+            + lower.components(separatedBy: "ws://").count - 1
+        guard schemeOccurrences == 1 else { return false }
+
+        // Reject obvious malformed values like pasted lists with encoded spaces.
+        guard !lower.contains("%20ws://"), !lower.contains("%20wss://") else { return false }
+
+        guard let components = URLComponents(string: trimmed),
+              let scheme = components.scheme?.lowercased(),
+              (scheme == "wss" || scheme == "ws"),
+              let host = components.host,
+              !host.isEmpty
+        else {
+            return false
+        }
+
+        return true
     }
     
     // (Planned) disconnect, so exponetional backoff and skipped is reset
