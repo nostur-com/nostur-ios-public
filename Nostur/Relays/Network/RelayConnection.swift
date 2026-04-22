@@ -463,6 +463,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         message.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[\"REQ\"")
     }
 
+    private static func isEventMessage(_ message: String) -> Bool {
+        message.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[\"EVENT\"")
+    }
 
     private static func isLatencyResponseMessage(_ message: String) -> Bool {
         let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -635,11 +638,13 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self.lastMessageReceivedAt = .now
             self.exponentialReconnectBackOff = 0
             self.skipped = 0
+            if Self.isEventMessage(string) {
+                self.stats.messages += 1
+            }
             if let subscriptionId = Self.subscriptionIdForLatencyResponse(from: string) {
                 self.stats.recordTrackedReqResponse(subscriptionId: subscriptionId)
             }
             
-            self.stats.messages += 1
         }
     }
     
@@ -657,7 +662,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self.exponentialReconnectBackOff = 0
             self.skipped = 0
 
-            self.stats.messages += 1
         }
     }
     
