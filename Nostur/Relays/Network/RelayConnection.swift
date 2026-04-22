@@ -142,9 +142,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 let fromDisconnectedToConnected = !self.isDeviceConnected && isNowConnected
                 let fromConnectedToDisconnected = self.isDeviceConnected && !isNowConnected
                 if self.isDeviceConnected != isNowConnected { // Status changed
-                    self.queue.async(flags: .barrier) { [weak self] in
-                        self?.isDeviceConnected = isNowConnected
-                    }
+                    self.isDeviceConnected = isNowConnected
                 }
                 if (fromDisconnectedToConnected) { // Connected
                     if self.relayData.shouldConnect {

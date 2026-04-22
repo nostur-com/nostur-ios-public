@@ -596,9 +596,7 @@ public class ConnectionPool: ObservableObject {
                     // skip if we already have an active subscription
                     if subscriptionId != nil && connection.nreqSubscriptions.contains(subscriptionId!) { continue }
                     if (subscriptionId != nil) {
-                        self.queue.async(flags: .barrier) { [weak connection] in
-                            connection?.nreqSubscriptions.insert(subscriptionId!)
-                        }
+                        connection.nreqSubscriptions.insert(subscriptionId!)
                     }
                     connection.sendMessage(message.message, subscriptionId: requestSubscriptionId)
                 }
@@ -613,9 +611,7 @@ public class ConnectionPool: ObservableObject {
                     L.sockets.info("🔚🔚 CLOSE: \(message.message)")
 #endif
                     if let cmSubId = message.clientMessage.subscriptionId {
-                        self.queue.async(flags: .barrier) { [weak connection] in
-                            connection?.nreqSubscriptions.remove(cmSubId)
-                        }
+                        connection.nreqSubscriptions.remove(cmSubId)
                     }
                     connection.sendMessage(message.message)
                 }
