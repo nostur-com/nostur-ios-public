@@ -418,8 +418,10 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     }
     
     // pull to refresh
-    public func refresh() async {
-        // don't change .state on refresh, or rerender will cause the pull-to-refresh to be wonky
+    public func refresh(showLoading: Bool = false) async {
+        if showLoading { // Pull to refresh has own spinner (in the pull thing) so no need to loading screen
+            self.state = .loading
+        }
         self.lastFetch = nil
         self.posts = [PostID: RecommendedBy<Pubkey>]()
         self.backlog.clear()

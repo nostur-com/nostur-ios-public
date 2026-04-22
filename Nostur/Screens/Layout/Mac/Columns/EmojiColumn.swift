@@ -20,12 +20,15 @@ struct EmojiColumn: View {
             .modifier { // need to hide glass bg in 26+
                 if #available(iOS 26.0, *) {
                     $0.toolbar {
+                        refreshButton
+                            .sharedBackgroundVisibility(.hidden)
                         settingsButton
                             .sharedBackgroundVisibility(.hidden)
                     }
                 }
                 else {
                     $0.toolbar {
+                        refreshButton
                         settingsButton
                     }
                 }
@@ -53,6 +56,30 @@ struct EmojiColumn: View {
             Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
                 showSettings = true
             }
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private var refreshButton: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Group {
+                if !isFeedLoading {
+                    Button(String(localized: "Refresh", comment: "Toolbar action to refresh the emoji feed"), systemImage: "arrow.clockwise") {
+                        Task {
+                            await vm.refresh()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private var isFeedLoading: Bool {
+        switch vm.state {
+        case .initializing, .loading, .fetchingFromFollows:
+            return true
+        case .ready, .timeout:
+            return false
         }
     }
 }

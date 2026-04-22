@@ -14,6 +14,7 @@ struct Gallery: View {
     @EnvironmentObject var vm: GalleryViewModel
     @StateObject private var speedTest = NXSpeedTest()
     @State private var showSettings = false
+    let useColumnLoadingAnimation: Bool
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -29,6 +30,10 @@ struct Gallery: View {
     
     static let gridColumns = Array(repeating: GridItem(.flexible()), count: 3)
     
+    init(useColumnLoadingAnimation: Bool = false) {
+        self.useColumnLoadingAnimation = useColumnLoadingAnimation
+    }
+    
     
     var body: some View {
 #if DEBUG
@@ -36,8 +41,25 @@ struct Gallery: View {
 #endif
         ScrollViewReader { proxy in
             switch vm.state {
-            case .initializing, .loading:
+            case .initializing:
                 CenteredProgressView()
+            case .loading:
+                if useColumnLoadingAnimation {
+                    ZStack(alignment: .center) {
+                        theme.listBackground
+                            .overlay(alignment: .bottom) {
+                                Text("Checking what your follows shared...")
+                                    .pulseEffect()
+                                    .multilineTextAlignment(.center)
+                                    .padding(15)
+                                    .padding(.bottom, 75)
+                            }
+                        FetchingAnimationView()
+                    }
+                }
+                else {
+                    CenteredProgressView()
+                }
             case .ready:
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
@@ -168,5 +190,4 @@ struct GalleryGridItemView: View {
         }
     }
 }
-
 

@@ -15,17 +15,20 @@ struct GalleryColumn: View {
     @State private var showSettings = false
     
     var body: some View {
-        Gallery()
+        Gallery(useColumnLoadingAnimation: true)
             .environmentObject(vm)
             .modifier { // need to hide glass bg in 26+
                 if #available(iOS 26.0, *) {
                     $0.toolbar {
+                        refreshButton
+                            .sharedBackgroundVisibility(.hidden)
                         settingsButton
                             .sharedBackgroundVisibility(.hidden)
                     }
                 }
                 else {
                     $0.toolbar {
+                        refreshButton
                         settingsButton
                     }
                 }
@@ -53,6 +56,30 @@ struct GalleryColumn: View {
             Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
                 showSettings = true
             }
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private var refreshButton: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Group {
+                if !isFeedLoading {
+                    Button(String(localized: "Refresh", comment: "Toolbar action to refresh the gallery feed"), systemImage: "arrow.clockwise") {
+                        Task {
+                            await vm.refresh(showLoading: true)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private var isFeedLoading: Bool {
+        switch vm.state {
+        case .initializing, .loading:
+            return true
+        case .ready, .timeout:
+            return false
         }
     }
 }
