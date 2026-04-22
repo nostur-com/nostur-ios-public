@@ -32,6 +32,7 @@ class EmbeddedVideoVM: ObservableObject {
     private var nrPost: NRPost?
     
     public var cachedFirstFrame: CachedFirstFrame?
+    private var firstFrameTask: Task<Void, Never>?
     
     public var isStream: Bool {
         guard let videoUrlString else { return false }
@@ -42,6 +43,24 @@ class EmbeddedVideoVM: ObservableObject {
     
     
     public func load(_ url: URL, nrPost: NRPost? = nil, autoLoad: Bool = false, metaDimensions: CGSize? = nil, availableWidth: CGFloat? = nil, availableHeight: CGFloat = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, loadAnyway: Bool = false) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.load(
+                    url,
+                    nrPost: nrPost,
+                    autoLoad: autoLoad,
+                    metaDimensions: metaDimensions,
+                    availableWidth: availableWidth,
+                    availableHeight: availableHeight,
+                    loadAnyway: loadAnyway
+                )
+            }
+            return
+        }
+        
+        firstFrameTask?.cancel()
+        firstFrameTask = nil
+        
         self.videoUrl = url
         self.videoUrlString = url.absoluteString
         self.metaDimensions = metaDimensions
@@ -81,7 +100,8 @@ class EmbeddedVideoVM: ObservableObject {
             self.viewState = .lowDataMode(videoUrlString)
         }
         else if isStream { // For streams, try to get type of steam first
-            Task {
+            firstFrameTask = Task { [weak self] in
+                guard let self else { return }
                 await loadStream(videoUrl)
             }
         }
@@ -95,7 +115,8 @@ class EmbeddedVideoVM: ObservableObject {
             }
         }
         else { // OK, lets load first frame
-            Task {
+            firstFrameTask = Task { [weak self] in
+                guard let self else { return }
                 await loadFirstFrame(videoUrl)
             }
         }
@@ -146,15 +167,16 @@ class EmbeddedVideoVM: ObservableObject {
     
     private func loadStream(_ videoURL: URL) async {
         let streamType: StreamType? = try? await fetchStreamType(videoURL)
+        guard !Task.isCancelled else { return }
         
-        Task { @MainActor in
+        await MainActor.run {
             if streamType == .unknown { // probably audio
                 self.isAudio = true
             }
-            Task {
-                await loadFirstFrame(videoURL)
-            }
         }
+        
+        guard !Task.isCancelled else { return }
+        await loadFirstFrame(videoURL)
     }
     
     private func fetchStreamType(_ videoURL: URL) async throws -> StreamType {
@@ -166,9 +188,12 @@ class EmbeddedVideoVM: ObservableObject {
     }
     
     private func loadFirstFrame(_ videoURL: URL) async {
+        let pathExtension = videoURL.pathExtension.isEmpty ? "mp4" : videoURL.pathExtension
+        
         do {
             // Probe file size, following redirects if needed
             let (actualUrl, fileSize) = try await getFileSizeWithRedirects(videoURL, maxRedirects: 3) ?? (videoURL, 1_048_576) // Default to 1MB if unknown
+            guard !Task.isCancelled else { return }
             
             // Define progressive ranges: 128KB, 256KB, 512KB, 1024KB
             var frontRanges = [
@@ -203,16 +228,9 @@ class EmbeddedVideoVM: ObservableObject {
                 
                 // Try extracting the frame, but don’t throw yet
                 do {
-                    if let (image, duration, dim) = try await tryExtractFirstFrameDetails(from: combinedData) {
-                        await MainActor.run { [weak self] in
-                            let cachedFirstFrame = CachedFirstFrame(url: videoURL.absoluteString, uiImage: image, dimensions: dim, duration: duration)
-                            self?.viewState = .loadedFirstFrame(cachedFirstFrame)
-                            self?.cachedFirstFrame = cachedFirstFrame // need to keep it to revert back to after PIP
-                            AVAssetCache.shared.set(url: videoURL.absoluteString, firstFrame: cachedFirstFrame)
-#if DEBUG
-                            L.og.debug("🎞️ Successful firstFrame \(String(describing: dim)) \(cachedFirstFrame.durationString ?? "") on \(videoURL.absoluteString) -[LOG]-")
-#endif
-                        }
+                    if let (image, duration, dim) = try await tryExtractFirstFrameDetails(from: combinedData, pathExtension: pathExtension) {
+                        guard !Task.isCancelled else { return }
+                        await setFirstFrame(image: image, duration: duration, dimensions: dim, for: videoURL)
                         return // Success, exit
                     }
                 } catch {
@@ -222,7 +240,7 @@ class EmbeddedVideoVM: ObservableObject {
                     // Only throw if it’s the last range
                     if index == frontRanges.count - 1 {
 #if DEBUG
-                        L.og.debug("🎞️ All front ranges failed, trying end of file -[LOG]-")
+                        L.og.debug("🎞️ Initial front ranges failed, trying expanded front fetch -[LOG]-")
 #endif
                         break
                     }
@@ -230,10 +248,43 @@ class EmbeddedVideoVM: ObservableObject {
                 }
             }
             
-            // If front ranges fail, try last 1MB
+            // If initial front ranges fail, progressively expand front fetch (bounded).
+            var frontData = combinedData
+            let expandedFrontTargets = [2_097_152, 4_194_304, 8_388_608] // 2MB, 4MB, 8MB
+            for targetSize in expandedFrontTargets where targetSize > frontData.count && frontData.count < fileSize {
+                let nextUpperBound = min(targetSize, fileSize)
+                let nextRange = frontData.count..<nextUpperBound
+                
+                let (extraData, response) = try await URLSession.shared.data(for: rangedRequest(url: actualUrl, bytes: nextRange))
+                guard !Task.isCancelled else { return }
+                guard let httpResponse = response as? HTTPURLResponse,
+                      httpResponse.statusCode == 206 || httpResponse.statusCode == 200 else {
+#if DEBUG
+                    L.og.debug("🎞️ Expanded front fetch failed with unexpected status on \(actualUrl) -[LOG]-")
+#endif
+                    break
+                }
+                
+                frontData.append(extraData)
+                
+                do {
+                    if let (image, duration, dim) = try await tryExtractFirstFrameDetails(from: frontData, pathExtension: pathExtension) {
+                        guard !Task.isCancelled else { return }
+                        await setFirstFrame(image: image, duration: duration, dimensions: dim, for: videoURL)
+                        return
+                    }
+                } catch {
+#if DEBUG
+                    L.og.debug("🎞️ Expanded front extraction failed at \(frontData.count) bytes on \(actualUrl) -[LOG]-")
+#endif
+                }
+            }
+            
+            // If front probing fails, try last 1MB
             combinedData = Data() // Reset
             let endRange = max(0, fileSize - 1_048_576)..<fileSize
             let (endData, response) = try await URLSession.shared.data(for: rangedRequest(url: actualUrl, bytes: endRange))
+            guard !Task.isCancelled else { return }
             
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 206 || httpResponse.statusCode == 200 else {
@@ -246,27 +297,40 @@ class EmbeddedVideoVM: ObservableObject {
             combinedData.append(endData)
             
             do {
-                if let (image, duration, dim) = try await tryExtractFirstFrameDetails(from: combinedData) {
-                    await MainActor.run { [weak self] in
-                        let cachedFirstFrame = CachedFirstFrame(url: videoURL.absoluteString, uiImage: image, dimensions: dim, duration: duration)
-                        self?.viewState = .loadedFirstFrame(cachedFirstFrame)
-                        self?.cachedFirstFrame = cachedFirstFrame // need to keep it to revert back to after PIP
-                        AVAssetCache.shared.set(url: videoURL.absoluteString, firstFrame: cachedFirstFrame)
-#if DEBUG
-                        L.og.debug("🎞️ Successful firstFrame \(String(describing: dim)) \(cachedFirstFrame.durationString ?? "") on \(videoURL.absoluteString) -[LOG]-")
-#endif
-                    }
+                if let (image, duration, dim) = try await tryExtractFirstFrameDetails(from: combinedData, pathExtension: pathExtension) {
+                    guard !Task.isCancelled else { return }
+                    await setFirstFrame(image: image, duration: duration, dimensions: dim, for: videoURL)
                     return
                 }
+                
+#if DEBUG
+                L.og.debug("🎞️ End extraction returned no frame at \(combinedData.count) bytes on \(actualUrl), trying stitched front+end ranges -[LOG]-")
+#endif
             } catch {
 #if DEBUG
                 L.og.debug("🎞️ End extraction failed at \(combinedData.count) bytes: \(error) at \(actualUrl) -[LOG]-")
 #endif
-                throw error // Final failure
             }
             
+            // Final fallback: stitch front+end chunks at original offsets in a sparse temp file.
+            if let (image, duration, dim) = try await tryExtractFirstFrameDetailsFromStitchedRanges(
+                fileSize: fileSize,
+                frontData: frontData,
+                endData: endData,
+                endRangeStart: endRange.lowerBound,
+                pathExtension: pathExtension
+            ) {
+                guard !Task.isCancelled else { return }
+                await setFirstFrame(image: image, duration: duration, dimensions: dim, for: videoURL)
+                return
+            }
+            
+            throw URLError(.cannotDecodeRawData)
+            
         } catch {
+            if Task.isCancelled { return }
             await MainActor.run {
+                guard self.videoUrlString == videoURL.absoluteString else { return }
 #if DEBUG
                 L.og.debug("🎞️ Error loading first frame: \(error.localizedDescription) at \(videoURL.absoluteString)")
 #endif
@@ -363,30 +427,98 @@ class EmbeddedVideoVM: ObservableObject {
         return nil // Too many redirects or no Content-Length
     }
     
-    private func tryExtractFirstFrameDetails(from data: Data) async throws -> (UIImage, CMTime?, CGSize?)? {
-        guard let videoUrl else { return nil }
-        let tempURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension(videoUrl.pathExtension.isEmpty ? "mp4" : videoUrl.pathExtension)
-        
-        defer { try? FileManager.default.removeItem(at: tempURL) }
-        
-        try data.write(to: tempURL)
-        let asset = AVAsset(url: tempURL)
-        
-        // Check if asset is valid by getting duration
-        let duration = try await asset.load(.duration)
-        if duration == .zero || duration == .indefinite {
-            return nil // Not enough data yet
-        }
-        
+    private func tryExtractFirstFrameDetails(from data: Data, pathExtension: String) async throws -> (UIImage, CMTime?, CGSize?)? {
+        return try await Task.detached(priority: .utility) {
+            let tempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString)
+                .appendingPathExtension(pathExtension)
+            
+            defer { try? FileManager.default.removeItem(at: tempURL) }
+            
+            try data.write(to: tempURL)
+            let asset = AVAsset(url: tempURL)
+            
+            let duration = try await asset.load(.duration)
+            if duration == .zero || duration == .indefinite {
+                return nil
+            }
+            
+            let dim: CGSize? = await getVideoDimensions(asset: asset)
+            if let image = Self.extractFirstAvailableFrameImage(from: asset) {
+                return (image, duration, dim)
+            }
+            return nil
+        }.value
+    }
+    
+    // Creates a sparse local file with front bytes at offset 0 and tail bytes at their real offset.
+    private func tryExtractFirstFrameDetailsFromStitchedRanges(
+        fileSize: Int,
+        frontData: Data,
+        endData: Data,
+        endRangeStart: Int,
+        pathExtension: String
+    ) async throws -> (UIImage, CMTime?, CGSize?)? {
+        return try await Task.detached(priority: .utility) {
+            let tempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString)
+                .appendingPathExtension(pathExtension)
+            
+            defer { try? FileManager.default.removeItem(at: tempURL) }
+            
+            FileManager.default.createFile(atPath: tempURL.path, contents: nil)
+            let handle = try FileHandle(forWritingTo: tempURL)
+            defer { try? handle.close() }
+            
+            try handle.truncate(atOffset: UInt64(fileSize))
+            try handle.seek(toOffset: 0)
+            try handle.write(contentsOf: frontData)
+            try handle.seek(toOffset: UInt64(endRangeStart))
+            try handle.write(contentsOf: endData)
+            
+            let asset = AVAsset(url: tempURL)
+            let duration = try await asset.load(.duration)
+            if duration == .zero || duration == .indefinite {
+                return nil
+            }
+            
+            let dim: CGSize? = await getVideoDimensions(asset: asset)
+            if let image = Self.extractFirstAvailableFrameImage(from: asset) {
+                return (image, duration, dim)
+            }
+            return nil
+        }.value
+    }
+    
+    private static func extractFirstAvailableFrameImage(from asset: AVAsset) -> UIImage? {
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
         
-        let dim: CGSize? = await getVideoDimensions(asset: asset)
+        let probeTimes: [CMTime] = [
+            .zero,
+            CMTime(seconds: 1.0 / 30.0, preferredTimescale: 600),
+            CMTime(seconds: 0.1, preferredTimescale: 600),
+            CMTime(seconds: 0.5, preferredTimescale: 600)
+        ]
         
-        let cgImage = try generator.copyCGImage(at: .zero, actualTime: nil)
-        return (UIImage(cgImage: cgImage), duration, dim)
+        for probeTime in probeTimes {
+            if let cgImage = try? generator.copyCGImage(at: probeTime, actualTime: nil) {
+                return UIImage(cgImage: cgImage)
+            }
+        }
+        return nil
+    }
+    
+    @MainActor
+    private func setFirstFrame(image: UIImage, duration: CMTime?, dimensions: CGSize?, for videoURL: URL) {
+        guard self.videoUrlString == videoURL.absoluteString else { return }
+        let cachedFirstFrame = CachedFirstFrame(url: videoURL.absoluteString, uiImage: image, dimensions: dimensions, duration: duration)
+        self.viewState = .loadedFirstFrame(cachedFirstFrame)
+        self.cachedFirstFrame = cachedFirstFrame // need to keep it to revert back to after PIP
+        AVAssetCache.shared.set(url: videoURL.absoluteString, firstFrame: cachedFirstFrame)
+#if DEBUG
+        L.og.debug("🎞️ Successful firstFrame \(String(describing: dimensions)) \(cachedFirstFrame.durationString ?? "") on \(videoURL.absoluteString) -[LOG]-")
+#endif
     }
     
     private func rangedRequest(url: URL, bytes: Range<Int>) -> URLRequest {

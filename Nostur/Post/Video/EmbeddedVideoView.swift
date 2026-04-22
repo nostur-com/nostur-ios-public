@@ -159,6 +159,7 @@ struct EmbeddedVideoView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 90, height: 90)
+                            .opacity(0.8)
                             .foregroundColor(theme.accent)
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -221,6 +222,7 @@ struct EmbeddedVideoView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 90, height: 90)
+                            .opacity(0.8)
                             .foregroundColor(theme.accent)
                             .contentShape(Rectangle())
                             .onTapGesture {
