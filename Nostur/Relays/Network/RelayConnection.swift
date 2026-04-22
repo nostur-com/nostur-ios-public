@@ -315,6 +315,22 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 #endif
                 return
             }
+
+            // CLOSE is a control message: send immediately, never keep in outQueue.
+            if Self.isCloseMessage(text) {
+                guard self.isSocketConnected, let webSocketTask = self.webSocketTask else {
+#if DEBUG
+                    L.sockets.debug("🔚🔚 Not connected. Dropping CLOSE for \(self.url): \(text)")
+#endif
+                    return
+                }
+                webSocketTask.send(.string(text)) { error in
+                    if let error {
+                        self.didReceiveError(error)
+                    }
+                }
+                return
+            }
             
             if bypassQueue { // To give prio to stuff like AUTH
                 if self.isSocketConnected {
@@ -380,18 +396,28 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 #endif
         }
 
-        while let out = outQueue.first {
+        while !outQueue.isEmpty {
             let now = Date()
             trimReqSendHistory(now: now)
 
-            if Self.isReqMessage(out.text), reqSentAt.count >= maxReqPerSecond {
-                let delay = nextReqDrainDelay(now: now)
+            let reqRateLimited = reqSentAt.count >= maxReqPerSecond
+            var sendIndex = 0
+
+            if reqRateLimited && Self.isReqMessage(outQueue[0].text) {
+                if let closeIndex = outQueue.firstIndex(where: { Self.isCloseMessage($0.text) }) {
+                    sendIndex = closeIndex
+                }
+                else {
+                    let delay = nextReqDrainDelay(now: now)
 #if DEBUG
-                L.sockets.debug("🟠🟠🏎️🔌🔌 \(self.url): req rate limited \(self.reqSentAt.count)/\(self.maxReqPerSecond) (outQueue: \(self.outQueue.count)) -[LOG]-")
+                    L.sockets.debug("🟠🟠🏎️🔌🔌 \(self.url): req rate limited \(self.reqSentAt.count)/\(self.maxReqPerSecond) (outQueue: \(self.outQueue.count)) -[LOG]-")
 #endif
-                scheduleReqDrain(after: delay)
-                break
+                    scheduleReqDrain(after: delay)
+                    break
+                }
             }
+
+            let out = outQueue[sendIndex]
 
 #if DEBUG
             L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text.prefix(255)) -[LOG]-")
@@ -409,7 +435,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     self.connect(andSend: out.text)
                 }
             }
-            outQueue.removeFirst()
+            outQueue.remove(at: sendIndex)
         }
     }
 
@@ -448,6 +474,11 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     private static func subscriptionIdForLatencyResponse(from message: String) -> String? {
         guard isLatencyResponseMessage(message) else { return nil }
         return extractSecondStringElement(from: message)
+    }
+
+
+    private static func isCloseMessage(_ message: String) -> Bool {
+        message.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[\"CLOSE\"")
     }
 
     // Guard against malformed relay hints being treated as a single URL
