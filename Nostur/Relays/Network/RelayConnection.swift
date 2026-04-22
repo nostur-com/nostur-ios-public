@@ -479,6 +479,42 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         return extractSecondStringElement(from: message)
     }
 
+    // Fast-path parser for relay frames like ["EVENT","subId",...], ["EOSE","subId"], ["CLOSED","subId",...]
+    private static func extractSecondStringElement(from message: String) -> String? {
+        let chars = Array(message.trimmingCharacters(in: .whitespacesAndNewlines))
+        guard !chars.isEmpty else { return nil }
+
+        var quoteCount = 0
+        var i = 0
+        while i < chars.count {
+            if chars[i] == "\"" {
+                quoteCount += 1
+                if quoteCount == 3 {
+                    var j = i + 1
+                    var value = ""
+                    while j < chars.count {
+                        let c = chars[j]
+                        if c == "\\" {
+                            if j + 1 < chars.count {
+                                value.append(chars[j + 1])
+                                j += 2
+                                continue
+                            }
+                            break
+                        }
+                        if c == "\"" {
+                            return value
+                        }
+                        value.append(c)
+                        j += 1
+                    }
+                    return nil
+                }
+            }
+            i += 1
+        }
+        return nil
+    }
 
     private static func isCloseMessage(_ message: String) -> Bool {
         message.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[\"CLOSE\"")
