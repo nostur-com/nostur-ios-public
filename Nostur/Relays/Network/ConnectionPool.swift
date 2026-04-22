@@ -517,6 +517,7 @@ public class ConnectionPool: ObservableObject {
 #endif
         
         let limitToRelayIds = relays.map({ $0.id })
+        let requestSubscriptionId = subscriptionId ?? message.clientMessage.subscriptionId
         
         for (_, connection) in self.connections {
             if connection.isNWC || connection.isNC { // Logic for N(W)C relay is a bit different, no read/write difference
@@ -533,7 +534,7 @@ public class ConnectionPool: ObservableObject {
                         }
                     }
                     // For NWC we just replace active subscriptions, else doesn't work
-                    connection.sendMessage(message.message)
+                    connection.sendMessage(message.message, subscriptionId: requestSubscriptionId)
                 }
                 else if message.type == .CLOSE {
                     if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
@@ -599,7 +600,7 @@ public class ConnectionPool: ObservableObject {
                             connection?.nreqSubscriptions.insert(subscriptionId!)
                         }
                     }
-                    connection.sendMessage(message.message)
+                    connection.sendMessage(message.message, subscriptionId: requestSubscriptionId)
                 }
                 else if message.type == .CLOSE { // CLOSE FOR ALL RELAYS
                     if (!connection.relayData.read && !limitToRelayIds.contains(connection.url)) { continue }
@@ -788,7 +789,7 @@ public class ConnectionPool: ObservableObject {
 #if DEBUG
             L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
 #endif
-                conn.sendMessage(message)
+                conn.sendMessage(message, subscriptionId: subscriptionId)
             }
             else {
                 ConnectionPool.shared.addOutboxConnection(RelayData(read: true, write: false, search: false, auth: false, url: req.key, excludedPubkeys: [])) { connection in
@@ -805,7 +806,7 @@ public class ConnectionPool: ObservableObject {
 #if DEBUG
             L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
 #endif
-                    connection.sendMessage(message)
+                    connection.sendMessage(message, subscriptionId: subscriptionId)
                 }
             }
         }
@@ -948,6 +949,7 @@ public class ConnectionPool: ObservableObject {
 struct SocketMessage {
     let id = UUID()
     let text: String
+    let subscriptionId: String?
 }
 
 

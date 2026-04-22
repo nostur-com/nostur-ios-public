@@ -8,12 +8,20 @@
 import SwiftUI
 import NavigationBackport
 
+enum RelayStatsSortMode: String, CaseIterable, Identifiable {
+    case activity = "Activity"
+    case latency = "Latency"
+
+    var id: String { rawValue }
+}
+
 struct RelayStatsView: View {
     
     public let stats: [CanonicalRelayUrl: RelayConnectionStats]
     @State private var showingStats: RelayConnectionStats? = nil
     
     @State private var statsSorted: [RelayConnectionStats] = []
+    @State private var sortMode: RelayStatsSortMode = .activity
     
     var body: some View {
         NXForm {
@@ -34,7 +42,7 @@ struct RelayStatsView: View {
                 } header: {
                     HStack {
                         Spacer()
-                        Text("(Re)connects/Messages/Errors")
+                        Text("(Re)connects/Messages/Errors + Avg latency (5m/15m/1h)")
                             .font(.footnote)
                             .foregroundColor(.secondary)
                     }
@@ -43,11 +51,31 @@ struct RelayStatsView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarTitle(String(localized: "Relay stats", comment: "Title for  relay connection statistics sheet"))
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    ForEach(RelayStatsSortMode.allCases) { mode in
+                        Button {
+                            sortMode = mode
+                        } label: {
+                            if sortMode == mode {
+                                Label(mode.rawValue, systemImage: "checkmark")
+                            }
+                            else {
+                                Text(mode.rawValue)
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down")
+                }
+            }
+        }
         .onAppear {
-            statsSorted = stats.values
-                .sorted(by: { $0.errors < $1.errors })
-                .sorted(by: { $0.receivedPubkeys.count > $1.receivedPubkeys.count })
-                .sorted(by: { $0.connected != 0 && $1.connected == 0 })
+            refreshSortedStats()
+        }
+        .onChange(of: sortMode) { _ in
+            refreshSortedStats()
         }
         .sheet(item: $showingStats, content: { relayConnectionStats in
             NBNavigationStack {
@@ -65,6 +93,34 @@ struct RelayStatsView: View {
             
         })
     }
+
+    private func refreshSortedStats() {
+        let selectedSortMode = sortMode
+        let statsValues = Array(stats.values)
+        ConnectionPool.shared.queue.async {
+            let sorted: [RelayConnectionStats]
+            switch selectedSortMode {
+            case .activity:
+                sorted = statsValues
+                    .sorted(by: { $0.errors < $1.errors })
+                    .sorted(by: { $0.receivedPubkeys.count > $1.receivedPubkeys.count })
+                    .sorted(by: { $0.connected != 0 && $1.connected == 0 })
+            case .latency:
+                sorted = statsValues
+                    .sorted { left, right in
+                        let leftLatency = left.latencyAverages().bestAvailableMs ?? Double.greatestFiniteMagnitude
+                        let rightLatency = right.latencyAverages().bestAvailableMs ?? Double.greatestFiniteMagnitude
+                        if leftLatency == rightLatency {
+                            return left.connected > right.connected
+                        }
+                        return leftLatency < rightLatency
+                    }
+            }
+            DispatchQueue.main.async {
+                self.statsSorted = sorted
+            }
+        }
+    }
 }
 
 struct RelayStatsRow: View {
@@ -72,30 +128,48 @@ struct RelayStatsRow: View {
     
     @State private var foundAccountRows: [(pubkey: String, pfp: URL?, name: String)] = []
     @State private var statsString = ""
+    @State private var latencyString = "-"
     
     var body: some View {
-        HStack {
-            Text(stats.id)
-                .strikethrough(ConnectionPool.shared.penaltybox.contains(stats.id))
-                .lineLimit(1)
-                .layoutPriority(2)
-            
-            if stats.lastNoticeMessages.count > 0 {
-                Text("\(stats.lastNoticeMessages.count)")
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Text(stats.id)
+                    .strikethrough(ConnectionPool.shared.penaltybox.contains(stats.id))
+                    .lineLimit(1)
+                    .layoutPriority(2)
+
+                if !foundAccountRows.isEmpty {
+                    Text("-")
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+
+                if stats.lastNoticeMessages.count > 0 {
+                    Text("\(stats.lastNoticeMessages.count)")
+                        .lineLimit(1)
+                        .font(.footnote)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 4)
+                        .background(Capsule().foregroundColor(.orange))
+                }
+
+                FoundAccountPFPs(foundAccountRows: foundAccountRows)
+                    .layoutPriority(1)
+
+                Spacer(minLength: 8)
+
+                Text(statsString)
+                    .lineLimit(1)
+                    .layoutPriority(3)
+            }
+
+            HStack {
+                Text(latencyString)
                     .lineLimit(1)
                     .font(.footnote)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 4)
-                    .background(Capsule().foregroundColor(.orange))
+                    .foregroundColor(.secondary)
+                Spacer()
             }
-            
-            FoundAccountPFPs(foundAccountRows: foundAccountRows)
-                .layoutPriority(1)
-            
-            Spacer()
-            Text(statsString)
-                .lineLimit(1)
-                .layoutPriority(3)
         }
         .onAppear {
             foundAccountRows = Array(stats.receivedPubkeys
@@ -113,11 +187,24 @@ struct RelayStatsRow: View {
             
             ConnectionPool.shared.queue.async {
                 let statsString = String(format: "%d/%d/%d", stats.connected, stats.messages, stats.errors)
+                let latency = stats.latencyAverages()
+                let latencyString = String(
+                    format: "avg %@/%@/%@",
+                    Self.formatLatency(latency.avg5mMs),
+                    Self.formatLatency(latency.avg15mMs),
+                    Self.formatLatency(latency.avg1hMs)
+                )
                 DispatchQueue.main.async {
                     self.statsString = statsString
+                    self.latencyString = latencyString
                 }
             }
         }
+    }
+
+    private static func formatLatency(_ value: Double?) -> String {
+        guard let value else { return "-" }
+        return String(format: "%.0fms", value)
     }
 }
 
@@ -144,9 +231,36 @@ struct RelayStatsDetails: View {
     @State private var errorMessages: [String] = []
     @State private var noticeMessages: [String] = []
     @State private var foundAccountRows: [(pubkey: String, pfp: URL?, name: String)] = []
+    @State private var latencyAverages: RelayLatencyAverages? = nil
  
     var body: some View {
         NXForm {
+            if let latencyAverages {
+                Section {
+                    HStack {
+                        Text("Last 5 minutes")
+                        Spacer()
+                        Text(Self.formatLatency(latencyAverages.avg5mMs))
+                    }
+                    HStack {
+                        Text("Last 15 minutes")
+                        Spacer()
+                        Text(Self.formatLatency(latencyAverages.avg15mMs))
+                    }
+                    HStack {
+                        Text("Last 1 hour")
+                        Spacer()
+                        Text(Self.formatLatency(latencyAverages.avg1hMs))
+                    }
+                } header: {
+                    Text("REQ response latency")
+                } footer: {
+                    Text("Samples (5m/15m/1h): \(latencyAverages.samples5m)/\(latencyAverages.samples15m)/\(latencyAverages.samples1h)")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+            }
+
             if stats.receivedPubkeys.count > 0 {
                 Section {
                     ForEach(foundAccountRows.indices, id: \.self) { index in
@@ -207,12 +321,19 @@ struct RelayStatsDetails: View {
             ConnectionPool.shared.queue.async {
                 let lastErrorMessages = stats.lastErrorMessages
                 let lastNoticeMessages = stats.lastNoticeMessages
+                let latencyAverages = stats.latencyAverages()
                 DispatchQueue.main.async {
                     errorMessages = lastErrorMessages
                     noticeMessages = lastNoticeMessages
+                    self.latencyAverages = latencyAverages
                 }
             }
         }
+    }
+
+    private static func formatLatency(_ value: Double?) -> String {
+        guard let value else { return "-" }
+        return String(format: "%.1f ms", value)
     }
 }
 

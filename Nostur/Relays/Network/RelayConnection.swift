@@ -206,7 +206,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 }
                 guard !self.isSocketConnecting || forceConnectionAttempt else {
                     if let andSend {
-                        let socketMessage = SocketMessage(text: andSend)
+                        let socketMessage = SocketMessage(text: andSend, subscriptionId: nil)
                         self.outQueue.append(socketMessage)
                     }
                     return
@@ -246,7 +246,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 self.skipped = 0
                 
                 if let andSend = andSend {
-                    self.outQueue.append(SocketMessage(text: andSend))
+                    self.outQueue.append(SocketMessage(text: andSend, subscriptionId: nil))
                 }
                 
                 if !self.isSocketConnected {
@@ -306,7 +306,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public var eventsThatMayNeedAuth: [String: String] = [:] // [ post id : event message text string ]
     
-    public func sendMessage(_ text: String, bypassQueue: Bool = false) {
+    public func sendMessage(_ text: String, subscriptionId: String? = nil, bypassQueue: Bool = false) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             if !self.isDeviceConnected {
@@ -328,14 +328,14 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     }
                 }
                 else {
-                    let socketMessage = SocketMessage(text: text)
+                    let socketMessage = SocketMessage(text: text, subscriptionId: subscriptionId)
                     self.outQueue.insert(socketMessage, at: 0)
                 }
                 
                 return
             }
             
-            let socketMessage = SocketMessage(text: text)
+            let socketMessage = SocketMessage(text: text, subscriptionId: subscriptionId)
             self.outQueue.append(socketMessage)
             
             if self.webSocketTask == nil || !self.isSocketConnected {
@@ -398,6 +398,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 #endif
             if Self.isReqMessage(out.text) {
                 reqSentAt.append(now)
+                if let subscriptionId = out.subscriptionId {
+                    self.stats.recordTrackedReqSent(subscriptionId: subscriptionId, nowUptimeNs: DispatchTime.now().uptimeNanoseconds)
+                }
             }
 
             webSocketTask.send(.string(out.text)) { error in
@@ -432,6 +435,19 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 
     private static func isReqMessage(_ message: String) -> Bool {
         message.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[\"REQ\"")
+    }
+
+
+    private static func isLatencyResponseMessage(_ message: String) -> Bool {
+        let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.hasPrefix("[\"EVENT\"")
+            || trimmed.hasPrefix("[\"EOSE\"")
+            || trimmed.hasPrefix("[\"CLOSED\"")
+    }
+
+    private static func subscriptionIdForLatencyResponse(from message: String) -> String? {
+        guard isLatencyResponseMessage(message) else { return nil }
+        return extractSecondStringElement(from: message)
     }
 
     // Guard against malformed relay hints being treated as a single URL
@@ -588,6 +604,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self.lastMessageReceivedAt = .now
             self.exponentialReconnectBackOff = 0
             self.skipped = 0
+            if let subscriptionId = Self.subscriptionIdForLatencyResponse(from: string) {
+                self.stats.recordTrackedReqResponse(subscriptionId: subscriptionId)
+            }
             
             self.stats.messages += 1
         }
