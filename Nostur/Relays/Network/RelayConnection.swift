@@ -481,39 +481,65 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 
     // Fast-path parser for relay frames like ["EVENT","subId",...], ["EOSE","subId"], ["CLOSED","subId",...]
     private static func extractSecondStringElement(from message: String) -> String? {
-        let chars = Array(message.trimmingCharacters(in: .whitespacesAndNewlines))
-        guard !chars.isEmpty else { return nil }
+        let bytes = message.utf8
+        guard !bytes.isEmpty else { return nil }
+
+        var start = bytes.startIndex
+        var end = bytes.endIndex
+
+        while start < end, isJSONWhitespace(bytes[start]) {
+            start = bytes.index(after: start)
+        }
+
+        while start < end {
+            let beforeEnd = bytes.index(before: end)
+            guard isJSONWhitespace(bytes[beforeEnd]) else { break }
+            end = beforeEnd
+        }
+
+        guard start < end else { return nil }
 
         var quoteCount = 0
-        var i = 0
-        while i < chars.count {
-            if chars[i] == "\"" {
+        var i = start
+
+        while i < end {
+            if bytes[i] == 0x22 {
                 quoteCount += 1
                 if quoteCount == 3 {
-                    var j = i + 1
-                    var value = ""
-                    while j < chars.count {
-                        let c = chars[j]
-                        if c == "\\" {
-                            if j + 1 < chars.count {
-                                value.append(chars[j + 1])
-                                j += 2
-                                continue
-                            }
-                            break
+                    var j = bytes.index(after: i)
+                    var valueBytes: [UInt8] = []
+                    valueBytes.reserveCapacity(64)
+
+                    while j < end {
+                        let c = bytes[j]
+                        if c == 0x5C {
+                            j = bytes.index(after: j)
+                            guard j < end else { return nil }
+                            valueBytes.append(bytes[j])
+                            j = bytes.index(after: j)
+                            continue
                         }
-                        if c == "\"" {
-                            return value
+
+                        if c == 0x22 {
+                            return String(decoding: valueBytes, as: UTF8.self)
                         }
-                        value.append(c)
-                        j += 1
+
+                        valueBytes.append(c)
+                        j = bytes.index(after: j)
                     }
+
                     return nil
                 }
             }
-            i += 1
+
+            i = bytes.index(after: i)
         }
+
         return nil
+    }
+
+    private static func isJSONWhitespace(_ byte: UInt8) -> Bool {
+        byte == 0x20 || byte == 0x09 || byte == 0x0A || byte == 0x0D
     }
 
     private static func isCloseMessage(_ message: String) -> Bool {
