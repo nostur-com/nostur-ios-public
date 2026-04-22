@@ -1108,7 +1108,7 @@ extension Event {
         if (event.kind == .shortVoiceMessage || event.kind == .textNote || NIP22_COMMENT_KINDS.contains(event.kind.id)) {
             EventCache.shared.setObject(for: event.id, value: savedEvent)
 #if DEBUG
-            L.og.debug("Saved \(event.id) in cache -[LOG]-")
+            L.og.debug("Saved \(event.id) in cache \(relays ?? "") -[LOG]-")
 #endif
         }
         
