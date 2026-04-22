@@ -42,7 +42,7 @@ struct RelayStatsView: View {
                 } header: {
                     HStack {
                         Spacer()
-                        Text("(Re)connects/Messages/Errors + Avg latency (5m/15m/1h)")
+                        Text("(Re)connects/Messages/Errors")
                             .font(.footnote)
                             .foregroundColor(.secondary)
                     }
@@ -133,7 +133,7 @@ struct RelayStatsRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Text(stats.id)
+                Text(stats.id.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: ""))
                     .strikethrough(ConnectionPool.shared.penaltybox.contains(stats.id))
                     .lineLimit(1)
                     .layoutPriority(2)
@@ -235,32 +235,6 @@ struct RelayStatsDetails: View {
  
     var body: some View {
         NXForm {
-            if let latencyAverages {
-                Section {
-                    HStack {
-                        Text("Last 5 minutes")
-                        Spacer()
-                        Text(Self.formatLatency(latencyAverages.avg5mMs))
-                    }
-                    HStack {
-                        Text("Last 15 minutes")
-                        Spacer()
-                        Text(Self.formatLatency(latencyAverages.avg15mMs))
-                    }
-                    HStack {
-                        Text("Last 1 hour")
-                        Spacer()
-                        Text(Self.formatLatency(latencyAverages.avg1hMs))
-                    }
-                } header: {
-                    Text("REQ response latency")
-                } footer: {
-                    Text("Samples (5m/15m/1h): \(latencyAverages.samples5m)/\(latencyAverages.samples15m)/\(latencyAverages.samples1h)")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                }
-            }
-
             if stats.receivedPubkeys.count > 0 {
                 Section {
                     ForEach(foundAccountRows.indices, id: \.self) { index in
@@ -314,6 +288,32 @@ struct RelayStatsDetails: View {
                     Text("Notices")
                 } footer: {
                     Text("Last 10 notice messages")
+                }
+            }
+            
+            if let latencyAverages {
+                Section {
+                    HStack {
+                        Text("Last 5 minutes")
+                        Spacer()
+                        Text(Self.formatLatency(latencyAverages.avg5mMs))
+                    }
+                    HStack {
+                        Text("Last 15 minutes")
+                        Spacer()
+                        Text(Self.formatLatency(latencyAverages.avg15mMs))
+                    }
+                    HStack {
+                        Text("Last 1 hour")
+                        Spacer()
+                        Text(Self.formatLatency(latencyAverages.avg1hMs))
+                    }
+                } header: {
+                    Text("REQ response latency")
+                } footer: {
+                    Text("Samples (5m/15m/1h): \(latencyAverages.samples5m)/\(latencyAverages.samples15m)/\(latencyAverages.samples1h)")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
                 }
             }
         }
