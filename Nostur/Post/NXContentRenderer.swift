@@ -219,10 +219,10 @@ struct NXContentRenderer: View { // VIEW things
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .id(index)
                                 .overlay(alignment: .center) {
-                                    Image(systemName:"play.circle")
+                                    Image(systemName: "play.fill")
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width: 80, height: 80)
+                                        .frame(width: 100, height: 100)
     //                                        .centered()
                                         .contentShape(Rectangle())
                                 }

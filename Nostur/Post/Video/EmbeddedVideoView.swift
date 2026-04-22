@@ -155,10 +155,10 @@ struct EmbeddedVideoView: View {
                 }
                 .overlay(alignment: .center) {
                     if vm.downloadProgress == 0 {
-                        Image(systemName:"play.circle")
+                        Image(systemName: "play.fill")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 65, height: 65)
+                            .frame(width: 90, height: 90)
                             .foregroundColor(theme.accent)
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -217,10 +217,10 @@ struct EmbeddedVideoView: View {
                 }
                 .overlay {
                     if vm.downloadProgress == 0 {
-                        Image(systemName:"play.circle")
+                        Image(systemName:"play.fill")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 65, height: 65)
+                            .frame(width: 90, height: 90)
                             .foregroundColor(theme.accent)
                             .contentShape(Rectangle())
                             .onTapGesture {
