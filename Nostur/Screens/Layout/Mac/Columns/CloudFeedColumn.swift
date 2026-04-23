@@ -44,6 +44,9 @@ struct CloudFeedColumn: View {
         .background(theme.listBackground)
         .onValueChange(feed, action: { oldFeed, newFeed in
             guard oldFeed != newFeed else { return }
+            
+            ConnectionPool.shared.closeSubscription(oldFeed.subscriptionId)
+            
             self.columnConfig = NXColumnConfig(
                 id: newFeed.subscriptionId,
                 columnType: newFeed.feedType,

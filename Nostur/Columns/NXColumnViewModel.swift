@@ -2319,9 +2319,14 @@ class NXColumnViewModel: ObservableObject {
     deinit {
 #if DEBUG
         if let config {
+            let configId = config.id
+            Task { @MainActor in
+                ConnectionPool.shared.closeSubscription(config.id)
+            }
             L.og.debug("☘️☘️ \(config.name) deinit  -[LOG]-")
         }
 #endif
+        
         // Cancel all subscriptions
         newEventsInDatabaseSub?.cancel()
         newPostSavedSub?.cancel()
