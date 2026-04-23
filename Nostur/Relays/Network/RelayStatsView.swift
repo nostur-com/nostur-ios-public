@@ -24,6 +24,7 @@ struct RelayStatsView: View {
     @State private var statsSorted: [RelayConnectionStats] = []
     @State private var sortMode: RelayStatsSortMode = .activity
     @State private var disabledRelayCount: Int = 0
+    @State private var collectionPeriodText: String = "min"
     
     var body: some View {
         NXForm {
@@ -44,7 +45,7 @@ struct RelayStatsView: View {
                 } header: {
                     HStack {
                         Spacer()
-                        Text("(Re)connects/Messages/Errors")
+                        Text("(Re)connects/Messages/Errors in last \(collectionPeriodText)")
                             .font(.footnote)
                             .foregroundColor(.secondary)
                     }
@@ -84,6 +85,7 @@ struct RelayStatsView: View {
         .onAppear {
             refreshSortedStats()
             refreshDisabledRelayCount()
+            refreshCollectionPeriodText()
         }
         .onChange(of: sortMode) { _ in
             refreshSortedStats()
@@ -138,6 +140,34 @@ struct RelayStatsView: View {
 
     private func refreshDisabledRelayCount() {
         disabledRelayCount = DisabledRelaysStore.count()
+    }
+
+    private func refreshCollectionPeriodText() {
+        let statsValues = Array(stats.values)
+        ConnectionPool.shared.queue.async {
+            guard let earliest = statsValues.map(\.firstSeenAt).min() else {
+                DispatchQueue.main.async {
+                    self.collectionPeriodText = "min"
+                }
+                return
+            }
+
+            let age = Date().timeIntervalSince(earliest)
+            let minutes = max(1, Int(age / 60.0))
+
+            let text: String
+            if minutes >= 60 {
+                let hours = max(1, minutes / 60)
+                text = "\(hours) \(hours == 1 ? "hour" : "hours")"
+            }
+            else {
+                text = "\(minutes) \(minutes == 1 ? "minute" : "minutes")"
+            }
+
+            DispatchQueue.main.async {
+                self.collectionPeriodText = text
+            }
+        }
     }
 }
 
