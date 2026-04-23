@@ -166,6 +166,7 @@
 
     },
     "(Re)connects/Messages/Errors" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -174,6 +175,9 @@
           }
         }
       }
+    },
+    "(Re)connects/Messages/Errors in last %@" : {
+
     },
     "(Timeout or other error)" : {
       "extractionState" : "stale",

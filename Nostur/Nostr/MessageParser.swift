@@ -72,12 +72,12 @@ class MessageParser {
                 switch message.type {
                 case .AUTH:
 #if DEBUG
-                    L.sockets.debug("🟢🟢 \(relayUrl): \(message.message)")
+                    L.sockets.debug("🟢🟢 \(relayUrl): \(message.message) (AUTH)")
 #endif
                     client.handleAuth(message.message)
                 case .OK:
 #if DEBUG
-                    L.sockets.debug("\(relayUrl): \(message.message)")
+                    L.sockets.debug("\(relayUrl): \(message.message) (OK)")
 #endif
                     if message.success ?? false {
                         if let id = message.id {

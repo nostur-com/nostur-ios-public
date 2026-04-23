@@ -186,12 +186,6 @@ struct RelayStatsRow: View {
                     .lineLimit(1)
                     .layoutPriority(2)
 
-                if !foundAccountRows.isEmpty {
-                    Text("-")
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-
                 if stats.lastNoticeMessages.count > 0 {
                     Text("\(stats.lastNoticeMessages.count)")
                         .lineLimit(1)
@@ -204,7 +198,7 @@ struct RelayStatsRow: View {
                 FoundAccountPFPs(foundAccountRows: foundAccountRows)
                     .layoutPriority(1)
 
-                Spacer(minLength: 8)
+                Spacer()
 
                 Text(statsString)
                     .lineLimit(1)
@@ -237,7 +231,7 @@ struct RelayStatsRow: View {
                 let statsString = String(format: "%d/%d/%d", stats.connected, stats.messages, stats.errors)
                 let latency = stats.latencyAverages()
                 let latencyString = String(
-                    format: "avg %@/%@/%@",
+                    format: "%@/%@/%@",
                     Self.formatLatency(latency.avg5mMs),
                     Self.formatLatency(latency.avg15mMs),
                     Self.formatLatency(latency.avg1hMs)
