@@ -30,6 +30,19 @@ struct NXPostsFeed: View {
         self.posts = posts
         self.vmInner = vm.vmInner
     }
+
+    private var relayFeedRelays: Set<RelayData> {
+        guard let config = vm.config else { return [] }
+
+        switch config.columnType {
+        case .relays(let feed):
+            return feed.relaysData
+        case .relayPreview(let relayData):
+            return [relayData]
+        default:
+            return []
+        }
+    }
     
     var body: some View {
         GeometryReader { geo in
@@ -38,6 +51,7 @@ struct NXPostsFeed: View {
                     PostOrThread(nrPost: nrPost, theme: theme)
                         .environment(\.availableHeight, geo.size.height)
                         .environment(\.availableWidth, geo.size.width)
+                        .environment(\.relayFeedRelays, relayFeedRelays)
                 }
                 .onDisappear {
                     onPostDisappear(nrPost)

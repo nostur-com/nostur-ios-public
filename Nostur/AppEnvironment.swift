@@ -148,6 +148,16 @@ extension EnvironmentValues {
     }
 }
 
+struct RelayFeedRelaysEnvironmentKey: EnvironmentKey {
+    static let defaultValue: Set<RelayData> = []
+}
+
+extension EnvironmentValues {
+    var relayFeedRelays: Set<RelayData> {
+        get { self[RelayFeedRelaysEnvironmentKey.self] }
+        set { self[RelayFeedRelaysEnvironmentKey.self] = newValue }
+    }
+}
 
 struct NetworkMonitorEnvironmentKey: EnvironmentKey {
     static let defaultValue: NetworkMonitor = .shared

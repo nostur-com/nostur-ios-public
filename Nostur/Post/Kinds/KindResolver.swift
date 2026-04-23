@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 struct KindResolver: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme
     @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
+    @Environment(\.relayFeedRelays) private var relayFeedRelays
     
     public let nrPost: NRPost
     public var fullWidth: Bool = false
@@ -209,6 +211,17 @@ struct KindResolver: View {
             bg().perform {
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
                 QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+
+                if !relayFeedRelays.isEmpty {
+                    let missingPubkeys = Set(nrPost.missingPs.prefix(500))
+                    guard !missingPubkeys.isEmpty else { return }
+
+                    nxReq(
+                        Filters(authors: missingPubkeys, kinds: [0]),
+                        subscriptionId: "MISSP-\(nrPost.shortId)-\(UUID().uuidString.prefix(8))",
+                        relays: relayFeedRelays
+                    )
+                }
             }
         }
     }
