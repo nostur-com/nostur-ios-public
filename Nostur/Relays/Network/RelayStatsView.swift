@@ -278,6 +278,7 @@ struct RelayStatsDetails: View {
     public let stats: RelayConnectionStats
     @State private var errorMessages: [String] = []
     @State private var noticeMessages: [String] = []
+    @State private var activeSubscriptions: [String] = []
     @State private var foundAccountRows: [(pubkey: String, pfp: URL?, name: String)] = []
     @State private var latencyAverages: RelayLatencyAverages? = nil
     @State private var neverConnectToRelay: Bool = false
@@ -339,6 +340,21 @@ struct RelayStatsDetails: View {
                     Text("Last 10 notice messages")
                 }
             }
+
+            Section {
+                if activeSubscriptions.isEmpty {
+                    Text("None")
+                        .foregroundColor(.secondary)
+                }
+                else {
+                    ForEach(activeSubscriptions, id: \.self) { subscriptionId in
+                        Text(subscriptionId)
+                            .font(.footnote)
+                    }
+                }
+            } header: {
+                Text("Active subscriptions (\(activeSubscriptions.count))")
+            }
             
             if let latencyAverages {
                 Section {
@@ -387,10 +403,14 @@ struct RelayStatsDetails: View {
                 let lastErrorMessages = stats.lastErrorMessages
                 let lastNoticeMessages = stats.lastNoticeMessages
                 let latencyAverages = stats.latencyAverages()
+                let relayId = normalizeRelayUrl(stats.id)
+                let activeSubscriptions = ConnectionPool.shared.connections[relayId]
+                    .map { Array($0.nreqSubscriptions).sorted() } ?? []
                 DispatchQueue.main.async {
                     errorMessages = lastErrorMessages
                     noticeMessages = lastNoticeMessages
                     self.latencyAverages = latencyAverages
+                    self.activeSubscriptions = activeSubscriptions
                 }
             }
         }
