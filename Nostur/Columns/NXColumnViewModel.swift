@@ -651,6 +651,9 @@ class NXColumnViewModel: ObservableObject {
                 
                 let event = notification.object as! Event
                 bg().perform { [weak self] in
+                    // Make sure the post is not a reply or that replies are enabled for this feed
+                    guard event.replyToId == nil || repliesEnabled else { return }
+                    
                     // Only kind 1222/1244 on yak-only feed
                     if case .yak(_) = config.columnType, (event.kind != 1222 && event.kind != 1244) {
                         return
@@ -699,7 +702,9 @@ class NXColumnViewModel: ObservableObject {
                 guard case .relays(let feed) = config.columnType else { return }
                 guard feed.relaysData.contains(where: { $0.id == relayData.id }) else { return }
                 
-                bg().perform { [weak self] in    
+                bg().perform { [weak self] in
+                    // Make sure the post is not a reply or that replies are enabled for this feed
+                    guard event.replyToId == nil || repliesEnabled else { return }
                     
                     guard !currentIdsOnScreen.contains(event.id) else { return }
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NXColumnViewModel.listenForOwnNewSingleRelayPostSaved")
