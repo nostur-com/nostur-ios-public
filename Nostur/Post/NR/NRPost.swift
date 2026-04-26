@@ -961,6 +961,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
     }
     private func rerenderReplyingToFragment() {
+#if DEBUG
+        L.og.debug("🍋🍋 NRPost.rerenderReplyingToFragment() id: \(self.id) missingPs: \(self.missingPs.count)")
+#endif
         bg().perform { [weak self] in
             guard let self = self, let event = event else { return }
             if let replyingToMarkdown = NRReplyingToBuilder.shared.replyingToUsernamesMarkDownString(event) {

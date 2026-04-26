@@ -673,7 +673,6 @@ class NotificationsViewModel: ObservableObject {
     }
     
     private func checkForUnreadReposts(accountData: AccountData) {
-        //TODO: Should check if there is actual mention in .content
         shouldBeBg()
         
         let fetchRequest = q.unreadRepostsQuery(resultType: .managedObjectResultType, accountData: accountData)

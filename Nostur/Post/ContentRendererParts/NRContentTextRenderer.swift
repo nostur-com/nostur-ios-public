@@ -120,7 +120,7 @@ struct NRContentTextRendererInner: View {
 //                        let output = isDetail ? reparsedNxOutput : reparsedNxOutput.prefix(NRTEXT_LIMIT)
                         if self.nxText != reparsedNxOutput {
 #if DEBUG
-                            L.og.debug("NRTextFixed.Reparsed: \(reparsed.input) ----> \(reparsedNxOutput)")
+                            L.og.debug("🍋🍋 Text.Reparsed() \(reparsed.input) ----> \(reparsedNxOutput)")
 #endif
                             DispatchQueue.main.async {
                                 self.nxText = reparsedNxOutput
@@ -192,7 +192,7 @@ struct NRContentTextRendererInner: View {
                                 let output = isDetail || shouldShowMoreButton ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
                                 if self.text != output {
 #if DEBUG
-                                    L.og.debug("NRTextFixed.Reparsed: \(reparsed.input) ----> \(output)")
+                                    L.og.debug("🍋🍋 NRTextFixed.Reparsed() \(reparsed.input) ----> \(output)")
 #endif
                                     DispatchQueue.main.async {
                                         self.text = output
@@ -255,7 +255,7 @@ struct NRContentTextRendererInner: View {
                                 let output = isDetail || shouldShowMoreButton ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
                                 if self.text != output {
 #if DEBUG
-                                    L.og.debug("NRTextDynamic.Reparsed: \(reparsed.input) ----> \(output)")
+                                    L.og.debug("🍋🍋 NRTextDynamic.Reparsed() \(reparsed.input) ----> \(output)")
 #endif
                                     DispatchQueue.main.async {
                                         self.text = output
