@@ -79,6 +79,7 @@ func handleRepost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = n
         }
         
         guard let firstQuote = Event.fetchEvent(id: firstQuoteId, context: context) else { return }
+        savedEvent.otherPubkey = firstQuote.pubkey // (again because more accurate that firstP)
         firstQuote.repostsCount = (firstQuote.repostsCount + 1)
         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
     }
