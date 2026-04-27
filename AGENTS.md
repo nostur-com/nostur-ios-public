@@ -17,7 +17,7 @@ Nostur is a social media client for the Nostr protocol, built for Mac, iPhone, a
 
 ```bash
 # iOS Simulator
-xcodebuild -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 16 Pro (18.5),OS=18.5' build
+xcodebuild -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone Air' build
 
 # Physical device
 xcodebuild -scheme Nostur -destination 'platform=iOS,id=<device_id>' build
@@ -29,10 +29,11 @@ xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
 ### Tests
 
 - Run tests:
-  `xcodebuild test -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 16 Pro (18.5),OS=18.5'`
+  `xcodebuild test -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone Air'`
 - Test files: `NosturTests/`
 - Test plans: `Nostur.xctestplan`, `NostrEssentials.xctestplan`
 - Current automated coverage is limited; previews and manual verification are common.
+- Mac Catalyst note: avoid `ExecuteSnippet` while Catalyst is selected; switch to an iPhone simulator for snippet runs because generated snippet code imports `Playgrounds`.
 
 ## Architecture
 

@@ -32,6 +32,7 @@ xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
 - **Test Files**: Located in `NosturTests/` directory
 - **Test Plans**: `Nostur.xctestplan` and `NostrEssentials.xctestplan`
 - **Note**: Current test suite is minimal - primarily uses SwiftUI previews and manual testing views
+- **Mac Catalyst Note**: Avoid `ExecuteSnippet` when Catalyst is selected; switch to an iPhone simulator for snippet runs because generated snippet code imports `Playgrounds`.
 
 ## Architecture Overview
 
