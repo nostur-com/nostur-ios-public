@@ -5311,6 +5311,9 @@
         }
       }
     },
+    "Hide private key" : {
+
+    },
     "Hide tab bars when scrolling" : {
       "comment" : "Setting on settings screen",
       "extractionState" : "stale",
@@ -8233,6 +8236,9 @@
         }
       }
     },
+    "Private key" : {
+
+    },
     "Private key copied to clipboard" : {
       "comment" : "Notification shown after user tapped to copy",
       "localizations" : {
@@ -8243,6 +8249,9 @@
           }
         }
       }
+    },
+    "Private key not available for this account." : {
+
     },
     "Private note" : {
       "comment" : "Label for private note edit field",
@@ -9687,6 +9696,9 @@
           }
         }
       }
+    },
+    "Reveal private key" : {
+
     },
     "s" : {
       "comment" : "short for seconds (ago), appended to number. Example: 15s",
@@ -12717,6 +12729,9 @@
           }
         }
       }
+    },
+    "Your private key controls your account. Never share it with anyone. Anyone with this key can fully access your account and post as you." : {
+
     },
     "Your report is public, other users can use your report to improve the network" : {
       "comment" : "Informational message",

@@ -85,6 +85,12 @@ struct Settings: View {
             
             if account()?.privateKey != nil && !(account()?.isNC ?? false) {
                 Section(header: Text("Account", comment: "Heading for section to delete account")) {
+                    NavigationLink {
+                        PrivateKeySettings()
+                    } label: {
+                        Label("Private key", systemImage: "key.fill")
+                    }
+
                     Button(role: .destructive) {
                         deleteAccountIsShown = true
                     } label: {
