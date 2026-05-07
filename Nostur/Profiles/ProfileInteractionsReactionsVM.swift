@@ -87,7 +87,7 @@ class ProfileInteractionsReactionsVM: ObservableObject {
     private func fetchReactionsFromDB(_ onComplete: (() -> ())? = nil) {
         guard let accountPubkey = self.accountPubkey else { return }
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 7 AND pubkey == %@ AND otherPubkey = %@", self.pubkey, accountPubkey)
+        fr.predicate = NSPredicate(format: "kind == 7 AND pubkey == %@ AND otherPubkey = %@ AND groupId == nil", self.pubkey, accountPubkey)
         bg().perform { [weak self] in
             guard let self else { return }
             guard let reactions = try? bg().fetch(fr) else { return }

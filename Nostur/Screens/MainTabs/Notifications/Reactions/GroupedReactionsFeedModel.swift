@@ -59,7 +59,7 @@ class GroupedReactionsFeedModel: ObservableObject {
             guard let self else { return }
             let r1 = Event.fetchRequest()
             r1.predicate = NSPredicate(
-                format: "otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
+                format: "otherPubkey == %@ AND kind == 7 AND groupId == nil AND NOT pubkey IN %@",
                 pubkey,
                 AppState.shared.bgAppState.blockedPubkeys
             )

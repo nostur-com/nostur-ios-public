@@ -34,7 +34,7 @@ struct BalloonView17: View {
                 ObservedPFP(nrContact: nrChatMessage.nrContact, size: 20)
                     .offset(x: 5, y: 5)
             }
-            VStack(spacing: 3) {
+            VStack(alignment: .leading, spacing: 3) {
                 
                 if let replyTo = nrChatMessage.replyTo {
                     EmbeddedChatMessage(nrChatMessage: replyTo, isSentByCurrentUser: isSentByCurrentUser)
@@ -61,6 +61,11 @@ struct BalloonView17: View {
                         .onTapGesture {
                             vm.scrollToId = quotedEvent.id
                         }
+                }
+
+                if !nrChatMessage.reactions.isEmpty {
+                    DMMessageReactionsView(reactions: nrChatMessage.reactions, isSentByCurrentUser: isSentByCurrentUser)
+                        .padding(.top, 2)
                 }
                 
                 if !isSentByCurrentUser && nrChatMessage.nEvent.kind == .legacyDirectMessage && vm.conversationVersion == 17 {
@@ -150,6 +155,46 @@ struct BalloonView17: View {
                     isOwnRelays: accountPubkey == dmSendResult.recipientPubkey
                 )
             }
+        }
+    }
+}
+
+private struct DMMessageReactionsView: View {
+    @Environment(\.theme) private var theme
+    let reactions: [DMReaction]
+    let isSentByCurrentUser: Bool
+
+    private var groupedByAuthor: [(authorPubkey: String, reactions: [DMReaction])] {
+        var grouped: [String: [DMReaction]] = [:]
+        var authorOrder: [String] = []
+
+        for reaction in reactions.sorted(by: { $0.createdAt < $1.createdAt }) {
+            if grouped[reaction.authorPubkey] == nil {
+                authorOrder.append(reaction.authorPubkey)
+            }
+            grouped[reaction.authorPubkey, default: []].append(reaction)
+        }
+
+        return authorOrder.map { ($0, grouped[$0] ?? []) }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(groupedByAuthor, id: \.authorPubkey) { item in
+                HStack(spacing: 4) {
+                    MiniPFP(pictureUrl: NRContact.instance(of: item.authorPubkey).pictureUrl, size: 12)
+                    Text(item.reactions.map { $0.content }.joined(separator: " "))
+                        .font(.caption)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .background {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(isSentByCurrentUser ? Color.white.opacity(0.18) : theme.secondaryBackground.opacity(0.7))
         }
     }
 }

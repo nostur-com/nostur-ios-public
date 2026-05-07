@@ -206,7 +206,7 @@ class DiscoverViewModel: ObservableObject {
         }
         
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@", agoTimestamp, follows)
+        fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@ AND groupId == nil", agoTimestamp, follows)
         bg().perform { [weak self] in
             guard let self else { return }
             guard let likesOrReposts = try? bg().fetch(fr) else {

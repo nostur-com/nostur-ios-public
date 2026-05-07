@@ -150,7 +150,8 @@ class ConversionVM: ObservableObject {
                 nil
             }
             
-            let visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair)
+            var visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair)
+            await attachReactions(to: &visibleMessages)
             
             self.onScreenIds = Set(visibleMessages.map { $0.id })
             
@@ -240,7 +241,10 @@ class ConversionVM: ObservableObject {
 #if DEBUG
                     L.og.debug("💌💌 Calling self.addToView from importedDMsub: rumor.id: \(nEvent.id)")
 #endif
-                if nEvent.kind == .directMessage { // already decrypted by unwrap, don't need keypair here
+                if nEvent.kind == .reaction {
+                    self.addReactionToView(nEvent)
+                }
+                else if nEvent.kind == .directMessage { // already decrypted by unwrap, don't need keypair here
                     _ = self.addToView(nEvent, nil, Date(timeIntervalSince1970: Double(nEvent.createdAt.timestamp)))
                 } else {
                     guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: self.ourAccountPubkey), let ourKeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { return }
@@ -255,6 +259,11 @@ class ConversionVM: ObservableObject {
     private func resolveConversationVersion(_ participants: Set<String>, messages: [NRChatMessage]) async -> Int {
         // More than 2 participants = NIP-17
         if participants.count > 2 {
+            return 17 // NIP-17
+        }
+        
+        // Last message is kind 7? = NIP17
+        if messages.last?.nEvent.kind == .reaction {
             return 17 // NIP-17
         }
         
@@ -339,10 +348,60 @@ class ConversionVM: ObservableObject {
         
         return dmEvents
     }
+
+    private func fetchReactions(forMessageIds messageIds: [String]) async -> [NEvent] {
+        guard !messageIds.isEmpty else { return [] }
+
+        return await withBgContext { bgContext in
+            let request = NSFetchRequest<Event>(entityName: "Event")
+            request.predicate = NSPredicate(format: "kind == 7 AND reactionToId IN %@", messageIds)
+            request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
+
+            return ((try? bgContext.fetch(request)) ?? [])
+                .map {
+                    NEvent(id: $0.id,
+                           publicKey: $0.pubkey,
+                           createdAt: NTimestamp(timestamp: $0.created_at),
+                           content: $0.content ?? "",
+                           kind: NEventKind(id: $0.kind),
+                           tags: $0.tags(),
+                           signature: ""
+                    )
+                }
+        }
+    }
+
+    private func attachReactions(to messages: inout [NRChatMessage]) async {
+        let messageIds = messages.map { $0.id }
+        let reactions = await fetchReactions(forMessageIds: messageIds)
+        guard !reactions.isEmpty else { return }
+
+        let messageById = Dictionary(uniqueKeysWithValues: messages.map { ($0.id, $0) })
+        for reaction in reactions {
+            guard let reactingToId = reaction.firstE(), let target = messageById[reactingToId] else { continue }
+            target.addReaction(reaction)
+        }
+    }
     
     private var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>)] = []
         
     private var lastAddedIds: RecentSet<String> = .init(capacity: 10)
+
+    private func addReactionToView(_ reactionNEvent: NEvent) {
+        guard reactionNEvent.kind == .reaction else { return }
+        guard let reactingToId = reactionNEvent.firstE() else { return }
+
+        if case .ready(let years) = self.viewState {
+            for year in years {
+                for day in year.days {
+                    if let message = day.messages.first(where: { $0.id == reactingToId }) {
+                        message.addReaction(reactionNEvent)
+                        return
+                    }
+                }
+            }
+        }
+    }
     
     private func addToView(_ rumorNEvent: NEvent, _ ourkeys: Keys? = nil, _ messageDate: Date) -> NRChatMessage? {
         guard !self.onScreenIds.contains(rumorNEvent.id) else { return nil }

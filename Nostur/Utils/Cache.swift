@@ -226,7 +226,8 @@ class AccountCache {
     
     private func initReactions(_ pubkey: String) {
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey)
+        // Don't include DM reactions: AND groupId == nil
+        fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == 7 AND groupId == nil", pubkey)
         let allReactions = (try? bg().fetch(fr)) ?? []
         
         var reactionIds: [String: Set<String>] = [:] // enoji -> reaction ids

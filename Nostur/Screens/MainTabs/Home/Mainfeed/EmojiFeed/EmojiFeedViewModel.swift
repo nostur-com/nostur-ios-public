@@ -230,7 +230,7 @@ class EmojiFeedViewModel: ObservableObject {
         }
         
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "created_at > %i AND kind = 7 AND pubkey IN %@", agoTimestamp, follows)
+        fr.predicate = NSPredicate(format: "created_at > %i AND kind = 7 AND pubkey IN %@ AND groupId == nil", agoTimestamp, follows)
         bg().perform { [weak self] in
             guard let self else { return }
             guard let reactions = try? bg().fetch(fr) else {

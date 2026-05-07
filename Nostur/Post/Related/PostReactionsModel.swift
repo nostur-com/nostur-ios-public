@@ -48,7 +48,7 @@ class PostReactionsModel: ObservableObject {
             guard let self else { return }
             let r1 = Event.fetchRequest()
             r1.predicate = NSPredicate(
-                format: "reactionToId == %@ AND kind == 7 AND NOT pubkey IN %@",
+                format: "reactionToId == %@ AND kind == 7 AND groupId == nil AND NOT pubkey IN %@",
                 eventId,
                 AppState.shared.bgAppState.blockedPubkeys
             )

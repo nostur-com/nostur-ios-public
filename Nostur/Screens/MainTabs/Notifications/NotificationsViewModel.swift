@@ -707,7 +707,7 @@ class NotificationsViewModel: ObservableObject {
         shouldBeBg()
         let fetchRequest = q.unreadReactionsQuery(resultType: .managedObjectResultType, accountData: accountData)
         let unreadReactions = ((try? bg().fetch(fetchRequest)) ?? [])
-            .filter { !$0.isSpam } // Need to filter so can't use .countResultType
+            .filter { !$0.isSpam && !isDMReaction($0) } // Need to filter so can't use .countResultType
             .count
         
         DispatchQueue.main.async { [weak self] in
@@ -716,6 +716,16 @@ class NotificationsViewModel: ObservableObject {
                 self.unreadReactions_ = min(unreadReactions,9999)
             }
         }
+    }
+
+    // Giftwrapped DM reactions can still leak into normal reaction queries.
+    // Treat as DM reaction if the reaction itself has a groupId or if its target event is a DM kind/group.
+    private func isDMReaction(_ event: Event) -> Bool {
+        guard event.kind == 7 else { return false }
+        if event.groupId != nil { return true }
+        guard let reactionToId = event.reactionToId,
+              let target = Event.fetchEvent(id: reactionToId, context: bg()) else { return false }
+        return target.groupId != nil || [4, 14, 15].contains(target.kind)
     }
     
     private func checkForUnreadZaps(accountData: AccountData) {
@@ -858,9 +868,12 @@ class NotificationsViewModel: ObservableObject {
         bg().perform { [weak self] in
             guard let self = self else { return }
             let r = q.unreadReactionsQuery(resultType: .managedObjectResultType, accountData: accountData)
-            r.fetchLimit = 1
+            r.fetchLimit = NotificationFetchRequests.FETCH_LIMIT
             
-            if let mostRecent = try? bg().fetch(r).first {
+            let mostRecent = ((try? bg().fetch(r)) ?? [])
+                .first(where: { !$0.isSpam && !self.isDMReaction($0) })
+            
+            if let mostRecent {
                 if lastSeenReactionCreatedAt != mostRecent.created_at {
                     let mostRecentCreated_at = mostRecent.created_at
                     DispatchQueue.main.async { [weak self] in
@@ -1041,6 +1054,7 @@ class NotificationFetchRequests {
         r.predicate = NSPredicate(format:
                                     "created_at > %i " +
                                     "AND otherPubkey == %@ " +
+                                    "AND groupId == nil " + // Skip DM reactions
                                     "AND NOT pubkey IN %@ " +
                                     "AND kind == 7",
                                     accountData.lastSeenReactionCreatedAt,

@@ -10,14 +10,16 @@ import CoreData
 import NostrEssentials
 
 // Kind 4 handling, for now we can reuse for kind 14 and kind 15 (file messages)
-func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext) {
-    guard nEvent.kind == .legacyDirectMessage || nEvent.kind == .directMessage || nEvent.kind == .fileMessage else { return }
+func handleDM(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, context: NSManagedObjectContext) {
+    // Only handle DM for giftwrapped kinds by checking if there is a wrapId
+    guard wrapId != nil else { return }
+    guard nEvent.kind == .legacyDirectMessage || nEvent.kind == .directMessage || nEvent.kind == .fileMessage || nEvent.kind == .reaction else { return }
     
     // needed to fetch contact in DMS: so event.firstP is in event.contacts
     
     guard let receiverPubkey = nEvent.firstP() else { return } // if we have no p, something is wrong
     let sender = nEvent.publicKey
-    let participants = if nEvent.kind == .directMessage || nEvent.kind == .fileMessage {
+    let participants = if nEvent.kind == .directMessage || nEvent.kind == .fileMessage || nEvent.kind == .reaction {
         allDMparticipants(nEvent) // including sender (.pubkey)
     } else { // .legacyDirectMessage
         Set([sender,receiverPubkey]) // just 1 sender and 1 receveiver
@@ -26,7 +28,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
     
     savedEvent.otherPubkey = receiverPubkey // TODO: Check do we still need this here?
     
-    let groupId = if nEvent.kind == .directMessage || nEvent.kind == .fileMessage {
+    let groupId = if nEvent.kind == .directMessage || nEvent.kind == .fileMessage || nEvent.kind == .reaction {
         dmConversationId(nEvent: nEvent) // based on all participants
     } else { // .legacyDirectMessage
         CloudDMState.getConversationId(for: [sender,receiverPubkey]) // just 1 sender and 1 receveiver

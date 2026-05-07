@@ -90,7 +90,7 @@ class ProfileReactionsViewModel: ObservableObject {
     // STEP 2: FETCH RECEIVED REACTIONS FROM DB
     private func fetchReactionsFromDB(_ onComplete: (() -> ())? = nil) {
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 7 AND pubkey == %@", self.pubkey)
+        fr.predicate = NSPredicate(format: "kind == 7 AND pubkey == %@ AND groupId == nil", self.pubkey)
         bg().perform { [weak self] in
             guard let self else { return }
             guard let reactions = try? bg().fetch(fr) else { return }

@@ -9,6 +9,13 @@ import Foundation
 import Combine
 import NostrEssentials
 
+struct DMReaction: Identifiable, Hashable {
+    let id: String
+    let authorPubkey: String
+    let content: String
+    let createdAt: Int
+}
+
 // NRChatMessage SHOULD BE CREATED IN BACKGROUND THREAD
 class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
 
@@ -77,6 +84,9 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     public var quotedEvent: NRChatMessage? {
         didSet { self.stopListeningForEmbeddedContent() }
     }
+
+    @Published public var reactions: [DMReaction] = []
+    private var reactionIds: Set<String> = []
     
     private var embeddedContentListener: AnyCancellable?
     
@@ -221,6 +231,15 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     
     private static func isBlocked(pubkey:String) -> Bool {
         return Nostur.blocks().contains(pubkey)
+    }
+
+    func addReaction(_ reactionEvent: NEvent) {
+        guard reactionEvent.kind == .reaction else { return }
+        guard !reactionIds.contains(reactionEvent.id) else { return }
+
+        let reactionContent = reactionEvent.content.isEmpty ? "+" : reactionEvent.content
+        reactionIds.insert(reactionEvent.id)
+        reactions.append(DMReaction(id: reactionEvent.id, authorPubkey: reactionEvent.publicKey, content: reactionContent, createdAt: reactionEvent.createdAt.timestamp))
     }
 
     private func rebuildContentElements() {

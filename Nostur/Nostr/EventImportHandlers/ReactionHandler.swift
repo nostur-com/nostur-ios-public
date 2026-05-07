@@ -8,7 +8,7 @@
 import Foundation
 import CoreData
 
-func handleReaction(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext) {
+func handleReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, context: NSManagedObjectContext) {
     guard nEvent.kind == .reaction else { return }
     
     if let lastE = nEvent.lastE() {
@@ -19,7 +19,8 @@ func handleReaction(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectC
         }
     }
     
-    
+    // Don't handle DM reactions as normal reactions
+    guard wrapId == nil else { return }
     
     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
     Event.updateLikeCountCache(savedEvent, content: nEvent.content, context: context)

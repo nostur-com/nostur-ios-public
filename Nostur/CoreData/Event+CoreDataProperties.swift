@@ -1094,8 +1094,8 @@ extension Event {
         let savedEvent = Event.fromNEvent(nEvent: event, flags: flags, context: context)
         savedEvent.otherId = wrapId // store outer wrap id on rumor
         
-        // backwards compatible tag (used for kind 20 for now)
-        if event.kind == .textNote, let kTag = event.fastTags.first(where: { $0.0 == "k" })?.1, let kTagInt = Int64(kTag) {
+        // backwards compatible tag (used for kind 20 for now), or referring-to kind kTag
+        if (event.kind == .textNote || event.kind == .reaction), let kTag = event.fastTags.first(where: { $0.0 == "k" })?.1, let kTagInt = Int64(kTag) {
             savedEvent.kTag = kTagInt
         }
         
@@ -1114,12 +1114,11 @@ extension Event {
         
         // Specific handling per kind
         handleZap(nEvent: event, savedEvent: savedEvent, context: context)
-        handleReaction(nEvent: event, savedEvent: savedEvent, context: context)
-        
+        handleReaction(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, context: context)
         handleTextPost(nEvent: event, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
         handlePostRelations(nEvent: event, savedEvent: savedEvent, context: context)
         handleRepost(nEvent: event, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
-        handleDM(nEvent: event, savedEvent: savedEvent, context: context)
+        handleDM(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, context: context)
         handleReplacableEvent(nEvent: event, context: context)
         handleAddressableReplacableEvent(nEvent: event, savedEvent: savedEvent, context: context)
         handleDelete(nEvent: event, context: context)
