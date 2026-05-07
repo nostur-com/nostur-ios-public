@@ -115,6 +115,7 @@ struct Maintenance {
             Self.runFixZaps(context: context)
             Self.runPutRepostedPubkeyInOtherPubkey(context: context)
             Self.runPutReactionToPubkeyInOtherPubkey(context: context)
+            Self.runBackfillGiftwrappedReactionGroupIds(context: context)
             Self.runUpdateKeychainInfo(context: context)
             Self.runSaveFullAccountFlag(context: context)
             Self.runUpgradeDMs(context: context)
@@ -938,6 +939,42 @@ struct Maintenance {
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.runPutReactionToPubkeyInOtherPubkey.rawValue
     }
+
+    // Run once to backfill missing groupId on legacy giftwrapped DM reactions.
+    static func runBackfillGiftwrappedReactionGroupIds(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.backfillGiftwrappedReactionGroupIds, context: context) else { return }
+
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind == 7 AND otherId != nil AND groupId == nil")
+
+        var fixed = 0
+        if let reactions = try? context.fetch(fr) {
+            L.maintenance.info("🧹🧹 runBackfillGiftwrappedReactionGroupIds: Found \(reactions.count) giftwrapped reactions without groupId")
+
+            for reaction in reactions {
+                // Preferred: use reacted-to event's groupId when available.
+                if let reactionToId = reaction.reactionToId,
+                   let targetEvent = Event.fetchEvent(id: reactionToId, context: context),
+                   let targetGroupId = targetEvent.groupId {
+                    reaction.groupId = targetGroupId
+                    fixed += 1
+                    continue
+                }
+
+                // Fallback: derive from participants encoded in p-tags + author pubkey.
+                let participants = allDMparticipants(reaction)
+                if participants.count >= 2 {
+                    reaction.groupId = CloudDMState.getConversationId(for: participants)
+                    fixed += 1
+                }
+            }
+
+            L.maintenance.info("🧹🧹 runBackfillGiftwrappedReactionGroupIds: Fixed \(fixed) groupId values")
+        }
+
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.backfillGiftwrappedReactionGroupIds.rawValue
+    }
     
     // Run once to put first A tag in .otherAtag, for fast reaction notification querying
     static func runPutReferencedAtag(context: NSManagedObjectContext) {
@@ -1354,6 +1391,9 @@ struct Maintenance {
         
         // Cache .reactionTo.pubkey in .otherPubkey
         case runPutReactionToPubkeyInOtherPubkey = "runPutReactionToPubkeyInOtherPubkey"
+
+        // Backfill legacy missing groupId values on giftwrapped reactions.
+        case backfillGiftwrappedReactionGroupIds = "backfillGiftwrappedReactionGroupIds"
         
         // Migrate Private Notes to iCloud
         case migratePrivateNotes = "migratePrivateNotes"
