@@ -67,7 +67,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             threadDictionary[recursiveDebugStackKey] = stack
         }
 
-        let childId = event.id as NSString
+        guard let childIdString = event.value(forKey: "id") as? String, !childIdString.isEmpty else {
+#if DEBUG
+//            L.og.debug("NRPost recurse skipped source=\(source) parent=\(parentId) reason=missing-child-id")
+#endif
+            return nil
+        }
+
+        let childId = childIdString as NSString
         let depth = stack.count + 1
         var duplicateCountInPath = 0
         for item in stack {
@@ -92,7 +99,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             return nil
         }
 
-        stack.add(childId)
+        stack.add(childId) // Thread 73: "*** -[__NSArrayM insertObject:atIndex:]: object cannot be nil"
         defer {
             stack.removeLastObject()
             if stack.count == 0 {
