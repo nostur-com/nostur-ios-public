@@ -44,6 +44,12 @@ struct Settings: View {
                 } label: {
                     Label("Zaps", systemImage: "bolt")
                 }
+                
+                NavigationLink {
+                    TranslationSettings()
+                } label: {
+                    Label("Translation", systemImage: "globe")
+                }
             }
             
             Section {

@@ -226,6 +226,16 @@ struct PostMenu: View {
             }
             .listRowBackground(theme.background)
             
+            if !nrPost.plainText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                NavigationLink {
+                    PostTranslationSheet(nrPost: nrPost, rootDismiss: dismiss)
+                } label: {
+                    Label("Translate", systemImage: "globe")
+                        .foregroundColor(theme.accent)
+                }
+                .listRowBackground(theme.background)
+            }
+            
             Button {
                 dismiss()
                 if let pn = Event.fetchEvent(id: nrPost.id, context: viewContext())?.privateNote {

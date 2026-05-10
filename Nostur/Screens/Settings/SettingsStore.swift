@@ -65,6 +65,12 @@ final class SettingsStore: ObservableObject {
         static let proMode:String = "nostur_pro_mode"
         
         static let blossomServerList:String = "blossom_server_list"
+        
+        static let translationAutoTranslate:String = "translation_auto_translate"
+        static let translationServiceURL:String = "translation_service_url"
+        static let translationAPIKey:String = "translation_api_key"
+        static let translationSourceLanguage:String = "translation_source_language"
+        static let translationTargetLanguage:String = "translation_target_language"
     }
 
 //    private let cancellable: Cancellable
@@ -200,7 +206,12 @@ final class SettingsStore: ObservableObject {
             Keys.enableOutboxPreview: false,
             Keys.enableVPNdetection: true,
             Keys.proMode: false,
-            Keys.blossomServerList: []
+            Keys.blossomServerList: [],
+            Keys.translationAutoTranslate: false,
+            Keys.translationServiceURL: "https://translate.nostr.wine",
+            Keys.translationAPIKey: "",
+            Keys.translationSourceLanguage: "auto",
+            Keys.translationTargetLanguage: Locale.current.language.languageCode?.identifier ?? "en"
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -266,6 +277,31 @@ final class SettingsStore: ObservableObject {
     var includeSharedFrom: Bool {
         set { defaults.set(newValue, forKey: Keys.includeSharedFrom); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.includeSharedFrom) }
+    }
+    
+    var translationAutoTranslate: Bool {
+        set { defaults.set(newValue, forKey: Keys.translationAutoTranslate); objectWillChange.send() }
+        get { defaults.bool(forKey: Keys.translationAutoTranslate) }
+    }
+    
+    var translationServiceURL: String {
+        set { defaults.set(newValue, forKey: Keys.translationServiceURL); objectWillChange.send() }
+        get { defaults.string(forKey: Keys.translationServiceURL) ?? "https://translate.nostr.wine" }
+    }
+    
+    var translationAPIKey: String {
+        set { defaults.set(newValue, forKey: Keys.translationAPIKey); objectWillChange.send() }
+        get { defaults.string(forKey: Keys.translationAPIKey) ?? "" }
+    }
+    
+    var translationSourceLanguage: String {
+        set { defaults.set(newValue, forKey: Keys.translationSourceLanguage); objectWillChange.send() }
+        get { defaults.string(forKey: Keys.translationSourceLanguage) ?? "auto" }
+    }
+    
+    var translationTargetLanguage: String {
+        set { defaults.set(newValue, forKey: Keys.translationTargetLanguage); objectWillChange.send() }
+        get { defaults.string(forKey: Keys.translationTargetLanguage) ?? "en" }
     }
     
     var postUserAgentEnabled: Bool {

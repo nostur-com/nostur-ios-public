@@ -105,6 +105,7 @@ struct Kind1: View {
                 ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload)
                     .environment(\.availableWidth, availableWidth_)
                     .frame(maxWidth: .infinity, alignment:.leading)
+                automaticTranslation
             }
             else {
                 
@@ -173,6 +174,7 @@ struct Kind1: View {
 //                        }
 //                        .background(Color.red)
 //                    }
+                automaticTranslation
             }
         }
     }
@@ -212,8 +214,18 @@ struct Kind1: View {
                                 showMore = true
                                 clipBottomHeight = 28000.0
                             })
-                    }
+                        }
                 }
+            automaticTranslation
+        }
+    }
+    
+    @ViewBuilder
+    private var automaticTranslation: some View {
+        if settings.translationAutoTranslate,
+           !nxViewingContext.contains(.screenshot),
+           !nrPost.plainText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            PostTranslationInline(nrPost: nrPost)
         }
     }
 }
