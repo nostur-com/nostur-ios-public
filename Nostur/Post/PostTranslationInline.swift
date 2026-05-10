@@ -8,9 +8,9 @@ import SwiftUI
 struct PostTranslationInline: View {
     @Environment(\.theme) private var theme
     let nrPost: NRPost
-    
+
     @State private var loadState: LoadState = .idle
-    
+
     private enum LoadState {
         case idle
         case loading
@@ -18,7 +18,7 @@ struct PostTranslationInline: View {
         case notNeeded
         case failed
     }
-    
+
     var body: some View {
         Group {
             switch loadState {
@@ -54,7 +54,7 @@ struct PostTranslationInline: View {
             await translate()
         }
     }
-    
+
     private func translate() async {
         guard case .idle = loadState else { return }
         let original = nrPost.plainText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -62,7 +62,7 @@ struct PostTranslationInline: View {
             loadState = .notNeeded
             return
         }
-        
+
         loadState = .loading
         do {
             let translation = try await LibreTranslateService.shared.translatePost(id: nrPost.id, text: original)

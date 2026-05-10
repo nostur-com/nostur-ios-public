@@ -15,57 +15,57 @@ struct Settings: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
-    
+
     @State var deleteAccountIsShown = false
-    
+
 
     var body: some View {
 #if DEBUG
         let _ = nxLogChanges(of: Self.self)
 #endif
         NXForm {
-            
+
             NavigationLink {
                 AppearanceSettings()
             } label: {
                 Label("Appearance", systemImage: "switch.2")
             }
-            
-  
+
+
             Section {
                 NavigationLink {
                     PostingAndUploadingSettings()
                 } label: {
                     Label("Posting & Media Uploading", systemImage: "icloud.and.arrow.up")
                 }
-                
+
                 NavigationLink {
                     ZapsSettings()
                 } label: {
                     Label("Zaps", systemImage: "bolt")
                 }
-                
+
                 NavigationLink {
                     TranslationSettings()
                 } label: {
                     Label("Translation", systemImage: "globe")
                 }
             }
-            
+
             Section {
                 NavigationLink {
                     RelaysAndConnectionsSettings()
                 } label: {
                     Label("Relay Connections", systemImage: "point.3.filled.connected.trianglepath.dotted")
                 }
-                
+
                 NavigationLink {
                     SpamFilteringSettings()
                 } label: {
                     Label("Spam Filtering", systemImage: "checkmark.shield")
                 }
             }
-                  
+
             Section(header: Text("Data Usage", comment: "Setting heading on settings screen")) {
                 Toggle(isOn: $settings.lowDataMode) {
                     VStack(alignment: .leading) {
@@ -76,19 +76,19 @@ struct Settings: View {
                     }
                 }
             }
-            
+
             NavigationLink {
                 DatabaseAndCacheSettings()
             } label: {
                 Label("Database & Cache", systemImage: "cylinder.split.1x2")
             }
-            
-       
-            
 
-            
-            
-            
+
+
+
+
+
+
             if account()?.privateKey != nil && !(account()?.isNC ?? false) {
                 Section(header: Text("Account", comment: "Heading for section to delete account")) {
                     NavigationLink {
@@ -101,7 +101,7 @@ struct Settings: View {
                         deleteAccountIsShown = true
                     } label: {
                         Label(String(localized:"Delete account", comment: "Button to delete account"), systemImage: "trash")
-                    }                    
+                    }
                 }
                 .listRowBackground(theme.background)
             }
@@ -143,7 +143,7 @@ extension Localizable {
 struct FooterConfiguratorLink: View {
     @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
-    
+
     var body: some View {
         NavigationLink(destination: {
             FooterConfigurator(footerButtons: $settings.footerButtons)
@@ -161,7 +161,7 @@ struct FooterConfiguratorLink: View {
 struct RelayMasteryLink: View {
     @Environment(\.theme) private var theme
     @State private var relays: [CloudRelay] = []
-    
+
     var body: some View {
         NavigationLink(destination: {
             RelayMastery(relays: relays)
@@ -183,7 +183,7 @@ struct RelayMasteryLink: View {
 
 struct RelaysLink: View {
     @Environment(\.theme) private var theme
-    
+
     var body: some View {
         NavigationLink(destination: {
             RelaysView()

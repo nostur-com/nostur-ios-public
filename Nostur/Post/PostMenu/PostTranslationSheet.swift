@@ -9,16 +9,16 @@ struct PostTranslationSheet: View {
     @Environment(\.theme) private var theme
     let nrPost: NRPost
     var rootDismiss: (() -> Void)? = nil
-    
+
     @State private var loadState: LoadState = .loading
-    
+
     private enum LoadState {
         case loading
         case loaded(String)
         case notNeeded
         case failed(String)
     }
-    
+
     var body: some View {
         NXForm {
             Section(header: Text("Translation")) {
@@ -41,7 +41,7 @@ struct PostTranslationSheet: View {
                 }
             }
             .listRowBackground(theme.background)
-            
+
             if case .loaded(let translation) = loadState {
                 Section {
                     Button {
@@ -68,7 +68,7 @@ struct PostTranslationSheet: View {
             }
         }
     }
-    
+
     private func translate() async {
         do {
             let translation = try await LibreTranslateService.shared.translatePost(id: nrPost.id, text: nrPost.plainText)
