@@ -8,11 +8,13 @@
 import Foundation
 import SwiftUI
 import Combine
+import KeychainAccess
 
 final class SettingsStore: ObservableObject {
 
     public static let shared = SettingsStore()
     static let deviceDefaultFiatCurrency = "__device_default__"
+    private static let translationAPIKeyKeychainKey = "libretranslate_api_key"
 
     public enum Keys {
         static let lastMaintenanceTimestamp:String = "last_maintenance_timestamp"
@@ -75,6 +77,8 @@ final class SettingsStore: ObservableObject {
 
 //    private let cancellable: Cancellable
     private let defaults: UserDefaults
+    private let translationKeychain = Keychain(service: "nostur.com.Nostur.translation")
+        .synchronizable(true)
 
     let objectWillChange = PassthroughSubject<Void, Never>()
 
@@ -209,7 +213,6 @@ final class SettingsStore: ObservableObject {
             Keys.blossomServerList: [],
             Keys.translationAutoTranslate: false,
             Keys.translationServiceURL: "https://translate.nostr.wine",
-            Keys.translationAPIKey: "",
             Keys.translationSourceLanguage: "auto",
             Keys.translationTargetLanguage: Locale.current.language.languageCode?.identifier ?? "en"
         ])
@@ -290,8 +293,45 @@ final class SettingsStore: ObservableObject {
     }
 
     var translationAPIKey: String {
-        set { defaults.set(newValue, forKey: Keys.translationAPIKey); objectWillChange.send() }
-        get { defaults.string(forKey: Keys.translationAPIKey) ?? "" }
+        set {
+            if newValue.isEmpty {
+                try? translationKeychain.remove(Self.translationAPIKeyKeychainKey)
+                defaults.removeObject(forKey: Keys.translationAPIKey)
+            }
+            else {
+                do {
+                    try translationKeychain
+                        .accessibility(.afterFirstUnlock)
+                        .set(newValue, key: Self.translationAPIKeyKeychainKey)
+                    defaults.removeObject(forKey: Keys.translationAPIKey)
+                }
+                catch {
+                    L.og.error("🔴🔴🔴 could not update translation API key in keychain")
+                }
+            }
+            objectWillChange.send()
+        }
+        get {
+            if let apiKey = try? translationKeychain.get(Self.translationAPIKeyKeychainKey), !apiKey.isEmpty {
+                return apiKey
+            }
+
+            guard let legacyAPIKey = defaults.string(forKey: Keys.translationAPIKey), !legacyAPIKey.isEmpty else {
+                return ""
+            }
+
+            do {
+                try translationKeychain
+                    .accessibility(.afterFirstUnlock)
+                    .set(legacyAPIKey, key: Self.translationAPIKeyKeychainKey)
+                defaults.removeObject(forKey: Keys.translationAPIKey)
+            }
+            catch {
+                L.og.error("🔴🔴🔴 could not migrate translation API key to keychain")
+            }
+
+            return legacyAPIKey
+        }
     }
 
     var translationSourceLanguage: String {

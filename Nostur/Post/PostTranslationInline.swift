@@ -46,8 +46,19 @@ struct PostTranslationInline: View {
                 .background(theme.secondaryBackground)
                 .cornerRadius(8)
                 .padding(.top, 8)
-            case .notNeeded, .failed:
+            case .notNeeded:
                 EmptyView()
+            case .failed:
+                HStack(spacing: 8) {
+                    Label("Translation unavailable", systemImage: "exclamationmark.triangle")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                    Button("Retry") {
+                        Task { await retryTranslate() }
+                    }
+                    .font(.footnote)
+                }
+                .padding(.top, 8)
             }
         }
         .task(id: nrPost.id) {
@@ -76,5 +87,10 @@ struct PostTranslationInline: View {
         catch {
             loadState = .failed
         }
+    }
+
+    private func retryTranslate() async {
+        loadState = .idle
+        await translate()
     }
 }

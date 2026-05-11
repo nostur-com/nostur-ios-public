@@ -41,6 +41,10 @@ struct TranslationSettings: View {
             .listRowBackground(theme.background)
 
             Section {
+                Text("Translations send note text to the configured service. Only enable automatic translation with a provider you trust.")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+
                 Text("Use any LibreTranslate-compatible endpoint. The default is translate.nostr.wine. Language values should be ISO codes like en, es, fr, de, or ja; use auto for source when the service supports detection.")
                     .font(.footnote)
                     .foregroundColor(.secondary)

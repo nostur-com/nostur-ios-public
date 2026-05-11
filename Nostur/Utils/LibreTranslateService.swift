@@ -3,6 +3,7 @@
 //  Nostur
 //
 
+import CryptoKit
 import Foundation
 
 enum LibreTranslateError: LocalizedError {
@@ -28,7 +29,10 @@ enum LibreTranslateError: LocalizedError {
 actor LibreTranslateService {
     static let shared = LibreTranslateService()
 
+    private let maxConcurrentRequests = 3
     private var cache: [String: String] = [:]
+    private var activeRequests = 0
+    private var requestWaiters: [CheckedContinuation<Void, Never>] = []
 
     private struct TranslateRequest: Encodable {
         let q: String
@@ -46,7 +50,7 @@ actor LibreTranslateService {
         guard !trimmed.isEmpty else { throw LibreTranslateError.emptyText }
 
         let target = normalizedTargetLanguage()
-        let cacheKey = "\(id)|\(target)|\(trimmed.hashValue)"
+        let cacheKey = "\(id)|\(target)|\(stableCacheDigest(trimmed))"
         if let cached = cache[cacheKey] {
             return cached
         }
@@ -56,6 +60,9 @@ actor LibreTranslateService {
             cache[cacheKey] = trimmed
             return trimmed
         }
+
+        await acquireRequestSlot()
+        defer { releaseRequestSlot() }
 
         let translated = try await translate(trimmed, source: source, target: target, apiKey: normalizedAPIKey())
         cache[cacheKey] = translated
@@ -108,5 +115,31 @@ actor LibreTranslateService {
         }
 
         return try JSONDecoder().decode(TranslateResponse.self, from: data).translatedText
+    }
+
+    private func acquireRequestSlot() async {
+        if activeRequests < maxConcurrentRequests {
+            activeRequests += 1
+            return
+        }
+
+        await withCheckedContinuation { continuation in
+            requestWaiters.append(continuation)
+        }
+    }
+
+    private func releaseRequestSlot() {
+        if requestWaiters.isEmpty {
+            activeRequests -= 1
+        }
+        else {
+            requestWaiters.removeFirst().resume()
+        }
+    }
+
+    private func stableCacheDigest(_ text: String) -> String {
+        SHA256.hash(data: Data(text.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
     }
 }
