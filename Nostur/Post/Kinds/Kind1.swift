@@ -12,12 +12,12 @@ struct Kind1: View {
     @Environment(\.theme) private var theme
     @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
-    
+
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
     @State private var showMore = false
-    
+
     private let hideFooter: Bool // For rendering in NewReply
     private let missingReplyTo: Bool // For rendering in thread
     private var connect: ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
@@ -27,23 +27,23 @@ struct Kind1: View {
     private let fullWidth: Bool
     private let grouped: Bool
     private let forceAutoload: Bool
-    
+
     private let THREAD_LINE_OFFSET = 24.0
-    
-    
+
+
     private var availableWidth_: CGFloat { // dim.listWidth is now .availableWidth, so now this one is .availableWidth_
         if isDetail || fullWidth || isEmbedded {
             return availableWidth - 20
         }
-        
+
         return DIMENSIONS.availableNoteRowImageWidth(availableWidth)
     }
-    
+
     private var isOlasGeneric: Bool { (nrPost.kind == 1 && (nrPost.kTag ?? "") == "20") }
-    
+
     @State var showMiniProfile = false
     @State var clipBottomHeight: CGFloat = 900.0
-    
+
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil,
          isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false,
          forceAutoload: Bool = false) {
@@ -60,7 +60,7 @@ struct Kind1: View {
         self.forceAutoload = forceAutoload
 //        _clipBottomHeight = State(wrappedValue: isEmbedded ? 300.0 : 900.0)
     }
-    
+
     var body: some View {
         if nrPost.plainTextOnly {
             Text("TODO PLAINTEXTONLY") // TODO: PLAIN TEXTO ONLY
@@ -72,11 +72,11 @@ struct Kind1: View {
             self.normalView
         }
     }
-    
+
     private var shouldAutoload: Bool {
         return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
-    
+
     @ViewBuilder
     private var normalView: some View {
 #if DEBUG
@@ -96,18 +96,19 @@ struct Kind1: View {
                 if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                     Image(systemName: "exclamationmark.triangle.fill")
                 }
-                
+
 //                Color.purple
 //                    .frame(height: 30)
 //                    .overlay { Text(availableWidth_.description) }
 //                    .debugDimensions("Kind1.normalView")
-                
+
                 ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload)
                     .environment(\.availableWidth, availableWidth_)
                     .frame(maxWidth: .infinity, alignment:.leading)
+                automaticTranslation
             }
             else {
-                
+
                 if missingReplyTo || nxViewingContext.contains(.screenshot) {
                     ReplyingToFragmentView(nrPost: nrPost)
                 }
@@ -119,12 +120,12 @@ struct Kind1: View {
                 if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                     Image(systemName: "exclamationmark.triangle.fill")
                 }
-                
+
 //                Color.purple
 //                    .frame(height: 30)
 //                    .overlay { Text(availableWidth_.description) }
 //                    .debugDimensions("Kind1.normalView2")
-                
+
                 ContentRenderer(nrPost: nrPost, showMore: $showMore, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload)
                     .environment(\.availableWidth, availableWidth_)
 //                    .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
@@ -145,7 +146,7 @@ struct Kind1: View {
                                 .highPriorityGesture(TapGesture().onEnded {
                                     showMore = true
                                     clipBottomHeight = 28000.0
-                                })                            
+                                })
                         }
                     }
 //                    .overlay(alignment: .topLeading) {
@@ -156,31 +157,32 @@ struct Kind1: View {
 //                            print("previewWeights.linkPreviews: \(String(describing: nrPost.previewWeights?.linkPreviews))")
 //                            print("previewWeights.text: \(String(describing: nrPost.previewWeights?.text))")
 //                            print("previewWeights.other: \(String(describing: nrPost.previewWeights?.other))")
-//                            
+//
 //                            print("previewWeights.morePosts: \(String(describing: nrPost.previewWeights?.morePosts))")
 //                            print("previewWeights.moreVideos: \(String(describing: nrPost.previewWeights?.moreVideos))")
 //                            print("previewWeights.morePictures: \(String(describing: nrPost.previewWeights?.morePictures))")
 //                            print("previewWeights.linkPreviews: \(String(describing: nrPost.previewWeights?.linkPreviews))")
 //                            print("previewWeights.moreText: \(String(describing: nrPost.previewWeights?.moreText))")
 //                            print("previewWeights.moreOther: \(String(describing: nrPost.previewWeights?.moreOther))")
-//                            
-//                            
+//
+//
 //                            print("previewWeights.morePosts: \(String(describing: nrPost.previewWeights?.morePosts))")
 //                            print("previewWeights.weight: \(String(describing: nrPost.previewWeights?.weight))")
-//                            
+//
 //                            print("nrPost.sizeEstimate.rawValue: \(String(describing: nrPost.sizeEstimate.rawValue))")
 //                            print("previewWeights.textOnly: \(String(describing: nrPost.previewWeights?.textOnly))")
 //                        }
 //                        .background(Color.red)
 //                    }
+                automaticTranslation
             }
         }
     }
-    
+
     @ViewBuilder
     private var embeddedView: some View {
         PostEmbeddedLayout(nrPost: nrPost) {
-            
+
             if missingReplyTo {
                 ReplyingToFragmentView(nrPost: nrPost)
             }
@@ -192,7 +194,7 @@ struct Kind1: View {
             if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                 Image(systemName: "exclamationmark.triangle.fill")
             }
-            
+
             ContentRenderer(nrPost: nrPost, showMore: $showMore,  isDetail: false, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                 .environment(\.availableWidth, availableWidth_)
                 .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
@@ -212,8 +214,18 @@ struct Kind1: View {
                                 showMore = true
                                 clipBottomHeight = 28000.0
                             })
-                    }
+                        }
                 }
+            automaticTranslation
+        }
+    }
+
+    @ViewBuilder
+    private var automaticTranslation: some View {
+        if settings.translationAutoTranslate,
+           !nxViewingContext.contains(.screenshot),
+           !nrPost.plainText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            PostTranslationInline(nrPost: nrPost)
         }
     }
 }

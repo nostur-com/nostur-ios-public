@@ -24,23 +24,23 @@ struct PostMenu: View {
     @State private var followToggles = false
     @State private var blockOptions = false
     @State private var pubkeysInPost: Set<String> = []
-    
+
     @State private var showMultiFollowSheet = false
-    
+
     @State private var isOwnPost = false
     @State private var isBlocked = false
     @State private var isFullAccount = false
     @State private var isFollowing = false
     @State private var showPinThisPostConfirmation = false
-    
+
     init(postMenuContext: PostMenuContext) {
         self.postMenuContext = postMenuContext
         self.nrContact = postMenuContext.nrPost.contact
     }
-    
+
     var body: some View {
         NXForm {
-            
+
             if isOwnPost && self.isFullAccount {
                 Section {
                     // Delete button
@@ -89,15 +89,15 @@ struct PostMenu: View {
                                 .foregroundColor(theme.accent)
                         }
                     }
-              
+
                     Button(action: {
-                        
+
                     }) {
                         Label("Add/remove from Highlights", systemImage: "star")
                             .foregroundColor(theme.accent)
                     }
 #endif
-                    
+
                     if nrPost.isRestricted {
                         NavigationLink {
                             RepublishRestrictedPostSheet(nrPost: nrPost, rootDismiss: dismiss)
@@ -110,12 +110,12 @@ struct PostMenu: View {
                 }
                 .listRowBackground(theme.background)
             }
-            
+
             Section {
                 if !isOwnPost {
                     self.followButton
                 }
-                
+
                 NavigationLink {
                     AddRemoveToListsheet(nrContact: nrContact, onDismiss: { dismiss() })
                         .environmentObject(la)
@@ -126,12 +126,12 @@ struct PostMenu: View {
                     Label("Add/remove from Lists", systemImage: "person.2.crop.square.stack")
                         .foregroundColor(theme.accent)
                 }
-        
+
                 if !isOwnPost {
                     Button(action: {
                         dismiss()
-                        
-                        
+
+
                         if IS_DESKTOP_COLUMNS() {
                             // Create new column, or replace last column (if too many)
                             withAnimation {
@@ -158,7 +158,7 @@ struct PostMenu: View {
                             ObservedPFP(nrContact: nrContact, size: 20)
                         }
                     }
-                    
+
                     Button(action: {
                         navigateToOnMain(ViewPath.ProfileReactionList(pubkey: nrPost.pubkey))
                         dismiss()
@@ -169,9 +169,9 @@ struct PostMenu: View {
                 }
             }
             .listRowBackground(theme.background)
-            
-            
-            
+
+
+
             Section {
                 // TODO: Add unblock { .onAppear.. show time remaining etc blocked() }
                 if !isOwnPost {
@@ -195,7 +195,7 @@ struct PostMenu: View {
                         }
                     }
                 }
-                
+
                 Button(action: {
                     dismiss()
                     L.og.debug("Mute conversation")
@@ -204,7 +204,7 @@ struct PostMenu: View {
                     Label("Mute conversation", systemImage: "bell.slash")
                         .foregroundColor(theme.accent)
                 }
-                
+
                 Button {
                     dismiss()
                     DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
@@ -216,8 +216,8 @@ struct PostMenu: View {
                 }
             }
             .listRowBackground(theme.background)
-            
-            
+
+
             NavigationLink {
                 PostMenuShareSheet(nrPost: nrPost, rootDismiss: dismiss)
             } label: {
@@ -225,7 +225,17 @@ struct PostMenu: View {
                     .foregroundColor(theme.accent)
             }
             .listRowBackground(theme.background)
-            
+
+            if !nrPost.plainText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                NavigationLink {
+                    PostTranslationSheet(nrPost: nrPost, rootDismiss: dismiss)
+                } label: {
+                    Label("Translate", systemImage: "globe")
+                        .foregroundColor(theme.accent)
+                }
+                .listRowBackground(theme.background)
+            }
+
             Button {
                 dismiss()
                 if let pn = Event.fetchEvent(id: nrPost.id, context: viewContext())?.privateNote {
@@ -250,28 +260,28 @@ struct PostMenu: View {
             } label: {
                 Label("Post details", systemImage: "info.circle")
                     .foregroundColor(theme.accent)
-                
+
             }
             .listRowBackground(theme.background)
-            
+
         }
 
 //        .scrollContentBackgroundHidden()
 //        .background(theme.listBackground)
-//        
+//
         .onAppear {
             isOwnPost = nrPost.pubkey == la.pubkey
             isBlocked = blocks().contains(nrPost.pubkey)
             self.isFullAccount = la.account.isFullAccount
         }
-        
+
         .nbNavigationDestination(isPresented: $showMultiFollowSheet) {
             MultiFollowSheet(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
                 .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
                 .background(theme.listBackground)
                 .environment(\.theme, theme)
         }
-        
+
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark") {
@@ -279,9 +289,9 @@ struct PostMenu: View {
                 }
             }
         }
-        
+
     }
-    
+
     @ViewBuilder
     private var followButton: some View {
         Button(action: {
@@ -332,7 +342,7 @@ struct PostMenuButton: View {
     @Environment(\.pinnedPostId) var pinnedPostId
     public let nrPost: NRPost
     public let theme: Theme
-    
+
     var body: some View {
         Image(systemName: "ellipsis")
             .fontWeightBold()
@@ -364,14 +374,14 @@ func unpinPost(_ pinnedPost: NRPost) async {
     let pinEventIds: [String] = await withBgContext { bgContext in
         Event.fetchReplacableEvents(10601, pubkeys: [pinnedPost.pubkey], context: bgContext).map { $0.id }
     }
-    
+
     // Create delete event
     var deleteRequestNEvent = NEvent(content: "")
     deleteRequestNEvent.kind = .delete
     deleteRequestNEvent.tags = pinEventIds.map { eventId in
         NostrTag(["e", eventId])
     }
-    
+
     // sign delete event
     guard let signedDeleteRequestNEvent = try? await Nostur.sign(nEvent: deleteRequestNEvent, accountPubkey: pinnedPost.pubkey)
     else {
@@ -380,15 +390,15 @@ func unpinPost(_ pinnedPost: NRPost) async {
 #endif
         return
     }
-        
+
     // publish signed delete event
     Unpublisher.shared.publishNow(signedDeleteRequestNEvent)
-    
+
     // Handle in own DB
     _ = await withBgContext { bgContext in
         Event.saveEvent(event: signedDeleteRequestNEvent, context: bgContext)
     }
-    
+
 }
 
 #Preview("Post Menu") {

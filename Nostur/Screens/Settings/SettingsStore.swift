@@ -8,18 +8,20 @@
 import Foundation
 import SwiftUI
 import Combine
+import KeychainAccess
 
 final class SettingsStore: ObservableObject {
-    
+
     public static let shared = SettingsStore()
     static let deviceDefaultFiatCurrency = "__device_default__"
-    
+    private static let translationAPIKeyKeychainKey = "libretranslate_api_key"
+
     public enum Keys {
         static let lastMaintenanceTimestamp:String = "last_maintenance_timestamp"
-        
+
         static let isSignatureVerificationEnabled:String = "signature_verification_enabled"
         static let replaceNsecWithHunter2:String = "replace_nsec_with_hunter2"
-        
+
         static let defaultZapAmount:String = "default_zap_amount"
         static let showFiat:String = "show_fiat"
         static let preferredFiatCurrency:String = "preferred_fiat_currency"
@@ -39,49 +41,57 @@ final class SettingsStore: ObservableObject {
         static let activeNWCconnectionId:String = "active_nwc_connection_id"
         static let fetchCounts:String = "fetch_counts"
         static let includeSharedFrom:String = "include_shared_from"
-        
+
         static let webOfTrustLevel:String = "web_of_trust_level"
         static let autoHideBars:String = "auto_hide_bars"
         static let lowDataMode:String = "low_data_mode"
         static let footerButtons:String = "footer_buttons"
-        
+
         static let nwcShowBalance:String = "nwc_show_balance"
         static let appWideSeenTracker:String = "app_wide_seen_tracker"
         static let appWideSeenTrackeriCloud:String = "app_wide_seen_tracker_icloud"
         static let mainWoTaccountPubkey:String = "main_wot_account_pubkey"
-        
+
         static let postUserAgentEnabled:String = "post_user_agent_enabled"
         static let displayUserAgentEnabled:String = "display_user_agent_enabled"
         static let excludedUserAgentPubkeys:String = "excluded_user_agent_pubkeys"
-        
+
         static let receiveLocalNotifications:String = "receive_local_notifications"
         static let receiveLocalNotificationsLimitToFollows:String = "receive_local_notifications_limit_to_follows"
-        
+
         static let followRelayHints:String = "follow_relay_hints"
         static let enableOutboxRelays:String = "outbox_enabled"
         static let enableVPNdetection:String = "vpn_detection_enabled"
         static let enableOutboxPreview:String = "outbox_preview_enabled"
-        
+
         static let proMode:String = "nostur_pro_mode"
-        
+
         static let blossomServerList:String = "blossom_server_list"
+
+        static let translationAutoTranslate:String = "translation_auto_translate"
+        static let translationServiceURL:String = "translation_service_url"
+        static let translationAPIKey:String = "translation_api_key"
+        static let translationSourceLanguage:String = "translation_source_language"
+        static let translationTargetLanguage:String = "translation_target_language"
     }
 
 //    private let cancellable: Cancellable
     private let defaults: UserDefaults
+    private let translationKeychain = Keychain(service: "nostur.com.Nostur.translation")
+        .synchronizable(true)
 
     let objectWillChange = PassthroughSubject<Void, Never>()
-    
+
     enum WebOfTrustLevel:String, CaseIterable, Localizable, Identifiable {
         case off = "WOT_OFF"
         case normal = "WOT_NORMAL"
         case strict = "WOT_STRICT"
-        
+
         var id:String {
             String(self.rawValue)
         }
     }
-    
+
     public static let walletOptions:[LightningWallet] = [
         LightningWallet(name: "none", scheme: "lightning:"),
         LightningWallet(name: "Alby Go", scheme: "alby:"),
@@ -97,12 +107,12 @@ final class SettingsStore: ObservableObject {
         LightningWallet(name: "Alby (Nostr Wallet Connect)", scheme: "nostur:nwc:alby:"), // NWC
         LightningWallet(name: "Custom Nostr Wallet Connect...", scheme: "nostur:nwc:custom:") // CUSTOM NWC
     ]
-    
+
     public static let mediaUploadServiceOptions:[MediaUploadService] = [
 
          // link will be just the image url but need to replace http with https
         getVoidCatService(),
-        
+
         MediaUploadService(name: "nostrcheck.me", request: { imageData, usePNG in
             // Dummy function body just to be compatible with MediaUploadService
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
@@ -114,7 +124,7 @@ final class SettingsStore: ObservableObject {
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
             return "https://localhost"
         }),
-        
+
         MediaUploadService(name: "nostr.build", request: { imageData, usePNG in
             // Dummy function body just to be compatible with MediaUploadService
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
@@ -129,7 +139,7 @@ final class SettingsStore: ObservableObject {
 
         // needs registered Client ID
         getImgurService(),
-        
+
         MediaUploadService(name: NIP96_LABEL, request: { imageData, usePNG in
             // Dummy function body just to be compatible with MediaUploadService
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
@@ -141,7 +151,7 @@ final class SettingsStore: ObservableObject {
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
             return "https://localhost"
         }),
-        
+
         MediaUploadService(name: BLOSSOM_LABEL, request: { imageData, usePNG in
             // Dummy function body just to be compatible with MediaUploadService
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
@@ -153,12 +163,12 @@ final class SettingsStore: ObservableObject {
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
             return "https://localhost"
         })
-        
+
     ]
-    
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        
+
         defaults.register(defaults: [
             Keys.lastMaintenanceTimestamp: 0,
             Keys.replaceNsecWithHunter2: true,
@@ -200,7 +210,11 @@ final class SettingsStore: ObservableObject {
             Keys.enableOutboxPreview: false,
             Keys.enableVPNdetection: true,
             Keys.proMode: false,
-            Keys.blossomServerList: []
+            Keys.blossomServerList: [],
+            Keys.translationAutoTranslate: false,
+            Keys.translationServiceURL: "https://translate.nostr.wine",
+            Keys.translationSourceLanguage: "auto",
+            Keys.translationTargetLanguage: Locale.current.language.languageCode?.identifier ?? "en"
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -210,7 +224,7 @@ final class SettingsStore: ObservableObject {
 //            .print("UserDefaults.didChangeNotificatio")
 //            .map { _ in () }
 //            .subscribe(objectWillChange)
-        
+
         // TODO: Refactor settings, better use all properties on SettingsStore directly instead of (slower) defaults.bool()
         // for now only a few that we need right now:
         _enableOutboxRelays = defaults.bool(forKey: Keys.enableOutboxRelays)
@@ -233,11 +247,11 @@ final class SettingsStore: ObservableObject {
         _appWideSeenTracker = defaults.bool(forKey: Keys.appWideSeenTracker)
         _appWideSeenTrackeriCloud = defaults.bool(forKey: Keys.appWideSeenTrackeriCloud)
         _mainWoTaccountPubkey = defaults.string(forKey: Keys.mainWoTaccountPubkey) ?? ""
-        
+
         // optimize
         self.updateNWCreadyCache()
     }
-    
+
     var defaultMediaUploadService: MediaUploadService {
         get {
             return defaults.string(forKey: Keys.defaultMediaUploadService)
@@ -252,22 +266,84 @@ final class SettingsStore: ObservableObject {
             defaults.set(newValue.id, forKey: Keys.defaultMediaUploadService); objectWillChange.send()
         }
     }
-    
+
     var lastMaintenanceTimestamp: Int {
         set { defaults.set(newValue, forKey: Keys.lastMaintenanceTimestamp) }
         get { defaults.integer(forKey: Keys.lastMaintenanceTimestamp) }
     }
-    
+
     var hideBadges: Bool {
         set { defaults.set(newValue, forKey: Keys.hideBadges); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.hideBadges) }
     }
-    
+
     var includeSharedFrom: Bool {
         set { defaults.set(newValue, forKey: Keys.includeSharedFrom); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.includeSharedFrom) }
     }
-    
+
+    var translationAutoTranslate: Bool {
+        set { defaults.set(newValue, forKey: Keys.translationAutoTranslate); objectWillChange.send() }
+        get { defaults.bool(forKey: Keys.translationAutoTranslate) }
+    }
+
+    var translationServiceURL: String {
+        set { defaults.set(newValue, forKey: Keys.translationServiceURL); objectWillChange.send() }
+        get { defaults.string(forKey: Keys.translationServiceURL) ?? "https://translate.nostr.wine" }
+    }
+
+    var translationAPIKey: String {
+        set {
+            if newValue.isEmpty {
+                try? translationKeychain.remove(Self.translationAPIKeyKeychainKey)
+                defaults.removeObject(forKey: Keys.translationAPIKey)
+            }
+            else {
+                do {
+                    try translationKeychain
+                        .accessibility(.afterFirstUnlock)
+                        .set(newValue, key: Self.translationAPIKeyKeychainKey)
+                    defaults.removeObject(forKey: Keys.translationAPIKey)
+                }
+                catch {
+                    L.og.error("🔴🔴🔴 could not update translation API key in keychain")
+                }
+            }
+            objectWillChange.send()
+        }
+        get {
+            if let apiKey = try? translationKeychain.get(Self.translationAPIKeyKeychainKey), !apiKey.isEmpty {
+                return apiKey
+            }
+
+            guard let legacyAPIKey = defaults.string(forKey: Keys.translationAPIKey), !legacyAPIKey.isEmpty else {
+                return ""
+            }
+
+            do {
+                try translationKeychain
+                    .accessibility(.afterFirstUnlock)
+                    .set(legacyAPIKey, key: Self.translationAPIKeyKeychainKey)
+                defaults.removeObject(forKey: Keys.translationAPIKey)
+            }
+            catch {
+                L.og.error("🔴🔴🔴 could not migrate translation API key to keychain")
+            }
+
+            return legacyAPIKey
+        }
+    }
+
+    var translationSourceLanguage: String {
+        set { defaults.set(newValue, forKey: Keys.translationSourceLanguage); objectWillChange.send() }
+        get { defaults.string(forKey: Keys.translationSourceLanguage) ?? "auto" }
+    }
+
+    var translationTargetLanguage: String {
+        set { defaults.set(newValue, forKey: Keys.translationTargetLanguage); objectWillChange.send() }
+        get { defaults.string(forKey: Keys.translationTargetLanguage) ?? "en" }
+    }
+
     var postUserAgentEnabled: Bool {
         set { defaults.set(newValue, forKey: Keys.postUserAgentEnabled); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.postUserAgentEnabled) }
@@ -277,17 +353,17 @@ final class SettingsStore: ObservableObject {
         set { defaults.set(newValue, forKey: Keys.statusBubble); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.statusBubble) }
     }
-    
+
     var enableLiveEvents: Bool {
         set { defaults.set(newValue, forKey: Keys.enableLiveEvents); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.enableLiveEvents) }
     }
-    
+
     var autoScroll: Bool {
         set { defaults.set(newValue, forKey: Keys.autoScroll); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.autoScroll) }
     }
-    
+
     var nwcShowBalance: Bool {
         set { defaults.set(newValue, forKey: Keys.nwcShowBalance); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.nwcShowBalance) }
@@ -297,9 +373,9 @@ final class SettingsStore: ObservableObject {
 //        set { defaults.set(newValue, forKey: Keys.hideEmojisInNames); objectWillChange.send() }
 //        get { defaults.bool(forKey: Keys.hideEmojisInNames) }
 //    }
-    
+
     var isSignatureVerificationEnabled: Bool {
-        set { 
+        set {
             defaults.set(newValue, forKey: Keys.isSignatureVerificationEnabled)
             bg().perform {
                 MessageParser.shared.isSignatureVerificationEnabled = newValue
@@ -307,12 +383,12 @@ final class SettingsStore: ObservableObject {
         }
         get { defaults.bool(forKey: Keys.isSignatureVerificationEnabled) }
     }
-    
+
     var replaceNsecWithHunter2Enabled: Bool {
         set { defaults.set(newValue, forKey: Keys.replaceNsecWithHunter2) }
         get { defaults.bool(forKey: Keys.replaceNsecWithHunter2) }
     }
-    
+
     var proMode: Bool {
         set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.proMode) }
         get { defaults.bool(forKey: Keys.proMode) }
@@ -322,7 +398,7 @@ final class SettingsStore: ObservableObject {
         set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.defaultZapAmount) }
         get { defaults.double(forKey: Keys.defaultZapAmount) }
     }
-    
+
     var activeNWCconnectionId: String {
         set {
             objectWillChange.send();
@@ -331,7 +407,7 @@ final class SettingsStore: ObservableObject {
         }
         get { defaults.string(forKey: Keys.activeNWCconnectionId) ?? "" }
     }
-    
+
     var excludedUserAgentPubkeys: Set<String> {
         set {
             objectWillChange.send();
@@ -364,12 +440,12 @@ final class SettingsStore: ObservableObject {
             updateNWCreadyCache()
         }
     }
-    
+
     var receiveLocalNotifications: Bool {
         set { defaults.set(newValue, forKey: Keys.receiveLocalNotifications); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.receiveLocalNotifications) }
-    }    
-    
+    }
+
     var receiveLocalNotificationsLimitToFollows: Bool {
         set {
             objectWillChange.send()
@@ -377,7 +453,7 @@ final class SettingsStore: ObservableObject {
         }
         get { defaults.bool(forKey: Keys.receiveLocalNotificationsLimitToFollows) }
     }
-    
+
     var thunderzapLevel: String {
         set {
             objectWillChange.send();
@@ -385,14 +461,14 @@ final class SettingsStore: ObservableObject {
         }
         get { defaults.string(forKey: Keys.thunderzapLevel) ?? ThunderzapLevel.normal.rawValue }
     }
-    
+
     var followRelayHints: Bool {
         set { defaults.set(newValue, forKey: Keys.followRelayHints); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.followRelayHints) }
     }
-    
+
     // MARK: -- SPECIAL HANDLING FOR PERFORMANCE ON EVERYTHING BELOW:
-    
+
     public var enableOutboxRelays: Bool {
         set {
             objectWillChange.send()
@@ -401,9 +477,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _enableOutboxRelays }
     }
-    
+
     private var _enableOutboxRelays:Bool = false
-    
+
     public var enableOutboxPreview: Bool {
         set {
             objectWillChange.send()
@@ -412,9 +488,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _enableOutboxPreview }
     }
-    
+
     private var _enableOutboxPreview:Bool = false
-    
+
     public var enableVPNdetection: Bool {
         set {
             objectWillChange.send()
@@ -423,9 +499,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _enableVPNdetection }
     }
-    
+
     private var _enableVPNdetection:Bool = false
-    
+
     var webOfTrustLevel: String {
         set {
             objectWillChange.send(); defaults.set(newValue, forKey: Keys.webOfTrustLevel)
@@ -433,7 +509,7 @@ final class SettingsStore: ObservableObject {
         }
         get { defaults.string(forKey: Keys.webOfTrustLevel) ?? WebOfTrustLevel.normal.rawValue }
     }
-    
+
     // Instruments:
     // 10.00 ms    0.0%    0 s           SettingsStore.animatedPFPenabled.getter
     public var animatedPFPenabled: Bool {
@@ -444,9 +520,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _animatedPFPenabledCache }
     }
-    
+
     private var _animatedPFPenabledCache:Bool = false
-    
+
     public var lowDataMode: Bool {
         set {
             objectWillChange.send()
@@ -455,9 +531,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _lowDataModeCache }
     }
-    
+
     private var _lowDataModeCache:Bool = false
-    
+
     var rowFooterEnabled: Bool {
         set {
             objectWillChange.send()
@@ -469,9 +545,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _rowFooterEnabled }
     }
-    
+
     private var _rowFooterEnabled:Bool = true
-    
+
     var displayUserAgentEnabled: Bool {
         set {
             objectWillChange.send()
@@ -480,9 +556,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _displayUserAgentEnabled }
     }
-    
+
     private var _displayUserAgentEnabled:Bool = true
-    
+
     var showFiat: Bool {
         set {
             objectWillChange.send()
@@ -494,7 +570,7 @@ final class SettingsStore: ObservableObject {
         }
         get { _showFiat }
     }
-    
+
     var preferredFiatCurrency: String {
         set {
             objectWillChange.send()
@@ -503,9 +579,9 @@ final class SettingsStore: ObservableObject {
         }
         get { defaults.string(forKey: Keys.preferredFiatCurrency) ?? Self.deviceDefaultFiatCurrency }
     }
-    
+
     private var _showFiat:Bool = true
-    
+
     public var restrictAutoDownload: Bool {
         set {
             objectWillChange.send()
@@ -514,9 +590,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _restrictAutoDownload }
     }
-    
+
     private var _restrictAutoDownload:Bool = false
-    
+
     public var autoDownloadFrom: String {
         set {
             objectWillChange.send(); defaults.set(newValue, forKey: Keys.autoDownloadFrom)
@@ -524,9 +600,9 @@ final class SettingsStore: ObservableObject {
         }
         get { defaults.string(forKey: Keys.autoDownloadFrom) ?? AutodownloadLevel.onlyWoT.rawValue }
     }
-    
+
     private var _autoDownloadFrom:String = AutodownloadLevel.onlyWoT.rawValue
-    
+
     // Starting iOS 26, full width is always on
     public var fullWidthImages: Bool {
         set {
@@ -541,9 +617,9 @@ final class SettingsStore: ObservableObject {
             return _fullWidthImages
         }
     }
-    
+
     private var _fullWidthImages:Bool = false
-    
+
     public var footerButtons: String {
         set {
             objectWillChange.send()
@@ -553,9 +629,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _footerButtons }
     }
-    
+
     private var _footerButtons: String = "💬🔄+⚡️🔖"
-    
+
     public var fetchCounts: Bool {
         set {
             objectWillChange.send()
@@ -564,9 +640,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _fetchCounts }
     }
-    
+
     private var _fetchCounts:Bool = false
-    
+
     public var appWideSeenTracker: Bool {
         set {
             objectWillChange.send()
@@ -575,9 +651,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _appWideSeenTracker }
     }
-    
+
     private var _appWideSeenTracker:Bool = false
-    
+
     public var appWideSeenTrackeriCloud: Bool {
         set {
             objectWillChange.send()
@@ -586,19 +662,19 @@ final class SettingsStore: ObservableObject {
         }
         get { _appWideSeenTrackeriCloud }
     }
-    
+
     private var _appWideSeenTrackeriCloud:Bool = false
-    
-    
+
+
     var blossomServerList: [String] {
         set { defaults.set(newValue, forKey: Keys.blossomServerList) }
         get { defaults.array(forKey: Keys.blossomServerList) as? [String] ?? [] }
     }
-    
+
     // optimize
-    
+
     public var nwcReady:Bool = false
-    
+
     private func isNWCready() -> Bool {
         defaultLightningWallet.scheme.contains(":nwc:") && !activeNWCconnectionId.isEmpty
     }
@@ -609,7 +685,7 @@ final class SettingsStore: ObservableObject {
             self.nwcReady = self.isNWCready()
         }
     }
-    
+
     public var mainWoTaccountPubkey: String {
         set {
             objectWillChange.send()
@@ -618,9 +694,9 @@ final class SettingsStore: ObservableObject {
         }
         get { _mainWoTaccountPubkey }
     }
-    
+
     private var _mainWoTaccountPubkey:String = ""
-    
+
     @MainActor
     static func shouldAutodownload(_ nrPost: NRPost, la laOrNil: LoggedInAccount? = nil) -> Bool {
         let la: LoggedInAccount? = laOrNil ?? AccountsState.shared.loggedInAccount
@@ -641,7 +717,7 @@ final class SettingsStore: ObservableObject {
             return true
         }
     }
-    
+
     @MainActor
     static func shouldAutodownload(_ nrPost: NRLiveEvent, la laOrNil: LoggedInAccount? = nil) -> Bool {
         let la: LoggedInAccount? = laOrNil ?? AccountsState.shared.loggedInAccount
@@ -662,7 +738,7 @@ final class SettingsStore: ObservableObject {
             return true
         }
     }
-    
+
     static func shouldAutodownload(_ nrChat: NRChatMessage) -> Bool {
         if nrChat.following { return true }
         if AccountsState.shared.bgFullAccountPubkeys.contains(nrChat.pubkey) { return true }
@@ -678,7 +754,7 @@ final class SettingsStore: ObservableObject {
             return true
         }
     }
-    
+
     static func shouldAutodownload(_ nxEvent: NXEvent) -> Bool {
         if AccountsState.shared.bgFullAccountPubkeys.contains(nxEvent.pubkey) { return true }
         switch SettingsStore.shared.autoDownloadFrom {
@@ -707,7 +783,7 @@ enum AutodownloadLevel:String, CaseIterable, Localizable, Identifiable {
     case all = "AUTODOWNLOAD_ALL"
     case onlyWoT = "AUTODOWNLOAD_WOT_NORMAL"
     case onlyWoTstrict = "AUTODOWNLOAD_WOT_STRICT"
-    
+
     var id:String {
         String(self.rawValue)
     }
@@ -717,7 +793,7 @@ enum ThunderzapLevel:String, CaseIterable, Localizable, Identifiable {
     case normal = "THUNDERZAP_NORMAL"
     case low = "THUNDERZAP_LOW"
     case off = "THUNDERZAP_OFF"
-    
+
     var id:String {
         String(self.rawValue)
     }
