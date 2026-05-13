@@ -42,7 +42,7 @@ extension CloudFeed {
             case .picture(_):
                 return String(localized: "Photos")
             case .vine(_):
-                return String(localized: "diVines")
+                return String(localized: "Divines")
             case .yak(_):
                 return String(localized: "Yaks")
             case .pubkeys(_):
@@ -190,11 +190,11 @@ struct ColumnConfigToolbarMenu: ViewModifier {
         
         if enableVineFeed {
             if #available(iOS 17.0, *) {
-                Button("diVines", systemImage: "person.crop.square.badge.video") {
+                Button("Divines", systemImage: "person.crop.square.badge.video") {
                     columnType = .vines(Nostur.account()?.publicKey)
                 }
             } else {
-                Button("diVines", systemImage: "video.bubble.left") {
+                Button("Divines", systemImage: "video.bubble.left") {
                     columnType = .vines(Nostur.account()?.publicKey)
                 }
             }

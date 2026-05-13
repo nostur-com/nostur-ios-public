@@ -63,7 +63,7 @@ struct MacColumn: View {
         case .yaks:
             return String(localized: "Yaks", comment: "Feed title")
         case .vines:
-            return String(localized: "diVines", comment: "Feed title")
+            return String(localized: "Divines", comment: "Feed title")
         case .mentions:
             return String(localized: "Mentions", comment: "Feed title")
         case .bookmarks:

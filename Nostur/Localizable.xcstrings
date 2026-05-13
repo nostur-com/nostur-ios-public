@@ -7732,6 +7732,9 @@
         }
       }
     },
+    "Picture-only, Yaks, Divines, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
+
+    },
     "Picture, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
       "extractionState" : "stale",
       "localizations" : {

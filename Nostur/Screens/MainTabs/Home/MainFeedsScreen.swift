@@ -543,9 +543,9 @@ struct MainFeedsScreen: View {
                           
                           if la.viewFollowingPublicKeys.count > 10 && enableVineFeed {
                               if #available(iOS 17.0, *) {
-                                  Button("diVines", systemImage: "person.crop.square.badge.video") { selectedSubTab = "Vine" }
+                                  Button("Divines", systemImage: "person.crop.square.badge.video") { selectedSubTab = "Vine" }
                               } else {
-                                  Button("diVines", systemImage: "video.bubble.left") { selectedSubTab = "Vine" }
+                                  Button("Divines", systemImage: "video.bubble.left") { selectedSubTab = "Vine" }
                               }
                           }
                           

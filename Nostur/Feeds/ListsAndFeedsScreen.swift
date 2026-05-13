@@ -72,7 +72,7 @@ struct ListsAndFeedsScreen: View {
                         .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableVineFeed, label: {
-                    Text("diVines")
+                    Text("Divines")
                     Text("Short videos feed from people you follow")
                         .foregroundStyle(.secondary)
                 })
@@ -124,7 +124,7 @@ struct ListsAndFeedsScreen: View {
             } header: {
                 Text("Default feeds")
             } footer: {
-                Text("Picture-only, Yaks, diVines, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
+                Text("Picture-only, Yaks, Divines, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
                     .foregroundStyle(.secondary)
             }
         }
