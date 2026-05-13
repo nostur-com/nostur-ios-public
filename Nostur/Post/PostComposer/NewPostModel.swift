@@ -310,6 +310,7 @@ public final class NewPostModel: ObservableObject {
                     videos: typingTextModel.pastedVideos,
                     voiceMessage: typingTextModel.voiceRecording,
                     typingTextModel: typingTextModel,
+                    isVineVideoPost: nEvent?.kind == .shortVideos,
                     uploadMethod: .blossom
                 )
                 
@@ -452,6 +453,7 @@ public final class NewPostModel: ObservableObject {
                     videos: typingTextModel.pastedVideos,
                     voiceMessage: typingTextModel.voiceRecording,
                     typingTextModel: typingTextModel,
+                    isVineVideoPost: nEvent?.kind == .shortVideos,
                     uploadMethod: .nip96(nip96apiURL)
                 )
                 
@@ -809,13 +811,13 @@ public final class NewPostModel: ObservableObject {
         }
         
         // Handle short video (vine)
-        else if nEvent.kind == .shortVideos, let imeta = imetas.first {
+        else if nEvent.kind == .shortVideos, let videoImeta = imetas.first(where: { isLikelyVideoURL($0.url) }) ?? imetas.first {
             // title tag holds the caption, content is left empty (openvine convention)
             let caption = content
             content = ""
             
             // d tag - use hash as identifier
-            let dValue = imeta.hash ?? UUID().uuidString
+            let dValue = videoImeta.hash ?? UUID().uuidString
             nEvent.tags.append(NostrTag(["d", dValue]))
             
             // title tag (caption)
@@ -837,17 +839,20 @@ public final class NewPostModel: ObservableObject {
             nEvent.tags.append(NostrTag(["client", "nostur"]))
             
             // imeta tag
-            var imetaParts: [String] = ["imeta", "url \(imeta.url)", "m video/mp4"]
-            if let dim = imeta.dim, !dim.isEmpty {
+            var imetaParts: [String] = ["imeta", "url \(videoImeta.url)", "m video/mp4"]
+            if let thumbnailURL = imetas.first(where: { !isLikelyVideoURL($0.url) })?.url, !thumbnailURL.isEmpty {
+                imetaParts.append("image \(thumbnailURL)")
+            }
+            if let dim = videoImeta.dim, !dim.isEmpty {
                 imetaParts.append("dim \(dim)")
             }
             else if let dim = typingTextModel.vineVideoDim, !dim.isEmpty {
                 imetaParts.append("dim \(dim)")
             }
-            if let hash = imeta.hash, !hash.isEmpty {
+            if let hash = videoImeta.hash, !hash.isEmpty {
                 imetaParts.append("x \(hash)")
             }
-            if let blurhash = imeta.blurhash, !blurhash.isEmpty {
+            if let blurhash = videoImeta.blurhash, !blurhash.isEmpty {
                 imetaParts.append("blurhash \(blurhash)")
             }
             nEvent.tags.append(NostrTag(imetaParts))
@@ -1640,7 +1645,7 @@ public func getUnsignedAuthorizationHeaderEvent96(pubkey: String, sha256hex: Str
 }
 
 
-public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], videos: [PostedVideoMeta] = [], voiceMessage: VoiceRecording? = nil, typingTextModel: TypingTextModel, uploadMethod: UploadMethod) async -> [(Data, String, String?, Int, NEvent)] {
+public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], videos: [PostedVideoMeta] = [], voiceMessage: VoiceRecording? = nil, typingTextModel: TypingTextModel, isVineVideoPost: Bool = false, uploadMethod: UploadMethod) async -> [(Data, String, String?, Int, NEvent)] {
     if let voiceMessage = voiceMessage {
         guard let recordingData = try? Data(contentsOf: voiceMessage.localFileURL) else { return [] }
         
@@ -1731,6 +1736,19 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
                     let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
 
                     result.append((compressedVideoData, "video/mp4", nil, (typingTextModel.pastedImages.count + videoMeta.index), unsignedAuthHeaderEvent))
+
+                    if isVineVideoPost,
+                       let firstFrame = await getVideoFirstFrame(asset: AVAsset(url: url)),
+                       let thumbnailData = firstFrame.jpegData(compressionQuality: 0.85) {
+                        let thumbBlurhash = firstFrame
+                            .resized(to: CGSize(width: 32, height: 32))
+                            .blurHash(numberOfComponents: (4, 3))
+                        let thumbContentType = "image/jpeg"
+                        let thumbHttpBody = makeHttpBody(mediaData: thumbnailData, contentType: thumbContentType, boundary: boundary)
+                        let thumbSha256hex = thumbHttpBody.sha256().hexEncodedString()
+                        let thumbAuthEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: thumbSha256hex, method: "POST", apiUrl: nip96apiURL)
+                        result.append((thumbnailData, PostedImageMeta.ImageType.jpeg.rawValue, thumbBlurhash, (typingTextModel.pastedImages.count + videoMeta.index + 10000), thumbAuthEvent))
+                    }
                 }
             }
 
@@ -1794,12 +1812,33 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
                     let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: compressedVideoData.sha256().hexEncodedString())
 
                     result.append((compressedVideoData, "video/mp4", nil, images.count + videoMeta.index, unsignedAuthHeaderEvent))
+
+                    if isVineVideoPost,
+                       let firstFrame = await getVideoFirstFrame(asset: AVAsset(url: url)),
+                       let thumbnailData = firstFrame.jpegData(compressionQuality: 0.85) {
+                        let thumbBlurhash = firstFrame
+                            .resized(to: CGSize(width: 32, height: 32))
+                            .blurHash(numberOfComponents: (4, 3))
+                        let thumbAuthEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: thumbnailData.sha256().hexEncodedString())
+                        result.append((thumbnailData, PostedImageMeta.ImageType.jpeg.rawValue, thumbBlurhash, images.count + videoMeta.index + 10000, thumbAuthEvent))
+                    }
                 }
             }
 
             return result
         }
     }
+}
+
+private func isLikelyVideoURL(_ urlString: String) -> Bool {
+    if let url = URL(string: urlString) {
+        let ext = url.pathExtension.lowercased()
+        if ["mp4", "mov", "m4v", "webm", "m3u8"].contains(ext) {
+            return true
+        }
+    }
+    let lower = urlString.lowercased()
+    return lower.contains(".mp4") || lower.contains(".mov") || lower.contains(".m3u8")
 }
 
 public enum UploadMethod {
