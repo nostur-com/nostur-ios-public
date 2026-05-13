@@ -9171,6 +9171,9 @@
         }
       }
     },
+    "Remove audio" : {
+
+    },
     "Remove author" : {
       "comment" : "Button to Remove author from Highlight",
       "localizations" : {

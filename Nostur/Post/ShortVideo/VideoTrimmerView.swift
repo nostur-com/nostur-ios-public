@@ -25,6 +25,7 @@ struct VideoTrimmerView: View {
     @State private var exportError: String?
     @State private var timeObserver: Any?
     @State private var isLoaded = false
+    @State private var removeAudio = false
     
     private var selectedDuration: Double {
         endTime - startTime
@@ -65,6 +66,10 @@ struct VideoTrimmerView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.bottom, 8)
+
+            Toggle("Remove audio", isOn: $removeAudio)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 8)
             
             // Trim timeline
             if isLoaded {
@@ -244,8 +249,20 @@ struct VideoTrimmerView: View {
         isExporting = true
         exportError = nil
         
-        let asset = AVURLAsset(url: sourceURL)
-        guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPreset1280x720) else {
+        let sourceAsset = AVURLAsset(url: sourceURL)
+        let assetForExport: AVAsset
+        if removeAudio {
+            guard let mutedAsset = makeVideoOnlyComposition(from: sourceAsset) else {
+                exportError = "Failed to remove audio"
+                isExporting = false
+                return
+            }
+            assetForExport = mutedAsset
+        } else {
+            assetForExport = sourceAsset
+        }
+
+        guard let exportSession = AVAssetExportSession(asset: assetForExport, presetName: AVAssetExportPreset1280x720) else {
             exportError = "Cannot create export session"
             isExporting = false
             return
@@ -281,6 +298,29 @@ struct VideoTrimmerView: View {
                     self.exportError = "Unknown export error"
                 }
             }
+        }
+    }
+
+    private func makeVideoOnlyComposition(from asset: AVAsset) -> AVMutableComposition? {
+        guard let sourceVideoTrack = asset.tracks(withMediaType: .video).first else {
+            return nil
+        }
+
+        let composition = AVMutableComposition()
+        guard let compositionVideoTrack = composition.addMutableTrack(
+            withMediaType: .video,
+            preferredTrackID: kCMPersistentTrackID_Invalid
+        ) else {
+            return nil
+        }
+
+        do {
+            let fullRange = CMTimeRange(start: .zero, duration: asset.duration)
+            try compositionVideoTrack.insertTimeRange(fullRange, of: sourceVideoTrack, at: .zero)
+            compositionVideoTrack.preferredTransform = sourceVideoTrack.preferredTransform
+            return composition
+        } catch {
+            return nil
         }
     }
     
