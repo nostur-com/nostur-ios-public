@@ -4182,6 +4182,7 @@
     },
     "diVines" : {
       "comment" : "Feed title\nTab title for short videos feed of people you follow",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4190,6 +4191,9 @@
           }
         }
       }
+    },
+    "Divines" : {
+      "comment" : "Feed title\nTab title for short videos feed of people you follow"
     },
     "DM" : {
       "comment" : "Navigation title for a DM conversation screen (Direct Message)",
@@ -6591,6 +6595,9 @@
     "Missing nrLiveEvent" : {
       "shouldTranslate" : false
     },
+    "Missing reply." : {
+      "comment" : "Shown in a thread when an intermediate reply is missing"
+    },
     "Mock Bookmark update" : {
       "localizations" : {
         "nl" : {
@@ -7723,6 +7730,7 @@
       }
     },
     "Picture-only, Yaks, diVines, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -11732,6 +11740,9 @@
           }
         }
       }
+    },
+    "Try to fetch" : {
+      "comment" : "Button to fetch missing reply in thread"
     },
     "Try to use anyway" : {
       "localizations" : {
