@@ -42,6 +42,7 @@ public actor ElectrumXClient: IElectrumXClient {
     /// Namecoin name expiry depth in blocks (~200 days).
     private static let NAME_EXPIRE_DEPTH = 36_000
 
+    private static let OP_NAME_FIRSTUPDATE: UInt8 = 0x52
     private static let OP_NAME_UPDATE: UInt8 = 0x53
     private static let OP_2DROP: UInt8 = 0x6d
     private static let OP_DROP: UInt8 = 0x75
@@ -327,8 +328,12 @@ public actor ElectrumXClient: IElectrumXClient {
         for (i, vout) in vouts.enumerated() {
             guard let spk = vout["scriptPubKey"] as? [String: Any],
                   let hex = spk["hex"] as? String else { continue }
-            if !hex.hasPrefix("53") {
-                NSLog("%@", "[Namecoin] vout[\(i)] no 53 prefix (hex[:10]=\(String(hex.prefix(10))))")
+            // Accept both OP_NAME_UPDATE (0x53) and OP_NAME_FIRSTUPDATE (0x52).
+            // FIRSTUPDATE is the first tx for any newly-registered name; if we
+            // only matched 0x53 we'd silently drop names that have never been
+            // re-updated (e.g. `d/mstrofnone`).
+            if !(hex.hasPrefix("53") || hex.hasPrefix("52")) {
+                NSLog("%@", "[Namecoin] vout[\(i)] no 52/53 prefix (hex[:10]=\(String(hex.prefix(10))))")
                 continue
             }
             guard let bytes = hexToBytes(hex) else {
@@ -385,15 +390,33 @@ public actor ElectrumXClient: IElectrumXClient {
 
     // MARK: - Script parsing
 
-    private static func parseNameScript(_ script: [UInt8]) -> (String, String)? {
-        guard !script.isEmpty, script[0] == OP_NAME_UPDATE else { return nil }
-        var pos = 1
-        guard let (nameBytes, p1) = readPushData(script, pos: pos) else { return nil }
-        pos = p1
-        guard let (valueBytes, _) = readPushData(script, pos: pos) else { return nil }
-        guard let name = String(bytes: nameBytes, encoding: .utf8),
-              let value = String(bytes: valueBytes, encoding: .utf8) else { return nil }
-        return (name, value)
+    static func parseNameScript(_ script: [UInt8]) -> (String, String)? {
+        guard !script.isEmpty else { return nil }
+        let head = script[0]
+        if head == OP_NAME_UPDATE {
+            // <NAME_UPDATE> <push name> <push value> OP_2DROP OP_DROP <address_script>
+            var pos = 1
+            guard let (nameBytes, p1) = readPushData(script, pos: pos) else { return nil }
+            pos = p1
+            guard let (valueBytes, _) = readPushData(script, pos: pos) else { return nil }
+            guard let name = String(bytes: nameBytes, encoding: .utf8),
+                  let value = String(bytes: valueBytes, encoding: .utf8) else { return nil }
+            return (name, value)
+        }
+        if head == OP_NAME_FIRSTUPDATE {
+            // <NAME_FIRSTUPDATE> <push name> <push rand> <push value> OP_2DROP OP_2DROP <address_script>
+            // The `rand` push is the 8-byte randomness from the prior name_new; skip it.
+            var pos = 1
+            guard let (nameBytes, p1) = readPushData(script, pos: pos) else { return nil }
+            pos = p1
+            guard let (_, p2) = readPushData(script, pos: pos) else { return nil }
+            pos = p2
+            guard let (valueBytes, _) = readPushData(script, pos: pos) else { return nil }
+            guard let name = String(bytes: nameBytes, encoding: .utf8),
+                  let value = String(bytes: valueBytes, encoding: .utf8) else { return nil }
+            return (name, value)
+        }
+        return nil
     }
 
     private static func readPushData(_ script: [UInt8], pos: Int) -> ([UInt8], Int)? {
