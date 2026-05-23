@@ -1480,11 +1480,26 @@ public final class NewPostModel: ObservableObject {
             replyingToPrivatePost = true
         }
         
+        // If we reply to ourselve we need to walk up to the parents until we find the original author who needs to receive the private reply
+        guard let activeAccountPubkey = activeAccount?.publicKey ?? account()?.publicKey else {
+            return
+        }
+        
         // Fetch DM relays for recipient to enable private reply option
-        let recipientPubkey = replyTo.nrPost.pubkey
+        let recipientPubkey = if replyTo.nrPost.pubkey == activeAccountPubkey {
+            (originalPrivateReplyTo(replyTo.nrPost) ?? replyTo.nrPost.pubkey)
+        } else {
+            replyTo.nrPost.pubkey
+        }
+        
+        if replyInPrivate { // if we reply to ourselves, we need to overwrite requiredP with recipient from parent where we originally replied to
+            requiredP = recipientPubkey
+        }
+        
+        
         Task { @MainActor in
             let recipientRelays = await getDMrelays(for: recipientPubkey)
-            let ownRelays = await getDMrelays(for: account()?.publicKey ?? "")
+            let ownRelays = await getDMrelays(for: activeAccountPubkey)
             self.recipientDMRelays = recipientRelays
             self.ownDMRelays = ownRelays
         }
@@ -1919,4 +1934,44 @@ func addReplyToTags(nEvent input: NEvent, replyTo: ReplyTo) -> NEvent {
     
     
     return nEvent
+}
+
+
+// keep walking up to parent until we find .pubkey that is not nrPost.pubkey
+@MainActor
+func originalPrivateReplyTo(_ nrPost: NRPost) -> String? {
+    if let replyTo = nrPost.replyTo {
+        if replyTo.pubkey != nrPost.pubkey {
+            return replyTo.pubkey
+        }
+        return originalPrivateReplyTo(replyTo)
+    }
+    
+    guard let replyToId = nrPost.replyToId else { return nil }
+    let originPubkey = nrPost.pubkey
+    let recursionLimit = 35
+    
+    func walkReplyChain(replyToId: String, depth: Int) -> String? {
+        guard depth < recursionLimit else { return nil }
+        
+        let parentData: (pubkey: String, nextReplyToId: String?)? = bg().performAndWait {
+            if replyToId.contains(":"),
+               let parent = Event.fetchReplacableEvent(aTag: replyToId, context: bg()) {
+                return (parent.pubkey, parent.replyToId)
+            }
+            if let parent = Event.fetchEvent(id: replyToId, context: bg()) {
+                return (parent.pubkey, parent.replyToId)
+            }
+            return nil
+        }
+        
+        guard let parentData else { return nil }
+        if parentData.pubkey != originPubkey {
+            return parentData.pubkey
+        }
+        guard let nextReplyToId = parentData.nextReplyToId else { return nil }
+        return walkReplyChain(replyToId: nextReplyToId, depth: depth + 1)
+    }
+    
+    return walkReplyChain(replyToId: replyToId, depth: 0)
 }
