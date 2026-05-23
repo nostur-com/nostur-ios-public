@@ -14,6 +14,7 @@ struct PostOrThread: View { //, Equatable {
 //    static func == (lhs: Self, rhs: Self) -> Bool {
 //        lhs.nrPost.id == rhs.nrPost.id
 //    }
+    @Environment(\.nxViewingContext) private var nxViewingContext
     
     private let nrPost: NRPost
     private var theme: Theme
@@ -45,6 +46,24 @@ struct PostOrThread: View { //, Equatable {
         }
         else { // Reply thread
             VStack(spacing: GUTTER) {
+                if nxViewingContext.contains(.detailPane), let missingParent = firstParentWithMissingReplyTo {
+                    HStack(spacing: 6) {
+                        Text(String(localized: "Missing reply.", comment: "Shown in a thread when an intermediate reply is missing"))
+                            .foregroundColor(theme.secondary)
+                        Button(String(localized: "Try to fetch", comment: "Button to fetch missing reply in thread")) {
+                            fetchMissingReplyParent(for: missingParent)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundColor(theme.accent)
+                        .disabled(nxViewingContext.contains(.preview))
+                        Spacer()
+                    }
+                    .font(.footnote)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(theme.listBackground)
+                }
+
                 ForEach(postOrThreadAttributes.parentPosts) { nrParent in
                     Box(nrPost: nrParent, showGutter: false) {
                         PostRowDeletable(nrPost: nrParent,
@@ -73,6 +92,30 @@ struct PostOrThread: View { //, Equatable {
                 }
             }
         }
+    }
+
+    private var firstParentWithMissingReplyTo: NRPost? {
+        guard let firstParent = postOrThreadAttributes.parentPosts.first else { return nil }
+        guard firstParent.replyToId != nil else { return nil }
+        guard firstParent.replyToId != rootId else { return nil }
+        return firstParent
+    }
+
+    private func fetchMissingReplyParent(for nrParent: NRPost) {
+        guard let replyToId = nrParent.replyToId else { return }
+
+        if replyToId.count > 64 && replyToId.contains(":") {
+            QueuedFetcher.shared.enqueue(aTag: replyToId)
+        }
+        else {
+            QueuedFetcher.shared.enqueue(id: replyToId)
+            req(RM.getEvent(id: replyToId), relayType: .SEARCH)
+            guard vpnGuardOK() else { return }
+            fetchEventFromRelayHint(replyToId, fastTags: nrParent.fastTags)
+        }
+
+        nrParent.loadReplyTo()
+        nrParent.loadParents()
     }
 }
 
