@@ -35,6 +35,15 @@ func handleDM(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, context:
     }
     savedEvent.groupId = groupId
     
+    // Don't continue if reaction
+    if nEvent.kind == .reaction {
+        // But still need this to handle DM reactions
+        Task { @MainActor in
+            Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: false))
+        }
+        return
+    }
+    
     // Info we need in other context
     let accountPubkeys: Set<String> = AccountsState.shared.bgAccountPubkeys
     let savedEventDate = savedEvent.date

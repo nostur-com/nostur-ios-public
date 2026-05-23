@@ -9,7 +9,8 @@ import Foundation
 import CoreData
 
 func handleReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, context: NSManagedObjectContext) {
-    guard nEvent.kind == .reaction else { return }
+    // Only reactions, but not DM reactions
+    guard nEvent.kind == .reaction && savedEvent.kTag != 14 else { return }
     
     if let lastE = nEvent.lastE() {
         savedEvent.reactionToId = lastE
@@ -18,9 +19,6 @@ func handleReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, co
             savedEvent.otherPubkey = lastP
         }
     }
-    
-    // Don't handle DM reactions as normal reactions
-    guard wrapId == nil else { return }
     
     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
     Event.updateLikeCountCache(savedEvent, content: nEvent.content, context: context)
@@ -38,6 +36,18 @@ func handleReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, co
                 accountCache()?.addReaction(reactionToId, reactionType: reactionContent)
                 sendNotification(.postAction, PostActionNotification(type: .reacted(nil, reactionContent), eventId: reactionToId))
             }
+        }
+    }
+}
+
+func handleDMReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, context: NSManagedObjectContext) {
+    guard nEvent.kind == .reaction, savedEvent.kTag == 14 else { return }
+    
+    if let lastE = nEvent.lastE() {
+        savedEvent.reactionToId = lastE
+
+        if savedEvent.otherPubkey == nil, let lastP = nEvent.lastP() {
+            savedEvent.otherPubkey = lastP
         }
     }
 }
