@@ -27,9 +27,15 @@ func typeOfSearch(_ searchInput: String) -> TypeOfSearch {
         if searchTrimmed.contains(".") {
             let domain = String(searchTrimmed.dropFirst(1))
             let name = "_"
-            
+
+            // Namecoin (.bit) — route to ElectrumX instead of HTTPS
+            if NamecoinResolver.isNamecoinIdentifier(domain) {
+                NSLog("%@", "[Namecoin] typeOfSearch routing to .namecoin for @\(domain) (bare @domain form)")
+                return .namecoin(NamecoinParts(identifier: domain, domain: domain, name: name))
+            }
+
             let url = URL(string: "https://\(domain)/.well-known/nostr.json?name=\(name)")
-            
+
             return .nip05(Nip05Parts(nip05url: url, domain: domain, name: name))
         }
         return .nametag(String(searchTrimmed.dropFirst(1)))
@@ -48,13 +54,24 @@ func typeOfSearch(_ searchInput: String) -> TypeOfSearch {
     }
     else if searchTrimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true).count == 2 {
         let nip05parts = searchTrimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true)
-        
+
         let domain = String(nip05parts[1])
         let name = String(nip05parts[0])
-        
+
+        // Namecoin (.bit) — route to ElectrumX instead of HTTPS
+        if NamecoinResolver.isNamecoinIdentifier(domain) {
+            NSLog("%@", "[Namecoin] typeOfSearch routing to .namecoin for \(searchTrimmed) (user@domain form, name=\(name) domain=\(domain))")
+            return .namecoin(NamecoinParts(identifier: searchTrimmed, domain: domain, name: name))
+        }
+
         let url = URL(string: "https://\(domain)/.well-known/nostr.json?name=\(name)")
-        
+
         return .nip05(Nip05Parts(nip05url: url, domain: domain, name: name))
+    }
+    // Bare .bit domain or d/*/id/* namespace
+    else if NamecoinResolver.isNamecoinIdentifier(searchTrimmed) {
+        NSLog("%@", "[Namecoin] typeOfSearch routing to .namecoin for \(searchTrimmed)")
+        return .namecoin(NamecoinParts(identifier: searchTrimmed, domain: searchTrimmed, name: "_"))
     }
     
     
@@ -71,8 +88,15 @@ public enum TypeOfSearch {
     case note1(String)
     case hexId(String)
     case nip05(Nip05Parts)
+    case namecoin(NamecoinParts)
     case url(String)
     case other(String)
+}
+
+public struct NamecoinParts {
+    let identifier: String // full user input (e.g. "alice@example.bit" or "example.bit")
+    let domain: String
+    let name: String
 }
 
 public struct Nip05Parts {
@@ -425,8 +449,13 @@ extension Search {
     }
     
     func hexIdSearch(_ term: String) {
+        NSLog("%@", "[Namecoin] hexIdSearch enter term=\(term.prefix(16))… len=\(term.count)")
         guard NostrRegexes.default.matchingStrings(term, regex: NostrRegexes.default.cache[.hexId]!).count == 1
-        else { return }
+        else {
+            NSLog("%@", "[Namecoin] hexIdSearch regex FAILED for term=\(term.prefix(16))…")
+            return
+        }
+        NSLog("%@", "[Namecoin] hexIdSearch regex ok, dispatching local + relay queries")
         
         searching = true
         contacts = []
@@ -435,7 +464,11 @@ extension Search {
         let bgContext = bg()
         
         bgContext.perform {
-            guard let event = Event.fetchEvent(id: term, context: bgContext) else { return }
+            guard let event = Event.fetchEvent(id: term, context: bgContext) else {
+                NSLog("%@", "[Namecoin] hexIdSearch local Event.fetchEvent: not found")
+                return
+            }
+            NSLog("%@", "[Namecoin] hexIdSearch local Event.fetchEvent: FOUND")
             let nrPost = NRPost(event: event)
             Task { @MainActor in
                 self.nrPosts = [nrPost]
@@ -444,7 +477,11 @@ extension Search {
         }
         
         bg().perform {
-            guard let nrContact = NRContact.fetch(term) else { return }
+            guard let nrContact = NRContact.fetch(term) else {
+                NSLog("%@", "[Namecoin] hexIdSearch local NRContact.fetch: not found")
+                return
+            }
+            NSLog("%@", "[Namecoin] hexIdSearch local NRContact.fetch: FOUND")
             Task { @MainActor in
                 self.contacts = [nrContact]
                 searching = false
@@ -452,14 +489,17 @@ extension Search {
         }
         
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+            NSLog("%@", "[Namecoin] hexIdSearch dispatching REQ taskId=\(taskId) to READ+SEARCH_ONLY relays")
             req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .READ)
             req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .SEARCH_ONLY)
             
             req(RM.getUserMetadata(pubkey: term, subscriptionId: taskId), relayType: .READ)
             req(RM.getUserMetadata(pubkey: term, subscriptionId: taskId), relayType: .SEARCH_ONLY)
         }, processResponseCommand: { taskId, _, _ in
+            NSLog("%@", "[Namecoin] hexIdSearch response received for taskId=\(taskId)")
             bg().perform {
                 guard let event = Event.fetchEvent(id: term, context: bg()) else { return }
+                NSLog("%@", "[Namecoin] hexIdSearch response: Event.fetchEvent FOUND")
                 let nrPost = NRPost(event: event)
                 Task { @MainActor in
                     self.nrPosts = [nrPost]
@@ -467,7 +507,11 @@ extension Search {
                 }
             }
             bg().perform {
-                guard let nrContact = NRContact.fetch(term) else { return }
+                guard let nrContact = NRContact.fetch(term) else {
+                    NSLog("%@", "[Namecoin] hexIdSearch response: NRContact.fetch still nil")
+                    return
+                }
+                NSLog("%@", "[Namecoin] hexIdSearch response: NRContact.fetch FOUND -> setting contacts")
                 Task { @MainActor in
                     self.contacts = [nrContact]
                     searching = false
@@ -508,6 +552,90 @@ extension Search {
             
             hexIdSearch(pubkey)
         }
+    }
+
+    /// Resolve a .bit / Namecoin identifier via ElectrumX, then surface the
+    /// pubkey immediately as an NRContact (so the user gets a result row even
+    /// if no relay in their READ pool has kind:0 metadata for that pubkey),
+    /// and kick off a background kind:0 fetch to fill in profile details.
+    /// On failure, sets `namecoinError` with a user-facing message that is
+    /// shown as a banner above the results.
+    func namecoinSearch(_ parts: NamecoinParts) {
+        NSLog("%@", "[Namecoin] namecoinSearch enter identifier=\(parts.identifier)")
+        searching = true
+        contacts = []
+        nrPosts = []
+        namecoinError = nil
+        let identifier = parts.identifier
+        let searchAtStart = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        Task {
+            let outcome = await NamecoinService.shared.resolveDetailed(identifier)
+
+            // Guard against stale results: if the user has changed the input
+            // since this lookup started, a newer onChange has already reset the
+            // UI state; don't overwrite it with this result.
+            let currentInput = await MainActor.run { self.searchText.trimmingCharacters(in: .whitespacesAndNewlines) }
+            guard currentInput == searchAtStart else {
+                NSLog("%@", "[Namecoin] namecoinSearch stale result (started with \(searchAtStart), current=\(currentInput)); discarding")
+                return
+            }
+
+            switch outcome {
+            case .success(let result):
+                NSLog("%@", "[Namecoin] namecoinSearch resolved \(identifier) -> \(String(result.pubkey.prefix(16)))")
+                await self.surfaceResolvedPubkey(result.pubkey)
+            case .nameNotFound, .noNostrField, .serversUnreachable, .invalidIdentifier, .timeout:
+                let msg = namecoinErrorMessage(for: outcome, identifier: identifier) ?? "Unknown error."
+                NSLog("%@", "[Namecoin] namecoinSearch FAILED \(identifier): \(msg)")
+                await MainActor.run {
+                    self.namecoinError = msg
+                    self.searching = false
+                }
+            }
+        }
+    }
+
+    /// Show the resolved pubkey in the results immediately (via a placeholder
+    /// NRContact) and fire a kind:0 REQ to READ+SEARCH_ONLY relays so the
+    /// profile fields fill in live when metadata arrives.
+    private func surfaceResolvedPubkey(_ pubkey: String) async {
+        let nrContact: NRContact? = await withCheckedContinuation { (cont: CheckedContinuation<NRContact?, Never>) in
+            bg().perform {
+                let c = NRContact.instance(of: pubkey)
+                cont.resume(returning: c)
+            }
+        }
+        await MainActor.run {
+            if let nrContact {
+                NSLog("%@", "[Namecoin] namecoinSearch surfacing NRContact for pubkey=\(String(pubkey.prefix(16)))…")
+                self.contacts = [nrContact]
+            }
+        }
+
+        await MainActor.run {
+            let searchTask = ReqTask(prefix: "NMC-", reqCommand: { taskId in
+                NSLog("%@", "[Namecoin] namecoinSearch dispatching REQ taskId=\(taskId) for kind:0 pubkey=\(String(pubkey.prefix(16)))…")
+                req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .READ)
+                req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .SEARCH_ONLY)
+            }, processResponseCommand: { taskId, _, _ in
+                NSLog("%@", "[Namecoin] namecoinSearch relay response for taskId=\(taskId)")
+                bg().perform {
+                    guard let refreshed = NRContact.fetch(pubkey) else {
+                        NSLog("%@", "[Namecoin] namecoinSearch NRContact.fetch after response: nil")
+                        return
+                    }
+                    Task { @MainActor in
+                        self.contacts = [refreshed]
+                        self.searching = false
+                    }
+                }
+            })
+            self.backlog.add(searchTask)
+            searchTask.fetch()
+        }
+
+        try? await Task.sleep(nanoseconds: 4_000_000_000)
+        await MainActor.run { self.searching = false }
     }
     
     func urlSearch(_ term: String) {
