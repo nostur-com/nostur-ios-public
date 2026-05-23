@@ -121,10 +121,14 @@ public final class NamecoinResolver: @unchecked Sendable {
             return nil
         }
         NSLog("%@", "[Namecoin] performLookup got NameShowResult name=\(result.name) value.len=\(result.value.count)")
-        guard let json = Self.tryParseJSON(result.value) else {
+        guard let rawJson = Self.tryParseJSON(result.value) else {
             NSLog("%@", "[Namecoin] performLookup JSON parse failed, raw[:200]=\(String(result.value.prefix(200)))")
             return nil
         }
+        // ifa-0001 §"import" expansion: if the record has no `import` key
+        // this is a passthrough with zero extra I/O. Otherwise we recursively
+        // merge the imported sibling(s) before extracting `nostr`.
+        let json = await self.expandImportsIfAny(rawJson)
         let extracted: NamecoinNostrResult?
         switch parsed.namespace {
         case .domain: extracted = Self.extractFromDomainValue(json: json, parsed: parsed)
@@ -154,9 +158,11 @@ public final class NamecoinResolver: @unchecked Sendable {
         guard let result = result else {
             return .nameNotFound(name: parsed.namecoinName)
         }
-        guard let json = Self.tryParseJSON(result.value) else {
+        guard let rawJson = Self.tryParseJSON(result.value) else {
             return .noNostrField(name: parsed.namecoinName)
         }
+        // ifa-0001 §"import" expansion: see performLookup for context.
+        let json = await self.expandImportsIfAny(rawJson)
         let nostr: NamecoinNostrResult?
         switch parsed.namespace {
         case .domain: nostr = Self.extractFromDomainValue(json: json, parsed: parsed)
@@ -166,6 +172,27 @@ public final class NamecoinResolver: @unchecked Sendable {
             return .success(nostr)
         }
         return .noNostrField(name: parsed.namecoinName)
+    }
+
+    // MARK: - Import-chain expansion
+
+    /// Wrap the import-chain resolver with a fetcher backed by this
+    /// resolver's ElectrumX client. Non-import records short-circuit
+    /// in `expandImports` itself (no extra queries).
+    private func expandImportsIfAny(_ root: [String: Any]) async -> [String: Any] {
+        // Capture what we need so the @Sendable closure doesn't retain self.
+        let client = self.client
+        let servers = self.serverListProvider()
+        let fetcher: NamecoinImportResolver.NameValueFetcher = { name in
+            do {
+                let r = try await client.nameShowWithFallback(identifier: name, servers: servers)
+                return r?.value
+            } catch {
+                NSLog("%@", "[Namecoin] import fetch failed for \(name): \(error) — treating as empty")
+                return nil
+            }
+        }
+        return await NamecoinImportResolver.expandImports(root: root, fetcher: fetcher)
     }
 
     // MARK: - Value extraction
