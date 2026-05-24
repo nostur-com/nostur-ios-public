@@ -133,19 +133,22 @@ struct Kind1: View {
                     .clipBottom(height: clipBottomHeight)
                     .overlay(alignment: .bottomTrailing) {
                         if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
-                            Image(systemName: "chevron.compact.down")
-                                .foregroundColor(.white)
-                                .padding(5)
-                                .padding(.top, 5)
-                                .background {
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .foregroundColor(theme.accent)
-                                }
-                                .contentShape(Rectangle())
-                                .highPriorityGesture(TapGesture().onEnded {
-                                    showMore = true
-                                    clipBottomHeight = 28000.0
-                                })                            
+                            ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
+                                Color.clear
+                                Image(systemName: "chevron.compact.down")
+                                    .foregroundColor(.white)
+                                    .padding(5)
+                                    .padding(.top, 5)
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 5)
+                                            .foregroundColor(theme.accent)
+                                    }
+                            }
+                            .contentShape(Rectangle())
+                            .highPriorityGesture(TapGesture().onEnded {
+                                showMore = true
+                                clipBottomHeight = 28000.0
+                            })
                         }
                     }
 //                    .overlay(alignment: .topLeading) {
@@ -199,19 +202,23 @@ struct Kind1: View {
                 .clipBottom(height: clipBottomHeight)
                 .overlay(alignment: .bottomTrailing) {
                     if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
-                        Image(systemName: "chevron.compact.down")
-                            .foregroundColor(.white)
-                            .padding(5)
-                            .padding(.top, 5)
-                            .background {
-                                RoundedRectangle(cornerRadius: 5)
-                                    .foregroundColor(theme.accent)
-                            }
-                            .contentShape(Rectangle())
-                            .highPriorityGesture(TapGesture().onEnded {
-                                showMore = true
-                                clipBottomHeight = 28000.0
-                            })
+                        ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
+                            Color.clear
+                            
+                            Image(systemName: "chevron.compact.down")
+                                .foregroundColor(.white)
+                                .padding(5)
+                                .padding(.top, 5)
+                                .background {
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .foregroundColor(theme.accent)
+                                }
+                        }
+                        .contentShape(Rectangle())
+                        .highPriorityGesture(TapGesture().onEnded {
+                            showMore = true
+                            clipBottomHeight = 28000.0
+                        })
                     }
                 }
         }

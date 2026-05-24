@@ -141,18 +141,22 @@ struct NRContentTextRendererInner: View {
             
                 .overlay(alignment: .bottomTrailing) {
                     if shouldShowMoreButton {
-                        Image(systemName: "chevron.compact.down")
-                            .foregroundColor(.white)
-                            .padding(5)
-                            .padding(.top, 5)
-                            .background {
-                                RoundedRectangle(cornerRadius: 5)
-                                    .foregroundColor(theme.accent)
-                            }
-                            .contentShape(Rectangle())
-                            .highPriorityGesture(TapGesture().onEnded {
-                                showMore = true
-                            })
+                        ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
+                            Color.clear
+                            
+                            Image(systemName: "chevron.compact.down")
+                                .foregroundColor(.white)
+                                .padding(5)
+                                .padding(.top, 5)
+                                .background {
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .foregroundColor(theme.accent)
+                                }
+                        }
+                        .contentShape(Rectangle())
+                        .highPriorityGesture(TapGesture().onEnded {
+                            showMore = true
+                        })
                     }
                 }
         }
@@ -219,18 +223,22 @@ struct NRContentTextRendererInner: View {
                     
                         .overlay(alignment: .bottomTrailing) {
                             if shouldShowMoreButton {
-                                Image(systemName: "chevron.compact.down")
-                                    .foregroundColor(.white)
-                                    .padding(5)
-                                    .padding(.top, 5)
-                                    .background {
-                                        RoundedRectangle(cornerRadius: 5)
-                                            .foregroundColor(theme.accent)
-                                    }
-                                    .contentShape(Rectangle())
-                                    .highPriorityGesture(TapGesture().onEnded {
-                                        showMore = true
-                                    })
+                                ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
+                                    Color.clear
+                                    
+                                    Image(systemName: "chevron.compact.down")
+                                        .foregroundColor(.white)
+                                        .padding(5)
+                                        .padding(.top, 5)
+                                        .background {
+                                            RoundedRectangle(cornerRadius: 5)
+                                                .foregroundColor(theme.accent)
+                                        }
+                                }
+                                .contentShape(Rectangle())
+                                .highPriorityGesture(TapGesture().onEnded {
+                                    showMore = true
+                                })
                             }
                         }
                 }
@@ -276,18 +284,22 @@ struct NRContentTextRendererInner: View {
                     
                         .overlay(alignment: .bottomTrailing) {
                             if shouldShowMoreButton {
-                                Image(systemName: "chevron.compact.down")
-                                    .foregroundColor(.white)
-                                    .padding(5)
-                                    .padding(.top, 5)
-                                    .background {
-                                        RoundedRectangle(cornerRadius: 5)
-                                            .foregroundColor(theme.accent)
-                                    }
-                                    .contentShape(Rectangle())
-                                    .highPriorityGesture(TapGesture().onEnded {
-                                        showMore = true
-                                    })
+                                ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
+                                    Color.clear
+                                    
+                                    Image(systemName: "chevron.compact.down")
+                                        .foregroundColor(.white)
+                                        .padding(5)
+                                        .padding(.top, 5)
+                                        .background {
+                                            RoundedRectangle(cornerRadius: 5)
+                                                .foregroundColor(theme.accent)
+                                        }
+                                }
+                                .contentShape(Rectangle())
+                                .highPriorityGesture(TapGesture().onEnded {
+                                    showMore = true
+                                })
                             }
                         }
                 }
