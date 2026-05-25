@@ -14,6 +14,7 @@ struct ZapCustomizerSheet: View {
     public var name: String
     public var customZapId: String?
     public var supportsZap = false
+    public var forcePrivate = false
     public var sendAction: ((CustomZap) -> Void)?
     @Environment(\.dismiss) private var dismiss
     
@@ -240,6 +241,7 @@ struct ZapCustomizerSheet: View {
                     Toggle(isOn: $privateZap) {
                         Text("Private zap")
                     }
+                    .disabled(forcePrivate)
                     .padding(.horizontal, 20)
                     
                     Toggle(isOn: $sendAnonymously) {
@@ -294,6 +296,7 @@ struct ZapCustomizerSheetInfo: Identifiable {
     var id: String { customZapId ?? UUID().uuidString }
     var zapEtag: String?
     var zapAtag: String?
+    var forcePrivate: Bool = false
 }
 
 struct CustomZap: Identifiable {

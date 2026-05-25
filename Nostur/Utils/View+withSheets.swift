@@ -298,7 +298,7 @@ struct WithSheets: ViewModifier {
                 self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
             }
             .sheet(item: $zapCustomizerSheetInfo) { zapCustomizerSheetInfo in
-                    ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
+                ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true, forcePrivate: zapCustomizerSheetInfo.forcePrivate)
                         .presentationDetentsLarge()
                         .environmentObject(la)
                         .environment(\.theme, theme)

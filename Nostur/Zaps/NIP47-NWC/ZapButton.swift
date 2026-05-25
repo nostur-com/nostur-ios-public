@@ -112,7 +112,7 @@ struct ZapButton: View {
                         .onAppear {
                             guard !isZapped else { return }
                             guard cancellationId == nil else { return }
-                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount, privateZap: privateZap, anonymousZap: anonymousZap)
+                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount, privateZap: (nrPost.isPrivate || privateZap), anonymousZap: anonymousZap)
                         }
                 }
             }
@@ -155,7 +155,7 @@ struct ZapButton: View {
         isZapped = false
         cancellationId = nil
         if let customZapId {
-            sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
+            sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId, forcePrivate: nrPost.isPrivate))
         }
     }
     
@@ -191,7 +191,7 @@ struct ZapButton: View {
         isZapped = false
         customAmount = nil
         zapMessage = ""
-        privateZap = false
+        privateZap = nrPost.isPrivate
         anonymousZap = false
         activeColor = theme.footerButtons
         L.og.info("⚡️ Zap cancelled")
@@ -357,7 +357,7 @@ struct VideoZapButton: View {
             guard customZapId != nil && customZap.customZapId == customZapId else { return }
             customAmount = customZap.amount
             zapMessage = customZap.publicNote
-            privateZap = customZap.privateZap
+            privateZap = (nrPost.isPrivate || customZap.privateZap)
             anonymousZap = customZap.anonymousZap
             triggerStrike = true
         }
@@ -368,7 +368,7 @@ struct VideoZapButton: View {
                         .onAppear {
                             guard !isZapped else { return }
                             guard cancellationId == nil else { return }
-                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount, privateZap: privateZap, anonymousZap: anonymousZap)
+                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount, privateZap: (nrPost.isPrivate || privateZap), anonymousZap: anonymousZap)
                         }
                 }
             }
@@ -404,7 +404,7 @@ struct VideoZapButton: View {
         // Trigger custom zap
         customZapId = UUID().uuidString
         if let customZapId {
-            sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
+            sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId, forcePrivate: nrPost.isPrivate))
         }
     }
     
