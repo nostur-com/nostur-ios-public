@@ -12,6 +12,7 @@ struct MasonryLayout<Content: View>: View {
     let columns: Int
     let spacing: CGFloat
     let content: [Content]
+    let contentIDs: [String]
     
     var body: some View {
         HStack(alignment: .top, spacing: spacing) {
@@ -20,6 +21,7 @@ struct MasonryLayout<Content: View>: View {
                     ForEach(0..<content.count, id: \.self) { itemIndex in
                         if itemIndex % columns == columnIndex {
                             content[itemIndex]
+                                .id(contentIDs[safe: itemIndex] ?? "\(columnIndex)-\(itemIndex)")
                         }
                     }
                 }
@@ -39,6 +41,7 @@ struct GifSearcher: View {
     @State private var autocompleteResults: [String] = []
     @State private var _suggestionResults: [String] = []
     @State private var scrollUpdater = UUID()
+    @State private var activeSearchTerm = ""
     @AppStorage("use_blossom_for_gifs") private var useBlossom = false
     
     var bothResults: [String] {
@@ -102,7 +105,8 @@ struct GifSearcher: View {
                             AnyView(
                                 gifItemView(gifResult: gifResult)
                             )
-                        }
+                        },
+                        contentIDs: gifItems.map { $0.id }
                     )
                     .id("top")
                 }
@@ -284,10 +288,12 @@ struct GifSearcher: View {
                         }
                 }
             }
+            .id(gifResult.id)
         }
     }
     
     func search(_ searchTerm: String) {
+        activeSearchTerm = searchTerm
         guard let searchTerm = searchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else { return }
         
         // Define the results upper limit
@@ -300,7 +306,9 @@ struct GifSearcher: View {
                                         clientkey,
                                         limit)) {
             let searchRequest = URLRequest(url: url)
-            makeWebRequest(urlRequest: searchRequest, callback: self.tenorSearchHandler)
+            makeWebRequest(urlRequest: searchRequest) { response in
+                self.tenorSearchHandler(response: response, for: searchTerm)
+            }
         }
         
         
@@ -311,7 +319,9 @@ struct GifSearcher: View {
                                         searchTerm,
                                         5)) {
             let autoRequest = URLRequest(url: url)
-            makeWebRequest(urlRequest: autoRequest, callback: tenorAutoCompleteResultsHandler)
+            makeWebRequest(urlRequest: autoRequest) { response in
+                self.tenorAutoCompleteResultsHandler(response: response, for: searchTerm)
+            }
         }
         
         if let url = URL(string: String(format: "https://\(GIF_API)/v2/search_suggestions?key=%@&client_key=%@&q=%@&limit=%d",
@@ -321,7 +331,9 @@ struct GifSearcher: View {
                                         10)) {
             // Get the top 10 search suggestions - using the default locale of en_US
             let suggestRequest = URLRequest(url: url)
-            makeWebRequest(urlRequest: suggestRequest, callback: tenorSuggestionResultsHandler)
+            makeWebRequest(urlRequest: suggestRequest) { response in
+                self.tenorSuggestionResultsHandler(response: response, for: searchTerm)
+            }
         }
     }
     
@@ -351,8 +363,9 @@ struct GifSearcher: View {
 
     }
     
-    func tenorSearchHandler(response: TenorResponse)
+    func tenorSearchHandler(response: TenorResponse, for encodedSearchTerm: String)
     {
+        guard activeSearchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) == encodedSearchTerm else { return }
         if let results = response.results {
             self.scrollUpdater = UUID()
             self.searchResults = results
@@ -373,15 +386,17 @@ struct GifSearcher: View {
         }
     }
     
-    func tenorAutoCompleteResultsHandler(response: AutoCompleteResponse)
+    func tenorAutoCompleteResultsHandler(response: AutoCompleteResponse, for encodedSearchTerm: String)
     {
+        guard activeSearchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) == encodedSearchTerm else { return }
         if let results = response.results {
             self.autocompleteResults = results
         }
     }
     
-    func tenorSuggestionResultsHandler(response: AutoCompleteResponse)
+    func tenorSuggestionResultsHandler(response: AutoCompleteResponse, for encodedSearchTerm: String)
     {
+        guard activeSearchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) == encodedSearchTerm else { return }
         if let results = response.results {
             self._suggestionResults = results
         }
