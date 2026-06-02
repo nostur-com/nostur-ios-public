@@ -8,6 +8,11 @@
 import SwiftUI
 import Photos
 
+private struct ShareableGalleryMedia: Identifiable {
+    let id = UUID()
+    let activityItems: [Any]
+}
+
 struct GalleryFullScreenSwiper: View {
     @Environment(\.theme) private var theme
     @Environment(\.fullScreenSize) var fullScreenSize: CGSize
@@ -20,6 +25,8 @@ struct GalleryFullScreenSwiper: View {
     @State private var activeIndex: Int?
     @State private var sharableImage: UIImage? = nil
     @State private var sharableGif: Data? = nil
+    @State private var shareableGalleryMedia: ShareableGalleryMedia? = nil
+    @State private var temporarySharedMediaURL: URL? = nil
     
     // Save state variables
     @State private var isSaving = false
@@ -216,6 +223,11 @@ struct GalleryFullScreenSwiper: View {
                 }
                 .foregroundColor(theme.accent)
             }
+            
+            Button("Share...") {
+                shareCurrentMedia()
+            }
+            .foregroundColor(theme.accent)
         }, label: {
             Group {
                 if isSaving {
@@ -243,6 +255,46 @@ struct GalleryFullScreenSwiper: View {
         .padding(.trailing, 10)
         .padding(.top, 10)
         .opacity(1.0 - dismissProgress)
+        .sheet(item: $shareableGalleryMedia, onDismiss: cleanupTemporarySharedMedia) { shareableGalleryMedia in
+            ActivityView(activityItems: shareableGalleryMedia.activityItems)
+        }
+    }
+    
+    // MARK: - Sharing
+    
+    private func shareCurrentMedia() {
+        guard let index = activeIndex, index < items.count else { return }
+        
+        let item = items[index]
+        
+        if let imageInfo = item.imageInfo {
+            shareableGalleryMedia = ShareableGalleryMedia(activityItems: [imageInfo.uiImage])
+        }
+        else if let gifInfo = item.gifInfo {
+            shareGif(gifInfo.gifData)
+        }
+        else {
+            sendNotification(.anyStatus, ("No media to share", "APP_NOTICE"))
+        }
+    }
+    
+    private func shareGif(_ gifData: Data) {
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+        let gifFileURL = temporaryDirectory.appendingPathComponent("nostur_shared_\(UUID().uuidString).gif")
+        
+        do {
+            try gifData.write(to: gifFileURL)
+            temporarySharedMediaURL = gifFileURL
+            shareableGalleryMedia = ShareableGalleryMedia(activityItems: [gifFileURL])
+        } catch {
+            sendNotification(.anyStatus, ("Failed to share GIF: \(error.localizedDescription)", "APP_NOTICE"))
+        }
+    }
+    
+    private func cleanupTemporarySharedMedia() {
+        guard let temporaryFileURL = temporarySharedMediaURL else { return }
+        try? FileManager.default.removeItem(at: temporaryFileURL)
+        temporarySharedMediaURL = nil
     }
     
     // MARK: - Gestures
