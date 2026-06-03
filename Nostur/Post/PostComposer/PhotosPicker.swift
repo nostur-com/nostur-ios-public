@@ -11,7 +11,7 @@ import PhotosUI
 @available(iOS 16.0, *)
 class MultipleImagePickerModel: ObservableObject {
 
-    @Published var newImages: [UIImage] = []
+    @Published var newImages: [SelectedImage] = []
     @Published var imageSelection: [PhotosPickerItem] = [] {
         didSet {
             guard !imageSelection.isEmpty else { return }
@@ -25,8 +25,8 @@ class MultipleImagePickerModel: ObservableObject {
         }
     }
 
-    private func loadTransferables() async -> [UIImage] {
-        var newImages: [UIImage] = []
+    private func loadTransferables() async -> [SelectedImage] {
+        var newImages: [SelectedImage] = []
         for imageSelection in self.imageSelection {
             if let image = await loadTransferable(from: imageSelection) {
                 newImages.append(image)
@@ -35,12 +35,12 @@ class MultipleImagePickerModel: ObservableObject {
         return newImages
     }
 
-    private func loadTransferable(from imageSelection: PhotosPickerItem) async -> UIImage? {
+    private func loadTransferable(from imageSelection: PhotosPickerItem) async -> SelectedImage? {
         await withCheckedContinuation { continuation in
             imageSelection.loadTransferable(type: SelectedImage.self) { result in
                 switch result {
                 case .success(let selectedImage?):
-                    continuation.resume(returning: selectedImage.uiImage)
+                    continuation.resume(returning: selectedImage)
                 case .success(nil):
                     continuation.resume(returning: nil)
                 case .failure(_):
@@ -55,9 +55,13 @@ class MultipleImagePickerModel: ObservableObject {
     }
 
     @available(iOS 16.0, *)
-    struct SelectedImage: Transferable {
-        let image: Image
+    struct SelectedImage: Transferable, Equatable {
         let uiImage: UIImage
+        let rawData: Data
+
+        static func == (lhs: SelectedImage, rhs: SelectedImage) -> Bool {
+            lhs.rawData == rhs.rawData
+        }
 
         static var transferRepresentation: some TransferRepresentation {
             DataRepresentation(importedContentType: .image) { data in
@@ -65,8 +69,7 @@ class MultipleImagePickerModel: ObservableObject {
                 guard let uiImage = UIImage(data: data) else {
                     throw TransferError.importFailed
                 }
-                let image = Image(uiImage: uiImage)
-                return SelectedImage(image: image, uiImage: uiImage)
+                return SelectedImage(uiImage: uiImage, rawData: data)
             #else
                 throw TransferError.importFailed
             #endif

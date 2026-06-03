@@ -746,13 +746,25 @@ struct PhotosPicker16: View {
                       matching: .images, photoLibrary: .shared())
         
             .onChange(of: ipm.newImages) { newImages in
+                let currentImageCount = vm.typingTextModel.pastedImages.count
                 for (index, newImage) in newImages.enumerated() {
-                    guard let data = newImage.pngData() else { return }
-                    let imageType: PostedImageMeta.ImageType = newImage.gifData() != nil ? .gif : .jpeg
+                    let imageData: Data
+                    let imageType: PostedImageMeta.ImageType
+                    
+                    if isAnimatedGIF(newImage.rawData) {
+                        imageData = newImage.rawData
+                        imageType = .gif
+                    }
+                    else {
+                        guard let data = newImage.uiImage.pngData() else { return }
+                        imageData = data
+                        imageType = .png
+                    }
+                    
                     vm.typingTextModel.pastedImages.append(
                         PostedImageMeta(
-                            index: vm.typingTextModel.pastedImages.count + index,
-                            data: data,
+                            index: currentImageCount + index,
+                            data: imageData,
                             type: imageType,
                             uniqueId: UUID().uuidString
                         )

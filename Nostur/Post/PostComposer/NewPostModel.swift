@@ -283,123 +283,214 @@ public final class NewPostModel: ObservableObject {
         if (!typingTextModel.pastedImages.isEmpty || !typingTextModel.pastedVideos.isEmpty || typingTextModel.voiceRecording != nil) {
             Task { @MainActor in
                 typingTextModel.uploading = true
-            }
-            
-            // Convert older api url to nip96 endpoint
-            if (nip96apiUrl.isEmpty && SettingsStore.shared.defaultMediaUploadService.name == "nostrcheck.me") { // upgrade nostrcheck.me v1 to v2
-                nip96apiUrl = "https://nostrcheck.me/api/v2/media"
-            }
-            
-            // Convert older api url to nip96 endpoint
-            if (nip96apiUrl.isEmpty && SettingsStore.shared.defaultMediaUploadService.name == "nostr.build") {
-                nip96apiUrl = "https://nostr.build/api/v2/nip96/upload"
-            }
-            
-            // Blossom upload method
-            if SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
-                guard let blossomServer = SettingsStore.shared.blossomServerList.first, let blossomServerURL = URL(string: blossomServer) else {
-                    sendNotification(.anyStatus, ("Blossom server list is empty", "NewPost"))
-                    return
+                
+                // Convert older api url to nip96 endpoint
+                if (nip96apiUrl.isEmpty && SettingsStore.shared.defaultMediaUploadService.name == "nostrcheck.me") { // upgrade nostrcheck.me v1 to v2
+                    nip96apiUrl = "https://nostrcheck.me/api/v2/media"
                 }
-                // TODO: remove hashing same data over and over, clean up a bit
                 
-                // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
-                let uploadItems: [(Data, String, String?, Int, NEvent)] = await prepareUploadItems(
-                    pubkey: pubkey,
-                    images: typingTextModel.pastedImages,
-                    videos: typingTextModel.pastedVideos,
-                    voiceMessage: typingTextModel.voiceRecording,
-                    typingTextModel: typingTextModel,
-                    isVineVideoPost: nEvent?.kind == .shortVideos,
-                    uploadMethod: .blossom
-                )
+                // Convert older api url to nip96 endpoint
+                if (nip96apiUrl.isEmpty && SettingsStore.shared.defaultMediaUploadService.name == "nostr.build") {
+                    nip96apiUrl = "https://nostr.build/api/v2/nip96/upload"
+                }
                 
-                let unsignedAuthHeaderEvents: [NEvent] = uploadItems.map { $0.4 }
-                
-                batchSignEvents(unsignedAuthHeaderEvents, account: account) { signedEventsDict in
-                    Task {
-                        guard let testItem = uploadItems.first,
-                              let signedEvent = signedEventsDict[testItem.4.id],
-                              let testAuthHeader = toHttpAuthHeader(signedEvent),
-                              let testHash = signedEvent.tags.first(where: { $0.type == "x" })?.value
-                        else {
-                            Task { @MainActor in
-                                self.uploadError = "Error 153"
-                                sendNotification(.anyStatus, ("Error 153", "NewPost"))
+                // Blossom upload method
+                if SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
+                    guard let blossomServer = SettingsStore.shared.blossomServerList.first, let blossomServerURL = URL(string: blossomServer) else {
+                        sendNotification(.anyStatus, ("Blossom server list is empty", "NewPost"))
+                        return
+                    }
+                    // TODO: remove hashing same data over and over, clean up a bit
+                    
+                    // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
+                    let uploadItems: [(Data, String, String?, Int, NEvent)] = await prepareUploadItems(
+                        pubkey: pubkey,
+                        images: typingTextModel.pastedImages,
+                        videos: typingTextModel.pastedVideos,
+                        voiceMessage: typingTextModel.voiceRecording,
+                        typingTextModel: typingTextModel,
+                        isVineVideoPost: nEvent?.kind == .shortVideos,
+                        uploadMethod: .blossom
+                    )
+                    
+                    let unsignedAuthHeaderEvents: [NEvent] = uploadItems.map { $0.4 }
+                    
+                    batchSignEvents(unsignedAuthHeaderEvents, account: account) { signedEventsDict in
+                        Task {
+                            guard let testItem = uploadItems.first,
+                                  let signedEvent = signedEventsDict[testItem.4.id],
+                                  let testAuthHeader = toHttpAuthHeader(signedEvent),
+                                  let testHash = signedEvent.tags.first(where: { $0.type == "x" })?.value
+                            else {
+                                Task { @MainActor in
+                                    self.uploadError = "Error 153"
+                                    sendNotification(.anyStatus, ("Error 153", "NewPost"))
+                                }
+                                return
                             }
-                            return
-                        }
-                        
-                        let blossomType = (try? await NostrEssentials.testBlossomServer(blossomServerURL, authorization: testAuthHeader, sha256: testHash)) ?? .none
-                        
-                        if blossomType == .none {
-                            L.og.error("Error: blossomType .none")
-                            Task { @MainActor in
-                                self.uploadError = "Blossom server not compatible"
-                                sendNotification(.anyStatus, ("Upload error: Blossom server not compatible", "NewPost"))
+                            
+                            let blossomType = (try? await NostrEssentials.testBlossomServer(blossomServerURL, authorization: testAuthHeader, sha256: testHash)) ?? .none
+                            
+                            if blossomType == .none {
+                                L.og.error("Error: blossomType .none")
+                                Task { @MainActor in
+                                    self.uploadError = "Blossom server not compatible"
+                                    sendNotification(.anyStatus, ("Upload error: Blossom server not compatible", "NewPost"))
+                                }
+                                return
                             }
-                            return
-                        }
-                        
-                        if blossomType == .unauthorized {
-                            L.og.error("Error: blossomType .unauthorized")
-                            Task { @MainActor in
-                                self.uploadError = "Blossom: Unauthorized"
-                                sendNotification(.anyStatus, ("Blossom error: Unauthorized", "NewPost"))
+                            
+                            if blossomType == .unauthorized {
+                                L.og.error("Error: blossomType .unauthorized")
+                                Task { @MainActor in
+                                    self.uploadError = "Blossom: Unauthorized"
+                                    sendNotification(.anyStatus, ("Blossom error: Unauthorized", "NewPost"))
+                                }
+                                return
                             }
-                            return
+                             
+                            let blossomUploader = BlossomUploader(blossomServerURL)
+                            blossomUploader.queued = uploadItems.compactMap { tuple in
+                                if let signedEvent = signedEventsDict[tuple.4.id], let authHeader = toHttpAuthHeader(signedEvent) {
+                                    // Will use /upload endpoint if set, else uses default /media unless its video (See BlossomUploadItem .verb getter)
+                                    return BlossomUploadItem(data: tuple.0, index: tuple.3, contentType: tuple.1, authorizationHeader: authHeader, verb: blossomType == .upload ? .upload : nil)
+                                } else {
+                                    sendNotification(.anyStatus, ("Problem with remote signer", "NewPost"))
+                                    return nil
+                                }
+                            }
+                            
+                            blossomUploader.onFinish = {
+                                let imetas: [Nostur.Imeta] = blossomUploader.queued
+                                    .compactMap {
+                                        guard let url = $0.downloadUrl else { return nil }
+                                        return Imeta(url: url, dim: $0.dim, hash: $0.sha256processed, blurhash: $0.blurhash)
+                                    }
+                                
+                                Task { @MainActor in
+                                    self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                                }
+                                
+                                if SettingsStore.shared.blossomServerList.count > 1 { // Mirror uploads to other blossom servers
+                                    
+                                    // Need new auth header because the file we mirror has a different hash after processing
+                                    let unsignedAuthHeaderEventsTuple: [(NEvent, BlossomUploadItem)] = blossomUploader.queued.compactMap { uploadItem in
+                                        guard let sha256processed = uploadItem.sha256processed else { return nil }
+                                        return (getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: sha256processed), uploadItem)
+                                    }
+                                    
+                                    let unsignedAuthHeaderEvents: [NEvent] = unsignedAuthHeaderEventsTuple.map { $0.0 }
+                                    
+                                    batchSignEvents(unsignedAuthHeaderEvents, account: account) { signedEventsDict in
+                                        // For every mirror server, upload each file again
+                                        
+                                        for server in SettingsStore.shared.blossomServerList.dropFirst(1) {
+                                            guard let blossomServer = URL(string: server) else { continue }
+                                            let mirrorUploader = BlossomUploader(blossomServer)
+                                            for tuple in unsignedAuthHeaderEventsTuple {
+                                                
+                                                if let signedEvent = signedEventsDict[tuple.0.id], let authHeader = toHttpAuthHeader(signedEvent) {
+                                                    let uploadItem: BlossomUploadItem = tuple.1
+                                                    uploadItem.authorizationHeader = authHeader
+                                                    Task {
+                                                        try await mirrorUploader.mirrorUpload(uploadItem: uploadItem, authorizationHeader: authHeader)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // clean up video tmp files (compressed videos)
+                                for videoURL in self.typingTextModel.compressedVideoFiles {
+                                    try? FileManager.default.removeItem(at: videoURL)
+                                }
+                            }
+                            
+                            blossomUploader.uploadingPublishers(for: blossomUploader.queued)
+                                .receive(on: RunLoop.main)
+                                .sink(receiveCompletion: { result in
+                                    switch result {
+                                    case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
+                                        L.og.error("Error uploading images (401): \(error.localizedDescription)")
+                                        Task { @MainActor in
+                                            self.uploadError = "Media upload authorization error"
+                                            sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
+                                        }
+                                    case .failure(let error):
+                                        L.og.error("Error uploading images: \(error.localizedDescription)")
+                                        Task { @MainActor in
+                                            self.uploadError = "Image upload error"
+                                            sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                                        }
+                                    case .finished:
+        #if DEBUG
+                                        L.og.debug("All images uploaded successfully")
+        #endif
+                                        break
+                                    }
+                                }, receiveValue: { uploadItems in
+                                    for uploadItem in uploadItems {
+                                        blossomUploader.processResponse(uploadItem: uploadItem)
+                                    }
+                                })
+                                .store(in: &self.subscriptions)
                         }
-                         
-                        let blossomUploader = BlossomUploader(blossomServerURL)
-                        blossomUploader.queued = uploadItems.compactMap { tuple in
+                    }
+                }
+                else if !nip96apiUrl.isEmpty { // nip96 upload method
+                    guard let nip96apiURL = URL(string: nip96apiUrl) else {
+                        sendNotification(.anyStatus, ("Problem with Custom File Storage Server", "NewPost"))
+                        return
+                    }
+                    let boundary = UUID().uuidString
+                    
+                    // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
+                    let uploadItems: [(Data, String, String?, Int, NEvent)] = await prepareUploadItems(
+                        pubkey: pubkey,
+                        images: typingTextModel.pastedImages,
+                        videos: typingTextModel.pastedVideos,
+                        voiceMessage: typingTextModel.voiceRecording,
+                        typingTextModel: typingTextModel,
+                        isVineVideoPost: nEvent?.kind == .shortVideos,
+                        uploadMethod: .nip96(nip96apiURL)
+                    )
+                    
+
+                    let unsignedAuthHeaderEvents: [NEvent] = uploadItems.map { $0.4 }
+                    
+                    batchSignEvents(unsignedAuthHeaderEvents, account: account) { signedEventsDict in
+                        // TODO: Note, self.upload, different from blossom uploader
+                        self.uploader.queued = uploadItems.compactMap { tuple in
                             if let signedEvent = signedEventsDict[tuple.4.id], let authHeader = toHttpAuthHeader(signedEvent) {
-                                // Will use /upload endpoint if set, else uses default /media unless its video (See BlossomUploadItem .verb getter)
-                                return BlossomUploadItem(data: tuple.0, index: tuple.3, contentType: tuple.1, authorizationHeader: authHeader, verb: blossomType == .upload ? .upload : nil)
+                                let filename = switch(tuple.1) {
+                                case PostedImageMeta.ImageType.jpeg.rawValue:
+                                    "media.jpg"
+                                case PostedImageMeta.ImageType.png.rawValue:
+                                    "media.png"
+                                case "video/mp4":
+                                    "media.mp4"
+                                case "audio/mp4":
+                                    "media.m4a"
+                                default:
+                                    "media"
+                                }
+                                return MediaRequestBag(apiUrl: nip96apiURL, method: "POST", uploadtype: "media", filename: filename, mediaData: tuple.0, index: tuple.3, authorizationHeader: authHeader, boundary: boundary, blurhash: tuple.2)
                             } else {
                                 sendNotification(.anyStatus, ("Problem with remote signer", "NewPost"))
                                 return nil
                             }
                         }
                         
-                        blossomUploader.onFinish = {
-                            let imetas: [Nostur.Imeta] = blossomUploader.queued
+                        self.uploader.onFinish = {
+                            let imetas: [Nostur.Imeta] = self.uploader.queued
                                 .compactMap {
                                     guard let url = $0.downloadUrl else { return nil }
-                                    return Imeta(url: url, dim: $0.dim, hash: $0.sha256processed, blurhash: $0.blurhash)
+                                    return Imeta(url: url, dim: $0.dim, hash: $0.sha256, blurhash: $0.blurhash)
                                 }
                             
                             Task { @MainActor in
                                 self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
-                            }
-                            
-                            if SettingsStore.shared.blossomServerList.count > 1 { // Mirror uploads to other blossom servers
-                                
-                                // Need new auth header because the file we mirror has a different hash after processing
-                                let unsignedAuthHeaderEventsTuple: [(NEvent, BlossomUploadItem)] = blossomUploader.queued.compactMap { uploadItem in
-                                    guard let sha256processed = uploadItem.sha256processed else { return nil }
-                                    return (getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: sha256processed), uploadItem)
-                                }
-                                
-                                let unsignedAuthHeaderEvents: [NEvent] = unsignedAuthHeaderEventsTuple.map { $0.0 }
-                                
-                                batchSignEvents(unsignedAuthHeaderEvents, account: account) { signedEventsDict in
-                                    // For every mirror server, upload each file again
-                                    
-                                    for server in SettingsStore.shared.blossomServerList.dropFirst(1) {
-                                        guard let blossomServer = URL(string: server) else { continue }
-                                        let mirrorUploader = BlossomUploader(blossomServer)
-                                        for tuple in unsignedAuthHeaderEventsTuple {
-                                            
-                                            if let signedEvent = signedEventsDict[tuple.0.id], let authHeader = toHttpAuthHeader(signedEvent) {
-                                                let uploadItem: BlossomUploadItem = tuple.1
-                                                uploadItem.authorizationHeader = authHeader
-                                                Task {
-                                                    try await mirrorUploader.mirrorUpload(uploadItem: uploadItem, authorizationHeader: authHeader)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
                             }
                             
                             // clean up video tmp files (compressed videos)
@@ -408,148 +499,57 @@ public final class NewPostModel: ObservableObject {
                             }
                         }
                         
-                        blossomUploader.uploadingPublishers(for: blossomUploader.queued)
+                        self.uploader.uploadingPublishers(for: self.uploader.queued)
                             .receive(on: RunLoop.main)
                             .sink(receiveCompletion: { result in
                                 switch result {
                                 case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
                                     L.og.error("Error uploading images (401): \(error.localizedDescription)")
-                                    Task { @MainActor in
-                                        self.uploadError = "Media upload authorization error"
-                                        sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
-                                    }
+                                    self.uploadError = "Media upload authorization error"
+                                    sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
                                 case .failure(let error):
                                     L.og.error("Error uploading images: \(error.localizedDescription)")
-                                    Task { @MainActor in
-                                        self.uploadError = "Image upload error"
-                                        sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
-                                    }
+                                    self.uploadError = "Image upload error"
+                                    sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
                                 case .finished:
     #if DEBUG
                                     L.og.debug("All images uploaded successfully")
     #endif
                                     break
                                 }
-                            }, receiveValue: { uploadItems in
-                                for uploadItem in uploadItems {
-                                    blossomUploader.processResponse(uploadItem: uploadItem)
+                            }, receiveValue: { mediaRequestBags in
+                                for mediaRequestBag in mediaRequestBags {
+                                    self.uploader.processResponse(mediaRequestBag: mediaRequestBag)
                                 }
                             })
                             .store(in: &self.subscriptions)
                     }
                 }
-            }
-            else if !nip96apiUrl.isEmpty { // nip96 upload method
-                guard let nip96apiURL = URL(string: nip96apiUrl) else {
-                    sendNotification(.anyStatus, ("Problem with Custom File Storage Server", "NewPost"))
-                    return
-                }
-                let boundary = UUID().uuidString
-                
-                // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
-                let uploadItems: [(Data, String, String?, Int, NEvent)] = await prepareUploadItems(
-                    pubkey: pubkey,
-                    images: typingTextModel.pastedImages,
-                    videos: typingTextModel.pastedVideos,
-                    voiceMessage: typingTextModel.voiceRecording,
-                    typingTextModel: typingTextModel,
-                    isVineVideoPost: nEvent?.kind == .shortVideos,
-                    uploadMethod: .nip96(nip96apiURL)
-                )
-                
-
-                let unsignedAuthHeaderEvents: [NEvent] = uploadItems.map { $0.4 }
-                
-                batchSignEvents(unsignedAuthHeaderEvents, account: account) { signedEventsDict in
-                    // TODO: Note, self.upload, different from blossom uploader
-                    self.uploader.queued = uploadItems.compactMap { tuple in
-                        if let signedEvent = signedEventsDict[tuple.4.id], let authHeader = toHttpAuthHeader(signedEvent) {
-                            let filename = switch(tuple.1) {
-                            case PostedImageMeta.ImageType.jpeg.rawValue:
-                                "media.jpg"
-                            case PostedImageMeta.ImageType.png.rawValue:
-                                "media.png"
-                            case "video/mp4":
-                                "media.mp4"
-                            case "audio/mp4":
-                                "media.m4a"
-                            default:
-                                "media"
-                            }
-                            return MediaRequestBag(apiUrl: nip96apiURL, method: "POST", uploadtype: "media", filename: filename, mediaData: tuple.0, index: tuple.3, authorizationHeader: authHeader, boundary: boundary, blurhash: tuple.2)
-                        } else {
-                            sendNotification(.anyStatus, ("Problem with remote signer", "NewPost"))
-                            return nil
-                        }
-                    }
-                    
-                    self.uploader.onFinish = {
-                        let imetas: [Nostur.Imeta] = self.uploader.queued
-                            .compactMap {
-                                guard let url = $0.downloadUrl else { return nil }
-                                return Imeta(url: url, dim: $0.dim, hash: $0.sha256, blurhash: $0.blurhash)
-                            }
-                        
-                        Task { @MainActor in
-                            self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
-                        }
-                        
-                        // clean up video tmp files (compressed videos)
-                        for videoURL in self.typingTextModel.compressedVideoFiles {
-                            try? FileManager.default.removeItem(at: videoURL)
-                        }
-                    }
-                    
-                    self.uploader.uploadingPublishers(for: self.uploader.queued)
+                else { // old media upload services
+                    uploadImages(images: typingTextModel.pastedImages)
                         .receive(on: RunLoop.main)
                         .sink(receiveCompletion: { result in
                             switch result {
-                            case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
-                                L.og.error("Error uploading images (401): \(error.localizedDescription)")
-                                self.uploadError = "Media upload authorization error"
-                                sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
                             case .failure(let error):
                                 L.og.error("Error uploading images: \(error.localizedDescription)")
                                 self.uploadError = "Image upload error"
                                 sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
                             case .finished:
-#if DEBUG
+    #if DEBUG
                                 L.og.debug("All images uploaded successfully")
-#endif
+    #endif
                                 break
                             }
-                        }, receiveValue: { mediaRequestBags in
-                            for mediaRequestBag in mediaRequestBags {
-                                self.uploader.processResponse(mediaRequestBag: mediaRequestBag)
+                        }, receiveValue: { urls in
+                            if (self.typingTextModel.pastedImages.count == urls.count) {
+                                let imetas = urls.map { Imeta(url: $0) }
+                                Task { @MainActor in
+                                    self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                                }
                             }
                         })
-                        .store(in: &self.subscriptions)
+                        .store(in: &subscriptions)
                 }
-            }
-            else { // old media upload services
-                uploadImages(images: typingTextModel.pastedImages)
-                    .receive(on: RunLoop.main)
-                    .sink(receiveCompletion: { result in
-                        switch result {
-                        case .failure(let error):
-                            L.og.error("Error uploading images: \(error.localizedDescription)")
-                            self.uploadError = "Image upload error"
-                            sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
-                        case .finished:
-#if DEBUG
-                            L.og.debug("All images uploaded successfully")
-#endif
-                            break
-                        }
-                    }, receiveValue: { urls in
-                        if (self.typingTextModel.pastedImages.count == urls.count) {
-                            let imetas = urls.map { Imeta(url: $0) }
-                            Task { @MainActor in
-                                self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
-                            }
-                        }
-                    })
-                    .store(in: &subscriptions)
             }
         }
         else {
