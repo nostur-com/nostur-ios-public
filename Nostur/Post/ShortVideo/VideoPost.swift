@@ -48,6 +48,7 @@ struct VideoPost: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.availableHeight) private var availableHeight: CGFloat
     @Environment(\.availableWidth) private var availableWidth: CGFloat
+    @Environment(\.shortVideoAutoplayAudioEnabled) private var shortVideoAutoplayAudioEnabled
     @EnvironmentObject private var coordinator: VideoPostPlaybackCoordinator
     
     public let nrPost: NRPost
@@ -57,6 +58,7 @@ struct VideoPost: View {
     public let theme: Theme
     
     @State private var isPlaying = false
+    @State private var isMuted = true
     
     private var postID: String { nrPost.id }
     
@@ -69,14 +71,35 @@ struct VideoPost: View {
         return availableWidth
     }
     
+    @ViewBuilder
+    private var muteButton: some View {
+        if !shortVideoAutoplayAudioEnabled {
+            Button {
+                isMuted.toggle()
+            } label: {
+                Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(width: 36, height: 36)
+                    .background(.black.opacity(0.55), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(12)
+            .accessibilityLabel(isMuted ? "Unmute video" : "Mute video")
+        }
+    }
+    
     var body: some View {
         VideoPostLayout(nrPost: nrPost, theme: theme) {
             if let videoURL = nrPost.eventUrl {
                 if #available(iOS 16.0, *) {
-                    ShortVideoPlayer(url: videoURL, isPlaying: $isPlaying)
+                    ShortVideoPlayer(url: videoURL, isPlaying: $isPlaying, isMuted: $isMuted)
                         .frame(width: videoWidth, height: min((videoWidth*3), availableHeight))
                         .background(Color.black)
                         .frame(width: videoWidth, height: availableHeight)
+                        .overlay(alignment: .topLeading) {
+                            muteButton
+                        }
                         .onTapGesture { togglePlayback() }
                         .modifier {
                             if !isDetail && !nxViewingContext.contains(.preview) {
@@ -112,10 +135,13 @@ struct VideoPost: View {
                         }
                 } else {
                     GeometryReader { geo in
-                        ShortVideoPlayer(url: videoURL, isPlaying: $isPlaying)
+                        ShortVideoPlayer(url: videoURL, isPlaying: $isPlaying, isMuted: $isMuted)
                             .frame(width: videoWidth, height: min((videoWidth*3), availableHeight))
                             .background(Color.black)
                             .frame(width: videoWidth, height: availableHeight)
+                            .overlay(alignment: .topLeading) {
+                                muteButton
+                            }
                             .onTapGesture { togglePlayback() }
                             .modifier {
                                 if !isDetail && !nxViewingContext.contains(.preview) {
@@ -177,13 +203,13 @@ struct VideoPost: View {
         }
         else {
             coordinator.markUserPlaying(postID: postID)
-            setPlaying(true)
+            setPlaying(true, muted: false)
         }
     }
     
     private func updateAutoplayState() {
         let shouldPlay = coordinator.mostVisiblePostID == postID && coordinator.canAutoPlay(postID: postID)
-        setPlaying(shouldPlay)
+        setPlaying(shouldPlay, muted: !shortVideoAutoplayAudioEnabled)
     }
     
     private func pauseForExternalPlayback() {
@@ -192,9 +218,10 @@ struct VideoPost: View {
         setPlaying(false)
     }
     
-    private func setPlaying(_ playing: Bool) {
+    private func setPlaying(_ playing: Bool, muted: Bool = true) {
         guard isPlaying != playing else { return }
         if playing {
+            isMuted = muted
             AnyPlayerModel.shared.pauseVideo()
             sendNotification(.shortVideoPlayerDidStartPlayback, postID)
         }

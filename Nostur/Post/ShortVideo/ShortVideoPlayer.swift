@@ -13,6 +13,7 @@ import AVKit
 struct ShortVideoPlayer: UIViewControllerRepresentable {
     let url: URL
     @Binding var isPlaying: Bool
+    @Binding var isMuted: Bool
     
 
     // Reuse or create player
@@ -30,7 +31,7 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
             
             // Create new player with buffering optimizations
             let player = AVPlayer()
-            player.isMuted = false
+            player.isMuted = true
             player.automaticallyWaitsToMinimizeStalling = true
             
             // Aggressive prefetching
@@ -68,6 +69,7 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
         
         // Critical for smoothness
         controller.player = Self.getPlayer(for: url)
+        controller.player?.isMuted = isMuted
         
         // Observe when video reaches end → loop
         NotificationCenter.default.addObserver(
@@ -89,6 +91,8 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
     
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
         guard let player = uiViewController.player else { return }
+        
+        player.isMuted = isMuted
         
         if isPlaying {
             player.playImmediately(atRate: 1.0)  // Bypasses some buffering delays

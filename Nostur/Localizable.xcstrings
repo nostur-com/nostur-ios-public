@@ -6934,6 +6934,9 @@
         }
       }
     },
+    "Mute video" : {
+
+    },
     "Muted conversations" : {
       "comment" : "Title of tab where Muted conversations are listed",
       "localizations" : {
@@ -12399,6 +12402,9 @@
           }
         }
       }
+    },
+    "Unmute video" : {
+
     },
     "Unpin" : {
       "localizations" : {

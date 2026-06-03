@@ -136,5 +136,6 @@ struct NXVinesFeed: View {
                 }
             }
         }
+        .environment(\.shortVideoAutoplayAudioEnabled, true)
     }
 }

@@ -97,6 +97,17 @@ extension EnvironmentValues {
     }
 }
 
+struct ShortVideoAutoplayAudioEnvironmentKey: EnvironmentKey {
+    static let defaultValue: Bool = false
+}
+
+extension EnvironmentValues {
+    var shortVideoAutoplayAudioEnabled: Bool {
+        get { self[ShortVideoAutoplayAudioEnvironmentKey.self] }
+        set { self[ShortVideoAutoplayAudioEnvironmentKey.self] = newValue }
+    }
+}
+
 enum NXViewingContextOptions {
     case selectableText // will use UITextView instead of Text
     
