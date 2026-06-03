@@ -81,6 +81,14 @@ struct VoiceMessagePlayer: View {
         player = nil
     }
     
+    private func pausePlayback() {
+        guard isPlaying else { return }
+        player?.pause()
+        isPlaying = false
+        progressTimer?.invalidate()
+        progressTimer = nil
+    }
+    
     private func startProgressTimer() {
         guard progressTimer == nil else { return }
         progressTimer?.invalidate()
@@ -107,6 +115,7 @@ struct VoiceMessagePlayer: View {
                         isPlaying = false
                     } else {
                         // Notify other players to pause
+                        AnyPlayerModel.shared.pauseVideo()
                         sendNotification(.voiceMessagePlayerDidStartPlayback, playerId)
                         
                         if isFinished {
@@ -247,6 +256,7 @@ struct VoiceMessagePlayer: View {
                         if await forceDownload {
                             Task { @MainActor in
                                 // Notify other players to pause
+                                AnyPlayerModel.shared.pauseVideo()
                                 sendNotification(.voiceMessagePlayerDidStartPlayback, playerId)
                                 
                                 try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
@@ -345,11 +355,13 @@ struct VoiceMessagePlayer: View {
         .onReceive(receiveNotification(.voiceMessagePlayerDidStartPlayback)) { notification in
             // If another player started, pause this one
             guard let otherPlayerId = notification.object as? UUID, otherPlayerId != playerId else { return }
-            
-            if isPlaying {
-                player?.pause()
-                isPlaying = false
-            }
+            pausePlayback()
+        }
+        .onReceive(receiveNotification(.shortVideoPlayerDidStartPlayback)) { _ in
+            pausePlayback()
+        }
+        .onReceive(receiveNotification(.stopPlayingVideo)) { _ in
+            pausePlayback()
         }
         .onAppear {
             Task {

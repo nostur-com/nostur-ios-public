@@ -390,4 +390,8 @@ extension Notification.Name {
     static var voiceMessagePlayerDidStartPlayback: Notification.Name {
         return Notification.Name("voiceMessagePlayerDidStartPlayback")
     }
+    
+    static var shortVideoPlayerDidStartPlayback: Notification.Name {
+        return Notification.Name("shortVideoPlayerDidStartPlayback")
+    }
 }
