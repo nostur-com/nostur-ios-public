@@ -57,21 +57,13 @@ struct NotificationsZaps: View {
         let _ = nxLogChanges(of: Self.self)
 #endif
         ScrollViewReader { proxy in
-            if model.nothingHere && model.postOrProfileZaps.isEmpty {
+            if model.nothingHere && notifications.isEmpty {
                 Text("Zaps you received will show up here")
                     .centered()
             }
-            else if model.postOrProfileZaps.isEmpty {
+            else if notifications.isEmpty {
                 ProgressView()
                     .centered()
-                    .task(id: "notifications-zaps") {
-                        try? await Task.sleep(nanoseconds: 4_000_000_000)
-                        Task { @MainActor in
-                            if model.postOrProfileZaps.isEmpty {
-                                model.nothingHere = true
-                            }
-                        }
-                    }
             }
             else {
                 ScrollView {
@@ -182,14 +174,22 @@ struct NotificationsZaps: View {
                 }
             },
             processResponseCommand: { (taskId, _, _) in
-                model.load(limit: 500)
+                updateZapsAfterFetch()
             },
             timeoutCommand: { taskId in
-                model.load(limit: 500)
+                updateZapsAfterFetch()
             })
         
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()
+    }
+    
+    private func updateZapsAfterFetch() {
+        model.load(limit: 500) { _ in
+            if notifications.isEmpty {
+                model.nothingHere = true
+            }
+        }
     }
     
     private func saveLastSeenZapCreatedAt(mostCreatedAt: Int64) {

@@ -40,14 +40,6 @@ struct NotificationsReactions: View {
             else if model.groupedReactions.isEmpty {
                 ProgressView()
                     .centered()
-                    .task(id: "notifications-reactions") {
-                        try? await Task.sleep(nanoseconds: 4_000_000_000)
-                        Task { @MainActor in
-                            if model.groupedReactions.isEmpty {
-                                model.nothingHere = true
-                            }
-                        }
-                    }
             }
             else {
                 ScrollView {
@@ -129,14 +121,22 @@ struct NotificationsReactions: View {
                 }
             },
             processResponseCommand: { (taskId, _, _) in
-                model.load(limit: 500)
+                updateReactionsAfterFetch()
             },
             timeoutCommand: { taskId in
-                model.load(limit: 500)
+                updateReactionsAfterFetch()
             })
         
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()
+    }
+    
+    private func updateReactionsAfterFetch() {
+        model.load(limit: 500) { _ in
+            if model.groupedReactions.isEmpty {
+                model.nothingHere = true
+            }
+        }
     }
     
     func saveLastSeenReactionCreatedAt(mostCreatedAt: Int64) {

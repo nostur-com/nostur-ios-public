@@ -42,14 +42,6 @@ struct NotificationsReposts: View {
             else if model.reposts.isEmpty {
                 ProgressView()
                     .centered()
-                    .task(id: "notifications-reposts") {
-                        try? await Task.sleep(nanoseconds: 6_000_000_000)
-                        Task { @MainActor in
-                            if model.reposts.isEmpty {
-                                model.nothingHere = true
-                            }
-                        }
-                    }
             }
             else {
                 ScrollView {
@@ -154,14 +146,22 @@ struct NotificationsReposts: View {
                 }
             },
             processResponseCommand: { (taskId, _, _) in
-                model.load(limit: 500)
+                updateRepostsAfterFetch()
             },
             timeoutCommand: { taskId in
-                model.load(limit: 500)
+                updateRepostsAfterFetch()
             })
         
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()
+    }
+    
+    private func updateRepostsAfterFetch() {
+        model.load(limit: 500) { _ in
+            if model.reposts.isEmpty {
+                model.nothingHere = true
+            }
+        }
     }
     
     private func saveLastSeenRepostCreatedAt(mostCreatedAt: Int64) {

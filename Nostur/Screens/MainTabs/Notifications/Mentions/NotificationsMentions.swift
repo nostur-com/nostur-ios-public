@@ -41,14 +41,6 @@ struct NotificationsMentions: View {
             else if model.mentions.isEmpty {
                 ProgressView()
                     .centered()
-                    .task(id: "notifications-mentions") {
-                        try? await Task.sleep(nanoseconds: 4_000_000_000)
-                        Task { @MainActor in
-                            if model.mentions.isEmpty {
-                                model.nothingHere = true
-                            }
-                        }
-                    }
             }
             else {
                 List {
@@ -146,14 +138,22 @@ struct NotificationsMentions: View {
                 }
             },
             processResponseCommand: { (taskId, _, _) in
-                model.load(limit: 500)
+                updateMentionsAfterFetch()
             },
             timeoutCommand: { taskId in
-                model.load(limit: 500)
+                updateMentionsAfterFetch()
             })
         
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()
+    }
+    
+    private func updateMentionsAfterFetch() {
+        model.load(limit: 500) { _ in
+            if model.mentions.isEmpty {
+                model.nothingHere = true
+            }
+        }
     }
     
     private func saveLastSeenMentionCreatedAt(mostCreatedAt: Int64) {
