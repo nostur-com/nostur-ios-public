@@ -21,6 +21,7 @@ struct PostOrThread: View { //, Equatable {
     @ObservedObject private var postOrThreadAttributes:  PostOrThreadAttributes
     private var rootId: String? = nil
     @ObservedObject private  var settings: SettingsStore = .shared
+    @State private var attemptedMissingReplyFetchIds: Set<String> = []
     
     init(nrPost: NRPost, theme: Theme, rootId: String? = nil) {
         self.nrPost = nrPost
@@ -34,34 +35,32 @@ struct PostOrThread: View { //, Equatable {
 //        let _ = nxLogChanges(of: Self.self)
 //#endif
         if postOrThreadAttributes.parentPosts.isEmpty { // Single Post
-            Box(nrPost: nrPost) {
-                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
-            }
-            .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-            .background {
-                if nrPost.kind == 30023 {
-                    theme.secondaryBackground
+            VStack(spacing: GUTTER) {
+                if nxViewingContext.contains(.detailPane), hasMissingReplyTo(nrPost) {
+                    missingReplyView(for: nrPost)
+                        .onAppear {
+                            fetchMissingReplyParentIfNeeded(for: nrPost)
+                        }
+                }
+                
+                Box(nrPost: nrPost) {
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: hasMissingReplyTo(nrPost), connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
+                }
+                .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
+                .background {
+                    if nrPost.kind == 30023 {
+                        theme.secondaryBackground
+                    }
                 }
             }
         }
         else { // Reply thread
             VStack(spacing: GUTTER) {
                 if nxViewingContext.contains(.detailPane), let missingParent = firstParentWithMissingReplyTo {
-                    HStack(spacing: 6) {
-                        Text(String(localized: "Missing reply.", comment: "Shown in a thread when an intermediate reply is missing"))
-                            .foregroundColor(theme.secondary)
-                        Button(String(localized: "Try to fetch", comment: "Button to fetch missing reply in thread")) {
-                            fetchMissingReplyParent(for: missingParent)
+                    missingReplyView(for: missingParent)
+                        .onAppear {
+                            fetchMissingReplyParentIfNeeded(for: missingParent)
                         }
-                        .buttonStyle(.plain)
-                        .foregroundColor(theme.accent)
-                        .disabled(nxViewingContext.contains(.preview))
-                        Spacer()
-                    }
-                    .font(.footnote)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(theme.listBackground)
                 }
 
                 ForEach(postOrThreadAttributes.parentPosts) { nrParent in
@@ -94,13 +93,43 @@ struct PostOrThread: View { //, Equatable {
         }
     }
 
+    @ViewBuilder
+    private func missingReplyView(for nrPost: NRPost) -> some View {
+        HStack(spacing: 6) {
+            Text(String(localized: "Missing reply.", comment: "Shown in a thread when an intermediate reply is missing"))
+                .foregroundColor(theme.secondary)
+            Button(String(localized: "Try to fetch", comment: "Button to fetch missing reply in thread")) {
+                fetchMissingReplyParent(for: nrPost)
+            }
+            .buttonStyle(.plain)
+            .foregroundColor(theme.accent)
+            .disabled(nxViewingContext.contains(.preview))
+            Spacer()
+        }
+        .font(.footnote)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(theme.listBackground)
+    }
+    
     private var firstParentWithMissingReplyTo: NRPost? {
         guard let firstParent = postOrThreadAttributes.parentPosts.first else { return nil }
-        guard firstParent.replyToId != nil else { return nil }
-        guard firstParent.replyToId != rootId else { return nil }
+        guard hasMissingReplyTo(firstParent) else { return nil }
         return firstParent
     }
+    
+    private func hasMissingReplyTo(_ nrPost: NRPost) -> Bool {
+        guard let replyToId = nrPost.replyToId else { return false }
+        return replyToId != rootId
+    }
 
+    private func fetchMissingReplyParentIfNeeded(for nrParent: NRPost) {
+        guard let replyToId = nrParent.replyToId else { return }
+        guard !attemptedMissingReplyFetchIds.contains(replyToId) else { return }
+        attemptedMissingReplyFetchIds.insert(replyToId)
+        fetchMissingReplyParent(for: nrParent)
+    }
+    
     private func fetchMissingReplyParent(for nrParent: NRPost) {
         guard let replyToId = nrParent.replyToId else { return }
 

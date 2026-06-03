@@ -1303,6 +1303,38 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
 
 extension NRPost { // Helpers for grouped replies
     
+    private func recoverMissingReplyToId(for reply: NRPost, rootId: String) {
+        guard reply.replyToId == nil, let event = reply.event else { return }
+        guard let inferredReplyToId = inferredReplyToId(from: event), inferredReplyToId != rootId else { return }
+        
+        reply.replyToId = inferredReplyToId
+        if event.replyToId == nil {
+            event.replyToId = inferredReplyToId
+        }
+        EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.recoverMissingReplyToId")
+    }
+    
+    private func inferredReplyToId(from event: Event) -> String? {
+        if let replyATag = event.fastTags.first(where: { $0.0 == "a" && $0.3 == "reply" })?.1 {
+            return replyATag
+        }
+        
+        let eTags = event.fastTags.filter { $0.0 == "e" && $0.1.count == 64 }
+        if let replyETag = eTags.first(where: { $0.3 == "reply" })?.1 {
+            return replyETag
+        }
+        
+        if eTags.count == 1, eTags.first?.3 == nil {
+            return eTags.first?.1
+        }
+        
+        if eTags.count >= 2 {
+            return eTags.last?.1
+        }
+        
+        return nil
+    }
+    
     // To make repliesSorted work we need repliesToRoot first (.loadRepliesToRoot())
     func sortGroupedReplies(_ nrPosts: [NRPost]) -> [NRPost] { // Read from bottom to top.
         
@@ -1441,28 +1473,27 @@ extension NRPost { // Helpers for grouped replies
             renderedReplyIds.removeAll()
             let replies = (newReplies.isEmpty ? self.replies : newReplies)
             // Load parents/replyTo
-            let groupedThreads = (replies + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
+            let threadCandidates = (replies + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
                 .uniqued(on: { $0.id })
-                .filter({ nrPost in
-                    return !AppState.shared.bgAppState.blockedPubkeys.contains(nrPost.pubkey)
-                })
-                .filter { // Only take eventual replies by author, or direct replies to root by others
-                    $0.pubkey == self.pubkey ||
-                    $0.replyToId == self.id
+            let unblockedThreadCandidates = threadCandidates.filter { nrPost in
+                !AppState.shared.bgAppState.blockedPubkeys.contains(nrPost.pubkey)
+            }
+            let groupedThreads = unblockedThreadCandidates.compactMap { reply -> NRPost? in
+                self.recoverMissingReplyToId(for: reply, rootId: self.id)
+                guard reply.pubkey == self.pubkey || reply.replyToId == self.id else { return nil }
+                
+                // use until:self.id so we don't render duplicates
+                if let replyEvent = reply.event {
+                    replyEvent.parentEvents = Event.getParentEvents(replyEvent, until: self.id)
+                    reply.parentPosts = replyEvent.parentEvents.map { NRPost(event: $0) }
+                    reply.threadPostsCount = 1 + replyEvent.parentEvents.count
                 }
-                .map { reply in
-                    // use until:self.id so we don't render duplicates
-                    if let replyEvent = reply.event {
-                        replyEvent.parentEvents = Event.getParentEvents(replyEvent, until: self.id)
-                        reply.parentPosts = replyEvent.parentEvents.map { NRPost(event: $0) }
-                        reply.threadPostsCount = 1 + replyEvent.parentEvents.count
-                    }
 
 //                    if let replyTo = reply.event.replyTo__ { // TODO: NEED THIS OR NO?
 //                        reply.replyTo = NRPost(event: replyTo)
 //                    }
-                    return reply
-                }
+                return reply
+            }
             
             // Dictionary to store unique items with highest values
             var uniqueThreads = [NRPostID: NRPost]()
