@@ -81,7 +81,7 @@ struct MainFeedsScreen: View {
         if (la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed) { return false }
 //        if (la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed) { return false }
         if enableDiscoverListsFeed { return false }
-        if enableStreamsFeed { return false }
+        if (la.viewFollowingPublicKeys.count > 10 && enableStreamsFeed) { return false }
         if enableExploreFeed { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableArticleFeed) { return false }
         if lists.count > 0 { return false }
@@ -199,7 +199,7 @@ struct MainFeedsScreen: View {
                                         Spacer()
                                     }
                                     
-                                    if enableStreamsFeed {
+                                    if la.viewFollowingPublicKeys.count > 10 && enableStreamsFeed {
                                         TabButton(
                                             action: { selectedSubTab = "Streams" },
                                             title: String(localized: "Live Streams", comment:"Tab title for Live Streams feed"),
@@ -549,7 +549,7 @@ struct MainFeedsScreen: View {
                               }
                           }
                           
-                          if enableStreamsFeed {
+                          if la.viewFollowingPublicKeys.count > 10 && enableStreamsFeed {
                               Button("Live Streams", systemImage: "dot.radiowaves.left.and.right") { selectedSubTab = "Streams" }
                           }
                           
