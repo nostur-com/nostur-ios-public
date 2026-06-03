@@ -29,7 +29,7 @@ xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
 ### Tests
 
 - Run tests:
-  `xcodebuild test -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone Air'`
+  `xcodebuild test -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 17 Pro'`
 - Test files: `NosturTests/`
 - Test plans: `Nostur.xctestplan`, `NostrEssentials.xctestplan`
 - Current automated coverage is limited; previews and manual verification are common.

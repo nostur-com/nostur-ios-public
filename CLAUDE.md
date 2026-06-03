@@ -17,7 +17,7 @@ Nostur is a social media oriented client for the Nostr protocol, built for Mac, 
 ### Build Commands
 ```bash
 # Build for iOS Simulator
-xcodebuild -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 16 Pro (18.5),OS=18.5' build
+xcodebuild -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 
 # Build for device
 xcodebuild -scheme Nostur -destination 'platform=iOS,id=<device_id>' build
