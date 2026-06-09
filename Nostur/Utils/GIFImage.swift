@@ -24,7 +24,12 @@ public struct GIFImage: View {
          _GIFImage(source: source, isPlaying: .constant(isPlaying && !hasReachedLoopLimit), replayToken: replayToken)
              .contentShape(Rectangle())
              .onAppear {
-                 scheduleLoopLimitStop()
+                 if isPlaying && hasReachedLoopLimit {
+                     restartPlayback()
+                 }
+                 else {
+                     scheduleLoopLimitStop()
+                 }
              }
              .onChange(of: isPlaying) { newValue in
                  if newValue {
@@ -55,7 +60,7 @@ public struct GIFImage: View {
          stopTask?.cancel()
          guard isPlaying else { return }
          
-         let duration = source.animationDuration * 5.0
+         let duration = source.animationDuration * 25.0
          stopTask = Task { @MainActor in
              try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
              guard !Task.isCancelled else { return }
@@ -66,7 +71,7 @@ public struct GIFImage: View {
 
  @available(iOS 13, tvOS 13, *)
  private struct _GIFImage: UIViewRepresentable {
-     private let maxLoopCount = 5
+     private let maxLoopCount = 25
      let source: GIFSource
      @Binding var isPlaying: Bool
      let replayToken: Int
@@ -92,6 +97,9 @@ public struct GIFImage: View {
              .store(in: &context.coordinator.subscriptions)
          
          configureAnimation(for: imageView)
+         if isPlaying {
+             imageView.startAnimatingGIF()
+         }
          
          return imageView
      }

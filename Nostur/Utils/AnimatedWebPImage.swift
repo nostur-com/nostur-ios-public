@@ -69,7 +69,12 @@ public struct AnimatedWebPImage: View {
             .contentShape(Rectangle())
             .onAppear {
                 prepareAnimationDuration()
-                scheduleLoopLimitStop()
+                if isPlaying && hasReachedLoopLimit {
+                    restartPlayback()
+                }
+                else {
+                    scheduleLoopLimitStop()
+                }
             }
             .onChange(of: isPlaying) { newValue in
                 if newValue {
@@ -101,7 +106,7 @@ public struct AnimatedWebPImage: View {
         stopTask?.cancel()
         guard isPlaying else { return }
         
-        let duration = animationDuration * 5.0
+        let duration = animationDuration * 25.0
         stopTask = Task { @MainActor in
             try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
             guard !Task.isCancelled else { return }
