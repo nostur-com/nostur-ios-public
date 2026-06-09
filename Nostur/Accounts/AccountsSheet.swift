@@ -22,6 +22,7 @@ struct AccountsSheet: View {
     private var accounts: FetchedResults<CloudAccount>
     private var accountsSorted: [CloudAccount] {
         accounts
+            .filter { $0.id != logoutAccount?.id }
             .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
             .sorted(by: { $0.privateKey != nil && $1.privateKey == nil })
             // always show current logged in account at top
