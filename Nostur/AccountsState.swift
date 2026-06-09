@@ -14,7 +14,7 @@ class AccountsState: ObservableObject {
     private init() {
         self._activeAccountPublicKey = UserDefaults.standard.string(forKey: "activeAccountPublicKey") ?? ""
         Task { @MainActor in
-            self.loadAccountsState()
+            self.loadAccountsState(loadAnyAccount: true)
         }
     }
     
@@ -67,7 +67,7 @@ class AccountsState: ObservableObject {
                 }
             }
         }
-        else if let nextAccount = accounts.last, loadAnyAccount { // can't find account, change to next account
+        else if let nextAccount = accounts.sorted(by: { $0.lastLoginAt < $1.lastLoginAt }).last, loadAnyAccount { // can't find account, change to last active account
             Task { @MainActor in
                 changeAccount(nextAccount)
             }
