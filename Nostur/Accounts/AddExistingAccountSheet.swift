@@ -45,6 +45,8 @@ struct AddExistingAccountSheet: View {
             ZStack {
                 if loading {
                     CenteredProgressView()
+                        .tint(Color.black)
+                        .scaleEffect(1.4)
                 }
                 else {
                     VStack {
