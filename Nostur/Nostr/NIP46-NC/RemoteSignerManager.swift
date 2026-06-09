@@ -45,6 +45,7 @@ class RemoteSignerManager: ObservableObject {
     var account: CloudAccount? = nil
     var subscriptions = Set<AnyCancellable>()
     private var getPublicKeyFallbackWorkItem: DispatchWorkItem?
+    private var pendingConnectToken: String? // bunker:// secret sent with the last connect request
     
     // Queue of commands to execute when we receive a response
     var responseCommmandQueue: [String: (NEvent) -> Void] = [:] // TODO: need to add clean up, timeout...
@@ -148,8 +149,14 @@ class RemoteSignerManager: ObservableObject {
                             self.startIdentityResolutionAfterConnect()
                         }
                     }                   
-                    else if result == "ack" {
+                    // Some signers (Clave, Amber, ...) acknowledge connect by echoing the bunker
+                    // secret back as the result instead of returning "ack" (the NIP-46
+                    // nostrconnect:// verification pattern). Both mean success — only accepting
+                    // "ack" made every bunker:// URL that carried a ?secret= fail with "Unable to
+                    // connect" even though the signer had created the pairing.
+                    else if result == "ack" || (self.pendingConnectToken != nil && result == self.pendingConnectToken) {
                         DispatchQueue.main.async {
+                            self.pendingConnectToken = nil
                             self.state = .connecting
 #if DEBUG
                             L.og.debug("🏰 Remote Signer ack success ")
@@ -345,6 +352,7 @@ class RemoteSignerManager: ObservableObject {
         // When the connection is made, we set ns.setAccount with connectingAccount
         state = .connecting
         self.account = account
+        self.pendingConnectToken = token // signer may echo this back instead of "ack" to confirm connect
         
         // Generate session key, the private key is stored in keychain, it will be accessed by looking up (account.ncRemoteSignerPubkey_ ?? account.publicKey) in the NC keychain
         guard let ncClientPubkey = try? NIP46SecretManager.shared.generateKeysForAccount(account) else {
