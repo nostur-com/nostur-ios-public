@@ -119,11 +119,11 @@ struct CustomEmojiChoices: View {
                             .disabled(vm.isFindingMoreEmojiSets)
                             .padding(.top, 2)
 
-                            Text("Largest emoji loaded: \(formattedByteCount(largestEmojiBytesRendered))")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.top, 2)
+//                            Text("Largest emoji loaded: \(formattedByteCount(largestEmojiBytesRendered))")
+//                                .font(.caption2)
+//                                .foregroundColor(.secondary)
+//                                .frame(maxWidth: .infinity, alignment: .leading)
+//                                .padding(.top, 2)
                         }
                         .padding([.top, .leading, .trailing])
                         .padding(.bottom, 6)

@@ -5948,9 +5948,6 @@
     "Landscape" : {
       "shouldTranslate" : false
     },
-    "Largest emoji loaded: %@" : {
-
-    },
     "Last 1 hour" : {
       "localizations" : {
         "nl" : {
