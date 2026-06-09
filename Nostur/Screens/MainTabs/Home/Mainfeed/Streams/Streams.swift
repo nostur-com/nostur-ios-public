@@ -74,7 +74,7 @@ struct Streams: View {
                 .padding(0)
             case .timeout:
                 VStack {
-                    Text("Time-out while loading discover feed")
+                    Text("Time-out while loading Live Streams feed")
                     Button("Try again") { streamsVM.reload() }
                 }
                 .centered()
