@@ -95,7 +95,7 @@ struct AddExistingAccountSheet: View {
                                     addExistingBunkerAccount(pubkey: bunkerURL.pubkey, token: bunkerURL.secret)
                                     showSidebar = false
                                     loading = true
-                                    onDismiss?()
+                                    // onDismiss?()
                                 }
                                 else {
                                     guard key.split(separator: "#").count >= 2 else { return }
@@ -109,7 +109,7 @@ struct AddExistingAccountSheet: View {
                                     addExistingBunkerAccount(pubkey: nip19.hexString, token: token)
                                     showSidebar = false
                                     loading = true
-                                    onDismiss?()
+                                    // onDismiss?()
                                 }
                             }
                             else {
@@ -224,7 +224,10 @@ struct AddExistingAccountSheet: View {
                     bunkerManager.ncRelay = ""
                 }
             }
-            .onChange(of: bunkerManager.state) { bunkerState in
+            .onValueChange(bunkerManager.state, action: { oldValue, bunkerState in
+#if DEBUG
+                L.og.debug("🏰 \(oldValue.rawValue) -> \(bunkerState.rawValue)")
+#endif
                 if bunkerState == .connected {
                     guard let account = bunkerManager.account else { return }
                     account.ncRelay = bunkerManager.ncRelay
@@ -279,7 +282,7 @@ struct AddExistingAccountSheet: View {
                         viewContext.delete(account)
                     }
                 }
-            }
+            })
             .onAppear {
                 if bunkerManager.state == .error {
                     bunkerManager.state = .disconnected
@@ -437,7 +440,7 @@ struct AddExistingAccountSheet: View {
 
         showSidebar = false
         loading = true
-        onDismiss?()
+        // onDismiss?()
         return
     }
 }
