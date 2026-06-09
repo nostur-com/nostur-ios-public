@@ -596,7 +596,65 @@ class RemoteSignerManager: ObservableObject {
             accountPubkey: account.publicKey
         )
     }
-    
+
+    // Best-effort NIP-46 logout: tells the remote signer to tear down this client's pairing.
+    // Per NIP-46 the client should delete its client keypair on logout; callers delete the session
+    // keypair (NIP46SecretManager) after calling this. Signers (Clave/Spectr) auto-allow logout (no
+    // user prompt) and treat it as a no-op when there is no live session, so it is always safe to send.
+    public func logout(usingAccount: CloudAccount? = nil) {
+        guard let account = (usingAccount ?? (Thread.isMainThread ? account : account?.toBG())) else { return }
+        guard account.isNC else { return }
+
+        // account does not have a .privateKey, but because isNC=true it will look up in NIP46SecretManager for a session private key and use that instead
+        guard let sessionPrivateKey = account.privateKey else { return }
+        guard let keys = try? Keys(privateKeyHex: sessionPrivateKey) else { return }
+
+        let ncRemoteSignerPubkey = account.ncRemoteSignerPubkey
+        let ncRelay = account.ncRelay
+
+        // Make sure we have a live connection to the signer's relay, otherwise the logout event has
+        // nowhere to go (e.g. logging out a remote-signer account that isn't the active one).
+        if !ncRelay.isEmpty {
+            Task { @MainActor in
+                self.connectToBunker(sessionPublicKey: ncRemoteSignerPubkey, relay: ncRelay)
+            }
+        }
+
+        let commandId = "logout-\(UUID().uuidString)"
+        let request = NCRequest(id: commandId, method: "logout", params: [])
+        let encoder = JSONEncoder()
+
+        guard let requestJsonData = try? encoder.encode(request) else { return }
+
+        guard let requestJsonString = String(data: requestJsonData, encoding: .utf8) else { return }
+
+        var ncReq = NEvent(content: requestJsonString)
+        ncReq.kind = .ncMessage
+        ncReq.tags.append(NostrTag(["p", ncRemoteSignerPubkey]))
+
+        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: ncRemoteSignerPubkey, content: ncReq.content) else {
+#if DEBUG
+            L.og.error("🏰🔴🔴 Could not encrypt content for logout")
+#endif
+            return
+        }
+
+        ncReq.content = encrypted
+
+        guard let signedReq = try? ncReq.sign(keys) else { return }
+
+        // Send message to remote signer
+        ConnectionPool.shared.sendMessage(
+            NosturClientMessage(
+                clientMessage: NostrEssentials.ClientMessage(type: .EVENT),
+                onlyForNCRelay: true,
+                relayType: .READ,
+                nEvent: signedReq
+            ),
+            accountPubkey: account.publicKey
+        )
+    }
+
     private func handleSignedEvent(eventString: String) {
 #if DEBUG
         L.og.info("🏰 Remote Signer signed event received, ready to publish: \(eventString)")
