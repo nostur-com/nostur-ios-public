@@ -80,6 +80,16 @@ class AccountsState: ObservableObject {
     
     @MainActor public func logout(_ account: CloudAccount) {
         let logoutAccountPubkey = account.publicKey
+
+        // Remote-signer (NIP-46) account: tell the signer (e.g. Clave/Spectr) to tear down this
+        // pairing, then delete our session keypair. Must happen before deleting the account, since
+        // sending the logout needs the session key. The signer auto-allows logout and no-ops if
+        // there is no live session, so this is safe even if the pairing was never fully established.
+        if account.isNC {
+            RemoteSignerManager.shared.logout(usingAccount: account)
+            NIP46SecretManager.shared.deleteSecret(account: account)
+        }
+
         DataProvider.shared().viewContext.delete(account)
         DataProvider.shared().saveToDiskNow(.viewContext)
         
