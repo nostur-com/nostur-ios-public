@@ -22,6 +22,8 @@ class RemoteSignerManager: ObservableObject {
         }
     }
     
+    private var secret: String? = nil
+    
     public var didRecentlyConnect: Bool {
         guard let lastConnectedAt else { return false }
         return Date.now.timeIntervalSince(lastConnectedAt) < 60
@@ -148,7 +150,7 @@ class RemoteSignerManager: ObservableObject {
                             self.startIdentityResolutionAfterConnect()
                         }
                     }                   
-                    else if result == "ack" {
+                    else if (result == "ack" || result == secret) {
                         DispatchQueue.main.async {
                             self.state = .connecting
 #if DEBUG
@@ -344,6 +346,7 @@ class RemoteSignerManager: ObservableObject {
     public func connect(_ account: CloudAccount, token: String? = nil) {
         // When the connection is made, we set ns.setAccount with connectingAccount
         state = .connecting
+        secret = token
         self.account = account
         
         // Generate session key, the private key is stored in keychain, it will be accessed by looking up (account.ncRemoteSignerPubkey_ ?? account.publicKey) in the NC keychain
@@ -613,11 +616,11 @@ class RemoteSignerManager: ObservableObject {
         ) // TODO: Outbox needs to know p's for inbox relays?
     }
     
-    enum STATE {
-        case disconnected
-        case connecting
-        case connected
-        case error
+    enum STATE: Int {
+        case disconnected = 0
+        case connecting = 1
+        case connected = 2
+        case error = 3
     }
 }
 
