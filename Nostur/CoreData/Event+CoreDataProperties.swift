@@ -34,6 +34,10 @@ extension Event {
     @NSManaged public var replyToRootId: String?
     @NSManaged public var replyToId: String?
     @NSManaged public var firstQuoteId: String?
+    
+    public var replyToPostOrZapId: String? {
+        replyToId ?? zappedEventId
+    }
         
     // Counters (cached)
     @NSManaged public var likesCount: Int64 // Cache
@@ -114,12 +118,12 @@ extension Event {
     }
     
     var replyTo: Event? {
-        if let replyToId {
+        if let replyToPostOrZapId = (replyToId ?? zappedEventId) {
             let context = self.managedObjectContext ?? bg()
-            if replyToId.contains(":") {
-                return Event.fetchReplacableEvent(aTag: replyToId, context: context)
+            if replyToPostOrZapId.contains(":") {
+                return Event.fetchReplacableEvent(aTag: replyToPostOrZapId, context: context)
             }
-            if let event = Event.fetchEvent(id: replyToId, context: context) {
+            if let event = Event.fetchEvent(id: replyToPostOrZapId, context: context) {
                 return event
             }
         }
@@ -168,6 +172,13 @@ extension Event {
                 parentEvents.append(replyTo)
                 currentEvent = replyTo
                 i = (i + 1)
+            }
+            else if currentEvent!.kind == 9735,
+                    let zappedEventId = currentEvent!.zappedEventId,
+                    let zappedEvent = Event.fetchEvent(id: zappedEventId, context: bg()) {
+                parentEvents.append(zappedEvent)
+                currentEvent = zappedEvent
+                i += 1
             }
             else {
                 currentEvent = nil

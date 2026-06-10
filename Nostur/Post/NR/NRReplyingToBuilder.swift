@@ -13,7 +13,15 @@ class NRReplyingToBuilder {
 
     // TODO: Add replyTo pfpUrl or pubkey or nrContact here also, and return, but only if missingReplyTo
     func replyingToUsernamesMarkDownString(_ event: Event) -> String? {
-        guard event.replyToId != nil || event.replyTo != nil else { return nil }
+        guard event.replyToPostOrZapId != nil || event.replyTo != nil else { return nil }
+        
+        if event.kind == 9735 {
+            if let zappedEventId = event.zappedEventId {
+                return String(localized:"Sent \(event.naiveSats.satsFormatted) sats on [post](nostur:e:\(zappedEventId))", comment: "Sent X sats on <post> (Replying to text)")
+                
+            }
+            return String(localized:"Sent \(event.naiveSats.satsFormatted) sats", comment: "Sent X sats (Replying to text)")
+        }
         
         if let replyTo = event.replyTo, replyTo.kind == 30023 {
             guard let articleTitle = replyTo.eventTitle else {

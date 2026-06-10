@@ -122,6 +122,7 @@ struct Entry: View {
                 HStack(alignment: .top) { // name + reply + context menu
                     if replyToKind == 443 {
                         Text("Commenting on website")
+                            .foregroundColor(theme.secondary)
                             .offset(x: 5.0, y: 4.0)
                     }
                     else {

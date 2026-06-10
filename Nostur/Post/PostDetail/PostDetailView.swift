@@ -87,7 +87,7 @@ struct PostDetailView: View {
                         proxy.scrollTo(detailId, anchor: .top)
                     }
                 }
-                .navigationTitleIf(nrPost.kind != 443, title: nrPost.replyToId != nil ? String(localized:"Thread", comment:"Navigation title when viewing a Thread") : String(localized:"Post.noun", comment: "Navigation title when viewing a Post"))
+                .navigationTitleIf(nrPost.kind != 443, title: nrPost.replyToPostOrZapId != nil ? String(localized:"Thread", comment:"Navigation title when viewing a Thread") : String(localized:"Post.noun", comment: "Navigation title when viewing a Post"))
                           
                 .navigationBarTitleDisplayMode(.inline)
                 .navigationBarHidden(navTitleHidden)

@@ -22,7 +22,11 @@ struct PostEmbeddedLayout<Content: View>: View {
     
     init(nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false, authorAtBottom: Bool = false, @ViewBuilder _ content: () -> Content) {
         self.nrPost = nrPost
-        self.nrContact = nrPost.contact
+        self.nrContact = if nrPost.kind == 9735, let fromPubkey = nrPost.fromPubkey {
+            NRContact.instance(of: fromPubkey)
+        } else {
+            nrPost.contact
+        }
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.forceAutoload = forceAutoload
         self.fullWidth = fullWidth

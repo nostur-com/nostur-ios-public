@@ -39,10 +39,10 @@ struct PostAndParent: View {
 //#endif
         VStack(spacing: 10) {
             // MARK: PARENT POST WITH POTENTIALLY ANOTHER PARENT
-            // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId
+            // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId/.zappedEventId
             if let replyTo = nrPost.replyTo {
                 if replyTo.deletedById == nil {
-                    let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
+                    let connect:ThreadConnectDirection? = replyTo.replyToPostOrZapId != nil ? .both : .bottom
                     PostAndParent(nrPost: replyTo, connect: connect)
                         .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
                         .background(theme.listBackground)
@@ -58,7 +58,7 @@ struct PostAndParent: View {
                     .hCentered()
                 }
             }
-            else if let replyToId = nrPost.replyToId {
+            else if let replyToPostOrZapId = nrPost.replyToPostOrZapId {
                 CenteredProgressView()
                     .onAppear {
                         guard !didFetchParent else { return }
@@ -68,11 +68,11 @@ struct PostAndParent: View {
                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
                         }
                         
-                        if replyToId.count > 64 && replyToId.contains(":") {
-                            QueuedFetcher.shared.enqueue(aTag: replyToId)
+                        if replyToPostOrZapId.count > 64 && replyToPostOrZapId.contains(":") {
+                            QueuedFetcher.shared.enqueue(aTag: replyToPostOrZapId)
                         }
                         else {
-                            QueuedFetcher.shared.enqueue(id: replyToId)
+                            QueuedFetcher.shared.enqueue(id: replyToPostOrZapId)
                         }
                         
                         timerTask = Task {
@@ -81,16 +81,16 @@ struct PostAndParent: View {
                                 nrPost.loadReplyTo()
                                 if nrPost.replyTo == nil {
                                     // try search relays
-                                    if replyToId.count > 64 && replyToId.contains(":"), let aTag = try? ATag(replyToId) {
+                                    if replyToPostOrZapId.count > 64 && replyToPostOrZapId.contains(":"), let aTag = try? ATag(replyToPostOrZapId) {
                                         req(RM.getArticle(pubkey: aTag.pubkey, kind: Int(aTag.kind), definition: aTag.definition))
                                     }
                                     else {
-                                        req(RM.getEvent(id: replyToId), relayType: .SEARCH)
+                                        req(RM.getEvent(id: replyToPostOrZapId), relayType: .SEARCH)
                                     }
                                     
                                     // try relay hint
                                     guard vpnGuardOK() else { return }
-                                    fetchEventFromRelayHint(replyToId, fastTags: nrPost.fastTags)
+                                    fetchEventFromRelayHint(replyToPostOrZapId, fastTags: nrPost.fastTags)
                                 }
                             }
                             catch { }
@@ -117,7 +117,7 @@ struct PostAndParent: View {
                         )
                 }
                 else {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.replyTo == nil, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != nil && nrPost.replyTo == nil, connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: theme)
                         .environment(\.nxViewingContext, [.selectableText, .postDetail, .detailPane])
 //                        .id(nrPost.id)
                         .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
@@ -126,7 +126,7 @@ struct PostAndParent: View {
                 }
             }
             .onAppear {
-               guard nrPost.replyToId != nil else { return } // don't scroll if we already the root
+               guard nrPost.replyToPostOrZapId != nil else { return } // don't scroll if we already the root
                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
                    sendNotification(.scrollToDetail, nrPost.id)
                }

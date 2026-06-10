@@ -212,8 +212,19 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var replyToId: String?
     var replyToRootId: String?
     
+    var zappedEventId: String?
+    
     var _replyTo: NRPost?
     var _replyToRoot: NRPost?
+    
+    // Helpers to also render threads for reply to zap
+    var isReplyToPostOrZap: Bool {
+        replyToId != nil || zappedEventId != nil
+    }
+    
+    var replyToPostOrZapId: String? {
+        replyToId ?? zappedEventId
+    }
     
     var firstQuoteId: String?
     
@@ -341,7 +352,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         let bgContext = event.managedObjectContext ?? bg()
         self.postRowDeletableAttributes = PostRowDeletableAttributes(
             blocked: Self.isBlocked(pubkey: event.pubkey),
-            muted: Self.isMuted(id: event.id, replyToRootId: event.replyToRootId, replyToId: event.replyToId),
+            muted: Self.isMuted(id: event.id, replyToRootId: event.replyToRootId, replyToPostOrZapId: event.replyToPostOrZapId),
             deletedById: event.deletedById
         )
         self.id = event.id
@@ -741,6 +752,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
         
         self.replyToId = event.replyToId
+        self.zappedEventId = event.zappedEventId
         if withReplyTo, let replyTo = event.replyTo {
             self.replyTo = Self.buildNestedNRPost(
                 event: replyTo,
@@ -749,7 +761,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 maxEmbeddedDepth: maxEmbeddedDepth
             )
         }
-        else if !isAwaiting && withReplyTo && event.replyToId != nil {
+        else if !isAwaiting && withReplyTo && event.replyToPostOrZapId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.003"); isAwaiting = true
         }
         
@@ -782,11 +794,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         return Nostur.blocks().contains(pubkey)
     }
     
-    private static func isMuted(id: String, replyToRootId: String?, replyToId: String?) -> Bool {
+    private static func isMuted(id: String, replyToRootId: String?, replyToPostOrZapId: String?) -> Bool {
         let mutedRootIds = AppState.shared.bgAppState.mutedRootIds
         return mutedRootIds.contains(id)
             || mutedRootIds.contains(replyToRootId ?? "NIL")
-            || mutedRootIds.contains(replyToId ?? "NIL")
+            || mutedRootIds.contains(replyToPostOrZapId ?? "NIL")
     }
     
     private var profileUpdatedSubscription: AnyCancellable?
@@ -909,7 +921,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 self.missingPs.remove(profileInfo.pubkey)
                 
                 if self.kind != 6 {
-                    if self.replyToId != nil {
+                    if self.replyToPostOrZapId != nil {
                         self.rerenderReplyingToFragment()
                     }
                     // TODO: no need to rebuild if p is not in text/content/comment
@@ -1134,17 +1146,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
         bg().perform { [weak self] in
             guard let self = self else { return }
-            guard self.replyTo == nil else { return }
-            if self.replyToId == nil {
-                self.replyToId = self.event?.replyToId
-            }
+            guard self.replyToPostOrZapId != nil && self.replyTo == nil else { return }
             
             if let replyTo = self.event?.replyTo {
                 let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
-                let replyToId = replyTo.id
                 DispatchQueue.main.async { [weak self] in
                     self?.objectWillChange.send()
-                    self?.replyToId = replyToId
                     self?.replyTo = nrReplyTo
                 }
             }
@@ -1160,7 +1167,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             
             let parents = Event.getParentEvents(event)//, until:self.id)
             let parentPosts = parents.map { NRPost(event: $0) }
-            let threadPostsCount = 1 + event.parentEvents.count
+            let threadPostsCount = 1 + parents.count
             
             guard beforeThreadPostsCount != threadPostsCount else { return }
             
@@ -1229,7 +1236,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.ownPostAttributes.cancellationId = nil
         let postKind = self.kind
         let postPubkey = self.pubkey
-        let postReplyToId = self.replyToId
+        let postReplyToId = self.replyToPostOrZapId
         bg().perform { [weak self] in
             guard let self, let event = self.event else { return }
             bg().delete(event)
@@ -1238,9 +1245,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 guard let self else { return }
                 sendNotification(.unpublishedNRPost, self)
                 if let accountCache = accountCache(), accountCache.pubkey == postPubkey {
-                    if Set([1,1111,1244]).contains(postKind), let replyToId = postReplyToId {
-                        accountCache.removeRepliedTo(replyToId)
-                        sendNotification(.postAction, PostActionNotification(type: .unreplied, eventId: replyToId))
+                    if Set([1,1111,1244]).contains(postKind), let postReplyToId = postReplyToId {
+                        accountCache.removeRepliedTo(postReplyToId)
+                        sendNotification(.postAction, PostActionNotification(type: .unreplied, eventId: postReplyToId))
                     }
                 }
             }
@@ -1353,8 +1360,8 @@ extension NRPost { // Helpers for grouped replies
                 })
                 // 1. Own direct replies first
                 .sorted(by: {
-                    ($0.pubkey == self.pubkey && $0.replyToId == self.id) &&
-                    ($1.pubkey != self.pubkey || $1.replyToId != self.id)
+                    ($0.pubkey == self.pubkey && $0.replyToPostOrZapId == self.id) &&
+                    ($1.pubkey != self.pubkey || $1.replyToPostOrZapId != self.id)
                 })
         }
         
@@ -1374,8 +1381,8 @@ extension NRPost { // Helpers for grouped replies
             })
             // 1. Own direct replies first
             .sorted(by: {
-                ($0.pubkey == self.pubkey && $0.replyToId == self.id) &&
-                ($1.pubkey != self.pubkey || $1.replyToId != self.id)
+                ($0.pubkey == self.pubkey && $0.replyToPostOrZapId == self.id) &&
+                ($1.pubkey != self.pubkey || $1.replyToPostOrZapId != self.id)
             })
     }
     
@@ -1459,7 +1466,7 @@ extension NRPost { // Helpers for grouped replies
     private func traversesUpToThisPost(_ event: Event) -> Bool {
         var currentEvent: Event? = event
         while currentEvent != nil {
-            if let replyToId = currentEvent?.replyToId, replyToId == self.id {
+            if let replyToPostOrZapId = currentEvent?.replyToPostOrZapId, replyToPostOrZapId == self.id {
                 return true
             }
             currentEvent = currentEvent?.replyTo
@@ -1480,7 +1487,7 @@ extension NRPost { // Helpers for grouped replies
             }
             let groupedThreads = unblockedThreadCandidates.compactMap { reply -> NRPost? in
                 self.recoverMissingReplyToId(for: reply, rootId: self.id)
-                guard reply.pubkey == self.pubkey || reply.replyToId == self.id else { return nil }
+                guard reply.pubkey == self.pubkey || reply.replyToPostOrZapId == self.id else { return nil }
                 
                 // use until:self.id so we don't render duplicates
                 if let replyEvent = reply.event {
@@ -1500,12 +1507,12 @@ extension NRPost { // Helpers for grouped replies
             
 
             for thread in groupedThreads {
-                if let replyToId = thread.replyToId, replyToId == self.id {
+                if let replyToPostOrZapId = thread.replyToPostOrZapId, replyToPostOrZapId == self.id {
                     // replying to root, but could be rendered also as parent in one of the threads,
                     // so skip and include in 2nd pass after we checked if its not rendered already
                     continue
                 }
-                else if let replyToRootId = thread.replyToRootId, thread.replyToId == nil, replyToRootId == self.id {
+                else if let replyToRootId = thread.replyToRootId, thread.replyToPostOrZapId == nil, replyToRootId == self.id {
                     // replying to root, but could be rendered also as parent in one of the threads,
                     // so skip and include in 2nd pass after we checked if its not rendered already
                     continue
@@ -1535,12 +1542,12 @@ extension NRPost { // Helpers for grouped replies
             // Second pass
             // Include the direct replies that have not been rendered yet in other threads (renderedIds)
             for thread in groupedThreads {
-                if let replyToId = thread.replyToId, replyToId == self.id, !renderedReplyIds.contains(thread.id) {
+                if let replyToPostOrZapId = thread.replyToPostOrZapId, replyToPostOrZapId == self.id, !renderedReplyIds.contains(thread.id) {
                     // direct reply
                     uniqueThreads[thread.id] = thread
                     renderedReplyIds.insert(thread.id)
                 }
-                else if let replyToRootId = thread.replyToRootId, thread.replyToId == nil, replyToRootId == self.id, !renderedReplyIds.contains(thread.id) {
+                else if let replyToRootId = thread.replyToRootId, thread.replyToPostOrZapId == nil, replyToRootId == self.id, !renderedReplyIds.contains(thread.id) {
                     // direct reply
                     uniqueThreads[thread.id] = thread
                     renderedReplyIds.insert(thread.id)

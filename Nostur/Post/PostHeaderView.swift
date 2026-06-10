@@ -18,7 +18,11 @@ struct NRPostHeaderContainer: View {
 
     init(nrPost: NRPost, singleLine: Bool = true, isDetail: Bool = false) {
         self.nrPost = nrPost
-        self.nrContact = nrPost.contact
+        self.nrContact = if let fromPubkey = nrPost.fromPubkey {
+            NRContact.instance(of: fromPubkey)
+        } else {
+            nrPost.contact
+        }
         self.singleLine = singleLine
         self.isDetail = isDetail
     }

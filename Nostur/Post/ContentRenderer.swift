@@ -44,7 +44,7 @@ struct ContentRenderer: View { // VIEW things
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if availableWidth < 220 {
+            if availableWidth < 200 {
                 Image(systemName: "chevron.right")
                     .foregroundColor(.white)
                     .padding(5)

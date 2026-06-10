@@ -31,7 +31,7 @@ struct PostZaps: View {
                     Color.clear.frame(height: 1).id(top)
                     LazyVStack(spacing: GUTTER) {
                         ForEach(model.verifiedZaps) { nrPost in
-                            Box {
+                            Box(nrPost: nrPost) {
                                 NxZapReceipt(fromPubkey: nrPost.fromPubkey!, nrPost: nrPost)
                             }
                         }
@@ -158,44 +158,48 @@ struct NxZapReceipt: View {
     }
     
     var body: some View { // Copy pasta from Kind1Default, remove all non 9735 stuff, removed footer, removed thread connecting lines
-        HStack(alignment: .top) {
-            VStack(alignment: .center) {
-                HStack(spacing: 4) {
-                    Image(systemName: "bolt.fill")
-                        .foregroundColor(theme.accent)
-                    if nrPost.isPrivateZap {
-                        Image(systemName: "lock.fill")
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(alignment: .top) {
+                VStack(alignment: .center) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bolt.fill")
+                            .foregroundColor(theme.accent)
+                        if nrPost.isPrivateZap {
+                            Image(systemName: "lock.fill")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .infoText("This is a private zap, the sender is not revealed in public.")
+                        }
+                    }
+                    Text(nrPost.sats, format: .number.notation((.compactName)))
+                        .font(.title3)
+                    if let fiatPrice = ExchangeRateModel.shared.formattedFiatValue(sats: Double(nrPost.sats)) {
+                        Text("\(fiatPrice)")
                             .font(.caption)
-                            .foregroundColor(.secondary)
-                            .infoText("This is a private zap, the sender is not revealed in public.")
+                            .opacity(nrPost.sats != 0 ? 0.5 : 0)
                     }
                 }
-                Text(nrPost.sats, format: .number.notation((.compactName)))
-                    .font(.title3)
-                if let fiatPrice = ExchangeRateModel.shared.formattedFiatValue(sats: Double(nrPost.sats)) {
-                    Text("\(fiatPrice)")
-                        .font(.caption)
-                        .opacity(nrPost.sats != 0 ? 0.5 : 0)
-                }
-            }
-            .frame(width: 70)
-            
-            InnerPFP(pubkey: fromPubkey, pictureUrl: nrContact.pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: nrContact.randomColor)
-                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
-                .onTapGesture {
-                    navigateTo(nrContact, context: containerID)
-                }
-            
-            VStack(alignment: .leading, spacing: 3) { // Post container
-                ZappedFromName(pubkey: fromPubkey, nrPost: nrPost)
+                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: false, fullWidth: false)
-                    .environment(\.availableWidth, DIMENSIONS.articleRowImageWidth(availableWidth) - 80)
-                    .frame(maxWidth: DIMENSIONS.articleRowImageWidth(availableWidth) - 80, minHeight: 40, alignment: .leading)
+                InnerPFP(pubkey: fromPubkey, pictureUrl: nrContact.pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: nrContact.randomColor)
+                    .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+                    .onTapGesture {
+                        navigateTo(nrContact, context: containerID)
+                    }
+                
+                VStack(alignment: .leading, spacing: 3) { // Post container
+                    ZappedFromName(pubkey: fromPubkey, nrPost: nrPost)
+                    
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: false, fullWidth: false)
+                        .environment(\.availableWidth, DIMENSIONS.articleRowImageWidth(availableWidth) - 80)
+                        .frame(maxWidth: DIMENSIONS.articleRowImageWidth(availableWidth) - 80, minHeight: 40, alignment: .leading)
+                }
+                .task {
+                    QueuedFetcher.shared.enqueue(pTag: fromPubkey)
+                }
             }
-            .task {
-                QueuedFetcher.shared.enqueue(pTag: fromPubkey)
-            }
+            CustomizableFooterFragmentView(nrPost: nrPost, isItem: false, theme: theme)
+                .background(theme.listBackground)
         }
     }
 }

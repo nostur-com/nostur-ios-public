@@ -87,23 +87,18 @@ struct KindResolver: View {
             }
         case 9735: // TODO: need to check
             if let fromPubkey = nrPost.fromPubkey {
-                if isEmbedded {
-                    NxZapReceipt(fromPubkey: fromPubkey, nrPost: nrPost)
-                        .onAppear { self.enqueue() }
-                        .onDisappear { self.dequeue() }
-                        .padding(.top, 5)
-                        .padding(.trailing, 5)
-                        .padding(.bottom, 5)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(theme.lineColor, lineWidth: 1)
-                        )
+                Kind9735(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo,
+                         connect: connect, isDetail: isDetail, isEmbedded: isEmbedded,
+                         fullWidth: fullWidth,
+                         forceAutoload: shouldAutoload,
+                         fromPubkey: fromPubkey
+                )
+                .environment(\.availableWidth, availableWidth - (DIMENSIONS.POST_ROW_PFP_DIAMETER + 10.0))
+                .task {
+                    QueuedFetcher.shared.enqueue(pTag: fromPubkey)
                 }
-                else {
-                    NxZapReceipt(fromPubkey: fromPubkey, nrPost: nrPost)
-                        .onAppear { self.enqueue() }
-                        .onDisappear { self.dequeue() }
-                }
+//                .onAppear { self.enqueue() }
+//                .onDisappear { self.dequeue() }
             }
             
         case 9802:

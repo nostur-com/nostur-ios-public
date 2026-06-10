@@ -44,7 +44,7 @@ struct PostOrThread: View { //, Equatable {
                 }
                 
                 Box(nrPost: nrPost) {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: hasMissingReplyTo(nrPost), connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: hasMissingReplyTo(nrPost), connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
                 }
                 .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                 .background {
@@ -67,8 +67,8 @@ struct PostOrThread: View { //, Equatable {
                     Box(nrPost: nrParent, showGutter: false) {
                         PostRowDeletable(nrPost: nrParent,
                                          hideFooter: true,
-                                         missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == postOrThreadAttributes.parentPosts.first?.id,
-                                         connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, theme: theme)
+                                         missingReplyTo: nrParent.replyToPostOrZapId != rootId && nrParent.replyToPostOrZapId != nil && nrParent.id == postOrThreadAttributes.parentPosts.first?.id,
+                                         connect: nrParent.isReplyToPostOrZap || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, theme: theme)
                     }
                     .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                     //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
@@ -77,7 +77,7 @@ struct PostOrThread: View { //, Equatable {
                 }
 
                 Box(nrPost: nrPost) {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != rootId && nrPost.replyToPostOrZapId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
                 }
                 .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                 .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
@@ -119,28 +119,28 @@ struct PostOrThread: View { //, Equatable {
     }
     
     private func hasMissingReplyTo(_ nrPost: NRPost) -> Bool {
-        guard let replyToId = nrPost.replyToId else { return false }
-        return replyToId != rootId
+        guard let replyToPostOrZapId = nrPost.replyToPostOrZapId else { return false }
+        return replyToPostOrZapId != rootId
     }
 
     private func fetchMissingReplyParentIfNeeded(for nrParent: NRPost) {
-        guard let replyToId = nrParent.replyToId else { return }
-        guard !attemptedMissingReplyFetchIds.contains(replyToId) else { return }
-        attemptedMissingReplyFetchIds.insert(replyToId)
+        guard let replyToPostOrZapId = nrParent.replyToPostOrZapId else { return }
+        guard !attemptedMissingReplyFetchIds.contains(replyToPostOrZapId) else { return }
+        attemptedMissingReplyFetchIds.insert(replyToPostOrZapId)
         fetchMissingReplyParent(for: nrParent)
     }
     
     private func fetchMissingReplyParent(for nrParent: NRPost) {
-        guard let replyToId = nrParent.replyToId else { return }
+        guard let replyToPostOrZapId = nrParent.replyToPostOrZapId else { return }
 
-        if replyToId.count > 64 && replyToId.contains(":") {
-            QueuedFetcher.shared.enqueue(aTag: replyToId)
+        if replyToPostOrZapId.count > 64 && replyToPostOrZapId.contains(":") {
+            QueuedFetcher.shared.enqueue(aTag: replyToPostOrZapId)
         }
         else {
-            QueuedFetcher.shared.enqueue(id: replyToId)
-            req(RM.getEvent(id: replyToId), relayType: .SEARCH)
+            QueuedFetcher.shared.enqueue(id: replyToPostOrZapId)
+            req(RM.getEvent(id: replyToPostOrZapId), relayType: .SEARCH)
             guard vpnGuardOK() else { return }
-            fetchEventFromRelayHint(replyToId, fastTags: nrParent.fastTags)
+            fetchEventFromRelayHint(replyToPostOrZapId, fastTags: nrParent.fastTags)
         }
 
         nrParent.loadReplyTo()
@@ -152,15 +152,6 @@ enum ThreadConnectDirection {
     case top
     case bottom
     case both
-}
-
-func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
-    if let replyToPubkey = event.replyTo?.pubkey {
-        if isFollowing(replyToPubkey) {
-            return true
-        }
-    }
-    return event.replyToId == nil
 }
 
 import NavigationBackport

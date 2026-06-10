@@ -29,7 +29,7 @@ struct ZappedFromName: View {
                 .fontWeightBold()
                 .contentTransitionOpacity()
                 .lineLimit(1)
-                .layoutPriority(2)
+                .layoutPriority(3)
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
                     navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: context)
@@ -48,7 +48,7 @@ struct ZappedFromName: View {
                 Text(String(format: "via %@", via))
                     .font(.subheadline)
                     .lineLimit(1)
-                    .layoutPriority(3)
+                    .layoutPriority(1)
                     .foregroundColor(.secondary)
             }
         }

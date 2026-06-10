@@ -968,14 +968,18 @@ public final class NewPostModel: ObservableObject {
         var unselectedPtags = typingTextModel.unselectedMentions.map { $0.pubkey }
         
         // always include the .p of pubkey we are replying to (not required by spec, but more healthy for nostr)
-        if let requiredP = requiredP {
+        if let requiredP = requiredP { // when replying to zap requiredP is already set from .fromPubkey (not .pubkey) in .loadReplyTo()
             pTags.append(requiredP)
             unselectedPtags.removeAll(where: { $0 == requiredP })
         }
         
         if let replyTo, let replyToMain = replyTo.nrPost.event?.toMain()  {
             // pTags from replyTo.pTags
-            let replyToPTags = replyToMain.pTags() + [replyToMain.pubkey]
+            let replyToPTags = if replyTo.nrPost.kind == 9735 {
+                replyToMain.pTags() // don't include .pubkey (zapper wallet) when replying to zap
+            } else {
+                replyToMain.pTags() + [replyToMain.pubkey]
+            }
             pTags.append(contentsOf: replyToPTags)
         }
         
@@ -1458,7 +1462,12 @@ public final class NewPostModel: ObservableObject {
     
     @MainActor
     func loadReplyTo(_ replyTo: ReplyTo) {
-        requiredP = replyTo.nrPost.pubkey
+        requiredP = if replyTo.nrPost.kind == 9735 { // if we reply to zap then the requiredP is not the zapper (wallet). Use fromPubkey.
+            replyTo.nrPost.fromPubkey ?? replyTo.nrPost.pubkey
+        } else {
+            replyTo.nrPost.pubkey
+        }
+        
         var newReply = NEvent(content: typingTextModel.text)
         
         if Set([1222,1244]).contains(replyTo.nrPost.kind) {
@@ -1506,12 +1515,18 @@ public final class NewPostModel: ObservableObject {
         
         bg().perform {
             guard let replyToEvent = replyTo.nrPost.event else { return }
-            let existingPtags = replyToEvent.pTags()
+            let existingPtags = replyToEvent.pTags() + [replyTo.nrPost.pubkey]
             
             let availableContacts: [NRContact] = Set(Contact.fetchByPubkeys(existingPtags, context: bg()))
                 .map { NRContact.instance(of: $0.pubkey, contact: $0) }
             
-            let replyToNrContact: NRContact? = if let contact = replyToEvent.contact {
+            if replyTo.nrPost.kind == 9735 { // When replying to zap, only notify .fromPubkey. Unselect all other Ps (including zapper wallet .pubkey)
+                self.typingTextModel.unselectedMentions = Set(availableContacts.filter { $0.pubkey != replyTo.nrPost.fromPubkey })
+            }
+            
+            let replyToNrContact: NRContact? = if replyTo.nrPost.kind == 9735, let fromPubkey = replyTo.nrPost.fromPubkey {
+                NRContact.fetch(fromPubkey) // replying to zap is always notifying only .fromPubkey
+            } else if replyTo.nrPost.kind != 9735, let contact = replyToEvent.contact {
                 NRContact.fetch(contact.pubkey, contact: contact)
             }
             else {
@@ -1519,8 +1534,14 @@ public final class NewPostModel: ObservableObject {
             }
             
             Task { @MainActor in
-                self.availableContacts = Set([replyToNrContact].compactMap { $0 } + availableContacts)
-                self.typingTextModel.selectedMentions = Set([replyToNrContact].compactMap { $0 } + availableContacts)
+                if replyTo.nrPost.kind == 9735 { // When replying to zap, only notify .fromPubkey.
+                    self.availableContacts = Set([replyToNrContact].compactMap { $0 } + [])
+                    self.typingTextModel.selectedMentions = Set([replyToNrContact].compactMap { $0 } + [])
+                }
+                else {
+                    self.availableContacts = Set([replyToNrContact].compactMap { $0 } + availableContacts)
+                    self.typingTextModel.selectedMentions = Set([replyToNrContact].compactMap { $0 } + availableContacts)
+                }
             }
             
             if !NIP22_COMMENT_KINDS.contains(newReply.kind.id) { // Original NIP-10 root/reply handling for non-NIP-22 kinds
@@ -1866,7 +1887,7 @@ public enum UploadMethod {
 let NIP22_COMMENT_KINDS: Set<Int> = [1111,1244] // default and voice message comment
 
 // All roots that use NIP22 replies/comments
-let NIP22_ROOT_KINDS: Set<Int> = [1222,20,30023,34236] // voice messages / pictures / articles / vines
+let NIP22_ROOT_KINDS: Set<Int> = [1222,20,30023,34236,9735] // voice messages / pictures / articles / vines
 
 // NIP-22
 // Comments MUST point to the root scope using uppercase tag names (e.g. K, E, A or I)
@@ -1915,22 +1936,29 @@ func addRootScopeTags(nEvent input: NEvent, replyTo: ReplyTo) -> NEvent {
 func addReplyToTags(nEvent input: NEvent, replyTo: ReplyTo) -> NEvent {
     var nEvent = input
     
+    // for replying to zaps the we are replying to a zap receipt from a wallet service, so don't use that .pubkey, use .fromPubkey instead
+    let replyToPubkey = if replyTo.nrPost.kind == 9735, let fromPubkey = replyTo.nrPost.fromPubkey {
+        fromPubkey
+    } else {
+        replyTo.nrPost.pubkey
+    }
+    
     // Tags k MUST be present to define the event kind of the parent items.
     nEvent.tags.append(NostrTag(["k", String(replyTo.nrPost.kind)]))
     
     // Comments MUST point to the authors when one is available (i.e. tagging a nostr event). p for the author of the parent item.
-    if !nEvent.pTags().contains(replyTo.nrPost.pubkey) {
-        nEvent.tags.append(NostrTag(["p", replyTo.nrPost.pubkey]))
+    if !nEvent.pTags().contains(replyToPubkey) {
+        nEvent.tags.append(NostrTag(["p", replyToPubkey]))
     }
     
-    let relayHint: String? = resolveRelayHint(forPubkey: replyTo.nrPost.pubkey, receivedFromRelays: replyTo.nrPost.footerAttributes.relays).first
+    let relayHint: String? = resolveRelayHint(forPubkey: replyToPubkey, receivedFromRelays: replyTo.nrPost.footerAttributes.relays).first
     
     // Add a (in addition to e)
     if (replyTo.nrPost.kind >= 30000 && replyTo.nrPost.kind < 40000) {
-        nEvent.tags.append(NostrTag(["a", replyTo.nrPost.aTag, relayHint ?? "", replyTo.nrPost.pubkey]))
+        nEvent.tags.append(NostrTag(["a", replyTo.nrPost.aTag, relayHint ?? "", replyToPubkey]))
     }
     
-    nEvent.tags.append(NostrTag(["e", replyTo.nrPost.id, relayHint ?? "", replyTo.nrPost.pubkey]))
+    nEvent.tags.append(NostrTag(["e", replyTo.nrPost.id, relayHint ?? "", replyToPubkey]))
     
     
     return nEvent

@@ -10442,6 +10442,20 @@
         }
       }
     },
+    "Sent %@ sats" : {
+      "comment" : "Sent X sats (Replying to text)"
+    },
+    "Sent %@ sats on [post](nostur:e:%@)" : {
+      "comment" : "Sent X sats on <post> (Replying to text)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sent %1$@ sats on [post](nostur:e:%2$@)"
+          }
+        }
+      }
+    },
     "Sent to %lld relays" : {
       "comment" : "Message shown in footer of sent post",
       "localizations" : {
