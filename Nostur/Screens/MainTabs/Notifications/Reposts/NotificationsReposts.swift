@@ -54,7 +54,7 @@ struct NotificationsReposts: View {
                                         .onAppear { self.enqueue(nrPost) }
                                         .onDisappear { self.dequeue(nrPost) }
                                     if let firstQuote = nrPost.firstQuote {
-                                        MinimalNoteTextRenderView(nrPost: firstQuote, lineLimit: 5)
+                                        MinimalNoteTextRenderView(nrPost: firstQuote, lineLimit: 5, showMediaThumbnail: true)
                                             .onTapGesture {
                                                 navigateTo(firstQuote, context: containerID)
                                             }

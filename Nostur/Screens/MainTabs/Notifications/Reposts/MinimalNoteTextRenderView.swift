@@ -8,15 +8,58 @@
 import SwiftUI
 
 struct MinimalNoteTextRenderView: View {
-    
+
     @ObservedObject var nrPost: NRPost
     var lineLimit:Int = 10
     var textColor: Color = .primary.opacity(0.5)
-    
+    var showMediaThumbnail: Bool = false // notification rows: leading thumbnail instead of raw media urls in text
+
+    private var videoContents: [MediaContent] {
+        nrPost.contentElements.compactMap { element in
+            if case .video(let mediaContent) = element { return mediaContent }
+            return nil
+        }
+    }
+
+    // plainText without the media urls that the thumbnail already represents
+    private var snippet: String {
+        var text = nrPost.plainText
+        for galleryItem in nrPost.galleryItems {
+            text = text.replacingOccurrences(of: galleryItem.url.absoluteString, with: "")
+        }
+        for video in videoContents {
+            text = text.replacingOccurrences(of: video.url.absoluteString, with: "")
+        }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     var body: some View {
+        if showMediaThumbnail, let firstGalleryItem = nrPost.galleryItems.first {
+            HStack(alignment: .top, spacing: 10) {
+                MinimalMediaThumbnail(url: firstGalleryItem.url, extraCount: (nrPost.galleryItems.count - 1) + videoContents.count)
+                    .padding(.vertical, 5) // same vertical padding as the text, so the image top aligns with the first text line
+                if snippet.isEmpty { Spacer() } else { textView(snippet) }
+            }
+            .contentShape(Rectangle()) // keep the area next to a caption-less thumbnail tappable for the row's tap gesture
+        }
+        else if showMediaThumbnail, let firstVideo = videoContents.first {
+            HStack(alignment: .top, spacing: 10) {
+                MinimalMediaThumbnail(url: firstVideo.url, extraCount: videoContents.count - 1, isVideo: true)
+                    .padding(.vertical, 5) // same vertical padding as the text, so the image top aligns with the first text line
+                if snippet.isEmpty { Spacer() } else { textView(snippet) }
+            }
+            .contentShape(Rectangle()) // keep the area next to a caption-less thumbnail tappable for the row's tap gesture
+        }
+        else {
+            textView(nrPost.plainText)
+        }
+    }
+
+    @ViewBuilder
+    private func textView(_ plainText: String) -> some View {
         VStack(alignment: .leading) {
             if #available(iOS 16.0, *) {
-                Text(nrPost.plainText)//.border(.cyan)
+                Text(plainText)//.border(.cyan)
                     .lineLimit(lineLimit, reservesSpace: false)
                     .multilineTextAlignment(TextAlignment.leading)
                     .foregroundColor(textColor)
@@ -25,7 +68,7 @@ struct MinimalNoteTextRenderView: View {
                     .padding(.vertical, 5)
             }
             else {
-                Text(nrPost.plainText)//.border(.cyan)
+                Text(plainText)//.border(.cyan)
                     .lineLimit(lineLimit)
                     .multilineTextAlignment(TextAlignment.leading)
                     .foregroundColor(textColor)
