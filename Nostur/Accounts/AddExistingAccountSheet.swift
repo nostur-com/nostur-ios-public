@@ -283,6 +283,10 @@ struct AddExistingAccountSheet: View {
                         NIP46SecretManager.shared.deleteSecret(account: account)
                         viewContext.delete(account)
                     }
+                    // Stop showing the full-screen spinner, otherwise the user is stuck on an
+                    // infinite CenteredProgressView() with no feedback. Returning to the form also
+                    // surfaces bunkerManager.error and lets them retry.
+                    loading = false
                 }
             })
             .onAppear {
