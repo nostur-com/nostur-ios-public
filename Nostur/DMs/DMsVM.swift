@@ -109,18 +109,20 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         self.unreadNewRequestsNotWoTCount = requestRowsNotWoT.count
     }
     
+    private func sortedDMRows(_ rows: [CloudDMState]) -> [CloudDMState] {
+        rows.sorted { lhs, rhs in
+            if lhs.isPinned != rhs.isPinned {
+                return lhs.isPinned
+            }
+            
+            return (lhs.lastMessageTimestamp_ ?? .distantPast) > (rhs.lastMessageTimestamp_ ?? .distantPast)
+        }
+    }
+    
     private func updateSorting() {
-        self.conversationRows = self.conversationRows
-            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-            .sorted(by: { $0.isPinned != $1.isPinned })
-        
-        self.requestRows = self.requestRows
-            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-            .sorted(by: { $0.isPinned != $1.isPinned })
-        
-        self.requestRowsNotWoT = self.requestRowsNotWoT
-            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-            .sorted(by: { $0.isPinned != $1.isPinned })
+        self.conversationRows = sortedDMRows(self.conversationRows)
+        self.requestRows = sortedDMRows(self.requestRows)
+        self.requestRowsNotWoT = sortedDMRows(self.requestRowsNotWoT)
     }
     
     public var hiddenDMs: Int {
@@ -434,32 +436,24 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         if dmState.accepted { // if accepted add to conversation list
             if !self.conversationRows.contains(where: { $0.conversationId == dmState.conversationId }) {
                 withAnimation {
-                    self.conversationRows = (self.conversationRows + [dmState])
-                        .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-                        .sorted(by: { $0.isPinned != $1.isPinned })
+                    self.conversationRows = sortedDMRows(self.conversationRows + [dmState])
                 }
             }
             else { // or only resort
                 withAnimation {
-                    self.conversationRows = self.conversationRows
-                        .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-                        .sorted(by: { $0.isPinned != $1.isPinned })
+                    self.conversationRows = sortedDMRows(self.conversationRows)
                 }
             }
         }
         else { // if not accepted add to requests list
             if !self.requestRows.contains(where: { $0.conversationId == dmState.conversationId }) {
                 withAnimation {
-                    self.requestRows = (self.requestRows + [dmState])
-                        .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-                        .sorted(by: { $0.isPinned != $1.isPinned })
+                    self.requestRows = sortedDMRows(self.requestRows + [dmState])
                 }
             }
             else { // or only resort
                 withAnimation {
-                    self.requestRows = self.requestRows
-                        .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-                        .sorted(by: { $0.isPinned != $1.isPinned })
+                    self.requestRows = sortedDMRows(self.requestRows)
                 }
             }
         }
@@ -541,12 +535,8 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 return true
             }
         
-        conversationRows = accepted
-            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-            .sorted(by: { $0.isPinned != $1.isPinned })
-        requestRows = requests
-            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-            .sorted(by: { $0.isPinned != $1.isPinned })
+        conversationRows = sortedDMRows(accepted)
+        requestRows = sortedDMRows(requests)
         
         guard WOT_FILTER_ENABLED() else { return }
         
@@ -567,9 +557,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 return false
             }
 
-        requestRowsNotWoT = outsideWoT
-            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-            .sorted(by: { $0.isPinned != $1.isPinned })
+        requestRowsNotWoT = sortedDMRows(outsideWoT)
     }
     
     @MainActor
@@ -583,21 +571,15 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         
         self.objectWillChange.send() // <-- not sure why this is needed. conversationRows/requestRows/requestRowsNotWoT are @Published and DMsVM is @ObservedObject. Should work but doesn't.
         
-        conversationRows = accepted
-            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-            .sorted(by: { $0.isPinned != $1.isPinned })
+        conversationRows = sortedDMRows(accepted)
         
-        requestRows = requests
-            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-            .sorted(by: { $0.isPinned != $1.isPinned })
+        requestRows = sortedDMRows(requests)
         
         guard WOT_FILTER_ENABLED() else { return }
         
         let requestsNotWoT = requestRowsNotWoT.filter { $0.id != dmState.id }
 
-        requestRowsNotWoT = requestsNotWoT
-            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
-            .sorted(by: { $0.isPinned != $1.isPinned })
+        requestRowsNotWoT = sortedDMRows(requestsNotWoT)
     }
     
     public func unhideAll() {
