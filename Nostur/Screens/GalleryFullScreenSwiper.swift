@@ -33,6 +33,8 @@ struct GalleryFullScreenSwiper: View {
     @State private var didSave = false
     
     // Zoom and pan state
+    private let minScale: CGFloat = 1.0 // fit-to-screen
+    private let maxScale: CGFloat = 4.0
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var position: CGSize = .zero
@@ -347,10 +349,32 @@ struct GalleryFullScreenSwiper: View {
             .onChanged { value in
                 let delta = value / self.lastScale
                 self.lastScale = value
-                self.scale *= delta
+                let newScale = self.scale * delta
+                // Rubber-band resistance beyond min/max, snaps back in .onEnded
+                if newScale < minScale {
+                    self.scale = minScale * sqrt(newScale / minScale)
+                }
+                else if newScale > maxScale {
+                    self.scale = maxScale * sqrt(newScale / maxScale)
+                }
+                else {
+                    self.scale = newScale
+                }
             }
             .onEnded { value in
                 self.lastScale = 1.0
+                if self.scale < minScale {
+                    withAnimation(.spring(duration: 0.3)) {
+                        self.scale = minScale
+                        self.position = .zero
+                    }
+                    self.newPosition = .zero
+                }
+                else if self.scale > maxScale {
+                    withAnimation(.spring(duration: 0.3)) {
+                        self.scale = maxScale
+                    }
+                }
             }
     }
     
@@ -365,9 +389,23 @@ struct GalleryFullScreenSwiper: View {
             }
             .onEnded { value in
                 if scale > 1.0 {
-                    self.newPosition = self.position
+                    // Keep the image on screen, snap back if dragged too far
+                    let clamped = self.clampedPosition(self.position)
+                    withAnimation(.spring(duration: 0.3)) {
+                        self.position = clamped
+                    }
+                    self.newPosition = clamped
                 }
             }
+    }
+
+    private func clampedPosition(_ position: CGSize) -> CGSize {
+        let maxX = max(0, (scale - 1) * fullScreenSize.width / 2)
+        let maxY = max(0, (scale - 1) * fullScreenSize.height / 2)
+        return CGSize(
+            width: min(maxX, max(-maxX, position.width)),
+            height: min(maxY, max(-maxY, position.height))
+        )
     }
     
     func saveCurrentImageToPhotos() {
