@@ -21,6 +21,13 @@ struct Onboarding: View {
                 .fullScreenCover(isPresented: $networkMonitor.isDisconnected) {
                     NoInternetView()
                 }
+                .onAppear {
+                    // Workaround for where account sync is messed up
+                    // Fall back to next last used account
+                    if let nextAccount = AccountsState.shared.accounts.sorted(by: { $0.lastLoginAt > $1.lastLoginAt }).first(where: { $0.publicKey != GUEST_ACCOUNT_PUBKEY }) {
+                        AccountsState.shared.changeAccount(nextAccount)
+                    }
+                }
         }
         
         // Sets toolbar (Back button) color

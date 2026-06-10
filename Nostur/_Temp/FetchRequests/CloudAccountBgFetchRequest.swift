@@ -94,7 +94,12 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
         let accountsCount = accounts.count
         Task { @MainActor in
             guard accountsCount != AccountsState.shared.accounts.count else { return }
-            AccountsState.shared.loadAccountsState(loadAnyAccount: false)
+            if AccountsState.shared.accounts.contains(where: { $0.publicKey == AccountsState.shared.activeAccountPublicKey }) {
+                AccountsState.shared.loadAccountsState(loadAnyAccount: false)
+            }
+            else {
+                AccountsState.shared.loadAccountsState(loadAnyAccount: true)
+            }
         }
     }
 }
