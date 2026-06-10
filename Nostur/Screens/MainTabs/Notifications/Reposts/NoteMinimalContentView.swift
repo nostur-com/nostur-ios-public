@@ -15,7 +15,7 @@ struct NoteMinimalContentView: View {
         VStack (alignment: .leading) {
             HStack(alignment: .top) {
                 VStack(alignment:.leading, spacing: 3) {
-                    MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: lineLimit)
+                    MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: lineLimit, showMediaThumbnail: true)
                     
                     if let quoteNRPost = nrPost.firstQuote {
                         MinimalQuotedNoteFragment(nrPost: quoteNRPost)
