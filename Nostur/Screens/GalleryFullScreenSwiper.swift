@@ -39,11 +39,16 @@ struct GalleryFullScreenSwiper: View {
     @State private var lastScale: CGFloat = 1.0
     @State private var position: CGSize = .zero
     @State private var newPosition: CGSize = .zero
-    @State private var gestureStartTime: Date?
-    
+
     // Interactive dismissal state
-    @State private var dismissProgress: CGFloat = 0
+    @State private var dismissOffset: CGFloat = 0 // tracks the finger 1:1 during swipe-down
     @State private var isDraggingToDismiss = false
+    @State private var isDismissing = false
+
+    // 0...1 over half a screen of downward drag; drives the background fade and chrome opacity
+    private var dismissProgress: CGFloat {
+        min(1.0, max(0, dismissOffset / max(1, fullScreenSize.height * 0.5)))
+    }
     
     // Media Post Preview
     @State private var mediaPostPreview = false
@@ -88,7 +93,7 @@ struct GalleryFullScreenSwiper: View {
         .scrollPosition(id: $activeIndex)
         .frame(width: fullScreenSize.width, height: fullScreenSize.height)
         .scrollDisabled(items.count == 1 || scale > 1.0 || isDraggingToDismiss)
-        .background(Color.black.opacity(1 - dismissProgress))
+        .background(Color.black.opacity(isDismissing ? 0 : 1 - (0.5 * dismissProgress)))
         .overlay(alignment: .leading) { navigationLeftButton }
         .overlay(alignment: .trailing) { navigationRightButton }
         .overlay(alignment: .topTrailing) { saveButton }
@@ -166,7 +171,7 @@ struct GalleryFullScreenSwiper: View {
         .frame(width: fullScreenSize.width, height: fullScreenSize.height)
         .scaleEffect(scale * (1.0 - (0.2 * dismissProgress)))
         .offset(position)
-        .offset(y: dismissProgress * 200)
+        .offset(y: dismissOffset)
         .contentShape(Rectangle())
         .onTapGesture(count: 2) {
             withAnimation {
@@ -304,43 +309,40 @@ struct GalleryFullScreenSwiper: View {
     private var dismissDragGesture: some Gesture {
         DragGesture(minimumDistance: 10, coordinateSpace: .local)
             .onChanged { value in
-                // Only handle vertical drags when not zoomed alot
-                if scale <= 1.3 && value.translation.height > 0 && abs(value.translation.height) > abs(value.translation.width) {
-                    if gestureStartTime == nil {
-                        gestureStartTime = Date()
-                        isDraggingToDismiss = true
-                    }
-                    
-                    // Calculate dismiss progress (0 to 1)
-                    let progress = min(1.0, max(0, value.translation.height / 200))
-                    dismissProgress = progress
+                // Only start on a mostly-vertical downward drag when not zoomed (much)
+                if !isDraggingToDismiss {
+                    guard scale <= 1.3 && value.translation.height > 0 && abs(value.translation.height) > abs(value.translation.width)
+                    else { return }
+                    isDraggingToDismiss = true
                 }
+                // Track the finger 1:1; rubber-band when dragged back up past the start point
+                let height = value.translation.height
+                dismissOffset = height >= 0 ? height : -(3 * sqrt(-height))
             }
             .onEnded { value in
-                if isDraggingToDismiss {
-                    guard let startTime = gestureStartTime else { return }
-                    let duration = Date().timeIntervalSince(startTime)
-                    let quickSwipeThreshold: TimeInterval = 0.25
-                    let dismissThreshold: CGFloat = 0.3
-                    
-                    let shouldDismiss = (duration < quickSwipeThreshold && value.translation.height > 30) || 
-                                      dismissProgress > dismissThreshold
-                    
-                    if shouldDismiss {
-                        withAnimation(.easeOut(duration: 0.2)) {
-                            dismissProgress = 1.0
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                            sendNotification(.closeFullscreenGallery)
-                        }
-                    } else {
-                        withAnimation(.spring(duration: 0.3)) {
-                            dismissProgress = 0
-                        }
+                guard isDraggingToDismiss else { return }
+                isDraggingToDismiss = false
+
+                // predictedEndTranslation projects ~250ms of deceleration, so this approximates pt/s
+                let velocity = (value.predictedEndTranslation.height - value.translation.height) * 4
+                let shouldDismiss = velocity > 800 || (dismissOffset > fullScreenSize.height * 0.25 && velocity > -100)
+
+                if shouldDismiss {
+                    // Hand the release velocity to the spring so the image keeps the finger's speed
+                    let remaining = max(1, fullScreenSize.height - dismissOffset)
+                    withAnimation(.interpolatingSpring(stiffness: 120, damping: 20, initialVelocity: max(0, velocity) / remaining)) {
+                        dismissOffset = fullScreenSize.height
+                        isDismissing = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                        sendNotification(.closeFullscreenGallery)
                     }
                 }
-                gestureStartTime = nil
-                isDraggingToDismiss = false
+                else {
+                    withAnimation(.spring(duration: 0.3)) {
+                        dismissOffset = 0
+                    }
+                }
             }
     }
     

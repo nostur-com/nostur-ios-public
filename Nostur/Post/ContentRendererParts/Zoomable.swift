@@ -14,44 +14,43 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
     private let content: Content
     private let detailContent: DetailContent
     private var frameSize: CGSize? = nil
-    @State private var contentSize: CGSize = CGSize(width: 350, height: 350)
-    @State private var viewPosition: CGPoint = .zero
-    
+
     init(id: String = "Default", @ViewBuilder _ content: () -> Content, frameSize: CGSize? = nil, @ViewBuilder detailContent: () -> DetailContent) {
         self.id = id
         self.content = content()
         self.detailContent = detailContent()
         self.frameSize = frameSize
     }
-    
+
     var body: some View {
-        if #available(iOS 16.0, *) {
-            content
-                .onTapGesture(coordinateSpace: .global) { location in
-                    guard !nxViewingContext.contains(.preview) else { return }
-                    triggerZoom(origin: CGPoint(x: location.x - 30, y: location.y - 30))
+        content
+            .modifier {
+                if let frameSize {
+                    $0.frame(width: frameSize.width, height: frameSize.height)
                 }
-                .modifier {
-                    if let frameSize {
-                        $0.frame(width: frameSize.width, height: frameSize.height)
-                    }
-                    else {
-                        $0
-                    }
+                else {
+                    $0
                 }
-        }
-        else {
-            // Fallback on earlier versions
-            content
-                .onTapGesture {
-                    guard !nxViewingContext.contains(.preview) else { return }
-                    triggerZoom(origin: CGPoint(x: UIScreen.main.bounds.width/2, y: UIScreen.main.bounds.height/2))
+            }
+            .overlay(
+                // Hero zoom: the fullscreen view should grow out of this thumbnail, so measure the
+                // thumbnail's actual frame at tap time (in the paired Zoomable's coordinate space).
+                // Must be an overlay: an Image is opaque to hit testing even without gestures, so a
+                // tap layer behind it would never receive touches.
+                GeometryReader { geo in
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            guard !nxViewingContext.contains(.preview) else { return }
+                            let frame = geo.frame(in: .named("zoomable-\(id)"))
+                            triggerZoom(origin: CGPoint(x: frame.midX, y: frame.midY), startingSize: frame.size)
+                        }
                 }
-        }
+            )
     }
-    
-    private func triggerZoom(origin: CGPoint) {
-        let zoomRequest = ZoomRequested(id: self.id, origin: origin, startingSize: contentSize, content: detailContent)
+
+    private func triggerZoom(origin: CGPoint, startingSize: CGSize) {
+        let zoomRequest = ZoomRequested(id: self.id, origin: origin, startingSize: startingSize, content: detailContent)
         sendNotification(.zoomRequested, zoomRequest)
     }
 }
@@ -82,18 +81,19 @@ struct Zoomable<Content: View>: View {
                 
                 if viewState == .zoomed {
                     ZStack(alignment: .topLeading) {
-                        // Content container
+                        // Content container: laid out at full size once, then transformed from the
+                        // thumbnail's rect to fullscreen (scale/position/opacity are render-server
+                        // animations, cheaper than animating layout)
                         if let detailContent {
                             detailContent
                                 .environment(\.fullScreenSize, fullScreenSize)
-                                .frame(
-                                    width: startingSize.width + (screenSize.width - startingSize.width) * animationProgress,
-                                    height: startingSize.height + (screenSize.height - startingSize.height) * animationProgress
-                                )
+                                .frame(width: screenSize.width, height: screenSize.height)
+                                .scaleEffect(zoomScale)
                                 .position(
                                     x: originOffset.x + ((screenSize.width / 2) - originOffset.x) * animationProgress,
                                     y: originOffset.y + ((screenSize.height / 2) - originOffset.y) * animationProgress
                                 )
+                                .opacity(min(1.0, animationProgress * 2)) // quick fade-in over the thumbnail
                         }
                         
                         CloseButton(action: closeWithAnimation)
@@ -103,6 +103,7 @@ struct Zoomable<Content: View>: View {
                     }
                 }
             }
+            .coordinateSpace(name: "zoomable-\(id)") // ZoomableItem measures thumbnail frames in this space
             .onAppear {
                 screenSize = geometry.size
                 if id == "Default" {
@@ -140,12 +141,21 @@ struct Zoomable<Content: View>: View {
         }
     }
     
+    // Uniform scale that covers the thumbnail's rect at progress 0 and reaches fullscreen at 1
+    private var zoomScale: CGFloat {
+        let startScale = max(
+            startingSize.width / max(1, screenSize.width),
+            startingSize.height / max(1, screenSize.height)
+        )
+        return startScale + (1.0 - startScale) * animationProgress
+    }
+
     private func zoom(from: CGPoint, detailContent: AnyView) {
         self.detailContent = detailContent
         self.viewState = .zoomed
         self.animationProgress = 0
-        
-        withAnimation(.easeOut(duration: 0.1)) {
+
+        withAnimation(.spring(duration: 0.25)) {
             self.animationProgress = 1.0
         }
     }
