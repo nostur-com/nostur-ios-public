@@ -67,7 +67,10 @@ class AccountsState: ObservableObject {
                 }
             }
         }
-        else if let nextAccount = accounts.sorted(by: { $0.lastLoginAt < $1.lastLoginAt }).last, loadAnyAccount { // can't find account, change to last active account
+        // can't find account, change to last active account. Never auto-activate the guest account
+        // here: it is pre-created as a prefetch on first launch (initializeGuestAccount) and should
+        // only become active by explicit user action (same exclusion as Onboarding.onAppear).
+        else if let nextAccount = accounts.sorted(by: { $0.lastLoginAt > $1.lastLoginAt }).first(where: { $0.publicKey != GUEST_ACCOUNT_PUBKEY }), loadAnyAccount {
             Task { @MainActor in
                 changeAccount(nextAccount)
             }
