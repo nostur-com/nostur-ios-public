@@ -45,6 +45,7 @@ struct InlineAccountSwitcher: View, Equatable {
                     .frame(width: size, height: size)
                     .overlay(Image(systemName: "theatermasks.fill").foregroundColor(.secondary))
                     .onTapGesture {
+                        hideKeyboard() // free space so the downward fan-out isn't behind the keyboard
                         withAnimation { expanded = true }
                     }
                     .zIndex(0)
@@ -164,6 +165,7 @@ struct InlineAccountSwitcher: View, Equatable {
     
     private func accountTapped(_ account:CloudAccount) {
         if !expanded {
+            hideKeyboard() // free space so the downward fan-out (incl. the anon item) isn't behind the keyboard
             withAnimation {
                 expanded = true
             }
@@ -174,6 +176,10 @@ struct InlineAccountSwitcher: View, Equatable {
                 expanded = false
             }
         }
+    }
+
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 
