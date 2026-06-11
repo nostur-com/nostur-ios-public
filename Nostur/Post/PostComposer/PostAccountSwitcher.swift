@@ -10,16 +10,19 @@ import SwiftUI
 // TODO: .fanOutDirection doesn't work well yet so only use .bottom for now
 struct InlineAccountSwitcher: View, Equatable {
     static func == (lhs: InlineAccountSwitcher, rhs: InlineAccountSwitcher) -> Bool {
-        lhs.activeAccount == rhs.activeAccount && lhs.expanded == rhs.expanded //&& lhs.accounts.count == rhs.accounts.count
+        lhs.activeAccount == rhs.activeAccount && lhs.expanded == rhs.expanded && lhs.isAnonSelected == rhs.isAnonSelected //&& lhs.accounts.count == rhs.accounts.count
     }
-    
+
     public var activeAccount: CloudAccount
     public var onChange: (CloudAccount) -> ()
     public var size: CGFloat = 50.0
     public var fanOutDirection: Direction = .bottom
-    
+    public var showAnonOption: Bool = false
+    public var isAnonSelected: Bool = false
+    public var onSelectAnon: (() -> Void)? = nil
+
     @State private var expanded = false
-    
+
     @State private var accounts: [CloudAccount] = []
     
     private var accountsSorted: [CloudAccount] {
@@ -35,16 +38,43 @@ struct InlineAccountSwitcher: View, Equatable {
     @ViewBuilder
     private var bottom: some View {
         VStack(spacing: 2) {
-            ForEach(accountsSorted.indices, id:\.self) { index in
-                PFP(pubkey: accountsSorted[index].publicKey, account: accountsSorted[index], size: size)
+            // Primary slot: show anon glyph when anon is selected, otherwise normal PFP
+            if isAnonSelected && !expanded {
+                Circle()
+                    .fill(Color.secondary.opacity(0.2))
+                    .frame(width: size, height: size)
+                    .overlay(Image(systemName: "theatermasks.fill").foregroundColor(.secondary))
                     .onTapGesture {
-                        accountTapped(accountsSorted[index])
+                        withAnimation { expanded = true }
                     }
-                    .opacity(index == 0 || expanded ? 1.0 : (index > 3 ? 0.0 : 0.2))
-                    .zIndex(-Double(index))
-                    .offset(y: expanded || (index == 0) ? 0 : (Double(index) * -(size - 2)))
-                    .animation(.easeOut(duration: 0.2), value: expanded)
-                    .id(accountsSorted[index].publicKey) // sorting index and view identity (publicKey) is different!
+                    .zIndex(0)
+            } else {
+                ForEach(accountsSorted.indices, id: \.self) { index in
+                    PFP(pubkey: accountsSorted[index].publicKey, account: accountsSorted[index], size: size)
+                        .onTapGesture {
+                            accountTapped(accountsSorted[index])
+                        }
+                        .opacity(index == 0 || expanded ? 1.0 : (index > 3 ? 0.0 : 0.2))
+                        .zIndex(-Double(index))
+                        .offset(y: expanded || (index == 0) ? 0 : (Double(index) * -(size - 2)))
+                        .animation(.easeOut(duration: 0.2), value: expanded)
+                        .id(accountsSorted[index].publicKey)
+                }
+                if showAnonOption && expanded {
+                    Circle()
+                        .fill(Color.secondary.opacity(0.2))
+                        .frame(width: size, height: size)
+                        .overlay(Image(systemName: "theatermasks.fill").foregroundColor(.secondary))
+                        .onTapGesture {
+                            withAnimation {
+                                onSelectAnon?()
+                                expanded = false
+                            }
+                        }
+                        .zIndex(-Double(accountsSorted.count))
+                        .animation(.easeOut(duration: 0.2), value: expanded)
+                        .id("anon-option")
+                }
             }
         }
         .fixedSize()

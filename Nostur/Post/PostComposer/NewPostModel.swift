@@ -30,10 +30,25 @@ public final class TypingTextModel: ObservableObject {
         }
     }
     
+    @Published var anonMode: Bool = false
+    private var savedRealDraft: String = ""
+
     @Published var text: String = "" {
         didSet {
-            draft = text
+            if !anonMode { draft = text }
         }
+    }
+
+    func savedRealDraftSnapshotAndClear() {
+        savedRealDraft = draft
+        anonMode = true
+        text = ""
+    }
+
+    func restoreRealDraft() {
+        anonMode = false
+        text = savedRealDraft
+        savedRealDraft = ""
     }
     @Published var pastedImages: [PostedImageMeta] = []
     @Published var pastedVideos: [PostedVideoMeta] = []
@@ -187,8 +202,13 @@ public final class NewPostModel: ObservableObject {
     @Published var customEmojiSearchResults: [ComposerCustomEmoji] = []
     @Published var isFindingMoreEmojiSets = false
     @Published var anonMode: Bool = false
+    @Published var showAnonExplainer: Bool = false
     @Published var activeAccount: CloudAccount? = nil {
         didSet {
+            if anonMode {
+                anonMode = false
+                typingTextModel.restoreRealDraft()
+            }
             loadCustomEmojisFromFollowedSets()
             if lockToSingleRelay {
                 enableAuthAndSendChallengeOnSingleRelay(usingAccount: activeAccount)
@@ -208,6 +228,29 @@ public final class NewPostModel: ObservableObject {
                 }
             }
         }
+    }
+
+    @MainActor func enterAnonMode() {
+        guard !anonMode else { return }
+        anonMode = true
+        typingTextModel.savedRealDraftSnapshotAndClear()
+        replyInPrivate = false
+        typingTextModel.pastedImages = []
+        typingTextModel.pastedVideos = []
+        typingTextModel.voiceRecording = nil
+        remoteIMetas = [:]
+        lockToSingleRelay = false
+    }
+
+    @MainActor func exitAnonMode() {
+        guard anonMode else { return }
+        anonMode = false
+        typingTextModel.restoreRealDraft()
+    }
+
+    @MainActor func requestAnonMode() {
+        if UserDefaults.standard.bool(forKey: "anonReplyExplainerAccepted") { enterAnonMode() }
+        else { showAnonExplainer = true }
     }
     
     @Published var selectedAuthor: Contact? // To include in 9802 highlight
@@ -1496,13 +1539,17 @@ public final class NewPostModel: ObservableObject {
     }
     
     func loadQuotingEvent() {
+        anonMode = false
+        typingTextModel.anonMode = false
         var newQuoteRepost = NEvent(content: typingTextModel.text)
         newQuoteRepost.kind = .textNote
         nEvent = newQuoteRepost
     }
-    
+
     @MainActor
     func loadReplyTo(_ replyTo: ReplyTo) {
+        anonMode = false
+        typingTextModel.anonMode = false
         requiredP = if replyTo.nrPost.kind == 9735 { // if we reply to zap then the requiredP is not the zapper (wallet). Use fromPubkey.
             replyTo.nrPost.fromPubkey ?? replyTo.nrPost.pubkey
         } else {

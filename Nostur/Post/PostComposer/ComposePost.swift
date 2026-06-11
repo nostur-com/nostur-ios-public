@@ -115,6 +115,8 @@ struct ComposePost: View {
                         AudioRecorderContentView(vm: vm, replyTo: replyTo, onDismiss: { onDismiss() }, onSwitchBack: {
                             showAudioRecorder = false
                             vm.nEvent?.kind = .comment
+                            vm.anonMode = false
+                            vm.typingTextModel.anonMode = false
                         } )
                             .frame(maxWidth: .infinity, alignment: .center)
                             .toolbar {
@@ -413,12 +415,16 @@ struct ComposePost: View {
                                                 .environment(\.nxViewingContext, [.preview, .selectableText, .postParent])
                                                 .onTapGesture { }
                                         }
-                                        
-                                        
+
+
                                         HStack(alignment: .top) {
-                                            InlineAccountSwitcher(activeAccount: account, onChange: { account in
-                                                vm.activeAccount = account
-                                            }).equatable()
+                                            InlineAccountSwitcher(
+                                                activeAccount: account,
+                                                onChange: { account in vm.activeAccount = account },
+                                                showAnonOption: (replyTo != nil && !vm.replyingToPrivatePost),
+                                                isAnonSelected: vm.anonMode,
+                                                onSelectAnon: { vm.requestAnonMode() }
+                                            ).equatable()
                                             
                                             textEntry
                                                 .frame(height: replyTo == nil && quotePost == nil ? max(50, (geo.size.height - 90)) : max(50, ((geo.size.height - 90) * 0.5 )) )
@@ -527,6 +533,7 @@ struct ComposePost: View {
                         }
                     }
                     .onDrop(of: [.image], isTargeted: $isTargeted) { providers in
+                        guard !vm.anonMode else { return false }
                         guard let provider = providers.first else { return false }
                         _ = provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, error in
                             if error == nil, let data {
@@ -609,6 +616,15 @@ struct ComposePost: View {
                 vm.nEvent = NEvent(content: "")
             }
             ConnectionPool.shared.connectAllWrite()
+        }
+        .alert("Reply anonymously", isPresented: $vm.showAnonExplainer) {
+            Button("Continue anonymously") {
+                UserDefaults.standard.set(true, forKey: "anonReplyExplainerAccepted")
+                vm.enterAnonMode()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This reply posts from a new one-time identity that isn't linked to any of your accounts. It's a throwaway — you can't edit, delete, undo it, or reply again as this identity. Relays can still see your IP address, and your writing style may identify you.")
         }
         .background(theme.listBackground)
         .environmentObject(VideoPostPlaybackCoordinator())

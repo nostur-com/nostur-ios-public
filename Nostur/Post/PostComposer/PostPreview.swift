@@ -67,23 +67,7 @@ struct PostPreview: View {
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button {
-                    typingTextModel.sending = true
-                    
-                    // Need to do these here in main thread
-                    guard let account = vm.activeAccount, account.isFullAccount else {
-                        sendNotification(.anyStatus, ("Problem with account", "NewPost"))
-                        return
-                    }
-                    let isNC = account.isNC
-                    let pubkey = account.publicKey
-                    
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
-                        Task {
-                            await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, quotePost: quotePost, onDismiss: {
-                                onDismiss()
-                            })
-                        }
-                    }
+                    dispatchSend()
                 } label: {
                     if (typingTextModel.uploading || typingTextModel.sending) {
                         ProgressView().colorInvert()
@@ -103,6 +87,30 @@ struct PostPreview: View {
         .background(theme.listBackground)
         .frame(width: availableWidth)
         .fixedSize(horizontal: true, vertical: false)
+    }
+
+    private func dispatchSend() {
+        typingTextModel.sending = true
+        if vm.anonMode, let replyTo {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                Task { await self.vm.sendNowAnon(replyTo: replyTo, onDismiss: { onDismiss() }) }
+            }
+            return
+        }
+        guard let account = vm.activeAccount, account.isFullAccount else {
+            typingTextModel.sending = false
+            sendNotification(.anyStatus, ("Problem with account", "NewPost"))
+            return
+        }
+        let isNC = account.isNC
+        let pubkey = account.publicKey
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
+            Task {
+                await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, quotePost: quotePost, onDismiss: {
+                    onDismiss()
+                })
+            }
+        }
     }
 }
 
