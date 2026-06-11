@@ -52,15 +52,18 @@ send. On mismatch: abort and alert, never publish.
 
 ## 1. UX
 
-- In the reply composer only (`ComposePost` with `replyTo` set, text or voice reply
-  kinds), the `InlineAccountSwitcher` (`PostAccountSwitcher.swift`) shows one extra
+- In the reply composer only (`ComposePost` with `replyTo` set, **text reply kinds
+  only** — kind:1 and NIP-22 text comments; voice replies are out of scope, see
+  below), the `InlineAccountSwitcher` (`PostAccountSwitcher.swift`) shows one extra
   item after the user's full accounts: an incognito icon. **The switcher is shared
   across five composer contexts** (voice, highlight, picture, short-video, default
   text — `ComposePost.swift:89,156,240,281,419`) and is `CloudAccount`-typed
   throughout, so the anon item requires (a) an explicit `showAnonOption: Bool`
-  parameter, true only when `replyTo != nil` and the kind is a text/voice reply, and
+  parameter, true only when `replyTo != nil` and the reply is a text reply, and
   (b) a selection channel that does not fabricate a `CloudAccount` (see §3
-  `SendIdentity`). It must never appear in highlight/picture/vine/new-post composers.
+  `SendIdentity`). It must never appear in highlight/picture/vine/voice/new-post
+  composers. (Voice replies are excluded because a voice reply is an audio upload,
+  and media/upload-auth is hard-blocked in anon v1 — §6.)
 - Selecting it puts the composer in anon mode: the pfp slot shows the incognito
   glyph, the name reads "Anon". Reopening the switcher returns to a real account.
 - First use shows a one-time explainer alert (UserDefaults flag):
@@ -203,8 +206,11 @@ machinery references anon keys.
   state whenever the composer is repurposed (`loadReplyTo` / `loadQuotingEvent` /
   audio switch-back at `ComposePost.swift:117`) so a stale key can't sign for a new
   thread.
-- **Undo-send:** undoing an anon send burns the persisted key (no orphan identity
-  with no published event). Decision recorded here so the implementation is explicit.
+- **Undo-send:** undoing an anon send burns the persisted key **only if this send
+  freshly minted it** (first anon reply in the thread). If the thread already had a
+  persisted anon identity from an earlier reply, undo leaves the key intact — burning
+  it would orphan the earlier replies (no more continue/delete). So: track whether
+  the key was newly created this send; burn on undo iff newly created.
 - **Drafts:** autosave is model-wide (`text.didSet → Drafts.shared.draft`, a single
   global UserDefaults key, restored into the next composer; the undo-send restore at
   `OwnPostFooter.swift:95` repopulates it). In anon mode, route text through an
@@ -255,7 +261,7 @@ client anon traffic through a few named relays (rate-limiting / bans).
 
 ## Out of scope (v1)
 
-- Anon top-level posts, quotes, **private/DM replies**, highlights.
+- Anon top-level posts, quotes, **private/DM replies**, **voice replies**, highlights.
 - Media attachments and custom emoji while anon.
 - Notifications for anon identities; multi-device anon sync.
 - NIP-13 PoW (conditional on smoke-test evidence).
