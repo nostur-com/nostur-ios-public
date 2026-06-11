@@ -190,6 +190,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     // For per account columns: .onAppear/.task of column
     @MainActor
     public func load(force: Bool = false) async {
+        syncMainAccountPubkeyIfNeeded()
         guard !accountPubkey.isEmpty else { return }
         guard force || !ready else { return }
         if let account = AccountsState.shared.accounts.first(where: { $0.publicKey == self.accountPubkey }) {
@@ -335,11 +336,19 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         accountChangedSubscription = receiveNotification(.activeAccountChanged)
             .sink { [weak self] notification in
                 Task { @MainActor in
-                    guard self?.ready ?? false else { return }
                     let account = notification.object as! CloudAccount
+                    guard self?.accountPubkey != account.publicKey || !(self?.ready ?? false) else { return }
                     await self?.reload(accountPubkey: account.publicKey)
                 }
             }
+    }
+
+    @MainActor
+    private func syncMainAccountPubkeyIfNeeded() {
+        guard isMain && accountPubkey.isEmpty else { return }
+        let activeAccountPubkey = AccountsState.shared.activeAccountPublicKey
+        guard !activeAccountPubkey.isEmpty else { return }
+        accountPubkey = activeAccountPubkey
     }
     
     public func loadAfterWoT() {
