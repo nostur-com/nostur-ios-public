@@ -15,13 +15,15 @@ final class AnonPublisher {
     /// Save locally for immediate thread display, then publish immediately. Returns the send result.
     @discardableResult
     func publish(signedEvent: NEvent, parentAuthorPubkey: String) async -> AnonPublishResult {
-        // Local-consume for immediate display — notify from INSIDE bg().perform (no bg object to main).
-        // Fire-and-forget: Task wraps the perform call so publish() can proceed without awaiting the save.
+        // Local-consume for immediate display — save on bg context, notify on main thread.
+        // Matches Unpublisher.swift pattern: bgContext.perform { save } → DispatchQueue.main.async { notify }.
         Task {
             bg().perform {
                 let saved = Event.saveEvent(event: signedEvent, context: bg())
                 // Do NOT set cancellationId and do NOT mark own — anon posts get no real-account footer.
-                sendNotification(.newPostSaved, saved)
+                DispatchQueue.main.async {
+                    sendNotification(.newPostSaved, saved)
+                }
             }
         }
         return await fire(signedEvent: signedEvent, parentAuthorPubkey: parentAuthorPubkey)
