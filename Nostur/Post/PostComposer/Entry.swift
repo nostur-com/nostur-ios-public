@@ -13,7 +13,6 @@ struct Entry: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.theme) private var theme
     private var vm: NewPostModel
-    @ObservedObject private var observedVm: NewPostModel
     @ObservedObject var typingTextModel: TypingTextModel
     @Binding var photoPickerShown: Bool
     @Binding var videoPickerShown: Bool
@@ -65,7 +64,6 @@ struct Entry: View {
         self.quotePost = quotePost
         self.directMention = directMention
         self.vm = vm
-        self.observedVm = vm
         self.typingTextModel = vm.typingTextModel
         self.onDismiss = onDismiss
         self.replyToKind = replyToKind
@@ -128,7 +126,7 @@ struct Entry: View {
                             .offset(x: 5.0, y: 4.0)
                     }
                     else {
-                        if replyInPrivate && !vm.anonMode, let requiredP = vm.requiredP {
+                        if replyInPrivate && !typingTextModel.anonMode, let requiredP = vm.requiredP {
                             ReplyingInPrivateTo(pubkey: requiredP, recipientDMRelays: vm.recipientDMRelays, ownDMRelays: vm.ownDMRelays)
                                 .offset(x: 5.0, y: 4.0)
                         }
@@ -172,7 +170,7 @@ struct Entry: View {
                     }
                 },
                 voiceMessageTapped: {
-                    guard !vm.anonMode else { return }
+                    guard !typingTextModel.anonMode else { return }
                     showAudioRecorder = true
                 },
                 privateReplyTapped: vm.canReplyInPrivate ? {
@@ -493,7 +491,7 @@ struct Entry: View {
             cameraSheetShown = true
         }
         .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading || vm.anonMode)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Take Photo")
     }
 
@@ -503,7 +501,7 @@ struct Entry: View {
             photoPickerShown = true
         }
         .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading || vm.anonMode)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Pick Photo")
     }
 
@@ -513,7 +511,7 @@ struct Entry: View {
             videoPickerShown = true
         }
         .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading || vm.anonMode)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Pick Video")
     }
 
@@ -525,7 +523,7 @@ struct Entry: View {
             Image("GifButton")
         }
         .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading || vm.anonMode)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Pick GIF")
     }
     
@@ -550,24 +548,24 @@ struct Entry: View {
     @ViewBuilder
     private var voiceRecordingButton: some View {
         Button("Voice", systemImage: "mic") {
-            guard !vm.anonMode else { return }
+            guard !typingTextModel.anonMode else { return }
             showAudioRecorder = true
         }
         .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading || vm.anonMode)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Record Voice Message")
     }
     
     @ViewBuilder
     private var privateReplyButton: some View {
-        if replyTo != nil && vm.canReplyInPrivate && !vm.anonMode {
+        if replyTo != nil && vm.canReplyInPrivate && !typingTextModel.anonMode {
             Button("Reply in private", systemImage: replyInPrivate ? "lock.fill" : "lock.open") {
                 guard !vm.replyingToPrivatePost else { return } // Can't turn off when replying to a private post
-                guard !vm.anonMode else { return }
+                guard !typingTextModel.anonMode else { return }
                 replyInPrivate.toggle()
             }
             .buttonStyle(.borderless)
-            .disabled(typingTextModel.uploading || vm.replyingToPrivatePost || vm.anonMode)
+            .disabled(typingTextModel.uploading || vm.replyingToPrivatePost || typingTextModel.anonMode)
             .help(vm.replyingToPrivatePost ? "Private reply required (replying to a private post)" : "Reply in private")
         }
     }
@@ -577,8 +575,8 @@ struct Entry: View {
         Button(String(localized: "Preview", comment:"Preview button when creating a new post"), systemImage: "mail.and.text.magnifyingglass.rtl") {
             vm.showPreview(quotePost: quotePost, replyTo: replyTo)
         }
-        .disabled(shouldDisablePostButton || vm.anonMode)
-        .opacity((shouldDisablePostButton || vm.anonMode) ? 0.25 : 1.0)
+        .disabled(shouldDisablePostButton || typingTextModel.anonMode)
+        .opacity((shouldDisablePostButton || typingTextModel.anonMode) ? 0.25 : 1.0)
         .help("Show Preview of this post")
     }
     
@@ -602,7 +600,7 @@ struct Entry: View {
 
     private func dispatchSend() {
         typingTextModel.sending = true
-        if vm.anonMode {
+        if typingTextModel.anonMode {
             guard let replyTo else { typingTextModel.sending = false; return }   // never real-account send while anon
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 Task { await self.vm.sendNowAnon(replyTo: replyTo, onDismiss: { onDismiss() }) }
