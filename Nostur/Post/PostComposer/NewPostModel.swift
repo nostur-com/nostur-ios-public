@@ -186,6 +186,7 @@ public final class NewPostModel: ObservableObject {
     @Published var showCustomEmojiPicker = false
     @Published var customEmojiSearchResults: [ComposerCustomEmoji] = []
     @Published var isFindingMoreEmojiSets = false
+    @Published var anonMode: Bool = false
     @Published var activeAccount: CloudAccount? = nil {
         didSet {
             loadCustomEmojisFromFollowedSets()
@@ -774,7 +775,38 @@ public final class NewPostModel: ObservableObject {
         onDismiss()
         sendNotification(.didSend)
     }
-    
+
+    @MainActor
+    func sendNowAnon(replyTo: ReplyTo, onDismiss: @escaping () -> Void) async {
+        let keys: Keys
+        do { keys = try Keys.newKeys() }
+        catch { typingTextModel.sending = false
+                sendNotification(.anyStatus, ("Could not create anon identity", "NewPost")); return }
+
+        guard var finalEvent = buildFinalEvent(imetas: [], replyTo: replyTo, anonPubkey: keys.publicKeyHex) else {
+            typingTextModel.sending = false
+            sendNotification(.anyStatus, ("Could not build reply", "NewPost")); return
+        }
+        finalEvent.createdAt = NTimestamp(date: Date())
+        guard let signed = try? finalEvent.sign(keys) else {
+            typingTextModel.sending = false
+            sendNotification(.anyStatus, ("Could not sign anon reply", "NewPost")); return
+        }
+
+        let realPubkeys = Set(AccountsState.shared.accounts.map { $0.publicKey })
+        guard AnonReplyHelper.isAnonSendSafe(signedEvent: signed, expectedKeys: keys, realAccountPubkeys: realPubkeys) else {
+            typingTextModel.sending = false
+            sendNotification(.anyStatus, ("Anon reply blocked: identity check failed", "NewPost")); return
+        }
+
+        AnonReplySession.shared.register(keys.publicKeyHex)
+        let parentAuthor = replyTo.nrPost.kind == 9735 ? (replyTo.nrPost.fromPubkey ?? replyTo.nrPost.pubkey) : replyTo.nrPost.pubkey
+        await AnonPublisher.shared.publish(signedEvent: signed, parentAuthorPubkey: parentAuthor)
+        // `keys` goes out of scope here → private key discarded.
+        typingTextModel.sending = false
+        onDismiss()
+    }
+
     private func buildFinalEvent(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, isPreviewContext: Bool = false, anonPubkey: String? = nil) -> NEvent? {
         guard var nEvent = self.nEvent else { return nil }
         let publicKey: String
