@@ -50,6 +50,8 @@ public final class TypingTextModel: ObservableObject {
         text = savedRealDraft
         savedRealDraft = ""
     }
+
+    func clearAnonState() { anonMode = false; savedRealDraft = "" }
     @Published var pastedImages: [PostedImageMeta] = []
     @Published var pastedVideos: [PostedVideoMeta] = []
     
@@ -1249,6 +1251,7 @@ public final class NewPostModel: ObservableObject {
     
     public func textChanged(_ newText:String) {
         guard textView != nil else { return }
+        if anonMode { showCustomEmojiPicker = false; return }
         if let emojiTerm = customEmojiTerm(newText, textView: textView) {
             mentioning = false
             term = ""
@@ -1540,7 +1543,7 @@ public final class NewPostModel: ObservableObject {
     
     func loadQuotingEvent() {
         anonMode = false
-        typingTextModel.anonMode = false
+        typingTextModel.clearAnonState()
         var newQuoteRepost = NEvent(content: typingTextModel.text)
         newQuoteRepost.kind = .textNote
         nEvent = newQuoteRepost
@@ -1549,7 +1552,7 @@ public final class NewPostModel: ObservableObject {
     @MainActor
     func loadReplyTo(_ replyTo: ReplyTo) {
         anonMode = false
-        typingTextModel.anonMode = false
+        typingTextModel.clearAnonState()
         requiredP = if replyTo.nrPost.kind == 9735 { // if we reply to zap then the requiredP is not the zapper (wallet). Use fromPubkey.
             replyTo.nrPost.fromPubkey ?? replyTo.nrPost.pubkey
         } else {

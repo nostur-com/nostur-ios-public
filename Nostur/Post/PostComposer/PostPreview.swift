@@ -91,7 +91,8 @@ struct PostPreview: View {
 
     private func dispatchSend() {
         typingTextModel.sending = true
-        if vm.anonMode, let replyTo {
+        if vm.anonMode {
+            guard let replyTo else { typingTextModel.sending = false; return }   // never real-account send while anon
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 Task { await self.vm.sendNowAnon(replyTo: replyTo, onDismiss: { onDismiss() }) }
             }

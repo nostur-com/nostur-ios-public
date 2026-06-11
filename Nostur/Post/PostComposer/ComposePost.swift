@@ -116,7 +116,7 @@ struct ComposePost: View {
                             showAudioRecorder = false
                             vm.nEvent?.kind = .comment
                             vm.anonMode = false
-                            vm.typingTextModel.anonMode = false
+                            vm.typingTextModel.clearAnonState()
                         } )
                             .frame(maxWidth: .infinity, alignment: .center)
                             .toolbar {
