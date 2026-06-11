@@ -29,7 +29,7 @@ struct NRPostHeaderContainer: View {
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(pubkey: nrPost.pubkey, name: nrContact.anyName, onTap: nameTapped, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted, isPrivate: nrPost.isPrivate, nrContact: nrContact, isDetail: isDetail)
+            PostHeaderView(pubkey: nrPost.pubkey, name: nrContact.anyName, onTap: nameTapped, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted, isPrivate: nrPost.isPrivate, nrContact: nrContact, isDetail: isDetail, isAnonPost: AnonReplySession.shared.isAnonPubkey(nrPost.pubkey))
                 .onDisappear {
                     if nrContact.metadata_created_at == 0 {
                         QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
@@ -74,6 +74,7 @@ struct PostHeaderView: View {
     public var isPrivate: Bool = false
     public var nrContact: NRContact? = nil
     public var isDetail: Bool = false
+    public var isAnonPost: Bool = false
 
     var body: some View {
 //#if DEBUG
@@ -90,6 +91,13 @@ struct PostHeaderView: View {
                     guard !nxViewingContext.contains(.preview) else { return }
                     onTap?()
                 }
+            if isAnonPost {
+                Text("you · anon")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .layoutPriority(2)
+            }
             if isPrivate {
                 PrivateLabel()
                     .lineLimit(1)
