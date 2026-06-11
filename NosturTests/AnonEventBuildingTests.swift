@@ -3,6 +3,11 @@ import Testing
 import NostrEssentials
 @testable import Nostur
 
+// @MainActor is REQUIRED: buildFinalEvent -> replaceMentionsWithNpubs -> blocks() lazily
+// boots AppState.shared, whose init does a main-context Core Data fetch (loadMutedWords).
+// Swift Testing runs tests off the main thread by default; without @MainActor this fetch
+// runs off-main and traps with _PFAssertSafeMultiThreadedAccess. This mirrors production,
+// where sendNowAnon and NewPostModel are @MainActor. Do not remove.
 @MainActor
 struct AnonEventBuildingTests {
     @Test func anon_event_has_ephemeral_pubkey_and_no_leaky_tags() throws {
