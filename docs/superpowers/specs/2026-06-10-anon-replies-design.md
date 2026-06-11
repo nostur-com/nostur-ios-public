@@ -45,10 +45,11 @@ the anon path.
 |---|---|
 | Threat model | Casual pseudonymity; strip client tag; isolated ephemeral transport |
 | Key lifetime | **One key per reply, minted at send, discarded after** (truly ephemeral) |
-| Persistence | **None.** In-memory only; nothing written to keychain, Core Data, or CloudKit |
+| Persistence | No key store, no CloudKit sync. The private key is never persisted; the reply body is saved to the **local on-disk** Core Data store for thread display (see §7) |
+| Send model | **Immediate send** (Amethyst parity) — no undo window. The action is irreversible (no delete in v1) |
 | Anon profile | No kind:0 published (matches Amethyst, pools with their anon posts) |
 | Scope | Text replies only; **not** private/DM replies; no new posts, quotes, voice, highlights |
-| Anon activity | In-session thread display only; no notifications, **no delete, no continue** |
+| Anon activity | In-session thread display only; no notifications, **no delete, no continue, no undo** |
 | Media / emoji | Hard-blocked while anon (text-only); custom-emoji picker disabled too |
 | Transport | Dedicated isolated websockets; AUTH signer throws (no NIP-42 AUTH ever) |
 | Architecture | Isolated send path; no `CloudAccount`, **no key store** |
@@ -69,19 +70,26 @@ the anon path.
 - **Anon is mutually exclusive with private/DM replies.** When the parent is private
   (`replyingToPrivatePost` locked on), the anon item is hidden; when anon is selected,
   `replyInPrivate` is forced false.
-- First use shows a one-time explainer alert (UserDefaults flag). Because the key is
-  truly one-shot, the copy is simple and honest:
+- First use shows a one-time explainer **modal with Cancel / Continue buttons** (not a
+  transient toast — it must be dismissible by an explicit choice). The "shown" flag is
+  set only when the user taps **Continue**, so a user who cancels sees it again next time;
+  **Cancel** calls `exitAnonMode()` and restores the real draft. Copy (one-shot, honest):
   - This reply posts from a new one-time identity not linked to any of your accounts.
-  - It's a throwaway: you **can't edit, delete, or reply again as** this identity.
+  - It's a throwaway: you **can't edit, delete, undo, or reply again as** this identity.
   - Limits: relays still see your IP address; your writing style may identify you.
+  - If a draft attachment/recording is present, warn that switching to anon discards it.
+- While anon is active, the **voice/mic entry, attachments, custom-emoji, Preview, and
+  the private-reply toggle are all disabled** (each is its own real-account send path or
+  identity surface). Switching to a real account in the switcher exits anon mode.
 - Anon is never auto-selected. Every reply starts on the real active account.
 
 ## 2. Key handling — no persistence
 
 - At send time, mint a keypair with `Keys.newKeys()` (NostrEssentials), sign the reply
   locally, hand the signed event to the transport, and **discard the private key** — it
-  goes out of scope and is never written anywhere. There is no key store, no keychain,
-  no Core Data, no CloudKit.
+  goes out of scope and is never written anywhere. There is **no key store, no keychain**,
+  and the key never touches CloudKit. (The reply *event body* is saved to the local
+  on-disk Core Data store for thread display — see §7 for that residual artifact.)
 - An in-memory, session-scoped `Set<String>` of anon pubkeys created this launch is
   kept **only** so the user's just-posted anon reply renders as "you · anon" in the
   thread during the session. It is lost on app restart (after which a past anon reply
@@ -114,9 +122,12 @@ the anon path.
 - **No parent/quote rebroadcast** (the real-account `_sendNow` tail rebroadcasts the
   parent over the user's write relays — an active real-identity event correlated to the
   anon reply). The anon path has its own minimal tail.
-- Save the event locally and consume it so it appears in the thread immediately. A ~9s
-  undo window before the actual relay send; **undo simply discards** the local event and
-  cancels the pending send (no key-burn logic — there is no persisted key).
+- **Immediate send, no undo window.** On send: sign, publish over the isolated sockets,
+  and save the event locally (consumed via `.newPostSaved` from inside `bg().perform` —
+  the local-consume notify must not cross a bg Core Data object to the main thread) so it
+  appears in the thread. There is no `Unpublisher` queue entry, no `cancellationId`, and
+  the anon post is **not** marked `isOwnPost` (that would render the real-account footer
+  with a misleading "0 relays" status, since the anon transport bypasses `ConnectionPool`).
 
 ## 5. Event, relays, and thread integration
 
@@ -126,27 +137,34 @@ the anon path.
   no NIP-70 protected tag — minimal footprint, matching Amethyst so anon posts pool
   together.
 - Thread view: posts whose pubkey is in the in-session anon set render a subtle
-  "you · anon" indicator. Ownership/visibility gates that exclude non-account pubkeys
-  (`NRPost.isOwnPost`, the WoT reply filters) must also consult the in-session anon set,
-  so the user's own anon reply isn't hidden behind "Show more" with WoT on.
-- **No delete, no forget** in v1 (the key is discarded, so a kind:5 can't be signed).
-  The first-use explainer states the reply can't be deleted. (Delete returns in v2 with
+  "you · anon" badge (computed directly from the session set, **not** via `isOwnPost`).
+  The **WoT reply filters** must consult the in-session anon set so the user's own anon
+  reply isn't hidden behind "Show more" with WoT on. `isOwnPost` is deliberately left
+  false for anon posts (no real-account footer / undo / relay-status for them).
+- **No delete, no forget, no undo** in v1 (the key is discarded, so a kind:5 can't be
+  signed and there is no pending-send to cancel). The first-use explainer states the
+  reply can't be edited, deleted, or undone. (Delete/continue return in v2 with
   per-thread persistence.)
 - Optional nicety: exclude in-session anon pubkeys from the user's own Mentions feed, so
   an anon reply to your own post doesn't notify you as a stranger during the session.
 
 ## 6. Error handling, edge cases, and the anon-path rule set
 
-- **Undo:** discards the local event and cancels the pending relay send. No key state to
-  clean up.
+- **Backgrounding:** because send is immediate (no 9s timer), there is no window in which
+  app backgrounding could silently drop a pending anon send.
 - **Drafts:** autosave is model-wide (`text.didSet → Drafts.shared.draft`). In anon mode,
   route text through an in-memory buffer only — never write the global draft — and restore
   the prior real draft on exit, so anon wording can't resurface in a later real-account
   composer.
-- **Media hard-block (not just hidden controls):** entering anon clears
-  `pastedImages`/`pastedVideos`/`voiceRecording`/`remoteIMetas`, disables drag-drop and
-  paste, disables the Preview button (its Send routes to the real account), and the send
-  path is unreachable with a non-empty media buffer.
+- **Media hard-block (every send path):** entering anon clears
+  `pastedImages`/`pastedVideos`/`voiceRecording`/`remoteIMetas` (warn first if present —
+  don't silently destroy a recording), disables drag-drop, paste, attachments, the
+  custom-emoji picker, the **voice/mic entry**, and the Preview button. All real-account
+  send entry points (text send, Preview send, **AudioRecorder send**) are routed through a
+  single dispatcher that checks `anonMode`, and the AudioRecorder send additionally guards
+  on `!anonMode` so no real-account send can fire while the UI shows anon.
+- **Exit anon:** switching to a real account in the switcher exits anon (centralized in
+  `activeAccount.didSet`, covering all switcher sites) and restores the real draft.
 - **Composer repurpose:** clear anon mode at the start of `loadReplyTo`/`loadQuotingEvent`
   and on the audio switch-back, so a reused composer can't carry stale anon state.
 - `AccountsState` is never touched; anon mode is composer-local.
@@ -163,13 +181,29 @@ Truly-ephemeral keys eliminate the reuse/persistence concern class entirely:
   is no single pubkey aggregating your anon activity.
 - **No key store to compromise**, no backup/sync/multi-device surface.
 
-Accepted residual risk (inherent, disclosed): device IP visible to relays; per-post
-writing-style correlation; timing of an individual post. Also: anon replies bypass any
-block/mute keyed on the real pubkey (block-evasion vector) — documented for the
-maintainer to accept deliberately, and **raised explicitly in the PR description**. No
-cryptographic mitigation is enforceable client-side (anyone can mint a key in any
-client). Operational note: funneling anon traffic through a few named relays risks
-rate-limiting/bans — also flagged in the PR.
+Accepted residual risk (inherent, disclosed):
+- **Device IP** visible to the anon relays; per-post writing-style correlation; timing of
+  an individual post.
+- **Same-IP relay correlation.** Opening a reply composer calls
+  `ConnectionPool.connectAllWrite()`, which opens the user's identified write sockets
+  (and may NIP-42 AUTH them with the real key). Those write relays overlap the fixed anon
+  set (damus/nos.lol/primal are common defaults), so a relay operator in both sets can see
+  a real-account-AUTH'd connection and a fresh-key anon reply from the same IP seconds
+  apart, and link them. This is beyond "relays see your IP" and is within the casual
+  threat model (a relay operator correlating sockets is a determined adversary), but it is
+  **called out explicitly in the PR** for the maintainer; a future mitigation is to defer
+  `connectAllWrite()` while composing anon.
+- **Local on-disk artifact.** The reply *event body* is written to the local Core Data
+  store (Nostur.sqlite, the non-CloudKit `Local` configuration) for thread display, so a
+  device-forensics adversary can recover the reply text and its local presence — though
+  **not the private key** (never persisted) and it is **not synced to CloudKit/iCloud**.
+  Accepted for v1 (the high-value artifact, the signing key, is gone).
+- **Block/mute evasion.** Anon replies bypass any block/mute keyed on the real pubkey, and
+  the parent author is still p-tagged — a block-evasion/harassment vector. No client-side
+  cryptographic mitigation is possible (anyone can mint a key in any client). Documented
+  for the maintainer to accept deliberately and **raised explicitly in the PR**.
+- **Operational:** funneling anon traffic through a few named relays risks
+  rate-limiting/bans — also flagged in the PR.
 
 ## 8. Testing
 
@@ -186,9 +220,12 @@ rate-limiting/bans — also flagged in the PR.
   - **Cross-client visibility:** view from a second unrelated account on Damus, Amethyst,
     Primal — confirm the anon reply surfaces (fresh-key spam filtering is the risk; add
     PoW if filtered).
-  - In-session display shows "you · anon"; after relaunch it renders as a stranger
-    (expected). Undo within 9s → nothing reaches the relays.
-  - Anon item absent on private-post replies; max-length input; reply to a NIP-22 parent.
+  - In-session display shows "you · anon" with no real-account footer/undo/relay-status on
+    it; after relaunch it renders as a stranger (expected).
+  - **Voice-path leak check:** in anon mode the mic is disabled and cannot publish a voice
+    reply under the real key.
+  - Anon item absent on private-post replies; the private-reply toggle is disabled in anon;
+    max-length input; reply to a NIP-22 parent.
 
 ## Out of scope (deferred to v2)
 
