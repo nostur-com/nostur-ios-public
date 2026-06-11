@@ -846,6 +846,9 @@ public final class NewPostModel: ObservableObject {
 
         AnonReplySession.shared.register(keys.publicKeyHex)
         let parentAuthor = replyTo.nrPost.kind == 9735 ? (replyTo.nrPost.fromPubkey ?? replyTo.nrPost.pubkey) : replyTo.nrPost.pubkey
+#if DEBUG
+        L.og.debug("🕶️ ANON reply id: \(signed.id) anon-pubkey: \(signed.publicKey) → publishing (parentAuthor: \(parentAuthor))")
+#endif
         await AnonPublisher.shared.publish(signedEvent: signed, parentAuthorPubkey: parentAuthor)
         // `keys` goes out of scope here → private key discarded.
         typingTextModel.sending = false
