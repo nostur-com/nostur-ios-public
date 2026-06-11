@@ -12,21 +12,24 @@ final class AnonPublisher {
     static let shared = AnonPublisher()
     static let fixedRelays: [String] = ["wss://relay.damus.io", "wss://nos.lol", "wss://relay.primal.net"]
 
-    /// Save locally for immediate thread display, then publish immediately. Returns the send result.
-    @discardableResult
-    func publish(signedEvent: NEvent, parentAuthorPubkey: String) async -> AnonPublishResult {
+    /// Save locally for immediate thread display, then publish to relays in the BACKGROUND.
+    /// Returns immediately — does NOT block the caller/UI on relay round-trips. The fixed +
+    /// parent-read relay set can take many seconds (slow/unreachable relays hit 8s connect +
+    /// 8s publish timeouts); blocking the composer on that is the "stuck sending" bug. The
+    /// local save below makes the reply appear in the thread instantly; delivery completes
+    /// in the background. Spec §0/§4.
+    func publish(signedEvent: NEvent, parentAuthorPubkey: String) {
         // Local-consume for immediate display — save on bg context, notify on main thread.
         // Matches Unpublisher.swift pattern: bgContext.perform { save } → DispatchQueue.main.async { notify }.
-        Task {
-            bg().perform {
-                let saved = Event.saveEvent(event: signedEvent, context: bg())
-                // Do NOT set cancellationId and do NOT mark own — anon posts get no real-account footer.
-                DispatchQueue.main.async {
-                    sendNotification(.newPostSaved, saved)
-                }
+        bg().perform {
+            let saved = Event.saveEvent(event: signedEvent, context: bg())
+            // Do NOT set cancellationId and do NOT mark own — anon posts get no real-account footer.
+            DispatchQueue.main.async {
+                sendNotification(.newPostSaved, saved)
             }
         }
-        return await fire(signedEvent: signedEvent, parentAuthorPubkey: parentAuthorPubkey)
+        // Relay publish in the background — never block the composer on network.
+        Task { await self.fire(signedEvent: signedEvent, parentAuthorPubkey: parentAuthorPubkey) }
     }
 
     @discardableResult

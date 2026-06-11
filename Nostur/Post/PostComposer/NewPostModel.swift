@@ -849,8 +849,9 @@ public final class NewPostModel: ObservableObject {
 #if DEBUG
         L.og.debug("🕶️ ANON reply id: \(signed.id) anon-pubkey: \(signed.publicKey) → publishing (parentAuthor: \(parentAuthor))")
 #endif
-        await AnonPublisher.shared.publish(signedEvent: signed, parentAuthorPubkey: parentAuthor)
-        // `keys` goes out of scope here → private key discarded.
+        AnonPublisher.shared.publish(signedEvent: signed, parentAuthorPubkey: parentAuthor)
+        // `keys` goes out of scope here → private key discarded. publish() returns immediately;
+        // relay delivery runs in the background so the composer dismisses without waiting on relays.
         typingTextModel.sending = false
         onDismiss()
     }
