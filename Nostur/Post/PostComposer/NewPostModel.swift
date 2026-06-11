@@ -30,11 +30,28 @@ public final class TypingTextModel: ObservableObject {
         }
     }
     
+    @Published var anonMode: Bool = false
+    private var savedRealDraft: String = ""
+
     @Published var text: String = "" {
         didSet {
-            draft = text
+            if !anonMode { draft = text }
         }
     }
+
+    func savedRealDraftSnapshotAndClear() {
+        savedRealDraft = draft
+        anonMode = true
+        text = ""
+    }
+
+    func restoreRealDraft() {
+        anonMode = false
+        text = savedRealDraft
+        savedRealDraft = ""
+    }
+
+    func clearAnonState() { anonMode = false; savedRealDraft = "" }
     @Published var pastedImages: [PostedImageMeta] = []
     @Published var pastedVideos: [PostedVideoMeta] = []
     
@@ -186,8 +203,14 @@ public final class NewPostModel: ObservableObject {
     @Published var showCustomEmojiPicker = false
     @Published var customEmojiSearchResults: [ComposerCustomEmoji] = []
     @Published var isFindingMoreEmojiSets = false
+    @Published var anonMode: Bool = false
+    @Published var showAnonExplainer: Bool = false
     @Published var activeAccount: CloudAccount? = nil {
         didSet {
+            if anonMode {
+                anonMode = false
+                typingTextModel.restoreRealDraft()
+            }
             loadCustomEmojisFromFollowedSets()
             if lockToSingleRelay {
                 enableAuthAndSendChallengeOnSingleRelay(usingAccount: activeAccount)
@@ -207,6 +230,29 @@ public final class NewPostModel: ObservableObject {
                 }
             }
         }
+    }
+
+    @MainActor func enterAnonMode() {
+        guard !anonMode else { return }
+        anonMode = true
+        typingTextModel.savedRealDraftSnapshotAndClear()
+        replyInPrivate = false
+        typingTextModel.pastedImages = []
+        typingTextModel.pastedVideos = []
+        typingTextModel.voiceRecording = nil
+        remoteIMetas = [:]
+        lockToSingleRelay = false
+    }
+
+    @MainActor func exitAnonMode() {
+        guard anonMode else { return }
+        anonMode = false
+        typingTextModel.restoreRealDraft()
+    }
+
+    @MainActor func requestAnonMode() {
+        if UserDefaults.standard.bool(forKey: "anonReplyExplainerAccepted") { enterAnonMode() }
+        else { showAnonExplainer = true }
     }
     
     @Published var selectedAuthor: Contact? // To include in 9802 highlight
@@ -774,11 +820,51 @@ public final class NewPostModel: ObservableObject {
         onDismiss()
         sendNotification(.didSend)
     }
-    
-    private func buildFinalEvent(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, isPreviewContext: Bool = false) -> NEvent? {
+
+    @MainActor
+    func sendNowAnon(replyTo: ReplyTo, onDismiss: @escaping () -> Void) async {
+        let keys: Keys
+        do { keys = try Keys.newKeys() }
+        catch { typingTextModel.sending = false
+                sendNotification(.anyStatus, ("Could not create anon identity", "NewPost")); return }
+
+        guard var finalEvent = buildFinalEvent(imetas: [], replyTo: replyTo, anonPubkey: keys.publicKeyHex) else {
+            typingTextModel.sending = false
+            sendNotification(.anyStatus, ("Could not build reply", "NewPost")); return
+        }
+        finalEvent.createdAt = NTimestamp(date: Date())
+        guard let signed = try? finalEvent.sign(keys) else {
+            typingTextModel.sending = false
+            sendNotification(.anyStatus, ("Could not sign anon reply", "NewPost")); return
+        }
+
+        let realPubkeys = Set(AccountsState.shared.accounts.map { $0.publicKey })
+        guard AnonReplyHelper.isAnonSendSafe(signedEvent: signed, expectedKeys: keys, realAccountPubkeys: realPubkeys) else {
+            typingTextModel.sending = false
+            sendNotification(.anyStatus, ("Anon reply blocked: identity check failed", "NewPost")); return
+        }
+
+        AnonReplySession.shared.register(keys.publicKeyHex)
+        let parentAuthor = replyTo.nrPost.kind == 9735 ? (replyTo.nrPost.fromPubkey ?? replyTo.nrPost.pubkey) : replyTo.nrPost.pubkey
+#if DEBUG
+        L.og.debug("🕶️ ANON reply id: \(signed.id) anon-pubkey: \(signed.publicKey) → publishing (parentAuthor: \(parentAuthor))")
+#endif
+        AnonPublisher.shared.publish(signedEvent: signed, parentAuthorPubkey: parentAuthor)
+        // `keys` goes out of scope here → private key discarded. publish() returns immediately;
+        // relay delivery runs in the background so the composer dismisses without waiting on relays.
+        typingTextModel.sending = false
+        onDismiss()
+    }
+
+    private func buildFinalEvent(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, isPreviewContext: Bool = false, anonPubkey: String? = nil) -> NEvent? {
         guard var nEvent = self.nEvent else { return nil }
-        guard let account = activeAccount else { return nil }
-        let publicKey = account.publicKey
+        let publicKey: String
+        if let anonPubkey {
+            publicKey = anonPubkey
+        } else {
+            guard let account = activeAccount else { return nil }
+            publicKey = account.publicKey
+        }
 
         nEvent.publicKey = publicKey
         var pTags: [String] = []
@@ -1014,29 +1100,31 @@ public final class NewPostModel: ObservableObject {
         }
         
         if let replyTo, NIP22_COMMENT_KINDS.contains(nEvent.kind.id) { // NIP-22 COMMENT HANDLING
-            nEvent = addRootScopeTags(nEvent: nEvent, replyTo: replyTo)
-            nEvent = addReplyToTags(nEvent: nEvent, replyTo: replyTo)
+            nEvent = addRootScopeTags(nEvent: nEvent, replyTo: replyTo, anon: anonPubkey != nil)
+            nEvent = addReplyToTags(nEvent: nEvent, replyTo: replyTo, anon: anonPubkey != nil)
         }
         
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             content = replaceNsecWithHunter2(content)
         }
 
-        let usedEmojiShortcodes = extractCustomEmojiShortcodes(from: content)
-        for shortcode in usedEmojiShortcodes {
-            guard let emojiURL = selectedCustomEmojiURLByShortcode[shortcode] ?? customEmojiURLByShortcode[shortcode] else { continue }
-            let emojiTag = NostrTag(["emoji", shortcode, emojiURL.absoluteString])
-            let alreadyPresent = nEvent.tags.contains(where: {
-                $0.type == "emoji" && $0.tag[safe: 1] == shortcode && $0.tag[safe: 2] == emojiURL.absoluteString
-            })
-            if !alreadyPresent {
-                nEvent.tags.append(emojiTag)
+        if anonPubkey == nil {
+            let usedEmojiShortcodes = extractCustomEmojiShortcodes(from: content)
+            for shortcode in usedEmojiShortcodes {
+                guard let emojiURL = selectedCustomEmojiURLByShortcode[shortcode] ?? customEmojiURLByShortcode[shortcode] else { continue }
+                let emojiTag = NostrTag(["emoji", shortcode, emojiURL.absoluteString])
+                let alreadyPresent = nEvent.tags.contains(where: {
+                    $0.type == "emoji" && $0.tag[safe: 1] == shortcode && $0.tag[safe: 2] == emojiURL.absoluteString
+                })
+                if !alreadyPresent {
+                    nEvent.tags.append(emojiTag)
+                }
             }
         }
         
         let lockToThisRelay: RelayData? = Drafts.shared.lockToThisRelay
-        
-        if lockToThisRelay != nil && lockToSingleRelay {
+
+        if anonPubkey == nil, lockToThisRelay != nil, lockToSingleRelay {
             nEvent.tags.append(NostrTag(["-"]))
         }
         
@@ -1044,7 +1132,9 @@ public final class NewPostModel: ObservableObject {
             nEvent.kind = .textNote
             nEvent.tags.append(NostrTag(["k", "20"]))
         }
-        if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
+        if anonPubkey == nil,
+           SettingsStore.shared.postUserAgentEnabled,
+           !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey) {
             nEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
         }
         
@@ -1165,6 +1255,7 @@ public final class NewPostModel: ObservableObject {
     
     public func textChanged(_ newText:String) {
         guard textView != nil else { return }
+        if anonMode { showCustomEmojiPicker = false; return }
         if let emojiTerm = customEmojiTerm(newText, textView: textView) {
             mentioning = false
             term = ""
@@ -1455,13 +1546,17 @@ public final class NewPostModel: ObservableObject {
     }
     
     func loadQuotingEvent() {
+        anonMode = false
+        typingTextModel.clearAnonState()
         var newQuoteRepost = NEvent(content: typingTextModel.text)
         newQuoteRepost.kind = .textNote
         nEvent = newQuoteRepost
     }
-    
+
     @MainActor
     func loadReplyTo(_ replyTo: ReplyTo) {
+        anonMode = false
+        typingTextModel.clearAnonState()
         requiredP = if replyTo.nrPost.kind == 9735 { // if we reply to zap then the requiredP is not the zapper (wallet). Use fromPubkey.
             replyTo.nrPost.fromPubkey ?? replyTo.nrPost.pubkey
         } else {
@@ -1593,6 +1688,21 @@ public final class NewPostModel: ObservableObject {
             self.textView!.selectedTextRange = self.textView!.textRange(from: newPosition, to: newPosition)
         }
     }
+
+#if DEBUG
+    /// Build a reply NEvent fixture synchronously, bypassing loadReplyTo's async assignment.
+    func buildAnonEventForTesting(replyToEventId: String, replyToPubkey: String, content: String, anonPubkey: String) -> NEvent? {
+        var reply = NEvent(content: content)
+        reply.kind = .textNote
+        reply.tags = [
+            NostrTag(["e", replyToEventId, "", "root"]),
+            NostrTag(["p", replyToPubkey]),
+        ]
+        self.nEvent = reply
+        self.typingTextModel.text = content
+        return buildFinalEvent(imetas: [], anonPubkey: anonPubkey)
+    }
+#endif
 }
 
 func mentionTerm(_ text: String, textView: SystemTextView?) -> String? {
@@ -1891,11 +2001,11 @@ let NIP22_ROOT_KINDS: Set<Int> = [1222,20,30023,34236,9735] // voice messages / 
 
 // NIP-22
 // Comments MUST point to the root scope using uppercase tag names (e.g. K, E, A or I)
-func addRootScopeTags(nEvent input: NEvent, replyTo: ReplyTo) -> NEvent {
+func addRootScopeTags(nEvent input: NEvent, replyTo: ReplyTo, anon: Bool = false) -> NEvent {
     var nEvent = input
-    
+
     // Tags K MUST be present to define the event kind of the root item.
-    
+
     // When replying to a reply, we may not have or know the root K/P/E/A. But that reply should already have it, so we take that
     if NIP22_COMMENT_KINDS.contains(Int(replyTo.nrPost.kind)) {
         if let rootK = replyTo.nrPost.fastTags.first(where: { $0.0 == "K" }) {
@@ -1904,8 +2014,8 @@ func addRootScopeTags(nEvent input: NEvent, replyTo: ReplyTo) -> NEvent {
         if let rootP = replyTo.nrPost.fastTags.first(where: { $0.0 == "P" }) {
             nEvent.tags.append(NostrTag(["P", rootP.1]))
         }
-        
-        
+
+
         // Add E or A, but not both
         if let rootE = replyTo.nrPost.fastTags.first(where: { $0.0 == "E" }) {
             nEvent.tags.append(NostrTag(["E", rootE.1]))
@@ -1917,10 +2027,10 @@ func addRootScopeTags(nEvent input: NEvent, replyTo: ReplyTo) -> NEvent {
     else if !NIP22_COMMENT_KINDS.contains(Int(replyTo.nrPost.kind)) { // probably replying to a ROOT
         nEvent.tags.append(NostrTag(["K", String(replyTo.nrPost.kind)]))
         nEvent.tags.append(NostrTag(["P", replyTo.nrPost.pubkey]))
-        
-        
+
+
         // Add A or E, but not both
-        let relayHint: String? = resolveRelayHint(forPubkey: replyTo.nrPost.pubkey, receivedFromRelays: replyTo.nrPost.footerAttributes.relays).first
+        let relayHint: String? = anon ? nil : resolveRelayHint(forPubkey: replyTo.nrPost.pubkey, receivedFromRelays: replyTo.nrPost.footerAttributes.relays).first
         if (replyTo.nrPost.kind >= 30000 && replyTo.nrPost.kind < 40000) {
             nEvent.tags.append(NostrTag(["A", replyTo.nrPost.aTag, relayHint ?? "", replyTo.nrPost.pubkey]))
         }
@@ -1928,39 +2038,39 @@ func addRootScopeTags(nEvent input: NEvent, replyTo: ReplyTo) -> NEvent {
             nEvent.tags.append(NostrTag(["E", replyTo.nrPost.id, relayHint ?? "", replyTo.nrPost.pubkey]))
         }
     }
-    
+
     return nEvent
 }
 
 // and MUST point to the parent item with lowercase ones (e.g. k, e, a or i).
-func addReplyToTags(nEvent input: NEvent, replyTo: ReplyTo) -> NEvent {
+func addReplyToTags(nEvent input: NEvent, replyTo: ReplyTo, anon: Bool = false) -> NEvent {
     var nEvent = input
-    
+
     // for replying to zaps the we are replying to a zap receipt from a wallet service, so don't use that .pubkey, use .fromPubkey instead
     let replyToPubkey = if replyTo.nrPost.kind == 9735, let fromPubkey = replyTo.nrPost.fromPubkey {
         fromPubkey
     } else {
         replyTo.nrPost.pubkey
     }
-    
+
     // Tags k MUST be present to define the event kind of the parent items.
     nEvent.tags.append(NostrTag(["k", String(replyTo.nrPost.kind)]))
-    
+
     // Comments MUST point to the authors when one is available (i.e. tagging a nostr event). p for the author of the parent item.
     if !nEvent.pTags().contains(replyToPubkey) {
         nEvent.tags.append(NostrTag(["p", replyToPubkey]))
     }
-    
-    let relayHint: String? = resolveRelayHint(forPubkey: replyToPubkey, receivedFromRelays: replyTo.nrPost.footerAttributes.relays).first
-    
+
+    let relayHint: String? = anon ? nil : resolveRelayHint(forPubkey: replyToPubkey, receivedFromRelays: replyTo.nrPost.footerAttributes.relays).first
+
     // Add a (in addition to e)
     if (replyTo.nrPost.kind >= 30000 && replyTo.nrPost.kind < 40000) {
         nEvent.tags.append(NostrTag(["a", replyTo.nrPost.aTag, relayHint ?? "", replyToPubkey]))
     }
-    
+
     nEvent.tags.append(NostrTag(["e", replyTo.nrPost.id, relayHint ?? "", replyToPubkey]))
-    
-    
+
+
     return nEvent
 }
 

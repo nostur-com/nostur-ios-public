@@ -126,7 +126,7 @@ struct Entry: View {
                             .offset(x: 5.0, y: 4.0)
                     }
                     else {
-                        if replyInPrivate, let requiredP = vm.requiredP {
+                        if replyInPrivate && !typingTextModel.anonMode, let requiredP = vm.requiredP {
                             ReplyingInPrivateTo(pubkey: requiredP, recipientDMRelays: vm.recipientDMRelays, ownDMRelays: vm.ownDMRelays)
                                 .offset(x: 5.0, y: 4.0)
                         }
@@ -170,6 +170,7 @@ struct Entry: View {
                     }
                 },
                 voiceMessageTapped: {
+                    guard !typingTextModel.anonMode else { return }
                     showAudioRecorder = true
                 },
                 privateReplyTapped: vm.canReplyInPrivate ? {
@@ -490,30 +491,30 @@ struct Entry: View {
             cameraSheetShown = true
         }
         .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Take Photo")
     }
-    
+
     @ViewBuilder
     private var pickPhotoButton: some View {
         Button("Pick Photo", systemImage: "photo") {
             photoPickerShown = true
         }
         .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Pick Photo")
     }
-    
+
     @ViewBuilder
     private var pickVideoButton: some View {
         Button("Pick Video", systemImage: "video") {
             videoPickerShown = true
         }
         .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Pick Video")
     }
-    
+
     @ViewBuilder
     private var gifButton: some View {
         Button {
@@ -522,7 +523,7 @@ struct Entry: View {
             Image("GifButton")
         }
         .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Pick GIF")
     }
     
@@ -547,22 +548,24 @@ struct Entry: View {
     @ViewBuilder
     private var voiceRecordingButton: some View {
         Button("Voice", systemImage: "mic") {
+            guard !typingTextModel.anonMode else { return }
             showAudioRecorder = true
         }
         .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Record Voice Message")
     }
     
     @ViewBuilder
     private var privateReplyButton: some View {
-        if replyTo != nil && vm.canReplyInPrivate {
+        if replyTo != nil && vm.canReplyInPrivate && !typingTextModel.anonMode {
             Button("Reply in private", systemImage: replyInPrivate ? "lock.fill" : "lock.open") {
                 guard !vm.replyingToPrivatePost else { return } // Can't turn off when replying to a private post
+                guard !typingTextModel.anonMode else { return }
                 replyInPrivate.toggle()
             }
             .buttonStyle(.borderless)
-            .disabled(typingTextModel.uploading || vm.replyingToPrivatePost)
+            .disabled(typingTextModel.uploading || vm.replyingToPrivatePost || typingTextModel.anonMode)
             .help(vm.replyingToPrivatePost ? "Private reply required (replying to a private post)" : "Reply in private")
         }
     }
@@ -572,15 +575,15 @@ struct Entry: View {
         Button(String(localized: "Preview", comment:"Preview button when creating a new post"), systemImage: "mail.and.text.magnifyingglass.rtl") {
             vm.showPreview(quotePost: quotePost, replyTo: replyTo)
         }
-        .disabled(shouldDisablePostButton)
-        .opacity(shouldDisablePostButton ? 0.25 : 1.0)
+        .disabled(shouldDisablePostButton || typingTextModel.anonMode)
+        .opacity((shouldDisablePostButton || typingTextModel.anonMode) ? 0.25 : 1.0)
         .help("Show Preview of this post")
     }
     
     @ViewBuilder
     private var sendButton: some View {
         Button {
-            self.sendNow()
+            self.dispatchSend()
         } label: {
             if (typingTextModel.uploading || typingTextModel.sending) {
                 ProgressView().colorInvert()
@@ -594,19 +597,24 @@ struct Entry: View {
         .opacity(shouldDisablePostButton ? 0.25 : 1.0)
         .help("Send")
     }
-    
-    private func sendNow() {
-        typingTextModel.sending = true
 
-        // Need to do these here in main thread
+    private func dispatchSend() {
+        typingTextModel.sending = true
+        if typingTextModel.anonMode {
+            guard let replyTo else { typingTextModel.sending = false; return }   // never real-account send while anon
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                Task { await self.vm.sendNowAnon(replyTo: replyTo, onDismiss: { onDismiss() }) }
+            }
+            return
+        }
         guard let account = vm.activeAccount, account.isFullAccount else {
+            typingTextModel.sending = false
             sendNotification(.anyStatus, ("Problem with account", "NewPost"))
             return
         }
         let isNC = account.isNC
         let pubkey = account.publicKey
-      
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
             Task {
                 await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() })

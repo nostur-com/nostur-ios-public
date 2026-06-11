@@ -560,7 +560,8 @@ struct AudioRecorderContentView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button {
                     typingTextModel.sending = true
-        
+                    guard !vm.anonMode else { typingTextModel.sending = false; return }
+
                     // Need to do these here in main thread
                     guard let account = vm.activeAccount, account.isFullAccount else {
                         sendNotification(.anyStatus, ("Problem with account", "NewPost"))
@@ -568,11 +569,11 @@ struct AudioRecorderContentView: View {
                     }
                     let isNC = account.isNC
                     let pubkey = account.publicKey
-                  
+
                     guard let localFileURL = recorder.recordingURL else { return }
-                    
+
                     typingTextModel.voiceRecording = VoiceRecording(localFileURL: localFileURL, samples: recorder.samples, duration: Int(recorder.duration))
-                    
+
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
                         Task {
                             await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, onDismiss: { onDismiss() })
