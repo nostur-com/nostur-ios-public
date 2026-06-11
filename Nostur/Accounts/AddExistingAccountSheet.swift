@@ -36,7 +36,12 @@ struct AddExistingAccountSheet: View {
     @ObservedObject private var bunkerManager = RemoteSignerManager.shared
     
     @State private var loading = false
-    
+
+    // Whether the bunker account currently connecting was created by this add attempt.
+    // addExistingBunkerAccount() reuses an existing CloudAccount when the bunker URI pubkey
+    // matches, and a failed connect must never delete an account the user already had.
+    @State private var didCreateNewBunkerAccount = false
+
     private var shouldDisableAddButton: Bool {
         isNsecbunkerKey && (bunkerManager.state == .connecting || bunkerManager.invalidRelayAddress)
     }
@@ -279,7 +284,11 @@ struct AddExistingAccountSheet: View {
                     }
                 }
                 else if bunkerState == .error {
-                    if let account = bunkerManager.account {
+                    // Only clean up an account this add attempt created. bunkerManager.account can
+                    // be a pre-existing account (reused row when the bunker URI pubkey matched), and
+                    // deleting it here would destroy the user's account and its NIP-46 session key,
+                    // with both deletions syncing to other devices (CloudKit + iCloud Keychain).
+                    if didCreateNewBunkerAccount, let account = bunkerManager.account {
                         NIP46SecretManager.shared.deleteSecret(account: account)
                         viewContext.delete(account)
                     }
@@ -428,6 +437,7 @@ struct AddExistingAccountSheet: View {
     private func addExistingBunkerAccount(pubkey: String, token: String? = nil) {
         if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext)) {
             existingAccount.flagsSet.insert("full_account")
+            didCreateNewBunkerAccount = false
             bunkerManager.connect(existingAccount, token: token)
             return
         }
@@ -435,6 +445,7 @@ struct AddExistingAccountSheet: View {
         let account = CloudAccount(context: viewContext)
         account.flags = "full_account"
         account.createdAt = Date()
+        didCreateNewBunkerAccount = true
         
         // NIP-46 user-pubkey. This one can change after we call get_public_key on bunker
         account.publicKey = pubkey
