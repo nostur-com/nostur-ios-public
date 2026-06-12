@@ -18,9 +18,11 @@ class NRContentElementBuilder {
     let context = bg()
     
     func buildElements(input: String, fastTags: [FastTag], event: Event? = nil, primaryColor: Color? = nil, previewImages: [PostedImageMeta] = [], previewVideos: [PostedVideoMeta] = [], isPreviewContext: Bool = false) -> ([ContentElement], [URL], [GalleryItem]) {
-        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-            L.og.info("☠️☠️☠️☠️ renderElements on MAIN thread....")
-        }
+#if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                L.og.info("☠️☠️☠️☠️ renderElements on MAIN thread....")
+            }
+#endif
         
         let range = NSRange(location: 0, length: input.utf16.count)
         
