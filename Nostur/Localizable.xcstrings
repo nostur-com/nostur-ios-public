@@ -3433,6 +3433,9 @@
         }
       }
     },
+    "Continue anonymously" : {
+
+    },
     "Conversation" : {
       "comment" : "Feed title",
       "localizations" : {
@@ -6136,6 +6139,9 @@
           }
         }
       }
+    },
+    "Like" : {
+
     },
     "Likes" : {
       "comment" : "Tab title",
@@ -8892,6 +8898,9 @@
         }
       }
     },
+    "React..." : {
+
+    },
     "Reaction buttons" : {
       "localizations" : {
         "nl" : {
@@ -9604,6 +9613,9 @@
           }
         }
       }
+    },
+    "Reply anonymously" : {
+
     },
     "Reply in private" : {
       "localizations" : {
@@ -11837,6 +11849,9 @@
         }
       }
     },
+    "This reply posts from a new one-time identity that isn't linked to any of your accounts. It's a throwaway — you can't edit, delete, undo it, or reply again as this identity. Relays can still see your IP address, and your writing style may identify you." : {
+
+    },
     "This will **delete** your:\n - Account from Nostur\n - Private key (nsec) from Apple Keychain" : {
       "comment" : "Confirmation text when you want to delete your account",
       "localizations" : {
@@ -13094,6 +13109,9 @@
           }
         }
       }
+    },
+    "you · anon" : {
+
     },
     "You are not following anyone yet, visit the explore tab and follow some people" : {
       "extractionState" : "stale",

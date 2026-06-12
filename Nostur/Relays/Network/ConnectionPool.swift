@@ -573,7 +573,7 @@ public class ConnectionPool: ObservableObject {
         
 #if DEBUG
         if !SettingsStore.shared.enableOutboxRelays && self.connections.isEmpty {
-            L.og.debug("There are no connections, and outbox is disabled")
+            L.og.debug("🔴🔴 There are no connections, and outbox is disabled")
         }
 #endif
         
