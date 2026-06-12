@@ -505,6 +505,67 @@ class ConversionVM: ObservableObject {
             try await self.sendMessage04(message)
         }
     }
+
+    @MainActor
+    public func sendReaction(_ reactionContent: String, to message: NRChatMessage) async {
+        guard conversationVersion == 17 else { return }
+        guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: ourAccountPubkey),
+              let ourkeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { return }
+
+        let normalizedReaction = reactionContent.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedReaction.isEmpty else { return }
+
+        guard !message.reactions.contains(where: { $0.authorPubkey == ourAccountPubkey && $0.content == normalizedReaction }) else {
+            return
+        }
+
+        var tags: [Tag] = participants.map { Tag(["p", $0]) }
+        tags.append(Tag(["e", message.id]))
+
+        if SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(ourAccountPubkey) {
+            tags.append(Tag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
+        }
+
+        let reactionEvent = NostrEssentials.Event(
+            pubkey: ourAccountPubkey,
+            content: normalizedReaction,
+            kind: 7,
+            created_at: Int(Date().timeIntervalSince1970),
+            tags: tags
+        )
+        let rumorEvent = createRumor(reactionEvent)
+        let rumorNEvent = NEvent.fromNostrEssentialsEvent(rumorEvent)
+
+        message.addReaction(rumorNEvent)
+
+        for receiverPubkey in participants {
+            do {
+                let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
+                let giftWrapId = giftWrap.fallbackId()
+
+                if receiverPubkey == ourAccountPubkey {
+                    await bg().perform {
+                        _ = Event.saveEvent(event: rumorEvent, wrapId: giftWrapId, context: bg())
+                        MessageParser.shared.pendingOkWrapIds.insert(giftWrapId)
+                    }
+                }
+
+                let relays = await getDMrelays(for: receiverPubkey)
+                let relaysWithFallback = if relays.isEmpty {
+                    await getDMrelays(for: ourAccountPubkey)
+                } else {
+                    relays
+                }
+
+                sendWrappedEventToDMRelays(giftWrap, relays: relaysWithFallback)
+            }
+            catch {
+#if DEBUG
+                L.og.debug("🔴🔴 💌💌 error while trying to wrap reaction \(error)")
+#endif
+            }
+        }
+    }
     
     @MainActor private func sendMessage04(_ message: String) async throws {
         guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: ourAccountPubkey) else { throw DMError.PrivateKeyMissing }
@@ -870,6 +931,30 @@ class ConversionVM: ObservableObject {
     public func markAsRead() {
         self.dmState?.markedReadAt_ = Date.now
 //        DataProvider.shared().saveToDisk(.all)
+    }
+
+    private func sendWrappedEventToDMRelays(_ wrappedEvent: NostrEssentials.Event, relays: Set<String>) {
+        for relay in relays {
+            if ConnectionPool.shared.connections[relay] != nil {
+                ConnectionPool.shared.sendMessage(
+                    NosturClientMessage(
+                        clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: wrappedEvent),
+                        relayType: .WRITE,
+                        nEvent: NEvent.fromNostrEssentialsEvent(wrappedEvent)
+                    ),
+                    relays: [RelayData(read: false, write: true, search: false, auth: false, url: relay, excludedPubkeys: [])]
+                )
+            }
+            else if let msg = NostrEssentials.ClientMessage(type: .EVENT, event: wrappedEvent).json() {
+                Task { @MainActor in
+                    ConnectionPool.shared.sendEphemeralMessage(
+                        msg,
+                        relay: relay,
+                        write: true
+                    )
+                }
+            }
+        }
     }
 }
 

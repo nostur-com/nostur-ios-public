@@ -21,6 +21,8 @@ struct BalloonView17: View {
     @Environment(\.availableWidth) private var availableWidth
     
     @State private var showDMSendResult: RecipientResult? = nil
+    @State private var showReactionPicker = false
+    @State private var selectedReactionEmoji = ""
     
     var body: some View {
 #if DEBUG
@@ -95,7 +97,14 @@ struct BalloonView17: View {
                                 vm.quotingNow = nrChatMessage
                             }
                         }
-    //                    Button("React...", systemImage: "smiley") { }
+                        Button("Like", systemImage: "heart") {
+                            Task {
+                                await vm.sendReaction("❤️", to: nrChatMessage)
+                            }
+                        }
+                        Button("React...", systemImage: "face.smiling") {
+                            showReactionPicker = true
+                        }
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -154,6 +163,19 @@ struct BalloonView17: View {
                     dmSentResult: dmSendResult,
                     isOwnRelays: accountPubkey == dmSendResult.recipientPubkey
                 )
+            }
+        }
+        .emojiPicker(
+            isPresented: $showReactionPicker,
+            selectedEmoji: $selectedReactionEmoji,
+            isDismissAfterChoosing: true
+        )
+        .onChange(of: selectedReactionEmoji) { newValue in
+            guard !newValue.isEmpty else { return }
+            let reaction = newValue
+            selectedReactionEmoji = ""
+            Task {
+                await vm.sendReaction(reaction, to: nrChatMessage)
             }
         }
     }
