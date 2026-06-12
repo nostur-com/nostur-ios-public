@@ -29,6 +29,26 @@ let POPULAR_RELAYS: Set<String> = [
 
 public typealias CanonicalRelayUrl = String // lowercased, without trailing slash on root domain
 
+private extension RelayConnection {
+    func mergeRelayData(_ relayData: RelayData) {
+        if relayData.read && !self.relayData.read {
+            self.relayData.setRead(true)
+        }
+        if relayData.write && !self.relayData.write {
+            self.relayData.setWrite(true)
+        }
+        if relayData.search && !self.relayData.search {
+            self.relayData.setSearch(true)
+        }
+        if relayData.auth && !self.relayData.auth {
+            self.relayData.setAuth(true)
+        }
+        if !relayData.excludedPubkeys.isEmpty {
+            self.relayData.setExcludedPubkeys(self.relayData.excludedPubkeys.union(relayData.excludedPubkeys))
+        }
+    }
+}
+
 public class ConnectionPool: ObservableObject {
     // not in wot stats
     public var notInWoTsince = Date()
@@ -150,6 +170,7 @@ public class ConnectionPool: ObservableObject {
     public func addConnection(_ relayData: RelayData, completion: ((RelayConnection) -> Void )? = nil) {
         self.queue.async(flags: .barrier) { [unowned self] in
             if let conn = self.connections[relayData.id] {
+                conn.mergeRelayData(relayData)
                 completion?(conn)
             }
             else {
@@ -184,12 +205,7 @@ public class ConnectionPool: ObservableObject {
         let newConnection = RelayConnection(relayData, isOutbox: true, queue: queue)
         self.queue.async(flags: .barrier) { [unowned self] in
             if let conn = self.outboxConnections[relayData.id] {
-                if relayData.read && !conn.relayData.read {
-                    conn.relayData.setRead(true)
-                }
-                if relayData.write && !conn.relayData.write {
-                    conn.relayData.setWrite(true)
-                }
+                conn.mergeRelayData(relayData)
                 completion?(conn)
             }
             else {
