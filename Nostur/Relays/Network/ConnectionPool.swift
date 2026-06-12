@@ -168,6 +168,12 @@ public class ConnectionPool: ObservableObject {
     }
     
     public func addConnection(_ relayData: RelayData, completion: ((RelayConnection) -> Void )? = nil) {
+        guard !isDisabledRelay(relayData.url) else {
+#if DEBUG
+            L.sockets.debug("🔴 addConnection: CANCELLED connecting to disabled relay \(relayData.url)")
+#endif
+            return
+        }
         self.queue.async(flags: .barrier) { [unowned self] in
             if let conn = self.connections[relayData.id] {
                 conn.mergeRelayData(relayData)
@@ -225,6 +231,12 @@ public class ConnectionPool: ObservableObject {
     }
     
     public func addNWCConnection(connectionId: String, url: String, completion: ((RelayConnection) -> Void )? = nil) {
+        guard !isDisabledRelay(url) else {
+#if DEBUG
+            L.sockets.debug("🔴 addNWCConnection: CANCELLED connecting to disabled relay \(url)")
+#endif
+            return
+        }
         let relayData = RelayData.new(url: url, read: true, write: true, search: false, auth: false, excludedPubkeys: [])
         let newConnection = RelayConnection(relayData, isNWC: true, queue: queue)
         self.queue.async(flags: .barrier) { [unowned self] in
@@ -239,6 +251,12 @@ public class ConnectionPool: ObservableObject {
     }
     
     public func addNCConnection(connectionId: String, url: String, completion: ((RelayConnection) -> Void )? = nil) {
+        guard !isDisabledRelay(url) else {
+#if DEBUG
+            L.sockets.debug("🔴 addNCConnection: CANCELLED connecting to disabled relay \(url)")
+#endif
+            return
+        }
         let relayData = RelayData.new(url: url, read: true, write: true, search: false, auth: false, excludedPubkeys: [])
         let newConnection = RelayConnection(relayData, isNC: true, queue: queue)
         self.queue.async(flags: .barrier) { [unowned self] in
@@ -721,7 +739,12 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     func sendEphemeralMessage(_ message: String, relay: String, write: Bool = false) {
-        guard !isDisabledRelay(relay) else { return }
+        guard !isDisabledRelay(relay) else {
+#if DEBUG
+            L.sockets.debug("🔴 sendEphemeralMessage: CANCELLED connecting to disabled relay \(relay)")
+#endif
+            return
+        }
         guard vpnGuardOK() else {
 #if DEBUG
             L.sockets.debug("📡📡 No VPN: Connection cancelled (\(relay)")
