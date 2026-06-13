@@ -1492,6 +1492,7 @@ extension NRPost { // Helpers for grouped replies
                 // use until:self.id so we don't render duplicates
                 if let replyEvent = reply.event {
                     replyEvent.parentEvents = Event.getParentEvents(replyEvent, until: self.id)
+                        .filter { $0.id != self.id }
                     reply.parentPosts = replyEvent.parentEvents.map { NRPost(event: $0) }
                     reply.threadPostsCount = 1 + replyEvent.parentEvents.count
                 }

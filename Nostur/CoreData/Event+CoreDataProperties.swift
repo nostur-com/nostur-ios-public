@@ -169,6 +169,9 @@ extension Event {
             }
             
             if let replyToId = currentEvent!.replyToId, let replyTo = Event.fetchEvent(id: replyToId, context: bg()) {
+                if replyTo.id == until {
+                    break
+                }
                 parentEvents.append(replyTo)
                 currentEvent = replyTo
                 i = (i + 1)
@@ -176,6 +179,9 @@ extension Event {
             else if currentEvent!.kind == 9735,
                     let zappedEventId = currentEvent!.zappedEventId,
                     let zappedEvent = Event.fetchEvent(id: zappedEventId, context: bg()) {
+                if zappedEvent.id == until {
+                    break
+                }
                 parentEvents.append(zappedEvent)
                 currentEvent = zappedEvent
                 i += 1

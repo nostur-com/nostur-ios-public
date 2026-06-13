@@ -34,7 +34,7 @@ struct PostOrThread: View { //, Equatable {
 //#if DEBUG
 //        let _ = nxLogChanges(of: Self.self)
 //#endif
-        if postOrThreadAttributes.parentPosts.isEmpty { // Single Post
+        if visibleParentPosts.isEmpty { // Single Post
             VStack(spacing: GUTTER) {
                 if nxViewingContext.contains(.detailPane), hasMissingReplyTo(nrPost) {
                     missingReplyView(for: nrPost)
@@ -63,12 +63,12 @@ struct PostOrThread: View { //, Equatable {
                         }
                 }
 
-                ForEach(postOrThreadAttributes.parentPosts) { nrParent in
+                ForEach(visibleParentPosts) { nrParent in
                     Box(nrPost: nrParent, showGutter: false) {
                         PostRowDeletable(nrPost: nrParent,
                                          hideFooter: true,
-                                         missingReplyTo: nrParent.replyToPostOrZapId != rootId && nrParent.replyToPostOrZapId != nil && nrParent.id == postOrThreadAttributes.parentPosts.first?.id,
-                                         connect: nrParent.isReplyToPostOrZap || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, theme: theme)
+                                         missingReplyTo: nrParent.replyToPostOrZapId != rootId && nrParent.replyToPostOrZapId != nil && nrParent.id == visibleParentPosts.first?.id,
+                                         connect: nrParent.isReplyToPostOrZap || visibleParentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, theme: theme)
                     }
                     .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                     //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
@@ -77,7 +77,7 @@ struct PostOrThread: View { //, Equatable {
                 }
 
                 Box(nrPost: nrPost) {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != rootId && nrPost.replyToPostOrZapId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != rootId && nrPost.replyToPostOrZapId != nil && visibleParentPosts.isEmpty, connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
                 }
                 .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                 .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
@@ -91,6 +91,11 @@ struct PostOrThread: View { //, Equatable {
                 }
             }
         }
+    }
+
+    private var visibleParentPosts: [NRPost] {
+        guard let rootId else { return postOrThreadAttributes.parentPosts }
+        return postOrThreadAttributes.parentPosts.filter { $0.id != rootId }
     }
 
     @ViewBuilder
@@ -113,7 +118,7 @@ struct PostOrThread: View { //, Equatable {
     }
     
     private var firstParentWithMissingReplyTo: NRPost? {
-        guard let firstParent = postOrThreadAttributes.parentPosts.first else { return nil }
+        guard let firstParent = visibleParentPosts.first else { return nil }
         guard hasMissingReplyTo(firstParent) else { return nil }
         return firstParent
     }
