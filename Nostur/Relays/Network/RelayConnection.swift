@@ -834,11 +834,13 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                     FeedsCoordinator.shared.resumeFeeds()
                                     NotificationsViewModel.restoreSubscriptions()
+                                    DMsVM.restoreSubscriptions()
                                 }
                             }
                             else {
                                 FeedsCoordinator.shared.resumeFeeds()
                                 NotificationsViewModel.restoreSubscriptions()
+                                DMsVM.restoreSubscriptions()
                             }
                         }
                         sendNotification(.socketConnected, "Connected: \(self?.url ?? "?")")
