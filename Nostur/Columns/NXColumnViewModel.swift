@@ -234,7 +234,7 @@ class NXColumnViewModel: ObservableObject {
                 }
                 .store(in: &subscriptions)
                 
-            FeedsCoordinator.shared.markedAsUnreadSubject
+            FeedsCoordinator.shared.markedAsReadSubject
                 .delay(for: .milliseconds(200), scheduler: RunLoop.main)
                 .sink(receiveValue: { [weak self] (postId, columnVMid) in
                     guard let self, columnVMid != self.columnVMid else { return }

@@ -28,7 +28,7 @@ class FeedsCoordinator {
         saveFeedStatesSubject.send()
     }
     
-    public var markedAsUnreadSubject = PassthroughSubject<(String, UUID), Never>() // String = nrPost.id, vm.columnVMid
+    public var markedAsReadSubject = PassthroughSubject<(String, UUID), Never>() // String = nrPost.id, vm.columnVMid
     
     
     public var fetchLoopSubject = PassthroughSubject<Void, Never>()

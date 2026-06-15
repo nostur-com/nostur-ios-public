@@ -436,7 +436,7 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
     vm.markAsRead(idsToMarkAsRead)
     
     for (id, columnId) in notificationPairs {
-        FeedsCoordinator.shared.markedAsUnreadSubject.send((id, columnId))
+        FeedsCoordinator.shared.markedAsReadSubject.send((id, columnId))
     }
     
     // Update UI immediately for responsiveness
