@@ -562,18 +562,22 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.postOrThreadAttributes = PostOrThreadAttributes(parentPosts: parentPosts)
         self._parentPosts = parentPosts
         
-        self.contact = NRContact.instance(of: pubkey)
+        self.contact = if let fromPubkey = event.fromPubkey, kind == 9735 { // for zap we need contact to be the fromPubkey, not the zapper wallet service
+            NRContact.instance(of: fromPubkey)
+        } else {
+            NRContact.instance(of: pubkey)
+        }
 
         var missingPs = Set<String>()
         if contact.bg_metadata_created_at == 0 {
-            missingPs.insert(event.pubkey)
+            missingPs.insert(contact.pubkey)
         }
         let eventContactPs = (referencedContacts.compactMap({ contact in
             if contact.bg_metadata_created_at != 0 {
                 return contact.pubkey
             }
             return nil
-        }) + [event.pubkey])
+        }) + [contact.pubkey])
         
         // Some clients put P in kind 6. Ignore that because the contacts are in the reposted post, not in the kind 6.
         // TODO: Should only fetch if the Ps are going to be on screen. Could be just for notifications.
