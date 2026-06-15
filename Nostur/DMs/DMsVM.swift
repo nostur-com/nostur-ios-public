@@ -10,6 +10,15 @@ import Combine
 import NostrEssentials
 
 class DMsVM: ObservableObject, Equatable, Hashable {
+    private final class WeakDMsVMBox {
+        weak var value: DMsVM?
+        
+        init(_ value: DMsVM) {
+            self.value = value
+        }
+    }
+    
+    @MainActor private static var liveInstances: [ObjectIdentifier: WeakDMsVMBox] = [:]
     
     static func == (lhs: DMsVM, rhs: DMsVM) -> Bool {
         lhs.id == rhs.id
@@ -49,6 +58,31 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     
     // Shared is for the main / currently logged in account
     static let shared = DMsVM()
+    
+    static func restoreSubscriptions() {
+        Task { @MainActor in
+            cleanupLiveInstances()
+            for vm in liveInstances.values.compactMap(\.value) {
+                vm.restoreSubscriptions()
+            }
+        }
+    }
+    
+    @MainActor
+    private static func register(_ vm: DMsVM) {
+        cleanupLiveInstances()
+        liveInstances[ObjectIdentifier(vm)] = WeakDMsVMBox(vm)
+    }
+    
+    @MainActor
+    private static func unregister(_ id: ObjectIdentifier) {
+        liveInstances.removeValue(forKey: id)
+    }
+    
+    @MainActor
+    private static func cleanupLiveInstances() {
+        liveInstances = liveInstances.filter { $0.value.value != nil }
+    }
     
     public var dmStates: [CloudDMState] = []
     {
@@ -175,6 +209,9 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         
         
         Task { @MainActor [weak self] in
+            if let self {
+                Self.register(self)
+            }
             self?.setupAccountChangedListener()
             if IS_CATALYST {
                 self?.setupBadgeNotifications()
@@ -239,28 +276,51 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     
     private var lastGiftWrapAt: Int = Int((Date(timeIntervalSinceNow: -518_400)).timeIntervalSince1970) // 6 days
     
+    private var giftWrapSubscriptionId: String {
+        "-OPEN-59-" + self.id
+    }
+    
+    private var sentDMSubscriptionId: String {
+        "-OPEN-DM-S-" + self.id
+    }
+    
+    private var receivedDMSubscriptionId: String {
+        "-OPEN-DM-R-" + self.id
+    }
+    
     private var giftWrapsTimer: Timer? = nil
     private func startGiftWrapsTimer() {
         guard giftWrapsTimer == nil else { return }
         self.giftWrapsTimer?.invalidate()
         self.giftWrapsTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
-            self?.fetchGiftWraps()
+            self?.fetchGiftWraps(forceRefresh: true)
         }
         self.giftWrapsTimer?.tolerance = 15.0
     }
     
-    public func fetchGiftWraps() {
+    @MainActor
+    public func restoreSubscriptions() {
+        guard ready, !ncNotSupported, !accountPubkey.isEmpty else { return }
+        fetchNip04DMs()
+        fetchGiftWraps(forceRefresh: true)
+    }
+    
+    public func fetchGiftWraps(forceRefresh: Bool = false) {
         let accountPubkey = self.accountPubkey
         let reqFilters = Filters(
             kinds: [1059],
             tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
             since: lastGiftWrapAt
         )
-        let subscriptionId = "-OPEN-59-" + self.id
+        let subscriptionId = self.giftWrapSubscriptionId
         Task { [weak self] in
             guard let self else { return }
             let dmRelays = await self.giftWrapReadRelays(accountPubkey: accountPubkey)
             await MainActor.run {
+                if forceRefresh {
+                    ConnectionPool.shared.closeSubscription(subscriptionId)
+                }
+                
                 guard !dmRelays.isEmpty else {
                     nxReq(
                         reqFilters,
@@ -308,7 +368,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 kinds: [4],
                 limit: 999
             ),
-            subscriptionId: "-OPEN-DM-S-" + self.id
+            subscriptionId: sentDMSubscriptionId
         )
         
         nxReq(
@@ -317,15 +377,20 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
                 limit: 999
             ),
-            subscriptionId: "-OPEN-DM-R-" + self.id
+            subscriptionId: receivedDMSubscriptionId
         )
     }
     
     deinit {
-        let id = self.id
+        let sentDMSubscriptionId = self.sentDMSubscriptionId
+        let receivedDMSubscriptionId = self.receivedDMSubscriptionId
+        let giftWrapSubscriptionId = self.giftWrapSubscriptionId
+        let instanceId = ObjectIdentifier(self)
         Task { @MainActor in
-            ConnectionPool.shared.closeSubscription("-OPEN-DM-S-" + id)
-            ConnectionPool.shared.closeSubscription("-OPEN-DM-R-" + id)
+            Self.unregister(instanceId)
+            ConnectionPool.shared.closeSubscription(sentDMSubscriptionId)
+            ConnectionPool.shared.closeSubscription(receivedDMSubscriptionId)
+            ConnectionPool.shared.closeSubscription(giftWrapSubscriptionId)
         }
     }
     
