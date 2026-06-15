@@ -314,6 +314,17 @@ class NXColumnViewModel: ObservableObject {
         syncFeedSubject.send()
     }
     
+    @MainActor
+    private func allShortIdsSeenMergingFeedLastRead(_ feed: CloudFeed?) -> Set<String> {
+        guard let feed else { return allShortIdsSeen }
+        return allShortIdsSeen.union(Set(feed.lastRead))
+    }
+    
+    @MainActor
+    private func mergeFeedLastReadIntoSeen(_ feed: CloudFeed?) {
+        allShortIdsSeen = allShortIdsSeenMergingFeedLastRead(feed)
+    }
+    
     private var syncFeedSubject = PassthroughSubject<Void, Never>()
     private var loadLocalSubject = PassthroughSubject<(NXColumnConfig, Bool, (() -> Void)?), Never>()
     
@@ -916,8 +927,8 @@ class NXColumnViewModel: ObservableObject {
     public func _loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
         let currentNRPostsOnScreen = self.currentNRPostsOnScreen
         
-        if !currentNRPostsOnScreen.isEmpty, let feed = config.feed { // if we don't check if screen is empty we can have permanent spinner at first run
-            self.allShortIdsSeen = self.allShortIdsSeen.union(Set(feed.lastRead))
+        if !currentNRPostsOnScreen.isEmpty { // if we don't check if screen is empty we can have permanent spinner at first run
+            mergeFeedLastReadIntoSeen(config.feed)
         }
         
         let repliesEnabled = config.repliesEnabled
@@ -1017,7 +1028,7 @@ class NXColumnViewModel: ObservableObject {
 #endif
         }
         
-        let allShortIdsSeen = self.allShortIdsSeen
+        let allShortIdsSeen = self.allShortIdsSeenMergingFeedLastRead(config.feed)
         let currentIdsOnScreen = self.currentIdsOnScreen
         let wotEnabled = config.wotEnabled
   
@@ -2240,6 +2251,7 @@ class NXColumnViewModel: ObservableObject {
                     // Need to go to main context again to get current screen state
                     Task { @MainActor [weak self] in
                         guard let self else { return }
+                        self.mergeFeedLastReadIntoSeen(config.feed)
                         let allShortIdsSeen = self.allShortIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let wotEnabled = config.wotEnabled
@@ -2269,6 +2281,7 @@ class NXColumnViewModel: ObservableObject {
                     // Need to go to main context again to get current screen state
                     Task { @MainActor [weak self] in
                         guard let self else { return }
+                        self.mergeFeedLastReadIntoSeen(config.feed)
                         let allShortIdsSeen = self.allShortIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let wotEnabled = config.wotEnabled
@@ -2836,7 +2849,7 @@ extension NXColumnViewModel {
                 
                 // Need to go to main context again to get current screen state
                 Task { @MainActor in
-                    self.allShortIdsSeen = self.allShortIdsSeen.union(Set(feed.lastRead))
+                    self.mergeFeedLastReadIntoSeen(feed)
                     let allShortIdsSeen = self.allShortIdsSeen
                     let currentIdsOnScreen = self.currentIdsOnScreen
                     let since = (self.mostRecentCreatedAt ?? 0)
