@@ -263,33 +263,11 @@ class NXColumnViewModel: ObservableObject {
                 .store(in: &subscriptions)
             
             feed?.objectWillChange
+                .debounce(for: .milliseconds(200), scheduler: RunLoop.main)
                 .sink(receiveValue: { [weak self] in
-                    guard let self, let feed else { return }
-                    guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
-                    
-                    // Only the keys of self.unreadIds where self.unreadIds[key] > 0
-                    let unreadShortIds: Set<String> = Set(
-                        self.vmInner.unreadIds.filter({ $0.value > 0 })
-                            .keys
-                            .map { String($0.prefix(8)) } // just the prefix
-                    )
-                
-                    // Only the (short) unreadIds that are also in feedLastReadIds
-                    let lastReadIdsToRemove: Set<String> = unreadShortIds.intersection(Set(feed.lastRead))
-                    
-                    guard !lastReadIdsToRemove.isEmpty else { return }
-                    
-                    if case .posts(let existingPosts) = self.viewState {
-                        for key in vmInner.unreadIds.keys {
-                            if lastReadIdsToRemove.contains(String(key.prefix(8))) {
-                                vmInner.unreadIds[key] = nil
-                                vmInner.updateIsAtTopSubject.send()
-                            }
-                        }
-
-                        withAnimation { // withAnimation and not at top keeps scroll position
-                            self.viewState = .posts(existingPosts.filter { !lastReadIdsToRemove.contains($0.shortId) })
-                        }
+                    Task { @MainActor [weak self] in
+                        await Task.yield()
+                        self?.removeUnreadPostsAlreadyMarkedReadInFeed()
                     }
                 })
                 .store(in: &subscriptions)
@@ -323,6 +301,40 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private func mergeFeedLastReadIntoSeen(_ feed: CloudFeed?) {
         allShortIdsSeen = allShortIdsSeenMergingFeedLastRead(feed)
+    }
+    
+    @MainActor
+    private func removeUnreadPostsAlreadyMarkedReadInFeed() {
+        guard let feed else { return }
+        guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
+        
+        mergeFeedLastReadIntoSeen(feed)
+        
+        // Only the keys of self.unreadIds where self.unreadIds[key] > 0
+        let unreadShortIds: Set<String> = Set(
+            vmInner.unreadIds.filter({ $0.value > 0 })
+                .keys
+                .map { String($0.prefix(8)) } // just the prefix
+        )
+        
+        // Only the (short) unreadIds that are also in feedLastReadIds
+        let lastReadIdsToRemove: Set<String> = unreadShortIds.intersection(Set(feed.lastRead))
+        guard !lastReadIdsToRemove.isEmpty else { return }
+        
+        let unreadKeysToRemove = vmInner.unreadIds.keys.filter {
+            lastReadIdsToRemove.contains(String($0.prefix(8)))
+        }
+        
+        for key in unreadKeysToRemove {
+            vmInner.unreadIds[key] = nil
+        }
+        vmInner.updateIsAtTopSubject.send()
+        
+        if case .posts(let existingPosts) = viewState {
+            withAnimation { // withAnimation and not at top keeps scroll position
+                viewState = .posts(existingPosts.filter { !lastReadIdsToRemove.contains($0.shortId) })
+            }
+        }
     }
     
     private var syncFeedSubject = PassthroughSubject<Void, Never>()
