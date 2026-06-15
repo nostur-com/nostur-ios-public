@@ -1616,7 +1616,10 @@ public final class NewPostModel: ObservableObject {
                 .map { NRContact.instance(of: $0.pubkey, contact: $0) }
             
             if replyTo.nrPost.kind == 9735 { // When replying to zap, only notify .fromPubkey. Unselect all other Ps (including zapper wallet .pubkey)
-                self.typingTextModel.unselectedMentions = Set(availableContacts.filter { $0.pubkey != replyTo.nrPost.fromPubkey })
+                let unselectedMentions = Set(availableContacts.filter { $0.pubkey != replyTo.nrPost.fromPubkey })
+                Task { @MainActor in
+                    self.typingTextModel.unselectedMentions = unselectedMentions
+                }
             }
             
             let replyToNrContact: NRContact? = if replyTo.nrPost.kind == 9735, let fromPubkey = replyTo.nrPost.fromPubkey {
