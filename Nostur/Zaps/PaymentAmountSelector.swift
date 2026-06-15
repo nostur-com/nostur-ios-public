@@ -125,12 +125,7 @@ struct PaymentAmountSelector: View {
                     return
                 }
                 
-                var zapRequestNote = if let aTag {
-                    zapRequest(forPubkey: pubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
-                }
-                else {
-                    zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
-                }
+                var zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, andATag: aTag, withMessage: zapMessage, relays: relays)
                 
                 zapRequestNote.publicKey = account.publicKey
                 if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {

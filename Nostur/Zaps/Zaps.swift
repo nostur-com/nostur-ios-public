@@ -20,7 +20,8 @@ func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, andAT
         let eTag = NostrTag(["e", eventId])
         zapRequest.tags.append(eTag)
     }
-    else if let aTag {
+    
+    if let aTag {
         let aTag = NostrTag(["a", aTag])
         zapRequest.tags.append(aTag)
     }

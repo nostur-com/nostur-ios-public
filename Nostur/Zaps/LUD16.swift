@@ -67,6 +67,9 @@ class LUD16 {
         
         if (zapRequestNote != nil) {
             let zapRequest = URLQueryItem(name: "nostr", value: zapRequestNote?.eventJson())
+#if DEBUG
+            L.og.debug("⚡️Zap request: \(zapRequestNote?.eventJson() ?? "no zap request")")
+#endif
             
             if var urlComponents = URLComponents(url: callbackUrl, resolvingAgainstBaseURL: false) {
                 let newQueryItems = [amount, zapRequest]

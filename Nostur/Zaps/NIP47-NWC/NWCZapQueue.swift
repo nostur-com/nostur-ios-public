@@ -380,12 +380,7 @@ class Zap {
                 }
                 
                 if isNC {
-                    var zapRequestNote = if let aTag = self.aTag {
-                        zapRequest(forPubkey: self.contactPubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
-                    }
-                    else {
-                        zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
-                    }
+                    var zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, andATag: aTag, withMessage: zapMessage, relays: relays)
                     
                     zapRequestNote.publicKey = accountPubkey
                     if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
@@ -442,12 +437,7 @@ class Zap {
                 }
                 else {
                     
-                    var zapRequestNote = if let aTag = self.aTag {
-                        zapRequest(forPubkey: self.contactPubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
-                    }
-                    else {
-                        zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
-                    }
+                    var zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, andATag: aTag, withMessage: zapMessage, relays: relays)
                     
                     zapRequestNote.publicKey = accountPubkey
                     if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
