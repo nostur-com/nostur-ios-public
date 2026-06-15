@@ -218,18 +218,26 @@ class NXColumnViewModel: ObservableObject {
                     guard let self, let feed else { return }
                     guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
                     
+                    let queuedReadIds = Array(self.markAsReadSyncQueue)
+                    guard !queuedReadIds.isEmpty else { return }
+                    
+                    feed.managedObjectContext?.refresh(feed, mergeChanges: true)
+                    
                     // Don't add duplicates to .lastRead but also keep the most recent one
                     // so remove new markAsReadSyncQueue from existing lastRead and then prepend markAsReadSyncQueue to lastRead (move existing ids to the front again)
                     // after that when we remove > 700 it is always less recent ones that are removed.
-                    feed.lastRead.removeAll { self.markAsReadSyncQueue.contains($0) }
-                    feed.lastRead.insert(contentsOf: self.markAsReadSyncQueue, at: 0)
+                    let queuedReadIdSet = Set(queuedReadIds)
+                    var mergedLastRead = feed.lastRead
+                    mergedLastRead.removeAll { queuedReadIdSet.contains($0) }
+                    mergedLastRead.insert(contentsOf: queuedReadIds, at: 0)
                     
                     // if size of feed.lastRead is > 700, remove all beyond index 700
-                    if feed.lastRead.count > 700 {
-                        feed.lastRead = Array(feed.lastRead[..<700])
+                    if mergedLastRead.count > 700 {
+                        mergedLastRead = Array(mergedLastRead[..<700])
                     }
                     
-                    self.markAsReadSyncQueue.removeAll()
+                    feed.lastRead = mergedLastRead
+                    self.markAsReadSyncQueue.subtract(queuedReadIdSet)
                     DataProvider.shared().saveToDiskNow(.viewContext)
                 }
                 .store(in: &subscriptions)
