@@ -389,6 +389,7 @@ func performIDCollectionUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
 @MainActor
 func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
     let vmInner = vm.vmInner
+    vm.newestMarkedAsRead = max(nrPost.createdAt, vm.newestMarkedAsRead ?? .distantPast)
     // Early exit if no unread items to process
     guard vmInner.unreadIds[nrPost.id] != 0 else { return }
     

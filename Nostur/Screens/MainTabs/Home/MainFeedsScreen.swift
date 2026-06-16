@@ -677,7 +677,7 @@ struct MainFeedsScreen: View {
         
         for config in followSetConfigs {
             guard let aTag = config.feed?.aTag else { continue }
-            let since: Int? = config.feed?.refreshedAt.map { Int($0.timeIntervalSince1970) }
+            let since: Int? = config.feed?.newestMarkedReadAt.map { Int($0.timeIntervalSince1970) }
             let subscriptionId = config.feed?.subscriptionId ?? String(UUID().uuidString.prefix(48))
             
 #if DEBUG
@@ -732,8 +732,8 @@ struct MainFeedsScreen: View {
         let followingFeeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
         let followingFeedsNewest: [CloudFeed] = followingFeeds
             .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
                 return mostRecentA > mostRecentB
             })
         
@@ -774,8 +774,8 @@ struct MainFeedsScreen: View {
         let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
         let feedsNewest: [CloudFeed] = feeds
             .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
                 return mostRecentA > mostRecentB
             })
         
@@ -816,8 +816,8 @@ struct MainFeedsScreen: View {
         let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
         let feedsNewest: [CloudFeed] = feeds
             .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
                 return mostRecentA > mostRecentB
             })
         
@@ -858,8 +858,8 @@ struct MainFeedsScreen: View {
         let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
         let feedsNewest: [CloudFeed] = feeds
             .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
                 return mostRecentA > mostRecentB
             })
         
@@ -910,8 +910,8 @@ struct MainFeedsScreen: View {
         let exploreFeeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
         let exploreFeedsNewest: [CloudFeed] = exploreFeeds
             .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
                 return mostRecentA > mostRecentB
             })
         

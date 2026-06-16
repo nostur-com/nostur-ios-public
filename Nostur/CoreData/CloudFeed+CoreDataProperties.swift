@@ -20,7 +20,37 @@ extension CloudFeed {
     @NSManaged public var followingHashtags_: String?
     @NSManaged public var id: UUID?
     @NSManaged public var name: String?
+    
+    // (REPURPUSED FIELD) Use newestMarkedReadAt instead of refreshedAt
     @NSManaged public var refreshedAt: Date?
+    public var newestMarkedReadAt: Date? {
+        get {
+            return self.refreshedAt
+        }
+        set {
+            self.refreshedAt = newValue
+        }
+    }
+    
+    // store when feed was last fetched locally (so no iCloud sync, using UserDefaults)
+    public var lastLocalFetchAt: Date? {
+        get {
+            guard let id else { return nil }
+            return UserDefaults.standard.object(forKey: "cloudFeedLastLocalFetchAt_\(id.uuidString)") as? Date
+        }
+        set {
+            guard let id else { return }
+            let key = "cloudFeedLastLocalFetchAt_\(id.uuidString)"
+            if let newValue {
+                UserDefaults.standard.set(newValue, forKey: key)
+            }
+            else {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+    }
+    
+    
     @NSManaged public var showAsTab: Bool
     
     // default (nil) or "pubkeys" = feed of posts from selected pubkeys

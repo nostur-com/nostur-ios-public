@@ -118,8 +118,8 @@ struct ContentTypeColumn: View {
         let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
         let feedsNewest: [CloudFeed] = feeds
             .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
                 return mostRecentA > mostRecentB
             })
         

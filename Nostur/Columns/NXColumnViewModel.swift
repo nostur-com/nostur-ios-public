@@ -25,6 +25,24 @@ class NXColumnViewModel: ObservableObject {
     public var tablePrefetcher: NXPostsFeedTablePrefetcher?
     
     public let vmInner = NXColumnViewModelInner()
+    private var newestMarkedAsReadSaveTask: Task<Void, Never>?
+    public var newestMarkedAsRead: Date? {
+        didSet {
+            guard newestMarkedAsRead != oldValue else { return }
+            let newestMarkedAsRead = newestMarkedAsRead
+            newestMarkedAsReadSaveTask?.cancel()
+            newestMarkedAsReadSaveTask = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 4_000_000_000)
+                guard !Task.isCancelled else { return }
+                await MainActor.run { [weak self] in
+                    guard let self, let feed = self.config?.feed else { return }
+                    guard feed.newestMarkedReadAt != newestMarkedAsRead else { return }
+                    feed.newestMarkedReadAt = newestMarkedAsRead
+                    DataProvider.shared().saveToDiskNow(.viewContext)
+                }
+            }
+        }
+    }
     
     private var didLoadFirstLocalState = false
     
@@ -137,43 +155,26 @@ class NXColumnViewModel: ObservableObject {
         return []
     }
     
-    // Use feed.refreshedAt for filling gaps, because most recent on screen can be from local db from a different column, so different query and may be missing posts from earlier
-    // We need to only update refreshed at after putting on screen from remote, not from local
+    // Use for filling gaps. Notes:
+    // - most recent on screen can be from local db from a different column, so different query and may be missing posts from earlier
+    // - use newest of either: feed.newestMarkedReadAt (iCloud synced) or feed.lastLocalFetchAt (UserDefaults)
+    // - if lastLocalFetchAt is newer than newestMarkedReadAt, then use that so we don't fetch the same posts over and over
+    // - loadRemote() is capped to not use since older than 24 hours ago (maxAgo)
+
     @MainActor
-    public var refreshedAt: Int64 {
-        get {
+    public var nextFetchSince: Int64 {
 #if DEBUG
-            
             if LESS_CACHE && IS_SIMULATOR { // Force to 6 hours ago for testing
                 return (Int64(Date().timeIntervalSince1970) - 21_600)
             }
 #endif
-            
             guard let config else { // 2 days ago if config is somehow missing
                 return (Int64(Date().timeIntervalSince1970) - 172_800)
             }
             
             switch config.columnType {
-            case .following(let feed), .picture(let feed), .vine(let feed), .yak(let feed):
-                if let refreshedAt = feed.refreshedAt, let mostRecentCreatedAt = self.mostRecentCreatedAt {
-                    return min(Int64(refreshedAt.timeIntervalSince1970),Int64(mostRecentCreatedAt) - 300)
-                }
-                if let refreshedAt = feed.refreshedAt { // 5 minutes before last refreshedAt
-                    return Int64(refreshedAt.timeIntervalSince1970) - 300
-                }
-                else if let mostRecentCreatedAt = self.mostRecentCreatedAt {
-                   return Int64(mostRecentCreatedAt) // or most recent on screen
-                }
-            case .pubkeys(let feed):
-                if let refreshedAt = feed.refreshedAt, let mostRecentCreatedAt = self.mostRecentCreatedAt {
-                    return min(Int64(refreshedAt.timeIntervalSince1970),Int64(mostRecentCreatedAt) - 300)
-                }
-                if let refreshedAt = feed.refreshedAt { // 5 minutes before last refreshedAt
-                    return Int64(refreshedAt.timeIntervalSince1970) - 300
-                }
-                else if let mostRecentCreatedAt = self.mostRecentCreatedAt {
-                   return Int64(mostRecentCreatedAt) // or most recent on screen
-                }
+            case .following(let feed), .picture(let feed), .vine(let feed), .yak(let feed), .pubkeys(let feed):
+                return Int64(max((feed.newestMarkedReadAt ?? .distantPast).timeIntervalSince1970, (feed.lastLocalFetchAt ?? .distantPast).timeIntervalSince1970))
             case .relays(_): // 8 hours
                 if let mostRecentCreatedAt = self.mostRecentCreatedAt {
                    return Int64(mostRecentCreatedAt) // or most recent on screen
@@ -183,28 +184,15 @@ class NXColumnViewModel: ObservableObject {
                 if let mostRecentCreatedAt = self.mostRecentCreatedAt {
                    return Int64(mostRecentCreatedAt) // or most recent on screen
                 }
-                // else take 8 hours?
-                return (Int64(Date().timeIntervalSince1970) - 28_800)
+                // else take 16 hours?
+                return (Int64(Date().timeIntervalSince1970) - 57_600)
             }
-            if let mostRecentCreatedAt = self.mostRecentCreatedAt {
-               return Int64(mostRecentCreatedAt) // or most recent on screen
-            }
-            // else take 2 days
-            return (Int64(Date().timeIntervalSince1970) - 172_800)
+        
+        if let mostRecentCreatedAt = self.mostRecentCreatedAt {
+           return Int64(mostRecentCreatedAt) // or most recent on screen
         }
-        set {
-            guard let config else { return }
-            switch config.columnType {
-            case .following(let feed), .picture(let feed), .vine(let feed), .yak(let feed):
-                feed.refreshedAt = Date(timeIntervalSince1970: TimeInterval(newValue))
-            case .pubkeys(let feed):
-                feed.refreshedAt = Date(timeIntervalSince1970: TimeInterval(newValue))
-            case .relays(let feed): // 8 hours
-                feed.refreshedAt = Date(timeIntervalSince1970: TimeInterval(newValue))
-            default:
-                return
-            }
-        }
+        // else take 16 hours?
+        return (Int64(Date().timeIntervalSince1970) - 57_600)
     }
     
     private var gapFiller: NXGapFiller?
@@ -390,7 +378,7 @@ class NXColumnViewModel: ObservableObject {
                 
         
         // Set up gap filler, don't trigger yet here
-        gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
+        gapFiller = NXGapFiller(since: self.nextFetchSince, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
         isViewPaused = false
         guard isVisible else { return }
         self.resetCancellables()
@@ -2891,10 +2879,10 @@ extension NXColumnViewModel {
         default:
             // Fetch since 5 minutes before most recent item on screen (since) or .refeshedAt
             let sinceTimestamp = if case .posts(let nrPosts) = viewState {
-                (nrPosts.first?.created_at ?? self.refreshedAt) - Int64(300)
+                (nrPosts.first?.created_at ?? self.nextFetchSince) - Int64(300)
             }
-            else { // or if empty screen: refreshedAt (since)
-                self.refreshedAt
+            else { // or if empty screen: nextFetchSince (since)
+                self.nextFetchSince
             }
             // Don't go older than 24 hrs ago
             let maxAgo = Int64(Date().addingTimeInterval(-86_400).timeIntervalSince1970)
@@ -2907,7 +2895,7 @@ extension NXColumnViewModel {
                 self.gapFiller?.fetchSimple(limit: 75)
             }
             
-            // If self.refreshedAt is longer than 15 minutes ago, fetch profiles
+            // If self.profilesFetchedAt is longer than 15 minutes ago, fetch profiles
             if let feed = config.feed, feed.profilesFetchedAt == nil || (feed.profilesFetchedAt?.timeIntervalSinceNow ?? 0) < -900 {
                 fetchProfiles(config)
             }

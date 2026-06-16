@@ -81,7 +81,7 @@ class NXGapFiller {
                 },
                 processResponseCommand: { [weak self] subId, _, _ in
                     guard let self else { return }
-                    self.columnVM?.refreshedAt = Int64(Date().timeIntervalSince1970)
+                    self.columnVM?.feed?.lastLocalFetchAt = Date()
 
                     self.columnVM?.speedTest?.relayFinished()
                     
@@ -163,7 +163,7 @@ class NXGapFiller {
                 },
                 processResponseCommand: { [weak self] subId, _, _ in
                     guard let self else { return }
-                    self.columnVM?.refreshedAt = Int64(Date().timeIntervalSince1970)
+                    self.columnVM?.feed?.lastLocalFetchAt = Date()
 
                     self.columnVM?.speedTest?.relayFinished()
                     
