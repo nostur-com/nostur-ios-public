@@ -766,6 +766,10 @@ class NXColumnViewModel: ObservableObject {
         }
         else {
             viewState = .loading
+            if SettingsStore.shared.appWideSeenTracker {
+                Deduplicator.shared.onScreenSeen = []
+            }
+            config.feed?.lastRead = []
             self.allShortIdsSeen = []
             startFetchFeedTimer()
             if config.continue {
