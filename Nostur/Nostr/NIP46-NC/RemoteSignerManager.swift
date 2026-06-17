@@ -367,13 +367,16 @@ class RemoteSignerManager: ObservableObject {
             self.connectToBunker(sessionPublicKey: ncRemoteSignerPubkey, relay: self.ncRelay)
         }
         
-        // the connect request, params are remote signer public key (used to be user pubkey) and the bunker provided redemption token
-        let request = if let token {
-            NCRequest(id: "connect-\(UUID().uuidString)", method: "connect", params: [ncRemoteSignerPubkey, token])
-        }
-        else {
-            NCRequest(id: "connect-\(UUID().uuidString)", method: "connect", params: [ncRemoteSignerPubkey])
-        }
+        // the connect request. NIP-46 params: [remote-signer pubkey, optional secret/redemption token,
+        // optional requested perms, optional client metadata]. Client metadata (NIP-46 PR #2381) lets the
+        // remote signer label this connection; it is a display hint only and is not authenticated. An empty
+        // string is passed for requested perms so the metadata occupies the required fourth position.
+        let clientMetadata: String = {
+            let meta = ["name": "Nostur", "url": "https://nostur.com", "image": "https://nostur.com/nostur.png"]
+            guard let data = try? JSONEncoder().encode(meta), let json = String(data: data, encoding: .utf8) else { return "" }
+            return json
+        }()
+        let request = NCRequest(id: "connect-\(UUID().uuidString)", method: "connect", params: [ncRemoteSignerPubkey, token ?? "", "", clientMetadata])
         let encoder = JSONEncoder()
         
         guard let requestJsonData = try? encoder.encode(request) else { state = .error; return }
