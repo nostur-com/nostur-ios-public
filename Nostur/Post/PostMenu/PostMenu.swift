@@ -255,6 +255,7 @@ struct PostMenu: View {
             .listRowBackground(theme.background)
             
         }
+        .contentMarginsTopCompat(0)
 
 //        .scrollContentBackgroundHidden()
 //        .background(theme.listBackground)
