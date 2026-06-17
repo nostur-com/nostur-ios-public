@@ -113,51 +113,49 @@ struct ZapLayout<Content: View, TitleContent: View>: View {
                 }
             }
         }
-        .padding(.vertical, 10)
+//        .padding(.vertical, 10)
         .background(alignment: .leading) {
             if connect == .bottom || connect == .both {
                 theme.lineColor
                     .frame(width: 1)
-                    .offset(x: THREAD_LINE_OFFSET, y: 20)
+                    .offset(x: THREAD_LINE_OFFSET, y: 10)
             }
         }
     }
     
     @ViewBuilder
     private var fullWidthLayout: some View {
-        VStack(spacing: 10) {
-            
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 10) {
-                regularPFP
-                NRPostHeaderContainer(nrPost: nrPost, singleLine: false, isDetail: isDetail)
-                if isDetail {
-                    Spacer()
-                    PostMenuButton(nrPost: nrPost, theme: theme)
+                VStack(alignment: .leading, spacing: 10) {
+                    regularPFP
+                    ZapAmountView(nrPost: nrPost, fromPubkey: fromPubkey, withPFP: false, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme)
+                }
+                
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(alignment: .top, spacing: 10) {
+                        NRPostHeaderContainer(nrPost: nrPost, singleLine: false, isDetail: isDetail)
+                        Spacer()
+                        PostMenuButton(nrPost: nrPost, theme: theme)
+                    }
+                    
+                    if missingReplyTo || nxViewingContext.contains(.screenshot) {
+                        ReplyingToFragmentView(nrPost: nrPost)
+                    }
+                    
+                    content
                 }
             }
             
-            // Post container
-            VStack(alignment: .leading, spacing: 3) {
-                
-                if missingReplyTo || nxViewingContext.contains(.screenshot) {
-                    ReplyingToFragmentView(nrPost: nrPost)
-                }
-                
-                HStack(alignment: .top, spacing: 10) {
-                    ZapAmountView(nrPost: nrPost, fromPubkey: fromPubkey, withPFP: false, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme)
-                    content
-                }
-                
-                if isDetail {
-                    DetailFooterFragment(nrPost: nrPost)
-                        .padding(.top, 10)
-                }
-                
-                if isDetail || ((!hideFooter && settings.rowFooterEnabled)) {
-                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, isItem: false, theme: theme)
-                        .background(theme.listBackground)
-                        .drawingGroup(opaque: true)
-                }
+            if isDetail {
+                DetailFooterFragment(nrPost: nrPost)
+                    .padding(.top, 10)
+            }
+            
+            if isDetail || ((!hideFooter && settings.rowFooterEnabled)) {
+                CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, isItem: false, theme: theme)
+                    .background(theme.listBackground)
+                    .drawingGroup(opaque: true)
             }
         }
     }
@@ -170,7 +168,7 @@ struct ZapLayout<Content: View, TitleContent: View>: View {
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
                         theme.lineColor
-                            .frame(width: 1, height: 20)
+                            .frame(width: 1, height: 10)
                             .offset(x: -0.5, y: -10)
                     }
                 }
@@ -208,7 +206,7 @@ struct ZapLayout<Content: View, TitleContent: View>: View {
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
                         theme.lineColor
-                            .frame(width: 1, height: 20)
+                            .frame(width: 1, height: 10)
                             .offset(x: -0.5, y: -10)
                     }
                 }

@@ -34,10 +34,10 @@ struct PostDetailView: View {
 //                        Color.red
 //                            .frame(height: 30)
 //                            .debugDimensions()
-                        PostAndParent(nrPost: nrPost,  navTitleHidden:navTitleHidden)
+                        PostAndParent(nrPost: nrPost,  navTitleHidden: navTitleHidden)
                         
                             // Around parents + detail (not replies)
-                            .padding(10)
+                            .padding(EdgeInsets(top: 10, leading: 10, bottom: 0, trailing: 10))
                             .background(theme.listBackground)
                             .overlay(alignment: .bottom) {
                                 theme.background.frame(height: GUTTER)

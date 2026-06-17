@@ -40,7 +40,7 @@ struct Box<Content: View>: View {
         let isDeleted = nrPost?.postRowDeletableAttributes.deletedById != nil
         self.navMode = isDeleted ? .noNavigation : (navMode ?? .background)
 
-        self.padding = (nrPost?.kind == 30023) ? 20 : 10
+        self.padding = (nrPost?.kind == 30023) ? 20 : 5
         self.content = content()
     }
 
@@ -50,7 +50,8 @@ struct Box<Content: View>: View {
             : theme.listBackground
         
         content
-            .padding(padding)
+//            .padding(padding)
+            .padding(EdgeInsets(top: 10, leading: 10, bottom: 0, trailing: 10))
             .background {
                 backgroundColor
                     .modifier {

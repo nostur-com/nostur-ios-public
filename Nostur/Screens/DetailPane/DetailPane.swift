@@ -24,7 +24,7 @@ struct DetailPane: View {
         VStack(spacing:0) {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing:0) {
+                    HStack(spacing: 0) {
                         ForEach(tm.tabs.indices, id:\.self) { index in
                             // TODO: Clean up / Refactor below:
                             NosturTabButton(

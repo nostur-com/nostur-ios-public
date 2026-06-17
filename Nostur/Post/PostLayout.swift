@@ -119,7 +119,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
             if connect == .bottom || connect == .both {
                 theme.lineColor
                     .frame(width: 1)
-                    .offset(x: THREAD_LINE_OFFSET, y: 20)
+                    .offset(x: THREAD_LINE_OFFSET, y: 10)
             }
         }
     }
@@ -182,7 +182,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
                         theme.lineColor
-                            .frame(width: 1, height: 20)
+                            .frame(width: 1, height: 10)
                             .offset(x: -0.5, y: -10)
                     }
                 }
@@ -220,7 +220,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
                         theme.lineColor
-                            .frame(width: 1, height: 20)
+                            .frame(width: 1, height: 10)
                             .offset(x: -0.5, y: -10)
                     }
                 }

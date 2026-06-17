@@ -37,7 +37,7 @@ struct PostAndParent: View {
 //#if DEBUG
 //        let _ = nxLogChanges(of: Self.self)
 //#endif
-        VStack(spacing: 10) {
+        VStack(spacing: 0) {
             // MARK: PARENT POST WITH POTENTIALLY ANOTHER PARENT
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId/.zappedEventId
             if let replyTo = nrPost.replyTo {
@@ -45,6 +45,7 @@ struct PostAndParent: View {
                     let connect:ThreadConnectDirection? = replyTo.replyToPostOrZapId != nil ? .both : .bottom
                     PostAndParent(nrPost: replyTo, connect: connect)
                         .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
+                        .padding(.bottom, 10)
                         .background(theme.listBackground)
                 }
                 else {
@@ -115,12 +116,14 @@ struct PostAndParent: View {
                                     navigateTo(nrPost, context: containerID)
                                 }
                         )
+                        .padding(.bottom, 10)
                 }
                 else {
                     PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != nil && nrPost.replyTo == nil, connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: theme)
                         .environment(\.nxViewingContext, [.selectableText, .postDetail, .detailPane])
 //                        .id(nrPost.id)
-                        .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
+//                        .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
+                        .padding(.bottom, 10)
                         .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
                         
                 }
