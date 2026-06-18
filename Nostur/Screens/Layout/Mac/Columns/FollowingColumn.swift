@@ -34,19 +34,6 @@ struct FollowingColumn: View {
             else if let columnConfig {
                 AvailableWidthContainer {
                     NXColumnView(config: columnConfig, isVisible: true)
-//                        .modifier { // need to hide glass bg in 26+
-//                            if #available(iOS 26.0, *) {
-//                                $0.toolbar {
-//                                    settingsButton
-//                                        .sharedBackgroundVisibility(.hidden)
-//                                }
-//                            }
-//                            else {
-//                                $0.toolbar {
-//                                    settingsButton
-//                                }
-//                            }
-//                        }
                 }
             }
         }
@@ -70,41 +57,8 @@ struct FollowingColumn: View {
             self.columnConfig = config
         }
     }
-    
-//    @ToolbarContentBuilder
-//    private var settingsButton: some ToolbarContent {
-//        ToolbarItem(placement: .navigationBarTrailing) {
-//            Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
-//                AppSheetsModel.shared.feedSettingsFeed = feed
-//            }
-//        }
-//    }
 }
 
-//@available(iOS 17.0, *)
-//#Preview {
-//    @Previewable @State var navPath = NBNavigationPath()
-//    @Previewable @State var columnType: MacColumnType = .following(nil)
-//    PreviewContainer({ pe in
-//        pe.loadContacts()
-//        pe.loadPosts()
-//    }) {
-//        NBNavigationStack(path: $navPath) {
-//            FollowingColumn(
-//                pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-//                navPath: $navPath,
-//                columnType: $columnType
-//            )
-//        }
-//    }
-//}
-//.onReceive(receiveNotification(.showingSomeoneElsesFeed)) { notification in
-//    let nrContact = notification.object as! NRContact
-//    if SettingsStore.shared.appWideSeenTracker {
-//        Deduplicator.shared.onScreenSeen = []
-//    }
-//    createSomeoneElsesFeed(nrContact.pubkey)
-//}
 
 
 private func createFollowingFeed(_ account: CloudAccount) async -> NXColumnConfig {
