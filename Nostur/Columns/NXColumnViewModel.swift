@@ -142,6 +142,7 @@ class NXColumnViewModel: ObservableObject {
     private var reloadWhenNeededSub: AnyCancellable?
     private var lastDisconnectionSub: AnyCancellable?
     private var onAppearSubjectSub: AnyCancellable?
+    private var onScreenSeenInsertedSub: AnyCancellable?
     public var watchForFirstConnection = false
     public var saveLocalStateSub: AnyCancellable?
     private var subscriptions = Set<AnyCancellable>()
@@ -303,36 +304,71 @@ class NXColumnViewModel: ObservableObject {
     private func removeUnreadPostsAlreadyMarkedReadInFeed() {
         guard let feed else { return }
         guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
-        
+
         mergeFeedLastReadIntoSeen(feed)
-        
-        // Only the keys of self.unreadIds where self.unreadIds[key] > 0
-        let unreadShortIds: Set<String> = Set(
-            vmInner.unreadIds.filter({ $0.value > 0 })
+        removeUnreadPostsAlreadyMarkedRead(Set(feed.lastRead), preservingVisiblePosts: false)
+    }
+
+    @MainActor
+    private func removeUnreadPostsAlreadyMarkedRead(_ seenShortIds: Set<String>, preservingVisiblePosts: Bool = true) {
+        guard SettingsStore.shared.appWideSeenTracker else { return }
+        guard !seenShortIds.isEmpty else { return }
+
+        let unreadKeysToRemove = Set(
+            vmInner.unreadIds
+                .filter { key, value in
+                    value > 0 && seenShortIds.contains(String(key.prefix(8)))
+                }
                 .keys
-                .map { String($0.prefix(8)) } // just the prefix
         )
-        
-        // Only the (short) unreadIds that are also in feedLastReadIds
-        let lastReadIdsToRemove: Set<String> = unreadShortIds.intersection(Set(feed.lastRead))
-        guard !lastReadIdsToRemove.isEmpty else { return }
-        
-        let unreadKeysToRemove = vmInner.unreadIds.keys.filter {
-            lastReadIdsToRemove.contains(String($0.prefix(8)))
+
+        let visiblePostIds = preservingVisiblePosts ? currentVisiblePostIds() : []
+        var postIdsToRemove = unreadKeysToRemove.subtracting(visiblePostIds)
+        if case .posts(let existingPosts) = viewState {
+            for post in existingPosts where !visiblePostIds.contains(post.id) && vmInner.unreadIds[post.id, default: 0] > 0 && postContainsAnyShortId(post, in: seenShortIds) {
+                postIdsToRemove.insert(post.id)
+            }
         }
-        
-        for key in unreadKeysToRemove {
+
+        guard !postIdsToRemove.isEmpty else { return }
+
+        for key in postIdsToRemove {
             vmInner.unreadIds[key] = nil
         }
         vmInner.updateIsAtTopSubject.send()
-        
+
         if case .posts(let existingPosts) = viewState {
             withAnimation { // withAnimation and not at top keeps scroll position
-                viewState = .posts(existingPosts.filter { !lastReadIdsToRemove.contains($0.shortId) })
+                viewState = .posts(existingPosts.filter { !postIdsToRemove.contains($0.id) })
             }
         }
     }
-    
+
+    @MainActor
+    private func currentVisiblePostIds() -> Set<String> {
+        guard case .posts(let posts) = viewState else { return [] }
+
+        if let collectionView {
+            return Set(collectionView.indexPathsForVisibleItems.compactMap { indexPath in
+                posts.indices.contains(indexPath.row) ? posts[indexPath.row].id : nil
+            })
+        }
+
+        if let tableView {
+            return Set(tableView.indexPathsForVisibleRows?.compactMap { indexPath in
+                posts.indices.contains(indexPath.row) ? posts[indexPath.row].id : nil
+            } ?? [])
+        }
+
+        return []
+    }
+
+    private func postContainsAnyShortId(_ post: NRPost, in shortIds: Set<String>) -> Bool {
+        if shortIds.contains(post.shortId) { return true }
+        if post.kind == 6, let firstQuoteId = post.firstQuoteId, shortIds.contains(String(firstQuoteId.prefix(8))) { return true }
+        return post.parentPosts.contains { shortIds.contains($0.shortId) }
+    }
+
     private var syncFeedSubject = PassthroughSubject<Void, Never>()
     private var loadLocalSubject = PassthroughSubject<(NXColumnConfig, Bool, (() -> Void)?), Never>()
     
@@ -345,6 +381,7 @@ class NXColumnViewModel: ObservableObject {
         reloadWhenNeededSub?.cancel()
         lastDisconnectionSub?.cancel()
         onAppearSubjectSub?.cancel()
+        onScreenSeenInsertedSub?.cancel()
         saveLocalStateSub?.cancel()
         muteListUpdatedSub?.cancel()
         mutedWordsChangedSub?.cancel()
@@ -418,7 +455,11 @@ class NXColumnViewModel: ObservableObject {
         reloadWhenNeededSub?.cancel()
         reloadWhenNeededSub = nil
         reloadWhenNeeded(config)
-        
+
+        onScreenSeenInsertedSub?.cancel()
+        onScreenSeenInsertedSub = nil
+        listenForOnScreenSeenInserted(config)
+
         resumeFeedSub?.cancel()
         resumeFeedSub = nil
         listenForResumeFeed(config)
@@ -464,6 +505,24 @@ class NXColumnViewModel: ObservableObject {
         listenForNextTickSub(config)
     }
     
+    @MainActor
+    private func listenForOnScreenSeenInserted(_ config: NXColumnConfig) {
+        guard onScreenSeenInsertedSub == nil else { return }
+        guard SettingsStore.shared.appWideSeenTracker else { return }
+
+        switch config.columnType {
+        case .picture, .vine, .yak, .pubkeysPreview, .relayPreview:
+            return
+        default:
+            break
+        }
+
+        onScreenSeenInsertedSub = Deduplicator.shared.onScreenSeenInsertedSubject
+            .sink { [weak self] insertedShortIds in
+                self?.removeUnreadPostsAlreadyMarkedRead(insertedShortIds)
+            }
+    }
+
     private var nextTickSub: AnyCancellable?
     public func fetchFeedTimerNextTick() {
         nextTickSubject.send()

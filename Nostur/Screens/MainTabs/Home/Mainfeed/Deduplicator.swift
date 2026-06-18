@@ -7,10 +7,18 @@
 
 import Foundation
 import CoreData
+import Combine
 
 class Deduplicator {
     // prefix / .shortId only
-    public var onScreenSeen: Set<String> = []
+    public var onScreenSeen: Set<String> = [] {
+        didSet {
+            let insertedIds = onScreenSeen.subtracting(oldValue)
+            guard !insertedIds.isEmpty else { return }
+            onScreenSeenInsertedSubject.send(insertedIds)
+        }
+    }
+    public let onScreenSeenInsertedSubject = PassthroughSubject<Set<String>, Never>()
     static let shared = Deduplicator()
     
     private init() {
@@ -29,4 +37,3 @@ class Deduplicator {
 #endif
     }
 }
-
