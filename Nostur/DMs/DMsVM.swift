@@ -301,6 +301,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     @MainActor
     public func restoreSubscriptions() {
         guard ready, !ncNotSupported, !accountPubkey.isEmpty else { return }
+        loadConversations(fullReload: true)
         fetchNip04DMs()
         fetchGiftWraps(forceRefresh: true)
     }
