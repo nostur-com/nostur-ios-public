@@ -253,6 +253,7 @@ struct NRPostOrChatMessage: View {
                     ReactionsForThisNote(reactions: groupedReactions.reactions, isDM: false)
                     NoteMinimalContentView(nrPost: nrPost)
                 }
+                .padding(.bottom, 10)
             }
         } else if let nrChatMessage = groupedReactions.nrChatMessage {
             Box(navMode: .view) {
@@ -260,6 +261,7 @@ struct NRPostOrChatMessage: View {
                     ReactionsForThisNote(reactions: groupedReactions.reactions, isDM: true)
                     MinimalChatMessageTextRenderView(nrChatMessage: nrChatMessage)
                 }
+                .padding(.bottom, 10)
             }
         }
         else {

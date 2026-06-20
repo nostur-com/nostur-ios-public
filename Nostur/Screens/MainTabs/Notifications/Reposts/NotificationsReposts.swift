@@ -60,6 +60,7 @@ struct NotificationsReposts: View {
                                             }
                                     }
                                 }
+                                .padding(.bottom, 10)
                             }
                             .overlay(alignment: .topTrailing) {
                                 Ago(nrPost.createdAt).layoutPriority(2)

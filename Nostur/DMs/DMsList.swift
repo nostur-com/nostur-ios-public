@@ -46,6 +46,7 @@ struct DMsInnerList: View {
                                 ForEach(vm.conversationRows) { dmState in
                                     Box(navMode: .noNavigation) {
                                         DMStateRow(dmState: dmState, accountPubkey: vm.accountPubkey, vm: vm)
+                                            .padding(.bottom, 10)
                                     }
                                     .contentShape(Rectangle())
                                     .onTapGesture {
@@ -87,7 +88,6 @@ struct DMsInnerList: View {
                                         .foregroundStyle(Color.secondary)
                                 }
                             }
-                            .padding(5)
                         }
                         else {
                             LazyVStack(alignment: .leading, spacing: GUTTER) {

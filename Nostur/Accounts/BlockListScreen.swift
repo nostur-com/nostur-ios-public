@@ -184,6 +184,7 @@ struct MutedConversationsView: View {
                                 .contentShape(Rectangle())
                                 .onTapGesture { navigateTo(NotePath(id: event.id), context: containerID) }
                         }
+                        .padding(.bottom, 10)
                     }
                     else {
                         HStack(spacing: 10) {
@@ -193,6 +194,7 @@ struct MutedConversationsView: View {
                                 .contentShape(Rectangle())
                                 .onTapGesture { navigateTo(NotePath(id: mutedRootId.eventId), context: containerID) }
                         }
+                        .padding(.bottom, 10)
                     }
                 }
                 .id(mutedRootId.eventId)
