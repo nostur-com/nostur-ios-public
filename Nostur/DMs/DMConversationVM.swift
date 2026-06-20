@@ -140,6 +140,8 @@ class ConversionVM: ObservableObject {
     private let yearIdFormatter: DateFormatter
     
     private var subscriptions: Set<AnyCancellable> = []
+    private var foregroundRestoreCompletionSubscription: AnyCancellable?
+    private var foregroundRestoreRefreshTask: Task<Void, Never>?
     
     public var dmState: CloudDMState? = nil
     
@@ -184,49 +186,8 @@ class ConversionVM: ObservableObject {
         self.isAccepted = self.dmState?.accepted ?? false
 
         if let dmState { // Should always exists because getGroupState() gets existing or creates new
-            
-            let keyPair: (publicKey: String, privateKey: String)? = if let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }), let privateKey = account.privateKey {
-                (publicKey: account.publicKey, privateKey: privateKey)
-            } else {
-                nil
-            }
-            
-            var visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair)
-            await attachReactions(to: &visibleMessages)
-            
-            self.onScreenIds = Set(visibleMessages.map { $0.id })
-            
-            let calendar = Calendar.current
-            
-            var messagesByDay: [Date: [NRChatMessage]] {
-                return Dictionary(grouping: visibleMessages) { nrChatMessage in
-                    calendar.startOfDay(for: nrChatMessage.createdAt)
-                }
-            }
-            
-            let days = messagesByDay.map { (date, messages) in
-                ConversationDay(
-                    dayId: dayIdFormatter.string(from: date),
-                    date: date,
-                    messages: messages // .sorted(by: { $0.createdAt < $1.createdAt })
-                )
-            }.sorted(by: { $0.dayId > $1.dayId })
-            
-            var daysByYear: [String: [ConversationDay]] {
-                return Dictionary(grouping: days) { day in
-                    yearIdFormatter.string(from: day.date)
-                }
-            }
-            
-            let years = daysByYear.map { (year, days) in
-                ConversationYear(
-                    year: year,
-                    days: days
-                )
-            }.sorted(by: { $0.year > $1.year })
-            
-            viewState = .ready(years)
-            lastMessageId = visibleMessages.last?.id
+            let visibleMessages = await localMessages(for: dmState)
+            applyVisibleMessages(visibleMessages)
             
             // add DM state to parent vm
             parentDMsVM.addDMState(dmState)
@@ -277,7 +238,45 @@ class ConversionVM: ObservableObject {
     @MainActor
     public func restoreSubscriptions() async {
         guard didLoad else { return }
+        startForegroundRestoreRefresh()
         await load(force: true)
+    }
+    
+    @MainActor
+    private func refreshFromLocalMessages() async {
+        guard let dmState else { return }
+        let visibleMessages = await localMessages(for: dmState)
+        applyVisibleMessages(visibleMessages, preservingRenderedMessages: true)
+    }
+    
+    @MainActor
+    private func startForegroundRestoreRefresh() {
+        foregroundRestoreCompletionSubscription?.cancel()
+        foregroundRestoreCompletionSubscription = Importer.shared.importedMessagesFromSubscriptionIds
+            .receive(on: RunLoop.main)
+            .filter { subscriptionIds in
+                subscriptionIds.contains(where: { $0.hasPrefix("-OPEN-59-") })
+            }
+            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    await self?.refreshFromLocalMessages()
+                    self?.foregroundRestoreCompletionSubscription?.cancel()
+                    self?.foregroundRestoreCompletionSubscription = nil
+                }
+            }
+        
+        foregroundRestoreRefreshTask?.cancel()
+        foregroundRestoreRefreshTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            guard !Task.isCancelled else { return }
+            await self?.refreshFromLocalMessages()
+            
+            try? await Task.sleep(nanoseconds: 8_500_000_000)
+            guard !Task.isCancelled else { return }
+            self?.foregroundRestoreCompletionSubscription?.cancel()
+            self?.foregroundRestoreCompletionSubscription = nil
+        }
     }
     
     private func listenForNewMessages() {
@@ -394,6 +393,77 @@ class ConversionVM: ObservableObject {
         }
         
         return dmEvents
+    }
+    
+    @MainActor
+    private func localMessages(for dmState: CloudDMState) async -> [NRChatMessage] {
+        let keyPair: (publicKey: String, privateKey: String)? = if let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }), let privateKey = account.privateKey {
+            (publicKey: account.publicKey, privateKey: privateKey)
+        } else {
+            nil
+        }
+        
+        var visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair)
+        await attachReactions(to: &visibleMessages)
+        return visibleMessages
+    }
+    
+    @MainActor
+    private func applyVisibleMessages(_ visibleMessages: [NRChatMessage], preservingRenderedMessages: Bool = false) {
+        let messages = preservingRenderedMessages ? mergedWithRenderedMessages(visibleMessages) : visibleMessages
+        self.onScreenIds = Set(messages.map { $0.id })
+        
+        let calendar = Calendar.current
+        
+        var messagesByDay: [Date: [NRChatMessage]] {
+            return Dictionary(grouping: messages) { nrChatMessage in
+                calendar.startOfDay(for: nrChatMessage.createdAt)
+            }
+        }
+        
+        let days = messagesByDay.map { (date, messages) in
+            ConversationDay(
+                dayId: dayIdFormatter.string(from: date),
+                date: date,
+                messages: messages
+            )
+        }.sorted(by: { $0.dayId > $1.dayId })
+        
+        var daysByYear: [String: [ConversationDay]] {
+            return Dictionary(grouping: days) { day in
+                yearIdFormatter.string(from: day.date)
+            }
+        }
+        
+        let years = daysByYear.map { (year, days) in
+            ConversationYear(
+                year: year,
+                days: days
+            )
+        }.sorted(by: { $0.year > $1.year })
+        
+        viewState = .ready(years)
+        lastMessageId = messages.last?.id
+    }
+    
+    @MainActor
+    private func mergedWithRenderedMessages(_ localMessages: [NRChatMessage]) -> [NRChatMessage] {
+        guard case .ready(let years) = viewState else {
+            return localMessages
+        }
+        
+        let renderedMessages = years
+            .flatMap { $0.days }
+            .flatMap { $0.messages }
+        
+        let renderedById = renderedMessages.reduce(into: [String: NRChatMessage]()) { result, message in
+            result[message.id] = message
+        }
+        var mergedMessages = localMessages.map { renderedById[$0.id] ?? $0 }
+        let localIds = Set(localMessages.map { $0.id })
+        
+        mergedMessages.append(contentsOf: renderedMessages.filter { !localIds.contains($0.id) })
+        return mergedMessages.sorted(by: { $0.createdAt < $1.createdAt })
     }
 
     private func fetchReactions(forMessageIds messageIds: [String]) async -> [NEvent] {
@@ -1005,6 +1075,8 @@ class ConversionVM: ObservableObject {
     }
     
     deinit {
+        foregroundRestoreCompletionSubscription?.cancel()
+        foregroundRestoreRefreshTask?.cancel()
         let instanceId = ObjectIdentifier(self)
         Task { @MainActor in
             Self.unregister(instanceId)
