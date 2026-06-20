@@ -115,6 +115,7 @@ extension AppView {
                     sendNotification(.scenePhaseActive)
                     FeedsCoordinator.shared.resumeFeeds()
                     DMsVM.restoreSubscriptions()
+                    ConversionVM.restoreSubscriptions()
                     NotificationsViewModel.restoreSubscriptions()
                     AppState.shared.startTaskTimers()
                     try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
@@ -127,6 +128,7 @@ extension AppView {
                 sendNotification(.scenePhaseActive)
                 FeedsCoordinator.shared.resumeFeeds()
                 DMsVM.restoreSubscriptions()
+                ConversionVM.restoreSubscriptions()
                 NotificationsViewModel.restoreSubscriptions()
                 AppState.shared.startTaskTimers()
             }

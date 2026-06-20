@@ -44,6 +44,41 @@ struct PendingFileAttachment {
 }
 
 class ConversionVM: ObservableObject {
+    private final class WeakConversionVMBox {
+        weak var value: ConversionVM?
+        
+        init(_ value: ConversionVM) {
+            self.value = value
+        }
+    }
+    
+    @MainActor private static var liveInstances: [ObjectIdentifier: WeakConversionVMBox] = [:]
+    
+    static func restoreSubscriptions() {
+        Task { @MainActor in
+            cleanupLiveInstances()
+            for vm in liveInstances.values.compactMap(\.value) {
+                await vm.restoreSubscriptions()
+            }
+        }
+    }
+    
+    @MainActor
+    private static func register(_ vm: ConversionVM) {
+        cleanupLiveInstances()
+        liveInstances[ObjectIdentifier(vm)] = WeakConversionVMBox(vm)
+    }
+    
+    @MainActor
+    private static func unregister(_ id: ObjectIdentifier) {
+        liveInstances.removeValue(forKey: id)
+    }
+    
+    @MainActor
+    private static func cleanupLiveInstances() {
+        liveInstances = liveInstances.filter { $0.value.value != nil }
+    }
+    
     public var participants: Set<String> // all participants (including sender)
     public var ourAccountPubkey: String {
         didSet {
@@ -126,6 +161,12 @@ class ConversionVM: ObservableObject {
         self.yearIdFormatter = yearIdFormatter
         
         self.parentDMsVM = parentDMsVM
+        
+        Task { @MainActor [weak self] in
+            if let self {
+                Self.register(self)
+            }
+        }
     }
     
     private var didLoad = false
@@ -231,6 +272,12 @@ class ConversionVM: ObservableObject {
         // newer giftwraps will be fetched from general DMsVM.fetchGiftWraps(), can't query conversation specific with metadata hidden
         self.fetchDMrelays()
         self.listenForNewMessages()
+    }
+    
+    @MainActor
+    public func restoreSubscriptions() async {
+        guard didLoad else { return }
+        await load(force: true)
     }
     
     private func listenForNewMessages() {
@@ -954,6 +1001,13 @@ class ConversionVM: ObservableObject {
                     )
                 }
             }
+        }
+    }
+    
+    deinit {
+        let instanceId = ObjectIdentifier(self)
+        Task { @MainActor in
+            Self.unregister(instanceId)
         }
     }
 }

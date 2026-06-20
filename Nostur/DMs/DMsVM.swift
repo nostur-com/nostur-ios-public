@@ -302,6 +302,9 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     public func restoreSubscriptions() {
         guard ready, !ncNotSupported, !accountPubkey.isEmpty else { return }
         loadConversations(fullReload: true)
+        fetchDMrelays()
+        ConnectionPool.shared.closeSubscription(sentDMSubscriptionId)
+        ConnectionPool.shared.closeSubscription(receivedDMSubscriptionId)
         fetchNip04DMs()
         fetchGiftWraps(forceRefresh: true)
     }
