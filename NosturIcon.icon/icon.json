@@ -41,8 +41,12 @@
               "value" : true
             },
             {
+              "appearance" : "light",
+              "value" : true
+            },
+            {
               "idiom" : "square",
-              "value" : false
+              "value" : true
             },
             {
               "appearance" : "dark",
@@ -55,7 +59,15 @@
               "value" : true
             }
           ],
-          "hidden" : false,
+          "hidden-specializations" : [
+            {
+              "value" : false
+            },
+            {
+              "idiom" : "square",
+              "value" : false
+            }
+          ],
           "image-name" : "Logo Black.svg",
           "name" : "Logo Black",
           "position-specializations" : [
