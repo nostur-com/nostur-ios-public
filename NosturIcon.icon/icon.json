@@ -71,10 +71,10 @@
             {
               "idiom" : "square",
               "value" : {
-                "scale" : 1.45,
+                "scale" : 1.34,
                 "translation-in-points" : [
                   0,
-                  -51
+                  -35
                 ]
               }
             },
