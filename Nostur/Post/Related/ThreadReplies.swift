@@ -13,6 +13,7 @@ struct ThreadReplies: View {
     @State private var timer: Timer? = nil
     @State private var showNotWoT = false
     @State private var didLoad = false
+    @State private var expandedFooterPostId: String? = nil
     
     var body: some View {
 #if DEBUG
@@ -25,7 +26,7 @@ struct ThreadReplies: View {
                         .frame(height: 30) // need some space or footer buttons of detail post dissapear behind toolbar
                 }
                 ForEach(nrPost.groupedRepliesSorted) { reply in
-                    PostOrThread(nrPost: reply, theme: theme, rootId: nrPost.id)
+                    PostOrThread(nrPost: reply, theme: theme, rootId: nrPost.id, expandedFooterPostId: $expandedFooterPostId)
                         .id(reply.id)
                         .animation(Animation.spring(), value: nrPost.groupedRepliesSorted)
                 }
@@ -43,7 +44,7 @@ struct ThreadReplies: View {
                     }
                     if showNotWoT {
                         ForEach(nrPost.groupedRepliesNotWoT) { reply in
-                            PostOrThread(nrPost: reply, theme: theme, rootId: nrPost.id)
+                            PostOrThread(nrPost: reply, theme: theme, rootId: nrPost.id, expandedFooterPostId: $expandedFooterPostId)
                                 .id(reply.id)
                         }
                         .animation(Animation.spring(), value: nrPost.groupedRepliesNotWoT)

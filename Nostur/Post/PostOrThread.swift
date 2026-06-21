@@ -20,14 +20,17 @@ struct PostOrThread: View { //, Equatable {
     private var theme: Theme
     @ObservedObject private var postOrThreadAttributes:  PostOrThreadAttributes
     private var rootId: String? = nil
+    @Binding private var expandedFooterPostId: String?
     @ObservedObject private  var settings: SettingsStore = .shared
     @State private var attemptedMissingReplyFetchIds: Set<String> = []
+    private let threadFooterAnimation = Animation.spring(response: 0.35, dampingFraction: 0.82, blendDuration: 0.12)
     
-    init(nrPost: NRPost, theme: Theme, rootId: String? = nil) {
+    init(nrPost: NRPost, theme: Theme, rootId: String? = nil, expandedFooterPostId: Binding<String?> = .constant(nil)) {
         self.nrPost = nrPost
         self.postOrThreadAttributes = nrPost.postOrThreadAttributes
         self.rootId = rootId
         self.theme = theme
+        self._expandedFooterPostId = expandedFooterPostId
     }
     
     var body: some View {
@@ -42,14 +45,24 @@ struct PostOrThread: View { //, Equatable {
                             fetchMissingReplyParentIfNeeded(for: nrPost)
                         }
                 }
-                
-                Box(nrPost: nrPost) {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: hasMissingReplyTo(nrPost), connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
+
+                if rootId != nil {
+                    compactThreadPost(
+                        nrPost,
+                        missingReplyTo: hasMissingReplyTo(nrPost),
+                        connect: nrPost.replyToPostOrZapId != nil ? .top : nil,
+                        fullWidth: settings.fullWidthImages
+                    )
                 }
-                .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-                .background {
-                    if nrPost.kind == 30023 {
-                        theme.secondaryBackground
+                else {
+                    Box(nrPost: nrPost) {
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: hasMissingReplyTo(nrPost), connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
+                    }
+                    .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
+                    .background {
+                        if nrPost.kind == 30023 {
+                            theme.secondaryBackground
+                        }
                     }
                 }
             }
@@ -64,23 +77,22 @@ struct PostOrThread: View { //, Equatable {
                 }
 
                 ForEach(visibleParentPosts) { nrParent in
-                    Box(nrPost: nrParent, showGutter: false) {
-                        PostRowDeletable(nrPost: nrParent,
-                                         hideFooter: true,
-                                         missingReplyTo: nrParent.replyToPostOrZapId != rootId && nrParent.replyToPostOrZapId != nil && nrParent.id == visibleParentPosts.first?.id,
-                                         connect: nrParent.isReplyToPostOrZap || visibleParentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, theme: theme)
-                    }
-                    .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-                    //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
-//                    .withoutAnimation()
-                    .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
+                    compactThreadPost(
+                        nrParent,
+                        hideFooter: true,
+                        missingReplyTo: nrParent.replyToPostOrZapId != rootId && nrParent.replyToPostOrZapId != nil && nrParent.id == visibleParentPosts.first?.id,
+                        connect: nrParent.isReplyToPostOrZap || visibleParentPosts.first?.id != nrParent.id ? .both : .bottom,
+                        fullWidth: false,
+                        showGutter: false
+                    )
                 }
 
-                Box(nrPost: nrPost) {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != rootId && nrPost.replyToPostOrZapId != nil && visibleParentPosts.isEmpty, connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
-                }
-                .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-                .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
+                compactThreadPost(
+                    nrPost,
+                    missingReplyTo: nrPost.replyToPostOrZapId != rootId && nrPost.replyToPostOrZapId != nil && visibleParentPosts.isEmpty,
+                    connect: nrPost.replyToPostOrZapId != nil ? .top : nil,
+                    fullWidth: settings.fullWidthImages
+                )
             }
             .background { // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
                 if nrPost.kind == 30023 {
@@ -96,6 +108,52 @@ struct PostOrThread: View { //, Equatable {
     private var visibleParentPosts: [NRPost] {
         guard let rootId else { return postOrThreadAttributes.parentPosts }
         return postOrThreadAttributes.parentPosts.filter { $0.id != rootId }
+    }
+
+    @ViewBuilder
+    private func compactThreadPost(
+        _ note: NRPost,
+        hideFooter: Bool = true,
+        missingReplyTo: Bool = false,
+        connect: ThreadConnectDirection? = nil,
+        fullWidth: Bool,
+        showGutter: Bool = true
+    ) -> some View {
+        Box(nrPost: note, showGutter: showGutter) {
+            VStack(alignment: .leading, spacing: 0) {
+                PostRowDeletable(
+                    nrPost: note,
+                    hideFooter: hideFooter,
+                    missingReplyTo: missingReplyTo,
+                    connect: connect,
+                    fullWidth: fullWidth,
+                    isDetail: false,
+                    theme: theme
+                )
+
+                if expandedFooterPostId == note.id {
+                    CustomizableFooterFragmentView(nrPost: note, theme: theme)
+                        .padding(.leading, DIMENSIONS.ROW_PFP_SPACE)
+                        .transition(
+                            .asymmetric(
+                                insertion: .move(edge: .top).combined(with: .opacity),
+                                removal: .opacity
+                            )
+                        )
+                }
+            }
+        }
+        .id(note.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
+        .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.35)
+                .onEnded { _ in
+                    withAnimation(threadFooterAnimation) {
+                        expandedFooterPostId = expandedFooterPostId == note.id ? nil : note.id
+                    }
+                }
+        )
+        .animation(threadFooterAnimation, value: expandedFooterPostId)
     }
 
     @ViewBuilder
