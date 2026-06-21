@@ -61,6 +61,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Nostur uses the camera to scan QR codes and capture photos.</string>
 	<key>TENOR_API_KEY</key>
 	<string>$(TENOR_API_KEY)</string>
 	<key>TENOR_CLIENT_KEY</key>
