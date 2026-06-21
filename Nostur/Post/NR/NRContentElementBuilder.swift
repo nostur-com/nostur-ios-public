@@ -56,7 +56,7 @@ class NRContentElementBuilder {
                 else if !matchString.matchingStrings(regex: Self.videoUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
                         let iMeta: iMetaInfo? = findImeta(fastTags, url: matchString)
-                        result.append(ContentElement.video(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash)))
+                        result.append(ContentElement.video(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash, thumbnailUrl: iMeta?.posterUrl)))
                     }
                     else {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
@@ -342,6 +342,7 @@ struct MediaContent: Hashable {
     var url: URL
     var dimensions: CGSize?
     var blurHash: String?
+    var thumbnailUrl: URL?
     
     var aspect: CGFloat {
         if let dimensions {
@@ -388,6 +389,7 @@ private func getTagValues(_ tag: FastTag) -> [String?] {
 struct iMetaInfo {
     var size: CGSize?
     var blurHash: String?
+    var posterUrl: URL? = nil
     
     var aspect: CGFloat? {
         if let size {
@@ -449,8 +451,17 @@ func iMetaFromFastTag(_ fastTag: FastTag) -> iMetaInfo? {
         }
     }
     
-    if blurHash != nil || size != nil {
-        return iMetaInfo(size: size, blurHash: blurHash)
+    var posterUrl: URL?
+    for value in getTagValues(fastTag) {
+        guard let value = value else { continue }
+        let parts = value.split(separator: " ", maxSplits: 1)
+        if parts.count == 2 && String(parts[0]) == "image" {
+            posterUrl = URL(string: String(parts[1]))
+        }
+    }
+    
+    if blurHash != nil || size != nil || posterUrl != nil {
+        return iMetaInfo(size: size, blurHash: blurHash, posterUrl: posterUrl)
     }
     
     return nil

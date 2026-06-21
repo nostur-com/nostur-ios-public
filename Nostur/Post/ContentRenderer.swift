@@ -193,7 +193,9 @@ struct ContentRenderer: View { // VIEW things
                             url: mediaContent.url,
                             pubkey: nrPost.pubkey,
                             nrPost: nrPost,
-                            autoload: shouldAutoload
+                            metaDimension: mediaContent.dimensions,
+                            autoload: shouldAutoload,
+                            thumbnail: mediaContent.thumbnailUrl ?? nrPost.eventImageUrl
                         )
                         .environment(\.availableWidth, availableWidth + (fullWidth ? 20 : 0))
                         .padding(.horizontal, fullWidth ? -10 : 0)
@@ -261,13 +263,7 @@ struct ContentRenderer: View { // VIEW things
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .overlay(alignment: .center) {
-                                    Image(systemName: "play.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 100, height: 100)
-                                        .opacity(0.8)
-    //                                        .centered()
-                                        .contentShape(Rectangle())
+                                    VideoPlayOverlay(size: 88)
                                 }
                         }
                         else {
