@@ -12,6 +12,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
+    @State private var showFooter = false
     
     private let hideFooter: Bool // For rendering in NewReply
     private let missingReplyTo: Bool // For rendering in thread
@@ -74,10 +75,28 @@ struct PostLayout<Content: View, TitleContent: View>: View {
 //#endif
         if isDetail || fullWidth {
             fullWidthLayout
+                .simultaneousGesture(
+                            LongPressGesture(minimumDuration: 0.35)
+                                .onEnded { _ in
+                                    withAnimation {
+                                        showFooter = true
+                                    }
+                                }
+                        )
+
 //                .background(theme.listBackground)
         }
         else {
             normalLayout
+                .simultaneousGesture(
+                            LongPressGesture(minimumDuration: 0.35)
+                                .onEnded { _ in
+                                    withAnimation {
+                                        showFooter = true
+                                    }
+                                }
+                        )
+
 //                .background(theme.listBackground)
         }
     }
@@ -108,7 +127,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
                 // No need for DetailFooterFragment here because .isDetail will always be in .fullWidthLayout
                 
-                if (!hideFooter && settings.rowFooterEnabled) && !isItem { // also no footer for items (only in Detail)
+                if ((!hideFooter || showFooter) && settings.rowFooterEnabled) && !isItem { // also no footer for items (only in Detail)
                     CustomizableFooterFragmentView(nrPost: nrPost, isItem: isItem, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
@@ -164,7 +183,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                         .padding(.top, 10)
                 }
                 
-                if isDetail || ((!hideFooter && settings.rowFooterEnabled) && !isItem) {
+                if isDetail || (((!hideFooter || showFooter) && settings.rowFooterEnabled) && !isItem) {
                     CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, isItem: isItem, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
