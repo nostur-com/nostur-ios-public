@@ -104,6 +104,7 @@ struct DMConversationView: View {
                     }
                     .scrollContentBackgroundCompat(.hidden)
                     .listStyle(.plain)
+                    .scaleEffect(x: 1, y: -1, anchor: .center)
                     .modifier {
                         if #available(iOS 26.0, *) {
                             // iOS 26 adds a translucent scroll-edge effect (UIKit.ScrollEdgeEffectView,
@@ -113,14 +114,6 @@ struct DMConversationView: View {
                             $0.scrollEdgeEffectHidden(true, for: .all)
                         } else {
                             $0
-                        }
-                    }
-                    .modifier {
-                        if #available(iOS 26.0, *) {
-                            // Fix SwiftUI Bug, -1 becomes blurry on 26+
-                            $0.scaleEffect(x: 1, y: -0.999, anchor: .center)
-                        } else {
-                            $0.scaleEffect(x: 1, y: -1, anchor: .center)
                         }
                     }
                     .onTapGesture {
