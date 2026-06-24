@@ -22,17 +22,35 @@ struct EmbeddedVideoView: View {
     public let autoload: Bool
     public var thumbnail: URL?
     
+    private var effectiveAspect: CGFloat {
+        if let metaDimension, metaDimension.width > 0, metaDimension.height > 0 {
+            return metaDimension.width / metaDimension.height
+        }
+        return vm.aspect
+    }
+    
+    private var frameHeight: CGFloat {
+        availableHeight ?? (availableWidth / effectiveAspect)
+    }
+    
+    private var thumbnailAspect: CGFloat {
+        if let metaDimension, metaDimension.width > 0, metaDimension.height > 0 {
+            return metaDimension.width / metaDimension.height
+        }
+        return 16 / 9
+    }
+    
     var body: some View {
         switch vm.viewState {
         case .initial:
             theme.background.opacity(0.7)
-                .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: frameHeight)
                 .overlay {
                     if let thumbnail {
                         MediaContentView(
                             galleryItem: GalleryItem(url: thumbnail),
                             availableWidth: availableWidth,
-                            placeholderAspect: 16/9,
+                            placeholderAspect: thumbnailAspect,
                             maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                             contentMode: .fit,
                             autoload: autoload
@@ -44,17 +62,17 @@ struct EmbeddedVideoView: View {
                     ProgressView()
                 }
                 .onAppear {
-                    vm.load(url, nrPost: nrPost, autoLoad: autoload)
+                    vm.load(url, nrPost: nrPost, autoLoad: autoload, metaDimensions: metaDimension, availableWidth: availableWidth, availableHeight: availableHeight ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                 }
         case .loading(let percentage), .paused(let percentage):
             theme.background.opacity(0.7)
-                .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: frameHeight)
                 .overlay {
                     if let thumbnail {
                         MediaContentView(
                             galleryItem: GalleryItem(url: thumbnail),
                             availableWidth: availableWidth,
-                            placeholderAspect: 16/9,
+                            placeholderAspect: thumbnailAspect,
                             maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                             contentMode: .fit,
                             autoload: autoload
@@ -78,14 +96,14 @@ struct EmbeddedVideoView: View {
                     }
                     else {
                         vm.viewState = .loading(vm.downloadProgress)
-                        vm.load(url, nrPost: nrPost, autoLoad: autoload, loadAnyway: true)
+                        vm.load(url, nrPost: nrPost, autoLoad: autoload, metaDimensions: metaDimension, availableWidth: availableWidth, availableHeight: availableHeight ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, loadAnyway: true)
                     }
                 }
                 .overlay {
                     if case .paused(_) = vm.viewState {
                         Button("Resume") {
                             vm.viewState = .loading(vm.downloadProgress)
-                            vm.load(url, nrPost: nrPost, autoLoad: autoload, loadAnyway: true)
+                            vm.load(url, nrPost: nrPost, autoLoad: autoload, metaDimensions: metaDimension, availableWidth: availableWidth, availableHeight: availableHeight ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, loadAnyway: true)
                         }
                     }
                 }
@@ -136,12 +154,12 @@ struct EmbeddedVideoView: View {
                 
         case .loadedFirstFrame(let firstFrame):
             theme.background.opacity(0.7)
-                .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: frameHeight)
                 .overlay {
                     Image(uiImage: firstFrame.uiImage)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                        .frame(width: availableWidth, height: frameHeight)
                         .overlay(alignment: .bottomLeading) {
                             if let durationString = firstFrame.durationString {
                                 Text(durationString)
@@ -155,13 +173,7 @@ struct EmbeddedVideoView: View {
                 }
                 .overlay(alignment: .center) {
                     if vm.downloadProgress == 0 {
-                        Image(systemName: "play.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 90, height: 90)
-                            .opacity(0.8)
-                            .foregroundColor(theme.accent)
-                            .contentShape(Rectangle())
+                        VideoPlayOverlay(size: 88, accentColor: theme.accent)
                             .onTapGesture {
                                 vm.startPlaying()
                             }
@@ -180,7 +192,7 @@ struct EmbeddedVideoView: View {
                 }
         case .playingInPIP:
             Color.black
-                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : frameHeight)
                 .overlay {
                     Image(systemName: "pip")
                         .resizable()
@@ -196,7 +208,7 @@ struct EmbeddedVideoView: View {
                 }
         case .noPreviewFound(let videoUrlString):
             theme.background.opacity(0.7)
-                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : frameHeight)
                 .overlay {
                     if SettingsStore.shared.lowDataMode {
                         Text(videoUrlString)
@@ -207,7 +219,7 @@ struct EmbeddedVideoView: View {
                         MediaContentView(
                             galleryItem: GalleryItem(url: thumbnail),
                             availableWidth: availableWidth,
-                            placeholderAspect: 16/9,
+                            placeholderAspect: thumbnailAspect,
                             maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                             contentMode: .fit,
                             autoload: autoload
@@ -218,13 +230,7 @@ struct EmbeddedVideoView: View {
                 }
                 .overlay {
                     if vm.downloadProgress == 0 {
-                        Image(systemName:"play.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 90, height: 90)
-                            .opacity(0.8)
-                            .foregroundColor(theme.accent)
-                            .contentShape(Rectangle())
+                        VideoPlayOverlay(size: 88, accentColor: theme.accent)
                             .onTapGesture {
                                 vm.startPlaying()
                             }
@@ -255,6 +261,29 @@ struct EmbeddedVideoView: View {
         default:
             Text("📽️")
         }
+    }
+}
+
+struct VideoPlayOverlay: View {
+    var size: CGFloat = 88
+    var accentColor: Color = .white
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Circle()
+                        .strokeBorder(Color.white.opacity(0.35), lineWidth: 1)
+                }
+                .shadow(color: .black.opacity(0.18), radius: 16, y: 8)
+            Image(systemName: "play.fill")
+                .font(.system(size: size * 0.34, weight: .semibold))
+                .foregroundStyle(accentColor)
+                .offset(x: size * 0.04)
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
     }
 }
 
