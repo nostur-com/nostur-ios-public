@@ -190,12 +190,20 @@ struct CustomNWCConnectSheet: View {
                 }
             }
         }
-        .sheet(isPresented: $showQRScanner) {
-            NWCQRScannerSheet { scannedValue in
-                importNWCURI(scannedValue, autoConnect: true)
+        .modifier {
+            if !IS_CATALYST {
+                $0.sheet(isPresented: $showQRScanner) {
+                    NWCQRScannerSheet { scannedValue in
+                        importNWCURI(scannedValue, autoConnect: true)
+                    }
+                    .presentationBackgroundCompat(theme.listBackground)
+                }
             }
-            .presentationBackgroundCompat(theme.listBackground)
+            else {
+                $0
+            }
         }
+       
     }
     
     func startNWC() {

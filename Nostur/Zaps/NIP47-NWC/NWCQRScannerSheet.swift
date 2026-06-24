@@ -78,6 +78,7 @@ struct NWCQRScannerSheet: View {
         }
     }
     
+#if canImport(VisionKit) && !targetEnvironment(macCatalyst)
     private var dataScannerContent: AnyView {
         if #available(iOS 16.0, *) {
             return AnyView(
@@ -93,6 +94,11 @@ struct NWCQRScannerSheet: View {
             return AnyView(unavailableView)
         }
     }
+#else
+    private var dataScannerContent: AnyView {
+        return AnyView(unavailableView)
+    }
+#endif
     
     private var instructionBanner: some View {
         Text(String(localized: "Point your camera at your wallet's NWC QR code", comment: "Instruction shown while scanning a Nostr Wallet Connect QR code"))

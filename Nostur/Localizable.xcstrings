@@ -2661,6 +2661,9 @@
         }
       }
     },
+    "Camera access is needed to scan an NWC QR code" : {
+      "comment" : "Explanation shown when camera permission is denied for the NWC QR scanner"
+    },
     "Cancel" : {
       "localizations" : {
         "nl" : {
@@ -2909,6 +2912,12 @@
           }
         }
       }
+    },
+    "Clipboard does not contain a Nostr Wallet Connect URI" : {
+      "comment" : "Error shown when the clipboard has no Nostr Wallet Connect URI to paste"
+    },
+    "Clipboard does not contain a valid Nostr Wallet Connect URI" : {
+      "comment" : "Error shown when pasted clipboard text is not a valid Nostr Wallet Connect URI"
     },
     "Close" : {
       "comment" : "Button to close this screen",
@@ -7847,6 +7856,9 @@
         }
       }
     },
+    "Open Settings" : {
+      "comment" : "Button to open system settings after camera permission was denied"
+    },
     "Open with" : {
       "localizations" : {
         "nl" : {
@@ -7922,6 +7934,9 @@
           }
         }
       }
+    },
+    "Paste" : {
+      "comment" : "Button to paste a Nostr Wallet Connect URI from the clipboard"
     },
     "Pay" : {
       "comment" : "Button to pay a lightning invoice",
@@ -8182,6 +8197,9 @@
           }
         }
       }
+    },
+    "Point your camera at your wallet's NWC QR code" : {
+      "comment" : "Instruction shown while scanning a Nostr Wallet Connect QR code"
     },
     "Portrait" : {
       "shouldTranslate" : false
@@ -8854,6 +8872,9 @@
           }
         }
       }
+    },
+    "QR scanning is not available on this device" : {
+      "comment" : "Message shown when QR scanning is not available on the current device"
     },
     "Quote" : {
       "comment" : "Button to Quote a post",
@@ -10150,6 +10171,12 @@
     "Saved to picker" : {
 
     },
+    "Scan QR" : {
+      "comment" : "Button to scan a QR code for Nostr Wallet Connect setup\nNavigation title for the Nostr Wallet Connect QR scanner"
+    },
+    "Scanned QR code is not a valid Nostr Wallet Connect URI" : {
+      "comment" : "Error shown when a scanned QR code is not a valid Nostr Wallet Connect URI"
+    },
     "Scanning relays for messages %lld/12 months ago..." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -11275,6 +11302,9 @@
         }
       }
     },
+    "Starting camera…" : {
+      "comment" : "Loading message shown while preparing the QR scanner camera"
+    },
     "Status" : {
       "comment" : "Connection status header",
       "localizations" : {
@@ -12117,6 +12147,12 @@
           }
         }
       }
+    },
+    "Torch Off" : {
+      "comment" : "Button to turn off the torch while scanning a QR code"
+    },
+    "Torch On" : {
+      "comment" : "Button to turn on the torch while scanning a QR code"
     },
     "Total: %lld" : {
       "localizations" : {
