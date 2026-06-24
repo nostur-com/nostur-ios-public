@@ -274,7 +274,27 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         )
     }
     
-    private var lastGiftWrapAt: Int = Int((Date(timeIntervalSinceNow: -518_400)).timeIntervalSince1970) // 6 days
+    // NIP-17 / NIP-59 randomize the gift wrap (kind 1059) created_at up to 2 days into the past,
+    // so to avoid missing messages we look back 2 days before our newest known NIP-17 message
+    // instead of re-fetching a fixed 6-day window every session/refresh. The lookback is clamped
+    // to at most 6 days so a stale inbox (newest message is weeks old) doesn't re-pull a huge
+    // range on every 60s timer refresh.
+    private static let nip17RandomizationWindow: TimeInterval = 2 * 24 * 60 * 60 // 48 hours
+    private static let maxGiftWrapLookback: TimeInterval = 6 * 24 * 60 * 60 // 6 days
+
+    private var lastGiftWrapAt: Int {
+        let oldestAllowed = Date(timeIntervalSinceNow: -Self.maxGiftWrapLookback)
+        let newestNip17 = dmStates
+            .filter { $0.version == 17 }
+            .compactMap { $0.lastMessageTimestamp_ }
+            .max()
+        guard let newestNip17 else {
+            return Int(oldestAllowed.timeIntervalSince1970) // no NIP-17 history yet
+        }
+        // 2 days before our newest NIP-17 message, but never older than 6 days ago.
+        let since = max(newestNip17.addingTimeInterval(-Self.nip17RandomizationWindow), oldestAllowed)
+        return Int(since.timeIntervalSince1970)
+    }
     
     private var giftWrapSubscriptionId: String {
         "-OPEN-59-" + self.id
