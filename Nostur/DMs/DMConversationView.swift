@@ -106,6 +106,17 @@ struct DMConversationView: View {
                     .listStyle(.plain)
                     .modifier {
                         if #available(iOS 26.0, *) {
+                            // iOS 26 adds a translucent scroll-edge effect (UIKit.ScrollEdgeEffectView,
+                            // backgroundReplay alpha 0.85). On this inverted list the geometric top edge
+                            // renders at the visual bottom (over the bubbles) and its pocket grows with the
+                            // composer's safe-area inset, obscuring chat when the input expands to 2+ lines.
+                            $0.scrollEdgeEffectHidden(true, for: .all)
+                        } else {
+                            $0
+                        }
+                    }
+                    .modifier {
+                        if #available(iOS 26.0, *) {
                             // Fix SwiftUI Bug, -1 becomes blurry on 26+
                             $0.scaleEffect(x: 1, y: -0.999, anchor: .center)
                         } else {
