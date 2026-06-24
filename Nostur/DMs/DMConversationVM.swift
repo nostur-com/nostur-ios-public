@@ -997,12 +997,30 @@ class ConversionVM: ObservableObject {
     
     @MainActor
     public func fetchNip04DMs() {
-        if participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first, !receiver.isEmpty {
+        guard participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first, !receiver.isEmpty else { return }
+
+        let conversationId = self.conversationId
+        let ourAccountPubkey = self.ourAccountPubkey
+
+        Task { @MainActor in
+            // Only backfill messages newer than what we already have stored locally, instead of
+            // re-downloading up to 999 messages every time the conversation is (re)opened.
+            // NIP-04 (kind 4) timestamps are not randomized, so the newest stored created_at is a
+            // safe lower bound. (NIP-17 randomizes created_at up to 2 days; NIP-04 does not.)
+            let since: Int? = await withBgContext { bgContext in
+                let fr = NSFetchRequest<Event>(entityName: "Event")
+                fr.predicate = NSPredicate(format: "groupId == %@ AND kind == 4", conversationId)
+                fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+                fr.fetchLimit = 1
+                return (try? bgContext.fetch(fr))?.first.map { Int($0.created_at) }
+            }
+
             nxReq(
                 Filters(
                     authors: [ourAccountPubkey],
                     kinds: [4],
                     tagFilter: TagFilter(tag: "p", values: [receiver]),
+                    since: since,
                     limit: 999
                 ),
                 subscriptionId: "DM-S-\(conversationId.prefix(16))-\(conversationId.suffix(16))"
@@ -1013,6 +1031,7 @@ class ConversionVM: ObservableObject {
                     authors: [receiver],
                     kinds: [4],
                     tagFilter: TagFilter(tag: "p", values: [ourAccountPubkey]),
+                    since: since,
                     limit: 999
                 ),
                 subscriptionId: "DM-R-\(conversationId.prefix(16))-\(conversationId.suffix(16))"
