@@ -2062,6 +2062,54 @@ class NXColumnViewModel: ObservableObject {
         }
     }
     
+    public func markShortIdSeen(_ shortId: String) {
+        if case .pubkeysPreview(_) = config?.columnType {
+            return
+        }
+        else if case .relayPreview(_) = config?.columnType {
+            return
+        }
+        else if case .picture(_) = config?.columnType {
+            _allShortIdsSeen.insert(shortId)
+        }
+        else if case .vine(_) = config?.columnType {
+            _allShortIdsSeen.insert(shortId)
+        }
+        else if case .yak(_) = config?.columnType {
+            _allShortIdsSeen.insert(shortId)
+        }
+        else if SettingsStore.shared.appWideSeenTracker {
+            Deduplicator.shared.insertOnScreenSeen(shortId)
+        }
+        else {
+            _allShortIdsSeen.insert(shortId)
+        }
+    }
+    
+    public func markShortIdsSeen(_ shortIds: Set<String>) {
+        if case .pubkeysPreview(_) = config?.columnType {
+            return
+        }
+        else if case .relayPreview(_) = config?.columnType {
+            return
+        }
+        else if case .picture(_) = config?.columnType {
+            _allShortIdsSeen.formUnion(shortIds)
+        }
+        else if case .vine(_) = config?.columnType {
+            _allShortIdsSeen.formUnion(shortIds)
+        }
+        else if case .yak(_) = config?.columnType {
+            _allShortIdsSeen.formUnion(shortIds)
+        }
+        else if SettingsStore.shared.appWideSeenTracker {
+            Deduplicator.shared.formUnionOnScreenSeen(shortIds)
+        }
+        else {
+            _allShortIdsSeen.formUnion(shortIds)
+        }
+    }
+    
     // Only shortIds: String(id.prefix(8))
     private var _allShortIdsSeen: Set<String> = []
     

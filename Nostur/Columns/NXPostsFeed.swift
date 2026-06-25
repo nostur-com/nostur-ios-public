@@ -375,14 +375,16 @@ struct NXPostsFeed: View {
 
 func performIDCollectionUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
     if nrPost.postOrThreadAttributes.parentPosts.isEmpty {
-        vm.allShortIdsSeen.insert(nrPost.shortId)
         if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
-            vm.allShortIdsSeen.insert(String(firstQuoteId.prefix(8)))
+            vm.markShortIdsSeen([nrPost.shortId, String(firstQuoteId.prefix(8))])
+        }
+        else {
+            vm.markShortIdSeen(nrPost.shortId)
         }
     }
     else {
         let leafIds: Set<String> = Set(nrPost.postOrThreadAttributes.parentPosts.map { $0.shortId } + [nrPost.shortId])
-        vm.allShortIdsSeen.formUnion(leafIds)
+        vm.markShortIdsSeen(leafIds)
     }
 }
 
