@@ -239,6 +239,8 @@ class ConversionVM: ObservableObject {
     public func restoreSubscriptions() async {
         guard didLoad else { return }
         startForegroundRestoreRefresh()
+        try? await Task.sleep(nanoseconds: 2_200_000_000)
+        guard !Task.isCancelled else { return }
         await load(force: true)
     }
     

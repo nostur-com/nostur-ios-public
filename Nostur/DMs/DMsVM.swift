@@ -40,19 +40,6 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         self.id == Self.shared.id
     }
     
-    // Only for main
-    private var lastDMLocalNotifcationAt: Int {
-        get {
-            let key = accountSpecificKey(accountPubkey, forKey: "last_dm_local_notification_timestamp")
-            return UserDefaults.standard.integer(forKey: key)
-        }
-        set {
-            let key = accountSpecificKey(accountPubkey, forKey: "last_dm_local_notification_timestamp")
-            UserDefaults.standard.setValue(newValue, forKey: key)
-        }
-    }
-    var lastNotificationReceivedAt: Date? = nil
-    
     // Tracks the conversationId currently visible to the user (Mac only)
     var activeConversationId: String? = nil
     
@@ -61,6 +48,8 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     
     static func restoreSubscriptions() {
         Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard !Task.isCancelled else { return }
             cleanupLiveInstances()
             for vm in liveInstances.values.compactMap(\.value) {
                 vm.restoreSubscriptions()
@@ -256,6 +245,11 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         ready = true
         showUpgradeNotice = await shouldShowUpgradeNotice(accountPubkey: self.accountPubkey)
         self.listenForNewMessages()
+        
+    
+        // Always delay 1.5 second so more important other reqs go first at launch / reopen from bg
+        try? await Task.sleep(nanoseconds: 1_500_000_000)
+        guard !Task.isCancelled else { return }
         self.fetchNip04DMs()
         self.fetchGiftWraps()
         self.startGiftWrapsTimer()
@@ -384,13 +378,35 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         return accountDMRelays.union(kind10050Relays)
     }
     
+    private var lastNip04Since: Int {
+        get {
+            let key = accountSpecificKey(accountPubkey, forKey: "last_nip04_since")
+            return UserDefaults.standard.integer(forKey: key)
+        }
+        set {
+            let key = accountSpecificKey(accountPubkey, forKey: "last_nip04_since")
+            UserDefaults.standard.setValue(newValue, forKey: key)
+        }
+    }
+    
+    private static let maxNip04Lookback: TimeInterval = 6 * 24 * 60 * 60 // 6 days
+    
+    private var nip04Since: Int {
+        let oldestAllowed = Int(Date(timeIntervalSinceNow: -Self.maxNip04Lookback).timeIntervalSince1970)
+
+        // since last, but never older than 6 days ago.
+        let since = max(lastNip04Since, oldestAllowed)
+        return since
+    }
+    
     public func fetchNip04DMs() {
         // TODO: Add "since" per account, store timestamp in user defaults
         nxReq(
             Filters(
                 authors: [accountPubkey],
                 kinds: [4],
-                limit: 999
+                since: lastNip04Since,
+                limit: 999,
             ),
             subscriptionId: sentDMSubscriptionId
         )
@@ -399,10 +415,14 @@ class DMsVM: ObservableObject, Equatable, Hashable {
             Filters(
                 kinds: [4],
                 tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
+                since: lastNip04Since,
                 limit: 999
             ),
             subscriptionId: receivedDMSubscriptionId
         )
+        
+        // TODO: Should actually check if REQ was succuess and not disconnected etc
+        lastNip04Since = Int(Date().timeIntervalSince1970)
     }
     
     deinit {
@@ -470,7 +490,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 // Don't send notification if it is our own message
                 guard nEvent.publicKey != self.accountPubkey else { return }
                 
-                guard nEvent.createdAt.timestamp > self.lastDMLocalNotifcationAt else { return }
+                guard nEvent.createdAt.timestamp > self.lastNip04Since else { return }
                 
                 let followingPubkeys = account(by: self.accountPubkey)?.followingPubkeys ?? []
                 

@@ -327,7 +327,7 @@ class NotificationsViewModel: ObservableObject {
     private func setupRestoreRelaySubSubscriptions() {
         if restoreRelaySubSubcription == nil { // Subscribe to the singleton
             restoreRelaySubSubcription = NotificationsViewModel.shared.sharedRestoreSubscriptionsSubject
-                .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
+                .debounce(for: .seconds(1.2), scheduler: RunLoop.main)
                 .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
                 .sink { [weak self] _ in
                     Task { @MainActor in
@@ -395,13 +395,18 @@ class NotificationsViewModel: ObservableObject {
     public var requestSince: Int64 { // TODO: If event .created_at, is in the future don't save date
         let oneWeekAgo = (Int64(Date.now.timeIntervalSince1970) - 604_800)
         guard let account else { return oneWeekAgo }
+        guard let accountPubkey = self.pubkey else { return oneWeekAgo }
+        
+        let key = accountSpecificKey(accountPubkey, forKey: "last_dm_local_notification_timestamp")
+        let lastDMLocalNotificationTimestamp = UserDefaults.standard.integer(forKey: key)
+        
         return [
             oneWeekAgo,
             account.lastSeenRepostCreatedAt,
             account.lastSeenPostCreatedAt,
             account.lastSeenZapCreatedAt,
             account.lastSeenReactionCreatedAt,
-            (DMsVM.shared.lastNotificationReceivedAt?.timeIntervalSince1970 as? Int64) ?? oneWeekAgo
+            max(Int64(lastDMLocalNotificationTimestamp),oneWeekAgo)
         ].sorted(by: >).first!
     }
     
