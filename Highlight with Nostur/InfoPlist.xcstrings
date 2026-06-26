@@ -17,6 +17,12 @@
             "value" : "Compartir texto seleccionado con Nostur"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan teks yang dipilih dengan Nostur"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -41,6 +47,12 @@
             "value" : "Compartir texto seleccionado con Nostur"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan teks yang dipilih dengan Nostur"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -60,6 +72,12 @@
           }
         },
         "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        },
+        "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : ""
