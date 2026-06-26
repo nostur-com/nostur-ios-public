@@ -684,7 +684,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**%@** y %lld otros zap publicaron tu publicación."
+            "value" : "**%@** y %lld otros enviaron un zap a tu publicación"
           }
         },
         "nl" : {
@@ -766,7 +766,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**%@** zapescribió tu publicación"
+            "value" : "**%@** envió un zap a tu publicación"
           }
         },
         "nl" : {
@@ -783,7 +783,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**%@** zapescribió su perfil"
+            "value" : "**%@** envió un zap a tu perfil"
           }
         },
         "nl" : {
@@ -1198,7 +1198,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tipo %1$@ Tipo %2$@ no compatible (todavía)"
+            "value" : "kind %1$@ tipo %2$@ aún no compatible"
           }
         },
         "nl" : {
@@ -1286,7 +1286,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ Enviar satélites"
+            "value" : "%@ Enviar sats"
           }
         },
         "nl" : {
@@ -4667,7 +4667,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cerca"
+            "value" : "Cerrar"
           }
         },
         "nl" : {
@@ -5098,7 +5098,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conecte la billetera Alby"
+            "value" : "Conecta la billetera Alby"
           }
         },
         "nl" : {
@@ -5166,7 +5166,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conecte su billetera **Alby** con **Nostur** para disfrutar de una experiencia de zapping perfecta"
+            "value" : "Conecta tu billetera **Alby** con **Nostur** para una experiencia de zapping fluida"
           }
         },
         "nl" : {
@@ -5182,7 +5182,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conecte su billetera compatible con NWC con **Nostur** para una experiencia de zapping perfecta"
+            "value" : "Conecta tu billetera compatible con NWC con **Nostur** para una experiencia de zapping fluida"
           }
         },
         "nl" : {
@@ -9464,7 +9464,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "tipo %@ tipo no soportado (todavía)"
+            "value" : "kind %@ aún no compatible"
           }
         },
         "nl" : {
@@ -9804,7 +9804,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Como"
+            "value" : "Me gusta"
           }
         }
       }
@@ -9929,7 +9929,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Liza"
+            "value" : "Listas"
           }
         },
         "nl" : {
@@ -16630,7 +16630,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enviar satélites %@ a %@"
+            "value" : "Enviar %@ sats a %@"
           }
         },
         "nl" : {
@@ -16723,7 +16723,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "enviar satélites"
+            "value" : "Enviar sats"
           }
         },
         "nl" : {
