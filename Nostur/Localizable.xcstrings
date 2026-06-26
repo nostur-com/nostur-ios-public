@@ -525,7 +525,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[#asknostr](buka:t:asknostr)"
+            "value" : "[#asknostr](nostur:t:asknostr)"
           }
         },
         "nl" : {
@@ -569,7 +569,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[#bitcoin](lihat:t:bitcoin)"
+            "value" : "[#bitcoin](nostur:t:bitcoin)"
           }
         },
         "nl" : {
@@ -591,7 +591,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[#rantai kopi](nostur:t:rantai kopi)"
+            "value" : "[#coffeechain](nostur:t:coffeechain)"
           }
         },
         "nl" : {
@@ -657,7 +657,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[#grownostr](lihat:t:grownostr)"
+            "value" : "[#grownostr](nostur:t:grownostr)"
           }
         },
         "nl" : {
@@ -723,7 +723,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[#nostr](lihat:t:nostr)"
+            "value" : "[#nostr](nostur:t:nostr)"
           }
         },
         "nl" : {
@@ -767,7 +767,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[#zapathon](lihat:t:zapathon)"
+            "value" : "[#zapathon](nostur:t:zapathon)"
           }
         },
         "nl" : {
@@ -1698,7 +1698,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ mem-posting ulang"
+            "value" : "%@ memposting ulang"
           }
         },
         "nl" : {
@@ -2813,7 +2813,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1w"
+            "value" : "1 minggu"
           }
         },
         "nl" : {
@@ -5708,7 +5708,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tembolok"
+            "value" : "Cache"
           }
         },
         "nl" : {
@@ -5981,7 +5981,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Memeriksa apa yang Anda ikuti zapped..."
+            "value" : "Memeriksa postingan yang dikirimi zap oleh orang yang Anda ikuti..."
           }
         },
         "nl" : {
@@ -7062,7 +7062,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hubungkan dompet **Alby** Anda dengan **Nostur** untuk pengalaman zapping yang lancar"
+            "value" : "Hubungkan dompet **Alby** Anda dengan **Nostur** agar kirim zap lebih lancar"
           }
         },
         "nl" : {
@@ -7084,7 +7084,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hubungkan dompet kompatibel NWC Anda dengan **Nostur** untuk pengalaman zapping yang lancar"
+            "value" : "Hubungkan dompet kompatibel NWC Anda dengan **Nostur** agar kirim zap lebih lancar"
           }
         },
         "nl" : {
@@ -8126,7 +8126,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Penghitung untuk balasan, suka, zaps dll."
+            "value" : "Penghitung balasan, suka, zap, dan lainnya"
           }
         },
         "nl" : {
@@ -8284,7 +8284,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Buat Sarang Audio Anda"
+            "value" : "Buat Audio Nest Anda"
           }
         },
         "nl" : {
@@ -8600,7 +8600,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Basis Data & Tembolok"
+            "value" : "Database & Cache"
           }
         },
         "nl" : {
@@ -8860,7 +8860,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jumlah zap default"
+            "value" : "Jumlah zap bawaan"
           }
         },
         "nl" : {
@@ -10708,7 +10708,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "zaps gagal"
+            "value" : "zap gagal"
           }
         },
         "nl" : {
@@ -10936,7 +10936,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pengambilan suka/zaps/balasan dihitung saat postingan muncul"
+            "value" : "Mengambil jumlah suka/zap/balasan saat postingan muncul"
           }
         },
         "nl" : {
@@ -13690,7 +13690,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sarang Langsung atau streaming dari berikut"
+            "value" : "Nest live atau streaming dari orang yang Anda ikuti"
           }
         },
         "nl" : {
@@ -14081,7 +14081,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mode Data Rendah"
+            "value" : "Mode Hemat Data"
           }
         },
         "nl" : {
@@ -14104,7 +14104,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modus Data Rendah"
+            "value" : "Mode Hemat Data"
           }
         },
         "nl" : {
@@ -14401,7 +14401,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tembolok media"
+            "value" : "Cache media"
           }
         },
         "nl" : {
@@ -15286,7 +15286,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Judul sarang"
+            "value" : "Judul Nest"
           }
         },
         "nl" : {
@@ -15308,7 +15308,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server Audio Sarang"
+            "value" : "Server Audio Nest"
           }
         },
         "nl" : {
@@ -15330,7 +15330,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server sarang"
+            "value" : "Server Nest"
           }
         },
         "nl" : {
@@ -15352,7 +15352,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server sarang:"
+            "value" : "Server Nest:"
           }
         },
         "nl" : {
@@ -15375,7 +15375,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sarang akan diumumkan pada:"
+            "value" : "Nest akan diumumkan di:"
           }
         },
         "nl" : {
@@ -15981,7 +15981,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "zaps baru"
+            "value" : "Zap baru"
           }
         },
         "nl" : {
@@ -18457,7 +18457,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Postingan dari siapa pun yang paling banyak zap dipedulikan oleh orang yang Anda ikuti"
+            "value" : "Postingan dari siapa pun yang paling banyak dikirimi zap oleh orang yang Anda ikuti"
           }
         },
         "nl" : {
@@ -18914,7 +18914,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "zap Pribadi"
+            "value" : "Zap pribadi"
           }
         },
         "nl" : {
@@ -20770,7 +20770,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingat jumlah ini untuk semua zaps"
+            "value" : "Ingat jumlah ini untuk semua zap"
           }
         },
         "nl" : {
@@ -21489,7 +21489,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "mem-posting ulang"
+            "value" : "memposting ulang"
           }
         },
         "nl" : {
@@ -24089,7 +24089,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tampilkan nilai fiat zaps"
+            "value" : "Tampilkan nilai fiat zap"
           }
         },
         "nl" : {
@@ -24679,7 +24679,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mulai Sarang"
+            "value" : "Mulai Nest"
           }
         },
         "nl" : {
@@ -24701,7 +24701,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mulai Nest (Ruang Audio)"
+            "value" : "Mulai Nest (ruang audio)"
           }
         },
         "nl" : {
@@ -24908,7 +24908,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dukung orang-orang yang menyusun daftar berkualitas tinggi dengan zapping mereka"
+            "value" : "Dukung orang yang menyusun daftar berkualitas dengan mengirim zap kepada mereka"
           }
         },
         "nl" : {
@@ -25750,7 +25750,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Zapped menampilkan postingan dari siapa saja yang paling banyak zapped oleh orang yang Anda ikuti dalam %lld jam terakhir"
+            "value" : "Feed Zapped menampilkan postingan dari siapa pun yang paling banyak dikirimi zap oleh orang yang Anda ikuti dalam %lld jam terakhir"
           }
         },
         "nl" : {
@@ -27570,7 +27570,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "zaps tidak terverifikasi"
+            "value" : "Zap tidak terverifikasi"
           }
         },
         "nl" : {
@@ -29099,7 +29099,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dompet **Alby** Anda sekarang terhubung dengan **Nostur**, kini Anda dapat menikmati pengalaman zapping yang lancar!"
+            "value" : "Dompet **Alby** Anda sekarang terhubung dengan **Nostur**. Sekarang Anda bisa mengirim zap dengan lebih lancar!"
           }
         },
         "nl" : {
@@ -29121,7 +29121,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alamat Anda untuk menerima zaps telah disetel ke: %@"
+            "value" : "Alamat Anda untuk menerima zap telah diatur ke: %@"
           }
         },
         "nl" : {
@@ -29227,7 +29227,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dompet Anda sekarang terhubung dengan **Nostur**, kini Anda dapat menikmati pengalaman zapping yang lancar!"
+            "value" : "Dompet Anda sekarang terhubung dengan **Nostur**. Sekarang Anda bisa mengirim zap dengan lebih lancar!"
           }
         },
         "nl" : {
@@ -29295,7 +29295,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zap tanda terima dari"
+            "value" : "Tanda terima zap dari"
           }
         },
         "nl" : {
@@ -29341,7 +29341,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zapped %@"
+            "value" : "Mengirim zap ke %@"
           }
         },
         "nl" : {
@@ -29365,7 +29365,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zapped %@ dengan %@"
+            "value" : "Mengirim zap %@ sats %@"
           }
         },
         "nl" : {
@@ -29387,7 +29387,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kerangka waktu umpan Zapped"
+            "value" : "Rentang waktu feed Zapped"
           }
         },
         "nl" : {
@@ -29410,7 +29410,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zapping"
+            "value" : "Mengirim zap"
           }
         },
         "nl" : {
@@ -29433,7 +29433,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "zaps"
+            "value" : "zap"
           }
         },
         "nl" : {
@@ -29456,7 +29456,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaps"
+            "value" : "Zap"
           }
         },
         "nl" : {
@@ -29479,7 +29479,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaps gagal pada: %@ (Waktu habis)."
+            "value" : "Zap gagal pada: %@ (waktu habis)."
           }
         },
         "nl" : {
@@ -29502,7 +29502,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaps mungkin gagal pada: %@."
+            "value" : "Zap mungkin gagal pada: %@."
           }
         },
         "nl" : {
@@ -29526,7 +29526,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaps diterima baru-baru ini"
+            "value" : "Zap yang diterima baru-baru ini"
           }
         },
         "nl" : {
@@ -29548,7 +29548,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaps yang Anda terima akan muncul di sini"
+            "value" : "Zap yang Anda terima akan muncul di sini"
           }
         },
         "nl" : {
