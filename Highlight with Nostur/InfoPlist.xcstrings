@@ -11,6 +11,12 @@
             "value" : "Share selected text with Nostur"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir texto seleccionado con Nostur"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -29,6 +35,12 @@
             "value" : "Share selected text with Nostur"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir texto seleccionado con Nostur"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -44,6 +56,12 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : ""
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : ""
           }
         }
