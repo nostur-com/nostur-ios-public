@@ -585,7 +585,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[#cadenadecafe](nostur:t:cadenadecafe)"
+            "value" : "[#coffeechain](nostur:t:coffeechain)"
           }
         },
         "id" : {
@@ -1692,7 +1692,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ volvió a publicar"
+            "value" : "%@ republicó"
           }
         },
         "id" : {
@@ -2807,7 +2807,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1s"
+            "value" : "1 semana"
           }
         },
         "id" : {
@@ -5702,7 +5702,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "cachés"
+            "value" : "Cachés"
           }
         },
         "id" : {
@@ -5975,7 +5975,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comprobando lo que sigues zapped..."
+            "value" : "Comprobando qué publicaciones recibieron zap de las personas que sigues..."
           }
         },
         "id" : {
@@ -7056,7 +7056,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conecta tu billetera **Alby** con **Nostur** para una experiencia de zapping fluida"
+            "value" : "Conecta tu billetera **Alby** con **Nostur** para enviar zap sin complicaciones"
           }
         },
         "id" : {
@@ -7078,7 +7078,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conecta tu billetera compatible con NWC con **Nostur** para una experiencia de zapping fluida"
+            "value" : "Conecta tu billetera compatible con NWC con **Nostur** para enviar zap sin complicaciones"
           }
         },
         "id" : {
@@ -7920,7 +7920,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No se pudo crear la solicitud zap privada"
+            "value" : "No se pudo crear la solicitud de zap privado"
           }
         },
         "id" : {
@@ -8120,7 +8120,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Contadores de respuestas, me gusta, zaps, etc."
+            "value" : "Contadores de respuestas, me gusta, zap, etc."
           }
         },
         "id" : {
@@ -8278,7 +8278,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Crea tu Nido de Audio"
+            "value" : "Crea tu Audio Nest"
           }
         },
         "id" : {
@@ -8854,7 +8854,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cantidad predeterminada de zap"
+            "value" : "Cantidad de zap predeterminada"
           }
         },
         "id" : {
@@ -8876,7 +8876,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cantidad predeterminada de zap:"
+            "value" : "Cantidad de zap predeterminada:"
           }
         },
         "id" : {
@@ -10702,7 +10702,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "falló zaps"
+            "value" : "zap fallidos"
           }
         },
         "id" : {
@@ -10930,7 +10930,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obtiene me gusta/zaps/respuestas a medida que aparecen las publicaciones."
+            "value" : "Obtiene los recuentos de me gusta/zap/respuestas a medida que aparecen las publicaciones"
           }
         },
         "id" : {
@@ -13684,7 +13684,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nidos en vivo o transmisiones de lo siguiente"
+            "value" : "Nests en vivo o transmisiones de personas que sigues"
           }
         },
         "id" : {
@@ -14075,7 +14075,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modo de datos bajos"
+            "value" : "Modo de ahorro de datos"
           }
         },
         "id" : {
@@ -14098,7 +14098,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modo de datos bajos"
+            "value" : "Modo de ahorro de datos"
           }
         },
         "id" : {
@@ -14395,7 +14395,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Caché de medios"
+            "value" : "Caché multimedia"
           }
         },
         "id" : {
@@ -15280,7 +15280,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Título del nido"
+            "value" : "Título del Nest"
           }
         },
         "id" : {
@@ -15302,7 +15302,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Servidor de audio Nest"
+            "value" : "Servidor de audio de Nests"
           }
         },
         "id" : {
@@ -15324,7 +15324,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Servidor de nidos"
+            "value" : "Servidor de Nests"
           }
         },
         "id" : {
@@ -15346,7 +15346,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Servidor de nidos:"
+            "value" : "Servidor de Nests:"
           }
         },
         "id" : {
@@ -15369,7 +15369,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Los nidos se anunciarán el:"
+            "value" : "Los Nests se anunciarán en:"
           }
         },
         "id" : {
@@ -15975,7 +15975,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nuevo zaps"
+            "value" : "Zap nuevos"
           }
         },
         "id" : {
@@ -18451,7 +18451,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publicaciones de cualquier persona que sean más zapped por las personas que sigues"
+            "value" : "Publicaciones de cualquiera que recibieron más zap de las personas que sigues"
           }
         },
         "id" : {
@@ -18908,7 +18908,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Privado zap"
+            "value" : "Zap privado"
           }
         },
         "id" : {
@@ -20764,7 +20764,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recuerda esta cantidad para todos los zaps"
+            "value" : "Recordar esta cantidad para todos los zap"
           }
         },
         "id" : {
@@ -21483,7 +21483,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "vuelto a publicar"
+            "value" : "republicado"
           }
         },
         "id" : {
@@ -24083,7 +24083,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mostrar valor fiduciario zaps"
+            "value" : "Mostrar el valor fiat de los zap"
           }
         },
         "id" : {
@@ -24673,7 +24673,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Iniciar nido"
+            "value" : "Iniciar Nest"
           }
         },
         "id" : {
@@ -24902,7 +24902,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apoye a las personas que seleccionan listas de alta calidad enviándoles zapping"
+            "value" : "Apoya a las personas que seleccionan listas de alta calidad enviándoles un zap"
           }
         },
         "id" : {
@@ -25744,7 +25744,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El feed de Zapped muestra las publicaciones de cualquier persona que hayan recibido más zapped de las personas que sigues en las últimas horas de %lld."
+            "value" : "El feed Zapped muestra publicaciones de cualquiera que recibieron más zap de las personas que sigues en las últimas %lld horas"
           }
         },
         "id" : {
@@ -27564,7 +27564,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "zaps no verificado"
+            "value" : "Zap no verificados"
           }
         },
         "id" : {
@@ -29093,7 +29093,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Su billetera **Alby** ahora está conectada con **Nostur**, ¡ahora puede disfrutar de una experiencia zapping perfecta!"
+            "value" : "Tu billetera **Alby** ya está conectada con **Nostur**. ¡Ahora puedes enviar zap sin complicaciones!"
           }
         },
         "id" : {
@@ -29115,7 +29115,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Su dirección para recibir zaps se ha configurado en: %@"
+            "value" : "Tu dirección para recibir zap se ha configurado como: %@"
           }
         },
         "id" : {
@@ -29221,7 +29221,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Su billetera ahora está conectada con **Nostur**, ¡ahora puede disfrutar de una experiencia de zapping perfecta!"
+            "value" : "Tu billetera ya está conectada con **Nostur**. ¡Ahora puedes enviar zap sin complicaciones!"
           }
         },
         "id" : {
@@ -29289,7 +29289,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zap recibo de"
+            "value" : "Recibo de zap de"
           }
         },
         "id" : {
@@ -29335,7 +29335,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zappedido %@"
+            "value" : "Enviaste zap a %@"
           }
         },
         "id" : {
@@ -29359,7 +29359,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zapped %@ sentado %@"
+            "value" : "Enviaste zap de %@ sats %@"
           }
         },
         "id" : {
@@ -29381,7 +29381,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zapmarco de tiempo de alimentación ped"
+            "value" : "Periodo del feed Zapped"
           }
         },
         "id" : {
@@ -29404,7 +29404,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zapping"
+            "value" : "Enviar zap"
           }
         },
         "id" : {
@@ -29427,7 +29427,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "zaps"
+            "value" : "zap"
           }
         },
         "id" : {
@@ -29450,7 +29450,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaps"
+            "value" : "Zap"
           }
         },
         "id" : {
@@ -29473,7 +29473,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaps falló en: %@ (tiempo de espera)."
+            "value" : "Zap fallidos en: %@ (tiempo de espera agotado)."
           }
         },
         "id" : {
@@ -29496,7 +29496,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Es posible que Zaps haya fallado en: %@."
+            "value" : "Es posible que los zap hayan fallado en: %@."
           }
         },
         "id" : {
@@ -29520,7 +29520,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaps recibido recientemente"
+            "value" : "Zap recibidos recientemente"
           }
         },
         "id" : {
@@ -29542,7 +29542,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaps que recibiste aparecerá aquí"
+            "value" : "Los zap que recibas aparecerán aquí"
           }
         },
         "id" : {
