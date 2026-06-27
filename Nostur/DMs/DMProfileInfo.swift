@@ -134,7 +134,7 @@ struct DMProfileInfo: View {
                 Spacer()
             }
             
-            NRTextDynamic("\(String(nrContact.about ?? ""))\n")
+            NRParsedTextDynamic(text: "\(String(nrContact.about ?? ""))\n")
 
             FollowedBy(pubkey: nrContact.pubkey, alignment: .center, showZero: true)
          //

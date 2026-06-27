@@ -246,6 +246,58 @@ struct NRTextDynamic: View {
     }
 }
 
+struct NRParsedTextDynamic: View {
+    let text: String
+    var plain = false
+    var fontColor: Color = Themes.default.theme.primary
+    var accentColor: Color? = nil
+
+    @State private var parsedText: NSAttributedString?
+    @State private var pTags: [Ptag] = []
+
+    var body: some View {
+        Group {
+            if let parsedText {
+                NRTextDynamic(parsedText, plain: plain, fontColor: fontColor, accentColor: accentColor)
+            }
+            else {
+                NRTextDynamic(text, plain: plain, fontColor: fontColor, accentColor: accentColor)
+            }
+        }
+        .onAppear {
+            parseText()
+        }
+        .onChange(of: text) { _ in
+            parsedText = nil
+            pTags = []
+            parseText()
+        }
+        .onReceive(
+            ViewUpdates.shared.profileUpdates
+                .receive(on: RunLoop.main)
+                .filter { profileUpdate in
+                    pTags.contains(profileUpdate.pubkey)
+                }
+        ) { _ in
+            parseText()
+        }
+    }
+
+    private func parseText() {
+        let input = text
+        bg().perform {
+            let parsed = NRTextParser.shared.parseText(fastTags: [], text: input, primaryColor: fontColor)
+            guard let output = parsed.output else { return }
+
+            DispatchQueue.main.async {
+                guard input == text else { return }
+                self.pTags = parsed.pTags
+                self.parsedText = output
+            }
+        }
+    }
+}
+
 #Preview("NRTextDynamic") {
     VStack {
         Text("[#bitcoin](nostur:t:bitcoin)")

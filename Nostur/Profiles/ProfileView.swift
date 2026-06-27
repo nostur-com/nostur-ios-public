@@ -145,7 +145,7 @@ struct ProfileView: View {
                         .lineLimit(1)
                         .opacity(lastSeenVM.lastSeen != nil ? 1.0 : 0)
                     
-                    NRTextDynamic("\(String(nrContact.about ?? ""))\n")
+                    NRParsedTextDynamic(text: "\(String(nrContact.about ?? ""))\n")
                     
                     HStack(alignment: .center, spacing: 10) {
                         ProfileFollowingCount(pubkey: nrContact.pubkey)
