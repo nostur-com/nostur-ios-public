@@ -17,16 +17,26 @@ struct ProfileRelays: View {
     @FetchRequest(sortDescriptors: [SortDescriptor(\.created_at, order: .reverse)], predicate: NSPredicate(value: false))
     private var relayListMetadata: FetchedResults<Event>
     
-    @State private var item:Event?
+    @State private var relayListItem: Event?
+    @State private var dmRelayListItem: Event?
     
     private var writeRelays:[String] {
-        guard let item = item else { return [] }
-        return item.fastTags.filter { $0.0 == "r" && ($0.2 == nil || $0.2 == "write") }.map { $0.1 }
+        guard let relayListItem else { return [] }
+        return relayListItem.fastTags.filter { $0.0 == "r" && ($0.2 == nil || $0.2 == "write") }.map { $0.1 }
     }
     
     private var readRelays:[String] {
-        guard let item = item else { return [] }
-        return item.fastTags.filter { $0.0 == "r" && ($0.2 == nil || $0.2 == "read") }.map { $0.1 }
+        guard let relayListItem else { return [] }
+        return relayListItem.fastTags.filter { $0.0 == "r" && ($0.2 == nil || $0.2 == "read") }.map { $0.1 }
+    }
+    
+    private var dmRelays:[String] {
+        guard let dmRelayListItem else { return [] }
+        return dmRelayListItem.fastTags.filter { $0.0 == "relay" }.compactMap { $0.1 }
+    }
+    
+    private var hasRelays: Bool {
+        !writeRelays.isEmpty || !readRelays.isEmpty || !dmRelays.isEmpty
     }
     
     @State private var backlog = Backlog(timeout: 3.0, auto: true)
@@ -43,9 +53,9 @@ struct ProfileRelays: View {
                     .task { [weak backlog] in
                         let task = ReqTask(
                             debounceTime: 0.02,
-                            subscriptionId: "P-10002",
+                            subscriptionId: "P-10002-10050",
                             reqCommand: { taskId in
-                                guard let rm = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: [Filters(authors: [pubkey], kinds: [10002])]).json()
+                                guard let rm = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: [Filters(authors: [pubkey], kinds: [10002, 10050])]).json()
                                 else {
                                     loading = false
                                     return
@@ -65,8 +75,8 @@ struct ProfileRelays: View {
                         task.fetch()
                     }
             }
-            else if let item = item, !writeRelays.isEmpty || !readRelays.isEmpty {
-                if !writeRelays.isEmpty {
+            else if hasRelays {
+                if let relayListItem, !writeRelays.isEmpty {
                     Section {
                         ForEach(writeRelays.indices, id:\.self) { index in
                             HStack {
@@ -79,7 +89,7 @@ struct ProfileRelays: View {
                         Text("\(name)'s posts can be found at")
                     } footer: {
                         if readRelays.isEmpty {
-                            Text("Last updated \(item.date.formatted())")
+                            Text("Last updated \(relayListItem.date.formatted())")
                                 .font(.caption)
                                 .padding(.top, 40)
                         }
@@ -102,8 +112,25 @@ struct ProfileRelays: View {
                     .listRowBackground(theme.background)
                 }
                 
-                Text("Last updated \(item.date.formatted())")
-                    .font(.caption)
+                if !dmRelays.isEmpty {
+                    Section {
+                        ForEach(dmRelays.indices, id:\.self) { index in
+                            HStack {
+                                NRTextDynamic(dmRelays[index], plain: true)
+                                Spacer()
+                                RelayConnectButton(url: dmRelays[index])
+                            }
+                        }
+                    } header: {
+                        Text("\(name)'s private message relays")
+                    }
+                    .listRowBackground(theme.background)
+                }
+                
+                if let relayListItem {
+                    Text("Last updated \(relayListItem.date.formatted())")
+                        .font(.caption)
+                }
 
             }
             else {
@@ -117,12 +144,17 @@ struct ProfileRelays: View {
         .frame(height: UIScreen.main.bounds.height * 2.5)
         .background(theme.listBackground)
         .task {
-            relayListMetadata.nsPredicate = NSPredicate(format: "kind == 10002 AND pubkey == %@", pubkey)
+            relayListMetadata.nsPredicate = NSPredicate(format: "kind IN {10002, 10050} AND pubkey == %@", pubkey)
+            updateRelayItems()
         }
-        .onChange(of: relayListMetadata.first) { newValue in
-            guard newValue != nil else { return }
-            self.item = newValue
+        .onChange(of: relayListMetadata.map { $0.id }) { _ in
+            updateRelayItems()
         }
+    }
+    
+    private func updateRelayItems() {
+        relayListItem = relayListMetadata.first(where: { $0.kind == 10002 })
+        dmRelayListItem = relayListMetadata.first(where: { $0.kind == 10050 })
     }
 }
 
@@ -187,7 +219,8 @@ struct RelayConnectButton: View {
 #Preview {
     PreviewContainer({ pe in
         pe.parseMessages([
-            ###"["EVENT","94d6e6f2-2b0c-4f66-a583-aa7d6c06bf8e",{"content":"","created_at":1700698284,"id":"7f48c8958c85985c8b65cd188acabdb35e7ae1bfc2f08bc88b560ec4a0d9f1f3","kind":10002,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","sig":"5fc7ff80e550c3f305f5ee92822eb43d09b450c32a9def89add5b46414ee8b702d76015c15a6b75b1e06aa7b308859396ceaa45a972c8f203b671291ccd26a10","tags":[["r","wss://nostr.wine", "read"],["r","wss://nos.lol", "read"],["r","wss://relay.damus.io","read"]]}]"###
+            ###"["EVENT","94d6e6f2-2b0c-4f66-a583-aa7d6c06bf8e",{"content":"","created_at":1700698284,"id":"7f48c8958c85985c8b65cd188acabdb35e7ae1bfc2f08bc88b560ec4a0d9f1f3","kind":10002,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","sig":"5fc7ff80e550c3f305f5ee92822eb43d09b450c32a9def89add5b46414ee8b702d76015c15a6b75b1e06aa7b308859396ceaa45a972c8f203b671291ccd26a10","tags":[["r","wss://nostr.wine", "read"],["r","wss://nos.lol", "read"],["r","wss://relay.damus.io","read"]]}]"###,
+            ###"["EVENT","94d6e6f2-2b0c-4f66-a583-aa7d6c06bf8e",{"content":"","created_at":1700698285,"id":"c59a2fd3fcb72641ee71f0c8f04074e51fbadf208635a1fd25a2d612c7f6f875","kind":10050,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","sig":"5fc7ff80e550c3f305f5ee92822eb43d09b450c32a9def89add5b46414ee8b702d76015c15a6b75b1e06aa7b308859396ceaa45a972c8f203b671291ccd26a10","tags":[["relay","wss://nos.lol"],["relay","wss://relay.damus.io"]]}]"###
         ])
     }){
         ProfileRelays(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: "Fabian")

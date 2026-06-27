@@ -342,7 +342,6 @@
       }
     },
     "!" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -356,7 +355,8 @@
             "value" : "!"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "·" : {
       "localizations" : {
@@ -1843,6 +1843,9 @@
         }
       }
     },
+    "%@'s private message relays" : {
+
+    },
     "%@'s reactions" : {
       "localizations" : {
         "es" : {
@@ -1866,7 +1869,6 @@
       }
     },
     "%lf" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -1880,7 +1882,8 @@
             "value" : "%lf"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%lld" : {
       "localizations" : {
@@ -2279,7 +2282,6 @@
       }
     },
     "+" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -2293,7 +2295,8 @@
             "value" : "+"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "+%lld" : {
       "localizations" : {
@@ -2432,7 +2435,6 @@
       "shouldTranslate" : false
     },
     "⚠️ Error: %@" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -2446,7 +2448,8 @@
             "value" : "⚠️ Kesalahan: %@"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "⚡️⚡️ Could not send NWC request" : {
       "comment" : "Error message",
@@ -2466,7 +2469,6 @@
       }
     },
     "✅ Downloaded: %@" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -2480,7 +2482,8 @@
             "value" : "✅ Diunduh: %@"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "❤️" : {
       "localizations" : {
@@ -2612,7 +2615,6 @@
       }
     },
     "🧩" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -2626,7 +2628,8 @@
             "value" : "🧩"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "🫥" : {
       "localizations" : {
@@ -5872,7 +5875,6 @@
       }
     },
     "Checked" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -5886,7 +5888,8 @@
             "value" : "Diperiksa"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Checking relays for your blossom server list..." : {
       "localizations" : {
@@ -7119,7 +7122,6 @@
       }
     },
     "connecting" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -7133,7 +7135,8 @@
             "value" : "menghubungkan"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Connecting..." : {
       "comment" : "Relay status while connecting",
@@ -7536,7 +7539,6 @@
       }
     },
     "Conversation column" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -7550,7 +7552,8 @@
             "value" : "Kolom percakapan"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Conversation details" : {
       "localizations" : {
@@ -8657,7 +8660,6 @@
       }
     },
     "ddd" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -8671,7 +8673,8 @@
             "value" : "hh"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "decode ack" : {
       "localizations" : {
@@ -9708,7 +9711,6 @@
       }
     },
     "earlyLoad" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -9722,7 +9724,8 @@
             "value" : "beban awal"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Edit muted word" : {
       "comment" : "Navigation title for screen to edit muted word",
@@ -10635,7 +10638,6 @@
       }
     },
     "Failed to generate QR Code" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -10649,7 +10651,8 @@
             "value" : "Gagal membuat Kode QR"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Failed to load image" : {
       "localizations" : {
@@ -10948,7 +10951,6 @@
       }
     },
     "fetching" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -10962,7 +10964,8 @@
             "value" : "mengambil"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Fetching..." : {
       "localizations" : {
@@ -11166,7 +11169,6 @@
       }
     },
     "finalLoad" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -11180,7 +11182,8 @@
             "value" : "beban akhir"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Find author" : {
       "comment" : "Navigation title of Find author screen",
@@ -11222,7 +11225,6 @@
       }
     },
     "finished" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -11236,7 +11238,8 @@
             "value" : "selesai"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Follow" : {
       "comment" : "Button to follow someone",
@@ -11866,7 +11869,6 @@
       }
     },
     "Hello, World!" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -11880,7 +11882,8 @@
             "value" : "Halo Dunia!"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Hello, World! Hello World! Hello World! Hello World! Hello World! Hello World" : {
       "localizations" : {
@@ -12972,7 +12975,6 @@
       }
     },
     "Landscape" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -12986,7 +12988,8 @@
             "value" : "Lanskap"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Last 1 hour" : {
       "localizations" : {
@@ -14886,7 +14889,6 @@
       }
     },
     "Missing nrLiveEvent" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -14900,7 +14902,8 @@
             "value" : "Tidak ada nrLiveEvent"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Missing reply." : {
       "comment" : "Shown in a thread when an intermediate reply is missing",
@@ -15993,7 +15996,6 @@
       }
     },
     "newPosts" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -16007,7 +16009,8 @@
             "value" : "Posting baru"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Next" : {
       "localizations" : {
@@ -17528,7 +17531,6 @@
       }
     },
     "Picture-in-picture" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -17542,10 +17544,10 @@
             "value" : "Gambar-dalam-gambar"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Picture-in-Picture" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -17559,7 +17561,8 @@
             "value" : "Gambar-dalam-Gambar"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
       "extractionState" : "stale",
@@ -17955,7 +17958,6 @@
       }
     },
     "Portrait" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -17969,7 +17971,8 @@
             "value" : "Potret"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "possible imposter" : {
       "comment" : "Label shown on a profile",
@@ -18673,7 +18676,6 @@
       }
     },
     "Preview App" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -18687,7 +18689,8 @@
             "value" : "Pratinjau Aplikasi"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Previously known as: %@" : {
       "localizations" : {
@@ -22546,7 +22549,6 @@
       }
     },
     "secondFetching" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -22560,7 +22562,8 @@
             "value" : "keduaPengambilan"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "See what's happening on nostr right now" : {
       "comment" : "Nostur intro text",
@@ -24350,7 +24353,6 @@
     },
     "Someone's Feed" : {
       "comment" : "Feed title",
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -24364,7 +24366,8 @@
             "value" : "Umpan Seseorang"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Something about yourself" : {
       "comment" : "Placeholder on input field for Bio on Edit Profile screen",
@@ -24797,7 +24800,6 @@
       }
     },
     "Stream" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -24811,7 +24813,8 @@
             "value" : "Sungai kecil"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Stream has ended" : {
       "localizations" : {
@@ -24836,7 +24839,6 @@
       }
     },
     "streaming" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -24850,7 +24852,8 @@
             "value" : "mengalir"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Subscribe" : {
       "extractionState" : "stale",
@@ -24989,7 +24992,6 @@
       }
     },
     "Tab" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -25003,10 +25005,10 @@
             "value" : "tab"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Tab 1" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -25020,10 +25022,10 @@
             "value" : "tab 1"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Tab 2" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -25037,10 +25039,10 @@
             "value" : "tab 2"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Tab 3" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -25054,10 +25056,10 @@
             "value" : "tab 3"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Tab 4" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -25071,10 +25073,10 @@
             "value" : "tab 4"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Tab 5" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -25088,7 +25090,8 @@
             "value" : "tab 5"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Tab title" : {
       "comment" : "Placeholder for input field to enter title of a feed",
@@ -26511,7 +26514,6 @@
       }
     },
     "timeout" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -26525,7 +26527,8 @@
             "value" : "batas waktu"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Tip" : {
       "localizations" : {
@@ -26662,7 +26665,6 @@
       }
     },
     "TODO PLAINTEXTONLY" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -26676,7 +26678,8 @@
             "value" : "TODO PLAINTEKSTON"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Toggle filters..." : {
       "localizations" : {
@@ -26954,7 +26957,6 @@
       }
     },
     "Type" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -26968,7 +26970,8 @@
             "value" : "Jenis"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Type your message..." : {
       "comment" : "Placeholder for input field for new direct message",
@@ -27284,7 +27287,6 @@
       }
     },
     "Unchecked" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -27298,10 +27300,10 @@
             "value" : "Tidak dicentang"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "unconfigured" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -27315,7 +27317,8 @@
             "value" : "belum dikonfigurasi"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Unconfigured" : {
       "localizations" : {
@@ -27829,7 +27832,6 @@
       }
     },
     "User does not have a lightning address set" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -27843,10 +27845,10 @@
             "value" : "Pengguna belum menetapkan alamat kilat"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Users wallet does not support nostr" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -27860,7 +27862,8 @@
             "value" : "Dompet pengguna tidak mendukung nostr"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Uses iCloud to sync across devices" : {
       "comment" : "Setting on settings screen",
@@ -27975,7 +27978,6 @@
       }
     },
     "Verifying..." : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -27989,10 +27991,10 @@
             "value" : "Memverifikasi..."
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Verifying... Done." : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -28006,7 +28008,8 @@
             "value" : "Memverifikasi... Selesai."
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Video ready" : {
       "localizations" : {
@@ -28075,7 +28078,6 @@
       }
     },
     "viewState: %@" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -28089,7 +28091,8 @@
             "value" : "kondisi tampilan: %@"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Voice" : {
       "localizations" : {
@@ -28896,7 +28899,6 @@
       }
     },
     "WTF" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -28910,7 +28912,8 @@
             "value" : "WTF"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "y" : {
       "comment" : "short for year (ago), appended to number. Example: 1y",
