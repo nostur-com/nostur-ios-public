@@ -120,6 +120,9 @@ extension AppView {
                     AppState.shared.startTaskTimers()
                     try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
                     try? AVAudioSession.sharedInstance().setActive(true)
+
+                    // NIP-40: promptly drop expired DM copies when returning from background
+                    Task { await Maintenance.purgeExpiredDMsNow() }
                 }
             }
             else {
@@ -131,6 +134,9 @@ extension AppView {
                 ConversionVM.restoreSubscriptions()
                 NotificationsViewModel.restoreSubscriptions()
                 AppState.shared.startTaskTimers()
+
+                // NIP-40: promptly drop expired DM copies when returning from background
+                Task { await Maintenance.purgeExpiredDMsNow() }
             }
             
             

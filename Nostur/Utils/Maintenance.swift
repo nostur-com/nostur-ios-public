@@ -274,6 +274,44 @@ struct Maintenance {
         }
     }
     
+    // NIP-40: delete DM events (NIP-04 kind 4, NIP-17 kind 14/15) whose expiration timestamp has passed.
+    // Intentionally ignores the own-account / bookmark exclusions used elsewhere: an expiring message
+    // should disappear even if it's our own or bookmarked.
+    static func deleteExpiredDMs(_ context: NSManagedObjectContext) {
+        let now = Int64(Date.now.timeIntervalSince1970)
+        let fr = NSFetchRequest<Event>(entityName: "Event")
+        fr.predicate = NSPredicate(format: "kind IN {4,14,15} AND tagsSerialized CONTAINS %@", "expiration")
+        guard let candidates = try? context.fetch(fr) else { return }
+        let expiredIds: [String] = candidates.compactMap { event in
+            guard let expString = event.fastTags.first(where: { $0.0 == "expiration" })?.1,
+                  let exp = Int64(expString), exp <= now
+            else { return nil }
+            return event.id
+        }
+        guard !expiredIds.isEmpty else { return }
+
+        let del = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+        del.predicate = NSPredicate(format: "id IN %@", expiredIds)
+        let batchDelete = NSBatchDeleteRequest(fetchRequest: del)
+        batchDelete.resultType = .resultTypeCount
+        do {
+            let result = try context.execute(batchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) expired DM events (NIP-40)")
+            }
+        } catch {
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete expired DM events (NIP-40)")
+        }
+    }
+
+    // Run the expired-DM purge promptly (e.g. on returning from background), outside the 24h maintenance throttle.
+    static func purgeExpiredDMsNow() async {
+        let context = bg()
+        await context.perform {
+            Self.deleteExpiredDMs(context)
+        }
+    }
+
     // TODO: NEED TO INVERT, DELETE ALL EXCEPT.. (instead of now: delete only *these*)
     static func databaseCleanUp(_ context: NSManagedObjectContext) {
         let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
@@ -369,8 +407,11 @@ struct Maintenance {
         } catch {
             L.maintenance.info("🧹🧹 🔴🔴 Failed to delete {1,1111,1222,1244,4,14,5,6,20,9802,30311,30023,34235,34236} data")
         }
-        
-        
+
+        // NIP-40: delete expired DM messages (NIP-04 / NIP-17)
+        Self.deleteExpiredDMs(context)
+
+
         // KIND 7,8
         // OLDER THAN X DAYS
         // PUBKEY NOT IN OWN ACCOUNTS
