@@ -379,6 +379,13 @@ class ConversionVM: ObservableObject {
             
             
             return ((try? bgContext.fetch(request)) ?? [])
+                .filter { event in
+                    // NIP-40: hide messages whose expiration has passed (even if not yet purged)
+                    guard let expString = event.fastTags.first(where: { $0.0 == "expiration" })?.1,
+                          let exp = Int64(expString)
+                    else { return true }
+                    return exp > Int64(Date.now.timeIntervalSince1970)
+                }
                 .map {
                     NEvent(id: $0.id,
                            publicKey: $0.pubkey,

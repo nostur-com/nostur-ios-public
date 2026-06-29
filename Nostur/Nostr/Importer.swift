@@ -272,8 +272,9 @@ class Importer {
                                 continue
                             }
 
-                            // Import rumor
-                            _ = try importEvent(event: NEvent.fromNostrEssentialsEvent(rumor), wrapId: event.id, message: message)
+                            // Import rumor (inherits the gift wrap's NIP-40 expiration)
+                            let rumorEvent = NEvent.fromRumor(rumor, unwrappedFrom: event)
+                            _ = try importEvent(event: rumorEvent, wrapId: event.id, message: message)
                         }
                         else {
                             // handle like normal
@@ -408,8 +409,9 @@ class Importer {
                                 continue
                             }
 
-                            // Import rumor
-                            let savedEvent = try importEvent(event: NEvent.fromNostrEssentialsEvent(rumor), wrapId: event.id, message: message)
+                            // Import rumor (inherits the gift wrap's NIP-40 expiration)
+                            let rumorEvent = NEvent.fromRumor(rumor, unwrappedFrom: event)
+                            let savedEvent = try importEvent(event: rumorEvent, wrapId: event.id, message: message)
                             
                             // Immediately notify (prio)
                             if let subscriptionId = message.subscriptionId {
@@ -456,7 +458,15 @@ class Importer {
             }
             throw ImportErrors.AlreadyHaveNewerReplacableEvent
         }
-        
+
+        // NIP-40: don't persist DMs (NIP-04 / NIP-17) that are already expired
+        if [4, 14, 15].contains(event.kind.id),
+           let exp = event.tagNamed("expiration").flatMap({ Int64($0) }),
+           exp <= Int64(Date.now.timeIntervalSince1970)
+        {
+            throw ImportErrors.Expired
+        }
+
         var kind6firstQuote: Event?
         kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext)
         try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext)
