@@ -387,7 +387,7 @@ class Importer {
                             
                 
                             // Unwrap then handle rumor like normal event
-                            var (rumor, seal) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
+                            var (rumor, _) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
                             
                             if rumor.id == nil { // some clients don't add rumor id, but we need them
                                 rumor.id = rumor.fallbackId()
