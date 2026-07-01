@@ -41,6 +41,7 @@ struct BalloonView17: View {
                     }
                     .offset(x: 5, y: 5)
             }
+            VStack(alignment: isSentByCurrentUser ? .trailing : .leading, spacing: 3) {
             VStack(alignment: .leading, spacing: 3) {
                 
                 if let replyTo = nrChatMessage.replyTo {
@@ -133,34 +134,32 @@ struct BalloonView17: View {
             }
             .padding(.horizontal, 10)
             .padding(isSentByCurrentUser ? .leading : .trailing, 50)
-            .overlay(alignment: isSentByCurrentUser ? .bottomLeading : .bottomTrailing) {
+
+            // Metadata row below the bubble: countdown · time · delivery checks
+            HStack(spacing: 5) {
+                if let expiresAt = nrChatMessage.expiresAt {
+                    ExpiryCountdownLabel(expiresAt: expiresAt)
+                }
                 Text(nrChatMessage.createdAt, format: .dateTime.hour().minute())
-                    .frame(alignment: isSentByCurrentUser ? .leading : .trailing)
                     .font(.footnote)
                     .foregroundColor(nrChatMessage.nEvent.kind == .legacyDirectMessage ? .secondary : .primary)
-                    .padding(.bottom, 8)
-                    .padding(isSentByCurrentUser ? .leading : .trailing, 5)
+                if isSentByCurrentUser {
+                    ForEach(Array(nrChatMessage.dmSendResult.keys).sorted(), id: \.self) { pubkey in
+                        RecipientResultView(result: nrChatMessage.dmSendResult[pubkey]!)
+                            .frame(width: 15, height: 15)
+                            .onTapGesture {
+                                showDMSendResult = nrChatMessage.dmSendResult[pubkey]!
+                            }
+                    }
+                }
             }
-            
+            .padding(isSentByCurrentUser ? .trailing : .leading, 12)
+            .padding(.bottom, 2)
+            }
+
             if !isSentByCurrentUser {
                 Spacer()
             }
-        }
-        .overlay(alignment: .bottom) {
-            HStack(spacing: 2) {
-               
-                Spacer()
-                
-                ForEach(Array(nrChatMessage.dmSendResult.keys).sorted(), id: \.self) { pubkey in
-                    RecipientResultView(result: nrChatMessage.dmSendResult[pubkey]!)
-                        .onTapGesture {
-                            showDMSendResult = nrChatMessage.dmSendResult[pubkey]!
-                        }
-                }
-            }
-            .frame(height: 12)
-            .padding(.trailing, 25)
-            .padding(.bottom, 2)
         }
         .sheet(item: $showDMSendResult) { dmSendResult in
             NBNavigationStack {

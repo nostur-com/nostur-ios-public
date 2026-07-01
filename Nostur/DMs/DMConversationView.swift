@@ -24,7 +24,8 @@ struct DMConversationView: View {
     @State private var errorText: String? = nil
     @State private var didLoad = false
     @State private var showConversationInfoSheet = false
-    
+    @State private var showExpirationSheet = false
+
     // File attachment state
     @State private var showFileImporter = false
     @State private var showPhotosPicker = false
@@ -153,6 +154,8 @@ struct DMConversationView: View {
                                         showPhotosPicker = true
                                     } onPickFiles: {
                                         showFileImporter = true
+                                    } onPickExpiration: {
+                                        showExpirationSheet = true
                                     }
                                     .overlay(alignment: .topTrailing) {
                                         if showThereIsMore {
@@ -251,6 +254,9 @@ struct DMConversationView: View {
                         DMConversationInfoSheet(vm: vm)
                     }
                 }
+                .sheet(isPresented: $showExpirationSheet) {
+                    MessageExpirationSheet(vm: vm)
+                }
                 .onDisappear {
                     if didLoad && years.isEmpty, let dmState = vm.dmState {
                         // Started a conversation but did not send or receive any message, so we can remove DM state
@@ -315,6 +321,7 @@ struct DMConversationView: View {
                     errorText = nil
                     try await vm.sendFileMessage17(fileURL: pending.fileURL, mimeType: pending.mimeType, imageDimensions: pending.imageDimensions)
                     removePendingAttachmentFile(at: pending.fileURL)
+                    if text.isEmpty { vm.resetDraftExpiryFromSetting() } // file-only send; text path resets otherwise
                 }
                 catch DMError.PrivateKeyMissing {
                     AppSheetsModel.shared.readOnlySheetVisible = true
@@ -339,6 +346,7 @@ struct DMConversationView: View {
                 vm.replyingNow = nil
                 vm.quotingNow = nil
                 try await vm.sendMessage(textToSend, quotingNow: quotingNow, replyingNow: replyingNow)
+                vm.resetDraftExpiryFromSetting()
             }
             catch DMError.PrivateKeyMissing {
                 AppSheetsModel.shared.readOnlySheetVisible = true

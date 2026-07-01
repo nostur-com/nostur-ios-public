@@ -36,6 +36,12 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
 
     public var createdAt: Date { Date(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp)) }
     public var created_at: Int64 { Int64(nEvent.createdAt.timestamp) }
+
+    // NIP-40 expiration (unix seconds) parsed from the ["expiration", <ts>] tag, or nil. Immutable.
+    public var expiresAt: Int? {
+        guard let value = nEvent.tagNamed("expiration"), let ts = Int(value) else { return nil }
+        return ts
+    }
     
     var id: NRPostID { nEvent.id }
         

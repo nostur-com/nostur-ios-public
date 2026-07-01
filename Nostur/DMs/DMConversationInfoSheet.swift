@@ -10,9 +10,11 @@ import NostrEssentials
 
 struct DMConversationInfoSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
     @ObservedObject var vm: ConversionVM
 
     @State private var viewState: ViewState = .checkingDMrelays
+    @State private var showExpirationSheet = false
     @State private var useImprovedFormat = false
     @State private var relaysPerPubkey: [String: Set<String>] = [:] // [pubkey: Set<relayString>]
 
@@ -115,6 +117,30 @@ struct DMConversationInfoSheet: View {
                     }
                 }
             }
+
+            Section {
+                Button {
+                    showExpirationSheet = true
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "clock")
+                            .foregroundStyle(theme.accent)
+                        Text("Auto-apply expiration")
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Text(expiryValueLabel)
+                            .foregroundStyle(theme.accent)
+                        Image(systemName: "chevron.right")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                }
+            } header: {
+                Text("Message expiration")
+            } footer: {
+                Text("Sets a NIP-40 expiration on each message you send (a device setting, fixed on the message once sent). Supported apps like Nostur hide it after; others may keep a copy. May expire up to 2 days early.")
+            }
         }
         .onAppear {
             if vm.conversationVersion == 17 {
@@ -131,6 +157,9 @@ struct DMConversationInfoSheet: View {
                 vm.dmState?.version = 0
             }
         }
+        .sheet(isPresented: $showExpirationSheet) {
+            MessageExpirationSheet(vm: vm, context: .conversationDefault)
+        }
         .navigationTitle(String(localized:"Conversation info", comment:"Navigation title for screen with DM conversation info"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -141,7 +170,12 @@ struct DMConversationInfoSheet: View {
             }
         }
     }
-    
+
+    private var expiryValueLabel: String {
+        let setting = vm.expirySetting
+        return setting.enabled ? DMExpiry.presetLabel(forDuration: setting.durationSeconds) : String(localized: "Off", comment: "DM expiration disabled")
+    }
+
     private func checkDMRelays(_ pubkeys: Set<String>) {
         let reqTask = ReqTask(debounceTime: 2.5, subscriptionId: "SUPP17I-") { taskId in
             nxReq(Filters(
