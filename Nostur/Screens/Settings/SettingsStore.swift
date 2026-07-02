@@ -185,7 +185,7 @@ final class SettingsStore: ObservableObject {
             Keys.appWideSeenTrackeriCloud: true,
             Keys.mainWoTaccountPubkey: "",
             Keys.postUserAgentEnabled: true,
-            Keys.displayUserAgentEnabled: true,
+            Keys.displayUserAgentEnabled: false,
             Keys.excludedUserAgentPubkeys: "",
             Keys.receiveLocalNotifications: true,
             Keys.receiveLocalNotificationsLimitToFollows: false,
