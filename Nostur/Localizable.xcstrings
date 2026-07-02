@@ -22140,17 +22140,18 @@
       }
     },
     "sats" : {
+      "comment" : "short for Satoshis",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "se sienta"
+            "value" : "sats"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "duduk"
+            "value" : "sats"
           }
         },
         "nl" : {
@@ -22168,13 +22169,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "sábados"
+            "value" : "Sats"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sat"
+            "value" : "Sats"
           }
         },
         "nl" : {
