@@ -648,6 +648,18 @@ extension NEvent {
             signature: event.sig
         )
     }
+
+    // Build an NEvent from a NIP-59 rumor that was just unwrapped from a gift wrap.
+    // Inherits the gift wrap's NIP-40 `expiration` when the rumor doesn't set its own, so the stored
+    // message can still be hidden/purged when the sender only tagged the outer wrap. Only the inbound
+    // unwrap path needs this; outbound/other conversions should keep using fromNostrEssentialsEvent.
+    static public func fromRumor(_ rumor: NostrEssentials.Event, unwrappedFrom wrap: NEvent) -> NEvent {
+        var nEvent = NEvent.fromNostrEssentialsEvent(rumor)
+        if nEvent.tagNamed("expiration") == nil, let wrapExpiration = wrap.tagNamed("expiration") {
+            nEvent.tags.append(NostrTag(["expiration", wrapExpiration]))
+        }
+        return nEvent
+    }
 }
 
 class TagSerializer {

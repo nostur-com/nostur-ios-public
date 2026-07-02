@@ -97,6 +97,7 @@ struct DMChatInputField: View {
     var onSubmit: (() -> Void)?
     var onPickPhotos: (() -> Void)?
     var onPickFiles: (() -> Void)?
+    var onPickExpiration: (() -> Void)?
 
     enum FocusedField {
         case message
@@ -111,28 +112,68 @@ struct DMChatInputField: View {
     private var canSend: Bool {
         !message.isEmpty || vm.pendingFileAttachment != nil
     }
-    
+
+    private var plusButtonIcon: some View {
+        Image(systemName: "plus.circle.fill")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 28, height: 28)
+            .foregroundStyle(theme.accent)
+    }
+
+    // NIP-40 composer chip, shown while a per-message expiry is set (screen 02-composer-while-typing).
+    @ViewBuilder
+    private var expiryChip: some View {
+        if let duration = vm.resolvedExpiryDuration() {
+            HStack(spacing: 5) {
+                Image(systemName: "clock")
+                Text("Set to expire · ~\(DMExpiry.presetLabel(forDuration: duration))")
+                Button {
+                    withAnimation { vm.draftExpiry = .off } // clear for THIS message (overrides auto-apply)
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.plain)
+            }
+            .font(.footnote)
+            .foregroundStyle(theme.accent)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(theme.accent.opacity(0.16), in: Capsule())
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10)
+            .padding(.top, 8)
+        }
+    }
+
     var body: some View {
         HStack(alignment: .center) {
-            if showAttachmentButton && vm.pendingFileAttachment == nil {
-                Menu {
-                    Button("Photos", systemImage: "photo") {
-                        onPickPhotos?()
+            if vm.pendingFileAttachment == nil {
+                Group {
+                    if showAttachmentButton {
+                        Menu {
+                            Button("Photos", systemImage: "photo") { onPickPhotos?() }
+                            Button("Files", systemImage: "doc") { onPickFiles?() }
+                            Divider()
+                            Button("Message expiration", systemImage: "clock") { onPickExpiration?() }
+                        } label: {
+                            plusButtonIcon
+                        }
                     }
-                    Button("Files", systemImage: "doc") {
-                        onPickFiles?()
+                    else {
+                        Button {
+                            onPickExpiration?()
+                        } label: {
+                            plusButtonIcon
+                        }
                     }
-                } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 28, height: 28)
-                        .foregroundStyle(theme.accent)
                 }
                 .padding(.leading, 4)
             }
             VStack(alignment: .center) {
-                
+
+                expiryChip
+
                 if let replyingNow = vm.replyingNow {
                     EmbeddedChatMessage(nrChatMessage: replyingNow, isSentByCurrentUser: false)
                         .clipShape(.rect(cornerRadius: 14))

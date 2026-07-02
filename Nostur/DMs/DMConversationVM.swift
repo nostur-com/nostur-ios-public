@@ -133,7 +133,34 @@ class ConversionVM: ObservableObject {
             quotingNow = nil
         }
     }
-    
+
+    // MARK: - NIP-40 message expiration
+
+    // Per-draft override (in-memory) for the message being composed; nil = no expiration.
+    // Initialized from the conversation's auto-apply setting on load / after each send.
+    @Published var draftExpiry: DMDraftExpiry = .auto
+
+    // Per-conversation, device-local auto-apply setting (never published to relays).
+    var expirySetting: DMExpirySetting {
+        DMExpiryStore.setting(account: ourAccountPubkey, conversationId: conversationId)
+    }
+
+    func saveExpirySetting(_ setting: DMExpirySetting) {
+        DMExpiryStore.save(setting, account: ourAccountPubkey, conversationId: conversationId)
+        objectWillChange.send()
+    }
+
+    // Duration (seconds) that will actually be applied to the next send, or nil for none.
+    func resolvedExpiryDuration() -> Int? {
+        DMExpiry.resolvedDuration(draft: draftExpiry, setting: expirySetting)
+    }
+
+    // After a successful send, reset the draft to follow the conversation setting again, so
+    // auto-apply persists but one-off manual picks/clears don't leak into the next message.
+    func resetDraftExpiryFromSetting() {
+        draftExpiry = .auto
+    }
+
     public var account: CloudAccount? = nil
     
     private let dayIdFormatter: DateFormatter
@@ -184,11 +211,19 @@ class ConversionVM: ObservableObject {
         self.receiverContacts = receivers.map { NRContact.instance(of: $0) }
         self.dmState = getGroupState()
         self.isAccepted = self.dmState?.accepted ?? false
+        self.resetDraftExpiryFromSetting()
 
         if let dmState { // Should always exists because getGroupState() gets existing or creates new
             let visibleMessages = await localMessages(for: dmState)
             applyVisibleMessages(visibleMessages)
-            
+
+            // NIP-40: live-hide + purge messages as they expire while the conversation is open.
+            AppState.shared.agoShouldUpdateSubject
+                .sink { [weak self] _ in
+                    Task { @MainActor in self?.sweepExpiredMessages() }
+                }
+                .store(in: &subscriptions)
+
             // add DM state to parent vm
             parentDMsVM.addDMState(dmState)
             
@@ -379,6 +414,13 @@ class ConversionVM: ObservableObject {
             
             
             return ((try? bgContext.fetch(request)) ?? [])
+                .filter { event in
+                    // NIP-40: hide messages whose expiration has passed (even if not yet purged)
+                    guard let expString = event.fastTags.first(where: { $0.0 == "expiration" })?.1,
+                          let exp = Int64(expString)
+                    else { return true }
+                    return exp > Int64(Date.now.timeIntervalSince1970)
+                }
                 .map {
                     NEvent(id: $0.id,
                            publicKey: $0.pubkey,
@@ -447,7 +489,44 @@ class ConversionVM: ObservableObject {
         viewState = .ready(years)
         lastMessageId = messages.last?.id
     }
-    
+
+    // NIP-40: remove messages whose expiration has passed from the visible conversation (with a
+    // fade/collapse animation) and purge them from the local store. Runs on the shared minute timer
+    // and on foreground; complements the load-time filter in getMessages and the maintenance sweep.
+    @MainActor
+    func sweepExpiredMessages() {
+        guard case .ready(let years) = viewState else { return }
+        let now = Int(Date.now.timeIntervalSince1970)
+        var removedAny = false
+
+        for year in years {
+            for day in year.days {
+                let kept = day.messages.filter { message in
+                    guard let expiresAt = message.expiresAt else { return true }
+                    return !DMExpiry.isExpired(expiresAt: expiresAt, now: now)
+                }
+                if kept.count != day.messages.count {
+                    removedAny = true
+                    withAnimation { day.messages = kept }
+                }
+            }
+        }
+
+        guard removedAny else { return }
+
+        // Drop days/years that emptied out so we don't leave dangling date headers.
+        let prunedYears = years.compactMap { year -> ConversationYear? in
+            let nonEmptyDays = year.days.filter { !$0.messages.isEmpty }
+            guard !nonEmptyDays.isEmpty else { return nil }
+            year.days = nonEmptyDays
+            return year
+        }
+        withAnimation { viewState = .ready(prunedYears) }
+
+        onScreenIds = Set(prunedYears.flatMap { $0.days }.flatMap { $0.messages }.map { $0.id })
+        Task { await Maintenance.purgeExpiredDMsNow() }
+    }
+
     @MainActor
     private func mergedWithRenderedMessages(_ localMessages: [NRChatMessage]) -> [NRChatMessage] {
         guard case .ready(let years) = viewState else {
@@ -703,7 +782,13 @@ class ConversionVM: ObservableObject {
         
         nEvent.content = encrypted
         nEvent.tags.append(NostrTag(["p", theirPubkey]))
-        
+
+        // NIP-40: attach expiration on the (publicly visible) kind-4 event itself.
+        if let duration = resolvedExpiryDuration() {
+            let expiresAt = DMExpiry.expiresAt(createdAt: Int(messageDate.timeIntervalSince1970), durationSeconds: duration)
+            nEvent.tags.append(NostrTag(["expiration", String(expiresAt)]))
+        }
+
         if let signedEvent = try? nEvent.sign(keys) {
             Unpublisher.shared.publishNow(signedEvent)
             _ = addToView(signedEvent, keys, messageDate)
@@ -732,7 +817,15 @@ class ConversionVM: ObservableObject {
         if let replyingTo {
             tags.append(Tag(["e", replyingTo.id]))
         }
-        
+
+        // NIP-40: resolve a single expiration anchor for this message. The tag goes on the gift
+        // wrap (1059) so relays/other clients honor it, and on the stored rumor so our own local
+        // copy shows the countdown and gets purged. Strategy A: anchor to a randomized past time.
+        let expiresAt: Int? = resolvedExpiryDuration().map { DMExpiry.expiresAt(createdAt: nip59CreatedAt(), durationSeconds: $0) }
+        if let expiresAt {
+            tags.append(Tag(["expiration", String(expiresAt)]))
+        }
+
         let messageDate = Date()
         let message = NostrEssentials.Event(
             pubkey: ourAccountPubkey,
@@ -750,7 +843,7 @@ class ConversionVM: ObservableObject {
         for (n, receiverPubkey) in participants.enumerated() {
             // wrap message
             do {
-                let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
+                let giftWrap = try createGiftWrapWithExpiration(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys, expiresAt: expiresAt)
                 let giftWrapId = giftWrap.fallbackId()
                 if receiverPubkey == ourAccountPubkey {
                     // save message to local db and giftwrap to ourselve (relay backup)  (we can't unwrap sent to receipents, can only unwrap received to our pubkey)
@@ -847,6 +940,11 @@ class ConversionVM: ObservableObject {
         
         // 4. Create kind 15 rumor event
         let messageDate = Date()
+        // NIP-40: attach expiration on the gift wrap + rumor (strategy A, randomized anchor).
+        let expiresAt: Int? = resolvedExpiryDuration().map { DMExpiry.expiresAt(createdAt: nip59CreatedAt(), durationSeconds: $0) }
+        if let expiresAt {
+            tags.append(Tag(["expiration", String(expiresAt)]))
+        }
         let message = NostrEssentials.Event(
             pubkey: ourAccountPubkey,
             content: downloadUrl,
@@ -863,7 +961,7 @@ class ConversionVM: ObservableObject {
         sendJobs = []
         for (n, receiverPubkey) in participants.enumerated() {
             do {
-                let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
+                let giftWrap = try createGiftWrapWithExpiration(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys, expiresAt: expiresAt)
                 let giftWrapId = giftWrap.fallbackId()
                 if receiverPubkey == ourAccountPubkey {
                     await bg().perform {

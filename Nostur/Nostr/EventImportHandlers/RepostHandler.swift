@@ -103,7 +103,8 @@ func handleRepost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = n
 }
 
 public enum ImportErrors: Error {
-    
+
     case InvalidSignature
     case AlreadyHaveNewerReplacableEvent
+    case Expired
 }
