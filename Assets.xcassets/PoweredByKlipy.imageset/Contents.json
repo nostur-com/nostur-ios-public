@@ -3,6 +3,16 @@
     {
       "filename" : "Powered By KLIPY Horizontal -Yellow&Black Logo.svg",
       "idiom" : "universal"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "Powered By KLIPY Horizontal -Yellow&White Logo.svg",
+      "idiom" : "universal"
     }
   ],
   "info" : {
