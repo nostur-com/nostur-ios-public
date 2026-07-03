@@ -146,6 +146,10 @@ struct MainTabs26: View {
                 set: { newValue in
                     let oldTab = selectedTab
                     if newValue == "New Post" {
+                        // Always switch to "Main" for the New Post
+                        selectedTab = "Main"
+                        
+                        // Keeping note for old behavior where we didn't switch tabs here:
                         // Don't actually switch to the "New Post" tab. The brief tab switch
                         // deactivates the NavigationStack, corrupting its safe area state
                         // for all subsequently pushed views. See: nostur-com/nostur-ios-public#48
@@ -199,8 +203,6 @@ struct MainTabs26: View {
                         .foregroundStyle(theme.accent)
                         .tint(theme.accent)
                 }
-                .hidden(selectedTab != "Main")
-
             }
             .tabBarMinimizeBehavior(.onScrollDown)
             .environment(\.horizontalSizeClass, .compact)
