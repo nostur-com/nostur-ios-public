@@ -196,10 +196,8 @@ struct MainTabs26: View {
                     Spacer()
                 } label: {
                     Label(String(localized:"New post", comment: "Button to create a new post"), systemImage: "plus")
-//                        .font(.title)
                         .fontWeightBold()
                         .labelStyle(.iconOnly)
-//                        .padding(.vertical, 5)
                         .foregroundStyle(theme.accent)
                         .tint(theme.accent)
                 }
