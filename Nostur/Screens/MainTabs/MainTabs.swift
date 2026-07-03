@@ -262,6 +262,7 @@ struct MainTabs26: View {
                 AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .shortVideos)
             }
             else {
+                if selectedSubTab != "Following" {  selectedSubTab = "Following" }
                 AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .textNote)
             }
             return // Don't process double-tap logic for "New Post"
