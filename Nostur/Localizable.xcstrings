@@ -1712,6 +1712,9 @@
         }
       }
     },
+    "%@ requested enabling disappearing messages for this conversation." : {
+      "comment" : "Alert text shown when someone sends a message with a timer, %@ is their name"
+    },
     "%@ sats %@" : {
       "localizations" : {
         "en" : {
@@ -9959,6 +9962,9 @@
         }
       }
     },
+    "Enable" : {
+      "comment" : "Button to enable disappearing messages for a conversation"
+    },
     "Enable animated profile pics" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -12914,6 +12920,9 @@
           }
         }
       }
+    },
+    "Keep messages" : {
+      "comment" : "Button to keep messages (decline disappearing messages) for a conversation"
     },
     "Keep your message short" : {
       "localizations" : {

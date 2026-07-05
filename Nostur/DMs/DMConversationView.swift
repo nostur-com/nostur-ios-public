@@ -31,10 +31,16 @@ struct DMConversationView: View {
     @State private var showPhotosPicker = false
     
     @Namespace private var bottomAnchor
-    
+
     @State private var stickToBottom = false
     @State private var showThereIsMore = false
     private var parentDMsVM: DMsVM
+
+    // Name shown in the disappearing messages request prompt
+    private var disappearingRequesterName: String {
+        guard let pubkey = vm.disappearingMessagesRequestPubkey else { return "" }
+        return vm.receiverContacts.first(where: { $0.pubkey == pubkey })?.anyName ?? String(nameOrPubkey(pubkey).prefix(20))
+    }
     
     init(participants: Set<String>, ourAccountPubkey: String, accepted: Bool = false, parentDMsVM: DMsVM) {
         self.participants = participants
@@ -275,6 +281,26 @@ struct DMConversationView: View {
         }
         .background(theme.listBackground)
         .navigationBarTitleDisplayMode(.inline)
+        .alert(
+            String(localized: "Disappearing messages", comment: "Title for the disappearing messages feature in DMs"),
+            isPresented: Binding(
+                get: { vm.disappearingMessagesRequestPubkey != nil },
+                set: { if !$0 { vm.disappearingMessagesRequestPubkey = nil } }
+            )
+        ) {
+            Button {
+                vm.respondToDisappearingMessagesRequest(enable: true)
+            } label: {
+                Text("Enable", comment: "Button to enable disappearing messages for a conversation")
+            }
+            Button(role: .cancel) {
+                vm.respondToDisappearingMessagesRequest(enable: false)
+            } label: {
+                Text("Keep messages", comment: "Button to keep messages (decline disappearing messages) for a conversation")
+            }
+        } message: {
+            Text("\(disappearingRequesterName) requested enabling disappearing messages for this conversation.", comment: "Alert text shown when someone sends a message with a timer, %@ is their name")
+        }
         .task {
             await vm.load()
 #if targetEnvironment(macCatalyst)
