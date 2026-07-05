@@ -140,6 +140,39 @@ class ConversionVM: ObservableObject {
     // Initialized from the conversation's auto-apply setting on load / after each send.
     @Published var draftExpiry: DMDraftExpiry = .auto
 
+    // Pubkey of the participant whose expiring message should trigger the one-time
+    // "requested enabling Disappearing Messages" prompt, while this conversation is
+    // still undecided. nil = no prompt.
+    @Published var disappearingMessagesRequestPubkey: String? = nil
+
+    // Show the prompt when an expiring message from another participant is present while the
+    // conversation's disappearing messages choice is still undecided. Answering (or using
+    // the toggle / a timer ourselves) resolves the setting, so it never shows again.
+    @MainActor
+    private func checkForDisappearingMessagesRequest(_ messages: [NRChatMessage]) {
+        guard disappearingMessagesRequestPubkey == nil else { return }
+        guard let dmState, dmState.disappearingMessagesSetting == .undecided else { return }
+        guard let request = messages.first(where: { $0.expiresAt != nil && $0.pubkey != ourAccountPubkey }) else { return }
+        disappearingMessagesRequestPubkey = request.pubkey
+    }
+
+    // Resolves the prompt: .enabled or .keepMessages. Never shown again for this conversation.
+    @MainActor
+    public func respondToDisappearingMessagesRequest(enable: Bool) {
+        dmState?.disappearingMessagesSetting = enable ? .enabled : .keepMessages
+        disappearingMessagesRequestPubkey = nil
+        if enable {
+            sweepExpiredMessages()
+            // Persist the flag first so the bg purge sees it, then trim expired messages from the database
+            DataProvider.shared().saveToDiskNow(.viewContext) {
+                Task { await Maintenance.purgeExpiredDMsNow() }
+            }
+        }
+        else {
+            DataProvider.shared().saveToDiskNow(.viewContext)
+        }
+    }
+
     // Per-conversation, device-local auto-apply setting (never published to relays).
     var expirySetting: DMExpirySetting {
         DMExpiryStore.setting(account: ourAccountPubkey, conversationId: conversationId)
@@ -500,6 +533,8 @@ class ConversionVM: ObservableObject {
         
         viewState = .ready(years)
         lastMessageId = messages.last?.id
+
+        checkForDisappearingMessagesRequest(messages)
     }
 
     // NIP-40: remove messages whose expiration has passed from the visible conversation (with a
@@ -637,7 +672,11 @@ class ConversionVM: ObservableObject {
             nEvent: rumorNEvent,
             keyPair: keyPair
         )
-        
+
+        Task { @MainActor in
+            self.checkForDisappearingMessagesRequest([newChatMessage])
+        }
+
         let yearId = yearIdFormatter.string(from: messageDate)
         
         if case .ready(let years) = self.viewState {
