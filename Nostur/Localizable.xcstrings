@@ -9002,6 +9002,9 @@
         }
       }
     },
+    "Delete messages in this conversation when their timer runs out" : {
+      "comment" : "Footnote for the per-conversation disappearing messages toggle"
+    },
     "Delete private note" : {
       "comment" : "Sheet title",
       "localizations" : {
