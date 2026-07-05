@@ -106,5 +106,4 @@ public enum ImportErrors: Error {
 
     case InvalidSignature
     case AlreadyHaveNewerReplacableEvent
-    case Expired
 }

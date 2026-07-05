@@ -30,7 +30,25 @@ extension CloudDMState {
     @NSManaged public var isPinned: Bool
     @NSManaged public var isHidden: Bool
     @NSManaged public var version: Int
-    
+
+    // Disappearing messages (NIP-40 expiration) opt-in for this conversation.
+    // Raw storage for disappearingMessagesSetting; only use directly in NSPredicates
+    // (which can't see computed properties).
+    @NSManaged public var disappearingMessages: Int16
+
+    public enum DisappearingMessagesSetting: Int16 {
+        case undecided = -1    // default: user has not been asked yet
+        case keepMessages = 0
+        case enabled = 1
+    }
+
+    public var disappearingMessagesSetting: DisappearingMessagesSetting {
+        // Fall back to .undecided for values from newer app versions (column syncs via CloudKit)
+        get { DisappearingMessagesSetting(rawValue: disappearingMessages) ?? .undecided }
+        set { disappearingMessages = newValue.rawValue }
+    }
+
+
     public var conversationId: String {
         return Self.getConversationId(for: self.participantPubkeys)
     }

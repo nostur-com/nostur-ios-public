@@ -16,6 +16,7 @@ struct DMConversationInfoSheet: View {
     @State private var viewState: ViewState = .checkingDMrelays
     @State private var showExpirationSheet = false
     @State private var useImprovedFormat = false
+    @State private var disappearingMessagesEnabled = false
     @State private var relaysPerPubkey: [String: Set<String>] = [:] // [pubkey: Set<relayString>]
 
     @State var backlog = Backlog(timeout: 10, auto: true, backlogDebugName: "SelectDMRecipientSheet")
@@ -119,6 +120,15 @@ struct DMConversationInfoSheet: View {
             }
 
             Section {
+                Toggle(isOn: $disappearingMessagesEnabled) {
+                    VStack(alignment: .leading) {
+                        Text("Disappearing messages")
+                        Text("Delete messages in this conversation when their timer runs out")
+                            .font(.footnote)
+                            .foregroundColor(Color.gray)
+                    }
+                }
+
                 Button {
                     showExpirationSheet = true
                 } label: {
@@ -145,6 +155,21 @@ struct DMConversationInfoSheet: View {
         .onAppear {
             if vm.conversationVersion == 17 {
                 useImprovedFormat = true
+            }
+            disappearingMessagesEnabled = vm.dmState?.disappearingMessagesSetting == .enabled
+        }
+        .onValueChange(disappearingMessagesEnabled) { _, newValue in
+            guard let dmState = vm.dmState, (dmState.disappearingMessagesSetting == .enabled) != newValue else { return }
+            dmState.disappearingMessagesSetting = newValue ? .enabled : .keepMessages // also resolves the undecided state
+            if newValue {
+                vm.sweepExpiredMessages()
+                // Persist the flag first so the bg purge sees it, then trim expired messages from the database
+                DataProvider.shared().saveToDiskNow(.viewContext) {
+                    Task { await Maintenance.purgeExpiredDMsNow() }
+                }
+            }
+            else {
+                DataProvider.shared().saveToDiskNow(.viewContext)
             }
         }
         .onValueChange(useImprovedFormat) { oldValue, newValue in

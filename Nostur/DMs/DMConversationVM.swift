@@ -147,7 +147,17 @@ class ConversionVM: ObservableObject {
 
     func saveExpirySetting(_ setting: DMExpirySetting) {
         DMExpiryStore.save(setting, account: ourAccountPubkey, conversationId: conversationId)
+        if setting.enabled {
+            optInToDisappearingMessagesIfUndecided()
+        }
         objectWillChange.send()
+    }
+
+    // Turning on a timer for messages we send counts as opting in to disappearing messages for
+    // this conversation. Only resolves the undecided state, never overrides an explicit choice.
+    private func optInToDisappearingMessagesIfUndecided() {
+        guard let dmState, dmState.disappearingMessagesSetting == .undecided else { return }
+        dmState.disappearingMessagesSetting = .enabled
     }
 
     // Duration (seconds) that will actually be applied to the next send, or nil for none.
@@ -405,17 +415,19 @@ class ConversionVM: ObservableObject {
         return newDMState
     }
     
-    private func getMessages(conversationId: String, keyPair: (publicKey: String, privateKey: String)? = nil) async -> [NRChatMessage] {
-        
+    private func getMessages(conversationId: String, keyPair: (publicKey: String, privateKey: String)? = nil, honorExpiration: Bool) async -> [NRChatMessage] {
+
         let dmEvents = await withBgContext { bgContext in
             let request = NSFetchRequest<Event>(entityName: "Event")
             request.predicate = NSPredicate(format: "groupId = %@ AND kind IN {4,14,15}", conversationId)
             request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
-            
-            
+
+
             return ((try? bgContext.fetch(request)) ?? [])
                 .filter { event in
-                    // NIP-40: hide messages whose expiration has passed (even if not yet purged)
+                    // NIP-40: hide messages whose expiration has passed (even if not yet purged),
+                    // but only when disappearing messages is enabled for this conversation (opt-in).
+                    guard honorExpiration else { return true }
                     guard let expString = event.fastTags.first(where: { $0.0 == "expiration" })?.1,
                           let exp = Int64(expString)
                     else { return true }
@@ -447,7 +459,7 @@ class ConversionVM: ObservableObject {
             nil
         }
         
-        var visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair)
+        var visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair, honorExpiration: dmState.disappearingMessagesSetting == .enabled)
         await attachReactions(to: &visibleMessages)
         return visibleMessages
     }
@@ -493,8 +505,10 @@ class ConversionVM: ObservableObject {
     // NIP-40: remove messages whose expiration has passed from the visible conversation (with a
     // fade/collapse animation) and purge them from the local store. Runs on the shared minute timer
     // and on foreground; complements the load-time filter in getMessages and the maintenance sweep.
+    // Only when disappearing messages is enabled for this conversation (opt-in).
     @MainActor
     func sweepExpiredMessages() {
+        guard dmState?.disappearingMessagesSetting == .enabled else { return }
         guard case .ready(let years) = viewState else { return }
         let now = Int(Date.now.timeIntervalSince1970)
         var removedAny = false
@@ -787,6 +801,7 @@ class ConversionVM: ObservableObject {
         if let duration = resolvedExpiryDuration() {
             let expiresAt = DMExpiry.expiresAt(createdAt: Int(messageDate.timeIntervalSince1970), durationSeconds: duration)
             nEvent.tags.append(NostrTag(["expiration", String(expiresAt)]))
+            optInToDisappearingMessagesIfUndecided()
         }
 
         if let signedEvent = try? nEvent.sign(keys) {
@@ -824,6 +839,7 @@ class ConversionVM: ObservableObject {
         let expiresAt: Int? = resolvedExpiryDuration().map { DMExpiry.expiresAt(createdAt: nip59CreatedAt(), durationSeconds: $0) }
         if let expiresAt {
             tags.append(Tag(["expiration", String(expiresAt)]))
+            optInToDisappearingMessagesIfUndecided()
         }
 
         let messageDate = Date()
@@ -944,6 +960,7 @@ class ConversionVM: ObservableObject {
         let expiresAt: Int? = resolvedExpiryDuration().map { DMExpiry.expiresAt(createdAt: nip59CreatedAt(), durationSeconds: $0) }
         if let expiresAt {
             tags.append(Tag(["expiration", String(expiresAt)]))
+            optInToDisappearingMessagesIfUndecided()
         }
         let message = NostrEssentials.Event(
             pubkey: ourAccountPubkey,

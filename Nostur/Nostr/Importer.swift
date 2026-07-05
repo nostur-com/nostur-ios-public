@@ -459,14 +459,6 @@ class Importer {
             throw ImportErrors.AlreadyHaveNewerReplacableEvent
         }
 
-        // NIP-40: don't persist DMs (NIP-04 / NIP-17) that are already expired
-        if [4, 14, 15].contains(event.kind.id),
-           let exp = event.tagNamed("expiration").flatMap({ Int64($0) }),
-           exp <= Int64(Date.now.timeIntervalSince1970)
-        {
-            throw ImportErrors.Expired
-        }
-
         var kind6firstQuote: Event?
         kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext)
         try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext)

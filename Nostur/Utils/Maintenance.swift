@@ -275,12 +275,20 @@ struct Maintenance {
     }
     
     // NIP-40: delete DM events (NIP-04 kind 4, NIP-17 kind 14/15) whose expiration timestamp has passed.
+    // Disappearing messages is opt-in per conversation: only conversations whose CloudDMState has it
+    // enabled are purged (any local account opting in counts). Deletion is permanent: turning the
+    // toggle off later does not restore already-deleted messages.
     // Intentionally ignores the own-account / bookmark exclusions used elsewhere: an expiring message
     // should disappear even if it's our own or bookmarked.
     static func deleteExpiredDMs(_ context: NSManagedObjectContext) {
+        let dmStatesFr = CloudDMState.fetchRequest()
+        let dmStates: [CloudDMState] = (try? context.fetch(dmStatesFr)) ?? []
+        let enabledConversationIds = Set(dmStates.filter { $0.disappearingMessagesSetting == .enabled }.map { $0.conversationId })
+        guard !enabledConversationIds.isEmpty else { return } // nothing opted in, skip the Event scan
+
         let now = Int64(Date.now.timeIntervalSince1970)
         let fr = NSFetchRequest<Event>(entityName: "Event")
-        fr.predicate = NSPredicate(format: "kind IN {4,14,15} AND tagsSerialized CONTAINS %@", "expiration")
+        fr.predicate = NSPredicate(format: "kind IN {4,14,15} AND groupId IN %@ AND tagsSerialized CONTAINS %@", Array(enabledConversationIds), "expiration")
         guard let candidates = try? context.fetch(fr) else { return }
         let expiredIds: [String] = candidates.compactMap { event in
             guard let expString = event.fastTags.first(where: { $0.0 == "expiration" })?.1,
