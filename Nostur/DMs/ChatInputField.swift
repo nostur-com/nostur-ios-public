@@ -127,7 +127,7 @@ struct DMChatInputField: View {
         if let duration = vm.resolvedExpiryDuration() {
             HStack(spacing: 5) {
                 Image(systemName: "clock")
-                Text("Set to expire · ~\(DMExpiry.presetLabel(forDuration: duration))")
+                Text("Disappears in ~\(DMExpiry.presetLabel(forDuration: duration))")
                 Button {
                     withAnimation { vm.draftExpiry = .off } // clear for THIS message (overrides auto-apply)
                 } label: {
@@ -155,7 +155,7 @@ struct DMChatInputField: View {
                             Button("Photos", systemImage: "photo") { onPickPhotos?() }
                             Button("Files", systemImage: "doc") { onPickFiles?() }
                             Divider()
-                            Button("Message expiration", systemImage: "clock") { onPickExpiration?() }
+                            Button("Disappearing messages", systemImage: "clock") { onPickExpiration?() }
                         } label: {
                             plusButtonIcon
                         }

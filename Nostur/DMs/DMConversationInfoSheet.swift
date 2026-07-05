@@ -125,7 +125,7 @@ struct DMConversationInfoSheet: View {
                     HStack(spacing: 12) {
                         Image(systemName: "clock")
                             .foregroundStyle(theme.accent)
-                        Text("Auto-apply expiration")
+                        Text("Message timer")
                             .foregroundStyle(.primary)
                         Spacer()
                         Text(expiryValueLabel)
@@ -137,9 +137,9 @@ struct DMConversationInfoSheet: View {
                     .contentShape(Rectangle())
                 }
             } header: {
-                Text("Message expiration")
+                Text("Disappearing messages")
             } footer: {
-                Text("Sets a NIP-40 expiration on each message you send (a device setting, fixed on the message once sent). Supported apps like Nostur hide it after; others may keep a copy. May expire up to 2 days early.")
+                Text("Adds a timer to messages you send from this device. Apps that support it, like Nostur, remove the message when the timer runs out; other apps may keep a copy. Timers are fixed once sent and can run out up to 2 days early (uses NIP-40 expiration).")
             }
         }
         .onAppear {

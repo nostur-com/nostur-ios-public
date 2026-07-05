@@ -2,11 +2,9 @@
 //  MessageExpirationSheet.swift
 //  Nostur
 //
-//  The "Message expiration" picker (screen 01-picker-sheet). Presented from the composer's
-//  + button and from Conversation info. Lets the user pick a per-message expiry (Off / 7 days /
+//  The "Disappearing messages" timer picker (screen 01-picker-sheet). Presented from the composer's
+//  + button and from Conversation info. Lets the user pick a per-message timer (Off / 7 days /
 //  30 days / Custom, >= 2 days) and toggle a per-conversation, device-local auto-apply default.
-//
-//  Copy strings are canonical per ENGINEERING_SPEC.md §6.
 //
 
 import SwiftUI
@@ -86,7 +84,7 @@ struct MessageExpirationSheet: View {
             HStack(spacing: 8) {
                 Image(systemName: "clock")
                     .foregroundStyle(theme.accent)
-                Text("Message expiration")
+                Text("Disappearing messages")
                     .font(.headline)
             }
             Text("How long should messages you send stay around?")
@@ -169,10 +167,10 @@ struct MessageExpirationSheet: View {
 
     private var customPicker: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Expire after")
+            Text("Disappear after")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-            Picker("Days until expiry", selection: $customDays) {
+            Picker("Days", selection: $customDays) {
                 ForEach(customDayOptions, id: \.self) { day in
                     Text(DMExpiry.presetLabel(forDuration: day * 86_400)).tag(day) // reuses the "%@ days" key
                 }
