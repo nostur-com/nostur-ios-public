@@ -11,9 +11,9 @@ import NostrEssentials
 
 // Kind 4 handling, for now we can reuse for kind 14 and kind 15 (file messages)
 func handleDM(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, context: NSManagedObjectContext) {
-    // Only handle DM for giftwrapped kinds by checking if there is a wrapId
-    guard wrapId != nil else { return }
     guard nEvent.kind == .legacyDirectMessage || nEvent.kind == .directMessage || nEvent.kind == .fileMessage || nEvent.kind == .reaction else { return }
+    // Only giftwrapped reactions are DM reactions; raw reactions are handled by ReactionHandler.
+    guard nEvent.kind != .reaction || wrapId != nil else { return }
     
     // needed to fetch contact in DMS: so event.firstP is in event.contacts
     
