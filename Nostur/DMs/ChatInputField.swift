@@ -97,7 +97,6 @@ struct DMChatInputField: View {
     var onSubmit: (() -> Void)?
     var onPickPhotos: (() -> Void)?
     var onPickFiles: (() -> Void)?
-    var onPickExpiration: (() -> Void)?
 
     enum FocusedField {
         case message
@@ -121,19 +120,13 @@ struct DMChatInputField: View {
             .foregroundStyle(theme.accent)
     }
 
-    // NIP-40 composer chip, shown while a per-message expiry is set (screen 02-composer-while-typing).
+    // NIP-40 composer chip, shown while this conversation has disappearing messages enabled.
     @ViewBuilder
     private var expiryChip: some View {
         if let duration = vm.resolvedExpiryDuration() {
             HStack(spacing: 5) {
                 Image(systemName: "clock")
                 Text("Disappears in ~\(DMExpiry.presetLabel(forDuration: duration))")
-                Button {
-                    withAnimation { vm.draftExpiry = .off } // clear for THIS message (overrides auto-apply)
-                } label: {
-                    Image(systemName: "xmark")
-                }
-                .buttonStyle(.plain)
             }
             .font(.footnote)
             .foregroundStyle(theme.accent)
@@ -154,15 +147,6 @@ struct DMChatInputField: View {
                         Menu {
                             Button("Photos", systemImage: "photo") { onPickPhotos?() }
                             Button("Files", systemImage: "doc") { onPickFiles?() }
-                            Divider()
-                            Button("Disappearing messages", systemImage: "clock") { onPickExpiration?() }
-                        } label: {
-                            plusButtonIcon
-                        }
-                    }
-                    else {
-                        Button {
-                            onPickExpiration?()
                         } label: {
                             plusButtonIcon
                         }

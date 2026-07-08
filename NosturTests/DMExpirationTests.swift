@@ -46,24 +46,13 @@ struct DMExpirationTests {
         #expect(!DMExpiry.isValidDuration(3600))                 // 1 hour is not
         #expect(DMExpiry.isValidDuration(DMExpiry.sevenDaysSeconds))
         #expect(DMExpiry.isValidDuration(DMExpiry.thirtyDaysSeconds))
+        #expect(DMExpiry.isValidDuration(DMExpiry.oneYearSeconds))
     }
 
-    @Test func resolved_duration_prefers_draft_and_enforces_minimum() {
-        let sevenDayAuto = DMExpirySetting(enabled: true, durationSeconds: DMExpiry.sevenDaysSeconds, label: "7 days")
-
-        // Explicit per-message duration overrides the auto-apply setting.
-        #expect(DMExpiry.resolvedDuration(draft: .duration(DMExpiry.thirtyDaysSeconds), setting: sevenDayAuto) == DMExpiry.thirtyDaysSeconds)
-        // .auto + auto-apply enabled → the setting's duration.
-        #expect(DMExpiry.resolvedDuration(draft: .auto, setting: sevenDayAuto) == DMExpiry.sevenDaysSeconds)
-        // .auto + auto-apply disabled → no expiration.
-        #expect(DMExpiry.resolvedDuration(draft: .auto, setting: .off) == nil)
-        // .off explicitly clears this message even when auto-apply is enabled (chip ✕ / sheet "Off").
-        #expect(DMExpiry.resolvedDuration(draft: .off, setting: sevenDayAuto) == nil)
-        // A sub-minimum explicit duration is rejected (treated as no expiry).
-        #expect(DMExpiry.resolvedDuration(draft: .duration(3600), setting: .off) == nil)
-        // A sub-minimum auto-apply setting is rejected too.
-        let badAuto = DMExpirySetting(enabled: true, durationSeconds: 3600, label: "bad")
-        #expect(DMExpiry.resolvedDuration(draft: .auto, setting: badAuto) == nil)
+    @Test func fixed_duration_presets_are_supported() {
+        #expect(DMExpiry.sevenDaysSeconds == 7 * 24 * 3600)
+        #expect(DMExpiry.thirtyDaysSeconds == 30 * 24 * 3600)
+        #expect(DMExpiry.oneYearSeconds == 365 * 24 * 3600)
     }
 
     // MARK: - Countdown formatting

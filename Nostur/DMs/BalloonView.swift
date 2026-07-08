@@ -137,7 +137,7 @@ struct BalloonView17: View {
 
             // Metadata row below the bubble: countdown · time · delivery checks
             HStack(spacing: 5) {
-                if let expiresAt = nrChatMessage.expiresAt {
+                if vm.dmState?.disappearingMessagesSetting.enabled == true, let expiresAt = nrChatMessage.expiresAt {
                     ExpiryCountdownLabel(expiresAt: expiresAt)
                 }
                 Text(nrChatMessage.createdAt, format: .dateTime.hour().minute())

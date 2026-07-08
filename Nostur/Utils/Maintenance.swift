@@ -283,7 +283,7 @@ struct Maintenance {
     static func deleteExpiredDMs(_ context: NSManagedObjectContext) {
         let dmStatesFr = CloudDMState.fetchRequest()
         let dmStates: [CloudDMState] = (try? context.fetch(dmStatesFr)) ?? []
-        let enabledConversationIds = Set(dmStates.filter { $0.disappearingMessagesSetting == .enabled }.map { $0.conversationId })
+        let enabledConversationIds = Set(dmStates.filter { $0.disappearingMessagesSetting.enabled }.map { $0.conversationId })
         guard !enabledConversationIds.isEmpty else { return } // nothing opted in, skip the Event scan
 
         let now = Int64(Date.now.timeIntervalSince1970)
@@ -1251,6 +1251,7 @@ struct Maintenance {
                 dmState.accepted = preparedState.didSend
                 dmState.initiatorPubkey_ = preparedState.initiatorPubkey
                 dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(preparedState.newest))
+                dmState.disappearingMessagesSetting = .undecided
                 if let ourNewest = preparedState.ourNewest {
                     dmState.markedReadAt_ = Date(timeIntervalSince1970: TimeInterval(ourNewest))
                 }

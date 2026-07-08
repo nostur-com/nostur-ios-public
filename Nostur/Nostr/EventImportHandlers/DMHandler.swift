@@ -78,6 +78,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, context:
                 dmState.initiatorPubkey_ = sender
             }
             dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
+            dmState.disappearingMessagesSetting = .undecided
             updateBlurb(dmState, nEvent: nEvent, context: viewContext())
             didCreateNewDMState = true
         }

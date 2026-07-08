@@ -14,12 +14,12 @@ struct DMConversationInfoSheet: View {
     @ObservedObject var vm: ConversionVM
 
     @State private var viewState: ViewState = .checkingDMrelays
-    @State private var showExpirationSheet = false
     @State private var useImprovedFormat = false
-    @State private var disappearingMessagesEnabled = false
     @State private var relaysPerPubkey: [String: Set<String>] = [:] // [pubkey: Set<relayString>]
 
     @State var backlog = Backlog(timeout: 10, auto: true, backlogDebugName: "SelectDMRecipientSheet")
+    
+    @State private var disappearingMessages: CloudDMState.DisappearingMessagesSetting = .off
     
     var body: some View {
         NXForm {
@@ -120,32 +120,18 @@ struct DMConversationInfoSheet: View {
             }
 
             Section {
-                Toggle(isOn: $disappearingMessagesEnabled) {
-                    VStack(alignment: .leading) {
-                        Text("Disappearing messages")
-                        Text("Delete messages in this conversation when their timer runs out")
-                            .font(.footnote)
-                            .foregroundColor(Color.gray)
+                Picker(selection: $disappearingMessages) {
+                    Group {
+                        Text("Off").tag(CloudDMState.DisappearingMessagesSetting.off)
+                        Text("7 days").tag(CloudDMState.DisappearingMessagesSetting.sevenDays)
+                        Text("30 days").tag(CloudDMState.DisappearingMessagesSetting.thirtyDays)
+                        Text("1 year").tag(CloudDMState.DisappearingMessagesSetting.oneYear)
                     }
-                }
-
-                Button {
-                    showExpirationSheet = true
+                    .foregroundColor(theme.primary)
                 } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "clock")
-                            .foregroundStyle(theme.accent)
-                        Text("Message timer")
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Text(expiryValueLabel)
-                            .foregroundStyle(theme.accent)
-                        Image(systemName: "chevron.right")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                    .contentShape(Rectangle())
+                    Text("Disappearing Messages", comment: "Picker label for Disappearing Messages in DMs")
                 }
+                .pickerStyleCompatNavigationLink()
             } header: {
                 Text("Disappearing messages")
             } footer: {
@@ -156,12 +142,12 @@ struct DMConversationInfoSheet: View {
             if vm.conversationVersion == 17 {
                 useImprovedFormat = true
             }
-            disappearingMessagesEnabled = vm.dmState?.disappearingMessagesSetting == .enabled
+            disappearingMessages = pickerSetting(for: vm.dmState?.disappearingMessagesSetting ?? .off)
         }
-        .onValueChange(disappearingMessagesEnabled) { _, newValue in
-            guard let dmState = vm.dmState, (dmState.disappearingMessagesSetting == .enabled) != newValue else { return }
-            dmState.disappearingMessagesSetting = newValue ? .enabled : .keepMessages // also resolves the undecided state
-            if newValue {
+        .onValueChange(disappearingMessages) { _, newValue in
+            guard let dmState = vm.dmState, dmState.disappearingMessagesSetting != newValue else { return }
+            dmState.disappearingMessagesSetting = newValue
+            if newValue.enabled {
                 vm.sweepExpiredMessages()
                 // Persist the flag first so the bg purge sees it, then trim expired messages from the database
                 DataProvider.shared().saveToDiskNow(.viewContext) {
@@ -182,9 +168,6 @@ struct DMConversationInfoSheet: View {
                 vm.dmState?.version = 0
             }
         }
-        .sheet(isPresented: $showExpirationSheet) {
-            MessageExpirationSheet(vm: vm, context: .conversationDefault)
-        }
         .navigationTitle(String(localized:"Conversation info", comment:"Navigation title for screen with DM conversation info"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -196,9 +179,8 @@ struct DMConversationInfoSheet: View {
         }
     }
 
-    private var expiryValueLabel: String {
-        let setting = vm.expirySetting
-        return setting.enabled ? DMExpiry.presetLabel(forDuration: setting.durationSeconds) : String(localized: "Off", comment: "DM expiration disabled")
+    private func pickerSetting(for setting: CloudDMState.DisappearingMessagesSetting) -> CloudDMState.DisappearingMessagesSetting {
+        setting == .undecided ? .off : setting
     }
 
     private func checkDMRelays(_ pubkeys: Set<String>) {

@@ -136,34 +136,28 @@ class ConversionVM: ObservableObject {
 
     // MARK: - NIP-40 message expiration
 
-    // Per-draft override (in-memory) for the message being composed; nil = no expiration.
-    // Initialized from the conversation's auto-apply setting on load / after each send.
-    @Published var draftExpiry: DMDraftExpiry = .auto
-
-    // Pubkey of the participant whose expiring message should trigger the one-time
-    // "requested enabling Disappearing Messages" prompt, while this conversation is
-    // still undecided. nil = no prompt.
+    // Pubkey of the participant whose expiring message should trigger the opt-in prompt while
+    // the disappearing messages setting is still undecided. nil = no prompt.
     @Published var disappearingMessagesRequestPubkey: String? = nil
 
-    // Show the prompt when an expiring message from another participant is present while the
-    // conversation's disappearing messages choice is still undecided. Answering (or using
-    // the toggle / a timer ourselves) resolves the setting, so it never shows again.
     @MainActor
     private func checkForDisappearingMessagesRequest(_ messages: [NRChatMessage]) {
         guard disappearingMessagesRequestPubkey == nil else { return }
-        guard let dmState, dmState.disappearingMessagesSetting == .undecided else { return }
-        guard let request = messages.first(where: { $0.expiresAt != nil && $0.pubkey != ourAccountPubkey }) else { return }
+        guard dmState?.disappearingMessagesSetting == .undecided else { return }
+        guard let request = messages.first(where: {
+            $0.expiresAt != nil &&
+            $0.pubkey != ourAccountPubkey
+        }) else { return }
         disappearingMessagesRequestPubkey = request.pubkey
     }
 
-    // Resolves the prompt: .enabled or .keepMessages. Never shown again for this conversation.
     @MainActor
     public func respondToDisappearingMessagesRequest(enable: Bool) {
-        dmState?.disappearingMessagesSetting = enable ? .enabled : .keepMessages
         disappearingMessagesRequestPubkey = nil
+        dmState?.disappearingMessagesSetting = enable ? .sevenDays : .off
         if enable {
             sweepExpiredMessages()
-            // Persist the flag first so the bg purge sees it, then trim expired messages from the database
+            // Persist the flag first so the bg purge sees it, then trim expired messages from the database.
             DataProvider.shared().saveToDiskNow(.viewContext) {
                 Task { await Maintenance.purgeExpiredDMsNow() }
             }
@@ -173,35 +167,10 @@ class ConversionVM: ObservableObject {
         }
     }
 
-    // Per-conversation, device-local auto-apply setting (never published to relays).
-    var expirySetting: DMExpirySetting {
-        DMExpiryStore.setting(account: ourAccountPubkey, conversationId: conversationId)
-    }
-
-    func saveExpirySetting(_ setting: DMExpirySetting) {
-        DMExpiryStore.save(setting, account: ourAccountPubkey, conversationId: conversationId)
-        if setting.enabled {
-            optInToDisappearingMessagesIfUndecided()
-        }
-        objectWillChange.send()
-    }
-
-    // Turning on a timer for messages we send counts as opting in to disappearing messages for
-    // this conversation. Only resolves the undecided state, never overrides an explicit choice.
-    private func optInToDisappearingMessagesIfUndecided() {
-        guard let dmState, dmState.disappearingMessagesSetting == .undecided else { return }
-        dmState.disappearingMessagesSetting = .enabled
-    }
-
-    // Duration (seconds) that will actually be applied to the next send, or nil for none.
+    // Duration (seconds) that will be applied to sent messages in this conversation.
     func resolvedExpiryDuration() -> Int? {
-        DMExpiry.resolvedDuration(draft: draftExpiry, setting: expirySetting)
-    }
-
-    // After a successful send, reset the draft to follow the conversation setting again, so
-    // auto-apply persists but one-off manual picks/clears don't leak into the next message.
-    func resetDraftExpiryFromSetting() {
-        draftExpiry = .auto
+        guard let setting = dmState?.disappearingMessagesSetting, setting.enabled else { return nil }
+        return DMExpiry.isValidDuration(setting.durationSeconds) ? setting.durationSeconds : nil
     }
 
     public var account: CloudAccount? = nil
@@ -254,7 +223,6 @@ class ConversionVM: ObservableObject {
         self.receiverContacts = receivers.map { NRContact.instance(of: $0) }
         self.dmState = getGroupState()
         self.isAccepted = self.dmState?.accepted ?? false
-        self.resetDraftExpiryFromSetting()
 
         if let dmState { // Should always exists because getGroupState() gets existing or creates new
             let visibleMessages = await localMessages(for: dmState)
@@ -492,7 +460,7 @@ class ConversionVM: ObservableObject {
             nil
         }
         
-        var visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair, honorExpiration: dmState.disappearingMessagesSetting == .enabled)
+        var visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair, honorExpiration: dmState.disappearingMessagesSetting.enabled)
         await attachReactions(to: &visibleMessages)
         return visibleMessages
     }
@@ -543,7 +511,7 @@ class ConversionVM: ObservableObject {
     // Only when disappearing messages is enabled for this conversation (opt-in).
     @MainActor
     func sweepExpiredMessages() {
-        guard dmState?.disappearingMessagesSetting == .enabled else { return }
+        guard dmState?.disappearingMessagesSetting.enabled == true else { return }
         guard case .ready(let years) = viewState else { return }
         let now = Int(Date.now.timeIntervalSince1970)
         var removedAny = false
@@ -840,7 +808,6 @@ class ConversionVM: ObservableObject {
         if let duration = resolvedExpiryDuration() {
             let expiresAt = DMExpiry.expiresAt(createdAt: Int(messageDate.timeIntervalSince1970), durationSeconds: duration)
             nEvent.tags.append(NostrTag(["expiration", String(expiresAt)]))
-            optInToDisappearingMessagesIfUndecided()
         }
 
         if let signedEvent = try? nEvent.sign(keys) {
@@ -878,7 +845,6 @@ class ConversionVM: ObservableObject {
         let expiresAt: Int? = resolvedExpiryDuration().map { DMExpiry.expiresAt(createdAt: nip59CreatedAt(), durationSeconds: $0) }
         if let expiresAt {
             tags.append(Tag(["expiration", String(expiresAt)]))
-            optInToDisappearingMessagesIfUndecided()
         }
 
         let messageDate = Date()
@@ -999,7 +965,6 @@ class ConversionVM: ObservableObject {
         let expiresAt: Int? = resolvedExpiryDuration().map { DMExpiry.expiresAt(createdAt: nip59CreatedAt(), durationSeconds: $0) }
         if let expiresAt {
             tags.append(Tag(["expiration", String(expiresAt)]))
-            optInToDisappearingMessagesIfUndecided()
         }
         let message = NostrEssentials.Event(
             pubkey: ourAccountPubkey,

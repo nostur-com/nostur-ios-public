@@ -31,20 +31,40 @@ extension CloudDMState {
     @NSManaged public var isHidden: Bool
     @NSManaged public var version: Int
 
-    // Disappearing messages (NIP-40 expiration) opt-in for this conversation.
+    // Disappearing messages (NIP-40 expiration) duration for this conversation.
     // Raw storage for disappearingMessagesSetting; only use directly in NSPredicates
-    // (which can't see computed properties).
+    // (which can't see computed properties). -1 means undecided, 0 means off (keep messages),
+    // other values are days.
     @NSManaged public var disappearingMessages: Int16
 
     public enum DisappearingMessagesSetting: Int16 {
-        case undecided = -1    // default: user has not been asked yet
-        case keepMessages = 0
-        case enabled = 1
+        case undecided = -1 // only show request notification if -1
+        case off = 0 // keep mesages
+        case sevenDays = 7
+        case thirtyDays = 30
+        case oneYear = 365
+
+        var enabled: Bool {
+            switch self {
+            case .sevenDays, .thirtyDays, .oneYear:
+                return true
+            case .undecided, .off:
+                return false
+            }
+        }
+
+        var durationSeconds: Int {
+            Int(rawValue) * 24 * 3600
+        }
     }
 
     public var disappearingMessagesSetting: DisappearingMessagesSetting {
-        // Fall back to .undecided for values from newer app versions (column syncs via CloudKit)
-        get { DisappearingMessagesSetting(rawValue: disappearingMessages) ?? .undecided }
+        get {
+            if disappearingMessages == 1 {
+                return .sevenDays
+            }
+            return DisappearingMessagesSetting(rawValue: disappearingMessages) ?? .undecided
+        }
         set { disappearingMessages = newValue.rawValue }
     }
 
@@ -131,6 +151,7 @@ extension CloudDMState: Identifiable {
         newGroupDMSstate.accountPubkey_ = accountPubkey
         newGroupDMSstate.participantPubkeys = participants
         newGroupDMSstate.contactPubkey_ = participants.subtracting([accountPubkey]).first
+        newGroupDMSstate.disappearingMessagesSetting = .undecided
         return newGroupDMSstate
     }
 
