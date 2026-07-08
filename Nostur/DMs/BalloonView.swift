@@ -18,6 +18,7 @@ struct BalloonView17: View {
     }
     
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
     
     @State private var showDMSendResult: RecipientResult? = nil
@@ -34,6 +35,10 @@ struct BalloonView17: View {
             }
             else if vm.receivers.count > 1 {
                 ObservedPFP(nrContact: nrChatMessage.nrContact, size: 20)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        navigateTo(ContactPath(key: nrChatMessage.pubkey), context: containerID)
+                    }
                     .offset(x: 5, y: 5)
             }
             VStack(alignment: .leading, spacing: 3) {

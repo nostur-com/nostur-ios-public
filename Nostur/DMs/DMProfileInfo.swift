@@ -28,6 +28,10 @@ struct DMProfileInfo: View {
 #endif
         VStack(alignment: .center) {
             ObservedPFP(nrContact: nrContact, size: 100)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    navigateTo(ContactPath(key: nrContact.pubkey), context: containerID)
+                }
 
             HStack(spacing: 0) {
                 Text("\(nrContact.anyName) ")
@@ -39,6 +43,10 @@ struct DMProfileInfo: View {
                     NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
                         .layoutPriority(3)
                 }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                navigateTo(ContactPath(key: nrContact.pubkey), context: containerID)
             }
             
             if let fixedName = nrContact.fixedName, fixedName != nrContact.anyName {

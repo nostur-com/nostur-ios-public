@@ -14,6 +14,7 @@ import ImageIO
 
 struct DMConversationView: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @EnvironmentObject private var la: LoggedInAccount
     private let participants: Set<String>
     private let ourAccountPubkey: String
@@ -22,7 +23,6 @@ struct DMConversationView: View {
     @State private var text = ""
     @State private var errorText: String? = nil
     @State private var didLoad = false
-    @State private var selectedContact: NRContact?
     @State private var showConversationInfoSheet = false
     
     // File attachment state
@@ -79,9 +79,7 @@ struct DMConversationView: View {
                         
                         if vm.receivers.count > 1 {
                             MultiPFPs(nrContacts: vm.receiverContacts, size: 75, onTap: { nrContact in
-                                
-                                // TODO: use sheet or navigate to...?
-                                selectedContact = nrContact
+                                navigateTo(ContactPath(key: nrContact.pubkey), context: containerID)
                             })
                             .listRowInsets(.init())
                             .listRowSeparator(.hidden)
@@ -234,7 +232,7 @@ struct DMConversationView: View {
                     ToolbarItem(placement: .principal) {
                         Button {
                             if let receiver = vm.receivers.first {
-                                navigateTo(ContactPath(key: receiver), context: "Messages")
+                                navigateTo(ContactPath(key: receiver), context: containerID)
                             }
                         } label: {
                             Text("To: \(vm.receiverContacts.map { $0.anyName }.formatted(.list(type: .and)))")
@@ -283,22 +281,6 @@ struct DMConversationView: View {
 #endif
         }
         .environmentObject(ViewingContext(availableWidth: DIMENSIONS.articleRowImageWidth(UIScreen.main.bounds.width), fullWidthImages: false, viewType: .row))
-        .sheet(item: $selectedContact) { selectedContact in
-            NBNavigationStack {
-                VStack(alignment: .center) {
-                    DMProfileInfo(nrContact: selectedContact)
-                    Spacer()
-                }
-                .environmentObject(la)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Close", systemImage: "xmark") {
-                            self.selectedContact = nil
-                        }
-                    }
-                }
-            }
-        }
         .sheet(isPresented: $showPhotosPicker) {
             if #available(iOS 16.0, *) {
                 DMPhotoPickerSheet { data, mimeType, dimensions in
