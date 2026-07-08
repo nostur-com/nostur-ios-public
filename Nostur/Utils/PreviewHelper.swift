@@ -79,12 +79,42 @@ public class PreviewEnvironment {
         context.performAndWait {
             for text in messages {
                 guard let nEvent = NEvent.fromString(text) else { continue }
-                let savedEvent = Event.saveEvent(event: nEvent, relays: "previewcanvas", context: context)
+                _ = Event.saveEvent(event: nEvent, relays: "previewcanvas", context: context)
                 
                 if nEvent.kind == .setMetadata {
                     Contact.saveOrUpdateContact(event: nEvent, context: context)
                 }
             }
+        }
+    }
+    
+    public func parseDMConversationEventJSON(_ messages: [String], participants: Set<String>, accountPubkey: String) {
+        context.performAndWait {
+            let conversationId = CloudDMState.getConversationId(for: participants)
+            let dmState = CloudDMState.fetchByParticipants(participants: participants, andAccountPubkey: accountPubkey, context: context)
+                ?? CloudDMState.create(accountPubkey: accountPubkey, participants: participants, context: context)
+            dmState.accepted = true
+            dmState.version = participants.count > 2 ? 17 : 0
+            dmState.initiatorPubkey_ = accountPubkey
+            
+            for text in messages {
+                guard let nEvent = NEvent.fromString(text) else { continue }
+                let savedEvent = Event.saveEvent(event: nEvent, relays: "previewcanvas", context: context)
+                
+                if nEvent.kind == .legacyDirectMessage || nEvent.kind == .directMessage || nEvent.kind == .fileMessage {
+                    savedEvent.groupId = conversationId
+                    savedEvent.otherPubkey = nEvent.firstP()
+                    if nEvent.createdAt.timestamp > Int(dmState.lastMessageTimestamp_?.timeIntervalSince1970 ?? 0) {
+                        dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
+                        updateBlurb(dmState, nEvent: nEvent, context: context)
+                    }
+                }
+                else if nEvent.kind == .setMetadata {
+                    Contact.saveOrUpdateContact(event: nEvent, context: context)
+                }
+            }
+            
+            try? context.save()
         }
     }
     
@@ -795,19 +825,19 @@ struct PreviewContainer<Content: View>: View {
     @State private var pe = PreviewEnvironment.shared
     private var setup: PreviewSetup? = nil
     private let previewDevice: PreviewDevice
-    private var content: Content
+    private var content: () -> Content
     @State private var didSetup = false
     
     init(_ setup: PreviewSetup? = nil, previewDevice: PreviewDevice? = nil, @ViewBuilder content: @escaping () -> Content) {
         self.setup = setup
         self.previewDevice = previewDevice ?? PreviewDevice(rawValue: PREVIEW_DEVICE)
-        self.content = content()
+        self.content = content
     }
     
     var body: some View {
         VStack(spacing: 0) {
             if didSetup, let loggedInAccount = AccountsState.shared.loggedInAccount {
-                content
+                content()
                     .environment(\.theme, Themes.GREEN)
                     .environment(\.managedObjectContext, pe.context)
                     .environmentObject(AppState.shared)

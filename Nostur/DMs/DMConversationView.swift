@@ -489,7 +489,9 @@ struct DMConversationView: View {
 @available(iOS 17.1, *)
 #Preview("DMConversationView") {
     PreviewContainer({ pe in
-        pe.parseEventJSON([
+        let participants: Set<String> = ["06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71", "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]
+        let ourAccountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+        pe.parseDMConversationEventJSON([
             ###"{"kind":4,"id":"fff8c33ce14af29921a6d737e6fe7f4be7eb6689f8c22468111fc4b813c7f6ee","pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","created_at":1732966153,"tags":[["p","06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71"]],"content":"cywUqdpmxTx7ycOlwREYWHNRPVrmcFHHwANXsO0Hx9j7UaTIsDoyNjjP/N75xz7A?iv=vZR3gyFrDniX3o3K+wOWkQ==","sig":"0a1da8058667aaf501a2fa0ca61f506ee0f9f849d94dbb7355d75956baa62b991333fb3c9d1be46e47613ef76bf1aff5a352a34ae88a47f543faa1f21d5d3bed"}"###,
             ###"{"kind":4,"id":"e312afd6dd189781241756d54f6d42cc69c3a7294a53694fffa5b8eab0880e31","pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","created_at":1731589700,"tags":[["p","06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71"]],"content":"u7MAvwej5IgHk1FDNCU0cfT51mbvwMFV+/9pm7dqOktl/bdPOtFxxiShc9IMgICwFYacy/xAVhnwWYsJDkVDWMp4o5tEBryVJC+QxOg5FS9PGhQeDuXod8KhRy9PDdJJmp6hzC4mknM8300z3F2JSDRvlcxZUELi+SQU+KrTG8Q=?iv=jILVmN/7+N5r1dSRO4bJNw==","sig":"48f95e8f36dbf46b979ceb48a3580c16185da1b815ce6a6aff98559d47722af4aaab258364ab55da9e9f2efd7fc98865dd89ad946290574b3e6e24b44dc29f80"}"###,
             ###"{"kind":4,"id":"90c07203a6bfa41f193b889331d5b91c09ae5de2226225bd09b58e0d7be60c62","pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","created_at":1731494836,"tags":[["p","06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71"]],"content":"hWZl/VIYA46DHolp7og7i3U7dcjsIZhIFX5Y5jCU1tZPtLrTL631M9baMXFP9NCAxJtbUuCKle6453e6lGSEyQ==?iv=JSt16hH42qil35u+Jo8J2A==","sig":"6d9c279d7d87506d4daf703171afa2732bf5dadb700ede3809a0bf2cda2eeb14f069422c2e34c104790c3895cd4e34017d08658aa1c436f2297c9adb8189bc76"}"###,
@@ -551,7 +553,7 @@ struct DMConversationView: View {
 
             ###"{"content": "Heb veel performance problemen met Nostur de laatste dagen, enig idee waar dat aan kan liggen?", "created_at": 1726123083, "id": "72cffcb18b0c2ccc12947e6788160c79cd8b28231c762124dee35068ea1a0a15", "kind": 14, "pubkey": "06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71", "tags": [["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]], "sig": "edad"}"###,
             ###"{"content":"Testing","created_at":1726126083,"id":"82cffcb18b0c2ccc12947e6788160c79cd8b28231c762124dee35068ea1a0a15","kind":14,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","tags":[["p","06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71"]], "sig": "uhh"}"###
-        ])
+        ], participants: participants, accountPubkey: ourAccountPubkey)
     }) {
         NBNavigationStack {
             let participants: Set<String> = ["06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]
