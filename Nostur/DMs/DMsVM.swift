@@ -100,7 +100,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     @Published var showNotWoT = false {
         didSet {
             if showNotWoT {
-                requestRows = requestRows + requestRowsNotWoT
+                requestRows = sortedDMRows(requestRows + requestRowsNotWoT)
             }
             else {
                 self.reloadConversations()
@@ -146,6 +146,30 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         self.conversationRows = sortedDMRows(self.conversationRows)
         self.requestRows = sortedDMRows(self.requestRows)
         self.requestRowsNotWoT = sortedDMRows(self.requestRowsNotWoT)
+    }
+    
+    private func repairMissingLastMessageTimestamps(in dmStates: [CloudDMState]) {
+        var didRepair = false
+        let context = viewContext()
+        
+        for dmState in dmStates where dmState.lastMessageTimestamp_ == nil {
+            let conversationId = dmState.conversationId
+            guard !conversationId.isEmpty else { continue }
+            
+            let request = Event.fetchRequest()
+            request.predicate = NSPredicate(format: "groupId == %@ AND kind IN %@", conversationId, [4, 14, 15])
+            request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            request.fetchLimit = 1
+            
+            guard let newestEvent = try? context.fetch(request).first else { continue }
+            dmState.lastMessageTimestamp_ = newestEvent.date
+            updateBlurb(dmState, event: newestEvent, context: context)
+            didRepair = true
+        }
+        
+        if didRepair {
+            try? context.save()
+        }
     }
     
     public var hiddenDMs: Int {
@@ -618,6 +642,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         if fullReload {
             self.loadDMStates()
         }
+        repairMissingLastMessageTimestamps(in: dmStates)
         let blockedPubkeys = blocks()
         
         let accepted = dmStates
@@ -654,9 +679,12 @@ class DMsVM: ObservableObject, Equatable, Hashable {
             }
         
         conversationRows = sortedDMRows(accepted)
-        requestRows = sortedDMRows(requests)
         
-        guard WOT_FILTER_ENABLED() else { return }
+        guard WOT_FILTER_ENABLED() else {
+            requestRows = sortedDMRows(requests)
+            requestRowsNotWoT = []
+            return
+        }
         
         let outsideWoT = dmStates
             .filter { dmState in
@@ -676,6 +704,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
             }
 
         requestRowsNotWoT = sortedDMRows(outsideWoT)
+        requestRows = sortedDMRows(showNotWoT ? requests + outsideWoT : requests)
     }
     
     @MainActor
@@ -732,14 +761,17 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                     req(message)
                 }
                 
-                if i+1 == monthsAgo {
+                if i == monthsAgo {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                        guard let self else { return }
 #if DEBUG
-                    L.maintenance.info("Running Manual DM fix")
+                        L.maintenance.info("Running Manual DM fix")
 #endif
-                    Maintenance.runUpgradeDMs(force: true, context: viewContext(), onlyForAccount: accountPubkey)
-                    try? viewContext().save()
-                    
-                    self.loadConversations(fullReload: true)
+                        Maintenance.runUpgradeDMs(force: true, context: viewContext(), onlyForAccount: accountPubkey)
+                        try? viewContext().save()
+                        
+                        self.loadConversations(fullReload: true)
+                    }
                 }
             }
         }

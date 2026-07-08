@@ -1104,7 +1104,7 @@ struct Maintenance {
         // also track for every accountPubkey so we can create missing
         for dmEvent in allDMs {
             
-            guard let receiverPubkey = dmEvent.firstP() else { return } // if we have no p, something is wrong
+            guard let receiverPubkey = dmEvent.firstP() else { continue } // if we have no p, something is wrong
             let sender = dmEvent.pubkey
             let participants = if dmEvent.kind == 14 {
                 allDMparticipants(dmEvent) // including sender (.pubkey)
@@ -1201,8 +1201,8 @@ struct Maintenance {
                 dmState.participantPubkeys = preparedState.participantPubkeys
                 dmState.accepted = preparedState.didSend
                 dmState.initiatorPubkey_ = preparedState.initiatorPubkey
+                dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(preparedState.newest))
                 if let ourNewest = preparedState.ourNewest {
-                    dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(ourNewest))
                     dmState.markedReadAt_ = Date(timeIntervalSince1970: TimeInterval(ourNewest))
                 }
                 // update blurb
