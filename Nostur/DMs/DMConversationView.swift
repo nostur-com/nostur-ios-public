@@ -76,6 +76,17 @@ struct DMConversationView: View {
                                 stickToBottom = false
                             }
                         
+                        if vm.disappearingMessagesRequestPubkey != nil {
+                            InfoBalloonView(name: disappearingRequesterName, vm: vm)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .listRowInsets(.init())
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(theme.listBackground)
+                                .scaleEffect(x: 1, y: -1, anchor: .center)
+                        }
+                        
                         ForEach(years) { year in
                             YearView(ourAccountPubkey: ourAccountPubkey, year: year, vm: vm)
                                 .listRowInsets(.init())
@@ -281,26 +292,6 @@ struct DMConversationView: View {
         }
         .background(theme.listBackground)
         .navigationBarTitleDisplayMode(.inline)
-        .alert(
-            String(localized: "Disappearing messages", comment: "Title for the disappearing messages feature in DMs"),
-            isPresented: Binding(
-                get: { vm.disappearingMessagesRequestPubkey != nil },
-                set: { if !$0 { vm.disappearingMessagesRequestPubkey = nil } }
-            )
-        ) {
-            Button {
-                vm.respondToDisappearingMessagesRequest(enable: true)
-            } label: {
-                Text("Enable", comment: "Button to enable disappearing messages for a conversation")
-            }
-            Button(role: .cancel) {
-                vm.respondToDisappearingMessagesRequest(enable: false)
-            } label: {
-                Text("Keep messages", comment: "Button to keep messages (decline disappearing messages) for a conversation")
-            }
-        } message: {
-            Text("\(disappearingRequesterName) requested enabling disappearing messages for this conversation.", comment: "Alert text shown when someone sends a message with a timer, %@ is their name")
-        }
         .task {
             await vm.load()
 #if targetEnvironment(macCatalyst)

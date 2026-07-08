@@ -1712,8 +1712,8 @@
         }
       }
     },
-    "%@ requested enabling disappearing messages for this conversation." : {
-      "comment" : "Alert text shown when someone sends a message with a timer, %@ is their name"
+    "%@ requested enabling disappearing messages for this conversation" : {
+
     },
     "%@ sats %@" : {
       "localizations" : {

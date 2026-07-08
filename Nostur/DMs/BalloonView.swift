@@ -298,6 +298,8 @@ private struct DMMessageReactionsView: View {
         
         BalloonView17(nrChatMessage: nrChatMessage4, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", vm: vm)
         
+        InfoBalloonView(name: "Jimmy", vm: vm)
+        
         Spacer()
     }
 }
@@ -442,6 +444,55 @@ struct ChatEmojiButton: View {
             if let customEmojiNotInOtherButtons = ourReactions.subtracting(ViewModelCache.shared.buttonIds).first {
                 alreadySelectedEmoji = customEmojiNotInOtherButtons
             }
+        }
+    }
+}
+
+
+struct InfoBalloonView: View {
+    public var name: String
+    public var vm: ConversionVM
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        VStack(alignment: .center, spacing: 10) {
+            Image(systemName: "text.bubble.badge.clock")
+                .font(.title3)
+                .foregroundStyle(theme.accent)
+            Text("\(name) requested enabling Disappearing Messages for this conversation")
+                .multilineTextAlignment(.center)
+                .padding(.trailing, 18)
+
+            HStack(spacing: 8) {
+                Button("Keep messages") {
+                    vm.respondToDisappearingMessagesRequest(enable: false)
+                }
+                .buttonStyle(.bordered)
+
+                Button("Enable") {
+                    vm.respondToDisappearingMessagesRequest(enable: true)
+                }
+                .buttonStyle(.borderedProminent)
+                    .tint(theme.accent)
+            }
+            .controlSize(.small)
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(theme.secondaryBackground)
+        )
+        .overlay(alignment: .topTrailing) {
+            Button {
+                vm.respondToDisappearingMessagesRequest(enable: false)
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.plain)
+            .padding(4)
         }
     }
 }
