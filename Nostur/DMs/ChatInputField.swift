@@ -123,7 +123,7 @@ struct DMChatInputField: View {
     // NIP-40 composer chip, shown while this conversation has disappearing messages enabled.
     @ViewBuilder
     private var expiryChip: some View {
-        if let duration = vm.resolvedExpiryDuration() {
+        if let duration = vm.expiryDuration {
             HStack(spacing: 5) {
                 Image(systemName: "clock")
                 Text("Disappears in ~\(DMExpiry.presetLabel(forDuration: duration))")

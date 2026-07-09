@@ -139,6 +139,12 @@ class ConversionVM: ObservableObject {
     // Pubkey of the participant whose expiring message should trigger the opt-in prompt while
     // the disappearing messages setting is still undecided. nil = no prompt.
     @Published var disappearingMessagesRequestPubkey: String? = nil
+    @Published private(set) var expiryDuration: Int? = nil
+
+    @MainActor
+    func refreshExpiryDuration() {
+        expiryDuration = resolvedExpiryDuration()
+    }
 
     @MainActor
     private func checkForDisappearingMessagesRequest(_ messages: [NRChatMessage]) {
@@ -155,6 +161,7 @@ class ConversionVM: ObservableObject {
     public func respondToDisappearingMessagesRequest(enable: Bool) {
         disappearingMessagesRequestPubkey = nil
         dmState?.disappearingMessagesSetting = enable ? .sevenDays : .off
+        refreshExpiryDuration()
         if enable {
             sweepExpiredMessages()
             // Persist the flag first so the bg purge sees it, then trim expired messages from the database.
@@ -223,6 +230,7 @@ class ConversionVM: ObservableObject {
         self.receiverContacts = receivers.map { NRContact.instance(of: $0) }
         self.dmState = getGroupState()
         self.isAccepted = self.dmState?.accepted ?? false
+        refreshExpiryDuration()
 
         if let dmState { // Should always exists because getGroupState() gets existing or creates new
             let visibleMessages = await localMessages(for: dmState)

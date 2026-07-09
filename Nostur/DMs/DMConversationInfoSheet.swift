@@ -147,6 +147,7 @@ struct DMConversationInfoSheet: View {
         .onValueChange(disappearingMessages) { _, newValue in
             guard let dmState = vm.dmState, dmState.disappearingMessagesSetting != newValue else { return }
             dmState.disappearingMessagesSetting = newValue
+            vm.refreshExpiryDuration()
             if newValue.enabled {
                 vm.sweepExpiredMessages()
                 // Persist the flag first so the bg purge sees it, then trim expired messages from the database
