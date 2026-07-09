@@ -10,6 +10,8 @@ import SwiftUI
 class NXSpeedTest: ObservableObject {
     public var timestampStart: Date?
     private var firstLoadRemoteStartedAt: Date?
+    private var runID = UUID()
+    private var timeoutTask: Task<Void, Never>?
 
     @Published var relaysFinishedAt: [Date] = []
     @Published var relaysTimeouts: [Date] = []
@@ -22,17 +24,32 @@ class NXSpeedTest: ObservableObject {
     
     init() { }
     
+    deinit {
+        timeoutTask?.cancel()
+    }
+    
     public func start() {
+        let newRunID = UUID()
+        runID = newRunID
+        timeoutTask?.cancel()
         timestampStart = Date()
         firstLoadRemoteStartedAt = nil
 
         Task { @MainActor in
+            guard self.runID == newRunID else { return }
             relaysFinishedAt = []
             relaysTimeouts = []
 
             resultFirstFetch = 0
+            resultLastFetch = 0
             
-            if !ConnectionPool.shared.anyConnected {
+            if ConnectionPool.shared.anyConnected {
+#if DEBUG
+                L.og.debug("🏁🏁 NXSpeedTest.start Setting loadingBarViewState to: .starting")
+#endif
+                loadingBarViewState = .starting
+            }
+            else {
 #if DEBUG
                 L.og.debug("🏁🏁 NXSpeedTest.start Setting loadingBarViewState to: .connecting")
 #endif
@@ -43,12 +60,13 @@ class NXSpeedTest: ObservableObject {
 
     public func loadRemoteStarted() { // called by loadRemote()
         if firstLoadRemoteStartedAt == nil {
+            let currentRunID = runID
             firstLoadRemoteStartedAt = Date()
 #if DEBUG
             L.og.debug("🏁🏁 NXSpeedTest.loadRemoteStarted Setting loadingBarViewState to: .fetching -[LOG]-")
 #endif
             loadingBarViewState = .fetching
-            self.setTimerForTimeout()
+            self.setTimerForTimeout(runID: currentRunID)
         }
     }
 
@@ -105,16 +123,21 @@ class NXSpeedTest: ObservableObject {
         }
     }
     
-    private func setTimerForTimeout() {
+    private func setTimerForTimeout(runID: UUID) {
         guard STATES_CAN_TIMEOUT.contains(loadingBarViewState) else { return }
 #if DEBUG
         L.og.debug("🏁🏁 NXSpeedTest.setTimerForTimeout, now: \(self.loadingBarViewState.rawValue.description) -[LOG]-")
 #endif
-        DispatchQueue.main.asyncAfter(deadline: .now() + 12.0) { [weak self] in
-            guard let self else { return }
-            L.og.debug("🏁🏁 NXSpeedTest.setTimerForTimeout??? now: \(self.loadingBarViewState.rawValue.description) -[LOG]-")
-            guard STATES_CAN_TIMEOUT.contains(loadingBarViewState) else { return }
-            self.otherTimeout()
+        timeoutTask?.cancel()
+        timeoutTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 12_000_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run { [weak self] in
+                guard let self, self.runID == runID else { return }
+                L.og.debug("🏁🏁 NXSpeedTest.setTimerForTimeout??? now: \(self.loadingBarViewState.rawValue.description) -[LOG]-")
+                guard STATES_CAN_TIMEOUT.contains(loadingBarViewState) else { return }
+                self.otherTimeout()
+            }
         }
     }
 }

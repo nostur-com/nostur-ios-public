@@ -134,6 +134,7 @@ class NXColumnViewModel: ObservableObject {
     }
     
     private var fetchFeedTimer: Timer? = nil
+    private var lastResumeStartedAt: Date?
     private var newEventsInDatabaseSub: AnyCancellable?
     private var newPostSavedSub: AnyCancellable?
     private var newSingleRelayPostSavedSub: AnyCancellable?
@@ -477,7 +478,7 @@ class NXColumnViewModel: ObservableObject {
         listenForSaveLocalFeedState(config)
         
         
-        // if config.columnType is .following OR .picture
+        // if config.columnType is .following / .picture / .vine / .yak
         switch config.columnType {
         case .following, .picture, .vine, .yak:
             followsChangedSub?.cancel()
@@ -876,6 +877,7 @@ class NXColumnViewModel: ObservableObject {
 #endif
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = nil
+        self.lastResumeStartedAt = nil
         self.realTimeReqTask?.cancel()
         
         switch config.columnType {
@@ -943,6 +945,14 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public func resume() {
         guard let config else { return }
+        let now = Date()
+        if let lastResumeStartedAt, now.timeIntervalSince(lastResumeStartedAt) < 2.0 {
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.name) resume() skipped, already resumed recently -[LOG]-")
+#endif
+            return
+        }
+        lastResumeStartedAt = now
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop) -[LOG]-")
 #endif

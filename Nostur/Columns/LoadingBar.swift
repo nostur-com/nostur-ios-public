@@ -16,16 +16,21 @@ struct LoadingBar: View {
     
     @State private var didAppear = false
     @State private var opacity: Double = 0.0
+    @State private var transitionID = UUID()
     @State private var viewState: ViewState = .starting {
         didSet {
             if opacity != 0.0 && Self.offStates.contains(viewState) {
+                let currentTransitionID = transitionID
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    guard transitionID == currentTransitionID else { return }
                     opacity = 0.0
                 }
             }
             
             if viewState == .finalLoad && oldValue != .finalLoad {
+                let currentTransitionID = transitionID
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    guard transitionID == currentTransitionID else { return }
                     opacity = 0.0
                     viewState = .finished
                     if loadingBarViewState != .finished {
@@ -74,6 +79,9 @@ struct LoadingBar: View {
             guard newViewState != oldViewState else { return }
             guard newViewState != .finished else { return } // .finished is only set on didSet with .finalLoad
             
+            let currentTransitionID = UUID()
+            transitionID = currentTransitionID
+            
             let duration = switch newViewState {
             case .off, .starting:
                 0.01
@@ -97,6 +105,7 @@ struct LoadingBar: View {
                 self.opacity = 0.0
                 self.viewState = .off
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.015) {
+                    guard transitionID == currentTransitionID else { return }
                     self.opacity = 1.0
                     withAnimation(.snappy(duration: duration)) {
 #if DEBUG
