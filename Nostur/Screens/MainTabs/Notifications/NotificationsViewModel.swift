@@ -143,9 +143,26 @@ class NotificationsViewModel: ObservableObject {
     // is true at start, then false after each notification check
     
     public func checkNeedsUpdate(_ notification: PersistentNotification) {
-        if notification.pubkey == self.pubkey {
-            bg().perform { [weak self] in
-                self?.needsUpdate = true
+        bg().perform { [weak self] in
+            guard let self else { return }
+            self.needsUpdate = true
+            
+#if DEBUG
+            L.og.debug("⏱️⏱️ NotificationsViewModel persistent notification update: \(notification.type.rawValue)")
+#endif
+            
+            switch notification.type {
+            case .newPosts:
+                guard self.isMain, !self.muteNewPosts else { return }
+                self.checkForUnreadNewPosts()
+            case .newFollowers:
+                guard notification.pubkey == self.pubkey, !self.muteFollows else { return }
+                self.checkForUnreadNewFollowers()
+            case .failedZap, .failedZaps, .failedZapsTimeout, .failedLightningInvoice:
+                guard notification.pubkey == self.pubkey else { return }
+                self.checkForUnreadFailedZaps()
+            case .none:
+                return
             }
         }
     }
@@ -343,6 +360,23 @@ class NotificationsViewModel: ObservableObject {
     
     static public func restoreSubscriptions() {
         NotificationsViewModel.shared.sharedRestoreSubscriptionsSubject.send()
+    }
+    
+    public func checkImmediately(reason: String, force: Bool = false) {
+        bg().perform { [weak self] in
+            guard let self else { return }
+            guard let accountData = self.accountDataCache else {
+#if DEBUG
+                L.og.debug("⏱️⏱️ NotificationsViewModel.checkImmediately(\(reason)) skipped: accountData missing")
+#endif
+                return
+            }
+#if DEBUG
+            L.og.debug("⏱️⏱️ NotificationsViewModel.checkImmediately(\(reason))")
+#endif
+            self.needsUpdate = true
+            self.checkForEverything(accountData: accountData, force: force)
+        }
     }
     
     private func setupBadgeNotifications() {

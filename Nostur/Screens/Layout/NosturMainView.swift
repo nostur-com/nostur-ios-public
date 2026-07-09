@@ -11,6 +11,12 @@ import NavigationBackport
 struct NosturMainView: View {
     @ObservedObject private var ss: SettingsStore = .shared
     @EnvironmentObject private var la: LoggedInAccount
+    @Environment(\.scenePhase) private var scenePhase
+#if DEBUG
+    @State private var firstNotificationMeasurementStart: Date?
+    @State private var previousUnreadNotifications = 0
+    @State private var wasInBackground = false
+#endif
     
     var body: some View {
         AppEnvironment(la: la) {
@@ -26,7 +32,42 @@ struct NosturMainView: View {
             }
         }
         .withAppSheets(la: la)
+        .onAppear {
+#if DEBUG
+            startFirstNotificationMeasurement()
+#endif
+        }
+        .onChange(of: scenePhase) { newPhase in
+#if DEBUG
+            if newPhase == .background {
+                wasInBackground = true
+            }
+            else if newPhase == .active, wasInBackground {
+                wasInBackground = false
+                startFirstNotificationMeasurement()
+            }
+#endif
+        }
+        .onReceive(NotificationsViewModel.shared.unreadPublisher) { unread in
+#if DEBUG
+            if previousUnreadNotifications == 0, unread > 0, let firstNotificationMeasurementStart {
+                let elapsed = Date().timeIntervalSince(firstNotificationMeasurementStart)
+                let elapsedString = String(format: "%.3f", locale: Locale(identifier: "nl_NL"), elapsed)
+                L.og.debug("⏱️⏱️ First new notification after \(elapsedString) sec")
+                self.firstNotificationMeasurementStart = nil
+            }
+            previousUnreadNotifications = unread
+#endif
+        }
     }
+    
+#if DEBUG
+    private func startFirstNotificationMeasurement() {
+        firstNotificationMeasurementStart = Date()
+        previousUnreadNotifications = NotificationsViewModel.shared.unread
+        L.og.debug("⏱️⏱️ NosturMainView visible, starting measurement.")
+    }
+#endif
 }
 
 struct FullScreenSizeEnvironmentKey: EnvironmentKey {

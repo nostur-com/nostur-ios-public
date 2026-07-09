@@ -117,6 +117,7 @@ extension AppView {
                     DMsVM.restoreSubscriptions()
                     ConversionVM.restoreSubscriptions()
                     NotificationsViewModel.restoreSubscriptions()
+                    NotificationsViewModel.shared.checkImmediately(reason: "scenePhaseActive", force: true)
                     AppState.shared.startTaskTimers()
                     try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
                     try? AVAudioSession.sharedInstance().setActive(true)
@@ -133,6 +134,7 @@ extension AppView {
                 DMsVM.restoreSubscriptions()
                 ConversionVM.restoreSubscriptions()
                 NotificationsViewModel.restoreSubscriptions()
+                NotificationsViewModel.shared.checkImmediately(reason: "scenePhaseActive", force: true)
                 AppState.shared.startTaskTimers()
 
                 // NIP-40: promptly drop expired DM copies when returning from background
