@@ -44,12 +44,6 @@ struct NosturTabsView: View {
             .contentShape(Rectangle())
             .background(theme.background) // GUTTER
             .withLightningEffect()
-            
-            .task {
-                if SettingsStore.shared.receiveLocalNotifications {
-                    requestNotificationPermission()
-                }
-            }
 
             .overlay(alignment: .center) {
                 OverlayPlayer()

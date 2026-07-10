@@ -115,6 +115,10 @@ struct NotificationsColumnInner: View {
             }
             .frame(width: availableWidth)
             
+            if nvm.isMain {
+                NotificationPermissionBanner()
+            }
+            
             AvailableWidthContainer {
                 switch (nvm.tab) {
                     case "Mentions", "Posts": // (old name was "Posts")

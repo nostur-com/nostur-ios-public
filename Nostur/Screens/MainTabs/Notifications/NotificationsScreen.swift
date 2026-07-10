@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 import NavigationBackport
+import UserNotifications
 
 struct NotificationsContainer: View {
     @Environment(\.theme) private var theme
@@ -117,6 +118,8 @@ struct NotificationsScreen: View {
             }
             .frame(width: availableWidth)
             
+            NotificationPermissionBanner()
+            
             AvailableWidthContainer {
                 switch (tab) {
                     case "Mentions", "Posts": // (old name was "Posts")
@@ -196,6 +199,107 @@ struct NotificationsScreen: View {
             nvm.markNewFollowersAsRead()
         default:
             break
+        }
+    }
+}
+
+struct NotificationPermissionBanner: View {
+    private static let dismissedUntilKey = "notification_permission_banner_dismissed_until"
+    
+    @Environment(\.theme) private var theme
+    @ObservedObject private var settings: SettingsStore = .shared
+    @State private var authorizationStatus: UNAuthorizationStatus?
+    @State private var dismissedUntil = UserDefaults.standard.double(forKey: Self.dismissedUntilKey)
+    
+    private var shouldShowBanner: Bool {
+        guard Date.now.timeIntervalSince1970 >= dismissedUntil else { return false }
+        guard let authorizationStatus else { return false }
+        return (authorizationStatus == .notDetermined && settings.receiveLocalNotifications) || authorizationStatus == .denied
+    }
+    
+    private var message: LocalizedStringKey {
+        authorizationStatus == .denied
+            ? "Notifications are disabled in iOS Settings."
+            : "Enable notifications so Nostur can alert you about new activity."
+    }
+    
+    private var buttonTitle: LocalizedStringKey {
+        authorizationStatus == .denied ? "Open Settings" : "Enable"
+    }
+    
+    var body: some View {
+        Group {
+            if shouldShowBanner {
+                HStack(spacing: 12) {
+                    Image(systemName: "bell.badge")
+                        .foregroundColor(theme.accent)
+                    
+                    Text(message)
+                        .font(.footnote)
+                        .foregroundColor(theme.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Button(buttonTitle) {
+                        handleButtonTap()
+                    }
+                    .buttonStyle(NRButtonStyle(style: .borderedProminent))
+                    
+                    Button {
+                        dismissBanner()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(theme.secondary)
+                            .frame(width: 24, height: 24)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("Hide"))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(theme.secondaryBackground)
+            }
+        }
+        .task {
+            refreshAuthorizationStatus()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            refreshAuthorizationStatus()
+        }
+    }
+    
+    private func handleButtonTap() {
+        switch authorizationStatus {
+        case .notDetermined:
+            requestNotificationPermission()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                refreshAuthorizationStatus()
+            }
+        case .denied:
+            openAppSettings()
+        default:
+            break
+        }
+    }
+    
+    private func dismissBanner() {
+        let dismissedUntilDate = Calendar.current.date(byAdding: .month, value: 3, to: .now) ?? Date.now.addingTimeInterval(90 * 24 * 60 * 60)
+        dismissedUntil = dismissedUntilDate.timeIntervalSince1970
+        UserDefaults.standard.set(dismissedUntil, forKey: Self.dismissedUntilKey)
+    }
+    
+    private func openAppSettings() {
+        guard let appSettings = URL(string: UIApplication.openSettingsURLString) else { return }
+        guard UIApplication.shared.canOpenURL(appSettings) else { return }
+        UIApplication.shared.open(appSettings)
+    }
+    
+    private func refreshAuthorizationStatus() {
+        UNUserNotificationCenter.current().getNotificationSettings { notificationSettings in
+            DispatchQueue.main.async {
+                authorizationStatus = notificationSettings.authorizationStatus
+            }
         }
     }
 }

@@ -120,22 +120,26 @@ struct DMConversationInfoSheet: View {
             }
 
             Section {
-                Picker(selection: $disappearingMessages) {
-                    Group {
-                        Text("Off").tag(CloudDMState.DisappearingMessagesSetting.off)
-                        Text("7 days").tag(CloudDMState.DisappearingMessagesSetting.sevenDays)
-                        Text("30 days").tag(CloudDMState.DisappearingMessagesSetting.thirtyDays)
-                        Text("1 year").tag(CloudDMState.DisappearingMessagesSetting.oneYear)
+                VStack {
+                    Picker(selection: $disappearingMessages) {
+                        Group {
+                            Text("Off").tag(CloudDMState.DisappearingMessagesSetting.off)
+                            Text("7 days").tag(CloudDMState.DisappearingMessagesSetting.sevenDays)
+                            Text("30 days").tag(CloudDMState.DisappearingMessagesSetting.thirtyDays)
+                            Text("1 year").tag(CloudDMState.DisappearingMessagesSetting.oneYear)
+                        }
+                        .foregroundColor(theme.primary)
+                    } label: {
+                        Text("Disappearing Messages", comment: "Picker label for Disappearing Messages in DMs")
                     }
-                    .foregroundColor(theme.primary)
-                } label: {
-                    Text("Disappearing Messages", comment: "Picker label for Disappearing Messages in DMs")
+                    .pickerStyleCompatNavigationLink()
+                    
+                    Text("After the specified time messages will be deleted. This is a collaborative feature and only works if all participants have it enabled and use relays that support it (NIP-40 Expiration Timestamp).")
+                        .font(.footnote)
+                        .foregroundColor(Color.gray)
                 }
-                .pickerStyleCompatNavigationLink()
             } header: {
-                Text("Disappearing messages")
-            } footer: {
-                Text("Adds a timer to messages you send from this device. Apps that support it, like Nostur, remove the message when the timer runs out; other apps may keep a copy. Timers are fixed once sent and can run out up to 2 days early (uses NIP-40 expiration).")
+                Text("Disappearing Messages")
             }
         }
         .onAppear {
