@@ -75,30 +75,37 @@ struct PostLayout<Content: View, TitleContent: View>: View {
 //#endif
         if isDetail || fullWidth {
             fullWidthLayout
-                .simultaneousGesture(
-                            LongPressGesture(minimumDuration: 0.35)
-                                .onEnded { _ in
-                                    withAnimation {
-                                        showFooter = true
-                                    }
-                                }
-                        )
-
+                .modifier {
+                    if #available(iOS 26.0, *) {
+                        $0.simultaneousGesture(longPressFooterGesture)
+                    }
+                    else {
+                        $0
+                    }
+                }
 //                .background(theme.listBackground)
         }
         else {
             normalLayout
-                .simultaneousGesture(
-                            LongPressGesture(minimumDuration: 0.35)
-                                .onEnded { _ in
-                                    withAnimation {
-                                        showFooter = true
-                                    }
-                                }
-                        )
-
+                .modifier {
+                    if #available(iOS 26.0, *) {
+                        $0.simultaneousGesture(longPressFooterGesture)
+                    }
+                    else {
+                        $0
+                    }
+                }
 //                .background(theme.listBackground)
         }
+    }
+    
+    private var longPressFooterGesture: some Gesture {
+        LongPressGesture(minimumDuration: 0.35)
+            .onEnded { _ in
+                withAnimation {
+                    showFooter = true
+                }
+            }
     }
     
     @ViewBuilder
