@@ -219,13 +219,7 @@ struct NXContentRenderer: View { // VIEW things
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .id(index)
                                 .overlay(alignment: .center) {
-                                    Image(systemName: "play.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 100, height: 100)
-                                        .opacity(0.8)
-    //                                        .centered()
-                                        .contentShape(Rectangle())
+                                    VideoPlayOverlay(size: 88)
                                 }
                         }
                         else {

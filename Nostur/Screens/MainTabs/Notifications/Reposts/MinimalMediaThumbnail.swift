@@ -25,9 +25,7 @@ struct MinimalMediaThumbnail: View {
             .frame(width: Self.SIZE, height: Self.SIZE)
             .overlay {
                 if isVideo {
-                    Image(systemName: "play.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(Color.gray)
+                    VideoPlayOverlay(size: 22, accentColor: .white)
                 }
                 else {
                     LazyImage(
