@@ -12,14 +12,20 @@ import PhotosUI
 class MultipleImagePickerModel: ObservableObject {
 
     @Published var newImages: [SelectedImage] = []
+    @Published var isLoadingSelectedImages = false
+    @Published var selectedImageCount = 0
     @Published var imageSelection: [PhotosPickerItem] = [] {
         didSet {
             guard !imageSelection.isEmpty else { return }
+            selectedImageCount = imageSelection.count
+            isLoadingSelectedImages = true
             Task {
                 let newImages = await loadTransferables()
                 Task { @MainActor in
                     self.newImages = newImages
                     self.imageSelection = []
+                    self.isLoadingSelectedImages = false
+                    self.selectedImageCount = 0
                 }
             }
         }

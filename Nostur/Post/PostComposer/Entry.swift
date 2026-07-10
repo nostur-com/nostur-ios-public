@@ -83,7 +83,12 @@ struct Entry: View {
         VStack(alignment: .leading, spacing: 3) {
             
             if kind == .picture {
-                if typingTextModel.pastedImages.isEmpty {
+                if typingTextModel.pastedImages.isEmpty && typingTextModel.isImportingSelectedImages {
+                    importingSelectedImagesView
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 28)
+                }
+                else if typingTextModel.pastedImages.isEmpty {
                     HStack(alignment: .top) {
                         Spacer()
                         
@@ -242,6 +247,10 @@ struct Entry: View {
                         )
                     }
                 }
+                if typingTextModel.isImportingSelectedImages {
+                    importingSelectedImagesView
+                        .padding(.top, 6)
+                }
                 if !typingTextModel.pastedVideos.isEmpty {
                     HStack(spacing: 5) {
                         VideoPreviews(pastedVideos: $typingTextModel.pastedVideos)
@@ -259,6 +268,11 @@ struct Entry: View {
                     .frame(maxWidth: .infinity)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, -10)
+            }
+            if kind == .picture && !typingTextModel.pastedImages.isEmpty && typingTextModel.isImportingSelectedImages {
+                importingSelectedImagesView
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 6)
             }
         }
         .modifier {
@@ -320,6 +334,26 @@ struct Entry: View {
 //                showVoiceRecorderButton = false
 //            }
 //        }
+    }
+    
+    private var importingSelectedImagesView: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+            Text(importingSelectedImagesTitle)
+                .font(.callout)
+                .foregroundColor(theme.secondary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(theme.listBackground.opacity(0.9), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var importingSelectedImagesTitle: String {
+        let count = typingTextModel.importingSelectedImageCount
+        if count > 1 {
+            return String(localized: "Loading selected photos...", comment: "Shown while multiple selected photos are being imported into the post composer")
+        }
+        return String(localized: "Loading selected photo...", comment: "Shown while a selected photo is being imported into the post composer")
     }
     
     @ToolbarContentBuilder

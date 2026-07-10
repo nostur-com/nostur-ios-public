@@ -14318,6 +14318,12 @@
         }
       }
     },
+    "Loading selected photo..." : {
+      "comment" : "Shown while a selected photo is being imported into the post composer"
+    },
+    "Loading selected photos..." : {
+      "comment" : "Shown while multiple selected photos are being imported into the post composer"
+    },
     "Loading..." : {
       "localizations" : {
         "es" : {

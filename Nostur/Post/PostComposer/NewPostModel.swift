@@ -54,6 +54,8 @@ public final class TypingTextModel: ObservableObject {
     func clearAnonState() { anonMode = false; savedRealDraft = "" }
     @Published var pastedImages: [PostedImageMeta] = []
     @Published var pastedImageUploadStates: [String: ComposerMediaUploadState] = [:]
+    @Published var isImportingSelectedImages = false
+    @Published var importingSelectedImageCount = 0
     @Published var pastedVideos: [PostedVideoMeta] = []
     
     @Published var voiceRecording: VoiceRecording?

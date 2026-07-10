@@ -761,6 +761,19 @@ struct PhotosPicker16: View {
                       maxSelectionCount: 12,
                       matching: .images, photoLibrary: .shared())
         
+            .onChange(of: ipm.isLoadingSelectedImages) { isLoading in
+                if isLoading {
+                    vm.typingTextModel.isImportingSelectedImages = true
+                    vm.typingTextModel.importingSelectedImageCount = ipm.selectedImageCount
+                }
+                else if ipm.newImages.isEmpty {
+                    vm.typingTextModel.isImportingSelectedImages = false
+                    vm.typingTextModel.importingSelectedImageCount = 0
+                }
+            }
+            .onChange(of: ipm.selectedImageCount) { count in
+                vm.typingTextModel.importingSelectedImageCount = ipm.isLoadingSelectedImages ? count : 0
+            }
             .onChange(of: ipm.newImages) { newImages in
                 let currentImageCount = vm.typingTextModel.pastedImages.count
                 for (index, newImage) in newImages.enumerated() {
@@ -787,6 +800,8 @@ struct PhotosPicker16: View {
                     )
                 }
                 ipm.newImages = []
+                vm.typingTextModel.isImportingSelectedImages = false
+                vm.typingTextModel.importingSelectedImageCount = 0
             }
     }
 }
