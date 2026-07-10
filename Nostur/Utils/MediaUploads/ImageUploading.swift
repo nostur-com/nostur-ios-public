@@ -11,6 +11,28 @@ import Combine
 import ImageIO
 import MobileCoreServices
 
+public enum ComposerMediaUploadState: Equatable, Hashable {
+    case idle
+    case preparing
+    case uploading(percentage: Int?)
+    case uploaded
+    case failed(String)
+
+    var isFailed: Bool {
+        if case .failed = self { return true }
+        return false
+    }
+
+    var isActive: Bool {
+        switch self {
+        case .preparing, .uploading:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
 public struct PostedImageMeta: Hashable, Identifiable, Equatable {
     
     static public func == (lhs: Self, rhs: Self) -> Bool {

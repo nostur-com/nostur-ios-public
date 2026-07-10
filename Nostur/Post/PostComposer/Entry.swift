@@ -111,7 +111,12 @@ struct Entry: View {
                     .font(.largeTitle)
                 }
                 else if typingTextModel.pastedImages.count == 1 {
-                    ImagePreviews(pastedImages: $typingTextModel.pastedImages, showButtons: false)
+                    ImagePreviews(
+                        pastedImages: $typingTextModel.pastedImages,
+                        uploadStates: $typingTextModel.pastedImageUploadStates,
+                        showButtons: true,
+                        onRemove: vm.removePastedImage
+                    )
                         .frame(maxWidth: .infinity)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, -10)
@@ -230,7 +235,11 @@ struct Entry: View {
             if kind != .picture && kind != .shortVideos {
                 if !typingTextModel.pastedImages.isEmpty {
                     HStack(spacing: 5) {
-                        ImagePreviews(pastedImages: $typingTextModel.pastedImages)
+                        ImagePreviews(
+                            pastedImages: $typingTextModel.pastedImages,
+                            uploadStates: $typingTextModel.pastedImageUploadStates,
+                            onRemove: vm.removePastedImage
+                        )
                     }
                 }
                 if !typingTextModel.pastedVideos.isEmpty {
@@ -240,7 +249,13 @@ struct Entry: View {
                 }
             }
             else if kind == .picture && typingTextModel.pastedImages.count > 1 {
-                ImagePreviews(pastedImages: $typingTextModel.pastedImages, showButtons: true, vertical: true)
+                ImagePreviews(
+                    pastedImages: $typingTextModel.pastedImages,
+                    uploadStates: $typingTextModel.pastedImageUploadStates,
+                    showButtons: true,
+                    vertical: true,
+                    onRemove: vm.removePastedImage
+                )
                     .frame(maxWidth: .infinity)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, -10)

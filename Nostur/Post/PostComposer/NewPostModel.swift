@@ -53,6 +53,7 @@ public final class TypingTextModel: ObservableObject {
 
     func clearAnonState() { anonMode = false; savedRealDraft = "" }
     @Published var pastedImages: [PostedImageMeta] = []
+    @Published var pastedImageUploadStates: [String: ComposerMediaUploadState] = [:]
     @Published var pastedVideos: [PostedVideoMeta] = []
     
     @Published var voiceRecording: VoiceRecording?
@@ -184,6 +185,8 @@ public final class NewPostModel: ObservableObject {
     var textView: SystemTextView?
     
     @Published var uploadError: String?
+    private var uploadedImageImetasById: [String: Imeta] = [:]
+    private var imageUploadCancellablesById: [String: AnyCancellable] = [:]
     var requiredP: String? = nil
     @Published var availableContacts: Set<NRContact> = [] // are available to toggle on/off for notifications
     
@@ -323,6 +326,416 @@ public final class NewPostModel: ObservableObject {
     ]
     static let typingRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|(?<![/\\?])#)", options: [])
     static let mentionRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\w+|(?<![/\\?])#\\S+)", options: [])
+
+    @MainActor
+    func removePastedImage(_ image: PostedImageMeta) {
+        typingTextModel.pastedImages.removeAll { $0.uniqueId == image.uniqueId }
+        typingTextModel.pastedImageUploadStates[image.uniqueId] = nil
+        uploadedImageImetasById[image.uniqueId] = nil
+        imageUploadCancellablesById[image.uniqueId]?.cancel()
+        imageUploadCancellablesById[image.uniqueId] = nil
+        uploadError = nil
+    }
+
+    @MainActor
+    private func pruneImageUploadState() {
+        let currentIds = Set(typingTextModel.pastedImages.map(\.uniqueId))
+        typingTextModel.pastedImageUploadStates = typingTextModel.pastedImageUploadStates.filter { currentIds.contains($0.key) }
+        uploadedImageImetasById = uploadedImageImetasById.filter { currentIds.contains($0.key) }
+        for id in imageUploadCancellablesById.keys where !currentIds.contains(id) {
+            imageUploadCancellablesById[id]?.cancel()
+            imageUploadCancellablesById[id] = nil
+        }
+    }
+
+    @MainActor
+    private func sendWithUploadedImagesIfComplete(replyTo: ReplyTo?, quotePost: QuotePost?, onDismiss: @escaping () -> Void) -> Bool {
+        pruneImageUploadState()
+        let orderedIMetas = typingTextModel.pastedImages.compactMap { uploadedImageImetasById[$0.uniqueId] }
+        guard orderedIMetas.count == typingTextModel.pastedImages.count else { return false }
+        _sendNow(imetas: orderedIMetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+        return true
+    }
+
+    @MainActor
+    private func finishImageUploadAttempt() {
+        let hasActiveUploads = typingTextModel.pastedImageUploadStates.values.contains { $0.isActive }
+        typingTextModel.uploading = hasActiveUploads
+        typingTextModel.sending = hasActiveUploads
+    }
+
+    @MainActor
+    private func failImageUpload(_ message: String) {
+        typingTextModel.uploading = false
+        typingTextModel.sending = false
+        uploadError = message
+        sendNotification(.anyStatus, (message, "NewPost"))
+    }
+
+    @MainActor
+    private func uploadBlossomImages(pubkey: String, account: CloudAccount, blossomServerURL: URL, replyTo: ReplyTo?, quotePost: QuotePost?, onDismiss: @escaping () -> Void) async {
+        pruneImageUploadState()
+        uploadError = nil
+
+        if sendWithUploadedImagesIfComplete(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss) {
+            return
+        }
+
+        let pendingImages = typingTextModel.pastedImages.filter { image in
+            uploadedImageImetasById[image.uniqueId] == nil && !(typingTextModel.pastedImageUploadStates[image.uniqueId]?.isActive ?? false)
+        }
+
+        guard !pendingImages.isEmpty else {
+            failImageUpload("Waiting for media upload")
+            return
+        }
+
+        for image in pendingImages {
+            typingTextModel.pastedImageUploadStates[image.uniqueId] = .preparing
+        }
+
+        let uploadItems = await prepareUploadItems(
+            pubkey: pubkey,
+            images: pendingImages,
+            typingTextModel: typingTextModel,
+            uploadMethod: .blossom
+        )
+
+        let idByIndex = pendingImages.reduce(into: [Int: String]()) { result, image in
+            result[image.index] = image.uniqueId
+        }
+        let uploadTuples = uploadItems.compactMap { tuple -> (String, (Data, String, String?, Int, NEvent))? in
+            guard let imageId = idByIndex[tuple.3] else { return nil }
+            return (imageId, tuple)
+        }
+
+        let preparedImageIds = Set(uploadTuples.map { $0.0 })
+        for image in pendingImages where !preparedImageIds.contains(image.uniqueId) {
+            typingTextModel.pastedImageUploadStates[image.uniqueId] = .failed("Could not prepare image")
+        }
+
+        guard !uploadTuples.isEmpty else {
+            for image in pendingImages {
+                typingTextModel.pastedImageUploadStates[image.uniqueId] = .failed("Could not prepare image")
+            }
+            failImageUpload("Could not prepare image")
+            return
+        }
+
+        let unsignedAuthHeaderEvents = uploadTuples.map { $0.1.4 }
+
+        batchSignEvents(unsignedAuthHeaderEvents, account: account) { [weak self] signedEventsDict in
+            Task { @MainActor in
+                guard let self else { return }
+                guard let testTuple = uploadTuples.first,
+                      let signedEvent = signedEventsDict[testTuple.1.4.id],
+                      let testAuthHeader = toHttpAuthHeader(signedEvent),
+                      let testHash = signedEvent.tags.first(where: { $0.type == "x" })?.value
+                else {
+                    for (imageId, _) in uploadTuples {
+                        self.typingTextModel.pastedImageUploadStates[imageId] = .failed("Signing failed")
+                    }
+                    self.failImageUpload("Signing failed")
+                    return
+                }
+
+                let blossomType = (try? await NostrEssentials.testBlossomServer(blossomServerURL, authorization: testAuthHeader, sha256: testHash)) ?? .none
+                guard blossomType != .none else {
+                    for (imageId, _) in uploadTuples {
+                        self.typingTextModel.pastedImageUploadStates[imageId] = .failed("Blossom server not compatible")
+                    }
+                    self.failImageUpload("Blossom server not compatible")
+                    return
+                }
+                guard blossomType != .unauthorized else {
+                    for (imageId, _) in uploadTuples {
+                        self.typingTextModel.pastedImageUploadStates[imageId] = .failed("Blossom: Unauthorized")
+                    }
+                    self.failImageUpload("Blossom: Unauthorized")
+                    return
+                }
+
+                let blossomUploader = BlossomUploader(blossomServerURL)
+                var uploadItemById: [String: BlossomUploadItem] = [:]
+                for (imageId, tuple) in uploadTuples {
+                    guard let signedEvent = signedEventsDict[tuple.4.id], let authHeader = toHttpAuthHeader(signedEvent) else {
+                        self.typingTextModel.pastedImageUploadStates[imageId] = .failed("Problem with remote signer")
+                        continue
+                    }
+                    let uploadItem = BlossomUploadItem(data: tuple.0, index: tuple.3, contentType: tuple.1, authorizationHeader: authHeader, blurhash: tuple.2, verb: blossomType == .upload ? .upload : nil)
+                    uploadItemById[imageId] = uploadItem
+                    self.typingTextModel.pastedImageUploadStates[imageId] = .uploading(percentage: 0)
+                }
+
+                guard !uploadItemById.isEmpty else {
+                    self.failImageUpload("Problem with remote signer")
+                    return
+                }
+
+                for (imageId, uploadItem) in uploadItemById {
+                    let stateCancellable = uploadItem.$state
+                        .receive(on: RunLoop.main)
+                        .sink { [weak self] state in
+                            guard let self else { return }
+                            switch state {
+                            case .initializing:
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .preparing
+                            case .uploading(let percentage), .processing(let percentage):
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .uploading(percentage: percentage)
+                            case .success:
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .uploaded
+                            case .error(let message):
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .failed(message)
+                            }
+                        }
+
+                    self.subscriptions.insert(stateCancellable)
+
+                    let uploadCancellable = blossomUploader.uploadingPublisher(for: uploadItem)
+                        .receive(on: RunLoop.main)
+                        .sink(receiveCompletion: { [weak self] result in
+                            guard let self else { return }
+                            self.imageUploadCancellablesById[imageId] = nil
+                            switch result {
+                            case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .failed("Media upload authorization error")
+                                self.uploadError = "Some media failed to upload"
+                                self.finishImageUploadAttempt()
+                                sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
+                            case .failure(let error):
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .failed(error.localizedDescription)
+                                self.uploadError = "Some media failed to upload"
+                                self.finishImageUploadAttempt()
+                                sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                            case .finished:
+                                break
+                            }
+                        }, receiveValue: { [weak self] uploadItem in
+                            guard let self else { return }
+                            blossomUploader.processResponse(uploadItem: uploadItem)
+                            guard let url = uploadItem.downloadUrl else { return }
+                            self.uploadedImageImetasById[imageId] = Imeta(url: url, dim: uploadItem.dim, hash: uploadItem.sha256processed, blurhash: uploadItem.blurhash)
+                            self.typingTextModel.pastedImageUploadStates[imageId] = .uploaded
+                            if self.sendWithUploadedImagesIfComplete(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss) {
+                                self.typingTextModel.uploading = false
+                            }
+                            else {
+                                self.finishImageUploadAttempt()
+                            }
+                        })
+
+                    self.imageUploadCancellablesById[imageId] = uploadCancellable
+                }
+            }
+        }
+    }
+
+    private func filename(for contentType: String) -> String {
+        switch contentType {
+        case PostedImageMeta.ImageType.jpeg.rawValue:
+            return "media.jpg"
+        case PostedImageMeta.ImageType.png.rawValue:
+            return "media.png"
+        case PostedImageMeta.ImageType.gif.rawValue:
+            return "media.gif"
+        case "video/mp4":
+            return "media.mp4"
+        case "audio/mp4":
+            return "media.m4a"
+        default:
+            return "media"
+        }
+    }
+
+    @MainActor
+    private func uploadNip96Images(pubkey: String, account: CloudAccount, nip96apiURL: URL, replyTo: ReplyTo?, quotePost: QuotePost?, onDismiss: @escaping () -> Void) async {
+        pruneImageUploadState()
+        uploadError = nil
+
+        if sendWithUploadedImagesIfComplete(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss) {
+            return
+        }
+
+        let pendingImages = typingTextModel.pastedImages.filter { image in
+            uploadedImageImetasById[image.uniqueId] == nil && !(typingTextModel.pastedImageUploadStates[image.uniqueId]?.isActive ?? false)
+        }
+
+        guard !pendingImages.isEmpty else {
+            failImageUpload("Waiting for media upload")
+            return
+        }
+
+        for image in pendingImages {
+            typingTextModel.pastedImageUploadStates[image.uniqueId] = .preparing
+        }
+
+        let boundary = UUID().uuidString
+        let uploadItems = await prepareUploadItems(
+            pubkey: pubkey,
+            images: pendingImages,
+            typingTextModel: typingTextModel,
+            uploadMethod: .nip96(nip96apiURL)
+        )
+
+        let idByIndex = pendingImages.reduce(into: [Int: String]()) { result, image in
+            result[image.index] = image.uniqueId
+        }
+        let uploadTuples = uploadItems.compactMap { tuple -> (String, (Data, String, String?, Int, NEvent))? in
+            guard let imageId = idByIndex[tuple.3] else { return nil }
+            return (imageId, tuple)
+        }
+
+        let preparedImageIds = Set(uploadTuples.map { $0.0 })
+        for image in pendingImages where !preparedImageIds.contains(image.uniqueId) {
+            typingTextModel.pastedImageUploadStates[image.uniqueId] = .failed("Could not prepare image")
+        }
+
+        guard !uploadTuples.isEmpty else {
+            failImageUpload("Could not prepare image")
+            return
+        }
+
+        let unsignedAuthHeaderEvents = uploadTuples.map { $0.1.4 }
+
+        batchSignEvents(unsignedAuthHeaderEvents, account: account) { [weak self] signedEventsDict in
+            Task { @MainActor in
+                guard let self else { return }
+                var mediaRequestBagsById: [String: MediaRequestBag] = [:]
+
+                for (imageId, tuple) in uploadTuples {
+                    guard let signedEvent = signedEventsDict[tuple.4.id], let authHeader = toHttpAuthHeader(signedEvent) else {
+                        self.typingTextModel.pastedImageUploadStates[imageId] = .failed("Problem with remote signer")
+                        continue
+                    }
+
+                    let bag = MediaRequestBag(
+                        apiUrl: nip96apiURL,
+                        method: "POST",
+                        uploadtype: "media",
+                        filename: self.filename(for: tuple.1),
+                        mediaData: tuple.0,
+                        index: tuple.3,
+                        authorizationHeader: authHeader,
+                        boundary: boundary,
+                        blurhash: tuple.2
+                    )
+                    mediaRequestBagsById[imageId] = bag
+                    self.typingTextModel.pastedImageUploadStates[imageId] = .uploading(percentage: 0)
+                }
+
+                guard !mediaRequestBagsById.isEmpty else {
+                    self.failImageUpload("Problem with remote signer")
+                    return
+                }
+
+                for (imageId, mediaRequestBag) in mediaRequestBagsById {
+                    let stateCancellable = mediaRequestBag.$state
+                        .receive(on: RunLoop.main)
+                        .sink { [weak self] state in
+                            guard let self else { return }
+                            switch state {
+                            case .initializing:
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .preparing
+                            case .uploading(let percentage), .processing(let percentage):
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .uploading(percentage: percentage)
+                            case .success:
+                                guard let url = mediaRequestBag.downloadUrl else { return }
+                                self.uploadedImageImetasById[imageId] = Imeta(url: url, dim: mediaRequestBag.dim, hash: mediaRequestBag.sha256, blurhash: mediaRequestBag.blurhash)
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .uploaded
+                                if self.sendWithUploadedImagesIfComplete(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss) {
+                                    self.typingTextModel.uploading = false
+                                }
+                                else {
+                                    self.finishImageUploadAttempt()
+                                }
+                            case .error(let message):
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .failed(message)
+                                self.uploadError = "Some media failed to upload"
+                                self.finishImageUploadAttempt()
+                            }
+                        }
+                    self.subscriptions.insert(stateCancellable)
+
+                    let uploadCancellable = self.uploader.uploadingPublisher(for: mediaRequestBag)
+                        .receive(on: RunLoop.main)
+                        .sink(receiveCompletion: { [weak self] result in
+                            guard let self else { return }
+                            self.imageUploadCancellablesById[imageId] = nil
+                            switch result {
+                            case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .failed("Media upload authorization error")
+                                self.uploadError = "Some media failed to upload"
+                                self.finishImageUploadAttempt()
+                                sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
+                            case .failure(let error):
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .failed(error.localizedDescription)
+                                self.uploadError = "Some media failed to upload"
+                                self.finishImageUploadAttempt()
+                                sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                            case .finished:
+                                break
+                            }
+                        }, receiveValue: { [weak self] mediaRequestBag in
+                            guard let self else { return }
+                            self.uploader.processResponse(mediaRequestBag: mediaRequestBag)
+                        })
+
+                    self.imageUploadCancellablesById[imageId] = uploadCancellable
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func uploadLegacyImages(replyTo: ReplyTo?, quotePost: QuotePost?, onDismiss: @escaping () -> Void) {
+        pruneImageUploadState()
+        uploadError = nil
+
+        if sendWithUploadedImagesIfComplete(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss) {
+            return
+        }
+
+        let pendingImages = typingTextModel.pastedImages.filter { image in
+            uploadedImageImetasById[image.uniqueId] == nil && !(typingTextModel.pastedImageUploadStates[image.uniqueId]?.isActive ?? false)
+        }
+
+        guard !pendingImages.isEmpty else {
+            failImageUpload("Waiting for media upload")
+            return
+        }
+
+        for image in pendingImages {
+            typingTextModel.pastedImageUploadStates[image.uniqueId] = .uploading(percentage: nil)
+
+            let uploadCancellable = uploadImage(image: image)
+                .receive(on: RunLoop.main)
+                .sink(receiveCompletion: { [weak self] result in
+                    guard let self else { return }
+                    self.imageUploadCancellablesById[image.uniqueId] = nil
+                    switch result {
+                    case .failure(let error):
+                        self.typingTextModel.pastedImageUploadStates[image.uniqueId] = .failed(error.localizedDescription)
+                        self.uploadError = "Some media failed to upload"
+                        self.finishImageUploadAttempt()
+                        sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                    case .finished:
+                        break
+                    }
+                }, receiveValue: { [weak self] url in
+                    guard let self else { return }
+                    self.uploadedImageImetasById[image.uniqueId] = Imeta(url: url)
+                    self.typingTextModel.pastedImageUploadStates[image.uniqueId] = .uploaded
+                    if self.sendWithUploadedImagesIfComplete(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss) {
+                        self.typingTextModel.uploading = false
+                    }
+                    else {
+                        self.finishImageUploadAttempt()
+                    }
+                })
+
+            imageUploadCancellablesById[image.uniqueId] = uploadCancellable
+        }
+    }
     
     func sendNow(isNC: Bool, pubkey: String, account: CloudAccount, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) async {
         Importer.shared.delayProcessing()
@@ -343,7 +756,14 @@ public final class NewPostModel: ObservableObject {
                 // Blossom upload method
                 if SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
                     guard let blossomServer = SettingsStore.shared.blossomServerList.first, let blossomServerURL = URL(string: blossomServer) else {
+                        typingTextModel.uploading = false
+                        typingTextModel.sending = false
                         sendNotification(.anyStatus, ("Blossom server list is empty", "NewPost"))
+                        return
+                    }
+
+                    if !typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty && typingTextModel.voiceRecording == nil {
+                        await uploadBlossomImages(pubkey: pubkey, account: account, blossomServerURL: blossomServerURL, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
                         return
                     }
                     // TODO: remove hashing same data over and over, clean up a bit
@@ -486,7 +906,14 @@ public final class NewPostModel: ObservableObject {
                 }
                 else if !nip96apiUrl.isEmpty { // nip96 upload method
                     guard let nip96apiURL = URL(string: nip96apiUrl) else {
+                        typingTextModel.uploading = false
+                        typingTextModel.sending = false
                         sendNotification(.anyStatus, ("Problem with Custom File Storage Server", "NewPost"))
+                        return
+                    }
+
+                    if !typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty && typingTextModel.voiceRecording == nil {
+                        await uploadNip96Images(pubkey: pubkey, account: account, nip96apiURL: nip96apiURL, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
                         return
                     }
                     let boundary = UUID().uuidString
@@ -572,6 +999,11 @@ public final class NewPostModel: ObservableObject {
                     }
                 }
                 else { // old media upload services
+                    if !typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty && typingTextModel.voiceRecording == nil {
+                        uploadLegacyImages(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                        return
+                    }
+
                     uploadImages(images: typingTextModel.pastedImages)
                         .receive(on: RunLoop.main)
                         .sink(receiveCompletion: { result in
