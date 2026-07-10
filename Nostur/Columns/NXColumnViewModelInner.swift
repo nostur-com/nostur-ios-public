@@ -15,17 +15,45 @@ class NXColumnViewModelInner: ObservableObject {
     // Full IDs (not shortIds)
     @Published public var unreadIds: [String: Int] = [:] {
         didSet {
+            let previousUnreadCount = oldValue.reduce(0, { $0 + $1.value })
+            let newUnreadCount = unreadCount
             if #available(iOS 16.0, *) {
-                if oldValue.reduce(0, { $0 + $1.value }) > 0 && unreadCount == 0 {
+                if previousUnreadCount > 0 && newUnreadCount == 0 {
                     AppReviewManager.shared.didJustReachEndOfFeed = true
                 }
             }
+            
+#if DEBUG
+            finishFirstUnreadMeasurementIfNeeded(previousUnreadCount: previousUnreadCount, newUnreadCount: newUnreadCount)
+#endif
         }
     }
     
     public var unreadCount: Int {
         unreadIds.reduce(0, { $0 + $1.value })
     }
+    
+#if DEBUG
+    private var firstUnreadMeasurementStart: Date?
+    private var firstUnreadMeasurementFeedName: String?
+    
+    public func startFirstUnreadMeasurement(feedName: String, reason: String) {
+        firstUnreadMeasurementStart = Date()
+        firstUnreadMeasurementFeedName = feedName
+        L.og.debug("⏱️⏱️ \(feedName) visible, starting first unread measurement. reason: \(reason)")
+    }
+    
+    private func finishFirstUnreadMeasurementIfNeeded(previousUnreadCount: Int, newUnreadCount: Int) {
+        guard previousUnreadCount == 0, newUnreadCount > 0 else { return }
+        guard let firstUnreadMeasurementStart else { return }
+        
+        let elapsed = Date().timeIntervalSince(firstUnreadMeasurementStart)
+        let elapsedString = String(format: "%.3f", locale: Locale(identifier: "nl_NL"), elapsed)
+        L.og.debug("⏱️⏱️ First new unread item on \(self.firstUnreadMeasurementFeedName ?? "feed") after \(elapsedString) sec")
+        self.firstUnreadMeasurementStart = nil
+        self.firstUnreadMeasurementFeedName = nil
+    }
+#endif
     
     @Published public var scrollToIndex: Int?
     

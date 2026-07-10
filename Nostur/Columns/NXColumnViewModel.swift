@@ -531,6 +531,18 @@ class NXColumnViewModel: ObservableObject {
     
     private var nextTickSubject = PassthroughSubject<Void, Never>()
     
+#if DEBUG
+    private func startFirstUnreadMeasurementIfNeeded(_ config: NXColumnConfig, reason: String) {
+        guard shouldMeasureFirstUnread(config) else { return }
+        vmInner.startFirstUnreadMeasurement(feedName: config.name, reason: reason)
+    }
+    
+    private func shouldMeasureFirstUnread(_ config: NXColumnConfig) -> Bool {
+        guard case .following = config.columnType else { return false }
+        return config.name != "Explore"
+    }
+#endif
+    
     @MainActor
     private func listenForNextTickSub(_ config: NXColumnConfig) {
         guard nextTickSub == nil else { return }
@@ -546,6 +558,9 @@ class NXColumnViewModel: ObservableObject {
         let resumeWhereLeftOff = config.continue
         isViewPaused = false
         speedTest?.start()
+#if DEBUG
+        startFirstUnreadMeasurementIfNeeded(config, reason: "firstLoad")
+#endif
         
         // For SomeoneElses feed we need to fetch kind 3 first, before we can do loadLocal/loadRemote
         if case .someoneElses(let pubkey) = config.columnType {
@@ -958,6 +973,9 @@ class NXColumnViewModel: ObservableObject {
 #endif
         isViewPaused = false
         speedTest?.start()
+#if DEBUG
+        startFirstUnreadMeasurementIfNeeded(config, reason: "resume")
+#endif
         
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
