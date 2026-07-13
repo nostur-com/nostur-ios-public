@@ -24,7 +24,7 @@ struct SideBar: View {
     
     static let ICON_WIDTH = 30.0
     static let MENU_TEXT_WIDTH = NOSTUR_SIDEBAR_WIDTH - 70.0
-    static let BUTTON_VPADDING = 12.0
+    static let BUTTON_VPADDING = 8.0
     
     private var account: CloudAccount {
         loggedInAccount.account
@@ -79,7 +79,7 @@ struct SideBar: View {
                 .zIndex(30)
             
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 5.0) {
                     HStack(alignment: .bottom) {
                         VStack(alignment: .leading) {
                             Text("\(account.name)").font(.headline)
@@ -91,7 +91,7 @@ struct SideBar: View {
                         Spacer()
                         NWCWalletBalance()
                     }
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 10)
                      
                     Button {
                         if IS_IPAD && !IS_DESKTOP_COLUMNS() {
