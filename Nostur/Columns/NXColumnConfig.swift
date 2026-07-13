@@ -21,8 +21,16 @@ struct NXColumnConfig: Identifiable, Equatable {
     
     @MainActor
     var wotEnabled: Bool {
-        get { feed?.wotEnabled ?? false }
-        set { 
+        get {
+            switch columnType {
+            case .following(_), .vine(_), .picture(_), .yak(_):
+                return WOT_FILTER_ENABLED()
+            default:
+                return feed?.wotEnabled ?? false
+            }
+            
+        }
+        set {
             feed?.wotEnabled = newValue
             DataProvider.shared().saveToDiskNow(.viewContext)
         }

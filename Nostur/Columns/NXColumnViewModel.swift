@@ -2633,22 +2633,22 @@ extension NXColumnViewModel {
         
         // if following feed, always show all the pubkeys
         if case .following(_) = config.columnType {
-            return events // no need, hashtags are already filtered in nxParseRelayMessage()
+            return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
         }
         
         // if picture feed, always show all the pubkeys
         if case .picture(_) = config.columnType {
-            return events // no need, hashtags are already filtered in nxParseRelayMessage()
+            return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
         }
         
         // if vine feed, always show all the pubkeys
         if case .vine(_) = config.columnType {
-            return events // no need, hashtags are already filtered in nxParseRelayMessage()
+            return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
         }
         
         // if yak feed, always show all the pubkeys
         if case .yak(_) = config.columnType {
-            return events // no need, hashtags are already filtered in nxParseRelayMessage()
+            return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
         }
         
         guard WOT_FILTER_ENABLED() else { return events }  // Return all if globally disabled
