@@ -84,7 +84,7 @@ public class CameraService {
     // Communicate with the session and other session objects on this queue.
     private let sessionQueue = DispatchQueue(label: "session queue")
     
-    @objc dynamic var videoDeviceInput: AVCaptureDeviceInput!
+    @objc dynamic var videoDeviceInput: AVCaptureDeviceInput?
     
     // MARK: Device Configuration Properties
     private let videoDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera, .builtInDualCamera, .builtInTrueDepthCamera], mediaType: .video, position: .unspecified)
@@ -237,7 +237,13 @@ public class CameraService {
         //
         
         sessionQueue.async {
-            let currentVideoDevice = self.videoDeviceInput.device
+            guard let currentVideoDeviceInput = self.videoDeviceInput else {
+                DispatchQueue.main.async {
+                    self.isCameraButtonDisabled = false
+                }
+                return
+            }
+            let currentVideoDevice = currentVideoDeviceInput.device
             let currentPosition = currentVideoDevice.position
             
             let preferredPosition: AVCaptureDevice.Position
@@ -275,13 +281,13 @@ public class CameraService {
                     
                     // Remove the existing device input first, because AVCaptureSession doesn't support
                     // simultaneous use of the rear and front cameras.
-                    self.session.removeInput(self.videoDeviceInput)
+                    self.session.removeInput(currentVideoDeviceInput)
                     
                     if self.session.canAddInput(videoDeviceInput) {
                         self.session.addInput(videoDeviceInput)
                         self.videoDeviceInput = videoDeviceInput
                     } else {
-                        self.session.addInput(self.videoDeviceInput)
+                        self.session.addInput(currentVideoDeviceInput)
                     }
                     
                     if let connection = self.photoOutput.connection(with: .video) {
@@ -308,7 +314,7 @@ public class CameraService {
     public func focus(at focusPoint: CGPoint){
         //        let focusPoint = self.videoPreviewLayer.captureDevicePointConverted(fromLayerPoint: point)
         
-        let device = self.videoDeviceInput.device
+        guard let device = videoDeviceInput?.device else { return }
         do {
             try device.lockForConfiguration()
             if device.isFocusPointOfInterestSupported {
@@ -378,16 +384,18 @@ public class CameraService {
     }
     
     public func set(zoom: CGFloat){
-        let factor = zoom < 1 ? 1 : zoom
-        let device = self.videoDeviceInput.device
-        
-        do {
-            try device.lockForConfiguration()
-            device.videoZoomFactor = factor
-            device.unlockForConfiguration()
-        }
-        catch {
-            print(error.localizedDescription)
+        sessionQueue.async {
+            guard let device = self.videoDeviceInput?.device else { return }
+            let factor = min(max(zoom, 1), device.activeFormat.videoMaxZoomFactor)
+            
+            do {
+                try device.lockForConfiguration()
+                device.videoZoomFactor = factor
+                device.unlockForConfiguration()
+            }
+            catch {
+                print(error.localizedDescription)
+            }
         }
     }
     
@@ -410,7 +418,7 @@ public class CameraService {
                 }
                 
                 // Sets the flash option for this capture.
-                if self.videoDeviceInput.device.isFlashAvailable {
+                if self.videoDeviceInput?.device.isFlashAvailable == true {
                     photoSettings.flashMode = self.flashMode
                 }
                 
