@@ -12,10 +12,13 @@ import Network
 public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableObject, Identifiable {
     
     // for views (viewContext)
-    @Published private(set) var isConnected = false { // don't set directly, set isDeviceConnected or isSocketConnected
-        willSet {
-            ConnectionPool.shared.updateAnyConnected()
-        }
+    @Published private(set) var isConnected = false // don't set directly, set isDeviceConnected or isSocketConnected
+
+    @MainActor
+    private func setConnected(_ isConnected: Bool) {
+        guard self.isConnected != isConnected else { return }
+        self.isConnected = isConnected
+        ConnectionPool.shared.updateAnyConnected()
     }
     
     // other (should use queue: "connection-pool"
@@ -73,8 +76,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 isSocketConnecting = false
                 isSocketConnected = false
                 Task { @MainActor in
-                    self.objectWillChange.send()
-                    self.isConnected = false
+                    self.setConnected(false)
                 }
             }
         }
@@ -88,7 +90,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             let isSocketConnected = isSocketConnected
             let wasConnected = oldValue
             Task { @MainActor in
-                self.objectWillChange.send()
                 // Disconnected? If this is last "disconnect" we should set "VPN detected" to false
                 if wasConnected && !isSocketConnected && !ConnectionPool.shared.anyConnected {
                     // Similar as in NetworMonitor.init .isConnectedSubject.sink { }
@@ -117,7 +118,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     // Should trigger resume on any visible feed?
                     sendNotification(.firstConnection)
                 }
-                self.isConnected = isSocketConnected
+                self.setConnected(isSocketConnected)
             }
             self.queue.async(flags: .barrier) { [weak self] in
                 self?.recentAuthAttempts = 0
@@ -621,7 +622,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 L.sockets.debug("🔴🔴 PING: Not connected. ????? \(self?.url ?? "")")
 #endif
                 Task { @MainActor [weak self] in
-                    self?.isConnected = false
+                    self?.setConnected(false)
                 }
                 return
             }
@@ -634,7 +635,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                         self.lastMessageReceivedAt = nil
                         self.isSocketConnected = false
                         Task { @MainActor [weak self] in
-                            self?.isConnected = false
+                            self?.setConnected(false)
                         }
                     }
 #if DEBUG
