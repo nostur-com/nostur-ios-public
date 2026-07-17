@@ -952,7 +952,7 @@
 				INFOPLIST_FILE = "Share with Nostur/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Share with Nostur";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 12.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -991,7 +991,7 @@
 				INFOPLIST_FILE = "Share with Nostur/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Share with Nostur";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 12.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

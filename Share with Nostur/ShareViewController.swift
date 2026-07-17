@@ -53,6 +53,11 @@ final class ShareViewController: UIViewController {
             await model.load(extensionContext: extensionContext)
         }
     }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        model.reducePreviewMemory()
+    }
 }
 
 private struct ShareAccount: Codable, Identifiable, Equatable {
@@ -134,9 +139,8 @@ private struct ShareThemeColors {
 private final class ShareExtensionModel: ObservableObject {
     @Published var text = ""
     @Published var sharedURL: URL?
-    @Published var mediaPreviews: [ShareMediaPreview] = []
-    @Published var mediaUploadStates: [ShareMediaUploadState] = []
-    @Published var mediaCount = 0
+    @Published var mediaViewModels: [ShareMediaViewModel] = []
+//    @Published var mediaCount = 0
     @Published var activePubkey = ""
     @Published var activeAccountName = ""
     @Published var activeAccountPictureURL: URL?
@@ -149,9 +153,14 @@ private final class ShareExtensionModel: ObservableObject {
     @Published var shareTheme = ShareThemeColors()
 
     private var mediaItems: [SharedMediaItem] = []
-    private var mediaUploadTask: Task<[ShareMediaMetadata], Error>?
+    /// In-flight upload tasks keyed by `ShareMediaViewModel.id`.
+    private var mediaItemUploadTasks: [UUID: Task<ShareMediaMetadata, Error>] = [:]
+    /// Completed upload metadata keyed by `ShareMediaViewModel.id`.
+    private var uploadedMediaById: [UUID: ShareMediaMetadata] = [:]
     private var mediaUploadPubkey: String?
-    private var uploadedMedia: [ShareMediaMetadata]?
+    /// Bumped only for full-batch invalidation (account switch, reload).
+    private var mediaUploadGeneration = 0
+    private let maxConcurrentMediaTasks = 2
     private var activeAccountIsRemoteSigner = false
     private var activeAccountNip46Relay = ""
     private var activeAccountRemoteSignerPubkey = ""
@@ -189,12 +198,14 @@ private final class ShareExtensionModel: ObservableObject {
         statusMessage = nil
         text = ""
         sharedURL = nil
-        mediaPreviews = []
-        mediaUploadStates = []
-        mediaCount = 0
+//        mediaPreviews = []
+//        mediaUploadStates = []
+//        mediaCount = 0
         activeAccountPictureImage = nil
-        cancelMediaUpload()
+        cancelMediaUpload(resetStates: true)
         mediaItems = []
+        mediaViewModels = []
+        
         shareTheme = ShareThemeColors(defaults: sharedDefaults)
         shareAccounts = loadSharedAccounts()
         let preferredPubkey = sharedDefaults?.string(forKey: "activeAccountPublicKey") ?? ""
@@ -239,7 +250,7 @@ private final class ShareExtensionModel: ObservableObject {
         activeAccountRemoteSignerPubkey = account.remoteSignerPubkey
 
         if persistSelection, accountChanged {
-            cancelMediaUpload()
+            cancelMediaUpload(resetStates: true)
             startMediaUploadIfPossible()
         }
 
@@ -280,20 +291,69 @@ private final class ShareExtensionModel: ObservableObject {
         }
     }
 
-    func removeMedia(at index: Int) {
+    func removeMedia(_ item: ShareMediaViewModel) {
         guard !isPosting else { return }
-        guard mediaItems.indices.contains(index) else { return }
 
-        cancelMediaUpload()
-        mediaItems.remove(at: index)
-        if mediaPreviews.indices.contains(index) {
-            mediaPreviews.remove(at: index)
+        // Drop from model first so late progress/failure callbacks for this id are ignored.
+        mediaItems.removeAll { $0.fileURL == item.fileURL }
+        mediaViewModels.removeAll { $0.id == item.id }
+        uploadedMediaById[item.id] = nil
+
+        // Cancel only this item's work; leave others running (do not bump generation).
+        mediaItemUploadTasks[item.id]?.cancel()
+        mediaItemUploadTasks[item.id] = nil
+
+        if mediaItems.isEmpty {
+            mediaUploadPubkey = nil
+            statusMessage = nil
+            errorMessage = nil
+            return
         }
-        if mediaUploadStates.indices.contains(index) {
-            mediaUploadStates.remove(at: index)
-        }
-        mediaCount = mediaItems.count
+
+        // Free a concurrency slot for any still-pending items without restarting in-flight ones.
         startMediaUploadIfPossible()
+        refreshUploadStatusMessage()
+    }
+    
+    func reducePreviewMemory() {
+        guard !mediaViewModels.isEmpty else { return }
+        ShareDebugLog.mark("memory warning reduce previews count=\(mediaViewModels.count)")
+        
+        mediaViewModels = mediaViewModels.map { vm in
+            let thumbnail: UIImage
+            if vm.isVideo {
+                thumbnail = ShareVideoThumbnailGenerator.thumbnail(from: vm.fileURL, maxPixelSize: 256)
+            } else {
+                thumbnail = ShareImageThumbnailGenerator.thumbnail(from: vm.fileURL, maxPixelSize: 256)
+            }
+            let newPreview = ShareMediaPreview(
+                fileURL: vm.fileURL,
+                contentType: vm.contentType,
+                fallbackImage: thumbnail
+            )
+            return ShareMediaViewModel(id: vm.id, preview: newPreview, uploadState: vm.uploadState)
+        }
+    }
+
+    func retryMediaUpload(_ item: ShareMediaViewModel) {
+        guard !isPosting else { return }
+        
+        errorMessage = nil
+        statusMessage = nil
+
+        mediaItemUploadTasks[item.id]?.cancel()
+        mediaItemUploadTasks[item.id] = nil
+        uploadedMediaById[item.id] = nil
+
+        if let index = indexOfViewModel(with: item.id) {
+            mediaViewModels[index].uploadState = .idle
+        }
+
+        startMediaUploadIfPossible()
+    }
+    
+    private func indexOfViewModel(with id: UUID) -> Int? {
+        mediaViewModels.firstIndex { $0.id == id }
     }
 
     private func scheduleMediaUploadStart() {
@@ -307,11 +367,7 @@ private final class ShareExtensionModel: ObservableObject {
     }
 
     private func startMediaUploadIfPossible() {
-        ShareDebugLog.mark("upload start requested media=\(mediaItems.count)")
-        guard mediaUploadTask == nil else {
-            ShareDebugLog.mark("upload start skipped existing task")
-            return
-        }
+        ShareDebugLog.mark("upload start requested media=\(mediaItems.count) inFlight=\(mediaItemUploadTasks.count) done=\(uploadedMediaById.count)")
         guard !mediaItems.isEmpty, !activePubkey.isEmpty, !blossomServerStrings.isEmpty else {
             ShareDebugLog.mark("upload start skipped missing requirements media=\(mediaItems.count) active=\(!activePubkey.isEmpty) blossom=\(!blossomServerStrings.isEmpty)")
             return
@@ -321,65 +377,213 @@ private final class ShareExtensionModel: ObservableObject {
             ShareDebugLog.mark("upload load signer start")
             let signer = try loadSigner()
             ShareDebugLog.mark("upload load signer complete remote=\(signer.needsRemoteApproval)")
-            let uploadPubkey = signer.publicKey
-            mediaUploadPubkey = uploadPubkey
-            uploadedMedia = nil
-            mediaUploadTask = Task { [weak self] in
-                guard let self else { return [] }
-                do {
-                    ShareDebugLog.mark("upload task begin")
-                    let imetas = try await self.uploadMediaIfNeeded(signer: signer)
-                    ShareDebugLog.mark("upload task complete imetas=\(imetas.count)")
-                    if self.mediaUploadPubkey == uploadPubkey {
-                        self.uploadedMedia = imetas
-                        self.mediaUploadTask = nil
-                        if !self.isPosting {
-                            self.statusMessage = "Media uploaded."
-                        }
-                    }
-                    return imetas
-                } catch {
-                    ShareDebugLog.mark("upload task error \(error.localizedDescription)")
-                    if !(error is CancellationError), self.mediaUploadPubkey == uploadPubkey {
-                        self.mediaUploadTask = nil
-                        self.errorMessage = error.localizedDescription
-                        self.statusMessage = nil
-                    }
-                    throw error
-                }
-            }
+            mediaUploadPubkey = signer.publicKey
+            pumpMediaUploads(signer: signer, generation: mediaUploadGeneration)
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    private func cancelMediaUpload() {
-        mediaUploadTask?.cancel()
-        mediaUploadTask = nil
+    /// Starts uploads only for items that still need them (not completed, not failed, not already in flight).
+    private func pumpMediaUploads(signer: ShareEventSigner, generation: Int) {
+        guard generation == mediaUploadGeneration else { return }
+
+        var slots = max(0, maxConcurrentMediaTasks - mediaItemUploadTasks.count)
+        guard slots > 0 else {
+            refreshUploadStatusMessage(signer: signer)
+            return
+        }
+
+        for (viewModel, mediaItem) in zip(mediaViewModels, mediaItems) {
+            guard slots > 0 else { break }
+            let id = viewModel.id
+            if uploadedMediaById[id] != nil { continue }
+            if mediaItemUploadTasks[id] != nil { continue }
+            if case .failed = viewModel.uploadState { continue }
+
+            startSingleMediaUpload(id: id, mediaItem: mediaItem, signer: signer, generation: generation)
+            slots -= 1
+        }
+
+        refreshUploadStatusMessage(signer: signer)
+    }
+
+    private func startSingleMediaUpload(id: UUID, mediaItem: SharedMediaItem, signer: ShareEventSigner, generation: Int) {
+        ShareDebugLog.mark("media \(id) enqueue bytes=\(mediaItem.byteCount) type=\(mediaItem.contentType)")
+
+        // Only zero progress when starting from idle so we never visually reset an in-flight bar.
+        if case .idle = mediaViewModels.first(where: { $0.id == id })?.uploadState {
+            setUploadProgress(0, forMediaWithId: id, uploadGeneration: generation)
+        }
+
+        mediaItemUploadTasks[id] = Task { [weak self] in
+            guard let self else { throw CancellationError() }
+            do {
+                let imeta = try await self.uploadSingleMedia(
+                    mediaItem: mediaItem,
+                    signer: signer,
+                    id: id,
+                    generation: generation
+                )
+                try Task.checkCancellation()
+                self.handleSingleMediaUploadSuccess(id: id, imeta: imeta, signer: signer, generation: generation)
+                return imeta
+            } catch is CancellationError {
+                ShareDebugLog.mark("media \(id) cancelled")
+                if self.mediaUploadGeneration == generation {
+                    self.mediaItemUploadTasks[id] = nil
+                }
+                throw CancellationError()
+            } catch {
+                ShareDebugLog.mark("media \(id) task error \(error.localizedDescription)")
+                self.handleSingleMediaUploadFailure(id: id, error: error, signer: signer, generation: generation)
+                throw error
+            }
+        }
+    }
+
+    private func handleSingleMediaUploadSuccess(id: UUID, imeta: ShareMediaMetadata, signer: ShareEventSigner, generation: Int) {
+        guard mediaUploadGeneration == generation else { return }
+        mediaItemUploadTasks[id] = nil
+        // Item may have been removed while finishing — still free the concurrency slot.
+        guard mediaViewModels.contains(where: { $0.id == id }) else {
+            pumpMediaUploads(signer: signer, generation: generation)
+            return
+        }
+        uploadedMediaById[id] = imeta
+        pumpMediaUploads(signer: signer, generation: generation)
+        refreshUploadStatusMessage(signer: signer)
+    }
+
+    private func handleSingleMediaUploadFailure(id: UUID, error: Error, signer: ShareEventSigner, generation: Int) {
+        guard mediaUploadGeneration == generation else { return }
+        mediaItemUploadTasks[id] = nil
+        guard mediaViewModels.contains(where: { $0.id == id }) else {
+            pumpMediaUploads(signer: signer, generation: generation)
+            return
+        }
+        setUploadFailed(forMediaWithId: id, uploadGeneration: generation)
+        errorMessage = error.localizedDescription
+        statusMessage = nil
+        // Keep other items moving.
+        pumpMediaUploads(signer: signer, generation: generation)
+    }
+
+    private func refreshUploadStatusMessage(signer: ShareEventSigner? = nil) {
+        guard !mediaViewModels.isEmpty else {
+            if !isPosting {
+                statusMessage = nil
+            }
+            return
+        }
+
+        let completedCount = mediaViewModels.filter { uploadedMediaById[$0.id] != nil }.count
+        let total = mediaViewModels.count
+        let hasInFlight = mediaViewModels.contains { mediaItemUploadTasks[$0.id] != nil }
+
+        if completedCount == total {
+            if !isPosting {
+                statusMessage = "Media uploaded."
+            }
+            return
+        }
+
+        guard hasInFlight || completedCount < total else { return }
+
+        if let signer, signer.needsRemoteApproval, hasInFlight {
+            statusMessage = "Waiting for remote signer..."
+            return
+        }
+
+        let mirrorCount = max(0, blossomServerStrings.count - 1)
+        if hasInFlight {
+            if total == 1 {
+                statusMessage = mirrorCount > 0 ? "Uploading and mirroring media..." : "Uploading media..."
+            } else {
+                statusMessage = mirrorCount > 0
+                    ? "Uploading and mirroring media (\(completedCount)/\(total))..."
+                    : "Uploading \(total) media items (\(completedCount)/\(total))..."
+            }
+        }
+    }
+
+    /// Full cancel — account switch, reload, or other hard resets. Does not apply to single-item remove.
+    private func cancelMediaUpload(resetStates: Bool = false) {
+        mediaUploadGeneration += 1
+        for task in mediaItemUploadTasks.values {
+            task.cancel()
+        }
+        mediaItemUploadTasks.removeAll()
         mediaUploadPubkey = nil
-        uploadedMedia = nil
+        uploadedMediaById.removeAll()
+        
+        if resetStates {
+            resetMediaUploadStates()
+        }
+    }
+
+    private func resetMediaUploadStates() {
+        for i in mediaViewModels.indices {
+            mediaViewModels[i].uploadState = .idle
+        }
     }
 
     private func mediaMetadataForPosting(signer: ShareEventSigner) async throws -> [ShareMediaMetadata] {
         guard !mediaItems.isEmpty else { return [] }
 
         if mediaUploadPubkey != signer.publicKey {
-            cancelMediaUpload()
+            cancelMediaUpload(resetStates: true)
         }
 
-        if let uploadedMedia, mediaUploadPubkey == signer.publicKey {
-            return uploadedMedia
+        // Retry any previously failed items when the user posts.
+        for index in mediaViewModels.indices {
+            if case .failed = mediaViewModels[index].uploadState {
+                mediaViewModels[index].uploadState = .idle
+                uploadedMediaById[mediaViewModels[index].id] = nil
+                mediaItemUploadTasks[mediaViewModels[index].id]?.cancel()
+                mediaItemUploadTasks[mediaViewModels[index].id] = nil
+            }
+        }
+
+        if mediaViewModels.allSatisfy({ uploadedMediaById[$0.id] != nil }), mediaUploadPubkey == signer.publicKey {
+            return mediaViewModels.compactMap { uploadedMediaById[$0.id] }
         }
 
         startMediaUploadIfPossible()
-        guard let mediaUploadTask else {
-            return try await uploadMediaIfNeeded(signer: signer)
+
+        var results: [ShareMediaMetadata] = []
+        results.reserveCapacity(mediaViewModels.count)
+
+        for viewModel in mediaViewModels {
+            let id = viewModel.id
+            if let imeta = uploadedMediaById[id] {
+                results.append(imeta)
+                continue
+            }
+
+            if let task = mediaItemUploadTasks[id] {
+                results.append(try await task.value)
+                continue
+            }
+
+            // Race: task finished between map clear and this check.
+            if let imeta = uploadedMediaById[id] {
+                results.append(imeta)
+                continue
+            }
+
+            // Still missing — kick the queue once more and wait.
+            startMediaUploadIfPossible()
+            if let task = mediaItemUploadTasks[id] {
+                results.append(try await task.value)
+            } else if let imeta = uploadedMediaById[id] {
+                results.append(imeta)
+            } else {
+                throw ShareExtensionError.couldNotPrepareMedia
+            }
         }
 
-        let imetas = try await mediaUploadTask.value
-        uploadedMedia = imetas
-        self.mediaUploadTask = nil
-        return imetas
+        return results
     }
 
     func post() async -> Bool {
@@ -410,6 +614,8 @@ private final class ShareExtensionModel: ObservableObject {
     }
 
     private func loadAttachments(_ providers: [NSItemProvider]) async throws {
+        let previewMaxPixelSize = SharePreviewSizing.maxPixelSize(forMediaCount: mediaProviderCount(in: providers))
+
         for provider in providers {
             if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier), sharedURL == nil {
                 sharedURL = try await provider.loadURL()
@@ -418,99 +624,90 @@ private final class ShareExtensionModel: ObservableObject {
             } else if let typeIdentifier = provider.registeredTypeIdentifier(conformingTo: .movie) {
                 let fileURL = try await provider.loadPersistentFile(typeIdentifier: typeIdentifier)
                 let contentType = UTType(typeIdentifier)?.preferredMIMEType ?? "video/quicktime"
-                let preview = ShareVideoThumbnailGenerator.thumbnail(from: fileURL)
-                mediaItems.append(SharedMediaItem(fileURL: fileURL, contentType: contentType, byteCount: fileURL.fileSize))
-                mediaCount = mediaItems.count
-                mediaPreviews.append(ShareMediaPreview(fileURL: fileURL, contentType: contentType, fallbackImage: preview))
-                mediaUploadStates.append(.idle)
+                let preview = ShareVideoThumbnailGenerator.thumbnail(from: fileURL, maxPixelSize: previewMaxPixelSize)
+                
+                let mediaItem = SharedMediaItem(fileURL: fileURL, contentType: contentType, byteCount: fileURL.fileSize)
+                let viewModel = ShareMediaViewModel(preview: ShareMediaPreview(fileURL: fileURL, contentType: contentType, fallbackImage: preview))
+                
+                mediaItems.append(mediaItem)
+                mediaViewModels.append(viewModel)
+//                mediaCount = mediaItems.count
+
             } else if let typeIdentifier = provider.registeredTypeIdentifier(conformingTo: .image) {
                 let fileURL = try await provider.loadPersistentFile(typeIdentifier: typeIdentifier)
                 let contentType = UTType(typeIdentifier)?.preferredMIMEType ?? "image/jpeg"
-                let preview = ShareImageThumbnailGenerator.thumbnail(from: fileURL)
-                mediaItems.append(SharedMediaItem(fileURL: fileURL, contentType: contentType, byteCount: fileURL.fileSize))
-                mediaCount = mediaItems.count
-                mediaPreviews.append(ShareMediaPreview(fileURL: fileURL, contentType: contentType, fallbackImage: preview))
-                mediaUploadStates.append(.idle)
+                let preview = ShareImageThumbnailGenerator.thumbnail(from: fileURL, maxPixelSize: previewMaxPixelSize)
+                
+                let mediaItem = SharedMediaItem(fileURL: fileURL, contentType: contentType, byteCount: fileURL.fileSize)
+                let viewModel = ShareMediaViewModel(preview: ShareMediaPreview(fileURL: fileURL, contentType: contentType, fallbackImage: preview))
+                
+                mediaItems.append(mediaItem)
+                mediaViewModels.append(viewModel)
+//                mediaCount = mediaItems.count
             }
         }
     }
 
-    private func uploadMediaIfNeeded(signer: ShareEventSigner) async throws -> [ShareMediaMetadata] {
-        ShareDebugLog.mark("uploadMediaIfNeeded start media=\(mediaItems.count)")
-        guard !mediaItems.isEmpty else { return [] }
+    private func mediaProviderCount(in providers: [NSItemProvider]) -> Int {
+        providers.reduce(0) { count, provider in
+            if provider.registeredTypeIdentifier(conformingTo: .movie) != nil || provider.registeredTypeIdentifier(conformingTo: .image) != nil {
+                return count + 1
+            }
+            return count
+        }
+    }
+
+    private func uploadSingleMedia(
+        mediaItem: SharedMediaItem,
+        signer: ShareEventSigner,
+        id: UUID,
+        generation: Int
+    ) async throws -> ShareMediaMetadata {
+        ShareDebugLog.mark("media \(id) task start bytes=\(mediaItem.byteCount) type=\(mediaItem.contentType)")
+
         let blossomServers = blossomServerStrings.compactMap(URL.init(string:))
         guard let server = blossomServers.first else {
             throw ShareExtensionError.noBlossomServer
         }
         let mirrorServers = Array(blossomServers.dropFirst())
 
-        statusMessage = mediaItems.count == 1 ? "Uploading media..." : "Uploading \(mediaItems.count) media items..."
-
         let uploader = ShareBlossomUploader(server: server)
-        let progressSink = ShareUploadProgressSink(model: self)
-        let uploadItems = Array(mediaItems.enumerated())
-        let maxConcurrentMediaTasks = 2
-        var nextItemIndex = 0
-        var imetas = Array<ShareMediaMetadata?>(repeating: nil, count: mediaItems.count)
+        let progressSink = ShareUploadProgressSink(model: self, uploadGeneration: generation)
 
-        func addNextMediaTask(to group: inout ThrowingTaskGroup<(Int, ShareMediaMetadata), Error>) {
-            guard nextItemIndex < uploadItems.count else { return }
-            let (index, mediaItem) = uploadItems[nextItemIndex]
-            nextItemIndex += 1
+        try Task.checkCancellation()
 
-            group.addTask {
-                do {
-                    ShareDebugLog.mark("media \(index) task start bytes=\(mediaItem.byteCount) type=\(mediaItem.contentType)")
-                    progressSink.set(0, forMediaAt: index)
-
-                    let imeta = try await uploader.upload(mediaItem: mediaItem, signer: signer) { progress in
-                        let uploadProgress = mirrorServers.isEmpty ? progress : progress * 0.9
-                        progressSink.set(uploadProgress, forMediaAt: index)
-                    }
-
-                    ShareDebugLog.mark("media \(index) upload complete")
-                    if mirrorServers.isEmpty {
-                        progressSink.set(1, forMediaAt: index)
-                    } else {
-                        progressSink.set(0.9, forMediaAt: index)
-                        let mirrorSucceeded = await ShareBlossomMirrorer(servers: mirrorServers).mirror(imeta: imeta, signer: signer) { progress in
-                            progressSink.set(0.9 + (progress * 0.1), forMediaAt: index)
-                        }
-                        progressSink.set(1, forMediaAt: index, mirrorFailed: !mirrorSucceeded)
-                    }
-
-                    return (index, imeta)
-                } catch {
-                    ShareDebugLog.mark("media \(index) task error \(error.localizedDescription)")
-                    progressSink.fail(forMediaAt: index)
-                    throw error
-                }
-            }
+        let imeta = try await uploader.upload(mediaItem: mediaItem, signer: signer) { progress in
+            let uploadProgress = mirrorServers.isEmpty ? progress : progress * 0.9
+            progressSink.set(uploadProgress, forMediaWithId: id)
         }
 
-        statusMessage = signer.needsRemoteApproval ? "Waiting for remote signer..." : (mirrorServers.isEmpty ? "Uploading media..." : "Uploading and mirroring media...")
-        try await withThrowingTaskGroup(of: (Int, ShareMediaMetadata).self) { group in
-            for _ in 0..<min(maxConcurrentMediaTasks, uploadItems.count) {
-                addNextMediaTask(to: &group)
-            }
+        try Task.checkCancellation()
+        ShareDebugLog.mark("media \(id) upload complete")
 
-            while let (index, imeta) = try await group.next() {
-                imetas[index] = imeta
-                addNextMediaTask(to: &group)
+        if mirrorServers.isEmpty {
+            progressSink.set(1, forMediaWithId: id)
+        } else {
+            progressSink.set(0.9, forMediaWithId: id)
+            let mirrorSucceeded = await ShareBlossomMirrorer(servers: mirrorServers).mirror(imeta: imeta, signer: signer) { progress in
+                progressSink.set(0.9 + (progress * 0.1), forMediaWithId: id)
             }
+            try Task.checkCancellation()
+            progressSink.set(1, forMediaWithId: id, mirrorFailed: !mirrorSucceeded)
         }
 
-        return imetas.compactMap { $0 }
+        return imeta
     }
 
-    fileprivate func setUploadProgress(_ progress: Double, forMediaAt index: Int, mirrorFailed: Bool = false) {
-        guard mediaUploadStates.indices.contains(index) else { return }
-        mediaUploadStates[index] = .progress(min(max(progress, 0), 1), mirrorFailed: mirrorFailed)
+    fileprivate func setUploadProgress(_ progress: Double, forMediaWithId id: UUID, uploadGeneration: Int, mirrorFailed: Bool = false) {
+        guard self.mediaUploadGeneration == uploadGeneration else { return }
+        guard let index = indexOfViewModel(with: id) else { return }
+        mediaViewModels[index].uploadState = .progress(min(max(progress, 0), 1), mirrorFailed: mirrorFailed)
     }
 
-    fileprivate func setUploadFailed(forMediaAt index: Int) {
-        guard mediaUploadStates.indices.contains(index) else { return }
-        mediaUploadStates[index] = .failed
+    fileprivate func setUploadFailed(forMediaWithId id: UUID, uploadGeneration: Int) {
+        guard self.mediaUploadGeneration == uploadGeneration else { return }
+        guard let index = indexOfViewModel(with: id) else { return }
+        mediaViewModels[index].uploadState = .failed
     }
 
     private func content(with imetas: [ShareMediaMetadata]) -> String {
@@ -620,20 +817,22 @@ private final class ShareExtensionModel: ObservableObject {
 
 private final class ShareUploadProgressSink: @unchecked Sendable {
     private weak var model: ShareExtensionModel?
+    private let uploadGeneration: Int
 
-    init(model: ShareExtensionModel) {
+    init(model: ShareExtensionModel, uploadGeneration: Int) {
         self.model = model
+        self.uploadGeneration = uploadGeneration
     }
 
-    func set(_ progress: Double, forMediaAt index: Int, mirrorFailed: Bool = false) {
+    func set(_ progress: Double, forMediaWithId id: UUID, mirrorFailed: Bool = false) {
         Task { @MainActor in
-            model?.setUploadProgress(progress, forMediaAt: index, mirrorFailed: mirrorFailed)
+            model?.setUploadProgress(progress, forMediaWithId: id, uploadGeneration: uploadGeneration, mirrorFailed: mirrorFailed)
         }
     }
 
-    func fail(forMediaAt index: Int) {
+    func fail(forMediaWithId id: UUID) {
         Task { @MainActor in
-            model?.setUploadFailed(forMediaAt: index)
+            model?.setUploadFailed(forMediaWithId: id, uploadGeneration: uploadGeneration)
         }
     }
 }
@@ -646,6 +845,17 @@ private enum ShareMediaUploadState: Equatable {
     var progress: Double? {
         guard case .progress(let progress, _) = self else { return nil }
         return progress
+    }
+
+    var displayProgress: Double? {
+        switch self {
+        case .idle:
+            return 0.02
+        case .progress(let progress, _):
+            return progress
+        case .failed:
+            return nil
+        }
     }
 
     var hasFailed: Bool {
@@ -871,6 +1081,19 @@ private struct SharedMediaItem {
     let byteCount: Int
 }
 
+private enum SharePreviewSizing {
+    static func maxPixelSize(forMediaCount count: Int) -> Int {
+        switch count {
+        case 0...1:
+            return 900
+        case 2...4:
+            return 640
+        default:
+            return 384
+        }
+    }
+}
+
 private struct ShareMediaPreview: Equatable {
     let fileURL: URL
     let contentType: String
@@ -893,7 +1116,7 @@ private struct ShareMediaPreview: Equatable {
 private enum ShareImageThumbnailGenerator {
     private static let resizeLock = NSLock()
 
-    static func thumbnail(from fileURL: URL, maxPixelSize: Int = 1200) -> UIImage {
+    static func thumbnail(from fileURL: URL, maxPixelSize: Int = 512) -> UIImage {
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
@@ -973,7 +1196,7 @@ private enum ShareImageThumbnailGenerator {
     }
 
     private static func placeholder() -> UIImage {
-        let size = CGSize(width: 1200, height: 675)
+        let size = CGSize(width: 512, height: 288)
         return UIGraphicsImageRenderer(size: size).image { context in
             UIColor.secondarySystemBackground.setFill()
             context.fill(CGRect(origin: .zero, size: size))
@@ -1109,18 +1332,18 @@ private enum ShareBlurHashEncoder {
 }
 
 private enum ShareVideoThumbnailGenerator {
-    static func thumbnail(from fileURL: URL) -> UIImage {
+    static func thumbnail(from fileURL: URL, maxPixelSize: Int = 512) -> UIImage {
         do {
             let asset = AVURLAsset(url: fileURL)
             let generator = AVAssetImageGenerator(asset: asset)
             generator.appliesPreferredTrackTransform = true
-            generator.maximumSize = CGSize(width: 1200, height: 1200)
+            generator.maximumSize = CGSize(width: maxPixelSize, height: maxPixelSize)
 
             let time = CMTime(seconds: 0.1, preferredTimescale: 600)
             let cgImage = try generator.copyCGImage(at: time, actualTime: nil)
             return UIImage(cgImage: cgImage)
         } catch {
-            return ShareImageThumbnailGenerator.thumbnail(from: fileURL)
+            return ShareImageThumbnailGenerator.thumbnail(from: fileURL, maxPixelSize: maxPixelSize)
         }
     }
 }
@@ -1507,13 +1730,14 @@ private struct ShareComposeBody: View {
                     }
                     .disabled(model.isPosting)
 
-                if !model.mediaPreviews.isEmpty {
+                if !model.mediaViewModels.isEmpty {
                     ShareMediaPreviews(
-                        previews: model.mediaPreviews,
-                        uploadStates: model.mediaUploadStates,
+                        viewModels: model.mediaViewModels,
                         accentColor: accentColor,
-                        canRemove: model.mediaPreviews.count > 1 && !model.isPosting,
-                        removeMedia: model.removeMedia
+                        canRemove: model.mediaViewModels.count > 1 && !model.isPosting,
+                        isPosting: model.isPosting,
+                        removeMedia: model.removeMedia,
+                        retryMedia: model.retryMediaUpload
                     )
                 }
 
@@ -1622,14 +1846,15 @@ private struct AccountAvatar: View {
 }
 
 private struct ShareMediaPreviews: View {
-    let previews: [ShareMediaPreview]
-    let uploadStates: [ShareMediaUploadState]
+    let viewModels: [ShareMediaViewModel]
     let accentColor: Color
     let canRemove: Bool
-    let removeMedia: (Int) -> Void
+    let isPosting: Bool
+    let removeMedia: (ShareMediaViewModel) -> Void
+    let retryMedia: (ShareMediaViewModel) -> Void
 
     private var columnCount: Int {
-        previews.count == 1 ? 1 : min(previews.count, 3)
+        viewModels.count == 1 ? 1 : min(viewModels.count, 3)
     }
 
     private var columns: [GridItem] {
@@ -1638,13 +1863,16 @@ private struct ShareMediaPreviews: View {
 
     var body: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: 5) {
-            ForEach(Array(previews.enumerated()), id: \.offset) { index, preview in
+            ForEach(viewModels) { vm in
                 MediaThumbnail(
-                    preview: preview,
-                    uploadState: uploadStates.indices.contains(index) ? uploadStates[index] : .idle,
+                    preview: vm.preview,
+                    uploadState: vm.uploadState,
                     accentColor: accentColor,
-                    showRemoveButton: canRemove,
-                    remove: { removeMedia(index) }
+                    showRemoveButton: canRemove,                    // ← This should be here
+                    showMirrorWarning: !isPosting,
+                    animateGIF: viewModels.count == 1,
+                    remove: { removeMedia(vm) },
+                    retry: { retryMedia(vm) }
                 )
             }
         }
@@ -1656,7 +1884,10 @@ private struct MediaThumbnail: View {
     let uploadState: ShareMediaUploadState
     let accentColor: Color
     let showRemoveButton: Bool
+    let showMirrorWarning: Bool
+    let animateGIF: Bool
     let remove: () -> Void
+    let retry: () -> Void
 
     var body: some View {
         GeometryReader { proxy in
@@ -1669,9 +1900,14 @@ private struct MediaThumbnail: View {
                     if uploadState.hasFailed {
                         ZStack {
                             Color.red.opacity(0.35)
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.title2)
-                                .foregroundStyle(.white)
+                            Button(action: retry) {
+                                Image(systemName: "arrow.clockwise.circle.fill")
+                                    .font(.system(size: 30, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .shadow(color: .black.opacity(0.35), radius: 2, x: 0, y: 1)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Retry upload")
                         }
                     }
                 }
@@ -1696,7 +1932,7 @@ private struct MediaThumbnail: View {
                         }
                         .buttonStyle(.plain)
                         .padding(5)
-                    } else if uploadState.mirrorFailed {
+                    } else if showMirrorWarning, uploadState.mirrorFailed {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.caption)
                             .foregroundStyle(.white)
@@ -1707,7 +1943,7 @@ private struct MediaThumbnail: View {
                     }
                 }
                 .overlay(alignment: .bottom) {
-                    if let uploadProgress = uploadState.progress {
+                    if let uploadProgress = uploadState.displayProgress {
                         UploadProgressBar(progress: uploadProgress, accentColor: accentColor, failed: uploadState.hasFailed)
                             .padding(.horizontal, 6)
                             .padding(.bottom, 6)
@@ -1720,8 +1956,8 @@ private struct MediaThumbnail: View {
 
     @ViewBuilder
     private var thumbnailContent: some View {
-        if preview.isGIF {
-            AnimatedGIFPreview(fileURL: preview.fileURL)
+        if preview.isGIF, animateGIF {
+            AnimatedGIFPreview(fileURL: preview.fileURL, maxPixelSize: 512, frameLimit: 24)
         } else {
             Image(uiImage: preview.fallbackImage)
                 .resizable()
@@ -1732,29 +1968,31 @@ private struct MediaThumbnail: View {
 
 private struct AnimatedGIFPreview: UIViewRepresentable {
     let fileURL: URL
+    let maxPixelSize: Int
+    let frameLimit: Int
 
     func makeUIView(context: Context) -> UIImageView {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
-        imageView.image = Self.animatedImage(from: fileURL)
+        imageView.image = Self.animatedImage(from: fileURL, maxPixelSize: maxPixelSize, frameLimit: frameLimit)
         return imageView
     }
 
     func updateUIView(_ imageView: UIImageView, context: Context) {}
 
-    private static func animatedImage(from fileURL: URL) -> UIImage? {
+    private static func animatedImage(from fileURL: URL, maxPixelSize: Int, frameLimit: Int) -> UIImage? {
         guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil) else {
-            return ShareImageThumbnailGenerator.thumbnail(from: fileURL)
+            return ShareImageThumbnailGenerator.thumbnail(from: fileURL, maxPixelSize: maxPixelSize)
         }
 
         let frameCount = CGImageSourceGetCount(source)
-        guard frameCount > 1 else { return ShareImageThumbnailGenerator.thumbnail(from: fileURL) }
+        guard frameCount > 1 else { return ShareImageThumbnailGenerator.thumbnail(from: fileURL, maxPixelSize: maxPixelSize) }
 
-        let frameLimit = min(frameCount, 60)
+        let frameLimit = min(frameCount, frameLimit)
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceThumbnailMaxPixelSize: 900,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
             kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceShouldCache: false,
             kCGImageSourceShouldCacheImmediately: false
@@ -2077,4 +2315,23 @@ private extension NSItemProvider {
             }
         }
     }
+}
+
+
+private struct ShareMediaViewModel: Identifiable {
+    let id: UUID
+    let preview: ShareMediaPreview
+    var uploadState: ShareMediaUploadState
+
+    init(id: UUID = UUID(), preview: ShareMediaPreview, uploadState: ShareMediaUploadState = .idle) {
+        self.id = id
+        self.preview = preview
+        self.uploadState = uploadState
+    }
+    
+    var fileURL: URL { preview.fileURL }
+    var contentType: String { preview.contentType }
+    var isVideo: Bool { preview.isVideo }
+    var isGIF: Bool { preview.isGIF }
+    var aspectRatio: CGFloat { preview.aspectRatio }
 }
