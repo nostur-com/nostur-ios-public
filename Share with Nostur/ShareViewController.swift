@@ -160,7 +160,10 @@ private final class ShareExtensionModel: ObservableObject {
     private var mediaUploadPubkey: String?
     /// Bumped only for full-batch invalidation (account switch, reload).
     private var mediaUploadGeneration = 0
-    private let maxConcurrentMediaTasks = 2
+    /// Starts at 2; drops to 1 under memory pressure.
+    private var maxConcurrentMediaTasks = 2
+    /// When true, avoid decoding non-essential images (avatars, large previews).
+    @Published private(set) var memoryPressureActive = false
     private var activeAccountIsRemoteSigner = false
     private var activeAccountNip46Relay = ""
     private var activeAccountRemoteSignerPubkey = ""
@@ -202,6 +205,8 @@ private final class ShareExtensionModel: ObservableObject {
 //        mediaUploadStates = []
 //        mediaCount = 0
         activeAccountPictureImage = nil
+        memoryPressureActive = false
+        maxConcurrentMediaTasks = 2
         cancelMediaUpload(resetStates: true)
         mediaItems = []
         mediaViewModels = []
@@ -244,7 +249,7 @@ private final class ShareExtensionModel: ObservableObject {
         activePubkey = account.pubkey
         activeAccountName = account.name
         activeAccountPictureURL = account.remotePictureURL
-        activeAccountPictureImage = account.cachedPictureImage
+        activeAccountPictureImage = memoryPressureActive ? nil : account.cachedPictureImage
         activeAccountIsRemoteSigner = account.isRemoteSigner
         activeAccountNip46Relay = account.nip46Relay
         activeAccountRemoteSignerPubkey = account.remoteSignerPubkey
@@ -316,15 +321,24 @@ private final class ShareExtensionModel: ObservableObject {
     }
     
     func reducePreviewMemory() {
-        guard !mediaViewModels.isEmpty else { return }
-        ShareDebugLog.mark("memory warning reduce previews count=\(mediaViewModels.count)")
-        
+        memoryPressureActive = true
+        maxConcurrentMediaTasks = 1
+        // Drop non-essential decoded avatar; AsyncImage/placeholder can refill if needed.
+        activeAccountPictureImage = nil
+
+        guard !mediaViewModels.isEmpty else {
+            ShareDebugLog.mark("memory warning reduced concurrency=1 previews=0")
+            return
+        }
+        ShareDebugLog.mark("memory warning reduce previews count=\(mediaViewModels.count) concurrency=1")
+
+        let maxPixelSize = 160
         mediaViewModels = mediaViewModels.map { vm in
             let thumbnail: UIImage
             if vm.isVideo {
-                thumbnail = ShareVideoThumbnailGenerator.thumbnail(from: vm.fileURL, maxPixelSize: 256)
+                thumbnail = ShareVideoThumbnailGenerator.thumbnail(from: vm.fileURL, maxPixelSize: maxPixelSize)
             } else {
-                thumbnail = ShareImageThumbnailGenerator.thumbnail(from: vm.fileURL, maxPixelSize: 256)
+                thumbnail = ShareImageThumbnailGenerator.thumbnail(from: vm.fileURL, maxPixelSize: maxPixelSize)
             }
             let newPreview = ShareMediaPreview(
                 fileURL: vm.fileURL,
@@ -1431,7 +1445,8 @@ private struct ShareBlossomUploader {
             ShareDebugLog.mark("blossom resize start max=2800")
             let resized = try ShareImageThumbnailGenerator.resizedJPEGFile(from: mediaItem.fileURL, maxPixelSize: 2800)
             ShareDebugLog.mark("blossom resize complete bytes=\(resized.byteCount) dim=\(resized.dim)")
-            let blurhash = ShareImageThumbnailGenerator.blurhash(from: mediaItem.fileURL)
+            // Derive blurhash from the already-resized file to avoid decoding the original again.
+            let blurhash = ShareImageThumbnailGenerator.blurhash(from: resized.fileURL)
             return PreparedShareMediaItem(
                 fileURL: resized.fileURL,
                 byteCount: resized.byteCount,
@@ -1710,6 +1725,7 @@ private struct ShareComposeBody: View {
                 accounts: model.shareAccounts,
                 fallbackImage: model.activeAccountPictureImage,
                 fallbackPictureURL: model.activeAccountPictureURL,
+                loadAccountImages: !model.memoryPressureActive,
                 onSelect: { account in model.selectAccount(account) }
             )
 
@@ -1754,6 +1770,8 @@ private struct ShareAccountSwitcher: View {
     let accounts: [ShareAccount]
     let fallbackImage: UIImage?
     let fallbackPictureURL: URL?
+    /// When false (memory pressure), skip decoding/loading avatar bitmaps.
+    var loadAccountImages = true
     let onSelect: (ShareAccount) -> Void
 
     @State private var expanded = false
@@ -1773,11 +1791,17 @@ private struct ShareAccountSwitcher: View {
             .frame(width: size, height: size)
             .overlay(alignment: .topLeading) {
                 if sortedAccounts.isEmpty {
-                    AccountAvatar(image: fallbackImage, pictureURL: fallbackPictureURL)
+                    AccountAvatar(
+                        image: loadAccountImages ? fallbackImage : nil,
+                        pictureURL: loadAccountImages ? fallbackPictureURL : nil
+                    )
                 } else {
                     VStack(spacing: 2) {
                         ForEach(Array(sortedAccounts.enumerated()), id: \.element.pubkey) { index, account in
-                            AccountAvatar(image: account.cachedPictureImage, pictureURL: account.remotePictureURL)
+                            AccountAvatar(
+                                image: loadAccountImages ? account.cachedPictureImage : nil,
+                                pictureURL: loadAccountImages ? account.remotePictureURL : nil
+                            )
                                 .onTapGesture {
                                     accountTapped(account)
                                 }
@@ -1868,9 +1892,8 @@ private struct ShareMediaPreviews: View {
                     preview: vm.preview,
                     uploadState: vm.uploadState,
                     accentColor: accentColor,
-                    showRemoveButton: canRemove,                    // ← This should be here
+                    showRemoveButton: canRemove,
                     showMirrorWarning: !isPosting,
-                    animateGIF: viewModels.count == 1,
                     remove: { removeMedia(vm) },
                     retry: { retryMedia(vm) }
                 )
@@ -1885,13 +1908,14 @@ private struct MediaThumbnail: View {
     let accentColor: Color
     let showRemoveButton: Bool
     let showMirrorWarning: Bool
-    let animateGIF: Bool
     let remove: () -> Void
     let retry: () -> Void
 
     var body: some View {
         GeometryReader { proxy in
-            thumbnailContent
+            Image(uiImage: preview.fallbackImage)
+                .resizable()
+                .scaledToFit()
                 .frame(width: proxy.size.width, height: proxy.size.width / preview.aspectRatio)
                 .background(Color(.secondarySystemBackground))
                 .clipped()
@@ -1918,6 +1942,18 @@ private struct MediaThumbnail: View {
                             .foregroundStyle(.white)
                             .padding(12)
                             .background(Circle().fill(.black.opacity(0.45)))
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    if preview.isGIF {
+                        Text("GIF")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(.black.opacity(0.55)))
+                            .padding(6)
+                            .accessibilityLabel("GIF")
                     }
                 }
                 .overlay(alignment: .topTrailing) {
@@ -1952,75 +1988,6 @@ private struct MediaThumbnail: View {
         }
         .aspectRatio(preview.aspectRatio, contentMode: .fit)
         .frame(maxWidth: .infinity)
-    }
-
-    @ViewBuilder
-    private var thumbnailContent: some View {
-        if preview.isGIF, animateGIF {
-            AnimatedGIFPreview(fileURL: preview.fileURL, maxPixelSize: 512, frameLimit: 24)
-        } else {
-            Image(uiImage: preview.fallbackImage)
-                .resizable()
-                .scaledToFit()
-        }
-    }
-}
-
-private struct AnimatedGIFPreview: UIViewRepresentable {
-    let fileURL: URL
-    let maxPixelSize: Int
-    let frameLimit: Int
-
-    func makeUIView(context: Context) -> UIImageView {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        imageView.clipsToBounds = true
-        imageView.image = Self.animatedImage(from: fileURL, maxPixelSize: maxPixelSize, frameLimit: frameLimit)
-        return imageView
-    }
-
-    func updateUIView(_ imageView: UIImageView, context: Context) {}
-
-    private static func animatedImage(from fileURL: URL, maxPixelSize: Int, frameLimit: Int) -> UIImage? {
-        guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil) else {
-            return ShareImageThumbnailGenerator.thumbnail(from: fileURL, maxPixelSize: maxPixelSize)
-        }
-
-        let frameCount = CGImageSourceGetCount(source)
-        guard frameCount > 1 else { return ShareImageThumbnailGenerator.thumbnail(from: fileURL, maxPixelSize: maxPixelSize) }
-
-        let frameLimit = min(frameCount, frameLimit)
-        let options: [CFString: Any] = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceShouldCache: false,
-            kCGImageSourceShouldCacheImmediately: false
-        ]
-
-        var frames: [UIImage] = []
-        var duration: TimeInterval = 0
-        for index in 0..<frameLimit {
-            guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, index, options as CFDictionary) else { continue }
-            frames.append(UIImage(cgImage: cgImage))
-            duration += frameDuration(at: index, source: source)
-        }
-
-        guard !frames.isEmpty else { return ShareImageThumbnailGenerator.thumbnail(from: fileURL) }
-        return UIImage.animatedImage(with: frames, duration: duration)
-    }
-
-    private static func frameDuration(at index: Int, source: CGImageSource) -> TimeInterval {
-        let fallbackDuration = 0.1
-        guard let properties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any],
-              let gifProperties = properties[kCGImagePropertyGIFDictionary] as? [CFString: Any] else {
-            return fallbackDuration
-        }
-
-        let unclampedDelay = gifProperties[kCGImagePropertyGIFUnclampedDelayTime] as? TimeInterval
-        let clampedDelay = gifProperties[kCGImagePropertyGIFDelayTime] as? TimeInterval
-        let duration = unclampedDelay ?? clampedDelay ?? fallbackDuration
-        return duration < 0.02 ? fallbackDuration : duration
     }
 }
 
