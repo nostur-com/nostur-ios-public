@@ -7,6 +7,7 @@
 
 import AVFoundation
 import Combine
+import CryptoKit
 import ImageIO
 import NostrEssentials
 import Security
@@ -14,6 +15,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
 
+@objc(ShareViewController)
 final class ShareViewController: UIViewController {
     private let model = ShareExtensionModel()
     private var hostingController: UIHostingController<ShareExtensionView>?
@@ -74,6 +76,16 @@ private struct ShareAccount: Codable, Identifiable, Equatable {
         guard let fileURL = URL(string: fileString), fileURL.isFileURL,
               let imageData = try? Data(contentsOf: fileURL) else { return nil }
         return UIImage(data: imageData)
+    }
+}
+
+private enum ShareDebugLog {
+    static func mark(_ message: String) {
+        let entry = "\(ISO8601DateFormatter().string(from: Date())) \(message)"
+        NSLog("[ShareWithNostur] %@", entry)
+        let defaults = UserDefaults(suiteName: "group.com.nostur.Share")
+        defaults?.set(entry, forKey: "share_debug_last_step")
+        defaults?.synchronize()
     }
 }
 
@@ -171,6 +183,7 @@ private final class ShareExtensionModel: ObservableObject {
     }
 
     func load(extensionContext: NSExtensionContext?) async {
+        ShareDebugLog.mark("load start")
         isLoading = true
         errorMessage = nil
         statusMessage = nil
@@ -195,8 +208,10 @@ private final class ShareExtensionModel: ObservableObject {
             let attachments = extensionContext?.inputItems
                 .compactMap { $0 as? NSExtensionItem }
                 .flatMap { $0.attachments ?? [] } ?? []
+            ShareDebugLog.mark("load attachments count=\(attachments.count)")
 
             try await loadAttachments(attachments)
+            ShareDebugLog.mark("load attachments complete media=\(mediaItems.count)")
 
             if activePubkey.isEmpty {
                 errorMessage = "Open Nostur and select an account first."
@@ -208,10 +223,13 @@ private final class ShareExtensionModel: ObservableObject {
         }
 
         isLoading = false
-        startMediaUploadIfPossible()
+        ShareDebugLog.mark("load complete schedule upload")
+        scheduleMediaUploadStart()
     }
 
     func selectAccount(_ account: ShareAccount, persistSelection: Bool = true) {
+        let accountChanged = activePubkey != account.pubkey
+
         activePubkey = account.pubkey
         activeAccountName = account.name
         activeAccountPictureURL = account.remotePictureURL
@@ -220,7 +238,7 @@ private final class ShareExtensionModel: ObservableObject {
         activeAccountNip46Relay = account.nip46Relay
         activeAccountRemoteSignerPubkey = account.remoteSignerPubkey
 
-        if persistSelection {
+        if persistSelection, accountChanged {
             cancelMediaUpload()
             startMediaUploadIfPossible()
         }
@@ -278,19 +296,40 @@ private final class ShareExtensionModel: ObservableObject {
         startMediaUploadIfPossible()
     }
 
+    private func scheduleMediaUploadStart() {
+        ShareDebugLog.mark("upload scheduled")
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 750_000_000)
+            guard !Task.isCancelled else { return }
+            ShareDebugLog.mark("upload schedule fired")
+            startMediaUploadIfPossible()
+        }
+    }
+
     private func startMediaUploadIfPossible() {
-        guard mediaUploadTask == nil else { return }
-        guard !mediaItems.isEmpty, !activePubkey.isEmpty, !blossomServerStrings.isEmpty else { return }
+        ShareDebugLog.mark("upload start requested media=\(mediaItems.count)")
+        guard mediaUploadTask == nil else {
+            ShareDebugLog.mark("upload start skipped existing task")
+            return
+        }
+        guard !mediaItems.isEmpty, !activePubkey.isEmpty, !blossomServerStrings.isEmpty else {
+            ShareDebugLog.mark("upload start skipped missing requirements media=\(mediaItems.count) active=\(!activePubkey.isEmpty) blossom=\(!blossomServerStrings.isEmpty)")
+            return
+        }
 
         do {
+            ShareDebugLog.mark("upload load signer start")
             let signer = try loadSigner()
+            ShareDebugLog.mark("upload load signer complete remote=\(signer.needsRemoteApproval)")
             let uploadPubkey = signer.publicKey
             mediaUploadPubkey = uploadPubkey
             uploadedMedia = nil
             mediaUploadTask = Task { [weak self] in
                 guard let self else { return [] }
                 do {
+                    ShareDebugLog.mark("upload task begin")
                     let imetas = try await self.uploadMediaIfNeeded(signer: signer)
+                    ShareDebugLog.mark("upload task complete imetas=\(imetas.count)")
                     if self.mediaUploadPubkey == uploadPubkey {
                         self.uploadedMedia = imetas
                         self.mediaUploadTask = nil
@@ -300,6 +339,7 @@ private final class ShareExtensionModel: ObservableObject {
                     }
                     return imetas
                 } catch {
+                    ShareDebugLog.mark("upload task error \(error.localizedDescription)")
                     if !(error is CancellationError), self.mediaUploadPubkey == uploadPubkey {
                         self.mediaUploadTask = nil
                         self.errorMessage = error.localizedDescription
@@ -376,29 +416,27 @@ private final class ShareExtensionModel: ObservableObject {
             } else if provider.canLoadObject(ofClass: NSString.self), text.isEmpty {
                 text = try await provider.loadString()
             } else if let typeIdentifier = provider.registeredTypeIdentifier(conformingTo: .movie) {
-                let data = try await provider.loadFileData(typeIdentifier: typeIdentifier)
+                let fileURL = try await provider.loadPersistentFile(typeIdentifier: typeIdentifier)
                 let contentType = UTType(typeIdentifier)?.preferredMIMEType ?? "video/quicktime"
-                let preview = ShareVideoThumbnailGenerator.thumbnail(from: data, contentType: contentType)
-                mediaItems.append(SharedMediaItem(data: data, contentType: contentType))
+                let preview = ShareVideoThumbnailGenerator.thumbnail(from: fileURL)
+                mediaItems.append(SharedMediaItem(fileURL: fileURL, contentType: contentType, byteCount: fileURL.fileSize))
                 mediaCount = mediaItems.count
-                mediaPreviews.append(ShareMediaPreview(data: data, contentType: contentType, fallbackImage: preview))
+                mediaPreviews.append(ShareMediaPreview(fileURL: fileURL, contentType: contentType, fallbackImage: preview))
                 mediaUploadStates.append(.idle)
-            } else if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
-                let data = try await provider.loadData(typeIdentifier: UTType.image.identifier)
-                let contentType = provider.registeredTypeIdentifiers
-                    .compactMap { UTType($0)?.preferredMIMEType }
-                    .first { $0.hasPrefix("image/") } ?? "image/jpeg"
-                mediaItems.append(SharedMediaItem(data: data, contentType: contentType))
+            } else if let typeIdentifier = provider.registeredTypeIdentifier(conformingTo: .image) {
+                let fileURL = try await provider.loadPersistentFile(typeIdentifier: typeIdentifier)
+                let contentType = UTType(typeIdentifier)?.preferredMIMEType ?? "image/jpeg"
+                let preview = ShareImageThumbnailGenerator.thumbnail(from: fileURL)
+                mediaItems.append(SharedMediaItem(fileURL: fileURL, contentType: contentType, byteCount: fileURL.fileSize))
                 mediaCount = mediaItems.count
-                if let preview = UIImage(data: data) {
-                    mediaPreviews.append(ShareMediaPreview(data: data, contentType: contentType, fallbackImage: preview))
-                    mediaUploadStates.append(.idle)
-                }
+                mediaPreviews.append(ShareMediaPreview(fileURL: fileURL, contentType: contentType, fallbackImage: preview))
+                mediaUploadStates.append(.idle)
             }
         }
     }
 
     private func uploadMediaIfNeeded(signer: ShareEventSigner) async throws -> [ShareMediaMetadata] {
+        ShareDebugLog.mark("uploadMediaIfNeeded start media=\(mediaItems.count)")
         guard !mediaItems.isEmpty else { return [] }
         let blossomServers = blossomServerStrings.compactMap(URL.init(string:))
         guard let server = blossomServers.first else {
@@ -422,6 +460,7 @@ private final class ShareExtensionModel: ObservableObject {
 
             group.addTask {
                 do {
+                    ShareDebugLog.mark("media \(index) task start bytes=\(mediaItem.byteCount) type=\(mediaItem.contentType)")
                     progressSink.set(0, forMediaAt: index)
 
                     let imeta = try await uploader.upload(mediaItem: mediaItem, signer: signer) { progress in
@@ -429,6 +468,7 @@ private final class ShareExtensionModel: ObservableObject {
                         progressSink.set(uploadProgress, forMediaAt: index)
                     }
 
+                    ShareDebugLog.mark("media \(index) upload complete")
                     if mirrorServers.isEmpty {
                         progressSink.set(1, forMediaAt: index)
                     } else {
@@ -441,6 +481,7 @@ private final class ShareExtensionModel: ObservableObject {
 
                     return (index, imeta)
                 } catch {
+                    ShareDebugLog.mark("media \(index) task error \(error.localizedDescription)")
                     progressSink.fail(forMediaAt: index)
                     throw error
                 }
@@ -494,6 +535,9 @@ private final class ShareExtensionModel: ObservableObject {
             var parts = ["imeta", "url \(imeta.url)"]
             if let dim = imeta.dim, !dim.isEmpty {
                 parts.append("dim \(dim)")
+            }
+            if let blurhash = imeta.blurhash, !blurhash.isEmpty {
+                parts.append("blurhash \(blurhash)")
             }
             if let hash = imeta.hash, !hash.isEmpty {
                 parts.append("sha256 \(hash)")
@@ -822,17 +866,18 @@ private enum ShareEventJSON {
 }
 
 private struct SharedMediaItem {
-    let data: Data
+    let fileURL: URL
     let contentType: String
+    let byteCount: Int
 }
 
 private struct ShareMediaPreview: Equatable {
-    let data: Data
+    let fileURL: URL
     let contentType: String
     let fallbackImage: UIImage
 
     var isGIF: Bool {
-        contentType.lowercased() == "image/gif" || data.prefix(3) == Data([0x47, 0x49, 0x46])
+        contentType.lowercased() == "image/gif"
     }
 
     var isVideo: Bool {
@@ -845,28 +890,86 @@ private struct ShareMediaPreview: Equatable {
     }
 }
 
-private enum ShareVideoThumbnailGenerator {
-    static func thumbnail(from data: Data, contentType: String) -> UIImage {
-        let fileExtension = UTType(mimeType: contentType)?.preferredFilenameExtension ?? "mov"
-        let fileURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension(fileExtension)
+private enum ShareImageThumbnailGenerator {
+    private static let resizeLock = NSLock()
 
-        do {
-            try data.write(to: fileURL, options: .atomic)
-            defer { try? FileManager.default.removeItem(at: fileURL) }
+    static func thumbnail(from fileURL: URL, maxPixelSize: Int = 1200) -> UIImage {
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCache: false,
+            kCGImageSourceShouldCacheImmediately: false
+        ]
 
-            let asset = AVURLAsset(url: fileURL)
-            let generator = AVAssetImageGenerator(asset: asset)
-            generator.appliesPreferredTrackTransform = true
-            generator.maximumSize = CGSize(width: 1200, height: 1200)
-
-            let time = CMTime(seconds: 0.1, preferredTimescale: 600)
-            let cgImage = try generator.copyCGImage(at: time, actualTime: nil)
-            return UIImage(cgImage: cgImage)
-        } catch {
+        guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil),
+              let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
             return placeholder()
         }
+        return UIImage(cgImage: cgImage)
+    }
+
+    static func resizedJPEGFile(from fileURL: URL, maxPixelSize: Int) throws -> (fileURL: URL, byteCount: Int, dim: String) {
+        resizeLock.lock()
+        defer { resizeLock.unlock() }
+
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCache: false,
+            kCGImageSourceShouldCacheImmediately: false
+        ]
+
+        guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil),
+              let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            throw ShareExtensionError.couldNotPrepareMedia
+        }
+
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ShareWithNosturPreparedMedia", isDirectory: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        let destinationURL = directoryURL
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("jpg")
+
+        guard let destination = CGImageDestinationCreateWithURL(
+            destinationURL as CFURL,
+            UTType.jpeg.identifier as CFString,
+            1,
+            nil
+        ) else {
+            throw ShareExtensionError.couldNotPrepareMedia
+        }
+
+        let properties: [CFString: Any] = [
+            kCGImageDestinationLossyCompressionQuality: 0.85
+        ]
+        CGImageDestinationAddImage(destination, cgImage, properties as CFDictionary)
+        guard CGImageDestinationFinalize(destination) else {
+            throw ShareExtensionError.couldNotPrepareMedia
+        }
+
+        return (destinationURL, destinationURL.fileSize, "\(cgImage.width)x\(cgImage.height)")
+    }
+
+    static func blurhash(from fileURL: URL) -> String? {
+        resizeLock.lock()
+        defer { resizeLock.unlock() }
+
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: 32,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCache: false,
+            kCGImageSourceShouldCacheImmediately: false
+        ]
+
+        guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil),
+              let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+        return ShareBlurHashEncoder.encode(cgImage: cgImage, components: (4, 3))
     }
 
     private static func placeholder() -> UIImage {
@@ -878,26 +981,205 @@ private enum ShareVideoThumbnailGenerator {
     }
 }
 
+private enum ShareBlurHashEncoder {
+    private static let encodeCharacters = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~")
+
+    static func encode(cgImage: CGImage, components: (Int, Int)) -> String? {
+        let width = cgImage.width
+        let height = cgImage.height
+        guard width > 0, height > 0,
+              components.0 >= 1, components.0 <= 9,
+              components.1 >= 1, components.1 <= 9,
+              let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(
+                data: nil,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: colorSpace,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              ),
+              let pixels = context.data?.assumingMemoryBound(to: UInt8.self) else { return nil }
+
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        var factors: [(Float, Float, Float)] = []
+        for y in 0..<components.1 {
+            for x in 0..<components.0 {
+                let normalisation: Float = (x == 0 && y == 0) ? 1 : 2
+                let factor = multiplyBasisFunction(pixels: pixels, width: width, height: height, bytesPerRow: context.bytesPerRow) {
+                    normalisation * cos(Float.pi * Float(x) * $0 / Float(width)) * cos(Float.pi * Float(y) * $1 / Float(height))
+                }
+                factors.append(factor)
+            }
+        }
+
+        guard let dc = factors.first else { return nil }
+        let ac = factors.dropFirst()
+        var hash = ""
+
+        let sizeFlag = (components.0 - 1) + (components.1 - 1) * 9
+        hash += encode83(sizeFlag, length: 1)
+
+        let maximumValue: Float
+        if !ac.isEmpty {
+            let actualMaximumValue = ac.map { max(abs($0.0), abs($0.1), abs($0.2)) }.max() ?? 0
+            let quantisedMaximumValue = Int(max(0, min(82, floor(actualMaximumValue * 166 - 0.5))))
+            maximumValue = Float(quantisedMaximumValue + 1) / 166
+            hash += encode83(quantisedMaximumValue, length: 1)
+        } else {
+            maximumValue = 1
+            hash += encode83(0, length: 1)
+        }
+
+        hash += encode83(encodeDC(dc), length: 4)
+        for factor in ac {
+            hash += encode83(encodeAC(factor, maximumValue: maximumValue), length: 2)
+        }
+
+        return hash
+    }
+
+    private static func multiplyBasisFunction(
+        pixels: UnsafePointer<UInt8>,
+        width: Int,
+        height: Int,
+        bytesPerRow: Int,
+        basisFunction: (Float, Float) -> Float
+    ) -> (Float, Float, Float) {
+        var red: Float = 0
+        var green: Float = 0
+        var blue: Float = 0
+        let buffer = UnsafeBufferPointer(start: pixels, count: height * bytesPerRow)
+
+        for x in 0..<width {
+            for y in 0..<height {
+                let basis = basisFunction(Float(x), Float(y))
+                let offset = x * 4 + y * bytesPerRow
+                red += basis * sRGBToLinear(buffer[offset])
+                green += basis * sRGBToLinear(buffer[offset + 1])
+                blue += basis * sRGBToLinear(buffer[offset + 2])
+            }
+        }
+
+        let scale = 1 / Float(width * height)
+        return (red * scale, green * scale, blue * scale)
+    }
+
+    private static func encodeDC(_ value: (Float, Float, Float)) -> Int {
+        (linearTosRGB(value.0) << 16) + (linearTosRGB(value.1) << 8) + linearTosRGB(value.2)
+    }
+
+    private static func encodeAC(_ value: (Float, Float, Float), maximumValue: Float) -> Int {
+        let quantR = Int(max(0, min(18, floor(signPow(value.0 / maximumValue, 0.5) * 9 + 9.5))))
+        let quantG = Int(max(0, min(18, floor(signPow(value.1 / maximumValue, 0.5) * 9 + 9.5))))
+        let quantB = Int(max(0, min(18, floor(signPow(value.2 / maximumValue, 0.5) * 9 + 9.5))))
+        return quantR * 19 * 19 + quantG * 19 + quantB
+    }
+
+    private static func signPow(_ value: Float, _ exponent: Float) -> Float {
+        copysign(pow(abs(value), exponent), value)
+    }
+
+    private static func linearTosRGB(_ value: Float) -> Int {
+        let value = max(0, min(1, value))
+        if value <= 0.0031308 { return Int(value * 12.92 * 255 + 0.5) }
+        return Int((1.055 * pow(value, 1 / 2.4) - 0.055) * 255 + 0.5)
+    }
+
+    private static func sRGBToLinear(_ value: UInt8) -> Float {
+        let value = Float(value) / 255
+        if value <= 0.04045 { return value / 12.92 }
+        return pow((value + 0.055) / 1.055, 2.4)
+    }
+
+    private static func encode83(_ value: Int, length: Int) -> String {
+        var result = ""
+        for index in 1...length {
+            let digit = (value / intPow(83, length - index)) % 83
+            result.append(encodeCharacters[digit])
+        }
+        return result
+    }
+
+    private static func intPow(_ base: Int, _ exponent: Int) -> Int {
+        (0..<exponent).reduce(1) { value, _ in value * base }
+    }
+}
+
+private enum ShareVideoThumbnailGenerator {
+    static func thumbnail(from fileURL: URL) -> UIImage {
+        do {
+            let asset = AVURLAsset(url: fileURL)
+            let generator = AVAssetImageGenerator(asset: asset)
+            generator.appliesPreferredTrackTransform = true
+            generator.maximumSize = CGSize(width: 1200, height: 1200)
+
+            let time = CMTime(seconds: 0.1, preferredTimescale: 600)
+            let cgImage = try generator.copyCGImage(at: time, actualTime: nil)
+            return UIImage(cgImage: cgImage)
+        } catch {
+            return ShareImageThumbnailGenerator.thumbnail(from: fileURL)
+        }
+    }
+}
+
 private struct ShareMediaMetadata {
     let url: String
     let dim: String?
     let hash: String?
+    let blurhash: String?
+}
+
+private enum ShareFileHasher {
+    static func sha256Hex(for fileURL: URL) throws -> String {
+        let handle = try FileHandle(forReadingFrom: fileURL)
+        defer { try? handle.close() }
+
+        var hasher = CryptoKit.SHA256()
+        while autoreleasepool(invoking: {
+            let data = handle.readData(ofLength: 1024 * 1024)
+            guard !data.isEmpty else { return false }
+            hasher.update(data: data)
+            return true
+        }) {}
+
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
 }
 
 private struct PreparedShareMediaItem {
-    let data: Data
+    let fileURL: URL
+    let byteCount: Int
     let contentType: String
     let dim: String?
+    let blurhash: String?
+    let removeAfterUpload: Bool
 }
 
 private struct ShareBlossomUploader {
     let server: URL
 
     func upload(mediaItem: SharedMediaItem, signer: ShareEventSigner, onProgress: @escaping (Double) -> Void) async throws -> ShareMediaMetadata {
-        let prepared = prepare(mediaItem: mediaItem)
-        let sha256 = prepared.data.sha256().hexEncodedString()
+        ShareDebugLog.mark("blossom prepare start bytes=\(mediaItem.byteCount) type=\(mediaItem.contentType)")
+        let prepared = try prepare(mediaItem: mediaItem)
+        ShareDebugLog.mark("blossom prepare complete bytes=\(prepared.byteCount) type=\(prepared.contentType)")
+        defer {
+            if prepared.removeAfterUpload {
+                try? FileManager.default.removeItem(at: prepared.fileURL)
+            }
+        }
+
+        ShareDebugLog.mark("blossom hash start bytes=\(prepared.byteCount)")
+        let sha256 = try ShareFileHasher.sha256Hex(for: prepared.fileURL)
+        ShareDebugLog.mark("blossom hash complete")
+        ShareDebugLog.mark("blossom auth start")
         let authHeader = try await signer.blossomAuthorizationHeader(sha256hex: sha256)
+        ShareDebugLog.mark("blossom auth complete")
+        ShareDebugLog.mark("blossom server test start")
         let blossomType = (try? await testBlossomServer(server, authorization: authHeader, sha256: sha256)) ?? .none
+        ShareDebugLog.mark("blossom server test complete type=\(blossomType)")
 
         switch blossomType {
         case .media, .upload:
@@ -908,24 +1190,44 @@ private struct ShareBlossomUploader {
             throw ShareExtensionError.blossomUnsupported
         }
 
+        ShareDebugLog.mark("blossom upload file start bytes=\(prepared.byteCount)")
         let response = try await upload(prepared: prepared, sha256: sha256, authHeader: authHeader, verb: blossomType, onProgress: onProgress)
+        ShareDebugLog.mark("blossom upload file complete")
         let responseURL = response.nip94?.first(where: { $0.type == "url" })?.value ?? response.url
         let responseDim = response.nip94?.first(where: { $0.type == "dim" })?.value ?? prepared.dim
         let responseHash = response.nip94?.first(where: { $0.type == "x" })?.value ?? response.sha256
 
-        return ShareMediaMetadata(url: responseURL, dim: responseDim, hash: responseHash)
+        let responseBlurhash = response.nip94?.first(where: { $0.type == "blurhash" })?.value ?? prepared.blurhash
+
+        return ShareMediaMetadata(url: responseURL, dim: responseDim, hash: responseHash, blurhash: responseBlurhash)
     }
 
-    private func prepare(mediaItem: SharedMediaItem) -> PreparedShareMediaItem {
-        guard mediaItem.contentType != "image/gif", let uiImage = UIImage(data: mediaItem.data) else {
-            return PreparedShareMediaItem(data: mediaItem.data, contentType: mediaItem.contentType, dim: nil)
+    private func prepare(mediaItem: SharedMediaItem) throws -> PreparedShareMediaItem {
+        let contentType = mediaItem.contentType.lowercased()
+        if contentType.hasPrefix("image/"), contentType != "image/gif" {
+            ShareDebugLog.mark("blossom resize start max=2800")
+            let resized = try ShareImageThumbnailGenerator.resizedJPEGFile(from: mediaItem.fileURL, maxPixelSize: 2800)
+            ShareDebugLog.mark("blossom resize complete bytes=\(resized.byteCount) dim=\(resized.dim)")
+            let blurhash = ShareImageThumbnailGenerator.blurhash(from: mediaItem.fileURL)
+            return PreparedShareMediaItem(
+                fileURL: resized.fileURL,
+                byteCount: resized.byteCount,
+                contentType: "image/jpeg",
+                dim: resized.dim,
+                blurhash: blurhash,
+                removeAfterUpload: true
+            )
         }
 
-        let maxWidth: CGFloat = 2800
-        let resized = uiImage.resizedForShare(maxWidth: maxWidth)
-        let data = resized.jpegData(compressionQuality: 0.85) ?? mediaItem.data
-        let dim = "\(Int(resized.size.width))x\(Int(resized.size.height))"
-        return PreparedShareMediaItem(data: data, contentType: "image/jpeg", dim: dim)
+        let blurhash = contentType.hasPrefix("image/") ? ShareImageThumbnailGenerator.blurhash(from: mediaItem.fileURL) : nil
+        return PreparedShareMediaItem(
+            fileURL: mediaItem.fileURL,
+            byteCount: mediaItem.byteCount,
+            contentType: mediaItem.contentType,
+            dim: nil,
+            blurhash: blurhash,
+            removeAfterUpload: false
+        )
     }
 
     private func upload(prepared: PreparedShareMediaItem, sha256: String, authHeader: String, verb: SupportedBlossomType, onProgress: @escaping (Double) -> Void) async throws -> BlossomUploadResponse {
@@ -933,7 +1235,7 @@ private struct ShareBlossomUploader {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 600
-        let progressDelegate = ShareUploadProgressDelegate(totalBytes: prepared.data.count, onProgress: onProgress)
+        let progressDelegate = ShareUploadProgressDelegate(totalBytes: prepared.byteCount, onProgress: onProgress)
         let session = URLSession(configuration: config, delegate: progressDelegate, delegateQueue: nil)
         defer { session.invalidateAndCancel() }
 
@@ -943,7 +1245,7 @@ private struct ShareBlossomUploader {
         request.setValue(authHeader, forHTTPHeaderField: "Authorization")
         request.setValue(sha256, forHTTPHeaderField: "X-SHA-256")
 
-        let (data, response) = try await withUploadStallTimeout(initialGraceSeconds: 90, stallSeconds: 45, session: session, request: request, data: prepared.data, progressDelegate: progressDelegate)
+        let (data, response) = try await withUploadStallTimeout(initialGraceSeconds: 90, stallSeconds: 45, session: session, request: request, fileURL: prepared.fileURL, progressDelegate: progressDelegate)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw ShareExtensionError.blossomUploadFailed
         }
@@ -960,10 +1262,10 @@ private struct ShareBlossomUploader {
         return try decoder.decode(BlossomUploadResponse.self, from: data)
     }
 
-    private func withUploadStallTimeout(initialGraceSeconds: TimeInterval, stallSeconds: TimeInterval, session: URLSession, request: URLRequest, data: Data, progressDelegate: ShareUploadProgressDelegate) async throws -> (Data, URLResponse) {
+    private func withUploadStallTimeout(initialGraceSeconds: TimeInterval, stallSeconds: TimeInterval, session: URLSession, request: URLRequest, fileURL: URL, progressDelegate: ShareUploadProgressDelegate) async throws -> (Data, URLResponse) {
         try await withThrowingTaskGroup(of: (Data, URLResponse).self) { group in
             group.addTask {
-                try await session.upload(for: request, from: data)
+                try await session.upload(for: request, fromFile: fileURL)
             }
             group.addTask {
                 while !Task.isCancelled {
@@ -1101,19 +1403,6 @@ private struct ShareBlossomMirrorer {
     }
 }
 
-private extension UIImage {
-    func resizedForShare(maxWidth: CGFloat) -> UIImage {
-        guard size.width > maxWidth else { return self }
-
-        let scale = maxWidth / size.width
-        let targetSize = CGSize(width: maxWidth, height: size.height * scale)
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
-        return renderer.image { _ in
-            draw(in: CGRect(origin: .zero, size: targetSize))
-        }
-    }
-}
-
 private struct ShareExtensionView: View {
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject var model: ShareExtensionModel
@@ -1129,7 +1418,7 @@ private struct ShareExtensionView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             VStack(spacing: 0) {
                 ScrollView {
                     ShareComposeBody(
@@ -1183,6 +1472,7 @@ private struct ShareExtensionView: View {
                 }
             }
         }
+        .navigationViewStyle(.stack)
     }
 }
 
@@ -1431,7 +1721,7 @@ private struct MediaThumbnail: View {
     @ViewBuilder
     private var thumbnailContent: some View {
         if preview.isGIF {
-            AnimatedGIFPreview(data: preview.data)
+            AnimatedGIFPreview(fileURL: preview.fileURL)
         } else {
             Image(uiImage: preview.fallbackImage)
                 .resizable()
@@ -1441,37 +1731,44 @@ private struct MediaThumbnail: View {
 }
 
 private struct AnimatedGIFPreview: UIViewRepresentable {
-    let data: Data
+    let fileURL: URL
 
     func makeUIView(context: Context) -> UIImageView {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
-        imageView.image = Self.animatedImage(from: data)
+        imageView.image = Self.animatedImage(from: fileURL)
         return imageView
     }
 
-    func updateUIView(_ imageView: UIImageView, context: Context) {
-        imageView.image = Self.animatedImage(from: data)
-    }
+    func updateUIView(_ imageView: UIImageView, context: Context) {}
 
-    private static func animatedImage(from data: Data) -> UIImage? {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
-            return UIImage(data: data)
+    private static func animatedImage(from fileURL: URL) -> UIImage? {
+        guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil) else {
+            return ShareImageThumbnailGenerator.thumbnail(from: fileURL)
         }
 
         let frameCount = CGImageSourceGetCount(source)
-        guard frameCount > 1 else { return UIImage(data: data) }
+        guard frameCount > 1 else { return ShareImageThumbnailGenerator.thumbnail(from: fileURL) }
+
+        let frameLimit = min(frameCount, 60)
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: 900,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCache: false,
+            kCGImageSourceShouldCacheImmediately: false
+        ]
 
         var frames: [UIImage] = []
         var duration: TimeInterval = 0
-        for index in 0..<frameCount {
-            guard let cgImage = CGImageSourceCreateImageAtIndex(source, index, nil) else { continue }
+        for index in 0..<frameLimit {
+            guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, index, options as CFDictionary) else { continue }
             frames.append(UIImage(cgImage: cgImage))
             duration += frameDuration(at: index, source: source)
         }
 
-        guard !frames.isEmpty else { return UIImage(data: data) }
+        guard !frames.isEmpty else { return ShareImageThumbnailGenerator.thumbnail(from: fileURL) }
         return UIImage.animatedImage(with: frames, duration: duration)
     }
 
@@ -1511,6 +1808,13 @@ private struct UploadProgressBar: View {
         }
         .frame(height: 4)
         .shadow(color: .black.opacity(0.25), radius: 1, x: 0, y: 1)
+    }
+}
+
+private extension URL {
+    var fileSize: Int {
+        let size = (try? resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        return max(size, 0)
     }
 }
 
@@ -1635,6 +1939,7 @@ private enum ShareExtensionError: LocalizedError {
     case privateKeyUnavailable(OSStatus)
     case invalidPrivateKey
     case couldNotEncodeEvent
+    case couldNotPrepareMedia
     case noBlossomServer
     case blossomUnsupported
     case blossomUnauthorized
@@ -1661,6 +1966,8 @@ private enum ShareExtensionError: LocalizedError {
             return "The active account private key could not be read."
         case .couldNotEncodeEvent:
             return "Could not encode the Nostr event."
+        case .couldNotPrepareMedia:
+            return "Could not prepare media for upload."
         case .noBlossomServer:
             return "Configure a Blossom server in Nostur settings before sharing media."
         case .blossomUnsupported:
@@ -1734,29 +2041,38 @@ private extension NSItemProvider {
         }
     }
 
-    func loadData(typeIdentifier: String) async throws -> Data {
-        try await withCheckedThrowingContinuation { continuation in
-            loadDataRepresentation(forTypeIdentifier: typeIdentifier) { data, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else if let data {
-                    continuation.resume(returning: data)
-                } else {
-                    continuation.resume(throwing: ShareExtensionError.invalidPrivateKey)
-                }
-            }
-        }
-    }
-
-    func loadFileData(typeIdentifier: String) async throws -> Data {
+    func loadPersistentFile(typeIdentifier: String) async throws -> URL {
         try await withCheckedThrowingContinuation { continuation in
             loadFileRepresentation(forTypeIdentifier: typeIdentifier) { fileURL, error in
                 if let error {
                     continuation.resume(throwing: error)
-                } else if let fileURL, let data = try? Data(contentsOf: fileURL) {
-                    continuation.resume(returning: data)
-                } else {
+                    return
+                }
+
+                guard let fileURL else {
                     continuation.resume(throwing: ShareExtensionError.invalidPrivateKey)
+                    return
+                }
+
+                do {
+                    let directoryURL = FileManager.default.temporaryDirectory
+                        .appendingPathComponent("ShareWithNosturMedia", isDirectory: true)
+                    try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+
+                    let fileExtension = fileURL.pathExtension.isEmpty
+                        ? (UTType(typeIdentifier)?.preferredFilenameExtension ?? "dat")
+                        : fileURL.pathExtension
+                    let destinationURL = directoryURL
+                        .appendingPathComponent(UUID().uuidString)
+                        .appendingPathExtension(fileExtension)
+
+                    if FileManager.default.fileExists(atPath: destinationURL.path) {
+                        try FileManager.default.removeItem(at: destinationURL)
+                    }
+                    try FileManager.default.copyItem(at: fileURL, to: destinationURL)
+                    continuation.resume(returning: destinationURL)
+                } catch {
+                    continuation.resume(throwing: error)
                 }
             }
         }
