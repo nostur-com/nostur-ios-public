@@ -391,7 +391,7 @@ class RemoteSignerManager: ObservableObject {
         L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
 #endif
         
-        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: ncRemoteSignerPubkey, content: ncReq.content) else {
+        guard let encrypted = Keys.encryptDirectMessageContent44(withPrivatekey: keys.privateKeyHex, pubkey: ncRemoteSignerPubkey, content: ncReq.content) else {
 #if DEBUG
             L.og.error("🏰 🔴🔴 Could not encrypt content for ncMessage")
 #endif
@@ -459,7 +459,7 @@ class RemoteSignerManager: ObservableObject {
         L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
 #endif
         
-        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
+        guard let encrypted = Keys.encryptDirectMessageContent44(withPrivatekey: keys.privateKeyHex, pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
 #if DEBUG
             L.og.error("🏰🔴🔴 Could not encrypt content")
 #endif
@@ -520,7 +520,7 @@ class RemoteSignerManager: ObservableObject {
         L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
 #endif
         
-        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
+        guard let encrypted = Keys.encryptDirectMessageContent44(withPrivatekey: keys.privateKeyHex, pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
 #if DEBUG
             L.og.error("🏰🔴🔴 Could not encrypt content")
 #endif
@@ -573,7 +573,7 @@ class RemoteSignerManager: ObservableObject {
         L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
 #endif
         
-        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
+        guard let encrypted = Keys.encryptDirectMessageContent44(withPrivatekey: keys.privateKeyHex, pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
 #if DEBUG
             L.og.error("🏰🔴🔴 Could not encrypt content")
 #endif
@@ -638,7 +638,7 @@ class RemoteSignerManager: ObservableObject {
         ncReq.kind = .ncMessage
         ncReq.tags.append(NostrTag(["p", ncRemoteSignerPubkey]))
 
-        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: ncRemoteSignerPubkey, content: ncReq.content) else {
+        guard let encrypted = Keys.encryptDirectMessageContent44(withPrivatekey: keys.privateKeyHex, pubkey: ncRemoteSignerPubkey, content: ncReq.content) else {
 #if DEBUG
             L.og.error("🏰🔴🔴 Could not encrypt content for logout")
 #endif

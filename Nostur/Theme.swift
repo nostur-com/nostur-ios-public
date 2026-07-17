@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import UIKit
 
 public struct Theme: Equatable, Identifiable {
     public var id = "Default"
@@ -30,7 +31,9 @@ public struct Theme: Equatable, Identifiable {
 
 class Themes: ObservableObject {
     
-    @Published var theme: Theme = Theme()
+    @Published var theme: Theme = Theme() {
+        didSet { Self.mirrorShareExtensionTheme(theme) }
+    }
     
     static let `default` = Themes()
     
@@ -50,6 +53,34 @@ class Themes: ObservableObject {
         default:
             return false
         }
+    }
+        
+    private static func mirrorShareExtensionTheme(_ theme: Theme) {
+        let shareDefaults = UserDefaults(suiteName: "group.com.nostur.Share")
+        setSharedColor(theme.accent, key: "share_theme_accent", defaults: shareDefaults)
+        setSharedColor(theme.listBackground, key: "share_theme_list_background", defaults: shareDefaults)
+        shareDefaults?.synchronize()
+    }
+
+    private static func setSharedColor(_ color: Color, key: String, defaults: UserDefaults?) {
+        if let lightRGBA = rgbaComponents(for: color, userInterfaceStyle: .light) {
+            defaults?.set(lightRGBA, forKey: "\(key)_light_rgba")
+        }
+        if let darkRGBA = rgbaComponents(for: color, userInterfaceStyle: .dark) {
+            defaults?.set(darkRGBA, forKey: "\(key)_dark_rgba")
+        }
+    }
+
+    private static func rgbaComponents(for color: Color, userInterfaceStyle: UIUserInterfaceStyle) -> [Double]? {
+        let traitCollection = UITraitCollection(userInterfaceStyle: userInterfaceStyle)
+        let resolvedColor = UIColor(color).resolvedColor(with: traitCollection)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        guard resolvedColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { return nil }
+        return [red, green, blue, alpha].map(Double.init)
     }
         
     private init() {

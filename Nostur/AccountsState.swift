@@ -5,14 +5,27 @@
 //  Created by Fabian Lachman on 20/03/2025.
 //
 
+import NostrEssentials
 import SwiftUI
 
+
+private struct SharedShareAccount: Codable {
+    let pubkey: String
+    let name: String
+    let pictureURL: String
+    let pictureFileURL: String
+    let isRemoteSigner: Bool
+    let nip46Relay: String
+    let remoteSignerPubkey: String
+    let writeRelays: [String]
+}
 
 class AccountsState: ObservableObject {
     
     static let shared = AccountsState()
     private init() {
         self._activeAccountPublicKey = UserDefaults.standard.string(forKey: "activeAccountPublicKey") ?? ""
+        Self.setSharedActiveAccountPublicKey(self._activeAccountPublicKey)
         Task { @MainActor in
             self.loadAccountsState(loadAnyAccount: true)
         }
@@ -32,6 +45,7 @@ class AccountsState: ObservableObject {
             self.objectWillChange.send()
             _activeAccountPublicKey = newValue
             UserDefaults.standard.setValue(newValue, forKey: "activeAccountPublicKey")
+            Self.setSharedActiveAccountPublicKey(newValue)
         }
     }
     private var _activeAccountPublicKey: String
@@ -45,6 +59,126 @@ class AccountsState: ObservableObject {
     public var bgAccountPubkeys: Set<String> = []
     public var bgFullAccountPubkeys: Set<String> = []
 
+    private static func setSharedActiveAccountPublicKey(_ pubkey: String) {
+        let defaults = UserDefaults(suiteName: "group.com.nostur.Share")
+        defaults?.setValue(pubkey, forKey: "activeAccountPublicKey")
+        defaults?.synchronize()
+    }
+
+    private static func setSharedWriteRelayList(_ relayUrls: [String]) {
+        let defaults = UserDefaults(suiteName: "group.com.nostur.Share")
+        defaults?.set(relayUrls, forKey: "write_relay_list")
+        defaults?.synchronize()
+    }
+
+    private static func setSharedAccountState(account: CloudAccount?) {
+        let defaults = UserDefaults(suiteName: "group.com.nostur.Share")
+        let accountPicture = (account?.pictureUrl?.absoluteString ?? account?.picture ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let contactPicture = account
+            .flatMap { Contact.fetchByPubkey($0.publicKey, context: context())?.picture }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) } ?? ""
+
+        let pictureURLString = accountPicture.isEmpty ? contactPicture : accountPicture
+
+        defaults?.set(account?.anyName ?? "", forKey: "activeAccountName")
+        defaults?.set(pictureURLString, forKey: "activeAccountPictureURL")
+        defaults?.set(sharedCachedProfileImageURL(for: pictureURLString, pubkey: account?.publicKey ?? "active")?.absoluteString ?? "", forKey: "activeAccountPictureFileURL")
+        defaults?.set(account?.isNC == true, forKey: "activeAccountIsRemoteSigner")
+        defaults?.set(account?.ncRelay ?? "", forKey: "activeAccountNip46Relay")
+        defaults?.set(account?.ncRemoteSignerPubkey ?? "", forKey: "activeAccountRemoteSignerPubkey")
+        defaults?.synchronize()
+    }
+
+    private static func sharedCachedProfileImageURL(for pictureURLString: String, pubkey: String) -> URL? {
+        let fileName = "account-pfp-\(pubkey).png"
+        guard let pictureURL = URL(string: pictureURLString),
+              hasFPFcacheFor(pfpImageRequestFor(pictureURL)),
+              let image = ImageProcessing.shared.pfp.cache.cachedImage(for: pfpImageRequestFor(pictureURL))?.image,
+              let imageData = image.pngData(),
+              let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.nostur.Share") else {
+            removeSharedCachedProfileImage(fileName: fileName)
+            return nil
+        }
+
+        let fileURL = containerURL.appendingPathComponent(fileName)
+        do {
+            try imageData.write(to: fileURL, options: .atomic)
+            return fileURL
+        } catch {
+            removeSharedCachedProfileImage(fileName: fileName)
+            return nil
+        }
+    }
+
+    private static func removeSharedCachedProfileImage(fileName: String) {
+        guard let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.nostur.Share") else { return }
+        try? FileManager.default.removeItem(at: containerURL.appendingPathComponent(fileName))
+    }
+
+    @MainActor private static func effectiveWriteRelayUrls(for account: CloudAccount?) -> [String] {
+        if let account {
+            let accountWriteRelays = account.accountRelays
+                .filter { $0.write }
+                .map { normalizeRelayUrl($0.url) }
+                .filter { Self.isShareExtensionRelayUrl($0) }
+
+            if !accountWriteRelays.isEmpty {
+                return Array(Set(accountWriteRelays)).sorted()
+            }
+        }
+
+        let activePubkey = account?.publicKey ?? ""
+        let relayUrls = CloudRelay.fetchAll(context: context())
+            .filter { $0.write }
+            .filter { activePubkey.isEmpty || !$0.excludedPubkeys.contains(activePubkey) }
+            .map { normalizeRelayUrl($0.url_ ?? "") }
+            .filter { Self.isShareExtensionRelayUrl($0) }
+
+        return Array(Set(relayUrls)).sorted()
+    }
+
+    private static func isShareExtensionRelayUrl(_ relayUrl: String) -> Bool {
+        guard relayUrl.hasPrefix("wss://") else { return false }
+        return !relayUrl.contains("/localhost")
+            && !relayUrl.contains("s://127.0")
+            && relayUrl != "local"
+            && relayUrl != "iCloud"
+    }
+
+    @MainActor private func mirrorShareExtensionAccountState(account: CloudAccount?) {
+        Self.setSharedWriteRelayList(Self.effectiveWriteRelayUrls(for: account))
+        Self.setSharedAccountState(account: account)
+        Self.setSharedAccounts(accounts.filter { $0.isFullAccount })
+    }
+
+    @MainActor private static func setSharedAccounts(_ accounts: [CloudAccount]) {
+        let sharedAccounts = accounts.map { account in
+            let accountPicture = (account.pictureUrl?.absoluteString ?? account.picture)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let contactPicture = (Contact.fetchByPubkey(account.publicKey, context: context())?.picture ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let pictureURLString = accountPicture.isEmpty ? contactPicture : accountPicture
+
+            return SharedShareAccount(
+                pubkey: account.publicKey,
+                name: account.anyName,
+                pictureURL: pictureURLString,
+                pictureFileURL: sharedCachedProfileImageURL(for: pictureURLString, pubkey: account.publicKey)?.absoluteString ?? "",
+                isRemoteSigner: account.isNC,
+                nip46Relay: account.ncRelay,
+                remoteSignerPubkey: account.ncRemoteSignerPubkey,
+                writeRelays: effectiveWriteRelayUrls(for: account)
+            )
+        }
+
+        let defaults = UserDefaults(suiteName: "group.com.nostur.Share")
+        if let data = try? JSONEncoder().encode(sharedAccounts) {
+            defaults?.set(data, forKey: "share_accounts")
+        }
+        defaults?.synchronize()
+    }
+
     @MainActor public func loadAccountsState(loadAnyAccount: Bool = false) {
         self.accounts = CloudAccount.fetchAccounts(context: context())
         let accountPubkeys = Set(accounts.map { $0.publicKey })
@@ -54,13 +188,16 @@ class AccountsState: ObservableObject {
             self.bgFullAccountPubkeys = fullAccountPubkeys
         }
         
+        let activeAccount = accounts.first(where: { $0.publicKey == activeAccountPublicKey })
+        mirrorShareExtensionAccountState(account: activeAccount)
+
         // No account selected
         if activeAccountPublicKey.isEmpty && !loadAnyAccount {
             self.loggedInAccount = nil
             sendNotification(.clearNavigation)
             return
         }
-        else if !activeAccountPublicKey.isEmpty, let account = accounts.first(where: { $0.publicKey == activeAccountPublicKey }) {
+        else if !activeAccountPublicKey.isEmpty, let account = activeAccount {
             if loggedInAccount?.account != account {
                 Task { @MainActor in
                     changeAccount(account)
@@ -99,6 +236,7 @@ class AccountsState: ObservableObject {
         guard logoutAccountPubkey == self.activeAccountPublicKey else { return }
         
         self.activeAccountPublicKey = ""
+        mirrorShareExtensionAccountState(account: nil)
         self.loadAccountsState(loadAnyAccount: true)
         AccountManager.shared.cleanUp(for: logoutAccountPubkey)
     }
@@ -117,6 +255,7 @@ class AccountsState: ObservableObject {
         else {
             self.loggedInAccount?.account = account
         }
+        mirrorShareExtensionAccountState(account: account)
         
         self.loadAccountsState()
         sendNotification(.activeAccountChanged, account)

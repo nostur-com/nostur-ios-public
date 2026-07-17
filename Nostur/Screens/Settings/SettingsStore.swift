@@ -227,6 +227,11 @@ final class SettingsStore: ObservableObject {
         _appWideSeenTracker = defaults.bool(forKey: Keys.appWideSeenTracker)
         _appWideSeenTrackeriCloud = defaults.bool(forKey: Keys.appWideSeenTrackeriCloud)
         _mainWoTaccountPubkey = defaults.string(forKey: Keys.mainWoTaccountPubkey) ?? ""
+        Self.setSharedBlossomServerList(defaults.array(forKey: Keys.blossomServerList) as? [String] ?? [])
+        Self.setSharedPostUserAgentState(
+            enabled: defaults.bool(forKey: Keys.postUserAgentEnabled),
+            excludedPubkeys: Set((defaults.string(forKey: Keys.excludedUserAgentPubkeys) ?? "").components(separatedBy: " "))
+        )
         
         // optimize
         self.updateNWCreadyCache()
@@ -263,7 +268,11 @@ final class SettingsStore: ObservableObject {
     }
     
     var postUserAgentEnabled: Bool {
-        set { defaults.set(newValue, forKey: Keys.postUserAgentEnabled); objectWillChange.send() }
+        set {
+            defaults.set(newValue, forKey: Keys.postUserAgentEnabled)
+            Self.setSharedPostUserAgentState(enabled: newValue, excludedPubkeys: excludedUserAgentPubkeys)
+            objectWillChange.send()
+        }
         get { defaults.bool(forKey: Keys.postUserAgentEnabled) }
     }
 
@@ -330,6 +339,7 @@ final class SettingsStore: ObservableObject {
         set {
             objectWillChange.send();
             defaults.set(newValue.joined(separator: " "), forKey: Keys.excludedUserAgentPubkeys)
+            Self.setSharedPostUserAgentState(enabled: postUserAgentEnabled, excludedPubkeys: newValue)
         }
         get {
             guard let pubkeys = defaults.string(forKey: Keys.excludedUserAgentPubkeys) else { return [] }
@@ -585,8 +595,24 @@ final class SettingsStore: ObservableObject {
     
     
     var blossomServerList: [String] {
-        set { defaults.set(newValue, forKey: Keys.blossomServerList) }
+        set {
+            defaults.set(newValue, forKey: Keys.blossomServerList)
+            Self.setSharedBlossomServerList(newValue)
+        }
         get { defaults.array(forKey: Keys.blossomServerList) as? [String] ?? [] }
+    }
+
+    private static func setSharedBlossomServerList(_ serverList: [String]) {
+        UserDefaults(suiteName: "group.com.nostur.Share")?.set(serverList, forKey: Keys.blossomServerList)
+    }
+
+    private static func setSharedPostUserAgentState(enabled: Bool, excludedPubkeys: Set<String>) {
+        let defaults = UserDefaults(suiteName: "group.com.nostur.Share")
+        defaults?.set(enabled, forKey: Keys.postUserAgentEnabled)
+        defaults?.set(excludedPubkeys.joined(separator: " "), forKey: Keys.excludedUserAgentPubkeys)
+        defaults?.set(NIP89_APP_NAME, forKey: "nip89_app_name")
+        defaults?.set(NIP89_APP_REFERENCE, forKey: "nip89_app_reference")
+        defaults?.synchronize()
     }
     
     // optimize

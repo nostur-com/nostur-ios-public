@@ -437,6 +437,8 @@ struct AddExistingAccountSheet: View {
     private func addExistingBunkerAccount(pubkey: String, token: String? = nil) {
         if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext)) {
             existingAccount.flagsSet.insert("full_account")
+            existingAccount.ncRelay = bunkerManager.ncRelay
+            existingAccount.ncRemoteSignerPubkey_ = existingAccount.ncRemoteSignerPubkey
             didCreateNewBunkerAccount = false
             bunkerManager.connect(existingAccount, token: token)
             return
