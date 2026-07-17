@@ -167,6 +167,8 @@ private final class ShareExtensionModel: ObservableObject {
     private var activeAccountIsRemoteSigner = false
     private var activeAccountNip46Relay = ""
     private var activeAccountRemoteSignerPubkey = ""
+    /// Write relays for the selected account (source of truth for publish).
+    private var writeRelayStrings: [String] = []
     private let sharedDefaults = UserDefaults(suiteName: "group.com.nostur.Share")
     private var blossomServerStrings: [String] {
         sharedDefaults?.array(forKey: "blossom_server_list") as? [String] ?? []
@@ -253,6 +255,9 @@ private final class ShareExtensionModel: ObservableObject {
         activeAccountIsRemoteSigner = account.isRemoteSigner
         activeAccountNip46Relay = account.nip46Relay
         activeAccountRemoteSignerPubkey = account.remoteSignerPubkey
+        // Always track this account's relays in-memory (even when not persisting).
+        writeRelayStrings = account.writeRelays
+        ShareDebugLog.mark("selectAccount \(account.pubkey.prefix(8)) writeRelays=\(account.writeRelays.count) \(account.writeRelays)")
 
         if persistSelection, accountChanged {
             cancelMediaUpload(resetStates: true)
@@ -283,6 +288,8 @@ private final class ShareExtensionModel: ObservableObject {
         activeAccountIsRemoteSigner = sharedDefaults?.bool(forKey: "activeAccountIsRemoteSigner") ?? false
         activeAccountNip46Relay = sharedDefaults?.string(forKey: "activeAccountNip46Relay") ?? ""
         activeAccountRemoteSignerPubkey = sharedDefaults?.string(forKey: "activeAccountRemoteSignerPubkey") ?? ""
+        writeRelayStrings = sharedDefaults?.array(forKey: "write_relay_list") as? [String] ?? []
+        ShareDebugLog.mark("loadActiveAccountFromDefaults writeRelays=\(writeRelayStrings.count) \(writeRelayStrings)")
 
         let accountPictureString = (sharedDefaults?.string(forKey: "activeAccountPictureURL") ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -614,9 +621,42 @@ private final class ShareExtensionModel: ObservableObject {
             let event = Event(pubkey: signer.publicKey, content: finalContent, kind: 1, tags: postTags(from: imetas, pubkey: signer.publicKey))
             let signedEvent = try await signer.sign(event)
 
-            statusMessage = "Publishing..."
-            let publishedRelays = try await ShareRelayPublisher().publish(event: signedEvent)
-            statusMessage = "Posted to \(publishedRelays.count) relay\(publishedRelays.count == 1 ? "" : "s")."
+            let publishStartedAt = Date()
+            // Prefer selected account relays; fall back to shared defaults / built-in list.
+            let relayURLs = ShareRelayPublisher.resolveRelayURLs(
+                preferred: writeRelayStrings,
+                sharedDefaults: sharedDefaults
+            )
+            ShareDebugLog.mark("publish relays total=\(relayURLs.count) preferred=\(writeRelayStrings.count) urls=\(relayURLs.map(\.absoluteString))")
+            let publisher = ShareRelayPublisher(relays: relayURLs)
+            let totalRelays = relayURLs.count
+            statusMessage = totalRelays == 1
+                ? "Publishing to 0/1 relay..."
+                : "Publishing to 0/\(totalRelays) relays..."
+
+            let publishedRelays = try await publisher.publish(event: signedEvent) { [weak self] succeeded, total in
+                guard let self else { return }
+                self.statusMessage = total == 1
+                    ? "Publishing to \(succeeded)/1 relay..."
+                    : "Publishing to \(succeeded)/\(total) relays..."
+            }
+
+            let succeeded = publishedRelays.count
+            statusMessage = totalRelays == 1
+                ? "Publishing to \(succeeded)/1 relay..."
+                : "Publishing to \(succeeded)/\(totalRelays) relays..."
+
+            // Hold the sheet so the user can see the final count before dismiss.
+            if succeeded == totalRelays {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+            } else {
+                let elapsed = Date().timeIntervalSince(publishStartedAt)
+                let remaining = max(0, 8 - elapsed)
+                if remaining > 0 {
+                    try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+                }
+            }
+
             isPosting = false
             return true
         } catch {
@@ -2059,31 +2099,92 @@ private struct MessageBar: View {
 }
 
 private struct ShareRelayPublisher {
-    private let fallbackRelays = [
+    private static let fallbackRelays = [
         URL(string: "wss://relay.damus.io")!,
         URL(string: "wss://nos.lol")!,
         URL(string: "wss://nostr.wine")!
     ]
 
-    private var relays: [URL] {
-        let sharedRelayStrings = UserDefaults(suiteName: "group.com.nostur.Share")?
-            .array(forKey: "write_relay_list") as? [String] ?? []
-        let sharedRelays = sharedRelayStrings.compactMap(URL.init(string:))
-        return sharedRelays.isEmpty ? fallbackRelays : sharedRelays
+    let relays: [URL]
+
+    init(relays: [URL]) {
+        self.relays = relays
     }
 
-    func publish(event: Event) async throws -> [URL] {
+    /// Prefer the selected account's relay strings; fall back to shared defaults, then built-ins.
+    static func resolveRelayURLs(preferred: [String], sharedDefaults: UserDefaults?) -> [URL] {
+        let preferredURLs = parseRelayURLs(from: preferred)
+        if !preferredURLs.isEmpty { return preferredURLs }
+
+        let sharedStrings = sharedDefaults?.array(forKey: "write_relay_list") as? [String] ?? []
+        let sharedURLs = parseRelayURLs(from: sharedStrings)
+        if !sharedURLs.isEmpty { return sharedURLs }
+
+        return fallbackRelays
+    }
+
+    /// Parse relay URL strings, trimming whitespace and dropping invalid / non-wss / duplicates.
+    static func parseRelayURLs(from strings: [String]) -> [URL] {
+        var seen = Set<String>()
+        var urls: [URL] = []
+
+        for raw in strings {
+            let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+
+            let withScheme: String
+            if trimmed.hasPrefix("wss://") || trimmed.hasPrefix("ws://") {
+                withScheme = trimmed
+            } else {
+                withScheme = "wss://\(trimmed)"
+            }
+
+            // Share extension only uses TLS websocket relays (same filter as main app export).
+            guard withScheme.hasPrefix("wss://") else {
+                ShareDebugLog.mark("skip non-wss relay \(trimmed)")
+                continue
+            }
+
+            guard let url = URL(string: withScheme), url.host != nil else {
+                ShareDebugLog.mark("skip unparseable relay \(trimmed)")
+                continue
+            }
+
+            // Dedupe by host+path without trailing slash / case.
+            let key = withScheme
+                .lowercased()
+                .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            guard seen.insert(key).inserted else { continue }
+            urls.append(url)
+        }
+
+        return urls
+    }
+
+    /// Publishes to all write relays in parallel. `onProgress` is called on the main actor
+    /// after each successful send with `(succeededCount, totalRelays)`.
+    func publish(
+        event: Event,
+        onProgress: @MainActor @escaping (_ succeeded: Int, _ total: Int) -> Void = { _, _ in }
+    ) async throws -> [URL] {
         guard let message = ClientMessage(type: .EVENT, event: event).json() else {
             throw ShareExtensionError.couldNotEncodeEvent
         }
 
+        let relayList = relays
+        let total = relayList.count
+        guard total > 0 else {
+            throw ShareExtensionError.noRelayAcceptedEvent
+        }
+
         let results = await withTaskGroup(of: URL?.self) { group in
-            for relay in relays {
+            for relay in relayList {
                 group.addTask {
                     do {
-                        try await publish(message: message, to: relay)
+                        try await self.publish(message: message, to: relay)
                         return relay
                     } catch {
+                        ShareDebugLog.mark("relay publish fail \(relay.absoluteString) \(error.localizedDescription)")
                         return nil
                     }
                 }
@@ -2093,6 +2194,8 @@ private struct ShareRelayPublisher {
             for await relay in group {
                 if let relay {
                     published.append(relay)
+                    let succeeded = published.count
+                    await onProgress(succeeded, total)
                 }
             }
             return published
