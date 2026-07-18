@@ -360,7 +360,12 @@ private final class ShareExtensionModel: ObservableObject {
                 contentType: vm.contentType,
                 fallbackImage: thumbnail
             )
-            return ShareMediaViewModel(id: vm.id, preview: newPreview, uploadState: vm.uploadState)
+            return ShareMediaViewModel(
+                id: vm.id,
+                preview: newPreview,
+                uploadState: vm.uploadState,
+                containsLocationMetadata: vm.containsLocationMetadata
+            )
         }
     }
 
@@ -686,9 +691,16 @@ private final class ShareExtensionModel: ObservableObject {
                 let fileURL = try await provider.loadPersistentFile(typeIdentifier: typeIdentifier)
                 let contentType = UTType(typeIdentifier)?.preferredMIMEType ?? "video/quicktime"
                 let preview = ShareVideoThumbnailGenerator.thumbnail(from: fileURL, maxPixelSize: previewMaxPixelSize)
-                
+                let containsLocation = await ShareVideoLocationMetadataDetector.containsLocationMetadata(at: fileURL)
+                ShareDebugLog.mark(
+                    "video location check \(fileURL.lastPathComponent) result=\(containsLocation)"
+                )
+
                 let mediaItem = SharedMediaItem(fileURL: fileURL, contentType: contentType, byteCount: fileURL.fileSize)
-                let viewModel = ShareMediaViewModel(preview: ShareMediaPreview(fileURL: fileURL, contentType: contentType, fallbackImage: preview))
+                let viewModel = ShareMediaViewModel(
+                    preview: ShareMediaPreview(fileURL: fileURL, contentType: contentType, fallbackImage: preview),
+                    containsLocationMetadata: containsLocation
+                )
                 
                 mediaItems.append(mediaItem)
                 mediaViewModels.append(viewModel)
@@ -1415,6 +1427,194 @@ private enum ShareVideoThumbnailGenerator {
     }
 }
 
+/// Lightweight inspection for GPS / location tags. Not a full re-encode.
+///
+/// Photos may show a place in its UI from library data even when the *shared file*
+/// has no location (e.g. share-sheet "Location" option off). We only inspect the
+/// bytes that will actually be uploaded.
+private enum ShareVideoLocationMetadataDetector {
+    private static let iso6709Pattern = try? NSRegularExpression(
+        pattern: #"[+-]\d+(?:\.\d+)?[+-]\d+(?:\.\d+)?(?:[+-]\d+(?:\.\d+)?)?/"#
+    )
+
+    /// ASCII needles embedded in QuickTime / MP4 location metadata.
+    private static let fileSignatureNeedles: [Data] = [
+        Data("com.apple.quicktime.location".utf8),
+        Data("com.apple.quicktime.location.ISO6709".utf8),
+        Data("com.apple.quicktime.location.name".utf8),
+        // QuickTime user-data location atom type (©xyz)
+        Data([0xA9, 0x78, 0x79, 0x7A]),
+        // 3GPP location information box
+        Data("loci".utf8)
+    ]
+
+    static func containsLocationMetadata(at fileURL: URL) async -> Bool {
+        if await assetContainsLocationMetadata(at: fileURL) {
+            return true
+        }
+        // AVFoundation sometimes omits tags that are still present in the container.
+        // A bounded byte scan is cheap and catches the common phone-camera keys.
+        return fileBytesContainLocationSignature(at: fileURL)
+    }
+
+    private static func assetContainsLocationMetadata(at fileURL: URL) async -> Bool {
+        let asset = AVURLAsset(url: fileURL)
+        let items = await loadAllMetadataItems(from: asset)
+        ShareDebugLog.mark("video metadata items=\(items.count) for \(fileURL.lastPathComponent)")
+
+        for item in items {
+            if await itemLooksLikeLocation(item) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private static func loadAllMetadataItems(from asset: AVURLAsset) async -> [AVMetadataItem] {
+        var items: [AVMetadataItem] = []
+
+        do {
+            let common = try await asset.load(.commonMetadata)
+            items.append(contentsOf: common)
+
+            let metadata = try await asset.load(.metadata)
+            items.append(contentsOf: metadata)
+
+            let formats = try await asset.load(.availableMetadataFormats)
+            ShareDebugLog.mark("video metadata formats=\(formats.map(\.rawValue).joined(separator: ","))")
+            for format in formats {
+                let formatItems = try await asset.loadMetadata(for: format)
+                items.append(contentsOf: formatItems)
+            }
+        } catch {
+            ShareDebugLog.mark("video metadata load failed: \(error.localizedDescription)")
+            // Fallback for older load path if async load throws.
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                asset.loadValuesAsynchronously(forKeys: ["commonMetadata", "metadata", "availableMetadataFormats"]) {
+                    continuation.resume()
+                }
+            }
+            items.append(contentsOf: asset.commonMetadata)
+            items.append(contentsOf: asset.metadata)
+            for format in asset.availableMetadataFormats {
+                items.append(contentsOf: asset.metadata(forFormat: format))
+            }
+        }
+
+        return items
+    }
+
+    private static func itemLooksLikeLocation(_ item: AVMetadataItem) async -> Bool {
+        // Identifier / commonKey / key are usually available without async value loading.
+        if item.commonKey == .commonKeyLocation {
+            return true
+        }
+
+        if let identifier = item.identifier {
+            switch identifier {
+            case .quickTimeMetadataLocationISO6709,
+                 .quickTimeMetadataLocationName,
+                 .quickTimeMetadataLocationBody,
+                 .quickTimeMetadataLocationNote,
+                 .quickTimeMetadataLocationRole,
+                 .quickTimeMetadataLocationDate,
+                 .quickTimeMetadataLocationHorizontalAccuracyInMeters:
+                return true
+            default:
+                break
+            }
+
+            let id = identifier.rawValue.lowercased()
+            if id.contains("location") || id.contains("gps") {
+                return true
+            }
+        }
+
+        if let key = item.key, keyIndicatesLocation(key) {
+            return true
+        }
+
+        // Values often need explicit loading on modern iOS.
+        if let stringValue = try? await item.load(.stringValue), stringLooksLikeISO6709(stringValue) {
+            return true
+        }
+        if let stringValue = item.stringValue, stringLooksLikeISO6709(stringValue) {
+            return true
+        }
+
+        if let dataValue = try? await item.load(.dataValue), dataLooksLikeLocation(dataValue) {
+            return true
+        }
+        if let dataValue = item.dataValue, dataLooksLikeLocation(dataValue) {
+            return true
+        }
+
+        return false
+    }
+
+    private static func keyIndicatesLocation(_ key: any NSCopying & NSObjectProtocol) -> Bool {
+        if let string = key as? String {
+            let lowered = string.lowercased()
+            return lowered.contains("location") || lowered.contains("gps") || string == "©xyz"
+        }
+        if let string = key as? NSString {
+            let lowered = string.lowercased
+            return lowered.contains("location") || lowered.contains("gps") || string as String == "©xyz"
+        }
+        return false
+    }
+
+    private static func stringLooksLikeISO6709(_ raw: String) -> Bool {
+        let stringValue = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !stringValue.isEmpty, let regex = iso6709Pattern else { return false }
+        let range = NSRange(stringValue.startIndex..., in: stringValue)
+        return regex.firstMatch(in: stringValue, options: [], range: range) != nil
+    }
+
+    private static func dataLooksLikeLocation(_ data: Data) -> Bool {
+        if let string = String(data: data, encoding: .utf8), stringLooksLikeISO6709(string) {
+            return true
+        }
+        // Short binary blobs are not treated as location without a string form.
+        return false
+    }
+
+    /// Stream the file in chunks looking for known location metadata signatures.
+    private static func fileBytesContainLocationSignature(at fileURL: URL) -> Bool {
+        guard let handle = try? FileHandle(forReadingFrom: fileURL) else { return false }
+        defer { try? handle.close() }
+
+        let chunkSize = 1024 * 1024
+        let maxOverlap = (fileSignatureNeedles.map(\.count).max() ?? 64) - 1
+        var carry = Data()
+
+        while true {
+            let chunk: Data
+            do {
+                chunk = try handle.read(upToCount: chunkSize) ?? Data()
+            } catch {
+                break
+            }
+            if chunk.isEmpty { break }
+
+            var window = carry
+            window.append(chunk)
+            for needle in fileSignatureNeedles {
+                if window.range(of: needle) != nil {
+                    ShareDebugLog.mark("video location signature hit in file bytes")
+                    return true
+                }
+            }
+            if window.count > maxOverlap {
+                carry = window.suffix(maxOverlap)
+            } else {
+                carry = window
+            }
+        }
+        return false
+    }
+}
+
 private struct ShareMediaMetadata {
     let url: String
     let dim: String?
@@ -1810,6 +2010,12 @@ private struct ShareComposeBody: View {
                     )
                 }
 
+                if model.mediaViewModels.contains(where: { $0.containsLocationMetadata }) {
+                    VideoLocationWarningBanner(
+                        multiple: model.mediaViewModels.filter(\.containsLocationMetadata).count > 1
+                    )
+                }
+
                 if let sharedURL = model.sharedURL, ShareExtensionModel.isShareableWebURL(sharedURL) {
                     LinkPreview(url: sharedURL)
                 }
@@ -2111,6 +2317,36 @@ private struct MessageBar: View {
     }
 }
 
+private struct VideoLocationWarningBanner: View {
+    let multiple: Bool
+
+    private var message: String {
+        if multiple {
+            return "These videos include location data. Others may be able to see where they were recorded after you upload."
+        }
+        return "This video includes location data. Others may be able to see where it was recorded after you upload."
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "location.fill")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.orange)
+                .padding(.top, 1)
+            Text(message)
+                .font(.footnote)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.14))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(message)
+    }
+}
+
 private struct ShareRelayPublisher {
     private static let fallbackRelays = [
         URL(string: "wss://relay.damus.io")!,
@@ -2405,11 +2641,19 @@ private struct ShareMediaViewModel: Identifiable {
     let id: UUID
     let preview: ShareMediaPreview
     var uploadState: ShareMediaUploadState
+    /// True when file-level GPS/location metadata was detected (videos only today).
+    let containsLocationMetadata: Bool
 
-    init(id: UUID = UUID(), preview: ShareMediaPreview, uploadState: ShareMediaUploadState = .idle) {
+    init(
+        id: UUID = UUID(),
+        preview: ShareMediaPreview,
+        uploadState: ShareMediaUploadState = .idle,
+        containsLocationMetadata: Bool = false
+    ) {
         self.id = id
         self.preview = preview
         self.uploadState = uploadState
+        self.containsLocationMetadata = containsLocationMetadata
     }
     
     var fileURL: URL { preview.fileURL }
