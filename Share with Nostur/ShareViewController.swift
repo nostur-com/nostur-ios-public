@@ -187,13 +187,21 @@ private final class ShareExtensionModel: ObservableObject {
         if !trimmedText.isEmpty {
             parts.append(trimmedText)
         }
-        if let sharedURL {
+        // Only append real web links — never file:/// paths from local media shares (macOS Preview/Catalyst).
+        if let sharedURL, Self.isShareableWebURL(sharedURL) {
             let urlString = sharedURL.absoluteString
             if !trimmedText.contains(urlString) {
                 parts.append(urlString)
             }
         }
         return parts.joined(separator: "\n")
+    }
+
+    /// Remote http(s) links only. Local `file://` URLs from Preview/Photos must not become post text.
+    fileprivate static func isShareableWebURL(_ url: URL) -> Bool {
+        guard !url.isFileURL else { return false }
+        guard let scheme = url.scheme?.lowercased() else { return false }
+        return scheme == "http" || scheme == "https"
     }
 
     func load(extensionContext: NSExtensionContext?) async {
@@ -671,11 +679,10 @@ private final class ShareExtensionModel: ObservableObject {
         let previewMaxPixelSize = SharePreviewSizing.maxPixelSize(forMediaCount: mediaProviderCount(in: providers))
 
         for provider in providers {
-            if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier), sharedURL == nil {
-                sharedURL = try await provider.loadURL()
-            } else if provider.canLoadObject(ofClass: NSString.self), text.isEmpty {
-                text = try await provider.loadString()
-            } else if let typeIdentifier = provider.registeredTypeIdentifier(conformingTo: .movie) {
+            // Prefer media over URL: on macOS/Catalyst (e.g. Preview), image providers also
+            // conform to public.url with a file:/// path. Treating URL first used to skip media
+            // and append the local path as a link in the post.
+            if let typeIdentifier = provider.registeredTypeIdentifier(conformingTo: .movie) {
                 let fileURL = try await provider.loadPersistentFile(typeIdentifier: typeIdentifier)
                 let contentType = UTType(typeIdentifier)?.preferredMIMEType ?? "video/quicktime"
                 let preview = ShareVideoThumbnailGenerator.thumbnail(from: fileURL, maxPixelSize: previewMaxPixelSize)
@@ -685,8 +692,6 @@ private final class ShareExtensionModel: ObservableObject {
                 
                 mediaItems.append(mediaItem)
                 mediaViewModels.append(viewModel)
-//                mediaCount = mediaItems.count
-
             } else if let typeIdentifier = provider.registeredTypeIdentifier(conformingTo: .image) {
                 let fileURL = try await provider.loadPersistentFile(typeIdentifier: typeIdentifier)
                 let contentType = UTType(typeIdentifier)?.preferredMIMEType ?? "image/jpeg"
@@ -697,7 +702,15 @@ private final class ShareExtensionModel: ObservableObject {
                 
                 mediaItems.append(mediaItem)
                 mediaViewModels.append(viewModel)
-//                mediaCount = mediaItems.count
+            } else if provider.canLoadObject(ofClass: NSString.self), text.isEmpty {
+                text = try await provider.loadString()
+            } else if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier), sharedURL == nil {
+                let url = try await provider.loadURL()
+                if Self.isShareableWebURL(url) {
+                    sharedURL = url
+                } else {
+                    ShareDebugLog.mark("ignore non-web shared URL \(url.absoluteString)")
+                }
             }
         }
     }
@@ -1797,7 +1810,7 @@ private struct ShareComposeBody: View {
                     )
                 }
 
-                if let sharedURL = model.sharedURL {
+                if let sharedURL = model.sharedURL, ShareExtensionModel.isShareableWebURL(sharedURL) {
                     LinkPreview(url: sharedURL)
                 }
             }

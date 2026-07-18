@@ -63,6 +63,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Nostur uses the camera to scan QR codes and capture photos.</string>
+	<key>NSAppDataUsageDescription</key>
+	<string>Nostur needs this when you share photos, videos, or links from other apps (for example Preview or Safari) into the share sheet so it can post them to Nostr.</string>
 	<key>TENOR_API_KEY</key>
 	<string>$(TENOR_API_KEY)</string>
 	<key>TENOR_CLIENT_KEY</key>
