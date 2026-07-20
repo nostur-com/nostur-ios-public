@@ -370,8 +370,29 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     func playVideo() {
+        let shouldRestartFromBeginning = didFinishPlaying || isAtEndOfCurrentItem
+        didFinishPlaying = false
         isPlaying = true
+        configurePlaybackSession()
+        
+        if shouldRestartFromBeginning {
+            player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
+        }
         player.play()
+#if os(macOS)
+        MPNowPlayingInfoCenter.default().playbackState = .playing
+#endif
+    }
+    
+    private var isAtEndOfCurrentItem: Bool {
+        guard let duration = player.currentItem?.duration.seconds, duration.isFinite, duration > 0 else { return false }
+        let currentTime = player.currentTime().seconds
+        guard currentTime.isFinite else { return false }
+        return currentTime >= duration - 0.05
+    }
+    
+    @MainActor
+    private func configurePlaybackSession() {
         // Must be .playAndRecord. Now Playing control center doesn't work with just .playback https://developer.apple.com/forums/thread/674696
         // Also .mixWithOthers doesn't work with Now Player control center
         try? AVAudioSession.sharedInstance().setActive(false)
@@ -383,9 +404,6 @@ class AnyPlayerModel: ObservableObject {
         
         // Prevent auto-lock while playing
         UIApplication.shared.isIdleTimerDisabled = true
-#if os(macOS)
-        MPNowPlayingInfoCenter.default().playbackState = .playing
-#endif
     }
     
     @MainActor

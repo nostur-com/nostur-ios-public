@@ -63,7 +63,7 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {        
         // SwiftUI to UIKit
         // Update properties of the UIViewController based on the latest SwiftUI state.
-        if isPlaying && player.timeControlStatus == .paused {
+        if isPlaying && player.timeControlStatus != .playing {
             player.play()
         }
         else if !isPlaying && player.timeControlStatus != .paused {
