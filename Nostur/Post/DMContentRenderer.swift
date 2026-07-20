@@ -119,7 +119,7 @@ struct DMContentRenderer: View { // VIEW things
                     )
                     .padding(.vertical, 10)
 
-                case .linkPreview(let url):
+                case .linkPreview(let url, _):
                     LinkPreviewView(url: url, autoload: false, linkColor: isSentByCurrentUser ? .mint : theme.accent)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts

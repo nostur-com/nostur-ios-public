@@ -145,7 +145,7 @@ struct ChatRenderer: View { // VIEW things
                         zoomableId: zoomableId
                     )
                     .padding(.vertical, 10)
-                case .linkPreview(let url):
+                case .linkPreview(let url, _):
                     LinkPreviewView(url: url, autoload: shouldAutoload)
                         .frame(maxWidth: max(600, availableWidth))
                         .padding(.vertical, 10)

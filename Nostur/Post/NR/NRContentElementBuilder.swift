@@ -322,7 +322,7 @@ enum ContentElement: Hashable, Identifiable {
     case link(String, URL)
     case image(GalleryItem)
     case video(MediaContent)
-    case linkPreview(URL)
+    case linkPreview(URL, id: UUID = UUID())
     case postPreviewImage(PostedImageMeta)
     case postPreviewVideo(PostedVideoMeta)
     case nevent1(ShareableIdentifier)

@@ -225,7 +225,7 @@ struct ContentRenderer: View { // VIEW things
                         //  imageUrls: nrPost.imageUrls
                         // no full width no detial -> .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
                         
-                    case .linkPreview(let url):
+                    case .linkPreview(let url, _):
                         LinkPreviewView(url: url, autoload: shouldAutoload)
                             .padding(.vertical, 10)
     //                        .withoutAnimation()

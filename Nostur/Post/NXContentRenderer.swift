@@ -185,7 +185,7 @@ struct NXContentRenderer: View { // VIEW things
                         .padding(.vertical, 10)
 //                        .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
 
-                    case .linkPreview(let url):
+                    case .linkPreview(let url, _):
                         LinkPreviewView(url: url, autoload: shouldAutoload)
                             .padding(.vertical, 10)
                             .id(index)
