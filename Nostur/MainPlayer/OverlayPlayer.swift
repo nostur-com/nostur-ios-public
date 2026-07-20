@@ -91,11 +91,7 @@ struct OverlayPlayer: View {
     @State private var nativeControlsVisible: Bool = false
     
     // State variables for custom playback controls
-    @State private var currentTime: Double = 0
-    @State private var duration: Double = 0
-    @State private var isScrubbing = false
     @State private var isMuted = false
-    @State private var timeObserverToken: Any?
     @State private var fullscreenControlsVisible = true
     @State private var fullscreenControlsHideTask: Task<Void, Never>?
     @State private var portraitCenterControlsVisible = false
@@ -113,12 +109,8 @@ struct OverlayPlayer: View {
     @State private var bookmarkState = false
     
     private var hasSeekableDuration: Bool {
-        duration.isFinite && duration > 0
-    }
-    
-    private var remainingTime: Double {
-        guard hasSeekableDuration else { return 0 }
-        return max(duration - currentTime, 0)
+        let durationSeconds = vm.player.currentItem?.duration.seconds ?? 0
+        return durationSeconds.isFinite && durationSeconds > 0
     }
     
     private var overlayControls: some View {
@@ -217,42 +209,17 @@ struct OverlayPlayer: View {
     }
     
     private func fullscreenTimeline() -> some View {
-        HStack(spacing: 8) {
-            Text(formatPlaybackTime(currentTime))
-                .font(.caption.monospacedDigit())
-                .foregroundColor(.white.opacity(0.85))
-                .frame(width: 46, alignment: .leading)
-            
-            Slider(
-                value: Binding(
-                    get: { min(currentTime, max(duration, 0)) },
-                    set: { newValue in
-                        isScrubbing = true
-                        currentTime = newValue
-                    }
-                ),
-                in: 0...max(duration, 1),
-                onEditingChanged: { editing in
-                    isScrubbing = editing
-                    if editing {
-                        fullscreenControlsHideTask?.cancel()
-                        fullscreenControlsHideTask = nil
-                        fullscreenControlsVisible = true
-                    }
-                    else {
-                        seek(to: currentTime)
-                        scheduleFullscreenControlsAutoHide()
-                    }
-                }
-            )
-            .tint(.white)
-            .disabled(!hasSeekableDuration)
-            
-            Text(hasSeekableDuration ? "-\(formatPlaybackTime(remainingTime))" : "--:--")
-                .font(.caption.monospacedDigit())
-                .foregroundColor(.white.opacity(0.85))
-                .frame(width: 52, alignment: .trailing)
-        }
+        FullscreenTimeline(
+            player: vm.player,
+            onScrubStarted: {
+                fullscreenControlsHideTask?.cancel()
+                fullscreenControlsHideTask = nil
+                fullscreenControlsVisible = true
+            },
+            onScrubEnded: {
+                scheduleFullscreenControlsAutoHide()
+            }
+        )
     }
     
     private func fullscreenCenterControls(isLandscape: Bool) -> some View {
@@ -845,8 +812,6 @@ struct OverlayPlayer: View {
                 
                 
                 .onAppear {
-                    setupTimeObserver()
-                    syncPlaybackValues()
                     syncMutedState()
                     showFullscreenControls()
                     
@@ -870,7 +835,6 @@ struct OverlayPlayer: View {
                     portraitCenterControlsHideTask?.cancel()
                     portraitCenterControlsHideTask = nil
                     portraitCenterControlsVisible = false
-                    removeTimeObserver()
                     if vm.viewMode == .fullscreen {
                         rotateToPortrait()
                     }
@@ -966,37 +930,6 @@ struct OverlayPlayer: View {
         
         let maxOffsetY = geometry.size.height - (videoHeight * currentScale)
         return clamp(value: currentOffset.height + dragOffset.height, min: 0, max: maxOffsetY)
-    }
-    
-    private func setupTimeObserver() {
-        guard timeObserverToken == nil else { return }
-        let interval = CMTime(seconds: 0.25, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-        timeObserverToken = vm.player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { _ in
-            syncPlaybackValues()
-        }
-    }
-    
-    private func removeTimeObserver() {
-        guard let timeObserverToken else { return }
-        vm.player.removeTimeObserver(timeObserverToken)
-        self.timeObserverToken = nil
-    }
-    
-    private func syncPlaybackValues() {
-        let currentSeconds = vm.player.currentTime().seconds
-        if !isScrubbing, currentSeconds.isFinite {
-            currentTime = max(currentSeconds, 0)
-        }
-        
-        let durationSeconds = vm.player.currentItem?.duration.seconds ?? 0
-        duration = durationSeconds.isFinite && durationSeconds > 0 ? durationSeconds : 0
-    }
-    
-    private func seek(to seconds: Double) {
-        guard hasSeekableDuration else { return }
-        let clampedSeconds = min(max(seconds, 0), duration)
-        vm.didFinishPlaying = false
-        vm.player.seek(to: CMTime(seconds: clampedSeconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC)))
     }
     
     private func togglePlayPause() {
@@ -1152,19 +1085,6 @@ struct OverlayPlayer: View {
         syncMutedState()
     }
     
-    private func formatPlaybackTime(_ seconds: Double) -> String {
-        guard seconds.isFinite && seconds >= 0 else { return "0:00" }
-        let totalSeconds = Int(seconds.rounded(.down))
-        let hours = totalSeconds / 3600
-        let minutes = (totalSeconds % 3600) / 60
-        let seconds = totalSeconds % 60
-        
-        if hours > 0 {
-            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
-        }
-        return String(format: "%d:%02d", minutes, seconds)
-    }
-    
     func saveAVAssetToPhotos() {
         guard !didSave else { return }
         isSaving = true
@@ -1264,6 +1184,114 @@ func saveVideoToPhotoLibrary(videoURL: URL, completion: @escaping (Bool, Error?)
             try? FileManager.default.removeItem(at: videoURL)
             completion(success, error)
         }
+    }
+}
+
+private struct FullscreenTimeline: View {
+    let player: AVPlayer
+    let onScrubStarted: () -> Void
+    let onScrubEnded: () -> Void
+    
+    @State private var currentTime: Double = 0
+    @State private var duration: Double = 0
+    @State private var isScrubbing = false
+    @State private var timeObserverToken: Any?
+    
+    private var hasSeekableDuration: Bool {
+        duration.isFinite && duration > 0
+    }
+    
+    private var remainingTime: Double {
+        guard hasSeekableDuration else { return 0 }
+        return max(duration - currentTime, 0)
+    }
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(formatPlaybackTime(currentTime))
+                .font(.caption.monospacedDigit())
+                .foregroundColor(.white.opacity(0.85))
+                .frame(width: 46, alignment: .leading)
+            
+            Slider(
+                value: Binding(
+                    get: { min(currentTime, max(duration, 0)) },
+                    set: { newValue in
+                        isScrubbing = true
+                        currentTime = newValue
+                    }
+                ),
+                in: 0...max(duration, 1),
+                onEditingChanged: { editing in
+                    isScrubbing = editing
+                    if editing {
+                        onScrubStarted()
+                    }
+                    else {
+                        seek(to: currentTime)
+                        onScrubEnded()
+                    }
+                }
+            )
+            .tint(.white)
+            .disabled(!hasSeekableDuration)
+            
+            Text(hasSeekableDuration ? "-\(formatPlaybackTime(remainingTime))" : "--:--")
+                .font(.caption.monospacedDigit())
+                .foregroundColor(.white.opacity(0.85))
+                .frame(width: 52, alignment: .trailing)
+        }
+        .onAppear {
+            syncPlaybackValues()
+            setupTimeObserver()
+        }
+        .onDisappear {
+            removeTimeObserver()
+        }
+    }
+    
+    private func setupTimeObserver() {
+        guard timeObserverToken == nil else { return }
+        let interval = CMTime(seconds: 0.25, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { _ in
+            syncPlaybackValues()
+        }
+    }
+    
+    private func removeTimeObserver() {
+        guard let timeObserverToken else { return }
+        player.removeTimeObserver(timeObserverToken)
+        self.timeObserverToken = nil
+    }
+    
+    private func syncPlaybackValues() {
+        let currentSeconds = player.currentTime().seconds
+        if !isScrubbing, currentSeconds.isFinite {
+            currentTime = max(currentSeconds, 0)
+        }
+        
+        let durationSeconds = player.currentItem?.duration.seconds ?? 0
+        duration = durationSeconds.isFinite && durationSeconds > 0 ? durationSeconds : 0
+    }
+    
+    private func seek(to seconds: Double) {
+        guard hasSeekableDuration else { return }
+        let clampedSeconds = min(max(seconds, 0), duration)
+        AnyPlayerModel.shared.didFinishPlaying = false
+        player.seek(to: CMTime(seconds: clampedSeconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC)))
+    }
+    
+    private func formatPlaybackTime(_ seconds: Double) -> String {
+        guard seconds.isFinite && seconds >= 0 else { return "0:00" }
+        let totalSeconds = Int(seconds.rounded(.down))
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+        
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        }
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }
 
