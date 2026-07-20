@@ -41,13 +41,14 @@ struct NosturTabsView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
             .background(theme.background) // GUTTER
             .withLightningEffect()
-
             .overlay(alignment: .center) {
                 OverlayPlayer()
-                    .edgesIgnoringSafeArea(.bottom)   
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
             }
         }
     }

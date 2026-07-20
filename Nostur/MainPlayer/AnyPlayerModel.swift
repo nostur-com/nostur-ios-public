@@ -371,6 +371,7 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     func playVideo() {
         isPlaying = true
+        player.play()
         // Must be .playAndRecord. Now Playing control center doesn't work with just .playback https://developer.apple.com/forums/thread/674696
         // Also .mixWithOthers doesn't work with Now Player control center
         try? AVAudioSession.sharedInstance().setActive(false)
@@ -390,6 +391,7 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     func pauseVideo() {
         isPlaying = false
+        player.pause()
 #if os(macOS)
         MPNowPlayingInfoCenter.default().playbackState = .paused
 #endif
@@ -398,14 +400,14 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     func seekForward() {
         let currentTime = player.currentTime()
-        let newTime = CMTimeAdd(currentTime, CMTimeMake(value: 15, timescale: 1))
+        let newTime = CMTimeAdd(currentTime, CMTimeMake(value: 10, timescale: 1))
         player.seek(to: newTime)
     }
         
     @MainActor
     func seekBackward() {
         let currentTime = player.currentTime()
-        let newTime = CMTimeSubtract(currentTime, CMTimeMake(value: 15, timescale: 1))
+        let newTime = CMTimeSubtract(currentTime, CMTimeMake(value: 10, timescale: 1))
         let clampedTime = CMTimeClampToRange(newTime, range: CMTimeRange(start: .zero, duration: player.currentItem?.duration ?? CMTime.indefinite))
         player.seek(to: clampedTime)
         didFinishPlaying = false

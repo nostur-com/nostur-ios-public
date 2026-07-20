@@ -11,6 +11,11 @@ import UserNotifications
 
 // AppDelegate is needed to handle notification taps
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    static var supportedOrientations: UIInterfaceOrientationMask = .allButUpsideDown
+    
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        Self.supportedOrientations
+    }
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         // Wire notification delegate

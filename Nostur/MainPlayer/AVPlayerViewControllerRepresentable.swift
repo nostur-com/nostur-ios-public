@@ -42,7 +42,7 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         
         avpc.allowsPictureInPicturePlayback = true
         avpc.delegate = context.coordinator
-        avpc.showsPlaybackControls = showsPlaybackControls
+        avpc.showsPlaybackControls = false
         avpc.canStartPictureInPictureAutomaticallyFromInline = true
         avpc.updatesNowPlayingInfoCenter = false // Otherwise Now Playing is broken when switching to audio only bar. Also breaks title/artist.
         context.coordinator.avpc = avpc
@@ -72,7 +72,7 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         
         
         if let avpc = context.coordinator.avpc, avpc.showsPlaybackControls != showsPlaybackControls {
-            avpc.showsPlaybackControls = showsPlaybackControls
+            avpc.showsPlaybackControls = false
         }
         
 //        if AnyPlayerModel.shared.timeControlStatus == .playing && player.timeControlStatus != .playing {
@@ -150,16 +150,39 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         }
         
         @objc func respondToSwipeGesture(_ swipe: UISwipeGestureRecognizer) {
-            // on swipe down go to mini player if detailstream, else close 
             Task { @MainActor in
-                if AnyPlayerModel.shared.viewMode == .detailstream  && AnyPlayerModel.shared.availableViewModes.contains(.overlay) {
+                switch AnyPlayerModel.shared.viewMode {
+                case .detailstream where AnyPlayerModel.shared.availableViewModes.contains(.overlay):
                     AnyPlayerModel.shared.viewMode = .overlay
-                }
-                else {
+                case .fullscreen:
+                    restorePortraitOrientation()
                     AnyPlayerModel.shared.close()
+                default:
+                    break
                 }
-               
             }
+        }
+        
+        private func restorePortraitOrientation() {
+#if !targetEnvironment(macCatalyst)
+            AppDelegate.supportedOrientations = .allButUpsideDown
+            UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+            UINavigationController.attemptRotationToDeviceOrientation()
+            
+            guard let windowScene = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .first(where: { $0.activationState == .foregroundActive })
+            else { return }
+            
+            if #available(iOS 16.0, *) {
+                windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+                windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait)) { error in
+#if DEBUG
+                    L.og.debug("Portrait rotation request failed: \(error.localizedDescription)")
+#endif
+                }
+            }
+#endif
         }
     }
 }

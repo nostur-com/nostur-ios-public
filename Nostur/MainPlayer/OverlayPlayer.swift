@@ -8,9 +8,12 @@
 import SwiftUI
 import NavigationBackport
 @_spi(Advanced) import SwiftUIIntrospect
+import AVKit
+import Photos
 
 let AUDIOONLYPILL_HEIGHT: CGFloat = 48.0
 let CONTROLS_HEIGHT: CGFloat = 60.0
+let FULLSCREEN_CONTROLS_HEIGHT: CGFloat = 86.0
 let TOOLBAR_HEIGHT: CGFloat = 160.0 // TODO: Fix magic number 160 or make sure its correct. This fixes "close" button and toolbar missing because video height is too high
 
 struct OverlayPlayer: View {
@@ -87,6 +90,18 @@ struct OverlayPlayer: View {
     @State private var scale: CGFloat = 1.0
     @State private var nativeControlsVisible: Bool = false
     
+    // State variables for custom playback controls
+    @State private var currentTime: Double = 0
+    @State private var duration: Double = 0
+    @State private var isScrubbing = false
+    @State private var isMuted = false
+    @State private var timeObserverToken: Any?
+    @State private var fullscreenControlsVisible = true
+    @State private var fullscreenControlsHideTask: Task<Void, Never>?
+    @State private var portraitCenterControlsVisible = false
+    @State private var portraitCenterControlsHideTask: Task<Void, Never>?
+    @State private var isRotatedFullscreen = false
+    
     private var videoAlignment: Alignment {
         if vm.viewMode == .fullscreen { return .center }
         return .topLeading
@@ -97,6 +112,342 @@ struct OverlayPlayer: View {
     @State private var didSave = false
     @State private var bookmarkState = false
     
+    private var hasSeekableDuration: Bool {
+        duration.isFinite && duration > 0
+    }
+    
+    private var remainingTime: Double {
+        guard hasSeekableDuration else { return 0 }
+        return max(duration - currentTime, 0)
+    }
+    
+    private var overlayControls: some View {
+        HStack(spacing: 30) {
+            controlButton(systemName: "gobackward.10", label: "Back 10 Seconds") {
+                vm.seekBackward()
+            }
+            
+            if vm.didFinishPlaying {
+                controlButton(systemName: "memories", label: "Replay") {
+                    vm.replay()
+                }
+            }
+            else {
+                controlButton(systemName: vm.isPlaying ? "pause.fill" : "play.fill", label: vm.isPlaying ? "Pause" : "Play") {
+                    togglePlayPause()
+                }
+            }
+            
+            controlButton(systemName: "goforward.10", label: "Forward 10 Seconds") {
+                vm.seekForward()
+            }
+            .opacity(vm.didFinishPlaying ? 0.0 : 1.0)
+        }
+        .frame(height: CONTROLS_HEIGHT)
+        .background(Color.black)
+    }
+    
+    @ViewBuilder
+    private func fullscreenControls(isLandscape: Bool) -> some View {
+        if isLandscape {
+            landscapeFullscreenBottomControls()
+        }
+        else {
+            portraitFullscreenControls()
+        }
+    }
+    
+    private func portraitFullscreenControls() -> some View {
+        VStack(spacing: 8) {
+            fullscreenTimeline()
+            
+            HStack(spacing: 14) {
+                fullscreenTransportControls(buttonSize: 36, iconFont: .system(size: 21, weight: .semibold), spacing: 18)
+                
+                Spacer(minLength: 12)
+                
+                fullscreenOutputControls()
+                controlButton(systemName: "arrow.up.left.and.arrow.down.right", label: "Rotate Full Screen") {
+                    rotateToLandscape()
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.bottom, 8)
+        .frame(height: FULLSCREEN_CONTROLS_HEIGHT)
+        .background(fullscreenBottomGradient)
+    }
+    
+    private func landscapeFullscreenBottomControls() -> some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 16) {
+                Spacer()
+                fullscreenOutputControls()
+                controlButton(systemName: "arrow.down.right.and.arrow.up.left", label: "Exit Full Screen") {
+                    rotateToPortrait()
+                }
+            }
+            
+            fullscreenTimeline()
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
+        .background(fullscreenBottomGradient)
+    }
+    
+    private func fullscreenOutputControls() -> some View {
+        HStack(spacing: 16) {
+            controlButton(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill", label: isMuted ? "Unmute" : "Mute") {
+                toggleMute()
+            }
+            
+            AirPlayRoutePicker()
+                .frame(width: 32, height: 32)
+                .accessibilityLabel("AirPlay and output")
+            
+            if vm.availableViewModes.contains(.overlay) {
+                controlButton(systemName: "pip.enter", label: "Picture-in-Picture") {
+                    rotateToPortrait()
+                    withAnimation {
+                        vm.toggleViewMode()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func fullscreenTimeline() -> some View {
+        HStack(spacing: 8) {
+            Text(formatPlaybackTime(currentTime))
+                .font(.caption.monospacedDigit())
+                .foregroundColor(.white.opacity(0.85))
+                .frame(width: 46, alignment: .leading)
+            
+            Slider(
+                value: Binding(
+                    get: { min(currentTime, max(duration, 0)) },
+                    set: { newValue in
+                        isScrubbing = true
+                        currentTime = newValue
+                    }
+                ),
+                in: 0...max(duration, 1),
+                onEditingChanged: { editing in
+                    isScrubbing = editing
+                    if editing {
+                        fullscreenControlsHideTask?.cancel()
+                        fullscreenControlsHideTask = nil
+                        fullscreenControlsVisible = true
+                    }
+                    else {
+                        seek(to: currentTime)
+                        scheduleFullscreenControlsAutoHide()
+                    }
+                }
+            )
+            .tint(.white)
+            .disabled(!hasSeekableDuration)
+            
+            Text(hasSeekableDuration ? "-\(formatPlaybackTime(remainingTime))" : "--:--")
+                .font(.caption.monospacedDigit())
+                .foregroundColor(.white.opacity(0.85))
+                .frame(width: 52, alignment: .trailing)
+        }
+    }
+    
+    private func fullscreenCenterControls(isLandscape: Bool) -> some View {
+        fullscreenTransportControls(
+            buttonSize: isLandscape ? 58 : 44,
+            iconFont: isLandscape ? .system(size: 34, weight: .semibold) : .system(size: 25, weight: .semibold),
+            spacing: isLandscape ? 44 : 28
+        )
+        .padding(.horizontal, isLandscape ? 26 : 20)
+        .padding(.vertical, isLandscape ? 18 : 14)
+        .background(.black.opacity(0.28))
+        .clipShape(Capsule())
+    }
+    
+    private func fullscreenTransportControls(buttonSize: CGFloat, iconFont: Font, spacing: CGFloat) -> some View {
+        HStack(spacing: spacing) {
+            controlButton(systemName: "gobackward.10", label: "Back 10 Seconds", size: buttonSize, iconFont: iconFont) {
+                vm.seekBackward()
+            }
+            .disabled(!hasSeekableDuration)
+            .opacity(hasSeekableDuration ? 1.0 : 0.35)
+            
+            if vm.didFinishPlaying {
+                controlButton(systemName: "memories", label: "Replay", size: buttonSize, iconFont: iconFont) {
+                    vm.replay()
+                }
+            }
+            else {
+                controlButton(systemName: vm.isPlaying ? "pause.fill" : "play.fill", label: vm.isPlaying ? "Pause" : "Play", size: buttonSize, iconFont: iconFont) {
+                    togglePlayPause()
+                }
+            }
+            
+            controlButton(systemName: "goforward.10", label: "Forward 10 Seconds", size: buttonSize, iconFont: iconFont) {
+                vm.seekForward()
+            }
+            .disabled(!hasSeekableDuration || vm.didFinishPlaying)
+            .opacity(hasSeekableDuration && !vm.didFinishPlaying ? 1.0 : 0.35)
+        }
+    }
+    
+    private var fullscreenBottomGradient: some View {
+        LinearGradient(
+            colors: [.clear, .black.opacity(0.7)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+    
+    private func topControlsTopPadding(geometry: GeometryProxy, isLandscape: Bool) -> CGFloat {
+        if isLandscape {
+            return max(geometry.safeAreaInsets.top, 8)
+        }
+        let windowTopInset = activeWindowScene()?.windows.first(where: { $0.isKeyWindow })?.safeAreaInsets.top ?? 0
+        return max(geometry.safeAreaInsets.top, windowTopInset, 8)
+    }
+    
+    private func fullscreenTopControls(geometry: GeometryProxy, isLandscape: Bool) -> some View {
+        HStack(spacing: 16) {
+            controlButton(systemName: "xmark", label: "Close") {
+                rotateToPortrait()
+                withAnimation {
+                    vm.close()
+                }
+            }
+            
+            Spacer()
+            
+            if vm.nrPost != nil, vm.availableViewModes.contains(.overlay) {
+                controlButton(systemName: bookmarkState ? "bookmark.fill" : "bookmark", label: "Bookmark") {
+                    bookmarkState.toggle()
+                }
+            }
+            
+            if !vm.isStream {
+                Menu(content: {
+                    Button("Save to Photo Library", systemImage: "square.and.arrow.down") {
+                        saveAVAssetToPhotos()
+                    }
+                    .help("Save to Photo Library")
+                    Button("Copy video URL", systemImage: "document.on.document") {
+                        if let url = vm.currentlyPlayingUrl {
+                            UIPasteboard.general.string = url
+                            sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
+                        }
+                    }
+                    .help("Copy video URL")
+                }, label: {
+                    if isSaving {
+                        HStack(spacing: 4) {
+                            ProgressView()
+                            Text(vm.downloadProgress, format: .percent)
+                                .font(.caption.monospacedDigit())
+                        }
+                        .foregroundColor(.white)
+                        .tint(.white)
+                        .frame(height: 32)
+                    }
+                    else if didSave {
+                        Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
+                            .font(.title3)
+                            .foregroundColor(.white)
+                            .frame(width: 32, height: 32)
+                    }
+                    else {
+                        Image(systemName: "square.and.arrow.down")
+                            .font(.title3)
+                            .foregroundColor(.white)
+                            .frame(width: 32, height: 32)
+                    }
+                })
+                .disabled(isSaving)
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, max(geometry.safeAreaInsets.leading, geometry.safeAreaInsets.trailing, 12))
+        .padding(.top, topControlsTopPadding(geometry: geometry, isLandscape: isLandscape))
+        .padding(.bottom, 28)
+        .background(
+            LinearGradient(
+                colors: [.black.opacity(0.7), .clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+    }
+    
+    private func fullscreenPlayer(geometry: GeometryProxy) -> some View {
+        ZStack {
+            Color.black
+                .ignoresSafeArea()
+            
+            if vm.isLoading {
+                ProgressView()
+            }
+            else {
+                AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if isRotatedFullscreen || geometry.size.width > geometry.size.height {
+                            toggleFullscreenControls()
+                        }
+                        else {
+                            showPortraitCenterControls()
+                        }
+                    }
+            }
+        }
+        .frame(width: geometry.size.width, height: geometry.size.height)
+        .background(Color.black)
+        .clipped()
+        .overlay(alignment: .top) {
+            if fullscreenControlsVisible || !(isRotatedFullscreen || geometry.size.width > geometry.size.height) {
+                fullscreenTopControls(geometry: geometry, isLandscape: isRotatedFullscreen || geometry.size.width > geometry.size.height)
+            }
+        }
+        .overlay(alignment: .center) {
+            if isRotatedFullscreen || geometry.size.width > geometry.size.height {
+                if fullscreenControlsVisible {
+                    fullscreenCenterControls(isLandscape: true)
+                }
+            }
+            else if portraitCenterControlsVisible {
+                fullscreenCenterControls(isLandscape: false)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if fullscreenControlsVisible || !(isRotatedFullscreen || geometry.size.width > geometry.size.height) {
+                fullscreenControls(isLandscape: isRotatedFullscreen || geometry.size.width > geometry.size.height)
+            }
+        }
+        .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
+            .onEnded({ value in
+                if value.translation.height > 0 {
+                    rotateToPortrait()
+                    vm.close()
+                }
+            }))
+        .ignoresSafeArea()
+    }
+    
+    private func controlButton(systemName: String, label: String, size: CGFloat = 32, iconFont: Font = .title3, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(iconFont)
+                .foregroundColor(.white)
+                .frame(width: size, height: size)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+    
     var body: some View {
 #if DEBUG
         let _ = nxLogChanges(of: Self.self)
@@ -104,105 +455,11 @@ struct OverlayPlayer: View {
         GeometryReader { geometry in
             if vm.isShown {
                 ZStack(alignment: videoAlignment) {
-                    // -- MARK: .fullscreen toolbar (ONLY the toolbar)
-                    // .detailstream has different toolbar
                     if vm.viewMode == .fullscreen {
-                        NRNavigationStack {
-                            Color.black
-                                .toolbar {
-                                    // CLOSE BUTTON
-                                    ToolbarItem(placement: .topBarLeading) {
-                                        if vm.viewMode != .overlay {
-                                            Button("Close", systemImage: "xmark") {
-                                                withAnimation {
-                                                    vm.close()
-                                                }
-                                            }
-                                            .buttonStyle(.borderless)
-                                            .foregroundStyle(Color.white)
-                                        }
-                                    }
-                                    
-                                    // BOOKMARK BUTTON
-                                    ToolbarItem(placement: .topBarTrailing) {
-                                        if vm.nrPost != nil, vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
-                                            Button("Bookmark", systemImage: bookmarkState ? "bookmark.fill" : "bookmark") {
-                                                bookmarkState.toggle()
-                                            }
-                                            .buttonStyle(.borderless)
-                                            .foregroundStyle(Color.white)
-                                            .offset(y: -2)
-                                        }
-                                    }
-                                    
-                                    // SAVE BUTTON
-                                    ToolbarItem(placement: .topBarTrailing) {
-                                        if !vm.isStream && vm.viewMode != .overlay {
-                                            Menu(content: {
-                                                Button("Save to Photo Library", systemImage: "square.and.arrow.down") {
-                                                    saveAVAssetToPhotos()
-                                                }
-                                                .help("Save to Photo Library")
-                                                Button("Copy video URL", systemImage: "document.on.document") {
-                                                    if let url = vm.currentlyPlayingUrl {
-                                                        UIPasteboard.general.string = url
-                                                        sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
-                                                    }
-                                                }
-                                                .help("Copy video URL")
-                                            }, label: {
-                                                if isSaving {
-                                                    HStack {
-                                                        ProgressView()
-                                                        Text(vm.downloadProgress, format: .percent)
-                                                    }
-                                                    .foregroundColor(Color.white)
-                                                    .tint(Color.white)
-                                                    .padding(5)
-                                                }
-                                                else if didSave {
-                                                    Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
-                                                        .foregroundColor(Color.white)
-                                                        .padding(5)
-                                                        .offset(y: -2)
-                                                }
-                                                else {
-                                                    Image(systemName: "square.and.arrow.down")
-                                                        .foregroundColor(Color.white)
-//                                                        .padding(5)
-                                                        .offset(y: -3)
-                                                }
-                                            })
-                                            .disabled(isSaving)
-//                                            .font(.title2)
-                                            .foregroundColor(Color.white)
-                                        }
-                                    }
-                                    
-                                    // PIP BUTTON
-                                    ToolbarItem(placement: .topBarTrailing) {
-                                        if vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
-                                            Button("Picture-in-Picture", systemImage: "pip.enter") {
-                                                withAnimation {
-                                                    vm.toggleViewMode()
-                                                }
-                                            }
-//                                            .font(.title2)
-                                            .buttonStyle(.borderless)
-                                            .foregroundColor(Color.white)
-                                            .help("Activate Picture-in-Picture")
-                                        }
-                                    }
-                                }
-                                .onDisappear {
-                                    AnyPlayerModel.shared.downloadTask?.cancel()
-                                    isSaving = false
-                                    didSave = false
-                                }
-                                .background(Color.black) // Needed for toolbar bg
-                        }
+                        fullscreenPlayer(geometry: geometry)
+                            .zIndex(1)
                     }
-                        
+                    
                     VStack(spacing: 0) {
                         NRNavigationStack {
                             VStack(spacing: 0) {
@@ -214,11 +471,23 @@ struct OverlayPlayer: View {
                                         }
                                     }
                                     .overlay {
-                                        if !vm.isLoading {
+                                        if !vm.isLoading && vm.viewMode != .fullscreen {
                                             AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
                                         }
                                     }
-                                    .frame(maxHeight: avPlayerHeight)
+                                    .frame(
+                                        width: vm.viewMode == .fullscreen ? geometry.size.width : nil,
+                                        height: vm.viewMode == .fullscreen ? geometry.size.height : nil
+                                    )
+                                    .frame(maxHeight: avPlayerHeight(geometry: geometry))
+                                    .clipped()
+                                    .ignoresSafeAreaIfFullscreen(vm.viewMode)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        if vm.viewMode == .fullscreen {
+                                            toggleFullscreenControls()
+                                        }
+                                    }
                                     .animation(.smooth, value: vm.viewMode)
                                     .overlay { // MARK: Overlay after finished playing
                                         if vm.didFinishPlaying {
@@ -228,6 +497,9 @@ struct OverlayPlayer: View {
                                                         .onEnded({ value in
                                                             // close on swipe down
                                                             if value.translation.height > 0 {
+                                                                if vm.viewMode == .fullscreen {
+                                                                    rotateToPortrait()
+                                                                }
                                                                 vm.close()
                                                             }
                                                         }))
@@ -434,73 +706,26 @@ struct OverlayPlayer: View {
                             }
                         }
                         
-                        // MARK: Video controls for .overlay mode
+                        // MARK: Custom video controls
                         if vm.viewMode == .overlay {
-                            HStack(spacing: 30) {
-                                Button(action: vm.seekBackward) {
-                                    Image(systemName: "gobackward.15")
-                                        .foregroundColor(Color.white)
-                                        .font(.title)
-                                }
-                                
-                                if vm.didFinishPlaying {
-                                    Button("Replay", systemImage: "memories") {
-                                        vm.replay()
-                                    }
-                                    .foregroundColor(Color.white)
-                                    .font(.title)
-                                    .labelStyle(.iconOnly)
-                                    .buttonStyle(.plain)
-                                }
-                                else {
-                                    Button(action: {
-                                        if vm.isPlaying {
-                                            vm.pauseVideo()
-                                        }
-                                        else {
-                                            vm.playVideo()
-                                        }
-                                    }) {
-                                        Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
-                                            .foregroundColor(Color.white)
-                                            .font(.title)
-                                    }
-                                }
-                                
-                                Button(action: vm.seekForward) {
-                                    Image(systemName: "goforward.15")
-//                                            .foregroundColor(.white)
-                                        .font(.title)
-                                        .foregroundColor(Color.white)
-                                }
-                                    .opacity(vm.didFinishPlaying ? 0.0 : 1.0)
-                            }
-                            .frame(height: CONTROLS_HEIGHT)
+                            overlayControls
                         }
-                        // MARK: Video controls for .audioOnlyPill mode
                         else if vm.viewMode == .audioOnlyBar {
-                            AudioOnlyBar()                                
+                            AudioOnlyBar()
                         }
-                        else {
-                            Spacer()
+                        else if vm.viewMode == .detailstream {
+                            fullscreenControls(isLandscape: false)
                         }
                     }
                     .ultraThinMaterialIfDetail(vm.viewMode)
                     .frame(
-                        width: videoWidth * currentScale,
-                        height: frameHeight
+                        width: frameWidth(geometry: geometry),
+                        height: frameHeight(geometry: geometry)
                     )
                     .offset(
                         x: clampedOffsetX(geometry: geometry),
                         y: clampedOffsetY(geometry: geometry) - (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
                     )
-                    .gestureIf(condition: vm.viewMode == .fullscreen, gesture: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
-                        .onEnded({ value in
-                            // close on swipe down
-                            if value.translation.height > 0 {
-                                vm.close()
-                            }
-                        }))
                     .highPriorityGestureIf(condition: vm.viewMode == .overlay, gesture:
                         DragGesture()
                             .onChanged { value in
@@ -587,15 +812,44 @@ struct OverlayPlayer: View {
 ////                                    self.scale = 1.0
 ////                                }
                     )
-                }
                 .onChange(of: vm.viewMode) { _ in
                     if vm.viewMode != .overlay && scale != 1.0 {
                         scale = 1.0
+                    }
+                    if vm.viewMode == .fullscreen {
+                        showFullscreenControls()
+                    }
+                    else {
+                        fullscreenControlsHideTask?.cancel()
+                        fullscreenControlsHideTask = nil
+                        portraitCenterControlsHideTask?.cancel()
+                        portraitCenterControlsHideTask = nil
+                        portraitCenterControlsVisible = false
+                        fullscreenControlsVisible = true
+                        restoreAllowedOrientations()
+                    }
+                }
+                .onChange(of: vm.isPlaying) { _ in
+                    if vm.isPlaying {
+                        scheduleFullscreenControlsAutoHide()
+                    }
+                    else {
+                        showFullscreenControls()
+                    }
+                }
+                .onChange(of: vm.didFinishPlaying) { _ in
+                    if vm.didFinishPlaying {
+                        showFullscreenControls()
                     }
                 }
                 
                 
                 .onAppear {
+                    setupTimeObserver()
+                    syncPlaybackValues()
+                    syncMutedState()
+                    showFullscreenControls()
+                    
                     guard let nrPost = vm.nrPost else {
                         bookmarkState = false
                         return
@@ -608,6 +862,20 @@ struct OverlayPlayer: View {
                     }
                     else {
                         bookmarkState = false
+                    }
+                }
+                .onDisappear {
+                    fullscreenControlsHideTask?.cancel()
+                    fullscreenControlsHideTask = nil
+                    portraitCenterControlsHideTask?.cancel()
+                    portraitCenterControlsHideTask = nil
+                    portraitCenterControlsVisible = false
+                    removeTimeObserver()
+                    if vm.viewMode == .fullscreen {
+                        rotateToPortrait()
+                    }
+                    else {
+                        restoreAllowedOrientations()
                     }
                 }
                 .onChange(of: bookmarkState) { [bookmarkState] newState in
@@ -641,10 +909,32 @@ struct OverlayPlayer: View {
             }
         }
     }
+    }
     
     /// Clamps a value between a minimum and maximum.
     private func clamp(value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
         return Swift.max(min, Swift.min(max, value))
+    }
+    
+    private func frameWidth(geometry: GeometryProxy) -> CGFloat {
+        if vm.viewMode == .fullscreen {
+            return geometry.size.width
+        }
+        return videoWidth * currentScale
+    }
+    
+    private func frameHeight(geometry: GeometryProxy) -> CGFloat {
+        if vm.viewMode == .fullscreen {
+            return geometry.size.height
+        }
+        return frameHeight
+    }
+    
+    private func avPlayerHeight(geometry: GeometryProxy) -> CGFloat {
+        if vm.viewMode == .fullscreen {
+            return geometry.size.height
+        }
+        return avPlayerHeight
     }
     
     /// Calculates the clamped X offset to ensure the video stays within horizontal bounds.
@@ -676,6 +966,203 @@ struct OverlayPlayer: View {
         
         let maxOffsetY = geometry.size.height - (videoHeight * currentScale)
         return clamp(value: currentOffset.height + dragOffset.height, min: 0, max: maxOffsetY)
+    }
+    
+    private func setupTimeObserver() {
+        guard timeObserverToken == nil else { return }
+        let interval = CMTime(seconds: 0.25, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        timeObserverToken = vm.player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { _ in
+            syncPlaybackValues()
+        }
+    }
+    
+    private func removeTimeObserver() {
+        guard let timeObserverToken else { return }
+        vm.player.removeTimeObserver(timeObserverToken)
+        self.timeObserverToken = nil
+    }
+    
+    private func syncPlaybackValues() {
+        let currentSeconds = vm.player.currentTime().seconds
+        if !isScrubbing, currentSeconds.isFinite {
+            currentTime = max(currentSeconds, 0)
+        }
+        
+        let durationSeconds = vm.player.currentItem?.duration.seconds ?? 0
+        duration = durationSeconds.isFinite && durationSeconds > 0 ? durationSeconds : 0
+    }
+    
+    private func seek(to seconds: Double) {
+        guard hasSeekableDuration else { return }
+        let clampedSeconds = min(max(seconds, 0), duration)
+        vm.didFinishPlaying = false
+        vm.player.seek(to: CMTime(seconds: clampedSeconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC)))
+    }
+    
+    private func togglePlayPause() {
+        if vm.isPlaying {
+            vm.pauseVideo()
+            showFullscreenControls()
+        }
+        else {
+            vm.playVideo()
+            scheduleFullscreenControlsAutoHide()
+        }
+        if portraitCenterControlsVisible {
+            schedulePortraitCenterControlsAutoHide()
+        }
+    }
+    
+    private func toggleFullscreenControls() {
+        fullscreenControlsVisible.toggle()
+        if fullscreenControlsVisible {
+            scheduleFullscreenControlsAutoHide()
+        }
+        else {
+            fullscreenControlsHideTask?.cancel()
+            fullscreenControlsHideTask = nil
+        }
+    }
+    
+    private func showFullscreenControls() {
+        fullscreenControlsVisible = true
+        scheduleFullscreenControlsAutoHide()
+    }
+    
+    private func scheduleFullscreenControlsAutoHide() {
+        fullscreenControlsHideTask?.cancel()
+        guard vm.viewMode == .fullscreen, isRotatedFullscreen, vm.isPlaying, !vm.didFinishPlaying else { return }
+        fullscreenControlsHideTask = Task {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                if vm.viewMode == .fullscreen, isRotatedFullscreen, vm.isPlaying, !vm.didFinishPlaying {
+                    fullscreenControlsVisible = false
+                }
+            }
+        }
+    }
+    
+    private func showPortraitCenterControls() {
+        guard vm.viewMode == .fullscreen, !isRotatedFullscreen, !vm.didFinishPlaying else { return }
+        portraitCenterControlsVisible = true
+        schedulePortraitCenterControlsAutoHide()
+    }
+    
+    private func schedulePortraitCenterControlsAutoHide() {
+        portraitCenterControlsHideTask?.cancel()
+        guard vm.viewMode == .fullscreen, !isRotatedFullscreen, portraitCenterControlsVisible else { return }
+        portraitCenterControlsHideTask = Task {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                if vm.viewMode == .fullscreen, !isRotatedFullscreen {
+                    portraitCenterControlsVisible = false
+                }
+            }
+        }
+    }
+    
+    private func rotateToLandscape() {
+#if targetEnvironment(macCatalyst)
+        return
+#else
+        if vm.viewMode != .fullscreen, vm.availableViewModes.contains(.fullscreen) {
+            vm.viewMode = .fullscreen
+        }
+        isRotatedFullscreen = true
+        portraitCenterControlsHideTask?.cancel()
+        portraitCenterControlsHideTask = nil
+        portraitCenterControlsVisible = false
+        
+        AppDelegate.supportedOrientations = .landscapeRight
+        refreshSupportedOrientations()
+        UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
+        UINavigationController.attemptRotationToDeviceOrientation()
+        
+        guard let windowScene = activeWindowScene() else { return }
+        
+        if #available(iOS 16.0, *) {
+            windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight)) { error in
+#if DEBUG
+                L.og.debug("Landscape rotation request failed: \(error.localizedDescription)")
+#endif
+            }
+        }
+#endif
+    }
+    
+    private func rotateToPortrait() {
+#if targetEnvironment(macCatalyst)
+        return
+#else
+        isRotatedFullscreen = false
+        fullscreenControlsHideTask?.cancel()
+        fullscreenControlsHideTask = nil
+        portraitCenterControlsHideTask?.cancel()
+        portraitCenterControlsHideTask = nil
+        portraitCenterControlsVisible = false
+        fullscreenControlsVisible = true
+        AppDelegate.supportedOrientations = .allButUpsideDown
+        refreshSupportedOrientations()
+        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+        UINavigationController.attemptRotationToDeviceOrientation()
+        
+        guard let windowScene = activeWindowScene() else { return }
+        
+        if #available(iOS 16.0, *) {
+            windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait)) { error in
+#if DEBUG
+                L.og.debug("Portrait rotation request failed: \(error.localizedDescription)")
+#endif
+            }
+        }
+#endif
+    }
+    
+    private func restoreAllowedOrientations() {
+#if !targetEnvironment(macCatalyst)
+        isRotatedFullscreen = false
+        AppDelegate.supportedOrientations = .allButUpsideDown
+        refreshSupportedOrientations()
+#endif
+    }
+    
+    private func activeWindowScene() -> UIWindowScene? {
+        UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive })
+    }
+    
+    private func refreshSupportedOrientations() {
+        if #available(iOS 16.0, *) {
+            activeWindowScene()?.windows.first(where: { $0.isKeyWindow })?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+        }
+        else {
+            UINavigationController.attemptRotationToDeviceOrientation()
+        }
+    }
+    
+    private func syncMutedState() {
+        isMuted = vm.player.isMuted
+    }
+    
+    private func toggleMute() {
+        vm.player.isMuted.toggle()
+        syncMutedState()
+    }
+    
+    private func formatPlaybackTime(_ seconds: Double) -> String {
+        guard seconds.isFinite && seconds >= 0 else { return "0:00" }
+        let totalSeconds = Int(seconds.rounded(.down))
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+        
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        }
+        return String(format: "%d:%02d", minutes, seconds)
     }
     
     func saveAVAssetToPhotos() {
@@ -719,9 +1206,6 @@ struct OverlayPlayer: View {
     }
 }
 
-
-import AVKit
-import Photos
 
 func exportAsset(_ asset: AVAsset, completion: @escaping (URL?) -> Void) {
     guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality) else {
@@ -783,7 +1267,33 @@ func saveVideoToPhotoLibrary(videoURL: URL, completion: @escaping (Bool, Error?)
     }
 }
 
+struct AirPlayRoutePicker: UIViewRepresentable {
+    func makeUIView(context: Context) -> AVRoutePickerView {
+        let routePickerView = AVRoutePickerView()
+        routePickerView.prioritizesVideoDevices = true
+        routePickerView.tintColor = .white
+        routePickerView.activeTintColor = .white
+        routePickerView.backgroundColor = .clear
+        return routePickerView
+    }
+    
+    func updateUIView(_ uiView: AVRoutePickerView, context: Context) {
+        uiView.tintColor = .white
+        uiView.activeTintColor = .white
+    }
+}
+
 extension View {
+    
+    @ViewBuilder
+    func ignoresSafeAreaIfFullscreen(_ viewMode: AnyPlayerViewMode) -> some View {
+        if viewMode == .fullscreen {
+            self.ignoresSafeArea()
+        }
+        else {
+            self
+        }
+    }
     
     @ViewBuilder
     func ultraThinMaterialIfDetail(_ viewMode: AnyPlayerViewMode) -> some View {
