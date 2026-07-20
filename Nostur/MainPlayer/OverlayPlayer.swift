@@ -96,6 +96,9 @@ struct OverlayPlayer: View {
     @State private var fullscreenControlsHideTask: Task<Void, Never>?
     @State private var portraitCenterControlsVisible = false
     @State private var portraitCenterControlsHideTask: Task<Void, Never>?
+    @State private var detailStreamControlsVisible = true
+    @State private var detailStreamControlsHideTask: Task<Void, Never>?
+    @State private var shouldRestoreDetailStreamAfterRotatedFullscreen = false
     @State private var isRotatedFullscreen = false
     
     private var videoAlignment: Alignment {
@@ -111,6 +114,11 @@ struct OverlayPlayer: View {
     private var hasSeekableDuration: Bool {
         let durationSeconds = vm.player.currentItem?.duration.seconds ?? 0
         return durationSeconds.isFinite && durationSeconds > 0
+    }
+    
+    private var shouldShowDetailStreamVideoControls: Bool {
+        guard vm.viewMode == .detailstream, detailStreamControlsVisible, !vm.isLoading else { return false }
+        return vm.player.status != .failed && vm.player.currentItem?.status != .failed
     }
     
     private var overlayControls: some View {
@@ -187,18 +195,18 @@ struct OverlayPlayer: View {
         .background(fullscreenBottomGradient)
     }
     
-    private func fullscreenOutputControls() -> some View {
-        HStack(spacing: 16) {
-            controlButton(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill", label: isMuted ? "Unmute" : "Mute") {
+    private func fullscreenOutputControls(buttonSize: CGFloat = 32, airPlaySize: CGFloat = 32, spacing: CGFloat = 16, iconFont: Font = .title3) -> some View {
+        HStack(spacing: spacing) {
+            controlButton(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill", label: isMuted ? "Unmute" : "Mute", size: buttonSize, iconFont: iconFont) {
                 toggleMute()
             }
             
             AirPlayRoutePicker()
-                .frame(width: 32, height: 32)
+                .frame(width: airPlaySize, height: airPlaySize)
                 .accessibilityLabel("AirPlay and output")
             
             if vm.availableViewModes.contains(.overlay) {
-                controlButton(systemName: "pip.enter", label: "Picture-in-Picture") {
+                controlButton(systemName: "pip.enter", label: "Picture-in-Picture", size: buttonSize, iconFont: iconFont) {
                     rotateToPortrait()
                     withAnimation {
                         vm.toggleViewMode()
@@ -208,18 +216,41 @@ struct OverlayPlayer: View {
         }
     }
     
-    private func fullscreenTimeline() -> some View {
+    private func fullscreenTimeline(
+        onScrubStarted: (() -> Void)? = nil,
+        onScrubEnded: (() -> Void)? = nil
+    ) -> some View {
         FullscreenTimeline(
             player: vm.player,
-            onScrubStarted: {
+            onScrubStarted: onScrubStarted ?? {
                 fullscreenControlsHideTask?.cancel()
                 fullscreenControlsHideTask = nil
                 fullscreenControlsVisible = true
             },
-            onScrubEnded: {
+            onScrubEnded: onScrubEnded ?? {
                 scheduleFullscreenControlsAutoHide()
             }
         )
+    }
+    
+    private func detailStreamCenterControls() -> some View {
+        fullscreenTransportControls(buttonSize: 38, iconFont: .system(size: 22, weight: .semibold), spacing: 24)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .background(.black.opacity(0.28))
+            .clipShape(Capsule())
+    }
+    
+    private func detailStreamBottomControls() -> some View {
+        HStack(spacing: 12) {
+            fullscreenOutputControls(buttonSize: 28, airPlaySize: 28, spacing: 12, iconFont: .system(size: 17, weight: .semibold))
+            controlButton(systemName: "arrow.up.left.and.arrow.down.right", label: "Full Screen", size: 28, iconFont: .system(size: 17, weight: .semibold)) {
+                enterDetailStreamRotatedFullscreen()
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(fullscreenBottomGradient)
     }
     
     private func fullscreenCenterControls(isLandscape: Bool) -> some View {
@@ -454,6 +485,9 @@ struct OverlayPlayer: View {
                                         if vm.viewMode == .fullscreen {
                                             toggleFullscreenControls()
                                         }
+                                        else if vm.viewMode == .detailstream {
+                                            toggleDetailStreamControls()
+                                        }
                                     }
                                     .animation(.smooth, value: vm.viewMode)
                                     .overlay { // MARK: Overlay after finished playing
@@ -569,6 +603,16 @@ struct OverlayPlayer: View {
                                                     }))
                                         }
                                     }
+                                    .overlay(alignment: .center) {
+                                        if shouldShowDetailStreamVideoControls {
+                                            detailStreamCenterControls()
+                                        }
+                                    }
+                                    .overlay(alignment: .bottomTrailing) {
+                                        if shouldShowDetailStreamVideoControls {
+                                            detailStreamBottomControls()
+                                        }
+                                    }
                                 
                                     .onDisappear {
                                         // Restore normal idle behavior
@@ -651,20 +695,6 @@ struct OverlayPlayer: View {
                                         .foregroundColor(theme.accent)
                                     }
                                 }
-                                
-                                // PIP BUTTON
-                                ToolbarItem(placement: .topBarTrailing) {
-                                    if vm.availableViewModes.contains(.overlay) && vm.viewMode == .detailstream {
-                                        Button("Picture-in-picture", systemImage: "pip.enter") {
-                                            withAnimation {
-                                                vm.toggleViewMode()
-                                            }
-                                        }
-//                                        .font(.title2)
-                                        .buttonStyle(.borderless)
-                                        .foregroundColor(theme.accent)
-                                    }
-                                }
                             }
                         }
                         .introspect(.navigationStack, on: .iOS(.v16...)) {
@@ -680,15 +710,14 @@ struct OverlayPlayer: View {
                         else if vm.viewMode == .audioOnlyBar {
                             AudioOnlyBar()
                         }
-                        else if vm.viewMode == .detailstream {
-                            fullscreenControls(isLandscape: false)
-                        }
                     }
                     .ultraThinMaterialIfDetail(vm.viewMode)
                     .frame(
                         width: frameWidth(geometry: geometry),
                         height: frameHeight(geometry: geometry)
                     )
+                    .ignoresSafeAreaIfFullscreen(vm.viewMode)
+                    .ignoresBottomSafeAreaIfDetail(vm.viewMode)
                     .offset(
                         x: clampedOffsetX(geometry: geometry),
                         y: clampedOffsetY(geometry: geometry) - (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
@@ -784,6 +813,7 @@ struct OverlayPlayer: View {
                         scale = 1.0
                     }
                     if vm.viewMode == .fullscreen {
+                        cancelDetailStreamControlsAutoHide()
                         showFullscreenControls()
                     }
                     else {
@@ -794,19 +824,29 @@ struct OverlayPlayer: View {
                         portraitCenterControlsVisible = false
                         fullscreenControlsVisible = true
                         restoreAllowedOrientations()
+                        if vm.viewMode == .detailstream {
+                            showDetailStreamControls()
+                        }
+                        else {
+                            cancelDetailStreamControlsAutoHide()
+                            detailStreamControlsVisible = true
+                        }
                     }
                 }
                 .onChange(of: vm.isPlaying) { _ in
                     if vm.isPlaying {
                         scheduleFullscreenControlsAutoHide()
+                        scheduleDetailStreamControlsAutoHide()
                     }
                     else {
                         showFullscreenControls()
+                        showDetailStreamControls()
                     }
                 }
                 .onChange(of: vm.didFinishPlaying) { _ in
                     if vm.didFinishPlaying {
                         showFullscreenControls()
+                        showDetailStreamControls()
                     }
                 }
                 
@@ -814,6 +854,7 @@ struct OverlayPlayer: View {
                 .onAppear {
                     syncMutedState()
                     showFullscreenControls()
+                    showDetailStreamControls()
                     
                     guard let nrPost = vm.nrPost else {
                         bookmarkState = false
@@ -835,6 +876,8 @@ struct OverlayPlayer: View {
                     portraitCenterControlsHideTask?.cancel()
                     portraitCenterControlsHideTask = nil
                     portraitCenterControlsVisible = false
+                    cancelDetailStreamControlsAutoHide()
+                    shouldRestoreDetailStreamAfterRotatedFullscreen = false
                     if vm.viewMode == .fullscreen {
                         rotateToPortrait()
                     }
@@ -881,14 +924,14 @@ struct OverlayPlayer: View {
     }
     
     private func frameWidth(geometry: GeometryProxy) -> CGFloat {
-        if vm.viewMode == .fullscreen {
+        if vm.viewMode == .fullscreen || vm.viewMode == .detailstream {
             return geometry.size.width
         }
         return videoWidth * currentScale
     }
     
     private func frameHeight(geometry: GeometryProxy) -> CGFloat {
-        if vm.viewMode == .fullscreen {
+        if vm.viewMode == .fullscreen || vm.viewMode == .detailstream {
             return geometry.size.height
         }
         return frameHeight
@@ -936,10 +979,12 @@ struct OverlayPlayer: View {
         if vm.isPlaying {
             vm.pauseVideo()
             showFullscreenControls()
+            showDetailStreamControls()
         }
         else {
             vm.playVideo()
             scheduleFullscreenControlsAutoHide()
+            scheduleDetailStreamControlsAutoHide()
         }
         if portraitCenterControlsVisible {
             schedulePortraitCenterControlsAutoHide()
@@ -996,6 +1041,48 @@ struct OverlayPlayer: View {
         }
     }
     
+    private func toggleDetailStreamControls() {
+        detailStreamControlsVisible.toggle()
+        if detailStreamControlsVisible {
+            scheduleDetailStreamControlsAutoHide()
+        }
+        else {
+            detailStreamControlsHideTask?.cancel()
+            detailStreamControlsHideTask = nil
+        }
+    }
+    
+    private func showDetailStreamControls() {
+        guard vm.viewMode == .detailstream else { return }
+        detailStreamControlsVisible = true
+        scheduleDetailStreamControlsAutoHide()
+    }
+    
+    private func scheduleDetailStreamControlsAutoHide() {
+        detailStreamControlsHideTask?.cancel()
+        guard vm.viewMode == .detailstream, detailStreamControlsVisible, vm.isPlaying, !vm.didFinishPlaying else { return }
+        detailStreamControlsHideTask = Task {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                if vm.viewMode == .detailstream, vm.isPlaying, !vm.didFinishPlaying {
+                    detailStreamControlsVisible = false
+                }
+            }
+        }
+    }
+    
+    private func cancelDetailStreamControlsAutoHide() {
+        detailStreamControlsHideTask?.cancel()
+        detailStreamControlsHideTask = nil
+    }
+    
+    private func enterDetailStreamRotatedFullscreen() {
+        shouldRestoreDetailStreamAfterRotatedFullscreen = true
+        vm.viewMode = .fullscreen
+        rotateToLandscape()
+    }
+    
     private func rotateToLandscape() {
 #if targetEnvironment(macCatalyst)
         return
@@ -1049,6 +1136,11 @@ struct OverlayPlayer: View {
                 L.og.debug("Portrait rotation request failed: \(error.localizedDescription)")
 #endif
             }
+        }
+        
+        if shouldRestoreDetailStreamAfterRotatedFullscreen {
+            shouldRestoreDetailStreamAfterRotatedFullscreen = false
+            vm.viewMode = .detailstream
         }
 #endif
     }
@@ -1317,6 +1409,16 @@ extension View {
     func ignoresSafeAreaIfFullscreen(_ viewMode: AnyPlayerViewMode) -> some View {
         if viewMode == .fullscreen {
             self.ignoresSafeArea()
+        }
+        else {
+            self
+        }
+    }
+    
+    @ViewBuilder
+    func ignoresBottomSafeAreaIfDetail(_ viewMode: AnyPlayerViewMode) -> some View {
+        if viewMode == .detailstream {
+            self.ignoresSafeArea(.container, edges: .bottom)
         }
         else {
             self
