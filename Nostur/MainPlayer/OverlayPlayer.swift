@@ -1113,9 +1113,6 @@ struct OverlayPlayer: View {
     }
     
     private func rotateToPortrait() {
-#if targetEnvironment(macCatalyst)
-        return
-#else
         isRotatedFullscreen = false
         fullscreenControlsHideTask?.cancel()
         fullscreenControlsHideTask = nil
@@ -1123,6 +1120,8 @@ struct OverlayPlayer: View {
         portraitCenterControlsHideTask = nil
         portraitCenterControlsVisible = false
         fullscreenControlsVisible = true
+        
+#if !targetEnvironment(macCatalyst)
         AppDelegate.supportedOrientations = .allButUpsideDown
         refreshSupportedOrientations()
         UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
@@ -1137,12 +1136,12 @@ struct OverlayPlayer: View {
 #endif
             }
         }
+#endif
         
         if shouldRestoreDetailStreamAfterRotatedFullscreen {
             shouldRestoreDetailStreamAfterRotatedFullscreen = false
             vm.viewMode = .detailstream
         }
-#endif
     }
     
     private func restoreAllowedOrientations() {
