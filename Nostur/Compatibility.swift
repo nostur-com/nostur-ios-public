@@ -149,14 +149,14 @@ extension View {
     
     
     @ViewBuilder
-    func scrollDisabledCompat() -> some View {
+    func scrollDisabledCompat(_ disabled: Bool = true) -> some View {
         if #available(iOS 16.0, *) {
-            self.scrollDisabled(true)
+            self.scrollDisabled(disabled)
         }
         else {
             self
         }
-    }    
+    }
     
     @ViewBuilder
     func scrollTargetBehaviorViewAligned() -> some View {
