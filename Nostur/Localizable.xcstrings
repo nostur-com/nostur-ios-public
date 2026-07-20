@@ -319,6 +319,12 @@
         }
       }
     },
+    "--:--" : {
+
+    },
+    "-%@" : {
+
+    },
     ":%@:" : {
       "localizations" : {
         "es" : {
@@ -3554,6 +3560,7 @@
       }
     },
     "Activate Picture-in-Picture" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -4501,6 +4508,9 @@
           }
         }
       }
+    },
+    "AirPlay and output" : {
+
     },
     "All" : {
       "comment" : "Menu choice to filter by All",
@@ -7859,6 +7869,9 @@
           }
         }
       }
+    },
+    "Copy" : {
+
     },
     "Copy image URL" : {
       "localizations" : {
@@ -17915,6 +17928,7 @@
       }
     },
     "Picture-in-picture" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -19933,6 +19947,9 @@
           }
         }
       }
+    },
+    "Raw JSON" : {
+
     },
     "React..." : {
       "localizations" : {
@@ -24373,6 +24390,9 @@
           }
         }
       }
+    },
+    "Show raw JSON" : {
+
     },
     "Show replies" : {
       "localizations" : {
