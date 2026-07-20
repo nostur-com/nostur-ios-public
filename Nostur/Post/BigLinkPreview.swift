@@ -91,7 +91,9 @@ struct BigLinkPreview: View {
                                 DispatchQueue.main.async {
                                     self.tags = tags
                                 }
-                                LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
+                                if !tags.isEmpty {
+                                    LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
+                                }
                             }
                             catch {
                                 

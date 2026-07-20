@@ -17,8 +17,16 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
         let request = URLRequest(url: url)
     
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
-                completion(.failure(error!))
+            if let error {
+                completion(.failure(error))
+                return
+            }
+            guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
+                completion(.failure(NSError(domain: "Invalid HTTP response", code: (response as? HTTPURLResponse)?.statusCode ?? 0, userInfo: nil)))
+                return
+            }
+            guard let data else {
+                completion(.failure(NSError(domain: "Missing data", code: 0, userInfo: nil)))
                 return
             }
             guard let json = String(data: data, encoding: .utf8) else {
@@ -37,11 +45,18 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
     }
     
     var request = URLRequest(url: url)
-    request.setValue("text/html; charset=utf-8", forHTTPHeaderField: "Content-Type")
-    request.setValue("text/html; charset=utf-8", forHTTPHeaderField: "Accept")
+    request.setValue("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", forHTTPHeaderField: "Accept")
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        guard let data = data, error == nil else {
-            completion(.failure(error!))
+        if let error {
+            completion(.failure(error))
+            return
+        }
+        guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
+            completion(.failure(NSError(domain: "Invalid HTTP response", code: (response as? HTTPURLResponse)?.statusCode ?? 0, userInfo: nil)))
+            return
+        }
+        guard let data else {
+            completion(.failure(NSError(domain: "Missing data", code: 0, userInfo: nil)))
             return
         }
         guard let html = String(data: data, encoding: .utf8) else {

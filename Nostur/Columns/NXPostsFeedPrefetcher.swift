@@ -70,10 +70,12 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                     fetchMetaTags(url: url) { result in
                         do {
                             let tags = try result.get()
-                            LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
+                            if !tags.isEmpty {
+                                LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
 #if DEBUG
-                            L.og.debug("✓✓ Loaded link preview meta tags from \(url) -[LOG]-")
+                                L.og.debug("✓✓ Loaded link preview meta tags from \(url) -[LOG]-")
 #endif
+                            }
                         }
                         catch { }
                     }
@@ -218,8 +220,12 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                     fetchMetaTags(url: url) { result in
                         do {
                             let tags = try result.get()
-                            LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
-                            L.og.debug("✓✓ Loaded link preview meta tags from \(url)")
+                            if !tags.isEmpty {
+                                LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
+#if DEBUG
+                                L.og.debug("✓✓ Loaded link preview meta tags from \(url)")
+#endif
+                            }
                         }
                         catch { }
                     }
@@ -227,7 +233,9 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
             }
             
             guard !SettingsStore.shared.lowDataMode else { return }
+#if DEBUG
             L.og.debug("☘️☘️ Prefetching \(imageRequests.count) + \(imageRequestsPFP.count) -[LOG]-")
+#endif
             if !imageRequests.isEmpty {
                 ImageProcessing.shared.contentPrefetcher.startPrefetching(with: imageRequests)
             }
