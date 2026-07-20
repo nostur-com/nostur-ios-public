@@ -145,6 +145,10 @@ struct GalleryFullScreenSwiper: View {
                 }
             }
         }
+        // Pinch only: DragGesture pan/dismiss fights ScrollView paging on iOS 16.
+        // scaleEffect / double-tap reset live on mediaItemView (shared with iOS 17+).
+        .simultaneousGesture(zoomGesture)
+        .scrollDisabledCompat(items.count == 1 || scale > 1.0)
         .frame(width: fullScreenSize.width, height: fullScreenSize.height)
         .background(Color.black.opacity(1 - dismissProgress))
         .overlay(alignment: .leading) { navigationLeftButton }
