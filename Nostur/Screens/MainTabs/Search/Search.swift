@@ -26,6 +26,13 @@ struct Search: View {
     @ObservedObject var settings: SettingsStore = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    private let containerID: String
+    private let showsNavigationTitle: Bool
+    
+    init(containerID: String = "Search", showsNavigationTitle: Bool = true) {
+        self.containerID = containerID
+        self.showsNavigationTitle = showsNavigationTitle
+    }
     
     private var isSearchingHashtag: Bool {
         let term = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -55,7 +62,7 @@ struct Search: View {
                             ForEach(contacts) { nrContact in
                                 VStack {
                                     NRContactSearchResultRow(nrContact: nrContact, onSelect: {
-                                        navigateTo(NRContactPath(nrContact: nrContact), context: "Search")
+                                        navigateTo(NRContactPath(nrContact: nrContact), context: containerID)
                                     }, showFollowButton: true)
                                         
                                     HStack {
@@ -70,7 +77,7 @@ struct Search: View {
                                 }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    navigateTo(NRContactPath(nrContact: nrContact), context: "Search")
+                                    navigateTo(NRContactPath(nrContact: nrContact), context: containerID)
                                 }
                             }
                             ForEach(nrPosts) { nrPost in
@@ -85,7 +92,7 @@ struct Search: View {
                                                     .padding(.vertical, 5)
                                                     .contentShape(Rectangle())
                                                     .onTapGesture {
-                                                        navigateTo(nrPost, context: "Search")
+                                                        navigateTo(nrPost, context: containerID)
                                                     }
                                                 Spacer()
                                             }
@@ -139,12 +146,20 @@ struct Search: View {
             .environmentObject(VideoPostPlaybackCoordinator())
             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
             .withNavigationDestinations(navPath: $navPath)
-            .environment(\.containerID, "Search")
+            .environment(\.containerID, containerID)
             .simultaneousGesture(TapGesture().onEnded({ _ in
-                AppState.shared.containerIDTapped = "Search"
+                AppState.shared.containerIDTapped = containerID
             }))
-            .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
-            .navigationBarTitleDisplayMode(.inline)
+            .modifier {
+                if showsNavigationTitle {
+                    $0
+                        .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
+                        .navigationBarTitleDisplayMode(.inline)
+                }
+                else {
+                    $0
+                }
+            }
             .onChange(of: searchText) { searchInput in
                 nrPosts = []
                 contacts = []
@@ -187,7 +202,7 @@ struct Search: View {
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
                 guard !IS_IPAD || horizontalSizeClass == .compact else { return }
-                guard destination.context == "Search" else { return }
+                guard destination.context == containerID else { return }
                 
                 if (type(of: destination.destination) == HashtagPath.self) {
                     navPath.removeLast(navPath.count)

@@ -47,6 +47,8 @@ struct MacColumn: View {
             return String(localized: "Live Streams", comment: "Feed title")
         case .explore:
             return String(localized: "Explore", comment: "Feed title")
+        case .search:
+            return String(localized: "Search", comment: "Navigation title for Search screen")
         case .notifications:
             return String(localized: "Notifications", comment: "Feed title")
         case .following(_):
@@ -123,6 +125,9 @@ struct MacColumn: View {
                     
                 case .explore:
                     ExploreColumn()
+                    
+                case .search:
+                    SearchColumn(containerID: config.id.uuidString)
                     
                 case .notifications(let accountPubkey):
                     self.renderNotificationsColumn(accountPubkey, columnType: $columnType)

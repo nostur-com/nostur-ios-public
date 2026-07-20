@@ -168,6 +168,10 @@ struct ColumnConfigToolbarMenu: ViewModifier {
             columnType = .bookmarks(Set(BOOKMARK_COLORS))
         }
         
+        Button("Search", systemImage: "magnifyingglass") {
+            columnType = .search
+        }
+        
         if enableExploreFeed {
             Button("Explore", systemImage: "binoculars") {
                 columnType = .explore
