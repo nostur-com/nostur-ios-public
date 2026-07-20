@@ -93,6 +93,21 @@ func goToDMs() {
     }
 }
 
+func goToDMConversation(_ conversation: NewDMConversation) {
+    // DMs moved into the Main navigation stack on iOS 26, so push both destinations on that stack directly.
+    if #available(iOS 26.0, *), !IS_CATALYST {
+        setSelectedTab("Main")
+        navigateToOnMain(ViewPath.DMs)
+        navigateToOnMain(conversation)
+    }
+    else { // older iOS, or catalyst (both pre/post 26)
+        goToDMs()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            sendNotification(.triggerDM, conversation)
+        }
+    }
+}
+
 func nxLogChanges<T: View>(of viewType: T.Type) {
     if #available(iOS 17.1, *) {
         viewType._logChanges()
