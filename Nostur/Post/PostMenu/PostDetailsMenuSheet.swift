@@ -60,6 +60,13 @@ struct PostDetailsMenuSheet: View {
                         .foregroundColor(theme.accent)
                 }
                 
+                NavigationLink {
+                    PostRawJSONSheet(nrPost: nrPost, rootDismiss: rootDismiss)
+                } label: {
+                    Label("Show raw JSON", systemImage: "doc.text.magnifyingglass")
+                        .foregroundColor(theme.accent)
+                }
+                
                 if nrPost.isRestricted && isOwnPost && isFullAccount {
                     NavigationLink {
                         RepublishRestrictedPostSheet(nrPost: nrPost, rootDismiss: rootDismiss)
@@ -198,6 +205,94 @@ struct PostDetailsMenuSheet: View {
                 else {
                     Unpublisher.shared.publishNow(nEvent)
                 }
+            }
+        }
+    }
+}
+
+struct PostRawJSONTextView: UIViewRepresentable {
+    let text: String
+    let textColor: Color
+    let accentColor: Color
+    
+    func makeUIView(context: Context) -> UITextView {
+        let view = UITextView()
+        view.isEditable = false
+        view.isSelectable = true
+        view.isScrollEnabled = true
+        view.alwaysBounceVertical = true
+        view.backgroundColor = .clear
+        view.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        view.textContainer.lineFragmentPadding = 0
+        view.autocorrectionType = .no
+        view.autocapitalizationType = .none
+        view.font = UIFont.monospacedSystemFont(
+            ofSize: UIFont.preferredFont(forTextStyle: .footnote).pointSize,
+            weight: .regular
+        )
+        view.adjustsFontForContentSizeCategory = true
+        updateUIView(view, context: context)
+        return view
+    }
+    
+    func updateUIView(_ uiView: UITextView, context: Context) {
+        if uiView.text != text {
+            uiView.text = text
+        }
+        uiView.textColor = UIColor(textColor)
+        uiView.tintColor = UIColor(accentColor)
+    }
+}
+
+struct PostRawJSONSheet: View {
+    @Environment(\.theme) private var theme
+    
+    private let nrPost: NRPost
+    private let rootDismiss: (() -> Void)?
+    
+    @State private var rawSource: String? = nil
+    
+    init(nrPost: NRPost, rootDismiss: (() -> Void)? = nil) {
+        self.nrPost = nrPost
+        self.rootDismiss = rootDismiss
+    }
+    
+    var body: some View {
+        Group {
+            if let rawSource {
+                PostRawJSONTextView(
+                    text: rawSource,
+                    textColor: theme.primary,
+                    accentColor: theme.accent
+                )
+            }
+            else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding()
+            }
+        }
+        .background(theme.listBackground)
+        .navigationTitle("Raw JSON")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
+                    rootDismiss?()
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Copy", systemImage: "doc.on.doc") {
+                    if let rawSource {
+                        UIPasteboard.general.string = rawSource
+                    }
+                }
+                .disabled(rawSource == nil)
+            }
+        }
+        .task {
+            rawSource = await withBgContext { _ in
+                return nrPost.event?.toNEvent().eventJson([.prettyPrinted, .withoutEscapingSlashes])
             }
         }
     }
