@@ -56,10 +56,12 @@ class Themes: ObservableObject {
     }
         
     private static func mirrorShareExtensionTheme(_ theme: Theme) {
+        #if !targetEnvironment(macCatalyst)
         let shareDefaults = UserDefaults(suiteName: "group.com.nostur.Share")
         setSharedColor(theme.accent, key: "share_theme_accent", defaults: shareDefaults)
         setSharedColor(theme.listBackground, key: "share_theme_list_background", defaults: shareDefaults)
         shareDefaults?.synchronize()
+        #endif
     }
 
     private static func setSharedColor(_ color: Color, key: String, defaults: UserDefaults?) {

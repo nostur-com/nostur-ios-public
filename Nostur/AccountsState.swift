@@ -59,19 +59,30 @@ class AccountsState: ObservableObject {
     public var bgAccountPubkeys: Set<String> = []
     public var bgFullAccountPubkeys: Set<String> = []
 
+    private static var isShareExtensionSharingEnabled: Bool {
+        #if targetEnvironment(macCatalyst)
+        false
+        #else
+        true
+        #endif
+    }
+
     private static func setSharedActiveAccountPublicKey(_ pubkey: String) {
+        guard isShareExtensionSharingEnabled else { return }
         let defaults = UserDefaults(suiteName: "group.com.nostur.Share")
         defaults?.setValue(pubkey, forKey: "activeAccountPublicKey")
         defaults?.synchronize()
     }
 
     private static func setSharedWriteRelayList(_ relayUrls: [String]) {
+        guard isShareExtensionSharingEnabled else { return }
         let defaults = UserDefaults(suiteName: "group.com.nostur.Share")
         defaults?.set(relayUrls, forKey: "write_relay_list")
         defaults?.synchronize()
     }
 
     private static func setSharedAccountState(account: CloudAccount?) {
+        guard isShareExtensionSharingEnabled else { return }
         let defaults = UserDefaults(suiteName: "group.com.nostur.Share")
         let accountPicture = (account?.pictureUrl?.absoluteString ?? account?.picture ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -91,6 +102,7 @@ class AccountsState: ObservableObject {
     }
 
     private static func sharedCachedProfileImageURL(for pictureURLString: String, pubkey: String) -> URL? {
+        guard isShareExtensionSharingEnabled else { return nil }
         let fileName = "account-pfp-\(pubkey).png"
         guard let pictureURL = URL(string: pictureURLString),
               hasFPFcacheFor(pfpImageRequestFor(pictureURL)),
@@ -112,6 +124,7 @@ class AccountsState: ObservableObject {
     }
 
     private static func removeSharedCachedProfileImage(fileName: String) {
+        guard isShareExtensionSharingEnabled else { return }
         guard let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.nostur.Share") else { return }
         try? FileManager.default.removeItem(at: containerURL.appendingPathComponent(fileName))
     }
@@ -147,12 +160,14 @@ class AccountsState: ObservableObject {
     }
 
     @MainActor private func mirrorShareExtensionAccountState(account: CloudAccount?) {
+        guard Self.isShareExtensionSharingEnabled else { return }
         Self.setSharedWriteRelayList(Self.effectiveWriteRelayUrls(for: account))
         Self.setSharedAccountState(account: account)
         Self.setSharedAccounts(accounts.filter { $0.isFullAccount })
     }
 
     @MainActor private static func setSharedAccounts(_ accounts: [CloudAccount]) {
+        guard isShareExtensionSharingEnabled else { return }
         let sharedAccounts = accounts.map { account in
             let accountPicture = (account.pictureUrl?.absoluteString ?? account.picture)
                 .trimmingCharacters(in: .whitespacesAndNewlines)

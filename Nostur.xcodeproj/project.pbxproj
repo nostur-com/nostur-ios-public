@@ -36,7 +36,7 @@
 		1FC283382FDC033300AC5AE4 /* Config.xcconfig.dist in Resources */ = {isa = PBXBuildFile; fileRef = 1FC283372FDC033300AC5AE4 /* Config.xcconfig.dist */; };
 		1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC4D40A2997E58E004E88CD /* KeychainAccess */; };
 		1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC5834E2BDDBA5B000C3588 /* SwiftUIFlow */; };
-		1FCF2E673004EDC700BF1A91 /* Share with Nostur.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1FCF2E5D3004EDC700BF1A91 /* Share with Nostur.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1FCF2E673004EDC700BF1A91 /* Share with Nostur.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1FCF2E5D3004EDC700BF1A91 /* Share with Nostur.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */ = {isa = PBXBuildFile; productRef = 1FE8828A2B48E9DC00A903F0 /* NavigationBackport */; };
 		1FEF2B302F01D6A40078188A /* SwiftCBOR in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEF2B2F2F01D6A40078188A /* SwiftCBOR */; };
 /* End PBXBuildFile section */
@@ -542,6 +542,7 @@
 		};
 		1FCF2E663004EDC700BF1A91 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilter = ios;
 			target = 1FCF2E5C3004EDC700BF1A91 /* Share with Nostur */;
 			targetProxy = 1FCF2E653004EDC700BF1A91 /* PBXContainerItemProxy */;
 		};
@@ -697,6 +698,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = NosturIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Nostur/Nostur.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = Nostur/Nostur.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Nostur/Nostur-macOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Nostur/Preview Content\"";
@@ -755,6 +758,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Nostur/Nostur.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = Nostur/Nostur.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Nostur/Nostur-macOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Nostur/Preview Content\"";

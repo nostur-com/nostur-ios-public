@@ -603,16 +603,20 @@ final class SettingsStore: ObservableObject {
     }
 
     private static func setSharedBlossomServerList(_ serverList: [String]) {
+        #if !targetEnvironment(macCatalyst)
         UserDefaults(suiteName: "group.com.nostur.Share")?.set(serverList, forKey: Keys.blossomServerList)
+        #endif
     }
 
     private static func setSharedPostUserAgentState(enabled: Bool, excludedPubkeys: Set<String>) {
+        #if !targetEnvironment(macCatalyst)
         let defaults = UserDefaults(suiteName: "group.com.nostur.Share")
         defaults?.set(enabled, forKey: Keys.postUserAgentEnabled)
         defaults?.set(excludedPubkeys.joined(separator: " "), forKey: Keys.excludedUserAgentPubkeys)
         defaults?.set(NIP89_APP_NAME, forKey: "nip89_app_name")
         defaults?.set(NIP89_APP_REFERENCE, forKey: "nip89_app_reference")
         defaults?.synchronize()
+        #endif
     }
     
     // optimize
