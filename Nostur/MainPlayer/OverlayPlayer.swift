@@ -99,6 +99,10 @@ struct OverlayPlayer: View {
     @State private var detailStreamControlsHideTask: Task<Void, Never>?
     @State private var shouldRestoreDetailStreamAfterRotatedFullscreen = false
     @State private var isRotatedFullscreen = false
+    /// Tracks real macOS window full screen (green button / `NSWindow.toggleFullScreen`).
+    @State private var isNativeMacFullScreen = false
+    /// True when this player session requested native Mac full screen (so we can restore on close).
+    @State private var enteredNativeMacFullScreenFromPlayer = false
     
     private var videoAlignment: Alignment {
         if vm.viewMode == .fullscreen { return .center }
@@ -148,11 +152,55 @@ struct OverlayPlayer: View {
     
     @ViewBuilder
     private func fullscreenControls(isLandscape: Bool) -> some View {
+        // Layout follows window aspect; on macOS the expand control toggles native
+        // window full screen instead of iOS landscape rotation (see handleFullscreenExpandToggle).
         if isLandscape {
             landscapeFullscreenBottomControls()
         }
         else {
             portraitFullscreenControls()
+        }
+    }
+    
+    /// macOS: enter/exit based on real window full screen. iOS portrait: always "expand".
+    private var portraitFullscreenExpandSystemName: String {
+        if IS_CATALYST {
+            return isNativeMacFullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right"
+        }
+        return "arrow.up.left.and.arrow.down.right"
+    }
+    
+    private var portraitFullscreenExpandLabel: String {
+        if IS_CATALYST {
+            return isNativeMacFullScreen ? "Exit Full Screen" : "Enter Full Screen"
+        }
+        return "Rotate Full Screen"
+    }
+    
+    /// macOS: enter/exit based on real window full screen. iOS landscape: always "exit".
+    private var landscapeFullscreenExpandSystemName: String {
+        if IS_CATALYST {
+            return isNativeMacFullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right"
+        }
+        return "arrow.down.right.and.arrow.up.left"
+    }
+    
+    private var landscapeFullscreenExpandLabel: String {
+        if IS_CATALYST {
+            return isNativeMacFullScreen ? "Exit Full Screen" : "Enter Full Screen"
+        }
+        return "Exit Full Screen"
+    }
+    
+    /// macOS only: toggle real `NSWindow` full screen (not iOS orientation rotation).
+    private func handleMacNativeFullscreenToggle() {
+        guard IS_CATALYST else { return }
+        let wasNativeFullScreen = isNativeMacFullScreen || isMacWindowInFullScreen()
+        toggleNativeMacFullScreenFromPlayer()
+        // Mirror iOS rotate-to-portrait: leaving expanded full screen returns to stream detail.
+        if wasNativeFullScreen, shouldRestoreDetailStreamAfterRotatedFullscreen {
+            shouldRestoreDetailStreamAfterRotatedFullscreen = false
+            vm.viewMode = .detailstream
         }
     }
     
@@ -166,8 +214,13 @@ struct OverlayPlayer: View {
                 Spacer(minLength: 12)
                 
                 fullscreenOutputControls()
-                controlButton(systemName: "arrow.up.left.and.arrow.down.right", label: "Rotate Full Screen") {
-                    rotateToLandscape()
+                controlButton(systemName: portraitFullscreenExpandSystemName, label: portraitFullscreenExpandLabel) {
+                    if IS_CATALYST {
+                        handleMacNativeFullscreenToggle()
+                    }
+                    else {
+                        rotateToLandscape()
+                    }
                 }
             }
         }
@@ -182,8 +235,13 @@ struct OverlayPlayer: View {
             HStack(spacing: 16) {
                 Spacer()
                 fullscreenOutputControls()
-                controlButton(systemName: "arrow.down.right.and.arrow.up.left", label: "Exit Full Screen") {
-                    rotateToPortrait()
+                controlButton(systemName: landscapeFullscreenExpandSystemName, label: landscapeFullscreenExpandLabel) {
+                    if IS_CATALYST {
+                        handleMacNativeFullscreenToggle()
+                    }
+                    else {
+                        rotateToPortrait()
+                    }
                 }
             }
             
@@ -863,6 +921,9 @@ struct OverlayPlayer: View {
                     syncMutedState()
                     applyFullscreenControlsForPlaybackState()
                     applyDetailStreamControlsForPlaybackState()
+                    if IS_CATALYST {
+                        syncNativeMacFullScreenState()
+                    }
                     
                     guard let nrPost = vm.nrPost else {
                         bookmarkState = false
@@ -878,6 +939,15 @@ struct OverlayPlayer: View {
                         bookmarkState = false
                     }
                 }
+                .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NSWindowDidEnterFullScreenNotification"))) { _ in
+                    guard IS_CATALYST else { return }
+                    isNativeMacFullScreen = true
+                }
+                .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NSWindowDidExitFullScreenNotification"))) { _ in
+                    guard IS_CATALYST else { return }
+                    isNativeMacFullScreen = false
+                    enteredNativeMacFullScreenFromPlayer = false
+                }
                 .onDisappear {
                     fullscreenControlsHideTask?.cancel()
                     fullscreenControlsHideTask = nil
@@ -888,6 +958,8 @@ struct OverlayPlayer: View {
                     }
                     else {
                         restoreAllowedOrientations()
+                        // Leaving non-fullscreen modes should still restore Mac window if we fullscreened it.
+                        exitNativeMacFullScreenFromPlayerIfNeeded()
                     }
                 }
                 .onChange(of: bookmarkState) { [bookmarkState] newState in
@@ -1095,13 +1167,24 @@ struct OverlayPlayer: View {
     private func enterDetailStreamRotatedFullscreen() {
         shouldRestoreDetailStreamAfterRotatedFullscreen = true
         vm.viewMode = .fullscreen
-        rotateToLandscape()
+        if IS_CATALYST {
+            // Real macOS window full screen — not iOS landscape rotation.
+            enterNativeMacFullScreenFromPlayer()
+        }
+        else {
+            rotateToLandscape()
+        }
     }
     
     private func rotateToLandscape() {
-#if targetEnvironment(macCatalyst)
-        return
-#else
+        if IS_CATALYST {
+            // Orientation APIs are iOS-only; on Mac use native window full screen.
+            if vm.viewMode != .fullscreen, vm.availableViewModes.contains(.fullscreen) {
+                vm.viewMode = .fullscreen
+            }
+            enterNativeMacFullScreenFromPlayer()
+            return
+        }
         if vm.viewMode != .fullscreen, vm.availableViewModes.contains(.fullscreen) {
             vm.viewMode = .fullscreen
         }
@@ -1122,7 +1205,6 @@ struct OverlayPlayer: View {
 #endif
             }
         }
-#endif
     }
     
     private func rotateToPortrait() {
@@ -1134,22 +1216,23 @@ struct OverlayPlayer: View {
             hideFullscreenControls()
         }
         
-#if !targetEnvironment(macCatalyst)
-        AppDelegate.supportedOrientations = .allButUpsideDown
-        refreshSupportedOrientations()
-        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
-        UINavigationController.attemptRotationToDeviceOrientation()
-        
-        guard let windowScene = activeWindowScene() else { return }
-        
-        if #available(iOS 16.0, *) {
-            windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait)) { error in
+        if IS_CATALYST {
+            exitNativeMacFullScreenFromPlayerIfNeeded()
+        }
+        else {
+            AppDelegate.supportedOrientations = .allButUpsideDown
+            refreshSupportedOrientations()
+            UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+            UINavigationController.attemptRotationToDeviceOrientation()
+            
+            if let windowScene = activeWindowScene(), #available(iOS 16.0, *) {
+                windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait)) { error in
 #if DEBUG
-                L.og.debug("Portrait rotation request failed: \(error.localizedDescription)")
+                    L.og.debug("Portrait rotation request failed: \(error.localizedDescription)")
 #endif
+                }
             }
         }
-#endif
         
         if shouldRestoreDetailStreamAfterRotatedFullscreen {
             shouldRestoreDetailStreamAfterRotatedFullscreen = false
@@ -1158,11 +1241,13 @@ struct OverlayPlayer: View {
     }
     
     private func restoreAllowedOrientations() {
-#if !targetEnvironment(macCatalyst)
+        if IS_CATALYST {
+            isRotatedFullscreen = false
+            return
+        }
         isRotatedFullscreen = false
         AppDelegate.supportedOrientations = .allButUpsideDown
         refreshSupportedOrientations()
-#endif
     }
     
     private func activeWindowScene() -> UIWindowScene? {
@@ -1177,6 +1262,93 @@ struct OverlayPlayer: View {
         }
         else {
             UINavigationController.attemptRotationToDeviceOrientation()
+        }
+    }
+    
+    // MARK: - Native macOS window full screen (Mac Catalyst)
+    
+    /// NSWindow.StyleMask.fullScreen raw value (`1 << 14`).
+    private static let nsWindowFullScreenStyleMask: UInt = 1 << 14
+    
+    private func keyMacNSWindow() -> NSObject? {
+        guard IS_CATALYST else { return nil }
+        guard let appClass = NSClassFromString("NSApplication") as? NSObject.Type else { return nil }
+        let sharedSelector = NSSelectorFromString("sharedApplication")
+        guard appClass.responds(to: sharedSelector),
+              let nsApp = appClass.perform(sharedSelector)?.takeUnretainedValue() as? NSObject
+        else { return nil }
+        
+        if let keyWindow = nsApp.value(forKey: "keyWindow") as? NSObject {
+            return keyWindow
+        }
+        if let mainWindow = nsApp.value(forKey: "mainWindow") as? NSObject {
+            return mainWindow
+        }
+        return (nsApp.value(forKey: "windows") as? [NSObject])?.first
+    }
+    
+    private func isMacWindowInFullScreen() -> Bool {
+        guard let window = keyMacNSWindow(),
+              let styleMask = window.value(forKey: "styleMask") as? UInt
+        else { return false }
+        return styleMask & Self.nsWindowFullScreenStyleMask != 0
+    }
+    
+    private func performMacWindowToggleFullScreen() {
+        guard let window = keyMacNSWindow() else { return }
+        let selector = NSSelectorFromString("toggleFullScreen:")
+        guard window.responds(to: selector) else { return }
+        window.perform(selector, with: nil)
+    }
+    
+    private func syncNativeMacFullScreenState() {
+        guard IS_CATALYST else { return }
+        isNativeMacFullScreen = isMacWindowInFullScreen()
+        if !isNativeMacFullScreen {
+            enteredNativeMacFullScreenFromPlayer = false
+        }
+    }
+    
+    private func enterNativeMacFullScreenFromPlayer() {
+        guard IS_CATALYST else { return }
+        syncNativeMacFullScreenState()
+        guard !isNativeMacFullScreen else { return }
+        enteredNativeMacFullScreenFromPlayer = true
+        performMacWindowToggleFullScreen()
+        // Notifications update state; also resync shortly after the animation starts.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            syncNativeMacFullScreenState()
+        }
+    }
+    
+    private func exitNativeMacFullScreenFromPlayerIfNeeded() {
+        guard IS_CATALYST else { return }
+        syncNativeMacFullScreenState()
+        guard enteredNativeMacFullScreenFromPlayer, isNativeMacFullScreen else { return }
+        performMacWindowToggleFullScreen()
+        enteredNativeMacFullScreenFromPlayer = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            syncNativeMacFullScreenState()
+        }
+    }
+    
+    private func toggleNativeMacFullScreenFromPlayer() {
+        guard IS_CATALYST else { return }
+        syncNativeMacFullScreenState()
+        if isNativeMacFullScreen {
+            // Exit whether we or the user entered full screen — explicit toggle.
+            if enteredNativeMacFullScreenFromPlayer {
+                exitNativeMacFullScreenFromPlayerIfNeeded()
+            }
+            else {
+                performMacWindowToggleFullScreen()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    syncNativeMacFullScreenState()
+                }
+            }
+        }
+        else {
+            enterNativeMacFullScreenFromPlayer()
         }
     }
     
