@@ -12,17 +12,24 @@ import Algorithms
 struct CustomizableFooterFragmentView: View {
     @ObservedObject private var settings: SettingsStore = .shared
     @ObservedObject private var vmc: ViewModelCache = .shared
+    @ObservedObject private var footerAttributes: FooterAttributes
     private var theme: Theme
 
     private let nrPost: NRPost
     private var isDetail = false
     private let isItem: Bool
     
+    /// MiniPFPs hang below the reply icon via overlay/offset and need a little extra footer height.
+    private var showsReplyMiniPFPs: Bool {
+        !isDetail && !footerAttributes.replyPFPs.isEmpty
+    }
+    
     init(nrPost: NRPost, isDetail: Bool = false, isItem: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.isDetail = isDetail
         self.isItem = isItem
         self.theme = theme
+        self.footerAttributes = nrPost.footerAttributes
     }
     
     var body: some View {
@@ -44,7 +51,8 @@ struct CustomizableFooterFragmentView: View {
             }
         }
         .padding(.top, 5)
-        .padding(.bottom, 16)
+        // Base 16; extra when MiniPFPs are overlaid under ReplyButton (offset y:19 + 20pt size)
+        .padding(.bottom, showsReplyMiniPFPs ? 23 : 16)
         .foregroundColor(theme.footerButtons)
         .font(.system(size: 14))
     }

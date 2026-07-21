@@ -191,7 +191,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
                 
                 if isDetail || (((!hideFooter || showFooter) && settings.rowFooterEnabled) && !isItem) {
-                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, isItem: isItem, theme: theme)
+                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: isDetail, isItem: isItem, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
                 }
