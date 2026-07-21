@@ -309,7 +309,11 @@ struct MainFeedsScreen: View {
                         AvailableWidthContainer {
                             NXColumnView(config: followingConfig, isVisible: selectedSubTab == "Following")
                         }
+                        // Keep inactive columns mounted, but only the visible one may receive scroll/hits
+                        // so tabBarMinimizeBehavior can bind to a single primary scroller.
                         .opacity(selectedSubTab == "Following" ? 1.0 : 0)
+                        .allowsHitTesting(selectedSubTab == "Following")
+                        .zIndex(selectedSubTab == "Following" ? 1 : 0)
                     }
                 }
                 
@@ -318,6 +322,8 @@ struct MainFeedsScreen: View {
                         NXColumnView(config: pictureConfig, isVisible: selectedSubTab == "Picture")
                     }
                     .opacity(selectedSubTab == "Picture" ? 1.0 : 0)
+                    .allowsHitTesting(selectedSubTab == "Picture")
+                    .zIndex(selectedSubTab == "Picture" ? 1 : 0)
                 }
                 
                 if let yakConfig, la.viewFollowingPublicKeys.count > 10  {
@@ -325,6 +331,8 @@ struct MainFeedsScreen: View {
                         NXColumnView(config: yakConfig, isVisible: selectedSubTab == "Yak")
                     }
                     .opacity(selectedSubTab == "Yak" ? 1.0 : 0)
+                    .allowsHitTesting(selectedSubTab == "Yak")
+                    .zIndex(selectedSubTab == "Yak" ? 1 : 0)
                 }
                 
                 if let vineConfig, la.viewFollowingPublicKeys.count > 10  {
@@ -332,15 +340,20 @@ struct MainFeedsScreen: View {
                         NXColumnView(config: vineConfig, isVisible: selectedSubTab == "Vine")
                     }
                     .opacity(selectedSubTab == "Vine" ? 1.0 : 0)
+                    .allowsHitTesting(selectedSubTab == "Vine")
+                    .zIndex(selectedSubTab == "Vine" ? 1 : 0)
                 }
                 
                 // LISTS
                 ForEach(columnConfigs) { config in
+                    let isActiveList = selectedSubTab == "List" && selectedList?.subscriptionId == config.id
                     AvailableWidthContainer {
-                        NXColumnView(config: config, isVisible: selectedSubTab == "List" && selectedList?.subscriptionId == config.id)
+                        NXColumnView(config: config, isVisible: isActiveList)
                     }
                     .id(config.id)
-                    .opacity(selectedSubTab == "List" && selectedList?.subscriptionId == config.id  ? 1.0 : 0)
+                    .opacity(isActiveList ? 1.0 : 0)
+                    .allowsHitTesting(isActiveList)
+                    .zIndex(isActiveList ? 1 : 0)
                 }
                 
                 // EXPLORE
@@ -350,6 +363,8 @@ struct MainFeedsScreen: View {
                     }
                     .id(exploreConfig.id)
                     .opacity(selectedSubTab == "Explore" ? 1.0 : 0)
+                    .allowsHitTesting(selectedSubTab == "Explore")
+                    .zIndex(selectedSubTab == "Explore" ? 1 : 0)
                 }
                 
                 // DISCOVER LISTS / FOLLOW PACKS

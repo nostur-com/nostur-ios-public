@@ -120,6 +120,8 @@ struct NotificationsScreen: View {
             
             NotificationPermissionBanner()
             
+            // List/ScrollView must be the expanding primary scroller (no Spacer competing for height),
+            // or tabBarMinimizeBehavior(.onScrollDown) will not attach on iOS 26.
             AvailableWidthContainer {
                 switch (tab) {
                     case "Mentions", "Posts": // (old name was "Posts")
@@ -139,8 +141,8 @@ struct NotificationsScreen: View {
                 }
             }
             .padding(.top, GUTTER)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(theme.listBackground)
-            Spacer()
             
             AudioOnlyBarSpace()
         }

@@ -14,8 +14,8 @@ import SwiftUI
 struct NXListRow<Content: View>: View {
     let nrPost: NRPost
     let vm: NXColumnViewModel
-    let containerTopOffset: CGFloat
     
+    @Environment(\.containerTopOffset) private var containerTopOffset
     @ViewBuilder var content: Content
     @State private var didAppearOnce = false
     
@@ -56,12 +56,24 @@ struct NXListRow<Content: View>: View {
     }
 }
 
+/// Measures top offset without wrapping the scroll view in a GeometryReader (which breaks
+/// system tab-bar minimize / scroll-edge linking on iOS 26).
 struct WithTopOffsetEnvironmentKeyViewModifier: ViewModifier {
+    @State private var topOffset: CGFloat = 0
+    
     func body(content: Content) -> some View {
-        GeometryReader { geo in
-            content
-                .environment(\.containerTopOffset, geo.safeAreaInsets.top == 0 ? geo.frame(in: .global).minY : geo.safeAreaInsets.top)
-        }
+        content
+            .environment(\.containerTopOffset, topOffset)
+            .background {
+                GeometryReader { geo in
+                    Color.clear
+                        .preference(
+                            key: ContainerTopOffsetPreferenceKey.self,
+                            value: geo.safeAreaInsets.top == 0 ? geo.frame(in: .global).minY : geo.safeAreaInsets.top
+                        )
+                }
+            }
+            .onPreferenceChange(ContainerTopOffsetPreferenceKey.self) { topOffset = $0 }
     }
 }
 
@@ -73,6 +85,13 @@ extension View {
 
 private struct ContainerTopOffSetKey: EnvironmentKey {
     static let defaultValue: CGFloat = 0
+}
+
+private struct ContainerTopOffsetPreferenceKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
 }
 
 extension EnvironmentValues {

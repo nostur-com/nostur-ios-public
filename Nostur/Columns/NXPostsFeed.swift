@@ -12,6 +12,8 @@ import Combine
 struct NXPostsFeed: View {
     
     @Environment(\.theme) private var theme
+    @Environment(\.availableWidth) private var availableWidth
+    @Environment(\.availableHeight) private var availableHeight
     
     private var vm: NXColumnViewModel
     private let posts: [NRPost]
@@ -45,157 +47,157 @@ struct NXPostsFeed: View {
     }
     
     var body: some View {
-        GeometryReader { geo in
-            List(posts) { nrPost in
-                NXListRow(nrPost: nrPost, vm: vm, containerTopOffset: geo.safeAreaInsets.top == 0 ? geo.frame(in: .global).minY : geo.safeAreaInsets.top) {
-                    PostOrThread(nrPost: nrPost, theme: theme)
-                        .environment(\.availableHeight, geo.size.height)
-                        .environment(\.availableWidth, geo.size.width)
-                        .environment(\.relayFeedRelays, relayFeedRelays)
-                }
-                .onDisappear {
-                    onPostDisappear(nrPost)
-                }
-                .listRowSeparator(.hidden)
-                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-            }
-            .withContainerTopOffsetEnvironmentKey()
-            .scrollOffsetID(vm.columnVMid)
-            .environment(\.defaultMinListRowHeight, 50)
-            .listStyle(.plain)
-            .introspect(.list, on: .iOS(.v15)) { [weak vm] view in
-                guard let vm else { return }
-                DispatchQueue.main.async {
-                    vm.tableView = view
-                    if vm.tablePrefetcher == nil {
-                        vm.tablePrefetcher = NXPostsFeedTablePrefetcher()
-                        vm.tablePrefetcher?.columnViewModel = vm
-                        view.isPrefetchingEnabled = true
-                        view.prefetchDataSource = vm.tablePrefetcher
-                    }
-                }
-                
-                // Special handling for the anti-flicker approach
-                if vm.vmInner.isPreparingForScrollRestore, let pendingIndex = vm.vmInner.pendingScrollToIndex {
-                    // Immediately scroll to the target index without animation
-                    if let rows = view.dataSource?.tableView(view, numberOfRowsInSection: 0),
-                       rows > pendingIndex {
-                        UIView.setAnimationsEnabled(false)
-                        view.scrollToRow(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
-                        UIView.setAnimationsEnabled(true)
-                        
-                        if pendingIndex > 0 {
-                            vm.vmInner.updateIsAtTopSubject.send()
-                        }
-                    }
-                }
-            }
-            .introspect(.list, on: .iOS(.v16...)) { [weak vm] view in
-                guard let vm else { return }
-                DispatchQueue.main.async {
-                    vm.collectionView = view
-                    
-                    if vm.collectionPrefetcher == nil {
-                        vm.collectionPrefetcher = NXPostsFeedPrefetcher()
-                        vm.collectionPrefetcher?.columnViewModel = vm
-                        view.isPrefetchingEnabled = true
-                        view.prefetchDataSource = vm.collectionPrefetcher
-                    }
-                }
-                
-                // Special handling for the anti-flicker approach
-                if vm.vmInner.isPreparingForScrollRestore, let pendingIndex = vm.vmInner.pendingScrollToIndex {
-                    // Immediately scroll to the target index without animation
-                    if let rows = view.dataSource?.collectionView(view, numberOfItemsInSection: 0),
-                       rows > pendingIndex {
-                        UIView.setAnimationsEnabled(false)
-                        view.scrollToItem(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
-                        UIView.setAnimationsEnabled(true)
-                        
-                        if pendingIndex > 0 {
-                            vm.vmInner.updateIsAtTopSubject.send()
-                        }
-                    }
-                }
-            }
-            .scrollContentBackgroundHidden()
-            .background(theme.listBackground)
-            .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
-                guard let scrollToIndex else { return }
-                guard !vmInner.isPerformingScroll else { return } // Prevent re-entrancy
-                guard !vmInner.isPerformingScrollToFirstUnread else { return } // Prevent re-entrancy
-                
-    #if DEBUG
-                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description) -[LOG]-")
-    #endif
-                
-                performScrollToIndex(scrollToIndex)
-            }
-            .overlay(alignment: .topTrailing) {
-                if vmInner.unreadCount != 0 {
-                    unreadCounterView
-                        .offset(x: nxUnreadCounterOffsetX + dragOffset.width,
-                               y: nxUnreadCounterOffsetY + dragOffset.height)
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    dragOffset = value.translation
-                                }
-                                .onEnded { value in
-                                    let newX = nxUnreadCounterOffsetX + value.translation.width
-                                    let newY = nxUnreadCounterOffsetY + value.translation.height
-                                    
-                                    // Constrain position within screen bounds with padding
-                                    let minX: CGFloat = -(ScreenSpace.shared.mainTabSize.width - 91) // not offscreen to the left
-                                    let minY: CGFloat = 0 // already top-right, don't move more
-                                    let maxX: CGFloat = 0 // already top-right, don't move more
-                                    let maxY: CGFloat = ScreenSpace.shared.mainTabSize.height - 296 // not too low
-                                    
-                                    let clampedX = min(max(newX, minX), maxX)
-                                    let clampedY = min(max(newY, minY), maxY)
-                                    
-                                    // Save position to UserDefaults
-                                    nxUnreadCounterOffsetX = clampedX
-                                    nxUnreadCounterOffsetY = clampedY
-                                    dragOffset = .zero
-                                }
-                        )
-                        .onTapGesture {
-                            scrollToFirstUnread()
-                        }
-                        .simultaneousGesture(LongPressGesture().onEnded { _ in
-                            scrollToTop()
-                        })
-                }
-            }
-            .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
-                guard vm.isVisible else { return }
-                scrollToFirstUnread()
-            }
-            .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
-                guard vm.isVisible else { return }
-                
-                scrollToTop()
-            }
-            
-            // Handle going to detail and back
-            .onAppear {
-                vm.resumeViewUpdates()
-                
-                // Add updateIsAtTop() debounces - increase debounce time for better performance
-                guard updateIsAtTopSubscription == nil else { return }
-                updateIsAtTopSubscription = vmInner.updateIsAtTopSubject
-                    .debounce(for: 0.15, scheduler: RunLoop.main) // Increased from 0.075 for smoother scrolling
-                    .sink {
-                        self._updateIsAtTop()
-                    }
+        // Keep List as the top-level scroll container (no GeometryReader parent) so iOS 26
+        // tabBarMinimizeBehavior(.onScrollDown) can observe it as the primary scroller.
+        List(posts) { nrPost in
+            NXListRow(nrPost: nrPost, vm: vm) {
+                PostOrThread(nrPost: nrPost, theme: theme)
+                    .environment(\.availableHeight, availableHeight)
+                    .environment(\.availableWidth, availableWidth)
+                    .environment(\.relayFeedRelays, relayFeedRelays)
             }
             .onDisappear {
-                // When opening detail, the feed would still update in background using withAnimation { },
-                // but because its not visible the hack to keep scroll position doesn't work
-                // so we pause() updates (and resume() in onAppear {})
-                vm.pauseViewUpdates()
+                onPostDisappear(nrPost)
             }
+            .listRowSeparator(.hidden)
+            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+        }
+        .withContainerTopOffsetEnvironmentKey()
+        .scrollOffsetID(vm.columnVMid)
+        .environment(\.defaultMinListRowHeight, 50)
+        .listStyle(.plain)
+        .introspect(.list, on: .iOS(.v15)) { [weak vm] view in
+            guard let vm else { return }
+            DispatchQueue.main.async {
+                vm.tableView = view
+                if vm.tablePrefetcher == nil {
+                    vm.tablePrefetcher = NXPostsFeedTablePrefetcher()
+                    vm.tablePrefetcher?.columnViewModel = vm
+                    view.isPrefetchingEnabled = true
+                    view.prefetchDataSource = vm.tablePrefetcher
+                }
+            }
+            
+            // Special handling for the anti-flicker approach
+            if vm.vmInner.isPreparingForScrollRestore, let pendingIndex = vm.vmInner.pendingScrollToIndex {
+                // Immediately scroll to the target index without animation
+                if let rows = view.dataSource?.tableView(view, numberOfRowsInSection: 0),
+                   rows > pendingIndex {
+                    UIView.setAnimationsEnabled(false)
+                    view.scrollToRow(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
+                    UIView.setAnimationsEnabled(true)
+                    
+                    if pendingIndex > 0 {
+                        vm.vmInner.updateIsAtTopSubject.send()
+                    }
+                }
+            }
+        }
+        .introspect(.list, on: .iOS(.v16...)) { [weak vm] view in
+            guard let vm else { return }
+            DispatchQueue.main.async {
+                vm.collectionView = view
+                
+                if vm.collectionPrefetcher == nil {
+                    vm.collectionPrefetcher = NXPostsFeedPrefetcher()
+                    vm.collectionPrefetcher?.columnViewModel = vm
+                    view.isPrefetchingEnabled = true
+                    view.prefetchDataSource = vm.collectionPrefetcher
+                }
+            }
+            
+            // Special handling for the anti-flicker approach
+            if vm.vmInner.isPreparingForScrollRestore, let pendingIndex = vm.vmInner.pendingScrollToIndex {
+                // Immediately scroll to the target index without animation
+                if let rows = view.dataSource?.collectionView(view, numberOfItemsInSection: 0),
+                   rows > pendingIndex {
+                    UIView.setAnimationsEnabled(false)
+                    view.scrollToItem(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
+                    UIView.setAnimationsEnabled(true)
+                    
+                    if pendingIndex > 0 {
+                        vm.vmInner.updateIsAtTopSubject.send()
+                    }
+                }
+            }
+        }
+        .scrollContentBackgroundHidden()
+        .background(theme.listBackground)
+        .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
+            guard let scrollToIndex else { return }
+            guard !vmInner.isPerformingScroll else { return } // Prevent re-entrancy
+            guard !vmInner.isPerformingScrollToFirstUnread else { return } // Prevent re-entrancy
+            
+#if DEBUG
+            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description) -[LOG]-")
+#endif
+            
+            performScrollToIndex(scrollToIndex)
+        }
+        .overlay(alignment: .topTrailing) {
+            if vmInner.unreadCount != 0 {
+                unreadCounterView
+                    .offset(x: nxUnreadCounterOffsetX + dragOffset.width,
+                           y: nxUnreadCounterOffsetY + dragOffset.height)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                dragOffset = value.translation
+                            }
+                            .onEnded { value in
+                                let newX = nxUnreadCounterOffsetX + value.translation.width
+                                let newY = nxUnreadCounterOffsetY + value.translation.height
+                                
+                                // Constrain position within screen bounds with padding
+                                let minX: CGFloat = -(ScreenSpace.shared.mainTabSize.width - 91) // not offscreen to the left
+                                let minY: CGFloat = 0 // already top-right, don't move more
+                                let maxX: CGFloat = 0 // already top-right, don't move more
+                                let maxY: CGFloat = ScreenSpace.shared.mainTabSize.height - 296 // not too low
+                                
+                                let clampedX = min(max(newX, minX), maxX)
+                                let clampedY = min(max(newY, minY), maxY)
+                                
+                                // Save position to UserDefaults
+                                nxUnreadCounterOffsetX = clampedX
+                                nxUnreadCounterOffsetY = clampedY
+                                dragOffset = .zero
+                            }
+                    )
+                    .onTapGesture {
+                        scrollToFirstUnread()
+                    }
+                    .simultaneousGesture(LongPressGesture().onEnded { _ in
+                        scrollToTop()
+                    })
+            }
+        }
+        .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+            guard vm.isVisible else { return }
+            scrollToFirstUnread()
+        }
+        .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
+            guard vm.isVisible else { return }
+            
+            scrollToTop()
+        }
+        
+        // Handle going to detail and back
+        .onAppear {
+            vm.resumeViewUpdates()
+            
+            // Add updateIsAtTop() debounces - increase debounce time for better performance
+            guard updateIsAtTopSubscription == nil else { return }
+            updateIsAtTopSubscription = vmInner.updateIsAtTopSubject
+                .debounce(for: 0.15, scheduler: RunLoop.main) // Increased from 0.075 for smoother scrolling
+                .sink {
+                    self._updateIsAtTop()
+                }
+        }
+        .onDisappear {
+            // When opening detail, the feed would still update in background using withAnimation { },
+            // but because its not visible the hack to keep scroll position doesn't work
+            // so we pause() updates (and resume() in onAppear {})
+            vm.pauseViewUpdates()
         }
     }
     
