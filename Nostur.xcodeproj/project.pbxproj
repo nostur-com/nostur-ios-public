@@ -1162,8 +1162,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Kitura/swift-html-entities.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.0;
+				kind = revision;
+				revision = d8ca73197f59ce260c71bd6d7f6eb8bbdccf508b;
 			};
 		};
 		1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
@@ -1171,7 +1171,7 @@
 			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess";
 			requirement = {
 				kind = revision;
-				revision = ecb18d8ce4d88277cc4fb103973352d91e18c535;
+				revision = e0c7eebc5a4465a3c4680764f26b7a61f567cdaf;
 			};
 		};
 		1FC5834D2BDDB98A000C3588 /* XCRemoteSwiftPackageReference "SwiftUIFlow" */ = {
@@ -1186,8 +1186,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/johnpatrickmorgan/NavigationBackport";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.3;
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.11.6;
 			};
 		};
 		1FEF2B2E2F01D6A40078188A /* XCRemoteSwiftPackageReference "SwiftCBOR" */ = {

@@ -33,7 +33,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kishikawakatsumi/KeychainAccess",
       "state" : {
-        "revision" : "ecb18d8ce4d88277cc4fb103973352d91e18c535"
+        "revision" : "e0c7eebc5a4465a3c4680764f26b7a61f567cdaf"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/johnpatrickmorgan/NavigationBackport",
       "state" : {
-        "revision" : "b648d876f3fbe879c9c3580d3aa6a42e7807a8e3",
-        "version" : "0.9.6"
+        "revision" : "8ad57caedac32db5b86a83cefa531dfe60a453f1",
+        "version" : "0.11.6"
       }
     },
     {
@@ -121,8 +121,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kitura/swift-html-entities.git",
       "state" : {
-        "revision" : "d8ca73197f59ce260c71bd6d7f6eb8bbdccf508b",
-        "version" : "4.0.1"
+        "revision" : "d8ca73197f59ce260c71bd6d7f6eb8bbdccf508b"
       }
     },
     {
