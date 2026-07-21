@@ -358,11 +358,20 @@ struct OverlayPlayer: View {
     }
     
     private func topControlsTopPadding(geometry: GeometryProxy, isLandscape: Bool) -> CGFloat {
+        let base: CGFloat
         if isLandscape {
-            return max(geometry.safeAreaInsets.top, 8)
+            base = max(geometry.safeAreaInsets.top, 8)
         }
-        let windowTopInset = activeWindowScene()?.windows.first(where: { $0.isKeyWindow })?.safeAreaInsets.top ?? 0
-        return max(geometry.safeAreaInsets.top, windowTopInset, 8)
+        else {
+            let windowTopInset = activeWindowScene()?.windows.first(where: { $0.isKeyWindow })?.safeAreaInsets.top ?? 0
+            base = max(geometry.safeAreaInsets.top, windowTopInset, 8)
+        }
+        // Mac Catalyst hides the title bar but keeps traffic lights over the top-left content area.
+        // Push fullscreen chrome down so Close (xmark) remains tappable.
+        if IS_CATALYST {
+            return base + 28
+        }
+        return base
     }
     
     private func fullscreenTopControls(geometry: GeometryProxy, isLandscape: Bool) -> some View {
