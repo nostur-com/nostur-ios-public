@@ -96,6 +96,10 @@ struct KindResolver: View {
                 .environment(\.availableWidth, availableWidth - (DIMENSIONS.POST_ROW_PFP_DIAMETER + 10.0))
                 .task {
                     QueuedFetcher.shared.enqueue(pTag: fromPubkey)
+                    // Recipient (p tag / otherPubkey) for "Sent X sats to @name"
+                    if let otherPubkey = nrPost.fastTags.first(where: { $0.0 == "p" })?.1 {
+                        QueuedFetcher.shared.enqueue(pTag: otherPubkey)
+                    }
                 }
 //                .onAppear { self.enqueue() }
 //                .onDisappear { self.dequeue() }

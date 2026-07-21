@@ -40,11 +40,11 @@ struct PostEmbeddedLayout<Content: View>: View {
                 VStack(alignment: .leading) { // Name + menu "replying to"
                     if !authorAtBottom {
                         HStack(spacing: 5) {
-                            // profile image
-                            PFP(pubkey: nrPost.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
+                            // profile image (use nrContact.pubkey — for kind 9735 this is fromPubkey, not the wallet service)
+                            PFP(pubkey: nrContact.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
+                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                                 }
                             
                             Text(nrContact.anyName) // Name
@@ -55,7 +55,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                                 .lineLimit(1)
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
+                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                                 }
                                 
                             if nrPost.isPrivate {
@@ -95,11 +95,11 @@ struct PostEmbeddedLayout<Content: View>: View {
             if authorAtBottom {
                 HStack(spacing: 5) {
                     Spacer()
-                    // profile image
-                    PFP(pubkey: nrPost.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
+                    // profile image (use nrContact.pubkey — for kind 9735 this is fromPubkey, not the wallet service)
+                    PFP(pubkey: nrContact.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
-                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
+                            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                         }
                     
                     Text(nrContact.anyName) // Name
@@ -110,7 +110,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                         .lineLimit(1)
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
-                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
+                            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                         }
                     
                     if nrPost.isPrivate {

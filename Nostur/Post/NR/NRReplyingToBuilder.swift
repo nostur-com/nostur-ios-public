@@ -13,15 +13,11 @@ class NRReplyingToBuilder {
 
     // TODO: Add replyTo pfpUrl or pubkey or nrContact here also, and return, but only if missingReplyTo
     func replyingToUsernamesMarkDownString(_ event: Event) -> String? {
-        guard event.replyToPostOrZapId != nil || event.replyTo != nil else { return nil }
-        
         if event.kind == 9735 {
-            if let zappedEventId = event.zappedEventId {
-                return String(localized:"Sent \(event.naiveSats.satsFormatted) sats on [post](nostur:e:\(zappedEventId))", comment: "Sent X sats on <post> (Replying to text)")
-                
-            }
-            return String(localized:"Sent \(event.naiveSats.satsFormatted) sats", comment: "Sent X sats (Replying to text)")
+            return zapReplyingToUsernamesMarkDownString(event)
         }
+        
+        guard event.replyToPostOrZapId != nil || event.replyTo != nil else { return nil }
         
         if let replyTo = event.replyTo, replyTo.kind == 30023 {
             guard let articleTitle = replyTo.eventTitle else {
@@ -60,6 +56,29 @@ class NRReplyingToBuilder {
         else {
             return String(localized:"Replying to...", comment:"Shown in a post when replying but the name is missing")
         }
+    }
+    
+    /// "Sent X sats to @name on post" / "Sent X sats to @name" / "Sent X sats on post"
+    private func zapReplyingToUsernamesMarkDownString(_ event: Event) -> String? {
+        let satsFormatted = event.naiveSats.satsFormatted
+        let recipientPubkey = event.otherPubkey ?? event.firstP()
+        var recipientMD: String? = nil
+        if let recipientPubkey {
+            let username = contactUsername(fromPubkey: recipientPubkey, event: event)
+                .escapeMD()
+            recipientMD = "[@\(username)](nostur:p:\(recipientPubkey))"
+        }
+        
+        if let zappedEventId = event.zappedEventId, let recipientMD {
+            return String(localized: "Sent \(satsFormatted) sats to \(recipientMD) on [post](nostur:e:\(zappedEventId))", comment: "Sent X sats to <name> on <post> (Replying to text)")
+        }
+        if let zappedEventId = event.zappedEventId {
+            return String(localized: "Sent \(satsFormatted) sats on [post](nostur:e:\(zappedEventId))", comment: "Sent X sats on <post> (Replying to text)")
+        }
+        if let recipientMD {
+            return String(localized: "Sent \(satsFormatted) sats to \(recipientMD)", comment: "Sent X sats to <name> (Replying to text)")
+        }
+        return String(localized: "Sent \(satsFormatted) sats", comment: "Sent X sats (Replying to text)")
     }
 
 }

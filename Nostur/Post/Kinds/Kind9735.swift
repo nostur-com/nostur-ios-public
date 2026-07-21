@@ -135,31 +135,35 @@ struct Kind9735: View {
             if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                 Image(systemName: "exclamationmark.triangle.fill")
             }
-            ContentRenderer(nrPost: nrPost, showMore: $showMore,  isDetail: false, fullWidth: fullWidth, forceAutoload: shouldAutoload)
-                .environment(\.availableWidth, availableWidth_)
-                .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
-                .clipBottom(height: clipBottomHeight)
-                .overlay(alignment: .bottomTrailing) {
-                    if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
-                        ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
-                            Color.clear
-                            
-                            Image(systemName: "chevron.compact.down")
-                                .foregroundColor(.white)
-                                .padding(5)
-                                .padding(.top, 5)
-                                .background {
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .foregroundColor(theme.accent)
-                                }
+            HStack(alignment: .top, spacing: 5) {
+                ZapAmountView(nrPost: nrPost, fromPubkey: fromPubkey, withPFP: false, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme)
+                
+                ContentRenderer(nrPost: nrPost, showMore: $showMore, isDetail: false, fullWidth: fullWidth, forceAutoload: shouldAutoload)
+                    .environment(\.availableWidth, availableWidth_)
+                    .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
+                    .clipBottom(height: clipBottomHeight)
+                    .overlay(alignment: .bottomTrailing) {
+                        if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
+                            ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
+                                Color.clear
+                                
+                                Image(systemName: "chevron.compact.down")
+                                    .foregroundColor(.white)
+                                    .padding(5)
+                                    .padding(.top, 5)
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 5)
+                                            .foregroundColor(theme.accent)
+                                    }
+                            }
+                            .contentShape(Rectangle())
+                            .highPriorityGesture(TapGesture().onEnded {
+                                showMore = true
+                                clipBottomHeight = 28000.0
+                            })
                         }
-                        .contentShape(Rectangle())
-                        .highPriorityGesture(TapGesture().onEnded {
-                            showMore = true
-                            clipBottomHeight = 28000.0
-                        })
                     }
-                }
+            }
         }
     }
 }
