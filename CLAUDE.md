@@ -16,15 +16,23 @@ Nostur is a social media oriented client for the Nostr protocol, built for Mac, 
 
 ### Build Commands
 ```bash
-# Build for iOS Simulator
-xcodebuild -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+# Build for iOS Simulator (use same DerivedData as run-sim.sh for fast relaunch)
+xcodebuild -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /tmp/NosturDerived build
 
 # Build for device
 xcodebuild -scheme Nostur -destination 'platform=iOS,id=<device_id>' build
 
 # Archive for distribution
 xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
+
+# Install + launch last build on Simulator (no recompile)
+./scripts/run-sim.sh --no-build
 ```
+
+### When Finishing UI/App Work
+1. Build into `/tmp/NosturDerived` (same path as `run-sim.sh`)
+2. Always run `./scripts/run-sim.sh --no-build` so the app launches on the simulator
+3. Tell the user it is ready to test — do **not** only print the command for them to run
 
 ### Testing
 - **Test Command**: `xcodebuild test -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 16 Pro (18.5),OS=18.5'`
