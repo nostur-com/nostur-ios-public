@@ -65,6 +65,9 @@ struct NoteById: View {
             if nrPost.kind == 30023 {
                 ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
             }
+            else if nrPost.kind == 22 || nrPost.kind == 34236 {
+                ShortVideoDetailView(nrPost: nrPost, navTitleHidden: navTitleHidden)
+            }
             else {
                 PostDetailView(nrPost: nrPost, navTitleHidden: navTitleHidden)
 //                    .debugDimensions("NoteById.PostDetailView", alignment: .topLeading)

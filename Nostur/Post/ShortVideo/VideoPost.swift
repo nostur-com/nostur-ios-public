@@ -174,6 +174,12 @@ struct VideoPost: View {
                 }
             }
         }
+        .onAppear {
+            // Detail has no feed-visibility autoplay; start when opening short-video detail.
+            guard isDetail else { return }
+            coordinator.markUserPlaying(postID: postID)
+            setPlaying(true, muted: !shortVideoAutoplayAudioEnabled)
+        }
         .onValueChange(isVisible) { wasVisible, isVisibleNow in
             // When changing feed, don't continue playing
             guard isPlaying && !isVisibleNow else { return }

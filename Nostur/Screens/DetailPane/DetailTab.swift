@@ -21,7 +21,14 @@ struct DetailTab: View {
                 ZStack {
                     theme.listBackground
                         .ignoresSafeArea()
-                    PostDetailView(nrPost: nrPost, navTitleHidden: true)
+                    Group {
+                        if nrPost.kind == 22 || nrPost.kind == 34236 {
+                            ShortVideoDetailView(nrPost: nrPost, navTitleHidden: true)
+                        }
+                        else {
+                            PostDetailView(nrPost: nrPost, navTitleHidden: true)
+                        }
+                    }
 //                        .debugDimensions("DetailTab.PostDetailView", alignment: .topLeading)
                         .withNavigationDestinations(navPath: $navPath)
                         .environment(\.containerID, containerID)

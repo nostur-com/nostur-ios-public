@@ -152,6 +152,10 @@ struct NavigationDestinationsModifier: ViewModifier {
                     else {
                         Text("Missing nrLiveEvent")
                     }
+                case 22, 34236: // Short videos (Vine / Divine)
+                    ShortVideoDetailView(nrPost: nrPost)
+                        .environment(\.containerID, self.containerID)
+                        .environmentObject(VideoPostPlaybackCoordinator())
                 default:
                     PostDetailView(nrPost: nrPost)
                         .environment(\.containerID, self.containerID)
@@ -220,9 +224,16 @@ struct NavigationDestinationsModifier: ViewModifier {
             .nbNavigationDestination(for: ViewPath.self) { path in
                 switch (path) {
                     case .Post(let post):
-                        PostDetailView(nrPost: post)
-                            .environment(\.containerID, self.containerID)
-                            .environmentObject(VideoPostPlaybackCoordinator())
+                        Group {
+                            if post.kind == 22 || post.kind == 34236 {
+                                ShortVideoDetailView(nrPost: post)
+                            }
+                            else {
+                                PostDetailView(nrPost: post)
+                            }
+                        }
+                        .environment(\.containerID, self.containerID)
+                        .environmentObject(VideoPostPlaybackCoordinator())
                     case .Blocklist:
                         BlockListScreen()
                             .tabBarSpaceCompat()
