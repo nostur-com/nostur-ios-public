@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import CoreData
 
 public typealias NRPostID = String
 
@@ -15,6 +16,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     @Published var groupedRepliesSorted: [NRPost] = []
     @Published var groupedRepliesNotWoT: [NRPost] = []
+    /// Root nodes for nested reply rendering (when `SettingsStore.nestedRepliesEnabled`).
+    @Published var nestedRepliesSorted: [NestedReplyNode] = []
+    @Published var nestedRepliesNotWoT: [NestedReplyNode] = []
     
 
     // Separate ObservableObjects for view performance optimization
@@ -182,10 +186,16 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
     }
     
+    private var suppressRepliesToRootDidSet = false
     private var _repliesToRoot: [NRPost] = [] {
         didSet {
+            guard !suppressRepliesToRootDidSet else { return }
             if withGroupedReplies {
-                self.groupRepliesToRoot.send([])
+                // Always hop to main: this didSet often runs on nrPostQueue, and the
+                // groupRepliesToRoot pipeline is debounced on RunLoop.main.
+                DispatchQueue.main.async { [weak self] in
+                    self?.groupRepliesToRoot.send([])
+                }
             }
         }
     }
@@ -846,6 +856,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] nrPosts in
                 guard let self = self else { return }
+                // Always rebuild both presentations; the view picks which list to show.
                 self._groupRepliesToRoot(nrPosts)
             }
     }
@@ -1067,7 +1078,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                             }
   
                     if (self.withGroupedReplies) {
-                        self.groupRepliesToRoot.send(nrReplies)
+                        DispatchQueue.main.async { [weak self] in
+                            self?.groupRepliesToRoot.send(nrReplies)
+                        }
                     }
                     else {
                         let replyPFPs = nrReplies
@@ -1119,28 +1132,67 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         ctx.perform { [weak self] in
             guard let self else { return }
             
-            let fr = Event.fetchRequest()
-            let afterCreatedAt = self.created_at - 7200 // allow some time mismatch (2 hours)
-            fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {1,1111,1244} AND replyToId == %@ AND NOT pubkey IN %@", afterCreatedAt, String(self.id), blocks()) // _PFManagedObject_coerceValueForKeyWithDescription + 1472 (NSManagedObject.m:0) - Maybe fix with String(self.id)
-            
-            let nrReplies = (self.event?.replies ?? [])
-                .filter { !blocks().contains($0.pubkey) }
-                .map { NRPost(event: $0, cancellationId: cancellationIds[$0.id]) }
+            let nrReplies = self.fetchDirectReplyNRPosts(cancellationIds: cancellationIds, context: ctx)
             self.event?.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                
-                if self.replies.count != nrReplies.count  {
-                    self.objectWillChange.send()
-                    self.replies = nrReplies
+            
+            if self.withGroupedReplies {
+                // Deliver on main so debounce/sink on RunLoop.main always sees the event.
+                DispatchQueue.main.async { [weak self] in
+                    self?.groupRepliesToRoot.send(nrReplies)
                 }
+            }
+            else {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
                     
-                if self.footerAttributes.repliesCount != Int64(nrReplies.count) {
-                    self.footerAttributes.objectWillChange.send()
-                    self.footerAttributes.repliesCount = Int64(nrReplies.count)
+                    if self.replies.count != nrReplies.count  {
+                        self.objectWillChange.send()
+                        self.replies = nrReplies
+                    }
+                        
+                    if self.footerAttributes.repliesCount != Int64(nrReplies.count) {
+                        self.footerAttributes.objectWillChange.send()
+                        self.footerAttributes.repliesCount = Int64(nrReplies.count)
+                    }
                 }
             }
         }
+    }
+    
+    /// Direct children of this post (replyToId == self.id). Must run on a bg context.
+    private func fetchDirectReplyNRPosts(cancellationIds: [String: UUID], context: NSManagedObjectContext) -> [NRPost] {
+        let afterCreatedAt = self.created_at - 7200
+        var replyEvents = Array(self.event?.replies ?? [])
+        if replyEvents.isEmpty {
+            let fr = Event.fetchRequest()
+            fr.predicate = NSPredicate(
+                format: "created_at > %i AND kind IN {1,1111,1244} AND replyToId == %@ AND NOT pubkey IN %@",
+                afterCreatedAt, String(self.id), blocks()
+            )
+            replyEvents = (try? context.fetch(fr)) ?? []
+        }
+        return replyEvents
+            .filter { !blocks().contains($0.pubkey) }
+            .map { NRPost(event: $0, cancellationId: cancellationIds[$0.id]) }
+    }
+    
+    /// All events that claim this post (or its root) as replyToRoot. Must run on a bg context.
+    private func fetchRepliesToRootNRPosts(cancellationIds: [String: UUID], context: NSManagedObjectContext) -> [NRPost] {
+        let afterCreatedAt = self.created_at - 7200
+        let rootId = self.replyToRootId ?? self.id
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(
+            format: "created_at > %i AND replyToRootId = %@ AND kind IN {1,1111,1244} AND NOT pubkey IN %@",
+            afterCreatedAt, rootId, blocks()
+        )
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
+        let events = (try? context.fetch(fr)) ?? []
+        for reply in events {
+            EventRelationsQueue.shared.addAwaitingEvent(reply, debugInfo: "reply in .repliesToRoot")
+        }
+        return events
+            .filter { !AppState.shared.bgAppState.blockedPubkeys.contains($0.pubkey) }
+            .map { NRPost(event: $0, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[$0.id]) }
     }
     
     public func loadReplyTo() {
@@ -1314,13 +1366,58 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
 
 extension NRPost { // Helpers for grouped replies
     
-    private func recoverMissingReplyToId(for reply: NRPost, rootId: String) {
-        guard reply.replyToId == nil, let event = reply.event else { return }
-        guard let inferredReplyToId = inferredReplyToId(from: event), inferredReplyToId != rootId else { return }
+    /// Immediate parent id for nesting (NIP-10 / stored fields).
+    /// Prefer tag markers over Core Data columns when they disagree with root.
+    private func preferredReplyParentId(for post: NRPost) -> String? {
+        if let event = post.event {
+            if let fromTags = inferredReplyToId(from: event) {
+                let root = post.replyToRootId ?? event.replyToRootId
+                // Stored replyTo often equals root when import collapsed missing reply-to;
+                // trust tags when they point at a different parent.
+                if let root, fromTags != root {
+                    return fromTags
+                }
+                if let stored = post.replyToId, let root, stored == root, fromTags != root {
+                    return fromTags
+                }
+                if post.replyToId == nil {
+                    return fromTags
+                }
+                // Tags and stored agree, or no root to conflict with.
+                if post.replyToId == fromTags || post.replyToRootId == nil {
+                    return fromTags
+                }
+            }
+        }
         
-        reply.replyToId = inferredReplyToId
-        if event.replyToId == nil {
-            event.replyToId = inferredReplyToId
+        let replyTo = post.replyToId ?? post.replyToPostOrZapId
+        let root = post.replyToRootId
+        // User rule: both set and different → parent is replyTo, not root.
+        if let replyTo, let root, replyTo != root {
+            return replyTo
+        }
+        return replyTo
+    }
+    
+    /// Top-level under this detail post only when the preferred parent is this post.
+    private func isDirectNestedRootReply(_ post: NRPost) -> Bool {
+        preferredReplyParentId(for: post) == self.id
+    }
+    
+    private func recoverMissingReplyToId(for reply: NRPost, rootId: String) {
+        guard let event = reply.event else { return }
+        guard let inferred = inferredReplyToId(from: event) else { return }
+        
+        let stored = reply.replyToId
+        let root = reply.replyToRootId ?? event.replyToRootId ?? rootId
+        
+        // Fill missing replyTo, or un-collapse when DB stored root as replyTo but tags differ.
+        let needsFix = stored == nil || (stored == root && inferred != root)
+        guard needsFix else { return }
+        
+        reply.replyToId = inferred
+        if event.replyToId == nil || event.replyToId == root {
+            event.replyToId = inferred
         }
         EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.recoverMissingReplyToId")
     }
@@ -1335,12 +1432,20 @@ extension NRPost { // Helpers for grouped replies
             return replyETag
         }
         
-        if eTags.count == 1, eTags.first?.3 == nil {
-            return eTags.first?.1
+        // NIP-10 positional: first e = root, last e = reply when multiple unmarked.
+        if eTags.count >= 2 {
+            let rootMarked = eTags.first(where: { $0.3 == "root" })?.1
+            let last = eTags.last!.1
+            if let rootMarked, last != rootMarked {
+                return last
+            }
+            if eTags.first!.1 != last {
+                return last
+            }
         }
         
-        if eTags.count >= 2 {
-            return eTags.last?.1
+        if eTags.count == 1 {
+            return eTags.first?.1
         }
         
         return nil
@@ -1398,37 +1503,37 @@ extension NRPost { // Helpers for grouped replies
     
     // TODO: 79.00 ms    0.7%    0 s          closure #2 in NRPost.loadGroupedReplies()
     public func loadGroupedReplies() {
-        self.loadReplies()
+        // Enable listeners before any async fetch so late arrivals still regroup.
+        if (!self.withReplies) {
+            self.withReplies = true
+            repliesListener()
+        }
         if (!self.withGroupedReplies) {
             self.withGroupedReplies = true
             repliesToRootListener()
         }
-        let ctx = bg()
         
+        let ctx = bg()
         let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         
+        // Single coordinated load: fetch direct + thread replies together, then rebuild
+        // BOTH flat and nested lists. The view chooses which array to render.
         ctx.perform { [weak self] in
-            guard let self = self else { return }
-            let fr = Event.fetchRequest()
-            let afterCreatedAt = self.created_at - 7200 // allow some time mismatch (2 hours)
-            if let replyToRootId = self.replyToRootId { // We are not root, so load replies for actual root instead
-                fr.predicate = NSPredicate(format: "created_at > %i AND replyToRootId = %@ AND kind IN {1,1111,1244} AND NOT pubkey IN %@", afterCreatedAt, replyToRootId, blocks())
+            guard let self else { return }
+            
+            let nrDirectReplies = self.fetchDirectReplyNRPosts(cancellationIds: cancellationIds, context: ctx)
+            let nrRepliesToRoot = self.fetchRepliesToRootNRPosts(cancellationIds: cancellationIds, context: ctx)
+            
+            AppState.shared.nrPostQueue.sync(flags: .barrier) {
+                self._replies = nrDirectReplies
+                self.suppressRepliesToRootDidSet = true
+                self._repliesToRoot = nrRepliesToRoot
+                self.suppressRepliesToRootDidSet = false
             }
-            else {
-                fr.predicate = NSPredicate(format: "created_at > %i AND replyToRootId = %@ AND kind IN {1,1111,1244} AND NOT pubkey IN %@", afterCreatedAt, self.id, blocks())
-            }
-            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true )]
-            let repliesToRoot = (try? ctx.fetch(fr)) ?? []
-            for reply in repliesToRoot { // Add to queue because some may be missing .replyTo
-                EventRelationsQueue.shared.addAwaitingEvent(reply, debugInfo: "reply in .repliesToRoot")
-            }
-            let nrRepliesToRoot = repliesToRoot
-                .filter { !AppState.shared.bgAppState.blockedPubkeys.contains($0.pubkey) }
-                .map { event in
-                    let nrPost = NRPost(event: event, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[event.id])
-                    return nrPost
-                } // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
-            self.repliesToRoot = nrRepliesToRoot
+            
+            self.event?.repliesCount = Int64(nrDirectReplies.count)
+            // Build on this bg context now (do not re-queue).
+            self.rebuildFlatAndNestedReplies(directReplies: nrDirectReplies)
         }
     }
     
@@ -1445,7 +1550,10 @@ extension NRPost { // Helpers for grouped replies
                 
                 let nrReply = NRPost(event: relation.event, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[relation.event.id]) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
                 self.repliesToRoot.append(nrReply)
-                self.groupRepliesToRoot.send(self.replies)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.groupRepliesToRoot.send(self.replies)
+                }
             }
     }
     
@@ -1478,103 +1586,294 @@ extension NRPost { // Helpers for grouped replies
         return false
     }
     
+    /// Combine / live-update entry: hop to bg, then rebuild both presentations.
     private func _groupRepliesToRoot(_ newReplies: [NRPost]) {
         bg().perform { [weak self] in
             guard let self else { return }
-            renderedReplyIds.removeAll()
-            let replies = (newReplies.isEmpty ? self.replies : newReplies)
-            // Load parents/replyTo
-            let threadCandidates = (replies + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
-                .uniqued(on: { $0.id })
-            let unblockedThreadCandidates = threadCandidates.filter { nrPost in
-                !AppState.shared.bgAppState.blockedPubkeys.contains(nrPost.pubkey)
+            self.rebuildFlatAndNestedReplies(directReplies: newReplies)
+        }
+    }
+    
+    /// Must run on the Core Data bg context. Fills BOTH flat (`groupedReplies*`) and nested
+    /// (`nestedReplies*`) arrays so the view can switch modes without a second fetch.
+    private func rebuildFlatAndNestedReplies(directReplies newReplies: [NRPost]) {
+        renderedReplyIds.removeAll()
+        let replies = (newReplies.isEmpty ? self.replies : newReplies)
+        let underThisPost = (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot)
+        let threadCandidates = (replies + underThisPost)
+            .uniqued(on: { $0.id })
+        let unblockedThreadCandidates = threadCandidates.filter { nrPost in
+            !AppState.shared.bgAppState.blockedPubkeys.contains(nrPost.pubkey)
+        }
+        
+        // ── Flat (classic) presentation ──────────────────────────────────
+        let groupedThreads = unblockedThreadCandidates.compactMap { reply -> NRPost? in
+            self.recoverMissingReplyToId(for: reply, rootId: self.id)
+            guard reply.pubkey == self.pubkey || reply.replyToPostOrZapId == self.id else { return nil }
+            
+            if let replyEvent = reply.event {
+                replyEvent.parentEvents = Event.getParentEvents(replyEvent, until: self.id)
+                    .filter { $0.id != self.id }
+                reply.parentPosts = replyEvent.parentEvents.map { NRPost(event: $0) }
+                reply.threadPostsCount = 1 + replyEvent.parentEvents.count
             }
-            let groupedThreads = unblockedThreadCandidates.compactMap { reply -> NRPost? in
-                self.recoverMissingReplyToId(for: reply, rootId: self.id)
-                guard reply.pubkey == self.pubkey || reply.replyToPostOrZapId == self.id else { return nil }
-                
-                // use until:self.id so we don't render duplicates
-                if let replyEvent = reply.event {
-                    replyEvent.parentEvents = Event.getParentEvents(replyEvent, until: self.id)
-                        .filter { $0.id != self.id }
-                    reply.parentPosts = replyEvent.parentEvents.map { NRPost(event: $0) }
-                    reply.threadPostsCount = 1 + replyEvent.parentEvents.count
-                }
-
-//                    if let replyTo = reply.event.replyTo__ { // TODO: NEED THIS OR NO?
-//                        reply.replyTo = NRPost(event: replyTo)
-//                    }
-                return reply
+            return reply
+        }
+        
+        var uniqueThreads = [NRPostID: NRPost]()
+        
+        for thread in groupedThreads {
+            if let replyToPostOrZapId = thread.replyToPostOrZapId, replyToPostOrZapId == self.id {
+                continue
+            }
+            else if let replyToRootId = thread.replyToRootId, thread.replyToPostOrZapId == nil, replyToRootId == self.id {
+                continue
             }
             
-            // Dictionary to store unique items with highest values
-            var uniqueThreads = [NRPostID: NRPost]()
-            
-
-            for thread in groupedThreads {
-                if let replyToPostOrZapId = thread.replyToPostOrZapId, replyToPostOrZapId == self.id {
-                    // replying to root, but could be rendered also as parent in one of the threads,
-                    // so skip and include in 2nd pass after we checked if its not rendered already
-                    continue
-                }
-                else if let replyToRootId = thread.replyToRootId, thread.replyToPostOrZapId == nil, replyToRootId == self.id {
-                    // replying to root, but could be rendered also as parent in one of the threads,
-                    // so skip and include in 2nd pass after we checked if its not rendered already
-                    continue
-                }
-                
-                let firstId = thread.event?.parentEvents.first?.id ?? thread.id
-                if let existingThread = uniqueThreads[firstId] {
-                    // TODO:
-                    // if we have a forked thread, then both will have the same firstId
-                    // so keep the longest, and store the shorter one with a new firstId (the last common post on both forks)
-                    if thread.threadPostsCount > existingThread.threadPostsCount {
-                        uniqueThreads[firstId] = thread
-                    }
-                } else {
+            let firstId = thread.event?.parentEvents.first?.id ?? thread.id
+            if let existingThread = uniqueThreads[firstId] {
+                if thread.threadPostsCount > existingThread.threadPostsCount {
                     uniqueThreads[firstId] = thread
                 }
-            }
-            
-            renderedReplyIds = Set(uniqueThreads.keys).union(uniqueThreads.values.reduce(Set<NRPostID>(), { partialResult, nrPost in
-                return partialResult.union(
-                    Set(
-                        nrPost.event?.parentEvents.map { $0.id } ?? []
-                    )
-                )
-            }))
-            
-            // Second pass
-            // Include the direct replies that have not been rendered yet in other threads (renderedIds)
-            for thread in groupedThreads {
-                if let replyToPostOrZapId = thread.replyToPostOrZapId, replyToPostOrZapId == self.id, !renderedReplyIds.contains(thread.id) {
-                    // direct reply
-                    uniqueThreads[thread.id] = thread
-                    renderedReplyIds.insert(thread.id)
-                }
-                else if let replyToRootId = thread.replyToRootId, thread.replyToPostOrZapId == nil, replyToRootId == self.id, !renderedReplyIds.contains(thread.id) {
-                    // direct reply
-                    uniqueThreads[thread.id] = thread
-                    renderedReplyIds.insert(thread.id)
-                }
-            }
-
-            // Retrieve the unique items with highest values
-            let groupedReplies = Array(uniqueThreads.values)
-            let groupedRepliesSorted = Array(self.sortGroupedReplies(groupedReplies).prefix(50))
-            let groupedRepliesNotWoT = Array(self.sortGroupedRepliesNotWoT(groupedReplies).prefix(50))
-            
-            self.event?.repliesCount = Int64(replies.count) // Fix wrong count in db
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                self.objectWillChange.send()
-                self.replies = replies
-                self.groupedRepliesSorted = groupedRepliesSorted
-                self.groupedRepliesNotWoT = groupedRepliesNotWoT
-                self.footerAttributes.objectWillChange.send()
-                self.footerAttributes.repliesCount = Int64(replies.count)
+            } else {
+                uniqueThreads[firstId] = thread
             }
         }
+        
+        renderedReplyIds = Set(uniqueThreads.keys).union(uniqueThreads.values.reduce(Set<NRPostID>(), { partialResult, nrPost in
+            return partialResult.union(
+                Set(
+                    nrPost.event?.parentEvents.map { $0.id } ?? []
+                )
+            )
+        }))
+        
+        for thread in groupedThreads {
+            if let replyToPostOrZapId = thread.replyToPostOrZapId, replyToPostOrZapId == self.id, !renderedReplyIds.contains(thread.id) {
+                uniqueThreads[thread.id] = thread
+                renderedReplyIds.insert(thread.id)
+            }
+            else if let replyToRootId = thread.replyToRootId, thread.replyToPostOrZapId == nil, replyToRootId == self.id, !renderedReplyIds.contains(thread.id) {
+                uniqueThreads[thread.id] = thread
+                renderedReplyIds.insert(thread.id)
+            }
+        }
+        
+        let groupedReplies = Array(uniqueThreads.values)
+        let groupedRepliesSorted = Array(self.sortGroupedReplies(groupedReplies).prefix(50))
+        let groupedRepliesNotWoT = Array(self.sortGroupedRepliesNotWoT(groupedReplies).prefix(50))
+        
+        // ── Nested (Reddit-style) presentation ───────────────────────────
+        // Fix stored replyTo from NIP-10 tags, then expand missing parents from Core Data
+        // so reply-to-reply does not fall back to looking like a direct root reply.
+        for reply in unblockedThreadCandidates {
+            self.recoverMissingReplyToId(for: reply, rootId: self.id)
+        }
+        
+        var byId: [String: NRPost] = [:]
+        byId.reserveCapacity(unblockedThreadCandidates.count)
+        for post in unblockedThreadCandidates {
+            byId[post.id] = post
+        }
+        
+        // Pull intermediate parents into the map when a child references them.
+        var pendingParentIds = Set(unblockedThreadCandidates.compactMap { post -> String? in
+            guard let parentId = self.preferredReplyParentId(for: post), parentId != self.id else { return nil }
+            return byId[parentId] == nil ? parentId : nil
+        })
+        var guardCounter = 0
+        while !pendingParentIds.isEmpty, guardCounter < 25 {
+            guardCounter += 1
+            var nextPending = Set<String>()
+            for parentId in pendingParentIds {
+                guard byId[parentId] == nil else { continue }
+                guard let event = Event.fetchEvent(id: parentId, context: bg()) else { continue }
+                let parentNR = NRPost(event: event, withReplyTo: false, withParents: false, withReplies: false, plainText: false)
+                self.recoverMissingReplyToId(for: parentNR, rootId: self.id)
+                byId[parentId] = parentNR
+                if let grandId = self.preferredReplyParentId(for: parentNR),
+                   grandId != self.id,
+                   byId[grandId] == nil {
+                    nextPending.insert(grandId)
+                }
+            }
+            pendingParentIds = nextPending
+        }
+        
+        var childrenOf: [String: [NRPost]] = [:]
+        var rootPosts: [NRPost] = []
+        /// postId -> why it was placed (for debug)
+        var placementById: [String: String] = [:]
+        var resolvedParentById: [String: String?] = [:]
+        
+        // Place every known post (candidates + injected parents) using preferred parent.
+        for post in byId.values {
+            let parentId = self.preferredReplyParentId(for: post)
+            resolvedParentById[post.id] = parentId
+            
+            if parentId == nil || parentId == self.id {
+                rootPosts.append(post)
+                placementById[post.id] = parentId == self.id ? "root-direct" : "root-no-parent"
+                continue
+            }
+            
+            if let parentId, byId[parentId] != nil {
+                childrenOf[parentId, default: []].append(post)
+                placementById[post.id] = "child-of-\(String(parentId.prefix(8)))"
+                continue
+            }
+            
+            // Preferred parent missing from map.
+            if let parentId,
+               let rootId = post.replyToRootId,
+               parentId != rootId {
+                if rootId == self.id {
+                    rootPosts.append(post)
+                    placementById[post.id] = "root-orphan-missing-parent-\(String(parentId.prefix(8)))"
+                }
+                else if byId[rootId] != nil {
+                    childrenOf[rootId, default: []].append(post)
+                    placementById[post.id] = "child-fallback-root-\(String(rootId.prefix(8)))"
+                }
+                else {
+                    rootPosts.append(post)
+                    placementById[post.id] = "root-orphan-no-parent-in-map"
+                }
+            }
+            else {
+                rootPosts.append(post)
+                placementById[post.id] = "root-fallback"
+            }
+        }
+        
+        // De-dupe root list and avoid listing a post both as root and as someone's child.
+        let childIds = Set(childrenOf.values.flatMap { $0.map(\.id) })
+        let uniqueRoots = rootPosts
+            .uniqued(on: { $0.id })
+            .filter { !childIds.contains($0.id) }
+        
+        func buildNodes(_ posts: [NRPost], depth: Int, remaining: inout Int, path: Set<String>) -> [NestedReplyNode] {
+            guard remaining > 0 else { return [] }
+            let sorted = self.sortNestedSiblings(posts)
+            var nodes: [NestedReplyNode] = []
+            for post in sorted {
+                guard remaining > 0 else { break }
+                guard !path.contains(post.id) else { continue }
+                remaining -= 1
+                let kids = (childrenOf[post.id] ?? []).uniqued(on: { $0.id })
+                let childNodes = buildNodes(kids, depth: depth + 1, remaining: &remaining, path: path.union([post.id]))
+                nodes.append(NestedReplyNode(
+                    nrPost: post,
+                    children: childNodes,
+                    depth: depth,
+                    resolvedParentId: resolvedParentById[post.id] ?? nil,
+                    placement: placementById[post.id] ?? "?"
+                ))
+            }
+            return nodes
+        }
+        
+        var remaining = NestedThreadMetrics.maxNodes
+        let fullTree = buildNodes(uniqueRoots, depth: 0, remaining: &remaining, path: [])
+        
+        // If tree ended up empty but flat has rows, mirror flat rows as depth-0 nested nodes
+        // so nested mode can never be blank while classic mode has content.
+        let fallbackTree: [NestedReplyNode] = fullTree.isEmpty
+            ? (groupedRepliesSorted + groupedRepliesNotWoT).map {
+                NestedReplyNode(nrPost: $0, children: [], depth: 0, resolvedParentId: self.id, placement: "flat-fallback")
+            }
+            : fullTree
+        
+        let wotOn = SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue
+        let accountPubkeys = AccountsState.shared.bgAccountPubkeys
+        let anonPubkeys = AnonReplySession.shared.bgAnonPubkeys
+        let detailPubkey = self.pubkey
+        
+        func isInWoT(_ post: NRPost) -> Bool {
+            if !wotOn { return true }
+            return post.inWoT
+                || accountPubkeys.contains(post.pubkey)
+                || anonPubkeys.contains(post.pubkey)
+                || post.pubkey == detailPubkey
+        }
+        
+        func nodeOrDescendantInWoT(_ node: NestedReplyNode) -> Bool {
+            if isInWoT(node.nrPost) { return true }
+            return node.children.contains { nodeOrDescendantInWoT($0) }
+        }
+        
+        // Nested mode must KEEP tree structure. Never promote children past an out-of-WoT
+        // parent (that lifted da4897a1 to d0 when c2c1aa39 was notWoT and scrambled branches).
+        // Partition only top-level roots:
+        // - Main list: roots in WoT, OR roots out-of-WoT that still have in-WoT descendants
+        //   (parent stays as structural glue so reply-to-reply stays nested).
+        // - Show more: entire top-level branches with no in-WoT posts at all.
+        let finalNestedInWoT: [NestedReplyNode]
+        let finalNestedNotWoT: [NestedReplyNode]
+        if !wotOn {
+            finalNestedInWoT = fallbackTree
+            finalNestedNotWoT = []
+        }
+        else {
+            var main: [NestedReplyNode] = []
+            var more: [NestedReplyNode] = []
+            for root in fallbackTree {
+                if nodeOrDescendantInWoT(root) {
+                    main.append(root)
+                }
+                else {
+                    more.append(root)
+                }
+            }
+            finalNestedInWoT = main
+            finalNestedNotWoT = more
+        }
+        
+        self.event?.repliesCount = Int64(replies.count)
+        
+        // Nested tree debug dump — use notice + .public so Console shows strings
+        // (debug level is often hidden; private privacy redacts interpolations).
+        func nestLog(_ message: String) {
+            L.og.notice("\(message, privacy: .public)")
+            print(message) // Xcode debug console always shows this
+        }
+        func dumpTree(_ nodes: [NestedReplyNode], prefix: String = "") {
+            for (i, n) in nodes.enumerated() {
+                let last = i == nodes.count - 1
+                let branch = last ? "└─ " : "├─ "
+                nestLog("NEST \(prefix)\(branch)\(n.debugLine)")
+                dumpTree(n.children, prefix: prefix + (last ? "   " : "│  "))
+            }
+        }
+        nestLog("NEST ===== detail=\(self.id) roots=\(finalNestedInWoT.count) candidates=\(unblockedThreadCandidates.count) byId=\(byId.count) =====")
+        dumpTree(finalNestedInWoT)
+        if !finalNestedNotWoT.isEmpty {
+            nestLog("NEST ----- notWoT -----")
+            dumpTree(finalNestedNotWoT)
+        }
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.objectWillChange.send()
+            self.replies = replies
+            self.groupedRepliesSorted = groupedRepliesSorted
+            self.groupedRepliesNotWoT = groupedRepliesNotWoT
+            self.nestedRepliesSorted = finalNestedInWoT
+            self.nestedRepliesNotWoT = finalNestedNotWoT
+            self.footerAttributes.objectWillChange.send()
+            self.footerAttributes.repliesCount = Int64(replies.count)
+        }
+    }
+    
+    /// Sibling order for nested mode (same priorities as flat sort, but only among siblings).
+    private func sortNestedSiblings(_ nrPosts: [NRPost]) -> [NRPost] {
+        let followingPubkeys = AccountsState.shared.loggedInAccount?.followingPublicKeys ?? []
+        return nrPosts
+            .sorted(by: { $0.created_at < $1.created_at })
+            .sorted(by: { followingPubkeys.contains($0.pubkey) && !followingPubkeys.contains($1.pubkey) })
+            .sorted(by: {
+                ($0.pubkey == self.pubkey) && ($1.pubkey != self.pubkey)
+            })
     }
 }
 

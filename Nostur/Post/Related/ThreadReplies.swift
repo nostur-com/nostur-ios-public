@@ -10,7 +10,7 @@ import SwiftUI
 struct ThreadReplies: View {
     @Environment(\.theme) private var theme
     @ObservedObject public var nrPost: NRPost
-    @State private var timer: Timer? = nil
+    @ObservedObject private var settings: SettingsStore = .shared
     @State private var showNotWoT = false
     @State private var didLoad = false
     
@@ -18,6 +18,39 @@ struct ThreadReplies: View {
 #if DEBUG
         let _ = nxLogChanges(of: Self.self)
 #endif
+        Group {
+            if settings.nestedRepliesEnabled {
+                NestedThreadReplies(nrPost: nrPost)
+            }
+            else {
+                flatReplies
+            }
+        }
+        .background(theme.listBackground)
+        .onAppear {
+            guard !didLoad else { return }
+            guard !nrPost.plainTextOnly else { L.og.debug("plaintext enabled, probably spam") ; return }
+            nrPost.loadGroupedReplies()
+            didLoad = true
+        }
+        .onChange(of: settings.nestedRepliesEnabled) { _ in
+            // Both lists are filled together; no reload required to switch modes.
+            // Still reload if one list is empty (e.g. toggled before first load finished).
+            guard didLoad else { return }
+            if nrPost.nestedRepliesSorted.isEmpty && nrPost.groupedRepliesSorted.isEmpty {
+                nrPost.loadGroupedReplies()
+            }
+        }
+        .onReceive(receiveNotification(.blockListUpdated)) { _ in
+            nrPost.loadGroupedReplies()
+        }
+        .onReceive(receiveNotification(.muteListUpdated)) { _ in
+            nrPost.loadGroupedReplies()
+        }
+    }
+    
+    @ViewBuilder
+    private var flatReplies: some View {
         LazyVStack(spacing: GUTTER) {
             if didLoad {
                 if nrPost.groupedRepliesSorted.isEmpty && nrPost.groupedRepliesNotWoT.isEmpty {
@@ -49,35 +82,9 @@ struct ThreadReplies: View {
                         .animation(Animation.spring(), value: nrPost.groupedRepliesNotWoT)
                     }
                 }
-                // If there are less than 5 replies, put some empty space so our detail note is at top of screen
-    //            if (nrPost.replies.count < 5) {
-    //                theme.listBackground.frame(height: 400)
-    //            }
-    //            Spacer()
             }
         }
-        .background(theme.listBackground)
-        .onAppear {
-            guard !didLoad else { return }
-            guard !nrPost.plainTextOnly else { L.og.debug("plaintext enabled, probably spam") ; return }
-            nrPost.loadGroupedReplies()
-            didLoad = true
-            
-            // After many attempts, still some replyTo's are missing, somewhere some observable is not
-            // triggering, cant find out where. So use this workaround...
-//            timer?.invalidate()
-//            timer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: false, block: { _ in
-//                nrPost.loadGroupedReplies()
-//            })
-        }
-        .onReceive(receiveNotification(.blockListUpdated)) { _ in
-            nrPost.loadGroupedReplies()
-        }
-        .onReceive(receiveNotification(.muteListUpdated)) { _ in
-            nrPost.loadGroupedReplies()
-        }
     }
-        
 }
 
 import NavigationBackport
