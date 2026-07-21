@@ -105,7 +105,6 @@ class AnyPlayerModel: ObservableObject {
         self.thumbnailUrl = nrLiveEvent.thumbUrl
         // Don't reuse existing viewMode
         self.viewMode = availableViewModes.first ?? .detailstream
-        playVideo()
         
         if nrLiveEvent.streamHasEnded, let recordingUrl = nrLiveEvent.recordingUrl, let url = URL(string: recordingUrl) {
             isStream = false
@@ -114,7 +113,10 @@ class AnyPlayerModel: ObservableObject {
             Task.detached(priority: .userInitiated) {
                 let playerItem = AVPlayerItem(url: url)
                 Task { @MainActor in
+                    // Must play after replaceCurrentItem — attaching a new item resets rate to 0.
                     self.player.replaceCurrentItem(with: playerItem)
+                    self.playVideo()
+                    self.setupRemoteControl()
                     self.isLoading = false
                 }
             }
@@ -126,7 +128,10 @@ class AnyPlayerModel: ObservableObject {
             Task.detached(priority: .userInitiated) {
                 let playerItem = AVPlayerItem(url: url)
                 Task { @MainActor in
+                    // Must play after replaceCurrentItem — attaching a new item resets rate to 0.
                     self.player.replaceCurrentItem(with: playerItem)
+                    self.playVideo()
+                    self.setupRemoteControl()
                     self.isLoading = false
                 }
             }

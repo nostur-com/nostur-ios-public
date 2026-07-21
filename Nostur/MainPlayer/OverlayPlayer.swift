@@ -92,11 +92,10 @@ struct OverlayPlayer: View {
     
     // State variables for custom playback controls
     @State private var isMuted = false
-    @State private var fullscreenControlsVisible = true
+    // Start hidden so opening a playing video isn't covered by chrome.
+    @State private var fullscreenControlsVisible = false
     @State private var fullscreenControlsHideTask: Task<Void, Never>?
-    @State private var portraitCenterControlsVisible = false
-    @State private var portraitCenterControlsHideTask: Task<Void, Never>?
-    @State private var detailStreamControlsVisible = true
+    @State private var detailStreamControlsVisible = false
     @State private var detailStreamControlsHideTask: Task<Void, Never>?
     @State private var shouldRestoreDetailStreamAfterRotatedFullscreen = false
     @State private var isRotatedFullscreen = false
@@ -379,7 +378,10 @@ struct OverlayPlayer: View {
     }
     
     private func fullscreenPlayer(geometry: GeometryProxy) -> some View {
-        ZStack {
+        // Prefer explicit rotate state; fall back to geometry when the device is already landscape.
+        let isLandscape = isRotatedFullscreen || geometry.size.width > geometry.size.height
+        
+        return ZStack {
             Color.black
                 .ignoresSafeArea()
             
@@ -390,38 +392,33 @@ struct OverlayPlayer: View {
                 AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        if isRotatedFullscreen || geometry.size.width > geometry.size.height {
-                            toggleFullscreenControls()
-                        }
-                        else {
-                            showPortraitCenterControls()
-                        }
-                    }
             }
         }
         .frame(width: geometry.size.width, height: geometry.size.height)
         .background(Color.black)
         .clipped()
+        // Transparent hit layer so taps reach SwiftUI even when AVPlayerViewController eats touches.
+        // Control overlays below are stacked on top and remain interactive.
+        .overlay {
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    toggleFullscreenControls()
+                }
+        }
         .overlay(alignment: .top) {
-            if fullscreenControlsVisible || !(isRotatedFullscreen || geometry.size.width > geometry.size.height) {
-                fullscreenTopControls(geometry: geometry, isLandscape: isRotatedFullscreen || geometry.size.width > geometry.size.height)
+            if fullscreenControlsVisible {
+                fullscreenTopControls(geometry: geometry, isLandscape: isLandscape)
             }
         }
         .overlay(alignment: .center) {
-            if isRotatedFullscreen || geometry.size.width > geometry.size.height {
-                if fullscreenControlsVisible {
-                    fullscreenCenterControls(isLandscape: true)
-                }
-            }
-            else if portraitCenterControlsVisible {
-                fullscreenCenterControls(isLandscape: false)
+            if fullscreenControlsVisible {
+                fullscreenCenterControls(isLandscape: isLandscape)
             }
         }
         .overlay(alignment: .bottom) {
-            if fullscreenControlsVisible || !(isRotatedFullscreen || geometry.size.width > geometry.size.height) {
-                fullscreenControls(isLandscape: isRotatedFullscreen || geometry.size.width > geometry.size.height)
+            if fullscreenControlsVisible {
+                fullscreenControls(isLandscape: isLandscape)
             }
         }
         .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
@@ -480,15 +477,6 @@ struct OverlayPlayer: View {
                                     .frame(maxHeight: avPlayerHeight(geometry: geometry))
                                     .clipped()
                                     .ignoresSafeAreaIfFullscreen(vm.viewMode)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        if vm.viewMode == .fullscreen {
-                                            toggleFullscreenControls()
-                                        }
-                                        else if vm.viewMode == .detailstream {
-                                            toggleDetailStreamControls()
-                                        }
-                                    }
                                     .animation(.smooth, value: vm.viewMode)
                                     .overlay { // MARK: Overlay after finished playing
                                         if vm.didFinishPlaying {
@@ -601,6 +589,18 @@ struct OverlayPlayer: View {
                                                             vm.viewMode = .audioOnlyBar
                                                         }
                                                     }))
+                                        }
+                                    }
+                                    // Transparent hit layer so taps reach SwiftUI even when AVPlayerViewController eats touches.
+                                    // Control overlays below stay on top and remain interactive.
+                                    // Skip when finished so the replay / like overlay can receive taps.
+                                    .overlay {
+                                        if vm.viewMode == .detailstream, !vm.didFinishPlaying {
+                                            Color.clear
+                                                .contentShape(Rectangle())
+                                                .onTapGesture {
+                                                    toggleDetailStreamControls()
+                                                }
                                         }
                                     }
                                     .overlay(alignment: .center) {
@@ -814,33 +814,41 @@ struct OverlayPlayer: View {
                     }
                     if vm.viewMode == .fullscreen {
                         cancelDetailStreamControlsAutoHide()
-                        showFullscreenControls()
+                        applyFullscreenControlsForPlaybackState()
                     }
                     else {
                         fullscreenControlsHideTask?.cancel()
                         fullscreenControlsHideTask = nil
-                        portraitCenterControlsHideTask?.cancel()
-                        portraitCenterControlsHideTask = nil
-                        portraitCenterControlsVisible = false
-                        fullscreenControlsVisible = true
+                        fullscreenControlsVisible = false
                         restoreAllowedOrientations()
                         if vm.viewMode == .detailstream {
-                            showDetailStreamControls()
+                            applyDetailStreamControlsForPlaybackState()
                         }
                         else {
                             cancelDetailStreamControlsAutoHide()
-                            detailStreamControlsVisible = true
+                            detailStreamControlsVisible = false
                         }
                     }
                 }
                 .onChange(of: vm.isPlaying) { _ in
                     if vm.isPlaying {
-                        scheduleFullscreenControlsAutoHide()
-                        scheduleDetailStreamControlsAutoHide()
+                        // Keep the video unobstructed while playing; user can tap to reveal chrome.
+                        hideFullscreenControls()
+                        hideDetailStreamControls()
                     }
-                    else {
+                    else if !vm.isLoading {
                         showFullscreenControls()
                         showDetailStreamControls()
+                    }
+                }
+                .onChange(of: vm.isLoading) { _ in
+                    if !vm.isLoading {
+                        applyFullscreenControlsForPlaybackState()
+                        applyDetailStreamControlsForPlaybackState()
+                    }
+                    else {
+                        hideFullscreenControls()
+                        hideDetailStreamControls()
                     }
                 }
                 .onChange(of: vm.didFinishPlaying) { _ in
@@ -853,8 +861,8 @@ struct OverlayPlayer: View {
                 
                 .onAppear {
                     syncMutedState()
-                    showFullscreenControls()
-                    showDetailStreamControls()
+                    applyFullscreenControlsForPlaybackState()
+                    applyDetailStreamControlsForPlaybackState()
                     
                     guard let nrPost = vm.nrPost else {
                         bookmarkState = false
@@ -873,9 +881,6 @@ struct OverlayPlayer: View {
                 .onDisappear {
                     fullscreenControlsHideTask?.cancel()
                     fullscreenControlsHideTask = nil
-                    portraitCenterControlsHideTask?.cancel()
-                    portraitCenterControlsHideTask = nil
-                    portraitCenterControlsVisible = false
                     cancelDetailStreamControlsAutoHide()
                     shouldRestoreDetailStreamAfterRotatedFullscreen = false
                     if vm.viewMode == .fullscreen {
@@ -983,11 +988,7 @@ struct OverlayPlayer: View {
         }
         else {
             vm.playVideo()
-            scheduleFullscreenControlsAutoHide()
-            scheduleDetailStreamControlsAutoHide()
-        }
-        if portraitCenterControlsVisible {
-            schedulePortraitCenterControlsAutoHide()
+            // isPlaying onChange will hide chrome while playing
         }
     }
     
@@ -997,45 +998,43 @@ struct OverlayPlayer: View {
             scheduleFullscreenControlsAutoHide()
         }
         else {
-            fullscreenControlsHideTask?.cancel()
-            fullscreenControlsHideTask = nil
+            hideFullscreenControls()
+        }
+    }
+    
+    /// Show chrome only when paused/finished; keep it hidden while loading or playing.
+    private func applyFullscreenControlsForPlaybackState() {
+        guard vm.viewMode == .fullscreen else { return }
+        if vm.isLoading || (vm.isPlaying && !vm.didFinishPlaying) {
+            hideFullscreenControls()
+        }
+        else {
+            showFullscreenControls()
         }
     }
     
     private func showFullscreenControls() {
+        guard vm.viewMode == .fullscreen else { return }
         fullscreenControlsVisible = true
         scheduleFullscreenControlsAutoHide()
     }
     
+    private func hideFullscreenControls() {
+        fullscreenControlsHideTask?.cancel()
+        fullscreenControlsHideTask = nil
+        fullscreenControlsVisible = false
+    }
+    
     private func scheduleFullscreenControlsAutoHide() {
         fullscreenControlsHideTask?.cancel()
-        guard vm.viewMode == .fullscreen, isRotatedFullscreen, vm.isPlaying, !vm.didFinishPlaying else { return }
+        // Auto-hide in any fullscreen orientation (portrait + landscape), not only after rotate button.
+        guard vm.viewMode == .fullscreen, fullscreenControlsVisible, vm.isPlaying, !vm.didFinishPlaying else { return }
         fullscreenControlsHideTask = Task {
             try? await Task.sleep(nanoseconds: 3_000_000_000)
             guard !Task.isCancelled else { return }
             await MainActor.run {
-                if vm.viewMode == .fullscreen, isRotatedFullscreen, vm.isPlaying, !vm.didFinishPlaying {
+                if vm.viewMode == .fullscreen, vm.isPlaying, !vm.didFinishPlaying {
                     fullscreenControlsVisible = false
-                }
-            }
-        }
-    }
-    
-    private func showPortraitCenterControls() {
-        guard vm.viewMode == .fullscreen, !isRotatedFullscreen, !vm.didFinishPlaying else { return }
-        portraitCenterControlsVisible = true
-        schedulePortraitCenterControlsAutoHide()
-    }
-    
-    private func schedulePortraitCenterControlsAutoHide() {
-        portraitCenterControlsHideTask?.cancel()
-        guard vm.viewMode == .fullscreen, !isRotatedFullscreen, portraitCenterControlsVisible else { return }
-        portraitCenterControlsHideTask = Task {
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                if vm.viewMode == .fullscreen, !isRotatedFullscreen {
-                    portraitCenterControlsVisible = false
                 }
             }
         }
@@ -1047,8 +1046,18 @@ struct OverlayPlayer: View {
             scheduleDetailStreamControlsAutoHide()
         }
         else {
-            detailStreamControlsHideTask?.cancel()
-            detailStreamControlsHideTask = nil
+            hideDetailStreamControls()
+        }
+    }
+    
+    /// Show chrome only when paused/finished; keep it hidden while loading or playing.
+    private func applyDetailStreamControlsForPlaybackState() {
+        guard vm.viewMode == .detailstream else { return }
+        if vm.isLoading || (vm.isPlaying && !vm.didFinishPlaying) {
+            hideDetailStreamControls()
+        }
+        else {
+            showDetailStreamControls()
         }
     }
     
@@ -1056,6 +1065,12 @@ struct OverlayPlayer: View {
         guard vm.viewMode == .detailstream else { return }
         detailStreamControlsVisible = true
         scheduleDetailStreamControlsAutoHide()
+    }
+    
+    private func hideDetailStreamControls() {
+        detailStreamControlsHideTask?.cancel()
+        detailStreamControlsHideTask = nil
+        detailStreamControlsVisible = false
     }
     
     private func scheduleDetailStreamControlsAutoHide() {
@@ -1091,9 +1106,7 @@ struct OverlayPlayer: View {
             vm.viewMode = .fullscreen
         }
         isRotatedFullscreen = true
-        portraitCenterControlsHideTask?.cancel()
-        portraitCenterControlsHideTask = nil
-        portraitCenterControlsVisible = false
+        applyFullscreenControlsForPlaybackState()
         
         AppDelegate.supportedOrientations = .landscapeRight
         refreshSupportedOrientations()
@@ -1114,12 +1127,12 @@ struct OverlayPlayer: View {
     
     private func rotateToPortrait() {
         isRotatedFullscreen = false
-        fullscreenControlsHideTask?.cancel()
-        fullscreenControlsHideTask = nil
-        portraitCenterControlsHideTask?.cancel()
-        portraitCenterControlsHideTask = nil
-        portraitCenterControlsVisible = false
-        fullscreenControlsVisible = true
+        if vm.viewMode == .fullscreen {
+            applyFullscreenControlsForPlaybackState()
+        }
+        else {
+            hideFullscreenControls()
+        }
         
 #if !targetEnvironment(macCatalyst)
         AppDelegate.supportedOrientations = .allButUpsideDown
