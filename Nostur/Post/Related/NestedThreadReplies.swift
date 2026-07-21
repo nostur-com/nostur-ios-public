@@ -183,7 +183,8 @@ struct NestedReplyRow: View {
     private func bodySpine(onTap: @escaping () -> Void) -> some View {
         let hit = NestedThreadMetrics.railHitWidth
         let x = NestedThreadMetrics.spineX
-        let y0 = NestedThreadMetrics.branchY
+        // Start below the PFP so the spine does not draw over the avatar.
+        let y0 = NestedThreadMetrics.spineBelowPfpY
         let lineW = NestedThreadMetrics.lineWidth
         
         return GeometryReader { geo in
@@ -211,8 +212,7 @@ struct NestedReplyRow: View {
         let count = threadPostCount
         let name = node.nrPost.anyName
         let chevron = NestedThreadMetrics.collapsedChevronSize
-        // Chevron center sits on spineX so the parent L-rail meets it.
-        let leading = NestedThreadMetrics.spineX - chevron / 2
+        // Left-align with the PFP column so the parent L-rail meets the chevron.
         return Button {
             isCollapsed = false
         } label: {
@@ -227,7 +227,7 @@ struct NestedReplyRow: View {
                 Spacer(minLength: 0)
             }
             .foregroundColor(theme.accent)
-            .padding(.leading, leading)
+            .padding(.leading, DIMENSIONS.BOX_PADDING)
             .padding(.trailing, 10)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -241,10 +241,9 @@ struct NestedReplyRow: View {
 /// Child under parent: content indented; L-rail in parent coordinates (aligned spine).
 /// Rail tap collapses the *parent* (the post this branch hangs from).
 ///
-/// The L-rail is an *overlay* (on top of content). Drawing it in `.background`
-/// hides it under `NestedReplyRow`'s opaque `listBackground`. Using
-/// `.background(alignment:)` / a leading `GeometryReader` in a sized `ZStack`
-/// can also give the rail zero height so nothing is painted.
+/// Rails are overlaid in the indent gutter only: the L stops at the child Box /
+/// PFP left edge so ink never crosses avatars. A full `.background` rail would
+/// sit under the post’s opaque `listBackground` and disappear.
 private struct NestedChildBranch: View {
     let node: NestedReplyNode
     let isLastSibling: Bool
@@ -258,19 +257,17 @@ private struct NestedChildBranch: View {
     private var hit: CGFloat { NestedThreadMetrics.railHitWidth }
     private var cornerR: CGFloat { NestedThreadMetrics.cornerRadius }
     
-    /// L arm ends at the leading edge of the child spine control
-    /// (collapsed chevron / near expanded PFP center).
+    /// L arm ends at the left edge of the child PFP / chevron column.
     private var branchEndX: CGFloat {
         NestedThreadMetrics.branchEndX(stepInset: stepInset)
-            - NestedThreadMetrics.collapsedChevronSize / 2
     }
     
     var body: some View {
         NestedReplyRow(node: node)
             .padding(.leading, stepInset)
             .fixedSize(horizontal: false, vertical: true)
-            // Plain overlay (no alignment) proposes the full content size to
-            // GeometryReader and paints the L *above* the opaque list background.
+            // Overlay so the rail is visible in the gutter; geometry is clipped
+            // to end at the PFP column so it does not paint over avatars.
             .overlay {
                 connectingRail
             }

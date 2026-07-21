@@ -64,7 +64,7 @@ enum NestedThreadMetrics {
     static let railHitWidth: CGFloat = 32.0
     /// Corner radius for the L-branch into a child.
     static let cornerRadius: CGFloat = 8.0
-    /// Chevron in collapsed "Show thread…" rows; center sits on `spineX`.
+    /// Chevron in collapsed "Show thread…" rows (left-aligned with the PFP column).
     static let collapsedChevronSize: CGFloat = 16.0
     
     /// Same X as `PostLayout` thread connect lines: Box pad + THREAD_LINE_OFFSET.
@@ -72,14 +72,20 @@ enum NestedThreadMetrics {
         DIMENSIONS.BOX_PADDING + THREAD_LINE_OFFSET
     }
     
-    /// Mid-PFP Y from top of a post Box (for horizontal branches into expanded posts).
+    /// Mid-PFP Y from top of a post Box (for horizontal L into a child).
     static var branchY: CGFloat {
         DIMENSIONS.BOX_PADDING + DIMENSIONS.POST_ROW_PFP_DIAMETER / 2.0
     }
     
-    /// Horizontal L arm ends at the child spine (PFP / collapsed-chevron center).
+    /// Y just below the PFP so a vertical spine does not paint over the avatar.
+    static var spineBelowPfpY: CGFloat {
+        DIMENSIONS.BOX_PADDING + DIMENSIONS.POST_ROW_PFP_DIAMETER
+    }
+    
+    /// Left edge of the child post Box / PFP column in parent coordinates.
+    /// L-arms stop here so rails meet avatars instead of drawing on top of them.
     static func branchEndX(stepInset: CGFloat) -> CGFloat {
-        stepInset + spineX
+        stepInset + DIMENSIONS.BOX_PADDING
     }
     
     // MARK: - Tapered indentation
