@@ -35,6 +35,14 @@ struct AppearanceSettings: View {
                         }
                     }
                     
+                    VStack(alignment: .leading) {
+                        ReplyThreadFormatPicker()
+                        
+                        Text("Nested indents each reply under the post it responds to. Flat lists all replies in one level.", comment: "Setting on settings screen")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                    
                     Toggle(isOn: $settings.enableLiveEvents) {
                         Text("Show Live banner", comment:"Setting on settings screen")
                         Text("Live Nests or streams from follows")

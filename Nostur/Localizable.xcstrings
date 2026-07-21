@@ -6756,6 +6756,9 @@
         }
       }
     },
+    "Collapse thread" : {
+      "comment" : "A11y: collapse reply thread\nA11y: tap tree line"
+    },
     "Color Blue" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -13024,6 +13027,9 @@
         }
       }
     },
+    "Flat" : {
+      "comment" : "Reply thread format: list all replies in a single level"
+    },
     "Interactions" : {
       "comment" : "Tab title",
       "localizations" : {
@@ -15692,6 +15698,12 @@
           }
         }
       }
+    },
+    "Nested" : {
+      "comment" : "Reply thread format: indent replies under the post they respond to"
+    },
+    "Nested indents each reply under the post it responds to. Flat lists all replies in one level." : {
+      "comment" : "Setting on settings screen"
     },
     "Nests Audio Server" : {
       "localizations" : {
@@ -21496,6 +21508,9 @@
         }
       }
     },
+    "Reply thread format" : {
+      "comment" : "Setting on settings screen"
+    },
     "Reply anonymously" : {
       "localizations" : {
         "es" : {
@@ -23445,6 +23460,28 @@
         }
       }
     },
+    "Sent %@ sats to %@" : {
+      "comment" : "Sent X sats to <name> (Replying to text)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sent %1$@ sats to %2$@"
+          }
+        }
+      }
+    },
+    "Sent %@ sats to %@ on [post](nostur:e:%@)" : {
+      "comment" : "Sent X sats to <name> on <post> (Replying to text)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sent %1$@ sats to %2$@ on [post](nostur:e:%3$@)"
+          }
+        }
+      }
+    },
     "Sent to %lld relays" : {
       "comment" : "Message shown in footer of sent post",
       "localizations" : {
@@ -24050,6 +24087,9 @@
         }
       }
     },
+    "Show collapsed reply thread" : {
+      "comment" : "A11y"
+    },
     "Show extra relays used on post preview" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -24412,6 +24452,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toon antwoorden"
+          }
+        }
+      }
+    },
+    "Show thread from %@ (%lld)" : {
+      "comment" : "Expand collapsed reply thread; name and post count",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show thread from %1$@ (%2$lld)"
           }
         }
       }
@@ -28860,6 +28911,7 @@
     },
     "What" : {
       "comment" : "Tab title for feed of people you follow",
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {

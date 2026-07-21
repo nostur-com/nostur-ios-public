@@ -35,6 +35,7 @@ final class SettingsStore: ObservableObject {
         static let autoScroll:String = "autoscroll"
         static let statusBubble:String = "statusBubble"
         static let fullWidthImages:String = "full_width_images"
+        static let nestedRepliesEnabled:String = "nested_replies_enabled"
         static let defaultMediaUploadService:String = "media_upload_service"
         static let activeNWCconnectionId:String = "active_nwc_connection_id"
         static let fetchCounts:String = "fetch_counts"
@@ -170,6 +171,7 @@ final class SettingsStore: ObservableObject {
             Keys.enableLiveEvents: true,
             Keys.autoScroll: false,
             Keys.fullWidthImages: true,
+            Keys.nestedRepliesEnabled: true,
             Keys.defaultMediaUploadService: "nostr.build",
             Keys.statusBubble: false,
             Keys.activeNWCconnectionId: "",
@@ -218,6 +220,7 @@ final class SettingsStore: ObservableObject {
         _restrictAutoDownload = defaults.bool(forKey: Keys.restrictAutoDownload)
         _autoDownloadFrom = defaults.string(forKey: Keys.autoDownloadFrom) ?? AutodownloadLevel.onlyWoT.rawValue
         _fullWidthImages = defaults.bool(forKey: Keys.fullWidthImages)
+        _nestedRepliesEnabled = defaults.bool(forKey: Keys.nestedRepliesEnabled)
         _footerButtons = defaults.string(forKey: Keys.footerButtons) ?? "💬🔄+🔖"
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -547,6 +550,18 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _fullWidthImages:Bool = false
+    
+    /// When true, post detail replies use nested indentation; when false, classic flat list.
+    public var nestedRepliesEnabled: Bool {
+        set {
+            objectWillChange.send()
+            _nestedRepliesEnabled = newValue
+            defaults.set(newValue, forKey: Keys.nestedRepliesEnabled)
+        }
+        get { _nestedRepliesEnabled }
+    }
+    
+    private var _nestedRepliesEnabled: Bool = true
     
     public var footerButtons: String {
         set {
