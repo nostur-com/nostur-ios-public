@@ -10,7 +10,20 @@ import SwiftUI
 struct VideoPostLayout<Content: View>: View {
     let nrPost: NRPost
     let theme: Theme
+    var isCompact = false
     @ViewBuilder var content: Content
+
+    private var bottomOffset: CGFloat {
+        isCompact ? -12.0 : -95.0
+    }
+
+    private var buttonsBottomOffset: CGFloat {
+        isCompact ? -12.0 : -90.0
+    }
+
+    private var buttonsWidth: CGFloat {
+        isCompact ? 42.0 : 56.0
+    }
 
     var body: some View {
         self.content
@@ -31,24 +44,25 @@ struct VideoPostLayout<Content: View>: View {
                     if let summary = nrPost.eventSummary, !summary.isEmpty {
                         Text(summary)
                             .foregroundColor(Color.white)
-                            .lineLimit(30)
+                            .lineLimit(isCompact ? 4 : 30)
                             .font(.caption)
                             .padding(.vertical, 5)
                     }
                 }
-                .padding(10)
-                .padding(.trailing, 56)
-                .offset(y: -95.0)
+                .font(isCompact ? .caption : .body)
+                .padding(isCompact ? 8 : 10)
+                .padding(.trailing, buttonsWidth)
+                .offset(y: bottomOffset)
                 
             }
         
             // Buttons
             .overlay(alignment: .bottomTrailing) {
-                VideoPostButtons(nrPost: nrPost, theme: theme)
+                VideoPostButtons(nrPost: nrPost, isCompact: isCompact, theme: theme)
                     .padding(.horizontal, 3)
-                    .frame(width: 56)
-                    .padding(.trailing, 7)
-                    .offset(y: -90.0)
+                    .frame(width: buttonsWidth)
+                    .padding(.trailing, isCompact ? 3 : 7)
+                    .offset(y: buttonsBottomOffset)
             }
     }
 }

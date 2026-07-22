@@ -394,7 +394,7 @@ struct Entry: View {
                     self.highlightAddRemoveAuthorButton
                 }
                 
-                if kind != .highlight {
+                if kind != .highlight && kind != .shortVideos {
                     self.previewButton
                 }
                 
@@ -446,7 +446,7 @@ struct Entry: View {
                 self.highlightAddRemoveAuthorButton
             }
             
-            if kind != .highlight {
+            if kind != .highlight && kind != .shortVideos {
                 self.previewButton
             }
             
@@ -500,7 +500,7 @@ struct Entry: View {
             }
         }
         
-        if kind != .highlight {
+        if kind != .highlight && kind != .shortVideos {
             ToolbarItem(placement: .primaryAction) {
                 self.previewButton
             }

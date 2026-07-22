@@ -50,6 +50,8 @@ struct ComposePost: View {
     @State private var vineVideoSourceURL: URL? // URL from picker or camera before trimming
     @State private var vineTrimmedVideoURL: URL? // URL after trimming
     @State private var vineTrimmedDuration: Double = 0
+    @State private var vinePreviewRestoreURL: URL?
+    @State private var vinePreviewRestoreDuration: Double = 0
     @State private var vineShowCamera: Bool = false
     @State private var vineShowTrimmer: Bool = false
     @State private var vineVideoPickerShown: Bool = false
@@ -278,26 +280,20 @@ struct ComposePost: View {
                                 case .shortVideos:
                                     VStack(alignment: .leading) {
                                         if let vineTrimmedVideoURL {
-                                            // Video is trimmed and ready - show preview + caption
-                                            HStack(alignment: .top) {
-                                                InlineAccountSwitcher(activeAccount: account, onChange: { account in
-                                                    vm.activeAccount = account
-                                                }).equatable()
-                                                
-                                                VStack(alignment: .leading, spacing: 0) {
-                                                    PostHeaderView(pubkey: account.publicKey, name: account.anyName, via: NIP89_APP_NAME, createdAt: Date.now, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: false)
+                                            VineVideoPreview(
+                                                videoURL: vineTrimmedVideoURL,
+                                                duration: vineTrimmedDuration,
+                                                account: account,
+                                                typingTextModel: vm.typingTextModel,
+                                                onRemove: {
+                                                    try? FileManager.default.removeItem(at: vineTrimmedVideoURL)
+                                                    self.vineTrimmedVideoURL = nil
+                                                    self.vineTrimmedDuration = 0
+                                                    self.vinePreviewRestoreURL = nil
+                                                    self.vinePreviewRestoreDuration = 0
+                                                    vm.typingTextModel.pastedVideos = []
                                                 }
-                                            }
-                                            .padding(.top, 10)
-                                            .zIndex(200)
-                                            
-                                            // Video thumbnail preview
-                                            VineVideoPreview(videoURL: vineTrimmedVideoURL, duration: vineTrimmedDuration, onRemove: {
-                                                try? FileManager.default.removeItem(at: vineTrimmedVideoURL)
-                                                self.vineTrimmedVideoURL = nil
-                                                self.vineTrimmedDuration = 0
-                                                vm.typingTextModel.pastedVideos = []
-                                            })
+                                            )
                                             .padding(.vertical, 8)
                                             
                                             textEntry
@@ -374,7 +370,7 @@ struct ComposePost: View {
                                         VineVideoPicker(selectedVideoURL: $vineVideoSourceURL, isLoading: $vineLoadingVideo)
                                     }
                                     .onChange(of: vineVideoSourceURL) { url in
-                                        if url != nil && !vineShowTrimmer {
+                                        if url != nil && !vineShowTrimmer && vinePreviewRestoreURL == nil {
                                             vineShowTrimmer = true
                                         }
                                     }
@@ -385,6 +381,14 @@ struct ComposePost: View {
                                                     sourceURL: sourceURL,
                                                     onTrimmed: { trimmedURL, duration in
                                                         vineShowTrimmer = false
+                                                        if let previousURL = vinePreviewRestoreURL, previousURL != trimmedURL {
+                                                            try? FileManager.default.removeItem(at: previousURL)
+                                                        }
+                                                        if let previousURL = vineTrimmedVideoURL, previousURL != trimmedURL {
+                                                            try? FileManager.default.removeItem(at: previousURL)
+                                                        }
+                                                        vinePreviewRestoreURL = nil
+                                                        vinePreviewRestoreDuration = 0
                                                         vineTrimmedVideoURL = trimmedURL
                                                         vineTrimmedDuration = duration
                                                         // Add to pastedVideos for upload pipeline
@@ -395,7 +399,19 @@ struct ComposePost: View {
                                                     },
                                                     onCancel: {
                                                         vineShowTrimmer = false
-                                                        vineVideoSourceURL = nil
+                                                        if let restoreURL = vinePreviewRestoreURL {
+                                                            vineTrimmedVideoURL = restoreURL
+                                                            vineTrimmedDuration = vinePreviewRestoreDuration
+                                                            vm.typingTextModel.pastedVideos = [
+                                                                PostedVideoMeta(index: 0, videoURL: restoreURL)
+                                                            ]
+                                                            vm.typingTextModel.vineVideoDuration = vinePreviewRestoreDuration
+                                                            vinePreviewRestoreURL = nil
+                                                            vinePreviewRestoreDuration = 0
+                                                        }
+                                                        else if vineTrimmedVideoURL == nil {
+                                                            vineVideoSourceURL = nil
+                                                        }
                                                     }
                                                 )
                                                 .navigationTitle("Trim Video")
@@ -565,6 +581,20 @@ struct ComposePost: View {
                             }
                         }
                         return true
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .primaryAction) {
+                            if kind == .shortVideos && vineTrimmedVideoURL != nil {
+                                Button("Trim", systemImage: "scissors") {
+                                    vinePreviewRestoreURL = vineTrimmedVideoURL
+                                    vinePreviewRestoreDuration = vineTrimmedDuration
+                                    vineTrimmedVideoURL = nil
+                                    vineTrimmedDuration = 0
+                                    vm.typingTextModel.pastedVideos = []
+                                    vineShowTrimmer = true
+                                }
+                            }
+                        }
                     }
                     // TODO: Add drag n drop for video
                 }

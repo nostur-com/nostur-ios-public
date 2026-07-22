@@ -159,12 +159,16 @@ struct VideoTrimmerView: View {
         .onDisappear { cleanup() }
         .onChange(of: startTime) { _ in seekToStart() }
         .onChange(of: endTime) { _ in seekToStart() }
+        .onChange(of: removeAudio) { newValue in
+            player?.isMuted = newValue
+        }
     }
     
     private func loadVideo() {
         let asset = AVURLAsset(url: sourceURL)
         let playerItem = AVPlayerItem(asset: asset)
         let newPlayer = AVPlayer(playerItem: playerItem)
+        newPlayer.isMuted = removeAudio
         
         Task {
             do {

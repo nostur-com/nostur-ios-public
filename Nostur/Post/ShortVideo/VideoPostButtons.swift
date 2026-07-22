@@ -16,28 +16,38 @@ struct VideoPostButtons: View {
     private let nrPost: NRPost
     private var isDetail = false
     private let isItem: Bool
+    private let isCompact: Bool
     
-    init(nrPost: NRPost, isDetail: Bool = false, isItem: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, isDetail: Bool = false, isItem: Bool = false, isCompact: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.isDetail = isDetail
         self.isItem = isItem
+        self.isCompact = isCompact
         self.theme = theme
+    }
+
+    private var profileImageSize: CGFloat {
+        isCompact ? 30.0 : DIMENSIONS.POST_ROW_PFP_WIDTH
+    }
+
+    private var profileFrameSize: CGFloat {
+        isCompact ? 36.0 : DIMENSIONS.POST_ROW_PFP_DIAMETER
     }
     
     var body: some View {
-        VStack(alignment: .center, spacing: 5) {
+        VStack(alignment: .center, spacing: isCompact ? 2 : 5) {
             Spacer()
             PostMenuButton(nrPost: nrPost, theme: theme)
-                .offset(x: -7)
-                .padding(.bottom, 20)
+                .offset(x: isCompact ? -4 : -7)
+                .padding(.bottom, isCompact ? 10 : 20)
             
-            ZappablePFP(pubkey: nrPost.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: true)
-                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+            ZappablePFP(pubkey: nrPost.pubkey, size: profileImageSize, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: true)
+                .frame(width: profileFrameSize, height: profileFrameSize)
                 
                 .onTapGesture {
                     navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost,  context: containerID)
                 }
-                .padding(.bottom, 25.0)
+                .padding(.bottom, isCompact ? 12.0 : 25.0)
             
             ForEach(vmc.buttonRow) { button in
                 switch button.id {
@@ -70,8 +80,8 @@ struct VideoPostButtons: View {
             }
         }
         .padding(.top, 5)
-        .padding(.bottom, 16)
+        .padding(.bottom, isCompact ? 8 : 16)
         .foregroundColor(theme.footerButtons)
-        .font(.system(size: 24))
+        .font(.system(size: isCompact ? 18 : 24))
     }
 }

@@ -63,12 +63,26 @@ struct VideoPost: View {
     private var postID: String { nrPost.id }
     
     @State var canPlay = true
+
+    private var isCompactPreview: Bool {
+        nxViewingContext.contains(.preview)
+    }
     
     private var videoWidth: CGFloat {
+        if isCompactPreview {
+            return min(max(availableWidth - 48, 180), 280)
+        }
         if nxViewingContext.contains(.postParent) {
             return availableWidth - 20
         }
         return availableWidth
+    }
+
+    private var videoHeight: CGFloat {
+        if isCompactPreview {
+            return min(videoWidth * 16 / 9, max(availableHeight - 40, 320))
+        }
+        return availableHeight
     }
     
     @ViewBuilder
@@ -90,13 +104,13 @@ struct VideoPost: View {
     }
     
     var body: some View {
-        VideoPostLayout(nrPost: nrPost, theme: theme) {
+        VideoPostLayout(nrPost: nrPost, theme: theme, isCompact: isCompactPreview) {
             if let videoURL = nrPost.eventUrl {
                 if #available(iOS 16.0, *) {
                     ShortVideoPlayer(url: videoURL, isPlaying: $isPlaying, isMuted: $isMuted)
-                        .frame(width: videoWidth, height: min((videoWidth*3), availableHeight))
+                        .frame(width: videoWidth, height: min((videoWidth*3), videoHeight))
                         .background(Color.black)
-                        .frame(width: videoWidth, height: availableHeight)
+                        .frame(width: videoWidth, height: videoHeight)
                         .overlay(alignment: .topLeading) {
                             muteButton
                         }
@@ -136,9 +150,9 @@ struct VideoPost: View {
                 } else {
                     GeometryReader { geo in
                         ShortVideoPlayer(url: videoURL, isPlaying: $isPlaying, isMuted: $isMuted)
-                            .frame(width: videoWidth, height: min((videoWidth*3), availableHeight))
+                            .frame(width: videoWidth, height: min((videoWidth*3), videoHeight))
                             .background(Color.black)
-                            .frame(width: videoWidth, height: availableHeight)
+                            .frame(width: videoWidth, height: videoHeight)
                             .overlay(alignment: .topLeading) {
                                 muteButton
                             }
@@ -170,9 +184,22 @@ struct VideoPost: View {
                                 else { $0 }
                             }
                     }
-                    .frame(width: videoWidth, height: availableHeight)
+                    .frame(width: videoWidth, height: videoHeight)
                 }
             }
+        }
+        .modifier {
+            if isCompactPreview {
+                $0.frame(width: videoWidth, height: videoHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(.white.opacity(0.18), lineWidth: 1)
+                    )
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity)
+            }
+            else { $0 }
         }
         .onAppear {
             // Detail has no feed-visibility autoplay; start when opening short-video detail.

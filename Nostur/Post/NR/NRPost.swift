@@ -674,6 +674,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             if self.eventUrl == nil, let eventUrlString = event.eventUrl, let eventUrl = URL(string: eventUrlString) {
                 self.eventUrl = eventUrl
             }
+            if self.eventUrl == nil, let previewVideo = event.previewVideos.first {
+                self.eventUrl = previewVideo.videoURL
+            }
             mostRecentId = event.mostRecentId
             
             if event.kind == 30311 {

@@ -49,14 +49,24 @@ struct PostPreview: View {
     var body: some View {
         ScrollView {
             AnyStatus()
-            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: theme)
-                .environment(\.nxViewingContext, [.preview, .postDetail])
-                .padding(10)
-                .disabled(true)
-                .onReceive(receiveNotification(.iMetaInfoForUrl)) { notification in
-                    let (urlString, iMeta) = notification.object as! (String, iMetaInfo)
-                    vm.remoteIMetas[urlString] = iMeta
-                }
+            if kind == .shortVideos {
+                VideoPost(nrPost: nrPost, isVisible: false, theme: theme)
+                    .environment(\.nxViewingContext, [.preview, .postDetail])
+                    .environment(\.availableHeight, 440)
+                    .environment(\.availableWidth, availableWidth)
+                    .disabled(true)
+                    .padding(10)
+            }
+            else {
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: theme)
+                    .environment(\.nxViewingContext, [.preview, .postDetail])
+                    .padding(10)
+                    .disabled(true)
+                    .onReceive(receiveNotification(.iMetaInfoForUrl)) { notification in
+                        let (urlString, iMeta) = notification.object as! (String, iMetaInfo)
+                        vm.remoteIMetas[urlString] = iMeta
+                    }
+            }
             Spacer()
         }
         .overlay(alignment: .bottom) {
