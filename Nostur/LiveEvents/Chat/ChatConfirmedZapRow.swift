@@ -14,15 +14,15 @@ struct ChatConfirmedZapRow: View {
     private var confirmedZap: NRChatConfirmedZap
     @ObservedObject private var nrContact: NRContact
     
-    @ObservedObject var settings: SettingsStore = .shared
-    
+    private let displayUserAgent: Bool
     private var zoomableId: String
     @Binding private var selectedContact: NRContact?
 
     
-    init(confirmedZap: NRChatConfirmedZap, zoomableId: String = "Default", selectedContact: Binding<NRContact?>) {
+    init(confirmedZap: NRChatConfirmedZap, displayUserAgent: Bool, zoomableId: String = "Default", selectedContact: Binding<NRContact?>) {
         self.confirmedZap = confirmedZap
         self.nrContact = confirmedZap.nrContact
+        self.displayUserAgent = displayUserAgent
         self.zoomableId = zoomableId
         _selectedContact = selectedContact
     }
@@ -54,7 +54,7 @@ struct ChatConfirmedZapRow: View {
                     Ago(confirmedZap.zapRequestCreatedAt)
                         .foregroundColor(theme.secondary)
                     
-                    if settings.displayUserAgentEnabled, let via = confirmedZap.via {
+                    if displayUserAgent, let via = confirmedZap.via {
                         Text(String(format: "via %@", via))
                             .font(.subheadline)
                             .lineLimit(1)

@@ -13,6 +13,7 @@ struct ChatRoom: View {
     public let aTag: String
     public let anonymous: Bool
     @ObservedObject public var chatVM: ChatRoomViewModel
+    @ObservedObject private var settings: SettingsStore = .shared
     public var zoomableId: String = "Default"
     @Binding var selectedContact: NRContact?
 
@@ -57,7 +58,13 @@ struct ChatRoom: View {
                                 else {
                                     ForEach(chatVM.messages) { rowContent in
                                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                                            ChatRow(content: rowContent, zoomableId: zoomableId, selectedContact: $selectedContact)
+                                            ChatRow(
+                                                content: rowContent,
+                                                displayUserAgent: settings.displayUserAgentEnabled,
+                                                zoomableId: zoomableId,
+                                                selectedContact: $selectedContact
+                                            )
+                                            .equatable()
                                         }
                                         .padding(.vertical, 5)
                                         .scaleEffect(x: 1, y: -1, anchor: .center)
@@ -65,6 +72,19 @@ struct ChatRoom: View {
                                     .listRowInsets(.init())
                                     .listRowSeparator(.hidden)
                                     .listRowBackground(.init(Color.clear))
+
+                                    if chatVM.hasOlderMessages {
+                                        ProgressView()
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .scaleEffect(x: 1, y: -1, anchor: .center)
+                                            .listRowInsets(.init())
+                                            .listRowSeparator(.hidden)
+                                            .listRowBackground(.init(Color.clear))
+                                            .onAppear {
+                                                chatVM.loadOlderMessages()
+                                            }
+                                    }
                                 }
                             case .timeout:
                                 VStack {

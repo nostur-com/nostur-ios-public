@@ -14,14 +14,14 @@ struct ChatPendingZapRow: View {
     private var pendingZap: NRChatPendingZap
     @ObservedObject private var nrContact: NRContact
     
-    @ObservedObject var settings: SettingsStore = .shared
-    
+    private let displayUserAgent: Bool
     private var zoomableId: String
     @Binding private var selectedContact: NRContact?
     
-    init(pendingZap: NRChatPendingZap, zoomableId: String = "Default", selectedContact: Binding<NRContact?>) {
+    init(pendingZap: NRChatPendingZap, displayUserAgent: Bool, zoomableId: String = "Default", selectedContact: Binding<NRContact?>) {
         self.pendingZap = pendingZap
         self.nrContact = pendingZap.nrContact
+        self.displayUserAgent = displayUserAgent
         self.zoomableId = zoomableId
         _selectedContact = selectedContact
     }
@@ -53,7 +53,7 @@ struct ChatPendingZapRow: View {
                 Ago(pendingZap.createdAt)
                     .foregroundColor(theme.secondary)
 
-                if settings.displayUserAgentEnabled, let via = pendingZap.via {
+                if displayUserAgent, let via = pendingZap.via {
                     Text(String(format: "via %@", via))
                         .font(.subheadline)
                         .lineLimit(1)

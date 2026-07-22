@@ -9,6 +9,39 @@ import SwiftUI
 import Combine
 import AVKit
 
+/// Lightweight inline video surface used by stream detail. Unlike
+/// `AVPlayerViewController`, this has no controller containment, native chrome,
+/// gesture recognizers, or AVKit overlay hierarchy for SwiftUI to composite
+/// while the chat underneath is scrolling.
+struct InlineAVPlayerLayerView: UIViewRepresentable {
+    let player: AVPlayer
+
+    func makeUIView(context: Context) -> PlayerLayerView {
+        let view = PlayerLayerView()
+        view.backgroundColor = .black
+        view.playerLayer.videoGravity = .resizeAspect
+        view.playerLayer.player = player
+        return view
+    }
+
+    func updateUIView(_ view: PlayerLayerView, context: Context) {
+        guard view.playerLayer.player !== player else { return }
+        view.playerLayer.player = player
+    }
+
+    static func dismantleUIView(_ view: PlayerLayerView, coordinator: ()) {
+        view.playerLayer.player = nil
+    }
+
+    final class PlayerLayerView: UIView {
+        override class var layerClass: AnyClass { AVPlayerLayer.self }
+
+        var playerLayer: AVPlayerLayer {
+            layer as! AVPlayerLayer
+        }
+    }
+}
+
 /// Hosts `AVPlayerViewController` for OverlayPlayer.
 /// Custom chrome sets `showsPlaybackControls = false`; play/pause is driven by the `isPlaying` binding.
 struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {

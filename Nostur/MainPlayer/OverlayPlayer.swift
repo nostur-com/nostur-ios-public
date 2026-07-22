@@ -517,7 +517,12 @@ struct OverlayPlayer: View {
                                         }
                                     }
                                     .overlay {
-                                        if !vm.isLoading {
+                                        if !vm.isLoading && vm.viewMode == .detailstream {
+                                            InlineAVPlayerLayerView(player: vm.player)
+                                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                                .allowsHitTesting(false)
+                                        }
+                                        else if !vm.isLoading {
                                             AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
                                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                         }

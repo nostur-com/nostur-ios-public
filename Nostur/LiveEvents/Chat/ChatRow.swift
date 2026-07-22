@@ -7,20 +7,39 @@
 
 import SwiftUI
 
-struct ChatRow: View {
+struct ChatRow: View, Equatable {
     @Environment(\.theme) private var theme
     public let content: ChatRowContent
+    public let displayUserAgent: Bool
     public var zoomableId: String = "Default"
     @Binding var selectedContact: NRContact?
+
+    init(
+        content: ChatRowContent,
+        displayUserAgent: Bool = SettingsStore.shared.displayUserAgentEnabled,
+        zoomableId: String = "Default",
+        selectedContact: Binding<NRContact?>
+    ) {
+        self.content = content
+        self.displayUserAgent = displayUserAgent
+        self.zoomableId = zoomableId
+        _selectedContact = selectedContact
+    }
+
+    static func == (lhs: ChatRow, rhs: ChatRow) -> Bool {
+        lhs.content.renderIdentity == rhs.content.renderIdentity &&
+        lhs.displayUserAgent == rhs.displayUserAgent &&
+        lhs.zoomableId == rhs.zoomableId
+    }
     
     var body: some View {
         switch content {
             case .chatConfirmedZap(let confirmedZap):
-                ChatConfirmedZapRow(confirmedZap: confirmedZap, zoomableId: zoomableId, selectedContact: $selectedContact)
+                ChatConfirmedZapRow(confirmedZap: confirmedZap, displayUserAgent: displayUserAgent, zoomableId: zoomableId, selectedContact: $selectedContact)
             case .chatPendingZap(let pendingZap):
-                ChatPendingZapRow(pendingZap: pendingZap, zoomableId: zoomableId, selectedContact: $selectedContact)
+                ChatPendingZapRow(pendingZap: pendingZap, displayUserAgent: displayUserAgent, zoomableId: zoomableId, selectedContact: $selectedContact)
             case .chatMessage(let nrChat):
-                ChatMessageRow(nrChat: nrChat, zoomableId: zoomableId, selectedContact: $selectedContact)
+                ChatMessageRow(nrChat: nrChat, displayUserAgent: displayUserAgent, zoomableId: zoomableId, selectedContact: $selectedContact)
         }
     }
 }
@@ -60,6 +79,20 @@ enum ChatRowContent: Identifiable {
                 pendingZap.id
             case .chatMessage(let nrChat):
                 nrChat.id
+        }
+    }
+
+    // Includes the row kind because a pending zap is replaced in place by a
+    // confirmed zap. Amount is included because aggregated zap rows can retain
+    // their identity while their displayed value changes.
+    var renderIdentity: String {
+        switch self {
+            case .chatConfirmedZap(let confirmedZap):
+                "confirmed:\(id):\(confirmedZap.amount)"
+            case .chatPendingZap(let pendingZap):
+                "pending:\(id):\(pendingZap.amount)"
+            case .chatMessage:
+                "message:\(id)"
         }
     }
     

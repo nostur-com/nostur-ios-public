@@ -11,6 +11,7 @@ import CryptoKit
 import Combine
 
 class ChatRoomViewModel: ObservableObject {
+    private static let messagePageSize = 25
     
     enum Errors: Error {
         case invalidATagError(String)
@@ -38,7 +39,10 @@ class ChatRoomViewModel: ObservableObject {
     
     @Published public var messages: [ChatRowContent] = []
     @Published public var topZaps: [NRChatConfirmedZap] = []
+    @Published private(set) var hasOlderMessages = false
     private var bgMessages: [ChatRowContent] = []
+    private var visibleMessageLimit = messagePageSize
+    private var isLoadingOlderMessages = false
     
     private var renderMessages = PassthroughSubject<Void, Never>()
     private var fetchMissingPs = PassthroughSubject<Void, Never>()
@@ -82,12 +86,10 @@ class ChatRoomViewModel: ObservableObject {
                 if let messages = self?.bgMessages {
                     DispatchQueue.main.async { [weak self] in
                         guard let self else { return }
-                        withAnimation {
-                            if self.state != .ready {
-                                self.state = .ready
-                            }
-                            self.messages = messages
+                        if self.state != .ready {
+                            self.state = .ready
                         }
+                        self.publishVisibleMessages(from: messages)
                     }
                 }
             }
@@ -114,6 +116,21 @@ class ChatRoomViewModel: ObservableObject {
             self?.fetchChatHistory()
         }
         self.updateLiveSubscription()
+    }
+
+    @MainActor
+    public func loadOlderMessages() {
+        guard hasOlderMessages, !isLoadingOlderMessages else { return }
+        isLoadingOlderMessages = true
+        visibleMessageLimit += Self.messagePageSize
+        publishVisibleMessages(from: bgMessages)
+        isLoadingOlderMessages = false
+    }
+
+    @MainActor
+    private func publishVisibleMessages(from messages: [ChatRowContent]) {
+        self.messages = Array(messages.prefix(visibleMessageLimit))
+        self.hasOlderMessages = messages.count > visibleMessageLimit
     }
     
     private func fetchFromDB(_ onComplete: (() -> ())? = nil) {
@@ -155,6 +172,7 @@ class ChatRoomViewModel: ObservableObject {
                 }
                 return row
             }
+            .sorted { $0.createdAt > $1.createdAt }
 
             self.bgMessages = rows
             self.fetchMissingPs.send()

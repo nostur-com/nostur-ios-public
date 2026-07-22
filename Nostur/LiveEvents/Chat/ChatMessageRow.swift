@@ -14,14 +14,14 @@ struct ChatMessageRow: View {
     @ObservedObject private var nrChat: NRChatMessage
     @ObservedObject private var nrContact: NRContact
     
-    @ObservedObject var settings: SettingsStore = .shared
-    
+    private let displayUserAgent: Bool
     private var zoomableId: String
     @Binding private var selectedContact: NRContact?
     
-    init(nrChat: NRChatMessage, zoomableId: String = "Default", selectedContact: Binding<NRContact?>) {
+    init(nrChat: NRChatMessage, displayUserAgent: Bool, zoomableId: String = "Default", selectedContact: Binding<NRContact?>) {
         self.nrChat = nrChat
         self.nrContact = nrChat.nrContact
+        self.displayUserAgent = displayUserAgent
         self.zoomableId = zoomableId
         _selectedContact = selectedContact
     }
@@ -36,7 +36,7 @@ struct ChatMessageRow: View {
 
                 Ago(nrChat.created_at).foregroundColor(theme.secondary)
                 
-                if settings.displayUserAgentEnabled, let via = nrChat.via {
+                if displayUserAgent, let via = nrChat.via {
                     Text(String(format: "via %@", via))
                         .font(.subheadline)
                         .lineLimit(1)
