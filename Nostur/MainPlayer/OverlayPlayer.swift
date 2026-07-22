@@ -120,8 +120,17 @@ struct OverlayPlayer: View {
     }
     
     private var shouldShowDetailStreamVideoControls: Bool {
-        guard vm.viewMode == .detailstream, detailStreamControlsVisible, !vm.isLoading else { return false }
+        guard vm.viewMode == .detailstream,
+              detailStreamControlsVisible,
+              !shouldShowPlaybackSpinner else { return false }
         return vm.player.status != .failed && vm.player.currentItem?.status != .failed
+    }
+
+    private var shouldShowPlaybackSpinner: Bool {
+        if vm.isLoading { return true }
+        guard vm.isPlaying, !vm.didFinishPlaying else { return false }
+        guard vm.player.status != .failed, vm.player.currentItem?.status != .failed else { return false }
+        return vm.timeControlStatus != .playing
     }
     
     private var overlayControls: some View {
@@ -461,7 +470,7 @@ struct OverlayPlayer: View {
                 }
             }
             .overlay(alignment: .center) {
-                if fullscreenControlsVisible {
+                if fullscreenControlsVisible && !shouldShowPlaybackSpinner {
                     fullscreenCenterControls(isLandscape: isLandscape)
                 }
             }
@@ -512,19 +521,17 @@ struct OverlayPlayer: View {
                                 // (Pre-custom-controls architecture. Dual AVPCs broke device reopen.)
                                 Color.black
                                     .overlay {
-                                        if vm.isLoading {
-                                            ProgressView()
+                                        if !vm.isLoading {
+                                            AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
+                                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                                         }
                                     }
                                     .overlay {
-                                        if !vm.isLoading && vm.viewMode == .detailstream {
-                                            InlineAVPlayerLayerView(player: vm.player)
-                                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        if shouldShowPlaybackSpinner {
+                                            ProgressView()
+                                                .tint(.white)
+                                                .controlSize(.large)
                                                 .allowsHitTesting(false)
-                                        }
-                                        else if !vm.isLoading {
-                                            AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
-                                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                                         }
                                     }
                                     .frame(

@@ -57,6 +57,11 @@ class AnyPlayerModel: ObservableObject {
     public var availableViewModes: [AnyPlayerViewMode] = []
     
     private var cancellables = Set<AnyCancellable>()
+    private var playerItemReadinessCancellables = Set<AnyCancellable>()
+#if DEBUG
+    private var playbackItemDebugCancellables = Set<AnyCancellable>()
+    private var playbackDebugStartedAt = Date()
+#endif
     
     public var currentlyPlayingUrl: String? = nil // when loading EmbeddedVideoView, check if we are currently playing the same already
     public var cachedFirstFrame: CachedFirstFrame? = nil // to restore .playingInPIP view back to first frame
@@ -65,6 +70,10 @@ class AnyPlayerModel: ObservableObject {
         setupRemoteControl()
         player.preventsDisplaySleepDuringVideoPlayback = true
         player.actionAtItemEnd = .pause
+        setupPlayerItemReadiness()
+#if DEBUG
+        setupPlaybackDebugging()
+#endif
         
         // IMPORTANT: do NOT assign `rate != 0` → isPlaying.
         // While buffering (esp. live HLS on device reopen), rate stays 0 for several seconds.
@@ -88,13 +97,11 @@ class AnyPlayerModel: ObservableObject {
             .sink { [weak self] newStatus in
                 guard let self else { return }
                 self.timeControlStatus = newStatus
-                // Keep trying while we intend to play (item still loading / rebuffering).
-                if self.isPlaying,
-                   !self.didFinishPlaying,
-                   newStatus != .playing,
-                   self.player.currentItem != nil {
-                    self.player.play()
-                }
+#if DEBUG
+                self.playbackDebugLog("timeControl=\(self.debugTimeControlStatus(newStatus)) rate=\(self.player.rate)")
+#endif
+                // Do not call play() again while waiting. Every repeated request makes AVPlayer
+                // restart its buffering-rate evaluation and can prevent live HLS from starting.
             }
             .store(in: &cancellables)
 
@@ -111,10 +118,45 @@ class AnyPlayerModel: ObservableObject {
             }
             .store(in: &cancellables)
     }
+
+    private func setupPlayerItemReadiness() {
+        player.publisher(for: \.currentItem, options: [.initial, .new])
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] item in
+                guard let self else { return }
+                self.playerItemReadinessCancellables.removeAll()
+                guard let item else { return }
+
+                item.publisher(for: \.status, options: [.initial, .new])
+                    .receive(on: DispatchQueue.main)
+                    .filter { $0 == .readyToPlay }
+                    .prefix(1)
+                    .sink { [weak self, weak item] _ in
+                        guard let self, item === self.player.currentItem else { return }
+                        guard self.isPlaying, !self.didFinishPlaying,
+                              self.player.timeControlStatus != .playing else { return }
+#if DEBUG
+                        self.playbackDebugLog("item became ready; resuming intended playback once")
+#endif
+                        if self.isStream {
+                            self.player.playImmediately(atRate: 1.0)
+                        }
+                        else {
+                            self.player.play()
+                        }
+                    }
+                    .store(in: &self.playerItemReadinessCancellables)
+            }
+            .store(in: &cancellables)
+    }
     
     // LIVE EVENT STREAM
     @MainActor
     public func loadLiveEvent(nrLiveEvent: NRLiveEvent, availableViewModes: [AnyPlayerViewMode] = [.detailstream, .overlay, .fullscreen, .audioOnlyBar], nrPost: NRPost? = nil) async {
+#if DEBUG
+        playbackDebugStartedAt = Date()
+        playbackDebugLog("loadLiveEvent mode=\(availableViewModes.first ?? .detailstream) ended=\(nrLiveEvent.streamHasEnded)")
+#endif
         
         // View updates
         sendNotification(.stopPlayingVideo)
@@ -148,6 +190,7 @@ class AnyPlayerModel: ObservableObject {
         }
         else if let url = nrLiveEvent.url {
             isStream = true
+            player.automaticallyWaitsToMinimizeStalling = false
             self.currentlyPlayingUrl = url.absoluteString
             Task.detached(priority: .userInitiated) {
                 let playerItem = AVPlayerItem(url: url)
@@ -406,7 +449,17 @@ class AnyPlayerModel: ObservableObject {
         if shouldRestartFromBeginning {
             player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
         }
-        player.play()
+#if DEBUG
+        playbackDebugLog("play() requested itemStatus=\(debugItemStatus(player.currentItem?.status)) playerStatus=\(debugPlayerStatus(player.status))")
+#endif
+        if isStream {
+            player.automaticallyWaitsToMinimizeStalling = false
+            player.playImmediately(atRate: 1.0)
+        }
+        else {
+            player.automaticallyWaitsToMinimizeStalling = true
+            player.play()
+        }
 #if os(macOS)
         MPNowPlayingInfoCenter.default().playbackState = .playing
 #endif
@@ -433,6 +486,9 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     func pauseVideo() {
+#if DEBUG
+        playbackDebugLog("pause() requested")
+#endif
         isPlaying = false
         player.pause()
 #if os(macOS)
@@ -466,6 +522,9 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     public func close() {
+#if DEBUG
+        playbackDebugLog("close()")
+#endif
         if let currentlyPlayingUrl {
             sendNotification(.didEndPIP, (currentlyPlayingUrl, self.cachedFirstFrame))
         }
@@ -501,6 +560,93 @@ class AnyPlayerModel: ObservableObject {
         // Restore normal idle behavior
         UIApplication.shared.isIdleTimerDisabled = false
     }
+
+#if DEBUG
+    private func setupPlaybackDebugging() {
+        player.publisher(for: \.currentItem, options: [.initial, .new])
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] item in
+                guard let self else { return }
+                self.playbackItemDebugCancellables.removeAll()
+                guard let item else {
+                    self.playbackDebugLog("currentItem=nil")
+                    return
+                }
+
+                self.playbackDebugLog("currentItem attached status=\(self.debugItemStatus(item.status))")
+                item.publisher(for: \.status, options: [.initial, .new])
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self, weak item] status in
+                        guard let self else { return }
+                        let error = item?.error?.localizedDescription ?? "none"
+                        self.playbackDebugLog("itemStatus=\(self.debugItemStatus(status)) error=\(error)")
+                    }
+                    .store(in: &self.playbackItemDebugCancellables)
+
+                NotificationCenter.default.publisher(for: .AVPlayerItemPlaybackStalled, object: item)
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self] _ in self?.playbackDebugLog("playback stalled") }
+                    .store(in: &self.playbackItemDebugCancellables)
+
+                NotificationCenter.default.publisher(for: .AVPlayerItemFailedToPlayToEndTime, object: item)
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self] notification in
+                        let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
+                        self?.playbackDebugLog("failed to play: \(error?.localizedDescription ?? "unknown error")")
+                    }
+                    .store(in: &self.playbackItemDebugCancellables)
+
+                NotificationCenter.default.publisher(for: .AVPlayerItemNewAccessLogEntry, object: item)
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self, weak item] _ in
+                        guard let event = item?.accessLog()?.events.last else { return }
+                        self?.playbackDebugLog("accessLog bitrate=\(Int(event.observedBitrate)) indicated=\(Int(event.indicatedBitrate)) stalls=\(event.numberOfStalls) transfer=\(String(format: "%.2f", event.transferDuration))s")
+                    }
+                    .store(in: &self.playbackItemDebugCancellables)
+            }
+            .store(in: &cancellables)
+
+        player.publisher(for: \.reasonForWaitingToPlay, options: [.initial, .new])
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] reason in
+                self?.playbackDebugLog("waitingReason=\(reason?.rawValue ?? "none")")
+            }
+            .store(in: &cancellables)
+    }
+
+    private func playbackDebugLog(_ message: String) {
+        let elapsed = Date().timeIntervalSince(playbackDebugStartedAt)
+        L.og.debug("🎬 Player +\(String(format: "%.3f", elapsed))s \(message)")
+    }
+
+    private func debugItemStatus(_ status: AVPlayerItem.Status?) -> String {
+        switch status {
+        case .unknown: "unknown"
+        case .readyToPlay: "readyToPlay"
+        case .failed: "failed"
+        case nil: "nil"
+        @unknown default: "unknown-future"
+        }
+    }
+
+    private func debugPlayerStatus(_ status: AVPlayer.Status) -> String {
+        switch status {
+        case .unknown: "unknown"
+        case .readyToPlay: "readyToPlay"
+        case .failed: "failed"
+        @unknown default: "unknown-future"
+        }
+    }
+
+    private func debugTimeControlStatus(_ status: AVPlayer.TimeControlStatus) -> String {
+        switch status {
+        case .paused: "paused"
+        case .waitingToPlayAtSpecifiedRate: "waiting"
+        case .playing: "playing"
+        @unknown default: "unknown-future"
+        }
+    }
+#endif
     
     public var downloadTask: ImageTask? // "Save to library" task
     public var nowPlayingThumbTask: ImageTask?

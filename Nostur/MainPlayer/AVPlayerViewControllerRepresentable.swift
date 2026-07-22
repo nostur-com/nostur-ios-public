@@ -9,39 +9,6 @@ import SwiftUI
 import Combine
 import AVKit
 
-/// Lightweight inline video surface used by stream detail. Unlike
-/// `AVPlayerViewController`, this has no controller containment, native chrome,
-/// gesture recognizers, or AVKit overlay hierarchy for SwiftUI to composite
-/// while the chat underneath is scrolling.
-struct InlineAVPlayerLayerView: UIViewRepresentable {
-    let player: AVPlayer
-
-    func makeUIView(context: Context) -> PlayerLayerView {
-        let view = PlayerLayerView()
-        view.backgroundColor = .black
-        view.playerLayer.videoGravity = .resizeAspect
-        view.playerLayer.player = player
-        return view
-    }
-
-    func updateUIView(_ view: PlayerLayerView, context: Context) {
-        guard view.playerLayer.player !== player else { return }
-        view.playerLayer.player = player
-    }
-
-    static func dismantleUIView(_ view: PlayerLayerView, coordinator: ()) {
-        view.playerLayer.player = nil
-    }
-
-    final class PlayerLayerView: UIView {
-        override class var layerClass: AnyClass { AVPlayerLayer.self }
-
-        var playerLayer: AVPlayerLayer {
-            layer as! AVPlayerLayer
-        }
-    }
-}
-
 /// Hosts `AVPlayerViewController` for OverlayPlayer.
 /// Custom chrome sets `showsPlaybackControls = false`; play/pause is driven by the `isPlaying` binding.
 struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
@@ -79,6 +46,8 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         avpc.view.addGestureRecognizer(swipeDown)
         
         startPlaybackIfNeeded(on: avpc)
+        context.coordinator.lastIsPlaying = isPlaying
+        context.coordinator.lastViewMode = viewMode
         
         return avpc
     }
@@ -86,24 +55,22 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     func updateUIViewController(_ avpc: AVPlayerViewController, context: Context) {
         context.coordinator.avpc = avpc
         
-        // Only pause when we intentionally stopped — never while buffering
-        // (.waitingToPlayAtSpecifiedRate is != .paused and used to cancel live HLS startup).
-        if isPlaying {
-            if player.timeControlStatus != .playing {
-                player.play()
-            }
-        }
-        else if player.rate != 0 || player.timeControlStatus == .playing {
-            player.pause()
-        }
-        
         avpc.showsPlaybackControls = false
         // Keep player assigned (important after item replace / reopen).
         if viewMode != .audioOnlyBar, avpc.player !== player {
             avpc.player = player
         }
         applyAudioOnlySettings(to: avpc)
-        startPlaybackIfNeeded(on: avpc)
+
+        let resumedFromAudioOnly = context.coordinator.lastViewMode == .audioOnlyBar && viewMode != .audioOnlyBar
+        if isPlaying && (!context.coordinator.lastIsPlaying || resumedFromAudioOnly) {
+            startPlaybackIfNeeded(on: avpc)
+        }
+        else if !isPlaying && context.coordinator.lastIsPlaying {
+            player.pause()
+        }
+        context.coordinator.lastIsPlaying = isPlaying
+        context.coordinator.lastViewMode = viewMode
     }
     
     static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: Coordinator) {
@@ -147,6 +114,8 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     class Coordinator: NSObject, AVPlayerViewControllerDelegate {
         var avpc: AVPlayerViewController?
         var parent: AVPlayerViewControllerRepresentable
+        var lastIsPlaying = false
+        var lastViewMode: AnyPlayerViewMode?
         
         init(parent: AVPlayerViewControllerRepresentable) {
             self.parent = parent
