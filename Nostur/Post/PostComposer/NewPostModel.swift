@@ -821,7 +821,7 @@ public final class NewPostModel: ObservableObject {
                             blossomUploader.queued = uploadItems.compactMap { tuple in
                                 if let signedEvent = signedEventsDict[tuple.4.id], let authHeader = toHttpAuthHeader(signedEvent) {
                                     // Will use /upload endpoint if set, else uses default /media unless its video (See BlossomUploadItem .verb getter)
-                                    return BlossomUploadItem(data: tuple.0, index: tuple.3, contentType: tuple.1, authorizationHeader: authHeader, verb: blossomType == .upload ? .upload : nil)
+                                    return BlossomUploadItem(data: tuple.0, index: tuple.3, contentType: tuple.1, authorizationHeader: authHeader, blurhash: tuple.2, verb: blossomType == .upload ? .upload : nil)
                                 } else {
                                     sendNotification(.anyStatus, ("Problem with remote signer", "NewPost"))
                                     return nil
