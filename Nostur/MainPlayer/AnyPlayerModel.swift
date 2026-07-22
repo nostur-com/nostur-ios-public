@@ -66,24 +66,48 @@ class AnyPlayerModel: ObservableObject {
         player.preventsDisplaySleepDuringVideoPlayback = true
         player.actionAtItemEnd = .pause
         
-        player.publisher(for: \.rate, options: [.initial, .new])
+        // IMPORTANT: do NOT assign `rate != 0` → isPlaying.
+        // While buffering (esp. live HLS on device reopen), rate stays 0 for several seconds.
+        // The old assign flipped isPlaying to false, then AVPlayerViewControllerRepresentable
+        // saw !isPlaying && status == .waitingToPlay… and called pause(), killing startup.
+        // Fullscreen "fixed" it by forcing a fresh updateUIView + play once the item was ready.
+        // isPlaying is playback *intent*, set by playVideo/pauseVideo only (plus rate>0 confirm).
+        player.publisher(for: \.rate, options: [.new])
             .receive(on: DispatchQueue.main)
-            .map { $0 != 0 }
-            .assign(to: \.isPlaying, on: self)
+            .sink { [weak self] rate in
+                guard let self, rate != 0 else { return }
+                if !self.isPlaying {
+                    self.isPlaying = true
+                }
+            }
             .store(in: &cancellables)
         
         player
-            .publisher(for: \.timeControlStatus)
+            .publisher(for: \.timeControlStatus, options: [.initial, .new])
             .receive(on: DispatchQueue.main)
             .sink { [weak self] newStatus in
-                self?.timeControlStatus = newStatus
+                guard let self else { return }
+                self.timeControlStatus = newStatus
+                // Keep trying while we intend to play (item still loading / rebuffering).
+                if self.isPlaying,
+                   !self.didFinishPlaying,
+                   newStatus != .playing,
+                   self.player.currentItem != nil {
+                    self.player.play()
+                }
             }
             .store(in: &cancellables)
 
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
-            .sink { [weak self] _ in
-                guard !(self?.didFinishPlaying ?? false) else { return }
-                self?.didFinishPlaying = true
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                guard let self, !self.didFinishPlaying else { return }
+                if let ended = notification.object as? AVPlayerItem,
+                   ended !== self.player.currentItem {
+                    return
+                }
+                self.didFinishPlaying = true
+                self.isPlaying = false
             }
             .store(in: &cancellables)
     }
@@ -113,11 +137,11 @@ class AnyPlayerModel: ObservableObject {
             Task.detached(priority: .userInitiated) {
                 let playerItem = AVPlayerItem(url: url)
                 Task { @MainActor in
-                    // Must play after replaceCurrentItem — attaching a new item resets rate to 0.
+                    // Mount the view first so AVPC exists, then play (device needs the layer attached).
                     self.player.replaceCurrentItem(with: playerItem)
-                    self.playVideo()
                     self.setupRemoteControl()
                     self.isLoading = false
+                    self.playVideo()
                 }
             }
             
@@ -128,11 +152,10 @@ class AnyPlayerModel: ObservableObject {
             Task.detached(priority: .userInitiated) {
                 let playerItem = AVPlayerItem(url: url)
                 Task { @MainActor in
-                    // Must play after replaceCurrentItem — attaching a new item resets rate to 0.
                     self.player.replaceCurrentItem(with: playerItem)
-                    self.playVideo()
                     self.setupRemoteControl()
                     self.isLoading = false
+                    self.playVideo()
                 }
             }
         }
@@ -170,9 +193,9 @@ class AnyPlayerModel: ObservableObject {
                 let playerItem = AVPlayerItem(url: url)
                 Task { @MainActor in
                     self.player.replaceCurrentItem(with: playerItem)
-                    self.playVideo()
                     self.setupRemoteControl()
                     self.isLoading = false
+                    self.playVideo()
                 }
             }
             else {
@@ -232,9 +255,9 @@ class AnyPlayerModel: ObservableObject {
                         
                         Task { @MainActor in
                             self.player.replaceCurrentItem(with: playerItem)
-                            self.playVideo()
                             self.setupRemoteControl()
                             self.isLoading = false
+                            self.playVideo()
                         }
                     } catch {
 #if DEBUG
@@ -258,9 +281,9 @@ class AnyPlayerModel: ObservableObject {
                     let playerItem = await AVPlayerItem(asset: asset)
                     Task { @MainActor in
                         self.player.replaceCurrentItem(with: playerItem)
-                        self.playVideo()
                         self.setupRemoteControl()
                         self.isLoading = false
+                        self.playVideo()
                     }
                 }
             }
@@ -398,16 +421,13 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     private func configurePlaybackSession() {
-        // Must be .playAndRecord. Now Playing control center doesn't work with just .playback https://developer.apple.com/forums/thread/674696
-        // Also .mixWithOthers doesn't work with Now Player control center
-        try? AVAudioSession.sharedInstance().setActive(false)
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-        try? AVAudioSession.sharedInstance().setActive(true)
+        // Always re-apply .playback without .mixWithOthers (app launch uses mixWithOthers).
+        // Avoid setActive(false) first — that can stall the next play on device after reopen.
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playback, mode: .default, options: [])
+        try? session.setActive(true)
         
-        // Only works when called after setting up audio session??
         UIApplication.shared.beginReceivingRemoteControlEvents()
-        
-        // Prevent auto-lock while playing
         UIApplication.shared.isIdleTimerDisabled = true
     }
     
@@ -465,11 +485,12 @@ class AnyPlayerModel: ObservableObject {
         self.aspect = 16/9 // reset
         self.didFinishPlaying = false
         
-        // Delay the player item replacement to allow AVPlayerViewController to clean up properly
+        // Delay the player item replacement to allow AVPlayerViewController to clean up properly.
+        // Skip if a new stream was opened in the meantime.
         Task {
-            // Small delay to ensure UI updates are processed
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             await MainActor.run {
+                guard !self.isShown else { return }
                 self.player.replaceCurrentItem(with: nil)
             }
         }

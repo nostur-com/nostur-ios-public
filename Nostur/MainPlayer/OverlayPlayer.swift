@@ -444,58 +444,40 @@ struct OverlayPlayer: View {
         )
     }
     
-    private func fullscreenPlayer(geometry: GeometryProxy) -> some View {
-        // Prefer explicit rotate state; fall back to geometry when the device is already landscape.
+    /// Fullscreen chrome only — shares the single AVPlayerViewController from the main player slot.
+    /// (A second AVPC for fullscreen was introduced with custom controls and broke device reopen.)
+    private func fullscreenChromeOverlays(geometry: GeometryProxy) -> some View {
         let isLandscape = isRotatedFullscreen || geometry.size.width > geometry.size.height
         
-        return ZStack {
-            Color.black
-                .ignoresSafeArea()
-            
-            if vm.isLoading {
-                ProgressView()
+        return Color.clear
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                toggleFullscreenControls()
             }
-            else {
-                AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
-            }
-        }
-        .frame(width: geometry.size.width, height: geometry.size.height)
-        .background(Color.black)
-        .clipped()
-        // Transparent hit layer so taps reach SwiftUI even when AVPlayerViewController eats touches.
-        // Control overlays below are stacked on top and remain interactive.
-        .overlay {
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    toggleFullscreenControls()
+            .overlay(alignment: .top) {
+                if fullscreenControlsVisible {
+                    fullscreenTopControls(geometry: geometry, isLandscape: isLandscape)
                 }
-        }
-        .overlay(alignment: .top) {
-            if fullscreenControlsVisible {
-                fullscreenTopControls(geometry: geometry, isLandscape: isLandscape)
             }
-        }
-        .overlay(alignment: .center) {
-            if fullscreenControlsVisible {
-                fullscreenCenterControls(isLandscape: isLandscape)
-            }
-        }
-        .overlay(alignment: .bottom) {
-            if fullscreenControlsVisible {
-                fullscreenControls(isLandscape: isLandscape)
-            }
-        }
-        .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
-            .onEnded({ value in
-                if value.translation.height > 0 {
-                    rotateToPortrait()
-                    vm.close()
+            .overlay(alignment: .center) {
+                if fullscreenControlsVisible {
+                    fullscreenCenterControls(isLandscape: isLandscape)
                 }
-            }))
-        .ignoresSafeArea()
+            }
+            .overlay(alignment: .bottom) {
+                if fullscreenControlsVisible {
+                    fullscreenControls(isLandscape: isLandscape)
+                }
+            }
+            .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
+                .onEnded({ value in
+                    if value.translation.height > 0 {
+                        rotateToPortrait()
+                        vm.close()
+                    }
+                }))
+            .ignoresSafeArea()
     }
     
     private func controlButton(systemName: String, label: String, size: CGFloat = 32, iconFont: Font = .title3, action: @escaping () -> Void) -> some View {
@@ -517,15 +499,17 @@ struct OverlayPlayer: View {
         GeometryReader { geometry in
             if vm.isShown {
                 ZStack(alignment: videoAlignment) {
+                    // Fullscreen custom chrome sits above the single shared player (no second AVPC).
                     if vm.viewMode == .fullscreen {
-                        fullscreenPlayer(geometry: geometry)
+                        fullscreenChromeOverlays(geometry: geometry)
                             .zIndex(1)
                     }
                     
                     VStack(spacing: 0) {
                         NRNavigationStack {
                             VStack(spacing: 0) {
-                                // -- MARK: Actual video/stream ( .overlay + .full + .stream + .audioOnlyPill)
+                                // -- MARK: Actual video/stream — ONE AVPlayerViewController for all modes
+                                // (Pre-custom-controls architecture. Dual AVPCs broke device reopen.)
                                 Color.black
                                     .overlay {
                                         if vm.isLoading {
@@ -533,8 +517,9 @@ struct OverlayPlayer: View {
                                         }
                                     }
                                     .overlay {
-                                        if !vm.isLoading && vm.viewMode != .fullscreen {
+                                        if !vm.isLoading {
                                             AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
+                                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                                         }
                                     }
                                     .frame(
@@ -709,7 +694,7 @@ struct OverlayPlayer: View {
                                                 vm.close()
                                             }
                                         }
-                                        .buttonStyle(.borderless)
+//                                        .buttonStyle(.borderless)
                                         .foregroundColor(theme.accent)
                                     }
                                 }
@@ -898,15 +883,10 @@ struct OverlayPlayer: View {
                     }
                 }
                 .onChange(of: vm.isPlaying) { _ in
-                    if vm.isPlaying {
-                        // Keep the video unobstructed while playing; user can tap to reveal chrome.
-                        hideFullscreenControls()
-                        hideDetailStreamControls()
-                    }
-                    else if !vm.isLoading {
-                        showFullscreenControls()
-                        showDetailStreamControls()
-                    }
+                    applyChromeForActualPlayback()
+                }
+                .onChange(of: vm.timeControlStatus) { _ in
+                    applyChromeForActualPlayback()
                 }
                 .onChange(of: vm.isLoading) { _ in
                     if !vm.isLoading {
@@ -1069,7 +1049,25 @@ struct OverlayPlayer: View {
         }
         else {
             vm.playVideo()
-            // isPlaying onChange will hide chrome while playing
+            // Chrome hides once timeControlStatus becomes .playing
+        }
+    }
+    
+    /// Hide chrome only when the player is actually playing, not merely when play was requested.
+    /// Otherwise a stuck autoplay leaves controls hidden and pause/play unreachable.
+    private func applyChromeForActualPlayback() {
+        if vm.isLoading {
+            hideFullscreenControls()
+            hideDetailStreamControls()
+            return
+        }
+        if vm.timeControlStatus == .playing, !vm.didFinishPlaying {
+            hideFullscreenControls()
+            hideDetailStreamControls()
+        }
+        else {
+            showFullscreenControls()
+            showDetailStreamControls()
         }
     }
     
@@ -1083,10 +1081,10 @@ struct OverlayPlayer: View {
         }
     }
     
-    /// Show chrome only when paused/finished; keep it hidden while loading or playing.
+    /// Show chrome only when paused/finished; keep it hidden while loading or actually playing.
     private func applyFullscreenControlsForPlaybackState() {
         guard vm.viewMode == .fullscreen else { return }
-        if vm.isLoading || (vm.isPlaying && !vm.didFinishPlaying) {
+        if vm.isLoading || (vm.timeControlStatus == .playing && !vm.didFinishPlaying) {
             hideFullscreenControls()
         }
         else {
@@ -1131,10 +1129,10 @@ struct OverlayPlayer: View {
         }
     }
     
-    /// Show chrome only when paused/finished; keep it hidden while loading or playing.
+    /// Show chrome only when paused/finished; keep it hidden while loading or actually playing.
     private func applyDetailStreamControlsForPlaybackState() {
         guard vm.viewMode == .detailstream else { return }
-        if vm.isLoading || (vm.isPlaying && !vm.didFinishPlaying) {
+        if vm.isLoading || (vm.timeControlStatus == .playing && !vm.didFinishPlaying) {
             hideDetailStreamControls()
         }
         else {
