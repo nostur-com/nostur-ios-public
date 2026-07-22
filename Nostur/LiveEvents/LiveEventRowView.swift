@@ -37,9 +37,16 @@ struct LiveEventRowView: View {
     
     @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: 3)
     
+    // Environment availableWidth is the full list/screen width.
+    // Nested padding: Box (10+10) + this view's padding (10+10) => -40 for inner content.
+    // fullWidth bleeds the image into this view's horizontal padding (-10 each side).
+    private var imageAvailableWidth: CGFloat {
+        (availableWidth - 40) + (fullWidth ? 20 : 0)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack {
+            VStack(alignment: .leading) {
                 headerView
                 
                 LazyVGrid(columns: gridColumns, spacing: 8.0) {
@@ -70,7 +77,7 @@ struct LiveEventRowView: View {
             if let image = liveEvent.thumbUrl {
                 MediaContentView(
                     galleryItem: GalleryItem(url: image, pubkey: nrPost.pubkey, eventId: nrPost.id),
-                    availableWidth: (availableWidth - 40) + (fullWidth ? 40 : 20),
+                    availableWidth: imageAvailableWidth,
                     placeholderAspect: 16/9,
                     maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                     contentMode: .fit,
@@ -83,6 +90,7 @@ struct LiveEventRowView: View {
                 .padding(.vertical, 10)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .onAppear {
             liveEvent.fetchPresenceFromRelays()
             

@@ -270,7 +270,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     @ViewBuilder
     private var bottomAuthorInfo: some View {
         HStack(spacing: 3) {
-            Spacer()
+            Spacer(minLength: 0)
             
             Text("by")
                 .foregroundColor(theme.secondary)
@@ -303,9 +303,11 @@ struct PostLayout<Content: View, TitleContent: View>: View {
             if nrContact.nip05verified, let nip05 = nrContact.nip05 {
                 NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
                     .layoutPriority(3)
+                    .lineLimit(1)
             }
         }
         .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .trailing)
         .lineLimit(1)
     }
 }
