@@ -8,6 +8,11 @@
 #   ./scripts/run-sim.sh --build-only
 #   ./scripts/run-sim.sh --no-build   # reinstall/launch last build only
 #
+# By default uses Xcode’s normal DerivedData (same cache as Xcode / bare xcodebuild).
+# Optional: DERIVED_DATA=/path/to/project-derived-data for an isolated build root.
+# Do not set DERIVED_DATA to the parent …/Xcode/DerivedData folder — that is not
+# the default layout and will not share Xcode’s Nostur-<hash> cache.
+#
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -15,10 +20,24 @@ cd "$ROOT"
 
 SCHEME="${SCHEME:-Nostur}"
 BUNDLE_ID="${BUNDLE_ID:-nostur.com.Nostur}"
-DERIVED_DATA="${DERIVED_DATA:-/tmp/NosturDerived}"
 DEVICE="${DEVICE:-iPhone 17 Pro}"
 DO_BUILD=1
 DO_LAUNCH=1
+
+# Optional isolated DerivedData. Empty = Xcode default (…/DerivedData/Nostur-<hash>/).
+DERIVED_DATA="${DERIVED_DATA:-}"
+DEFAULT_DD_PARENT="${HOME}/Library/Developer/Xcode/DerivedData"
+
+# If someone exported the parent DerivedData folder (common .zshrc mistake), ignore it
+# so we actually share the default per-project cache with Xcode / CLI builds.
+if [[ -n "$DERIVED_DATA" ]]; then
+  resolved_dd="$(cd "$DERIVED_DATA" 2>/dev/null && pwd)" || resolved_dd=""
+  resolved_parent="$(cd "$DEFAULT_DD_PARENT" 2>/dev/null && pwd)" || resolved_parent=""
+  if [[ -n "$resolved_dd" && -n "$resolved_parent" && "$resolved_dd" == "$resolved_parent" ]]; then
+    echo "==> Note: DERIVED_DATA points at the Xcode parent folder; using default per-project DerivedData instead"
+    DERIVED_DATA=""
+  fi
+fi
 
 for arg in "$@"; do
   case "$arg" in
@@ -43,7 +62,9 @@ Env:
   DEVICE        Simulator name (default: iPhone 17 Pro)
   SCHEME        Xcode scheme (default: Nostur)
   BUNDLE_ID     App id (default: nostur.com.Nostur)
-  DERIVED_DATA  Build products path (default: /tmp/NosturDerived)
+  DERIVED_DATA  Optional isolated build root. Leave unset to use Xcode’s default
+                DerivedData (shared with Xcode / bare xcodebuild). Do not set this
+                to the parent …/Xcode/DerivedData folder.
 HELP
       exit 0
       ;;
@@ -55,7 +76,11 @@ done
 
 echo "==> Device:      ${DEVICE}"
 echo "==> Scheme:      ${SCHEME}"
-echo "==> DerivedData: ${DERIVED_DATA}"
+if [[ -n "$DERIVED_DATA" ]]; then
+  echo "==> DerivedData: ${DERIVED_DATA} (custom)"
+else
+  echo "==> DerivedData: default (Xcode …/DerivedData/Nostur-*/)"
+fi
 echo "==> Bundle ID:   ${BUNDLE_ID}"
 
 # Resolve device name -> UDID (first available match)
@@ -100,21 +125,52 @@ open -a Simulator
 
 DESTINATION="platform=iOS Simulator,id=${UDID}"
 
+XCODEBUILD_ARGS=(
+  -scheme "$SCHEME"
+  -destination "$DESTINATION"
+  -quiet
+)
+if [[ -n "$DERIVED_DATA" ]]; then
+  XCODEBUILD_ARGS+=(-derivedDataPath "$DERIVED_DATA")
+fi
+
 if [[ "$DO_BUILD" -eq 1 ]]; then
   echo "==> Building..."
-  xcodebuild \
-    -scheme "$SCHEME" \
-    -destination "$DESTINATION" \
-    -derivedDataPath "$DERIVED_DATA" \
-    -quiet \
-    build
+  xcodebuild "${XCODEBUILD_ARGS[@]}" build
   echo "==> Build succeeded"
 fi
 
-APP_PATH="$(find "$DERIVED_DATA" -name 'Nostur.app' -path '*/Debug-iphonesimulator/*' 2>/dev/null | head -1)"
+# Resolve Nostur.app from build settings (respects default or custom DerivedData).
+resolve_app_path() {
+  local settings products_dir
+  local sb_args=(-scheme "$SCHEME" -destination "$DESTINATION")
+  if [[ -n "$DERIVED_DATA" ]]; then
+    sb_args+=(-derivedDataPath "$DERIVED_DATA")
+  fi
+  settings="$(xcodebuild "${sb_args[@]}" -showBuildSettings 2>/dev/null)" || true
+  products_dir="$(printf '%s\n' "$settings" | sed -n 's/^ *BUILT_PRODUCTS_DIR = //p' | head -1)"
+  if [[ -n "$products_dir" && -d "${products_dir}/Nostur.app" ]]; then
+    printf '%s\n' "${products_dir}/Nostur.app"
+    return 0
+  fi
+
+  # Fallback: newest Debug-iphonesimulator product under the relevant root
+  local search_root="${DERIVED_DATA:-$DEFAULT_DD_PARENT}"
+  find "$search_root" -name 'Nostur.app' -path '*/Debug-iphonesimulator/*' 2>/dev/null \
+    | while IFS= read -r p; do
+        [[ -d "$p" ]] || continue
+        # mtime (epoch) then path — newest first
+        stat -f '%m %N' "$p" 2>/dev/null || true
+      done \
+    | sort -rn \
+    | head -1 \
+    | cut -d' ' -f2-
+}
+
+APP_PATH="$(resolve_app_path)"
 if [[ -z "${APP_PATH:-}" || ! -d "$APP_PATH" ]]; then
-  echo "error: could not find Nostur.app under $DERIVED_DATA"
-  echo "Run without --no-build first."
+  echo "error: could not find Nostur.app"
+  echo "Run without --no-build first (or check DERIVED_DATA)."
   exit 1
 fi
 

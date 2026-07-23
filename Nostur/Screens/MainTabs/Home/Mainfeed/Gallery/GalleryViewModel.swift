@@ -468,10 +468,11 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
 struct GalleryItem: Identifiable, Equatable, Hashable {
     
     func hash(into hasher: inout Hasher) {
-        return hasher.combine(id)
+        hasher.combine(id)
     }
     
-    let id: UUID
+    /// Stable identity from content (event + URL). Random UUIDs caused SwiftUI to reuse wrong cells.
+    let id: String
     let pubkey: String? // for blocklist filtering
     let url: URL
 
@@ -485,7 +486,7 @@ struct GalleryItem: Identifiable, Equatable, Hashable {
     init(url: URL, pubkey: String? = nil, eventId: String? = nil, dimensions: CGSize? = nil, blurhash: String? = nil, imageInfo: ImageInfo? = nil, gifInfo: GifInfo? = nil) {
         self.url = url
         self.eventId = eventId
-        self.id = UUID()
+        self.id = Self.stableId(eventId: eventId, url: url)
         self.pubkey = pubkey
         self.imageInfo = imageInfo
         self.gifInfo = gifInfo
@@ -494,6 +495,10 @@ struct GalleryItem: Identifiable, Equatable, Hashable {
         if let pubkey {
             self.pfpPictureURL = AccountsState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL
         }
+    }
+    
+    static func stableId(eventId: String?, url: URL) -> String {
+        "\(eventId ?? "")|\(url.absoluteString)"
     }
     
     var aspect: CGFloat? {

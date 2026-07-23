@@ -40,27 +40,33 @@ struct ProfileMediaView: View {
         case .ready:
             if !vm.items.isEmpty {
                 // No longer LazyVGrid here, because in List its not Lazy. We can just make 3 by 1 rows here, container List will make it lazy.
-                ForEach(Array(stride(from: 0, to: vm.items.count, by: 3)), id: \.self) { index in
+                // Row identity = first item id so filter/reload doesn't reuse wrong cells.
+                ForEach(Array(stride(from: 0, to: vm.items.count, by: 3).map { start in
+                    (start: start, id: vm.items[start].id)
+                }), id: \.id) { row in
+                    let index = row.start
+                    let cellSize = (availableWidth - GUTTER*2) / 3.0
                     HStack(spacing: GUTTER) {
                         Group {
-                            GalleryGridItemView(size: ((availableWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index)
+                            GalleryGridItemView(size: cellSize, item: vm.items[index], items: vm.items, currentIndex: index)
                                 .task {
                                     vm.fetchMoreIfNeeded(index)
                                 }
                             
                             if (index+1) < vm.items.count {
-                                GalleryGridItemView(size: ((availableWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index + 1)
+                                GalleryGridItemView(size: cellSize, item: vm.items[index + 1], items: vm.items, currentIndex: index + 1)
                             }
                             if (index+2) < vm.items.count {
-                                GalleryGridItemView(size: ((availableWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index + 2)
+                                GalleryGridItemView(size: cellSize, item: vm.items[index + 2], items: vm.items, currentIndex: index + 2)
                             }
                         }
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: ((availableWidth - GUTTER*2) / 3.0), height: ((availableWidth - GUTTER*2) / 3.0))
+                        .frame(width: cellSize, height: cellSize)
                         .clipped()
                         .aspectRatio(1, contentMode: .fit)
                         .padding(.bottom, GUTTER)
                     }
+                    .id(row.id)
                 }
             }
             else {

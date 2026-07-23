@@ -65,19 +65,20 @@ struct Gallery: View {
                     Color.clear.frame(height: 1).id(top)
                     if !vm.items.isEmpty {
                         LazyVGrid(columns: Self.gridColumns) {
-                            ForEach(vm.items.indices, id:\.self) { index in
+                            ForEach(Array(vm.items.enumerated()), id: \.element.id) { index, item in
                                 GeometryReader { geo in
-                                    if index < vm.items.count { // Should fix "Index out of range" crash
-                                        GalleryGridItemView(size: geo.size.width, items: vm.items, currentIndex: index, withPFP: true)
-                                    }
+                                    GalleryGridItemView(
+                                        size: geo.size.width,
+                                        item: item,
+                                        items: vm.items,
+                                        currentIndex: index,
+                                        withPFP: true
+                                    )
                                 }
+                                .id(item.id)
                                 .clipped()
                                 .aspectRatio(1, contentMode: .fill)
-//                                    .id(index)
                                 .contentShape(Rectangle())
-//                                    .onTapGesture {
-//                                        sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
-//                                    }
                             }
                         }
                     }
@@ -165,16 +166,15 @@ struct Gallery_Previews: PreviewProvider {
 
 struct GalleryGridItemView: View {
     public let size: Double
+    public let item: GalleryItem
     public let items: [GalleryItem]
     public let currentIndex: Int
     
     public var withPFP = false
     
-    private var currentItem: GalleryItem { items[currentIndex] }
-    
     var body: some View {
         MediaContentView(
-            galleryItem: currentItem,
+            galleryItem: item,
             availableWidth: size,
             placeholderAspect: 1.0,
             maxHeight: size,
@@ -182,9 +182,11 @@ struct GalleryGridItemView: View {
             galleryItems: items,
             autoload: true // Gallery is from follows so can be true
         )
+        .id(item.id)
         .overlay(alignment: .bottomLeading) {
-            if withPFP, let pfpPictureURL = currentItem.pfpPictureURL {
+            if withPFP, let pfpPictureURL = item.pfpPictureURL {
                 MiniPFP(pictureUrl: pfpPictureURL)
+                    .id(pfpPictureURL.absoluteString)
                     .padding(10)
             }
         }

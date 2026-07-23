@@ -22,7 +22,8 @@ struct GalleryFullScreenSwiper: View {
     public var isEncrypted: Bool = false
     public var usePFPpipeline: Bool = false // set true to load fixed PFP from cache (else nothing in cache)
     
-    @State private var activeIndex: Int?
+    /// Scroll identity must match `.id` on pages (stable GalleryItem.id, not index).
+    @State private var activeItemId: String?
     @State private var sharableImage: UIImage? = nil
     @State private var sharableGif: Data? = nil
     @State private var shareableGalleryMedia: ShareableGalleryMedia? = nil
@@ -54,6 +55,13 @@ struct GalleryFullScreenSwiper: View {
     @State private var mediaPostPreview = false
     @State private var post: NRPost? = nil
     @State private var showMiniProfile = false
+    /// Bumped when page changes so stale bg loads never overwrite the current preview.
+    @State private var mediaPostPreviewLoadToken = UUID()
+    
+    private var activeIndex: Int? {
+        guard let activeItemId else { return nil }
+        return items.firstIndex(where: { $0.id == activeItemId })
+    }
     
     var body: some View {
         if #available(iOS 17.0, *) {
@@ -68,11 +76,12 @@ struct GalleryFullScreenSwiper: View {
     private var mainContentView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 0) {
-                ForEach(items.indices, id:\.self) { index in
-                    mediaItemView(for: index)
+                ForEach(items) { item in
+                    mediaItemView(for: item)
                         .onAppear {
-                            loadMediaPostPreview(for: index)
-                            prefetchNextImage(currentIndex: index)
+                            if let index = items.firstIndex(where: { $0.id == item.id }) {
+                                prefetchNextImage(currentIndex: index)
+                            }
                         }
                         .highPriorityGesture(TapGesture().onEnded({ _ in
                             withAnimation {
@@ -90,7 +99,7 @@ struct GalleryFullScreenSwiper: View {
         .simultaneousGesture(panGesture)
         
         .scrollTargetBehavior(.paging)
-        .scrollPosition(id: $activeIndex)
+        .scrollPosition(id: $activeItemId)
         .frame(width: fullScreenSize.width, height: fullScreenSize.height)
         .scrollDisabled(items.count == 1 || scale > 1.0 || isDraggingToDismiss)
         .background(Color.black.opacity(isDismissing ? 0 : 1 - (0.5 * dismissProgress)))
@@ -98,30 +107,59 @@ struct GalleryFullScreenSwiper: View {
         .overlay(alignment: .trailing) { navigationRightButton }
         .overlay(alignment: .topTrailing) { saveButton }
         .onAppear {
-            activeIndex = initialIndex
+            setActiveItem(at: initialIndex)
+            // onChange does not run for the initial assignment; load preview for the first page here
+            loadMediaPostPreview(for: activeItemId)
+        }
+        .onChange(of: activeItemId) { oldItemId, newItemId in
+            // Skip redundant work when onAppear already loaded the same first id
+            guard oldItemId != newItemId else { return }
+            resetZoomAndPan()
+            // Keep mediaPostPreview show/hide across swipes; only swap the loaded post
+            didSave = false
+            loadMediaPostPreview(for: newItemId)
         }
         .overlay(alignment: .bottomLeading) {
             if let post = post, mediaPostPreview && !showMiniProfile {
                 MediaPostPreview(post, showMiniProfile: $showMiniProfile)
+                    .id(post.id)
                     .padding(10)
                     .background(.ultraThinMaterial)
             }
         }
     }
     
-    private func loadMediaPostPreview(for index: Int) {
+    private func setActiveItem(at index: Int) {
+        guard items.indices.contains(index) else { return }
+        activeItemId = items[index].id
+    }
+    
+    private func resetZoomAndPan() {
+        scale = 1.0
+        lastScale = 1.0
+        position = .zero
+        newPosition = .zero
+    }
+    
+    private func loadMediaPostPreview(for itemId: String?) {
         post = nil
-        mediaPostPreview = false
-        guard items.count > index else { return }
-        let galleryItem = items[index]
+        guard let itemId,
+              let galleryItem = items.first(where: { $0.id == itemId }),
+              let eventId = galleryItem.eventId
+        else { return }
+        
+        let loadToken = UUID()
+        mediaPostPreviewLoadToken = loadToken
         
         bg().perform {
-            guard let eventId = galleryItem.eventId,
-                  let event = Event.fetchEvent(id: eventId, context: bg())
+            guard let event = Event.fetchEvent(id: eventId, context: bg())
             else { return }
             
             let nrPost = NRPost(event: event)
             Task { @MainActor in
+                guard self.mediaPostPreviewLoadToken == loadToken,
+                      self.activeItemId == itemId
+                else { return }
                 self.post = nrPost
             }
         }
@@ -140,8 +178,8 @@ struct GalleryFullScreenSwiper: View {
     private var mainContentIOS16: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 0) {
-                ForEach(items.indices, id:\.self) { index in
-                    mediaItemView(for: index)
+                ForEach(items) { item in
+                    mediaItemView(for: item)
                 }
             }
         }
@@ -155,21 +193,21 @@ struct GalleryFullScreenSwiper: View {
         .overlay(alignment: .trailing) { navigationRightButton }
         .overlay(alignment: .topTrailing) { saveButton }
         .onAppear {
-            activeIndex = initialIndex
+            setActiveItem(at: initialIndex)
         }
     }
     
-    private func mediaItemView(for index: Int) -> some View {
+    private func mediaItemView(for item: GalleryItem) -> some View {
         MediaContentView(
-            galleryItem: items[index],
+            galleryItem: item,
             availableWidth: fullScreenSize.width,
             maxHeight: fullScreenSize.height,
             contentMode: .fit,
             fullScreen: true,
             // Already fullscreen, so don't load "galleryItems" recursively
             autoload: true,
-            imageInfo: items[index].imageInfo,
-            gifInfo: items[index].gifInfo,
+            imageInfo: item.imageInfo,
+            gifInfo: item.gifInfo,
             usePFPpipeline: usePFPpipeline
         )
         .frame(width: fullScreenSize.width, height: fullScreenSize.height)
@@ -184,7 +222,7 @@ struct GalleryFullScreenSwiper: View {
                 self.newPosition = .zero
             }
         }
-        .id(index)
+        .id(item.id)
     }
     
     private var navigationLeftButton: some View {
@@ -193,7 +231,7 @@ struct GalleryFullScreenSwiper: View {
                 Button("", systemImage: "chevron.compact.backward") {
                     guard let activeIndex, activeIndex > 0 else { return }
                     withAnimation {
-                        self.activeIndex = activeIndex - 1
+                        setActiveItem(at: activeIndex - 1)
                     }
                 }
                 .font(.system(size: 50))
@@ -207,14 +245,14 @@ struct GalleryFullScreenSwiper: View {
         Group {
             if IS_CATALYST {
                 Button("", systemImage: "chevron.compact.forward") {
-                    guard let activeIndex, activeIndex < items.count else { return }
+                    guard let activeIndex, activeIndex < items.count - 1 else { return }
                     withAnimation {
-                        self.activeIndex = activeIndex + 1
+                        setActiveItem(at: activeIndex + 1)
                     }
                 }
                 .font(.system(size: 50))
                 .padding(.trailing, 10)
-                .opacity(activeIndex != items.count-1 ? 1.0 : 0)
+                .opacity(activeIndex != items.count - 1 ? 1.0 : 0)
             }
         }
     }
