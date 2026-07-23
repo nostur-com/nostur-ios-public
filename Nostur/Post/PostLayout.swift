@@ -134,7 +134,8 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
                 // No need for DetailFooterFragment here because .isDetail will always be in .fullWidthLayout
                 
-                if ((!hideFooter || showFooter) && settings.rowFooterEnabled) && !isItem { // also no footer for items (only in Detail)
+                // No reply/repost/like/zap/bookmark for live chat messages (kind 1311)
+                if showsInteractionFooter {
                     CustomizableFooterFragmentView(nrPost: nrPost, isItem: isItem, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
@@ -148,6 +149,11 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     .offset(x: THREAD_LINE_OFFSET, y: 10)
             }
         }
+    }
+    
+    /// Footer interaction buttons (reply/repost/like/zap/bookmark) — not for chat messages
+    private var showsInteractionFooter: Bool {
+        ((!hideFooter || showFooter) && settings.rowFooterEnabled) && !isItem && !nrPost.isLiveChatMessage
     }
     
     @ViewBuilder
@@ -185,12 +191,13 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     }
                 }
                 
-                if isDetail {
+                if isDetail && !nrPost.isLiveChatMessage {
                     DetailFooterFragment(nrPost: nrPost)
                         .padding(.top, 10)
                 }
                 
-                if isDetail || (((!hideFooter || showFooter) && settings.rowFooterEnabled) && !isItem) {
+                // Interaction footer for normal posts only (not live chat)
+                if (isDetail || showsInteractionFooter) && !nrPost.isLiveChatMessage {
                     CustomizableFooterFragmentView(nrPost: nrPost, isDetail: isDetail, isItem: isItem, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)

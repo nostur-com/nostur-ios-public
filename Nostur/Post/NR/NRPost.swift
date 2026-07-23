@@ -345,6 +345,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var mostRecentId: String?
     var blurhash: String?
     
+    /// Kind 1311 live chat: title of the live room (from a-tag → 30311), if known
+    var liveChatRoomTitle: String?
+    
+    var isLiveChatMessage: Bool { kind == 1311 }
+    
     var isNSFW: Bool = false
     var sizeEstimate: RowSizeEstimate
     
@@ -681,6 +686,22 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             
             if event.kind == 30311 {
                 self.nrLiveEvent = NRLiveEvent(event: event)
+            }
+            
+        case 1311:
+            // Live chat message — resolve room title from a-tag for notifications UI
+            if let aTag = event.otherAtag ?? event.firstA(),
+               let liveEvent = Event.fetchReplacableEvent(aTag: aTag, context: bgContext) {
+                let title = liveEvent.eventTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
+                if let title, !title.isEmpty {
+                    liveChatRoomTitle = title
+                }
+                else {
+                    let summary = liveEvent.eventSummary?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if let summary, !summary.isEmpty {
+                        liveChatRoomTitle = summary
+                    }
+                }
             }
             
         default:

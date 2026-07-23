@@ -29,7 +29,7 @@ struct NRPostHeaderContainer: View {
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(pubkey: nrPost.pubkey, name: nrContact.anyName, onTap: nameTapped, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted, isPrivate: nrPost.isPrivate, nrContact: nrContact, isDetail: isDetail, isAnonPost: AnonReplySession.shared.isAnonPubkey(nrPost.pubkey))
+            PostHeaderView(pubkey: nrPost.pubkey, name: nrContact.anyName, onTap: nameTapped, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted, isPrivate: nrPost.isPrivate, nrContact: nrContact, isDetail: isDetail, isAnonPost: AnonReplySession.shared.isAnonPubkey(nrPost.pubkey), isLiveChat: nrPost.isLiveChatMessage, liveChatRoomTitle: nrPost.liveChatRoomTitle)
                 .onDisappear {
                     if nrContact.metadata_created_at == 0 {
                         QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
@@ -75,6 +75,9 @@ struct PostHeaderView: View {
     public var nrContact: NRContact? = nil
     public var isDetail: Bool = false
     public var isAnonPost: Bool = false
+    /// Kind 1311 live chat mention: show "· chat · Room title" after the time
+    public var isLiveChat: Bool = false
+    public var liveChatRoomTitle: String? = nil
 
     var body: some View {
 //#if DEBUG
@@ -121,7 +124,9 @@ struct PostHeaderView: View {
                     .foregroundColor(.secondary)
                     .lineLimit(1)
 
-                if displayUserAgentEnabled, let via = via {
+                liveChatLabel
+                
+                if !isLiveChat, displayUserAgentEnabled, let via = via {
                     Text(String(format: "via %@", via))
                         .font(.subheadline)
                         .lineLimit(1)
@@ -145,7 +150,9 @@ struct PostHeaderView: View {
                     .foregroundColor(.secondary)
                     .lineLimit(1)
 
-                if displayUserAgentEnabled, let via = via {
+                liveChatLabel
+                
+                if !isLiveChat, displayUserAgentEnabled, let via = via {
                     Text(String(format: "via %@", via))
                         .font(.subheadline)
                         .lineLimit(1)
@@ -169,6 +176,30 @@ struct PostHeaderView: View {
                         .layoutPriority(2)
                         .lineLimit(1)
                 }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var liveChatLabel: some View {
+        if isLiveChat {
+            Text(verbatim: "·")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            Text("chat", comment: "Label next to time indicating a live chat mention notification")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
+                .layoutPriority(2)
+            if let liveChatRoomTitle, !liveChatRoomTitle.isEmpty {
+                Text(verbatim: "·")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                Text(liveChatRoomTitle)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .layoutPriority(1)
             }
         }
     }
