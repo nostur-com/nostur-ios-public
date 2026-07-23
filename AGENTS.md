@@ -26,6 +26,13 @@ xcodebuild -scheme Nostur -destination 'platform=iOS,id=<device_id>' build
 xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
 ```
 
+### When Finishing UI / App Work
+
+After UI or app behavior changes that should be verified on device:
+
+1. Build and launch with `./scripts/run-sim.sh` (shares Xcode’s default DerivedData; use `--no-build` only if the app is already built and only reinstall/launch is needed).
+2. Tell the user the app is ready to test — do **not** only print the command for them to run.
+
 ### Tests
 
 - Run tests:
@@ -94,6 +101,17 @@ xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
   3. Add handling in the relevant feature module
   4. Update relay communication logic as needed
 
+## Large / Sensitive Paths
+
+Agents should avoid these unless the user explicitly asks:
+
+- `Config.xcconfig` — secrets / API keys (gitignored). Use `Config.xcconfig.dist` as the template.
+- `Nostur/Nostr/DummyData/DummyEvents.swift` — multi‑MB fixture; do not open or search into it by default.
+- Build products and archives: `build/`, `DerivedData/`, `*.xcarchive/`, `/tmp/NosturDerived` if present.
+- Local/tooling noise: `*.log`, `*.dump`, large generated dumps.
+
+Prefer listing, grepping, and reading under `Nostur/` feature code; skip dummy fixtures and secrets.
+
 ## Path Canonicalization For File Edits
 
 - Never pass Xcode navigator paths directly to `apply_patch` or shell edit commands.
@@ -108,7 +126,3 @@ xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
 - Usually CloudAccount is accessed from main and Event frorm bg
 - Look for bg().perform { } or Task { @MainActor } or DispatchQueue.main... to make sure we are in the right context.
 
-## Multi-Agent Compatibility
-
-- `CLAUDE.md` is kept for Claude Code compatibility.
-- `AGENTS.md` is the Codex-native equivalent and should be updated alongside `CLAUDE.md` when guidance changes.
