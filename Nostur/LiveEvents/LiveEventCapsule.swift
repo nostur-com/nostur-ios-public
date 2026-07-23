@@ -126,28 +126,7 @@ struct LiveEventCapsule: View {
     }
     
     private func tap() {
-        if let status = liveEvent.status, status == "planned" {
-            navigateTo(liveEvent, context: containerID)
-        }
-        else if liveEvent.isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
-            navigateTo(liveEvent, context: containerID)
-        }
-        else {
-            // LOAD NEST
-            if liveEvent.isLiveKit {
-                LiveKitVoiceSession.shared.activeNest = liveEvent
-            }
-            // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
-            else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
-                AnyPlayerModel.shared.viewMode = .detailstream
-            }
-            // LOAD NEW .DETAILSTREAM
-            else {
-                Task {
-                    await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay, .audioOnlyBar])
-                }
-            }
-        }
+        liveEvent.open(context: containerID)
     }
 }
 

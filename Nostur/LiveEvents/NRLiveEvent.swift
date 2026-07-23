@@ -206,6 +206,72 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         return fastPs.first(where: { $0.1 == pubkey })?.3?.capitalized
     }
     
+    /// Open this live event / nest chat. Shared entry point for capsule tap, notifications, etc.
+    @MainActor
+    public func open(context: String) {
+        if let status = status, status == "planned" {
+            navigateTo(self, context: context)
+        }
+        else if isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
+            navigateTo(self, context: context)
+        }
+        else {
+            // LOAD NEST
+            if isLiveKit {
+                LiveKitVoiceSession.shared.activeNest = self
+            }
+            // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
+            else if AnyPlayerModel.shared.nrLiveEvent?.id == id {
+                AnyPlayerModel.shared.viewMode = .detailstream
+            }
+            // LOAD NEW .DETAILSTREAM
+            else {
+                Task {
+                    await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: self, availableViewModes: [.detailstream, .overlay, .audioOnlyBar])
+                }
+            }
+        }
+    }
+    
+    /// Resolve live event by a-tag and open chat. Used when tapping kind 1311 chat mention notifications.
+    @MainActor
+    public static func open(aTag: String, context: String) {
+        // Prefer already-loaded instances so we don't recreate state
+        if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.id == aTag }) {
+            liveEvent.open(context: context)
+            return
+        }
+        if let liveEvent = AnyPlayerModel.shared.nrLiveEvent, liveEvent.id == aTag {
+            liveEvent.open(context: context)
+            return
+        }
+        if let liveEvent = LiveKitVoiceSession.shared.activeNest, liveEvent.id == aTag {
+            liveEvent.open(context: context)
+            return
+        }
+        
+        bg().perform {
+            if let event = Event.fetchReplacableEvent(aTag: aTag, context: bg()) {
+                let nrLiveEvent = NRLiveEvent(event: event)
+                DispatchQueue.main.async {
+                    nrLiveEvent.open(context: context)
+                }
+                return
+            }
+            
+            // Not in DB yet — navigate via naddr and let LiveEventByNaddr fetch it
+            let parts = aTag.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false).map(String.init)
+            guard parts.count == 3,
+                  let kind = Int(parts[0]),
+                  let si = try? NostrEssentials.ShareableIdentifier("naddr", kind: kind, pubkey: parts[1], dTag: parts[2], relays: [])
+            else { return }
+            
+            DispatchQueue.main.async {
+                navigateTo(Naddr1Path(naddr1: si.identifier, navigationTitle: "Live event"), context: context)
+            }
+        }
+    }
+    
     @MainActor
     public func joinRoom(account: CloudAccount, completion: ((String) -> Void)? = nil) {
         joining = true

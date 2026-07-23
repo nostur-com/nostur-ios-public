@@ -171,7 +171,7 @@ class NotificationsViewModel: ObservableObject {
         guard let accountData = self.accountDataCache else { return }
         guard let pubkey = self.pubkey else { return }
         switch event.kind {
-        case 1,1111,1222,1244,4,20,9802,30023,34235: // TODO: Should check if not muted or blocked
+        case 1,1111,1222,1244,4,20,9802,30023,34235,1311: // TODO: Should check if not muted or blocked
             let before = needsUpdate
             needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == pubkey })
             if needsUpdate && needsUpdate != before {
@@ -229,7 +229,7 @@ class NotificationsViewModel: ObservableObject {
     
     
     // Don't read these @Published vars, only set them. Use the computed above instead because they correctly return 0 when muted
-    @Published var unreadMentions_: Int = 0 {      // 1,20,9802,30023,34235
+    @Published var unreadMentions_: Int = 0 {      // 1,1111,1222,1244,20,9802,30023,34235,1311
         didSet {
             if unreadMentions_ > oldValue, let accountPubkey = self.pubkey {
                 sendNotification(.newNotification, NewNotification(type: .newMentions, pubkey: accountPubkey))
@@ -412,7 +412,7 @@ class NotificationsViewModel: ObservableObject {
         let sinceNTimestamp = NTimestamp(date: ago)
         
         // Public req for notifications
-        req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235],
+        req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235,1311],
                            subscriptionId: "-OPEN-Notifications-\(self.id)", since: sinceNTimestamp),
             activeSubscriptionId: "-OPEN-Notifications-\(self.id)")
         
@@ -455,7 +455,7 @@ class NotificationsViewModel: ObservableObject {
             self.needsUpdate = true
             
             DispatchQueue.main.async {
-                req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235], subscriptionId: "Notifications-CATCHUP-\(self.id)", since: since))
+                req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235,1311], subscriptionId: "Notifications-CATCHUP-\(self.id)", since: since))
                 
                 // Separate req for kind 4, because possibly needs auth
                 // 2 days ago to deal with NIP-17 randomized created_at
@@ -1022,7 +1022,7 @@ class NotificationFetchRequests {
         r.predicate = NSPredicate(format:
                                     "created_at > %i " +
                                     "AND NOT pubkey IN %@ " +
-                                    "AND kind IN {1,1111,1222,1244,20,9802,30023,34235} " +
+                                    "AND kind IN {1,1111,1222,1244,20,9802,30023,34235,1311} " +
                                     "AND tagsSerialized CONTAINS %@ " +
                                     "AND NOT id IN %@ " + // mutedRootIds
                                     "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds

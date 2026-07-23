@@ -227,8 +227,10 @@ class MessageParser {
                         }
                         
                         // Handle directly (not to db) or continue to importer
+                        // Note: kind 1311 chat messages from -DB- subs already returned above.
+                        // Other subs (e.g. mention notifications) should hit the importer so we can show chat mentions.
                         switch nEvent.kind {
-                        case .ncMessage, .chatMessage, .custom(10312):
+                        case .ncMessage, .custom(10312):
                             try handleNoDbMessage(message: message, nEvent: nEvent)
                         case .nwcInfo:
                             try handleNWCInfoResponse(message: message, nEvent: nEvent)

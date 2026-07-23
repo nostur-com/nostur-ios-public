@@ -300,6 +300,15 @@ func navigateTo(_ path: any IdentifiableDestination, context: String) {
         if nrPost.kind == 30023 {
             sendNotification(.navigateTo, NavigationDestination(destination: ArticlePath(id: nrPost.id, navigationTitle: nrPost.eventTitle ?? "Article"), context: context))
         }
+        else if nrPost.kind == 1311 {
+            // Live chat mention → open the live event / nest chat, not post detail
+            if let aTag = nrPost.fastTags.first(where: { $0.0 == "a" })?.1 {
+                Task { @MainActor in
+                    NRLiveEvent.open(aTag: aTag, context: context)
+                }
+            }
+            return // don't minimize what we just opened
+        }
         else {
             sendNotification(.navigateTo, NavigationDestination(destination: path, context: context))
         }

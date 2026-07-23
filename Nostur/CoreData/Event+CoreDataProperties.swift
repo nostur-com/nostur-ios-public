@@ -1196,9 +1196,9 @@ extension Event {
         savedEvent.pubkey = nEvent.publicKey
         savedEvent.likesCount = 0
         savedEvent.flags = flags
-        savedEvent.otherAtag = savedEvent.firstA()
-
+        // tagsSerialized must be set before firstA()/otherAtag — tags() reads tagsSerialized
         savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: nEvent.tags) // TODO: why encode again, need to just store what we received before (performance)
+        savedEvent.otherAtag = nEvent.firstA() // prefer nEvent (already has tags); firstA() on Event also works after tagsSerialized
         return savedEvent
     }
 }

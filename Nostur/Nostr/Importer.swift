@@ -470,8 +470,8 @@ class Importer {
             NeedsUpdateInfo(event: savedEvent)
         )
                      
-        // FOR LIVE CHATS THAT ARE NOT IN DB
-        if event.kind == .zapNote {
+        // FOR LIVE CHATS (also when saved from mention notifications, not only -DB- subs)
+        if event.kind == .zapNote || event.kind == .chatMessage {
             DispatchQueue.main.async { // TODO: Need to check how to handle .receivedMessage in case of GiftWrap (so far not needed, yet)
                 sendNotification(.receivedMessage, message)
             }

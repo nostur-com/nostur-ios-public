@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NavigationBackport
+import NostrEssentials
 
 struct ChatRoom: View {
     @Environment(\.theme) private var theme
@@ -137,9 +138,12 @@ struct ChatRoom: View {
         .onAppear {
             account = Nostur.account()
             startTimer()
+            // Ensure resume if List onAppear already ran, or VM was paused
+            try? chatVM.start(aTag: aTag)
         }
         .onDisappear {
             stopTimer()
+            chatVM.pause()
         }
         
         
@@ -147,15 +151,31 @@ struct ChatRoom: View {
     }
     
     private func submitMessage() {
-        // Create and send DM (via unpublisher?)
+        // Create and send chat message (via unpublisher?)
         guard let account = self.account, account.privateKey != nil else { AppSheetsModel.shared.readOnlySheetVisible = true; return }
         guard !message.isEmpty else { return }
-        var nEvent = NEvent(content: message)
-        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+        
+        var content = message
+        if SettingsStore.shared.replaceNsecWithHunter2Enabled {
+            content = replaceNsecWithHunter2(content)
         }
+        
+        // @npub1... → nostr:npub1... and collect p-tags (same as post composer)
+        let (contentNpubsReplaced, atNpubs) = replaceAtWithNostr(content)
+        content = contentNpubsReplaced
+        let atPtags = atNpubs.compactMap { Keys.hex(npub: $0) }
+        
+        // nostr:npub1... already in content
+        let nostrNpubTags = getNostrNpubs(content).compactMap { Keys.hex(npub: $0) }
+        
+        var nEvent = NEvent(content: content)
         nEvent.kind = .chatMessage
         nEvent.tags.append(NostrTag(["a", aTag]))
+        
+        // Mention p-tags so mentioned people get notifications
+        for pubkey in Set(atPtags + nostrNpubTags) {
+            nEvent.tags.append(NostrTag(["p", pubkey]))
+        }
         
         nEvent.publicKey = account.publicKey
                 
@@ -166,22 +186,18 @@ struct ChatRoom: View {
         if account.isNC {
             nEvent = nEvent.withId()
             RemoteSignerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
-                Unpublisher.shared.publishNow(signedEvent, skipDB: true)
+                // Save own chat to DB so reopen can load without relying only on relays
+                Unpublisher.shared.publishNow(signedEvent, skipDB: false)
                 sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
-                bg().perform {
-                    Importer.shared.existingIds[signedEvent.id] = EventState(status: .RECEIVED, relays: "self")
-                }
             })
             
             message = ""
         }
         else {
             guard let signedEvent = try? account.signEvent(nEvent) else { return }
-            Unpublisher.shared.publishNow(signedEvent, skipDB: true)
+            // Save own chat to DB so reopen can load without relying only on relays
+            Unpublisher.shared.publishNow(signedEvent, skipDB: false)
             sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
-            bg().perform {
-                Importer.shared.existingIds[signedEvent.id] = EventState(status: .RECEIVED, relays: "self")
-            }
             message = ""
         }
     }

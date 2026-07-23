@@ -23,17 +23,19 @@ class ChatRoomViewModel: ObservableObject {
     private var pubkey: String?
     private var dTag: String?
     
-    private lazy var subId: String = {
-        guard let pubkey, let dTag else { return "-DB-CHAT-??" }
-        let sha256data = SHA256.hash(data: "1311-\(pubkey)-\(dTag)".data(using: .utf8)!)
-        return String("-DB-CHAT-" + String(bytes: sha256data.bytes).prefix(32))
-    }()
-    
-    private lazy var realTimeSubId: String = {
+    // Realtime sub — kept open while chat is visible (MessageParser keeps -DB-1311-9735- open on EOSE)
+    private var realTimeSubId: String {
         guard let pubkey, let dTag else { return "-DB-1311-9735-??" }
         let sha256data = SHA256.hash(data: "1311-\(pubkey)-\(dTag)".data(using: .utf8)!)
         return String("-DB-1311-9735-" + String(bytes: sha256data.bytes).prefix(32))
-    }()
+    }
+    
+    // One-shot history sub — must NOT use -DB-CHAT- prefix (that prefix is kept open forever on EOSE)
+    private var historySubId: String {
+        guard let pubkey, let dTag else { return "-DB-HIST-1311-??" }
+        let sha256data = SHA256.hash(data: "hist-1311-\(pubkey)-\(dTag)".data(using: .utf8)!)
+        return String("-DB-HIST-1311-" + String(bytes: sha256data.bytes).prefix(32))
+    }
     
     private var subscriptions = Set<AnyCancellable>()
     
@@ -49,13 +51,33 @@ class ChatRoomViewModel: ObservableObject {
     private var alreadyFetchedMissingPs: Set<String> = []
     
     private var didStart = false
+    private var isVisible = false
     
     @MainActor
     public func start(aTag: String) throws {
-        guard !didStart else { return }
-        self.didStart = true
+        // Re-open of same room: refresh subs + history (didStart alone used to skip everything)
+        if didStart {
+            guard self.aTag == aTag else {
+                // Different room on same VM — full restart
+                stop()
+                try begin(aTag: aTag)
+                return
+            }
 #if DEBUG
-        L.og.debug("vm.start()")
+            L.og.debug("vm.start() resume existing room")
+#endif
+            resume()
+            return
+        }
+        try begin(aTag: aTag)
+    }
+    
+    @MainActor
+    private func begin(aTag: String) throws {
+        self.didStart = true
+        self.isVisible = true
+#if DEBUG
+        L.og.debug("vm.start() begin")
 #endif
         self.aTag = aTag
        
@@ -117,6 +139,62 @@ class ChatRoomViewModel: ObservableObject {
         }
         self.updateLiveSubscription()
     }
+    
+    /// Called when chat UI reappears on an already-started VM.
+    @MainActor
+    public func resume() {
+        isVisible = true
+        // Close then re-open realtime so we are not stuck with a zombie active sub
+        // (nreqSubscriptions would skip re-REQ after a bad close / reconnect).
+        closeLiveSubscription()
+        
+        // Keep in-memory messages; do not replace from sparse DB (most chat is no-db).
+        if bgMessages.isEmpty {
+            state = .loading
+            fetchFromDB { [weak self] in
+                self?.fetchChatHistory()
+            }
+        }
+        else {
+            if state != .ready {
+                state = .ready
+            }
+            publishVisibleMessages(from: bgMessages)
+            fetchChatHistory()
+        }
+        
+        // Re-REQ after close is enqueued on ConnectionPool's barrier queue
+        DispatchQueue.main.async { [weak self] in
+            self?.updateLiveSubscription()
+        }
+    }
+    
+    /// Called when chat UI disappears — tear down live sub so reopen can re-REQ.
+    @MainActor
+    public func pause() {
+        isVisible = false
+        closeLiveSubscription()
+        removeChatsFromExistingIdsCache()
+    }
+    
+    /// Full teardown (different aTag on same VM, or deinit).
+    @MainActor
+    public func stop() {
+        isVisible = false
+        closeLiveSubscription()
+        removeChatsFromExistingIdsCache()
+        subscriptions.removeAll()
+        didStart = false
+        aTag = nil
+        pubkey = nil
+        dTag = nil
+        messages = []
+        bgMessages = []
+        topZaps = []
+        visibleMessageLimit = Self.messagePageSize
+        state = .initializing
+        alreadyFetchedMissingPs = []
+    }
 
     @MainActor
     public func loadOlderMessages() {
@@ -137,13 +215,28 @@ class ChatRoomViewModel: ObservableObject {
         guard let aTag else { return }
         let blockedPubkeys = blocks()
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind IN {1311,9735} AND otherAtag == %@ AND NOT pubkey IN %@", aTag, blockedPubkeys)
+        // otherAtag is preferred (indexed/fast). Also match tagsSerialized for older rows where
+        // otherAtag was never set (fromNEvent used to call firstA() before tagsSerialized).
+        fr.predicate = NSPredicate(
+            format: "kind IN {1311,9735} AND (otherAtag == %@ OR tagsSerialized CONTAINS %@) AND NOT pubkey IN %@",
+            aTag,
+            "[\"a\",\"\(aTag)\"",
+            blockedPubkeys
+        )
         
         let bgContext = bg()
         bgContext.perform { [weak self]  in
             guard let self else { return }
             
-            guard let events = try? bgContext.fetch(fr) else { return }
+            guard let events = try? bgContext.fetch(fr) else {
+                onComplete?()
+                return
+            }
+            
+            // Heal missing otherAtag so future queries stay fast
+            for event in events where event.otherAtag == nil {
+                event.otherAtag = event.firstA() ?? aTag
+            }
                         
             let rows: [ChatRowContent] = events
                 .filter { $0.inWoT }
@@ -182,13 +275,14 @@ class ChatRoomViewModel: ObservableObject {
         }
     }
     
-    // Fetch past messages
+    // Fetch past messages (one-shot; MessageParser closes non-kept -DB-HIST- on EOSE)
     private func fetchChatHistory(limit: Int = 300) {
         guard let aTag else { return }
+        let subId = historySubId
         
         if let cm = NostrEssentials
             .ClientMessage(type: .REQ,
-                           subscriptionId: "-DB-CHATHIST",
+                           subscriptionId: subId,
                            filters: [Filters(
                             kinds: [1311,9735],
                             tagFilter: TagFilter(tag: "a", values: [aTag]),
@@ -202,25 +296,29 @@ class ChatRoomViewModel: ObservableObject {
     // Realtime for future messages
     public func updateLiveSubscription() {
         guard let aTag else { return }
+        let subId = realTimeSubId
 
         if let cm = NostrEssentials
             .ClientMessage(type: .REQ,
-                           subscriptionId: realTimeSubId,
+                           subscriptionId: subId,
                            filters: [Filters(
                             kinds: [1311,9735],
                             tagFilter: TagFilter(tag: "a", values: [aTag]),
                             since: (Int(Date.now.timeIntervalSince1970) - 60)
                            )]
             ).json() {
-            req(cm, activeSubscriptionId: realTimeSubId)
+            req(cm, activeSubscriptionId: subId)
         }
     }
     
     @MainActor
     public func closeLiveSubscription() {
         guard pubkey != nil, dTag != nil else { return }
-        req(NostrEssentials.ClientMessage(type: .CLOSE, subscriptionId: subId).json()!)
-    }    
+        // Must close the realtime id (and clear nreqSubscriptions) or reopen skips re-REQ
+        ConnectionPool.shared.closeSubscription(realTimeSubId)
+        // Also clear any leftover history sub if still open
+        ConnectionPool.shared.closeSubscription(historySubId)
+    }
     
     private func listenForChats() {
         guard let aTag else { return }
@@ -229,7 +327,9 @@ class ChatRoomViewModel: ObservableObject {
                 guard let self = self else { return }
                 let message = notification.object as! NXRelayMessage
                 
-                if (state == .initializing || state == .loading) && message.type == .EOSE, let subscriptionId = message.subscriptionId, (subscriptionId == subId || subscriptionId == realTimeSubId) {
+                if (state == .initializing || state == .loading) && message.type == .EOSE,
+                   let subscriptionId = message.subscriptionId,
+                   (subscriptionId == historySubId || subscriptionId == realTimeSubId) {
                     DispatchQueue.main.async { [weak self] in
                         guard let self = self else { return }
                         self.objectWillChange.send()
@@ -281,8 +381,15 @@ class ChatRoomViewModel: ObservableObject {
                         if case .chatConfirmedZap(let existingZap) = row, existingZap.id == confirmedZap.id {
                             return true
                         }
+                        if case .chatMessage(let existingChat) = row, existingChat.id == confirmedZap.id {
+                            return true
+                        }
                         return false
                     }) {
+                        // Prefer confirmed zap over pending; skip re-adding an existing chat message
+                        if case .chatMessage = confirmedZap {
+                            return
+                        }
                         self.bgMessages[index] = confirmedZap
                     }
                     else {
@@ -332,12 +439,13 @@ class ChatRoomViewModel: ObservableObject {
         case error(String)
     }
     
-    // We are not storing chats in DB. So when we close and reopen chat and try
-    // to fetch chats again they wont be parsed because they will be considered already parsed
-    // by Importer.shared.existingIds. So we remove them so we can parse them again.
+    // Chat history is mostly no-db, but some chat events may land in existingIds
+    // (e.g. mention import). Clear all known row ids so reopen can receive them again.
     @MainActor
     public func removeChatsFromExistingIdsCache() {
-        let ids = self.messages.map { $0.id }
+        // Prefer full bg list; main messages is only the visible page
+        let ids = (bgMessages.isEmpty ? messages : bgMessages).map { $0.id }
+        guard !ids.isEmpty else { return }
         bg().perform {
             for id in ids {
                 Importer.shared.existingIds[id] = nil
@@ -385,12 +493,17 @@ class ChatRoomViewModel: ObservableObject {
     }
     
     deinit {
+        // closeLiveSubscription is @MainActor; close realtime id from deinit via ConnectionPool
+        let realtimeId = realTimeSubId
+        let histId = historySubId
+        let ids = (bgMessages.isEmpty ? messages : bgMessages).map { $0.id }
         
-        // cant use removeChatsFromExistingIdsCache() and closeLiveSubscription() so copy paste and fix later
-        guard pubkey != nil, dTag != nil else { return }
-        req(NostrEssentials.ClientMessage(type: .CLOSE, subscriptionId: subId).json()!)
-
-        let ids = self.messages.map { $0.id }
+        Task { @MainActor in
+            ConnectionPool.shared.closeSubscription(realtimeId)
+            ConnectionPool.shared.closeSubscription(histId)
+        }
+        
+        guard !ids.isEmpty else { return }
         bg().perform {
             for id in ids {
                 Importer.shared.existingIds[id] = nil

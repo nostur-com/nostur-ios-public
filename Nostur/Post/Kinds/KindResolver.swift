@@ -185,7 +185,7 @@ struct KindResolver: View {
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
         
-        case 1,1111:
+        case 1,1111,1311: // 1311 = live chat message (show as text note in mentions list)
             Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth || (nrPost.kTag ?? "" == "20" && nrPost.galleryItems.count > 0), forceAutoload: shouldAutoload)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
