@@ -11684,6 +11684,29 @@
       },
       "shouldTranslate" : false
     },
+    "Flat" : {
+      "comment" : "Reply thread format: list all replies in a single level",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plano"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plat"
+          }
+        }
+      }
+    },
     "Follow" : {
       "comment" : "Button to follow someone",
       "localizations" : {
@@ -13102,29 +13125,6 @@
         }
       }
     },
-    "Flat" : {
-      "comment" : "Reply thread format: list all replies in a single level",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plano"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Datar"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plat"
-          }
-        }
-      }
-    },
     "Interactions" : {
       "comment" : "Tab title",
       "localizations" : {
@@ -14370,7 +14370,7 @@
         }
       }
     },
-    "Loading emoji sets\u2026" : {
+    "Loading emoji sets…" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -21745,29 +21745,6 @@
         }
       }
     },
-    "Reply thread format" : {
-      "comment" : "Setting on settings screen",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Formato del hilo de respuestas"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Format utas balasan"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Antwoord thread-indeling"
-          }
-        }
-      }
-    },
     "Reply anonymously" : {
       "localizations" : {
         "es" : {
@@ -21808,6 +21785,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stuur privé antwoord"
+          }
+        }
+      }
+    },
+    "Reply thread format" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato del hilo de respuestas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format utas balasan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord thread-indeling"
           }
         }
       }
@@ -28852,6 +28852,7 @@
       "shouldTranslate" : false
     },
     "Video ready" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
