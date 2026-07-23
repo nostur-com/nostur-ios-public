@@ -122,6 +122,7 @@ struct OverlayPlayer: View {
     private var shouldShowDetailStreamVideoControls: Bool {
         guard vm.viewMode == .detailstream,
               detailStreamControlsVisible,
+              !vm.didFinishPlaying,
               !shouldShowPlaybackSpinner else { return false }
         return vm.player.status != .failed && vm.player.currentItem?.status != .failed
     }
@@ -495,7 +496,7 @@ struct OverlayPlayer: View {
                 }
             }
             .overlay(alignment: .center) {
-                if fullscreenControlsVisible && !shouldShowPlaybackSpinner {
+                if fullscreenControlsVisible && !vm.didFinishPlaying && !shouldShowPlaybackSpinner {
                     fullscreenCenterControls(isLandscape: isLandscape)
                 }
             }
@@ -511,6 +512,8 @@ struct OverlayPlayer: View {
                         vm.close()
                     }
                 }))
+            // The finished-playback overlay owns the full video surface and its gestures.
+            .allowsHitTesting(!vm.didFinishPlaying)
             .ignoresSafeArea()
     }
     
@@ -949,8 +952,12 @@ struct OverlayPlayer: View {
                 }
                 .onChange(of: vm.didFinishPlaying) { _ in
                     if vm.didFinishPlaying {
-                        showFullscreenControls()
-                        showDetailStreamControls()
+                        hideFullscreenControls()
+                        hideDetailStreamControls()
+                    }
+                    else {
+                        applyFullscreenControlsForPlaybackState()
+                        applyDetailStreamControlsForPlaybackState()
                     }
                 }
                 
@@ -1114,12 +1121,12 @@ struct OverlayPlayer: View {
     /// Hide chrome only when the player is actually playing, not merely when play was requested.
     /// Otherwise a stuck autoplay leaves controls hidden and pause/play unreachable.
     private func applyChromeForActualPlayback() {
-        if vm.isLoading {
+        if vm.isLoading || vm.didFinishPlaying {
             hideFullscreenControls()
             hideDetailStreamControls()
             return
         }
-        if vm.timeControlStatus == .playing, !vm.didFinishPlaying {
+        if vm.timeControlStatus == .playing {
             hideFullscreenControls()
             hideDetailStreamControls()
         }
@@ -1139,10 +1146,10 @@ struct OverlayPlayer: View {
         }
     }
     
-    /// Show chrome only when paused/finished; keep it hidden while loading or actually playing.
+    /// Hide chrome while loading, playing, or while the finished-playback overlay is shown.
     private func applyFullscreenControlsForPlaybackState() {
         guard vm.viewMode == .fullscreen else { return }
-        if vm.isLoading || (vm.timeControlStatus == .playing && !vm.didFinishPlaying) {
+        if vm.isLoading || vm.didFinishPlaying || vm.timeControlStatus == .playing {
             hideFullscreenControls()
         }
         else {
@@ -1187,10 +1194,10 @@ struct OverlayPlayer: View {
         }
     }
     
-    /// Show chrome only when paused/finished; keep it hidden while loading or actually playing.
+    /// Hide chrome while loading, playing, or while the finished-playback overlay is shown.
     private func applyDetailStreamControlsForPlaybackState() {
         guard vm.viewMode == .detailstream else { return }
-        if vm.isLoading || (vm.timeControlStatus == .playing && !vm.didFinishPlaying) {
+        if vm.isLoading || vm.didFinishPlaying || vm.timeControlStatus == .playing {
             hideDetailStreamControls()
         }
         else {
