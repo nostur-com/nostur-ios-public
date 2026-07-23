@@ -296,6 +296,7 @@ struct Kind10002ConfigurationWizard: View {
                 DataProvider.shared().saveToDiskNow(.bgContext)
                 onDismiss()
                 DispatchQueue.main.async {
+                    AccountsState.shared.refreshShareExtensionAccountState()
                     dismiss()
                     RemoteSignerManager.shared.requestSignature(forEvent: kind10002, usingAccount: account, whenSigned: { signedEvent10002 in
                         bgContext.perform {
@@ -326,6 +327,7 @@ struct Kind10002ConfigurationWizard: View {
                     DataProvider.shared().saveToDiskNow(.bgContext)
                     onDismiss()
                     DispatchQueue.main.async {
+                        AccountsState.shared.refreshShareExtensionAccountState()
                         dismiss()
                         Unpublisher.shared.publishNow(signedEvent10002)
                     }

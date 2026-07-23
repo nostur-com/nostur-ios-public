@@ -288,6 +288,7 @@ struct RelayEditView: View {
                         dismiss()
                         do {
                             try viewContext.save()
+                            AccountsState.shared.refreshShareExtensionAccountState()
 #if DEBUG
                             L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
 #endif
@@ -317,6 +318,7 @@ struct RelayEditView: View {
                         relay.excludedPubkeys = excludedPubkeys
                         relay.updatedAt = .now
                         try viewContext.save()
+                        AccountsState.shared.refreshShareExtensionAccountState()
 #if DEBUG
                         L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
 #endif

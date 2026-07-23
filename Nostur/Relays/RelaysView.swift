@@ -50,6 +50,7 @@ struct RelayRowView: View {
                         connection?.connect(forceConnectionAttempt: true)
                     }
                     DataProvider.shared().saveToDiskNow(.viewContext)
+                    AccountsState.shared.refreshShareExtensionAccountState()
                 }
             
             Image(systemName:"arrow.down.circle.fill").foregroundColor(relay.read ? .green : .gray)
@@ -62,6 +63,7 @@ struct RelayRowView: View {
                         connection?.connect(forceConnectionAttempt: true)
                     }
                     DataProvider.shared().saveToDiskNow(.viewContext)
+                    AccountsState.shared.refreshShareExtensionAccountState()
                 }
             
             Image(systemName:"arrow.up.circle.fill").foregroundColor(relay.write ? .green : .gray)
@@ -71,6 +73,7 @@ struct RelayRowView: View {
                     relay.updatedAt = .now
                     connection?.relayData.setWrite(relay.write)
                     DataProvider.shared().saveToDiskNow(.viewContext)
+                    AccountsState.shared.refreshShareExtensionAccountState()
                 }
         }
         .task {

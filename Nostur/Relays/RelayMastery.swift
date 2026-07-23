@@ -230,6 +230,7 @@ struct AccountRelaySettings: View {
                                         guard let account else { return }
                                         account.accountRelays = Set(rwAndDmRelays)
                                         DataProvider.shared().saveToDiskNow(.viewContext)
+                                        AccountsState.shared.refreshShareExtensionAccountState()
                                         vm.ready(rwAndDmRelays)
                                     }
                                 } else {

@@ -59,6 +59,7 @@ class AccountsState: ObservableObject {
     public var bgAccountPubkeys: Set<String> = []
     public var bgFullAccountPubkeys: Set<String> = []
 
+    /// Share extension is iOS-only; do not write App Group state from Mac Catalyst.
     private static var isShareExtensionSharingEnabled: Bool {
         #if targetEnvironment(macCatalyst)
         false
@@ -129,26 +130,17 @@ class AccountsState: ObservableObject {
         try? FileManager.default.removeItem(at: containerURL.appendingPathComponent(fileName))
     }
 
+    /// Write relays the share extension should use for `account`.
+    /// Always app-level `CloudRelay` write flags (Relays UI / ConnectionPool) — never kind:10002 `accountRelays`.
     @MainActor private static func effectiveWriteRelayUrls(for account: CloudAccount?) -> [String] {
-        if let account {
-            let accountWriteRelays = account.accountRelays
-                .filter { $0.write }
-                .map { normalizeRelayUrl($0.url) }
-                .filter { Self.isShareExtensionRelayUrl($0) }
-
-            if !accountWriteRelays.isEmpty {
-                return Array(Set(accountWriteRelays)).sorted()
-            }
-        }
-
         let activePubkey = account?.publicKey ?? ""
-        let relayUrls = CloudRelay.fetchAll(context: context())
+        let cloudWriteRelays = CloudRelay.fetchAll(context: context())
             .filter { $0.write }
             .filter { activePubkey.isEmpty || !$0.excludedPubkeys.contains(activePubkey) }
             .map { normalizeRelayUrl($0.url_ ?? "") }
             .filter { Self.isShareExtensionRelayUrl($0) }
 
-        return Array(Set(relayUrls)).sorted()
+        return Array(Set(cloudWriteRelays)).sorted()
     }
 
     private static func isShareExtensionRelayUrl(_ relayUrl: String) -> Bool {
@@ -164,6 +156,15 @@ class AccountsState: ObservableObject {
         Self.setSharedWriteRelayList(Self.effectiveWriteRelayUrls(for: account))
         Self.setSharedAccountState(account: account)
         Self.setSharedAccounts(accounts.filter { $0.isFullAccount })
+    }
+
+    /// Call after relay list / write flags change so the share extension does not keep a stale list.
+    /// No-op on Mac Catalyst (share extension is iOS-only).
+    @MainActor public func refreshShareExtensionAccountState() {
+        guard Self.isShareExtensionSharingEnabled else { return }
+        let activeAccount = accounts.first(where: { $0.publicKey == activeAccountPublicKey })
+            ?? loggedInAccount?.account
+        mirrorShareExtensionAccountState(account: activeAccount)
     }
 
     @MainActor private static func setSharedAccounts(_ accounts: [CloudAccount]) {

@@ -264,8 +264,19 @@ private final class ShareExtensionModel: ObservableObject {
         activeAccountNip46Relay = account.nip46Relay
         activeAccountRemoteSignerPubkey = account.remoteSignerPubkey
         // Always track this account's relays in-memory (even when not persisting).
-        writeRelayStrings = account.writeRelays
-        ShareDebugLog.mark("selectAccount \(account.pubkey.prefix(8)) writeRelays=\(account.writeRelays.count) \(account.writeRelays)")
+        // Prefer the live write_relay_list mirrored by the main app for the active account;
+        // fall back to the snapshot embedded in share_accounts (can be stale).
+        let liveWriteRelays = sharedDefaults?.array(forKey: "write_relay_list") as? [String] ?? []
+        let activeSharedPubkey = (sharedDefaults?.string(forKey: "activeAccountPublicKey") ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if account.pubkey == activeSharedPubkey, !liveWriteRelays.isEmpty {
+            writeRelayStrings = liveWriteRelays
+        } else if !account.writeRelays.isEmpty {
+            writeRelayStrings = account.writeRelays
+        } else {
+            writeRelayStrings = liveWriteRelays
+        }
+        ShareDebugLog.mark("selectAccount \(account.pubkey.prefix(8)) writeRelays=\(writeRelayStrings.count) fromAccount=\(account.writeRelays.count) live=\(liveWriteRelays.count)")
 
         if persistSelection, accountChanged {
             cancelMediaUpload(resetStates: true)
@@ -280,7 +291,12 @@ private final class ShareExtensionModel: ObservableObject {
         sharedDefaults?.set(account.isRemoteSigner, forKey: "activeAccountIsRemoteSigner")
         sharedDefaults?.set(account.nip46Relay, forKey: "activeAccountNip46Relay")
         sharedDefaults?.set(account.remoteSignerPubkey, forKey: "activeAccountRemoteSignerPubkey")
-        sharedDefaults?.set(account.writeRelays, forKey: "write_relay_list")
+        // Only overwrite write_relay_list when we have a non-empty list for this account.
+        // Prefer live list if this is the main-app active account; otherwise account snapshot.
+        let relaysToPersist = !writeRelayStrings.isEmpty ? writeRelayStrings : account.writeRelays
+        if !relaysToPersist.isEmpty {
+            sharedDefaults?.set(relaysToPersist, forKey: "write_relay_list")
+        }
         sharedDefaults?.synchronize()
     }
 
@@ -635,6 +651,15 @@ private final class ShareExtensionModel: ObservableObject {
             let signedEvent = try await signer.sign(event)
 
             let publishStartedAt = Date()
+            // Re-read mirrored list at publish time so we pick up main-app relay edits
+            // made after the share sheet opened (or after a previous share session).
+            let activeSharedPubkey = (sharedDefaults?.string(forKey: "activeAccountPublicKey") ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if activePubkey == activeSharedPubkey,
+               let liveWriteRelays = sharedDefaults?.array(forKey: "write_relay_list") as? [String],
+               !liveWriteRelays.isEmpty {
+                writeRelayStrings = liveWriteRelays
+            }
             // Prefer selected account relays; fall back to shared defaults / built-in list.
             let relayURLs = ShareRelayPublisher.resolveRelayURLs(
                 preferred: writeRelayStrings,

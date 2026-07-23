@@ -109,6 +109,8 @@ extension AppView {
             AppState.shared.agoShouldUpdateSubject.send() // Update ago timestamps
             
             if !IS_CATALYST {
+                // Keep share extension write-relay list in sync after relay edits (iOS only).
+                AccountsState.shared.refreshShareExtensionAccountState()
                 if (AppState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)
                     AppState.shared.appIsInBackground = false // needs to set before we call other actions
                     ConnectionPool.shared.connectAll()
