@@ -948,6 +948,15 @@ struct OverlayPlayer: View {
                     guard IS_CATALYST else { return }
                     isNativeMacFullScreen = false
                     enteredNativeMacFullScreenFromPlayer = false
+                    // ESC / traffic-light exit only leaves native window full screen; restore
+                    // detail stream when we had entered fullscreen from that mode (otherwise
+                    // viewMode stays .fullscreen = in-app fullscreen chrome).
+                    if shouldRestoreDetailStreamAfterRotatedFullscreen {
+                        shouldRestoreDetailStreamAfterRotatedFullscreen = false
+                        if vm.viewMode == .fullscreen {
+                            vm.viewMode = .detailstream
+                        }
+                    }
                 }
                 .onDisappear {
                     fullscreenControlsHideTask?.cancel()
