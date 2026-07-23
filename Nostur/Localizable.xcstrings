@@ -5999,13 +5999,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se necesita acceso a la cámara para escanear un código QR de NWC"
+            "value" : "Se necesita acceso a la cámara para escanear códigos QR"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Akses kamera diperlukan untuk memindai kode QR NWC"
+            "value" : "Akses kamera diperlukan untuk memindai kode QR"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cameratoegang is nodig om QR codes te scannen"
           }
         }
       }
@@ -6210,13 +6216,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comprobando lo que tus seguidores compartieron..."
+            "value" : "Comprobando lo que compartieron las personas que sigues…"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Memeriksa apa yang dibagikan pengikut Anda..."
+            "value" : "Memeriksa apa yang dibagikan orang yang Anda ikuti…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat hebben degenen die je volgt gedeeld…"
           }
         }
       }
@@ -6359,13 +6371,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elige emoji personalizado:"
+            "value" : "Elegir emoji"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pilih emoji khusus:"
+            "value" : "Pilih emoji"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies emoji"
           }
         }
       }
@@ -6420,13 +6438,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elige de la biblioteca"
+            "value" : "Elegir de la biblioteca"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pilih dari perpustakaan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies uit bibliotheek"
           }
         }
       }
@@ -6757,7 +6781,27 @@
       }
     },
     "Collapse thread" : {
-      "comment" : "A11y: collapse reply thread\nA11y: tap tree line"
+      "comment" : "A11y: collapse reply thread\nA11y: tap tree line",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraer hilo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciutkan utas"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draadje inklappen"
+          }
+        }
+      }
     },
     "Color Blue" : {
       "extractionState" : "stale",
@@ -7763,6 +7807,12 @@
             "state" : "translated",
             "value" : "Lanjutkan secara anonim"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anoniem doorgaan"
+          }
         }
       }
     },
@@ -7874,7 +7924,26 @@
       }
     },
     "Copy" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salin"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieëren"
+          }
+        }
+      }
     },
     "Copy image URL" : {
       "localizations" : {
@@ -11581,13 +11650,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Encuentra más conjuntos de Emoji"
+            "value" : "Buscar más conjuntos de Emoji"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Temukan kumpulan Emoji lainnya"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer Emoji-sets zoeken"
           }
         }
       }
@@ -13028,7 +13103,27 @@
       }
     },
     "Flat" : {
-      "comment" : "Reply thread format: list all replies in a single level"
+      "comment" : "Reply thread format: list all replies in a single level",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plano"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plat"
+          }
+        }
+      }
     },
     "Interactions" : {
       "comment" : "Tab title",
@@ -14275,7 +14370,7 @@
         }
       }
     },
-    "Loading emoji sets…" : {
+    "Loading emoji sets\u2026" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -14287,6 +14382,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Memuat kumpulan emoji…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emoji sets laden…"
           }
         }
       }
@@ -14355,6 +14456,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Memuat..."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laden..."
           }
         }
       }
@@ -15560,6 +15667,12 @@
             "state" : "translated",
             "value" : "Bisukan video"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video dempen"
+          }
         }
       }
     },
@@ -15700,10 +15813,50 @@
       }
     },
     "Nested" : {
-      "comment" : "Reply thread format: indent replies under the post they respond to"
+      "comment" : "Reply thread format: indent replies under the post they respond to",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anidado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bersarang"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genest"
+          }
+        }
+      }
     },
     "Nested indents each reply under the post it responds to. Flat lists all replies in one level." : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El formato anidado sangra cada respuesta bajo la publicación a la que responde. El formato plano lista todas las respuestas en un solo nivel."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format bersarang menjorok setiap balasan di bawah postingan yang dibalas. Format datar menampilkan semua balasan di satu tingkat."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bij een geneste lay-out wordt elk antwoord ingesprongen onder het bericht waarop het reageert. Bij een platte lay-out worden alle antwoorden op één niveau weergegeven."
+          }
+        }
+      }
     },
     "Nests Audio Server" : {
       "localizations" : {
@@ -17195,7 +17348,26 @@
       }
     },
     "Notifications are disabled in iOS Settings." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las notificaciones están desactivadas en Ajustes de iOS."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifikasi dinonaktifkan di Pengaturan iOS."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldingen zijn uitgeschakeld in iOS instellingen"
+          }
+        }
+      }
     },
     "Notifications settings..." : {
       "localizations" : {
@@ -17559,13 +17731,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abrir configuración"
+            "value" : "Abrir ajustes"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Buka Pengaturan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open instellingen"
           }
         }
       }
@@ -17749,13 +17927,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pasta"
+            "value" : "Pegar"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pasta"
+            "value" : "Tempel"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plakken"
           }
         }
       }
@@ -18356,13 +18540,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apunta tu cámara al código QR NWC de tu billetera"
+            "value" : "Apunta la cámara al código QR NWC de tu monedero"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Arahkan kamera Anda ke kode QR NWC dompet Anda"
+            "value" : "Arahkan kamera ke kode QR NWC dompet Anda"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richt je camera op de NWC QR code"
           }
         }
       }
@@ -19961,20 +20151,45 @@
       }
     },
     "Raw JSON" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON puro"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON murni"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pure JSON"
+          }
+        }
+      }
     },
     "React..." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reaccionar..."
+            "value" : "Reaccionar…"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bereaksi..."
+            "value" : "Bereaksi…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reageren…"
           }
         }
       }
@@ -21441,6 +21656,28 @@
         }
       }
     },
+    "Remove video" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar vídeo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus video"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder video"
+          }
+        }
+      }
+    },
     "Replay" : {
       "localizations" : {
         "es" : {
@@ -21509,7 +21746,27 @@
       }
     },
     "Reply thread format" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato del hilo de respuestas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format utas balasan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord thread-indeling"
+          }
+        }
+      }
     },
     "Reply anonymously" : {
       "localizations" : {
@@ -22721,6 +22978,12 @@
             "state" : "translated",
             "value" : "Pindai QR"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan QR"
+          }
         }
       }
     },
@@ -22737,6 +23000,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kode QR yang dipindai bukan URI Nostr Wallet Connect yang valid"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gescande QR code is geen geldige Nostr Wallet Connect URI"
           }
         }
       }
@@ -24088,7 +24357,27 @@
       }
     },
     "Show collapsed reply thread" : {
-      "comment" : "A11y"
+      "comment" : "A11y",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar hilo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan utas"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon draadje"
+          }
+        }
+      }
     },
     "Show extra relays used on post preview" : {
       "comment" : "Setting on settings screen",
@@ -24432,7 +24721,26 @@
       }
     },
     "Show raw JSON" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar JSON puro"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan JSON murni"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon pure JSON"
+          }
+        }
+      }
     },
     "Show replies" : {
       "localizations" : {
@@ -24459,10 +24767,22 @@
     "Show thread from %@ (%lld)" : {
       "comment" : "Expand collapsed reply thread; name and post count",
       "localizations" : {
-        "en" : {
+        "es" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show thread from %1$@ (%2$lld)"
+            "state" : "translated",
+            "value" : "Mostrar hilo desde %1$@ (%2$lld)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan utas dari %1$@ (%2$lld)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon draadje vanaf %1$@ (%2$lld)"
           }
         }
       }
@@ -27211,13 +27531,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Antorcha apagada"
+            "value" : "Linterna apagada"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obor Mati"
+            "value" : "Senter mati"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lamp uit"
           }
         }
       }
@@ -27228,13 +27554,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Antorcha encendida"
+            "value" : "Linterna encendida"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Senter Menyala"
+            "value" : "Senter menyala"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lamp aan"
           }
         }
       }
@@ -27257,6 +27589,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Totaal: %lld"
+          }
+        }
+      }
+    },
+    "Trim" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recortar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potong"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trim"
           }
         }
       }
@@ -27962,13 +28316,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dejar silenciar vídeo"
+            "value" : "Activar sonido del vídeo"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Suarakan video"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video ontdempen"
           }
         }
       }
