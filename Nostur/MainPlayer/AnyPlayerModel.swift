@@ -26,11 +26,17 @@ class AnyPlayerModel: ObservableObject {
     
     @Published var isLoading = false
     @Published var isShown = false
+    /// System Picture in Picture is active (Mac Catalyst). Host stays mounted but chrome is hidden.
+    @Published var isNativePictureInPictureActive = false
     
     public var aspect: CGFloat = 16/9
     public var isPortrait: Bool {
         aspect < 1
     }
+    
+    /// Wired by `AVPlayerViewControllerRepresentable` while the player host is mounted.
+    var startNativePictureInPictureHandler: (() -> Bool)?
+    var stopNativePictureInPictureHandler: (() -> Void)?
     
     @Published var viewMode: AnyPlayerViewMode = .overlay {
         didSet {
@@ -439,6 +445,24 @@ class AnyPlayerModel: ObservableObject {
         }
     }
     
+    /// Prefer native system PiP on Mac; custom `.overlay` everywhere else (and as Mac fallback).
+    @MainActor
+    public func enterPictureInPicture() {
+        if IS_CATALYST {
+            let started = startNativePictureInPictureHandler?() ?? false
+            if started {
+                return
+            }
+#if DEBUG
+            L.og.debug("Native PiP start unavailable — falling back to overlay")
+#endif
+        }
+        guard availableViewModes.contains(.overlay) else { return }
+        withAnimation {
+            viewMode = .overlay
+        }
+    }
+    
     @MainActor
     func playVideo() {
         let shouldRestartFromBeginning = didFinishPlaying || isAtEndOfCurrentItem
@@ -525,6 +549,9 @@ class AnyPlayerModel: ObservableObject {
 #if DEBUG
         playbackDebugLog("close()")
 #endif
+        stopNativePictureInPictureHandler?()
+        isNativePictureInPictureActive = false
+        
         if let currentlyPlayingUrl {
             sendNotification(.didEndPIP, (currentlyPlayingUrl, self.cachedFirstFrame))
         }

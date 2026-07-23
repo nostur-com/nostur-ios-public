@@ -271,11 +271,36 @@ struct OverlayPlayer: View {
                 .frame(width: airPlaySize, height: airPlaySize)
                 .accessibilityLabel("AirPlay and output")
             
-            if vm.availableViewModes.contains(.overlay) {
+            if vm.availableViewModes.contains(.overlay) || IS_CATALYST {
                 controlButton(systemName: "pip.enter", label: "Picture-in-Picture", size: buttonSize, iconFont: iconFont) {
-                    rotateToPortrait()
+                    if IS_CATALYST {
+                        // Exit Mac window full screen first so system PiP can float.
+                        if isNativeMacFullScreen || isMacWindowInFullScreen() {
+                            performMacWindowToggleFullScreen()
+                            enteredNativeMacFullScreenFromPlayer = false
+                        }
+                        vm.enterPictureInPicture()
+                    }
+                    else {
+                        rotateToPortrait()
+                        withAnimation {
+                            vm.toggleViewMode()
+                        }
+                    }
+                }
+            }
+            
+            // Mac: PiP no longer cycles through .overlay, so offer a direct path to the mini bar
+            // (same control that lived on the custom overlay: rectangle.bottomthird.inset.filled).
+            if IS_CATALYST, vm.availableViewModes.contains(.audioOnlyBar) {
+                controlButton(systemName: "rectangle.bottomthird.inset.filled", label: "Audio only", size: buttonSize, iconFont: iconFont) {
+                    if isNativeMacFullScreen || isMacWindowInFullScreen() {
+                        performMacWindowToggleFullScreen()
+                        enteredNativeMacFullScreenFromPlayer = false
+                    }
+                    shouldRestoreDetailStreamAfterRotatedFullscreen = false
                     withAnimation {
-                        vm.toggleViewMode()
+                        vm.viewMode = .audioOnlyBar
                     }
                 }
             }
@@ -509,7 +534,8 @@ struct OverlayPlayer: View {
             if vm.isShown {
                 ZStack(alignment: videoAlignment) {
                     // Fullscreen custom chrome sits above the single shared player (no second AVPC).
-                    if vm.viewMode == .fullscreen {
+                    // Hide when system PiP owns the picture (Mac) so chrome doesn't cover the app.
+                    if vm.viewMode == .fullscreen, !vm.isNativePictureInPictureActive {
                         fullscreenChromeOverlays(geometry: geometry)
                             .zIndex(1)
                     }
@@ -519,6 +545,9 @@ struct OverlayPlayer: View {
                             VStack(spacing: 0) {
                                 // -- MARK: Actual video/stream — ONE AVPlayerViewController for all modes
                                 // (Pre-custom-controls architecture. Dual AVPCs broke device reopen.)
+                                // Keep a normal-sized AVPlayerLayer host during native PiP (do NOT
+                                // shrink to 1×1 — that breaks resume after closing system PiP).
+                                // Chrome is hidden via opacity/hitTesting; layer stays layout-valid.
                                 Color.black
                                     .overlay {
                                         if !vm.isLoading {
@@ -527,7 +556,7 @@ struct OverlayPlayer: View {
                                         }
                                     }
                                     .overlay {
-                                        if shouldShowPlaybackSpinner {
+                                        if shouldShowPlaybackSpinner, !vm.isNativePictureInPictureActive {
                                             ProgressView()
                                                 .tint(.white)
                                                 .controlSize(.large)
@@ -539,6 +568,8 @@ struct OverlayPlayer: View {
                                         height: vm.viewMode == .fullscreen ? geometry.size.height : nil
                                     )
                                     .frame(maxHeight: avPlayerHeight(geometry: geometry))
+                                    .opacity(vm.isNativePictureInPictureActive ? 0 : 1)
+                                    .allowsHitTesting(!vm.isNativePictureInPictureActive)
                                     .clipped()
                                     .ignoresSafeAreaIfFullscreen(vm.viewMode)
                                     .animation(.smooth, value: vm.viewMode)
@@ -686,7 +717,7 @@ struct OverlayPlayer: View {
                                         AnyPlayerModel.shared.nowPlayingThumbTask?.cancel()
                                     }
                                 
-                                if vm.viewMode == .detailstream {
+                                if vm.viewMode == .detailstream, !vm.isNativePictureInPictureActive {
                                     if let nrLiveEvent = vm.nrLiveEvent {
                                         AvailableWidthContainer {
                                             StreamDetail(liveEvent: nrLiveEvent)
@@ -700,7 +731,7 @@ struct OverlayPlayer: View {
                             .toolbar { // MARK: Toolbar for detailstream
                                 // CLOSE BUTTON
                                 ToolbarItem(placement: .topBarLeading) {
-                                    if vm.viewMode == .detailstream {
+                                    if vm.viewMode == .detailstream, !vm.isNativePictureInPictureActive {
                                         Button("Close", systemImage: "xmark") {
                                             withAnimation {
                                                 vm.close()
@@ -713,7 +744,7 @@ struct OverlayPlayer: View {
                                 
                                 // SAVE BUTTON
                                 ToolbarItem(placement: .topBarTrailing) {
-                                    if !vm.isStream && vm.viewMode == .detailstream {
+                                    if !vm.isStream && vm.viewMode == .detailstream, !vm.isNativePictureInPictureActive {
                                         Menu(content: {
                                             Button("Save to Photo Library", systemImage: "square.and.arrow.down") {
                                                 saveAVAssetToPhotos()
@@ -768,18 +799,24 @@ struct OverlayPlayer: View {
                         }
                         
                         // MARK: Custom video controls
-                        if vm.viewMode == .overlay {
-                            overlayControls
-                        }
-                        else if vm.viewMode == .audioOnlyBar {
-                            AudioOnlyBar()
+                        if !vm.isNativePictureInPictureActive {
+                            if vm.viewMode == .overlay {
+                                overlayControls
+                            }
+                            else if vm.viewMode == .audioOnlyBar {
+                                AudioOnlyBar()
+                            }
                         }
                     }
-                    .ultraThinMaterialIfDetail(vm.viewMode)
+                    .ultraThinMaterialIfDetail(vm.viewMode, theme: theme)
                     .frame(
                         width: frameWidth(geometry: geometry),
                         height: frameHeight(geometry: geometry)
                     )
+                    // Keep real layout size during native PiP so the player layer can resume.
+                    // Hide visually and let hits pass through to the app underneath.
+                    .opacity(vm.isNativePictureInPictureActive ? 0 : 1)
+                    .allowsHitTesting(!vm.isNativePictureInPictureActive)
                     .ignoresSafeAreaIfFullscreen(vm.viewMode)
                     .ignoresBottomSafeAreaIfDetail(vm.viewMode)
                     .offset(
@@ -1638,9 +1675,16 @@ extension View {
     }
     
     @ViewBuilder
-    func ultraThinMaterialIfDetail(_ viewMode: AnyPlayerViewMode) -> some View {
+    func ultraThinMaterialIfDetail(_ viewMode: AnyPlayerViewMode, theme: Theme) -> some View {
         if viewMode == .detailstream {
-            self.background(.ultraThinMaterial)
+            // On Mac, nested ultraThinMaterial under video/chat redraws causes chat
+            // background flicker; use solid fill. iOS keeps frosted material.
+            if IS_CATALYST {
+                self.background(theme.listBackground)
+            }
+            else {
+                self.background(.ultraThinMaterial)
+            }
         }
         else {
             self.background(Color.black)

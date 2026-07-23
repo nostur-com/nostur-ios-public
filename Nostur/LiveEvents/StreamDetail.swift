@@ -148,7 +148,16 @@ struct StreamDetail: View {
                                             }
                                     }
                                 }
-                                .background(.ultraThinMaterial)
+                                // Solid on Mac: ultraThinMaterial over a live List recomposites
+                                // constantly (chat/player invalidations) and flickers as a rectangle.
+                                .background {
+                                    if IS_CATALYST {
+                                        theme.listBackground
+                                    }
+                                    else {
+                                        Rectangle().fill(.ultraThinMaterial)
+                                    }
+                                }
                                 .overlay(alignment: !contentExpanded ? .topTrailing : .bottomTrailing) {
                                     if !sendSatsToWhoShown {
                                         Button {
@@ -276,7 +285,16 @@ struct StreamDetail: View {
                 }
                 liveEvent.fetchPresenceFromRelays()
             }
-            .background(.ultraThinMaterial)
+            // Solid on Mac: material as chat backdrop flickers when StreamDetail redraws
+            // (presence, player timeControlStatus). iOS keeps the frosted look.
+            .background {
+                if IS_CATALYST {
+                    theme.listBackground
+                }
+                else {
+                    Rectangle().fill(.ultraThinMaterial)
+                }
+            }
             .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
 //            .withNavigationDestinations()
             .nbNavigationDestination(isPresented: $showZapSheet, destination: {
