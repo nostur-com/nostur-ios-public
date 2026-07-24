@@ -15,14 +15,19 @@ class MentionsFeedModel: ObservableObject {
     private var pubkey: String?
     private var npub: String?
     public var account: CloudAccount? // Main context
-    
+
     // bg
     public var mostRecentMentionCreatedAt: Int64 {
         allMentionEvents.sorted(by: { $0.created_at > $1.created_at }).first?.created_at ?? 0
     }
     private var allMentionEvents: [Event] = []
     private var subscriptions: Set<AnyCancellable> = []
-    
+
+    /// Soft-fail cooldown so we don't hammer relays for rooms that are offline, but retry later
+    private var failedLiveEventATags: [String: Date] = [:]
+    private let liveEventFailureCooldown: TimeInterval = 90
+    private var liveEventResolutionGeneration = UUID()
+
     public init() {
         ViewUpdates.shared.feedUpdates
             .filter { $0.type == .Mentions && $0.accountPubkey == self.pubkey }
@@ -34,7 +39,7 @@ class MentionsFeedModel: ObservableObject {
                 }
             }
             .store(in: &subscriptions)
-        
+
         receiveNotification(.blockListUpdated)
             .sink { [weak self] notification in
                 guard let self else { return }
@@ -43,7 +48,7 @@ class MentionsFeedModel: ObservableObject {
                 }
             }
             .store(in: &subscriptions)
-        
+
         receiveNotification(.muteListUpdated)
             .sink { [weak self] notification in
                 guard let self else { return }
@@ -53,13 +58,15 @@ class MentionsFeedModel: ObservableObject {
             }
             .store(in: &subscriptions)
     }
-    
+
     public func setup(pubkey: String) {
         self.pubkey = pubkey
         self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey })
         self.npub = self.account?.npub
+        self.failedLiveEventATags = [:]
+        self.liveEventResolutionGeneration = UUID()
     }
-    
+
     public func load(limit: Int?, includeSpam: Bool = false, completion: ((Int64) -> Void)? = nil) {
         guard let pubkey, let npub else { return }
         let bgContext = bg()
@@ -80,20 +87,20 @@ class MentionsFeedModel: ObservableObject {
             if let limit {
                 r1.fetchLimit = limit
             }
-            
+
             self.allMentionEvents = ((try? bgContext.fetch(r1)) ?? [])
                 .filter { includeSpam || !$0.isSpam }
-                
+
                 // Hellthread handling
                 .filter {
-                
+
                     // check if actual mention is in content (if there are more than 20 Ps, potential hellthread)
                     if $0.fastPs.count > 20 {
                         // but always allow if its a root post
                         if $0.replyToId == nil && $0.replyToRootId == nil {
                             return true
                         }
-                        
+
                         // but always allow if direct reply to own post
                         if let replyToId = $0.replyToId {
                             if let replyTo = Event.fetchEvent(id: replyToId, context: bg()) {
@@ -106,18 +113,27 @@ class MentionsFeedModel: ObservableObject {
                             // We don't have our own event? Maybe new app user
                             return false // fallback to false
                         }
-                        
+
                         // our npub is in content? (we don't check old [0], [1] style...)
                         return $0.content != nil && $0.content!.contains(npub)
                     }
-                    
+
                     return true
                 }
-            
-            let mentions = self.allMentionEvents.map { NRPost(event: $0, withFooter: true, withReplyTo: true, withParents: false, withReplies: false, plainText: false, withRepliesCount: true) }
-            
+
             let mostRecentMentionCreatedAt = self.mostRecentMentionCreatedAt
-            
+
+            // Always build the list immediately — never block text mentions on room fetches
+            let mentions = self.allMentionEvents.map { NRPost(event: $0, withFooter: true, withReplyTo: true, withParents: false, withReplies: false, plainText: false, withRepliesCount: true) }
+
+            let missingLiveEventATags = Set(self.allMentionEvents.compactMap { event -> String? in
+                guard event.kind == 1311,
+                      let aTag = event.otherAtag ?? event.firstA(),
+                      Event.fetchReplacableEvent(aTag: aTag, context: bgContext) == nil
+                else { return nil }
+                return aTag
+            })
+
             DispatchQueue.main.async {
                 self.mentions = mentions
                 if !mentions.isEmpty {
@@ -126,10 +142,65 @@ class MentionsFeedModel: ObservableObject {
                 if let completion {
                     completion(mostRecentMentionCreatedAt)
                 }
+
+                // Resolve missing rooms in the background and patch titles when they arrive
+                let aTagsToResolve = missingLiveEventATags.filter { !self.isRecentlyFailed(aTag: $0) }
+                if !aTagsToResolve.isEmpty {
+                    let generation = UUID()
+                    self.liveEventResolutionGeneration = generation
+                    self.resolveLiveEventTitles(aTags: Array(aTagsToResolve), generation: generation)
+                }
             }
         }
     }
-    
+
+    @MainActor
+    private func resolveLiveEventTitles(aTags: [String], generation: UUID) {
+        for aTag in aTags {
+            LiveEventResolver.shared.resolve(aTag: aTag, requireFresh: false) { [weak self] liveEvent in
+                guard let self, self.liveEventResolutionGeneration == generation else { return }
+
+                if let liveEvent {
+                    self.failedLiveEventATags.removeValue(forKey: aTag)
+                    self.applyRoomTitle(aTag: aTag, liveEvent: liveEvent)
+                }
+                else {
+                    self.failedLiveEventATags[aTag] = Date()
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func applyRoomTitle(aTag: String, liveEvent: NRLiveEvent) {
+        let title: String? = {
+            if let t = liveEvent.title?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty {
+                return t
+            }
+            if let s = liveEvent.summary?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty {
+                return s
+            }
+            return nil
+        }()
+        guard let title else { return }
+
+        for post in mentions where post.kind == 1311 {
+            let postATag = post.fastTags.first(where: { $0.0 == "a" })?.1
+            guard postATag == aTag else { continue }
+            guard post.liveChatRoomTitle != title else { continue }
+            post.liveChatRoomTitle = title
+        }
+    }
+
+    private func isRecentlyFailed(aTag: String) -> Bool {
+        guard let failedAt = failedLiveEventATags[aTag] else { return false }
+        if Date().timeIntervalSince(failedAt) >= liveEventFailureCooldown {
+            failedLiveEventATags.removeValue(forKey: aTag)
+            return false
+        }
+        return true
+    }
+
     public func showMore() {
         // TODO: Implement solution for gap mentions 60d ago and 223d ago caused by: We have mentions until 60d, we fetch until 60d with limit 500, we receive from 250d ago and newer but because of limit result is cut off at 223d because relays don't support ASC/DESC.
         guard let pubkey else { return }
@@ -146,7 +217,7 @@ class MentionsFeedModel: ObservableObject {
             else {
                 req(RM.getMentions(pubkeys: [pubkey], kinds: [1,1111,1222,1244,20,9802,30023,34235,1311], limit: 500))
             }
-            
+
             self.load(limit: 500)
         }
     }

@@ -10,7 +10,8 @@ import SwiftUI
 struct NRPostHeaderContainer: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.containerID) private var containerID
-    private let nrPost: NRPost
+    /// Observed so live-chat room titles can appear after async room resolve
+    @ObservedObject private var nrPost: NRPost
     @ObservedObject var settings: SettingsStore = .shared
     @ObservedObject var nrContact: NRContact
     private var singleLine: Bool = true

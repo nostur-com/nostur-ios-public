@@ -346,7 +346,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var blurhash: String?
     
     /// Kind 1311 live chat: title of the live room (from a-tag → 30311), if known
-    var liveChatRoomTitle: String?
+    @Published var liveChatRoomTitle: String?
     
     var isLiveChatMessage: Bool { kind == 1311 }
     
@@ -689,7 +689,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             }
             
         case 1311:
-            // Live chat message — resolve room title from a-tag for notifications UI
+            // Live chat message — resolve room title from a-tag for notifications UI.
+            // Leave nil when unknown so the header shows only "· chat" (no redundant "Live chat").
             if let aTag = event.otherAtag ?? event.firstA(),
                let liveEvent = Event.fetchReplacableEvent(aTag: aTag, context: bgContext) {
                 let title = liveEvent.eventTitle?.trimmingCharacters(in: .whitespacesAndNewlines)

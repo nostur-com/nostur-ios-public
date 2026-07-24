@@ -234,41 +234,24 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     }
     
     /// Resolve live event by a-tag and open chat. Used when tapping kind 1311 chat mention notifications.
+    /// Always goes through LiveEventResolver with requireFresh so memory/DB hits are validated
+    /// (usable live stream / nest / ended with media) instead of blindly opening a stale room.
     @MainActor
     public static func open(aTag: String, context: String) {
-        // Prefer already-loaded instances so we don't recreate state
-        if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.id == aTag }) {
-            liveEvent.open(context: context)
-            return
-        }
-        if let liveEvent = AnyPlayerModel.shared.nrLiveEvent, liveEvent.id == aTag {
-            liveEvent.open(context: context)
-            return
-        }
-        if let liveEvent = LiveKitVoiceSession.shared.activeNest, liveEvent.id == aTag {
-            liveEvent.open(context: context)
-            return
-        }
-        
-        bg().perform {
-            if let event = Event.fetchReplacableEvent(aTag: aTag, context: bg()) {
-                let nrLiveEvent = NRLiveEvent(event: event)
-                DispatchQueue.main.async {
-                    nrLiveEvent.open(context: context)
-                }
+        LiveEventResolver.shared.resolve(aTag: aTag, requireFresh: true) { liveEvent in
+            if let liveEvent {
+                liveEvent.open(context: context)
                 return
             }
-            
-            // Not in DB yet — navigate via naddr and let LiveEventByNaddr fetch it
+
+            // Unable to resolve from our relays — retain the existing navigable fallback
             let parts = aTag.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false).map(String.init)
             guard parts.count == 3,
                   let kind = Int(parts[0]),
                   let si = try? NostrEssentials.ShareableIdentifier("naddr", kind: kind, pubkey: parts[1], dTag: parts[2], relays: [])
             else { return }
-            
-            DispatchQueue.main.async {
-                navigateTo(Naddr1Path(naddr1: si.identifier, navigationTitle: "Live event"), context: context)
-            }
+
+            navigateTo(Naddr1Path(naddr1: si.identifier, navigationTitle: "Live event"), context: context)
         }
     }
     
@@ -597,6 +580,207 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                 self.status = "live"
             }
         }
+    }
+}
+
+/// Local-first resolver for kind 30311 events referenced by live-chat messages.
+/// Coalesces concurrent notification-title and tap requests for the same room.
+@MainActor
+final class LiveEventResolver {
+    static let shared = LiveEventResolver()
+
+    private final class PendingRequest {
+        let backlog = Backlog(timeout: 4.0, auto: true, backlogDebugName: "LiveEventResolver")
+        var completions: [(NRLiveEvent?) -> Void] = []
+        var localFallback: NRLiveEvent?
+        var didStartSearch = false
+        var requireFresh = false
+    }
+
+    private var pending: [String: PendingRequest] = [:]
+
+    /// - Parameter requireFresh: When true (open/tap), wait for a network refresh if the local
+    ///   event is missing or incomplete (e.g. stale `planned` without stream). When false (titles),
+    ///   return any local hit immediately so the list stays non-blocking.
+    func resolve(aTag: String, requireFresh: Bool = false, completion: @escaping (NRLiveEvent?) -> Void) {
+        if let liveEvent = memoryCached(aTag: aTag) {
+            if !requireFresh || Self.liveEventIsUsableForOpen(liveEvent) {
+                completion(liveEvent)
+                return
+            }
+        }
+
+        if let request = pending[aTag] {
+            request.requireFresh = request.requireFresh || requireFresh
+            request.completions.append(completion)
+            return
+        }
+
+        let request = PendingRequest()
+        request.requireFresh = requireFresh
+        request.localFallback = memoryCached(aTag: aTag)
+        request.completions.append(completion)
+        pending[aTag] = request
+
+        bg().perform { [weak self] in
+            guard let self else { return }
+
+            if let event = Event.fetchReplacableEvent(aTag: aTag, context: bg()) {
+                let local = NRLiveEvent(event: event)
+                let usable = Self.eventIsUsableForOpen(event)
+
+                DispatchQueue.main.async {
+                    guard let request = self.pending[aTag] else { return }
+                    if !request.requireFresh || usable {
+                        self.finish(aTag: aTag, liveEvent: local)
+                    }
+                    else {
+                        // Stale/incomplete local room — keep as fallback while we refresh
+                        request.localFallback = local
+                        self.startFetch(aTag: aTag, parsedATag: try? ATag(aTag), searchOnly: false)
+                    }
+                }
+                return
+            }
+
+            guard let parsedATag = try? ATag(aTag) else {
+                DispatchQueue.main.async {
+                    self.finish(aTag: aTag, liveEvent: self.pending[aTag]?.localFallback)
+                }
+                return
+            }
+
+            DispatchQueue.main.async {
+                self.startFetch(aTag: aTag, parsedATag: parsedATag, searchOnly: false)
+            }
+        }
+    }
+
+    private func memoryCached(aTag: String) -> NRLiveEvent? {
+        if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.id == aTag }) {
+            return liveEvent
+        }
+        if let liveEvent = AnyPlayerModel.shared.nrLiveEvent, liveEvent.id == aTag {
+            return liveEvent
+        }
+        if let liveEvent = LiveKitVoiceSession.shared.activeNest, liveEvent.id == aTag {
+            return liveEvent
+        }
+        return nil
+    }
+
+    private nonisolated static func liveEventIsUsableForOpen(_ liveEvent: NRLiveEvent) -> Bool {
+        if liveEvent.status == "live" {
+            return liveEvent.url != nil || liveEvent.isLiveKit
+        }
+        if liveEvent.status == "ended" {
+            return liveEvent.recordingUrl != nil || liveEvent.url != nil || liveEvent.isLiveKit
+        }
+        return false
+    }
+
+    /// Live video/nest with enough metadata to open the intended player path, or ended room.
+    private nonisolated static func eventIsUsableForOpen(_ event: Event) -> Bool {
+        let status = event.streamStatus()
+        if status == "live" {
+            return event.streamingUrl() != nil || event.isLiveKit()
+        }
+        // Ended rooms still need something that the player/open path can present.
+        if status == "ended" {
+            return event.recordingUrl() != nil || event.streamingUrl() != nil || event.isLiveKit()
+        }
+        return false
+    }
+
+    private func startFetch(aTag: String, parsedATag: ATag?, searchOnly: Bool) {
+        guard pending[aTag] != nil else { return }
+        guard let parsedATag else {
+            finish(aTag: aTag, liveEvent: pending[aTag]?.localFallback)
+            return
+        }
+
+        let task = ReqTask(
+            prio: true,
+            debounceTime: 0.05,
+            timeout: 4.0,
+            prefix: searchOnly ? "LiveEventResolverS-" : "LiveEventResolver-",
+            reqCommand: { taskId in
+                req(
+                    RM.getArticle(
+                        pubkey: parsedATag.pubkey,
+                        kind: Int(parsedATag.kind),
+                        definition: parsedATag.definition,
+                        subscriptionId: taskId
+                    ),
+                    relayType: searchOnly ? .SEARCH : .READ
+                )
+            },
+            processResponseCommand: { [weak self] _, _, event in
+                bg().perform {
+                    let resolvedEvent: Event? = {
+                        if let event, event.aTag == aTag { return event }
+                        return Event.fetchReplacableEvent(aTag: aTag, context: bg())
+                    }()
+                    let liveEvent = resolvedEvent.map { NRLiveEvent(event: $0) }
+                    let usable = resolvedEvent.map(Self.eventIsUsableForOpen) ?? false
+                    DispatchQueue.main.async {
+                        guard let self, let request = self.pending[aTag] else { return }
+                        if request.requireFresh && !usable && !searchOnly && !request.didStartSearch {
+                            if let liveEvent {
+                                request.localFallback = liveEvent
+                            }
+                            request.didStartSearch = true
+                            self.startFetch(aTag: aTag, parsedATag: parsedATag, searchOnly: true)
+                        }
+                        else {
+                            self.finish(aTag: aTag, liveEvent: liveEvent ?? request.localFallback)
+                        }
+                    }
+                }
+            },
+            timeoutCommand: { [weak self] _ in
+                bg().perform {
+                    // Event may have landed just as we timed out
+                    if let event = Event.fetchReplacableEvent(aTag: aTag, context: bg()) {
+                        let liveEvent = NRLiveEvent(event: event)
+                        let usable = Self.eventIsUsableForOpen(event)
+                        DispatchQueue.main.async {
+                            guard let self, let request = self.pending[aTag] else { return }
+                            if usable || searchOnly || request.didStartSearch {
+                                self.finish(aTag: aTag, liveEvent: liveEvent)
+                            }
+                            else {
+                                // Prefer fresher data via search relays before accepting stale local
+                                request.localFallback = liveEvent
+                                request.didStartSearch = true
+                                self.startFetch(aTag: aTag, parsedATag: parsedATag, searchOnly: true)
+                            }
+                        }
+                        return
+                    }
+
+                    DispatchQueue.main.async {
+                        guard let self, let request = self.pending[aTag] else { return }
+                        if !searchOnly && !request.didStartSearch {
+                            request.didStartSearch = true
+                            self.startFetch(aTag: aTag, parsedATag: parsedATag, searchOnly: true)
+                            return
+                        }
+                        self.finish(aTag: aTag, liveEvent: request.localFallback)
+                    }
+                }
+            }
+        )
+
+        guard let request = pending[aTag] else { return }
+        request.backlog.add(task)
+        task.fetch()
+    }
+
+    private func finish(aTag: String, liveEvent: NRLiveEvent?) {
+        guard let request = pending.removeValue(forKey: aTag) else { return }
+        request.backlog.clear()
+        request.completions.forEach { $0(liveEvent) }
     }
 }
 

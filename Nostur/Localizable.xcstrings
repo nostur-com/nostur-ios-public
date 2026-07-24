@@ -6128,6 +6128,9 @@
         }
       }
     },
+    "chat" : {
+      "comment" : "Label next to time indicating a live chat mention notification"
+    },
     "Checked" : {
       "localizations" : {
         "es" : {
