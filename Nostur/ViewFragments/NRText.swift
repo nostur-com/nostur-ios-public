@@ -49,7 +49,7 @@ private final class NIP30InlineEmojiTextView: UITextView {
         guard rect.width > 0, rect.height > 0 else { return nil }
         
         #if targetEnvironment(macCatalyst)
-        let font = (attributedText?.attribute(.font, at: range.location, effectiveRange: nil) as? UIFont) ?? UIFont.preferredFont(forTextStyle: .body)
+        let font = (attributedText?.attribute(.font, at: range.location, effectiveRange: nil) as? UIFont) ?? UIFont.nosturBody()
         let size = min(rect.height, font.pointSize)
         let y = rect.minY + ((rect.height - size) / 2.0)
         return CGRect(x: rect.minX, y: y, width: size, height: size).integral
@@ -176,8 +176,7 @@ struct NRTextDynamic: View {
             paragraphStyle.lineBreakMode = .byWordWrapping
                         
             let attributes:[NSAttributedString.Key: NSObject] = [
-                .font: UIFont.preferredFont(forTextStyle: .body),
-//                .font: UIFontMetrics.default.scaledFont(for: UIFont.preferredFont(forTextStyle: .body)),
+                .font: UIFont.nosturBody(),
                 .foregroundColor: UIColor(self.fontColor),
                 .paragraphStyle: paragraphStyle
             ]
@@ -198,8 +197,7 @@ struct NRTextDynamic: View {
             paragraphStyle.lineBreakMode = .byWordWrapping
             
             let attributes:[NSAttributedString.Key: NSObject] = [
-                .font: UIFont.preferredFont(forTextStyle: .body),
-//                .font: UIFontMetrics.default.scaledFont(for: UIFont.preferredFont(forTextStyle: .body)),
+                .font: UIFont.nosturBody(),
                 .foregroundColor: UIColor(self.fontColor),
                 .paragraphStyle: paragraphStyle
             ]
@@ -279,6 +277,9 @@ struct NRParsedTextDynamic: View {
                     pTags.contains(profileUpdate.pubkey)
                 }
         ) { _ in
+            parseText()
+        }
+        .onReceive(receiveNotification(.dynamicTextChanged)) { _ in
             parseText()
         }
     }
@@ -542,7 +543,7 @@ extension NSMutableAttributedString {
             let shortcode = String(string[shortcodeRange])
             guard let url = emojiMap[shortcode] else { continue }
             
-            let font = (attribute(.font, at: max(0, match.range.location), effectiveRange: nil) as? UIFont) ?? UIFont.preferredFont(forTextStyle: .body)
+            let font = (attribute(.font, at: max(0, match.range.location), effectiveRange: nil) as? UIFont) ?? UIFont.nosturBody()
             guard let emojiImage = NIP30CustomEmojiImageCache.shared.image(for: url, pointSize: font.pointSize) else { continue }
             
             #if targetEnvironment(macCatalyst)

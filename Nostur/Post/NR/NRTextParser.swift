@@ -29,10 +29,16 @@ class NRTextParser { // TEXT things
         self.paragraphStyle.lineBreakMode = .byWordWrapping
 
         self.attributes = [
-            .font: UIFont.preferredFont(forTextStyle: .body),
+            .font: UIFont.nosturBody(),
             .foregroundColor: UIColor(lastColor),
             .paragraphStyle: paragraphStyle
         ]
+    }
+    
+    /// Call after Mac text size (or Dynamic Type) changes so new parses use the updated font.
+    func refreshFontsForTextSize() {
+        attributes[.font] = UIFont.nosturBody()
+        reloadHashtagIcons()
     }
 
     func parseText(fastTags: [FastTag], event: Event? = nil, text: String, primaryColor: Color? = nil) -> AttributedStringWithPs {
@@ -547,8 +553,7 @@ class NRTextParser { // TEXT things
     public var hashtagIcons: [String: NSAttributedString]
     
     static public func prepareHashtagIcons() -> [String: NSAttributedString] {
-        let font = UIFont.preferredFont(forTextStyle: .body)
-//        let font = UIFontMetrics.default.scaledFont(for: UIFont.preferredFont(forTextStyle: .body))
+        let font = UIFont.nosturBody()
         let size = (font.capHeight - font.pointSize).rounded() / 2
         
         return Self.hashtags.mapValues { imageName in

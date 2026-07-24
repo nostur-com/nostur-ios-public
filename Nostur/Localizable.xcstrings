@@ -9135,6 +9135,7 @@
       }
     },
     "Default" : {
+      "comment" : "Mac text size setting: default size",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -11077,6 +11078,9 @@
         }
       }
     },
+    "Extra Large" : {
+      "comment" : "Mac text size setting: extra large"
+    },
     "Failed to generate QR Code" : {
       "localizations" : {
         "es" : {
@@ -12763,6 +12767,9 @@
         }
       }
     },
+    "Huge" : {
+      "comment" : "Mac text size setting: huge"
+    },
     "ID" : {
       "comment" : "Label for post identifier (ID)",
       "extractionState" : "stale",
@@ -13481,6 +13488,12 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "Large" : {
+      "comment" : "Mac text size setting: large"
+    },
+    "Larger post text and UI labels on Mac" : {
+      "comment" : "Setting on settings screen"
     },
     "Last 1 hour" : {
       "localizations" : {
@@ -26256,6 +26269,9 @@
           }
         }
       }
+    },
+    "Text size" : {
+      "comment" : "Setting on settings screen (Mac)"
     },
     "The account to post from. Defaults to the currently active account if not specified." : {
       "localizations" : {

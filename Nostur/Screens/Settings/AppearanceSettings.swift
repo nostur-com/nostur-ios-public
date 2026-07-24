@@ -23,6 +23,14 @@ struct AppearanceSettings: View {
                                     .foregroundColor(.secondary)
                             }
                         }
+                        
+                        VStack(alignment: .leading) {
+                            MacTextSizePicker()
+                            
+                            Text("Larger post text and UI labels on Mac", comment: "Setting on settings screen")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
                     if #available(iOS 16, *) {

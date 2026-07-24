@@ -95,6 +95,7 @@ struct NRContentTextRendererInner: View {
     var body: some View {
         if let nxText {
             Text(nxText)
+                .font(Font.nosturBody())
                 .foregroundColor(primaryColor)
                 .tint(accentColor)
                 .accentColor(accentColor)
@@ -113,20 +114,10 @@ struct NRContentTextRendererInner: View {
                             return self.attributedStringWithPs.pTags.contains(profileUpdate.pubkey)
                         }
                 ) { _ in
-                    bg().perform {
-                        guard let event = attributedStringWithPs.event else { return }
-                        let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
-                        guard let reparsedNxOutput = reparsed.nxOutput else { return }
-//                        let output = isDetail ? reparsedNxOutput : reparsedNxOutput.prefix(NRTEXT_LIMIT)
-                        if self.nxText != reparsedNxOutput {
-#if DEBUG
-                            L.og.debug("🍋🍋 Text.Reparsed() \(reparsed.input) ----> \(reparsedNxOutput)")
-#endif
-                            DispatchQueue.main.async {
-                                self.nxText = reparsedNxOutput
-                            }
-                        }
-                    }
+                    reparseNxText()
+                }
+                .onReceive(receiveNotification(.dynamicTextChanged)) { _ in
+                    reparseNxText()
                 }
                 .onChange(of: showMore) { [oldValue = self.showMore] newValue in
                     if newValue && !oldValue {
@@ -188,21 +179,10 @@ struct NRContentTextRendererInner: View {
                                     return self.attributedStringWithPs.pTags.contains(profileUpdate.pubkey)
                                 }
                         ) { _ in
-                            bg().perform {
-                                guard let event = attributedStringWithPs.event else { return }
-                                let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
-                                reparsedOutput = reparsed.output
-                                guard let reparsedOutput else { return }
-                                let output = isDetail || shouldShowMoreButton ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
-                                if self.text != output {
-#if DEBUG
-                                    L.og.debug("🍋🍋 NRTextFixed.Reparsed() \(reparsed.input) ----> \(output)")
-#endif
-                                    DispatchQueue.main.async {
-                                        self.text = output
-                                    }
-                                }
-                            }
+                            reparseSelectableText()
+                        }
+                        .onReceive(receiveNotification(.dynamicTextChanged)) { _ in
+                            reparseSelectableText()
                         }
                         .frame(height: textHeight, alignment: .topLeading) // <-- Fixes clipped text height, stuck at initial 60, this problem only happens inside LazyVStack
                         .onChange(of: availableWidth) { newWidth in
@@ -256,20 +236,10 @@ struct NRContentTextRendererInner: View {
                                     return self.attributedStringWithPs.pTags.contains(profileUpdate.pubkey)
                                 }
                         ) { _ in
-                            bg().perform {
-                                guard let event = attributedStringWithPs.event else { return }
-                                let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
-                                guard let reparsedOutput = reparsed.output else { return }
-                                let output = isDetail || shouldShowMoreButton ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
-                                if self.text != output {
-#if DEBUG
-                                    L.og.debug("🍋🍋 NRTextDynamic.Reparsed() \(reparsed.input) ----> \(output)")
-#endif
-                                    DispatchQueue.main.async {
-                                        self.text = output
-                                    }
-                                }
-                            }
+                            reparseSelectableText()
+                        }
+                        .onReceive(receiveNotification(.dynamicTextChanged)) { _ in
+                            reparseSelectableText()
                         }
                         .onChange(of: showMore) { [oldValue = self.showMore] newValue in
                             if newValue && !oldValue {
@@ -302,6 +272,52 @@ struct NRContentTextRendererInner: View {
                                 })
                             }
                         }
+                }
+            }
+        }
+    }
+    
+    private func reparseNxText() {
+        bg().perform {
+            guard !attributedStringWithPs.input.isEmpty else { return }
+            let event = attributedStringWithPs.event
+            let reparsed = NRTextParser.shared.parseText(
+                fastTags: event?.fastTags ?? [],
+                event: event,
+                text: attributedStringWithPs.input,
+                primaryColor: primaryColor
+            )
+            guard let reparsedNxOutput = reparsed.nxOutput else { return }
+            if self.nxText != reparsedNxOutput {
+#if DEBUG
+                L.og.debug("🍋🍋 Text.Reparsed() \(reparsed.input) ----> \(reparsedNxOutput)")
+#endif
+                DispatchQueue.main.async {
+                    self.nxText = reparsedNxOutput
+                }
+            }
+        }
+    }
+    
+    private func reparseSelectableText() {
+        bg().perform {
+            guard !attributedStringWithPs.input.isEmpty else { return }
+            let event = attributedStringWithPs.event
+            let reparsed = NRTextParser.shared.parseText(
+                fastTags: event?.fastTags ?? [],
+                event: event,
+                text: attributedStringWithPs.input,
+                primaryColor: primaryColor
+            )
+            DispatchQueue.main.async {
+                self.reparsedOutput = reparsed.output
+                guard let reparsedOutput = reparsed.output else { return }
+                let output = self.isDetail || self.showMore ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
+                if self.text != output {
+#if DEBUG
+                    L.og.debug("🍋🍋 NRText.Reparsed() \(reparsed.input) ----> \(output)")
+#endif
+                    self.text = output
                 }
             }
         }

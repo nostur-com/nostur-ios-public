@@ -64,8 +64,51 @@ final class SettingsStore: ObservableObject {
         static let enableOutboxPreview:String = "outbox_preview_enabled"
         
         static let proMode:String = "nostur_pro_mode"
+        /// Mac Catalyst only: in-app post/UI text size (see `MacTextSizeOption`).
+        static let macTextSize:String = "mac_text_size"
         
         static let blossomServerList:String = "blossom_server_list"
+    }
+    
+    /// Discrete text size choices for Mac Catalyst (system Dynamic Type is unreliable there).
+    public enum MacTextSizeOption: String, CaseIterable, Identifiable {
+        case standard
+        case large
+        case extraLarge
+        case huge
+        
+        public var id: String { rawValue }
+        
+        public var scale: CGFloat {
+            switch self {
+            case .standard: return 1.0
+            case .large: return 1.15
+            case .extraLarge: return 1.3
+            case .huge: return 1.5
+            }
+        }
+        
+        public var dynamicTypeSize: DynamicTypeSize {
+            switch self {
+            case .standard: return .large
+            case .large: return .xLarge
+            case .extraLarge: return .xxLarge
+            case .huge: return .xxxLarge
+            }
+        }
+        
+        public var label: String {
+            switch self {
+            case .standard:
+                return String(localized: "Default", comment: "Mac text size setting: default size")
+            case .large:
+                return String(localized: "Large", comment: "Mac text size setting: large")
+            case .extraLarge:
+                return String(localized: "Extra Large", comment: "Mac text size setting: extra large")
+            case .huge:
+                return String(localized: "Huge", comment: "Mac text size setting: huge")
+            }
+        }
     }
 
 //    private let cancellable: Cancellable
@@ -196,6 +239,7 @@ final class SettingsStore: ObservableObject {
             Keys.enableOutboxPreview: false,
             Keys.enableVPNdetection: true,
             Keys.proMode: false,
+            Keys.macTextSize: MacTextSizeOption.standard.rawValue,
             Keys.blossomServerList: []
         ])
 
@@ -212,6 +256,7 @@ final class SettingsStore: ObservableObject {
         _enableOutboxRelays = defaults.bool(forKey: Keys.enableOutboxRelays)
         _enableOutboxPreview = defaults.bool(forKey: Keys.enableOutboxPreview)
         _enableVPNdetection = defaults.bool(forKey: Keys.enableVPNdetection)
+        _macTextSize = defaults.string(forKey: Keys.macTextSize) ?? MacTextSizeOption.standard.rawValue
         _animatedPFPenabledCache = defaults.bool(forKey: Keys.animatedPFPenabled)
         _showFiat = defaults.bool(forKey: Keys.showFiat)
         _lowDataModeCache = defaults.bool(forKey: Keys.lowDataMode)
@@ -322,6 +367,35 @@ final class SettingsStore: ObservableObject {
     var proMode: Bool {
         set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.proMode) }
         get { defaults.bool(forKey: Keys.proMode) }
+    }
+    
+    /// Mac Catalyst only. Changes update fonts and notify the UI to reparse post text.
+    public var macTextSize: String {
+        set {
+            let value = MacTextSizeOption(rawValue: newValue)?.rawValue ?? MacTextSizeOption.standard.rawValue
+            guard value != _macTextSize else { return }
+            _macTextSize = value
+            defaults.set(value, forKey: Keys.macTextSize)
+            objectWillChange.send()
+            if IS_CATALYST {
+                NRTextParser.shared.refreshFontsForTextSize()
+                sendNotification(.dynamicTextChanged)
+            }
+        }
+        get { _macTextSize }
+    }
+    
+    private var _macTextSize: String = MacTextSizeOption.standard.rawValue
+    
+    public var macTextSizeOption: MacTextSizeOption {
+        get { MacTextSizeOption(rawValue: macTextSize) ?? .standard }
+        set { macTextSize = newValue.rawValue }
+    }
+    
+    /// Multiplier applied to post body fonts. Always `1.0` off Mac Catalyst.
+    public var textSizeScale: CGFloat {
+        guard IS_CATALYST else { return 1.0 }
+        return macTextSizeOption.scale
     }
 
     var defaultZapAmount: Double {

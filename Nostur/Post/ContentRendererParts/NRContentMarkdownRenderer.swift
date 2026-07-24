@@ -12,10 +12,15 @@ import NukeUI
 // Same as NRContentTextRenderer, but with Markdown instead of AttributedString
 struct NRContentMarkdownRenderer: View {
     @Environment(\.theme) private var theme
+    @ObservedObject private var settings: SettingsStore = .shared
     public let markdownContentWithPs: MarkdownContentWithPs
     public let fullWidth = false
     public var maxWidth: CGFloat
     @State var text: MarkdownContent? = nil
+    
+    private var articleFontSize: CGFloat {
+        22 * settings.textSizeScale
+    }
     
     var body: some View {
         Markdown(text ?? markdownContentWithPs.output)
@@ -28,7 +33,7 @@ struct NRContentMarkdownRenderer: View {
                 FontFamily(.custom("Charter"))
                 ForegroundColor(Color.primary)
                 BackgroundColor(Color(.secondarySystemBackground))
-                FontSize(22)
+                FontSize(articleFontSize)
             }
             .markdownTextStyle(\.link) {
                 ForegroundColor(theme.accent)

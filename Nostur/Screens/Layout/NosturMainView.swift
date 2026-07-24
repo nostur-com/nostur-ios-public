@@ -31,6 +31,7 @@ struct NosturMainView: View {
                 }
             }
         }
+        .modifier(MacTextSizeEnvironmentModifier(textSize: ss.macTextSizeOption))
         .withAppSheets(la: la)
         .onAppear {
 #if DEBUG
@@ -68,6 +69,19 @@ struct NosturMainView: View {
         L.og.debug("⏱️⏱️ NosturMainView visible, starting measurement.")
     }
 #endif
+}
+
+/// Applies the Mac in-app text size as SwiftUI Dynamic Type (Catalyst only).
+private struct MacTextSizeEnvironmentModifier: ViewModifier {
+    let textSize: SettingsStore.MacTextSizeOption
+    
+    func body(content: Content) -> some View {
+        if IS_CATALYST {
+            content.dynamicTypeSize(textSize.dynamicTypeSize)
+        } else {
+            content
+        }
+    }
 }
 
 struct FullScreenSizeEnvironmentKey: EnvironmentKey {

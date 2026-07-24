@@ -243,7 +243,7 @@ struct ArticleView: View {
                         .markdownTextStyle() {
                             FontFamily(.custom("Charter"))
                             ForegroundColor(Color.primary)
-                            FontSize(18)
+                            FontSize(18 * SettingsStore.shared.textSizeScale)
                         }
                         .markdownTextStyle(\.link) {
                             ForegroundColor(theme.accent)
@@ -258,7 +258,7 @@ struct ArticleView: View {
                         .markdownTextStyle() {
                             FontFamily(.custom("Charter"))
                             ForegroundColor(Color.primary)
-                            FontSize(18)
+                            FontSize(18 * SettingsStore.shared.textSizeScale)
                         }
                         .markdownTextStyle(\.link) {
                             ForegroundColor(theme.accent)

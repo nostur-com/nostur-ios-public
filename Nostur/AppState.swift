@@ -185,7 +185,7 @@ class AppState: ObservableObject {
     }
 
     @objc func preferredContentSizeChanged(_ notification: Notification) {
-        NRTextParser.shared.reloadHashtagIcons()
+        NRTextParser.shared.refreshFontsForTextSize()
         sendNotification(.dynamicTextChanged)
     }
     
