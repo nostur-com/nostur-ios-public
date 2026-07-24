@@ -483,38 +483,47 @@ struct OverlayPlayer: View {
     /// (A second AVPC for fullscreen was introduced with custom controls and broke device reopen.)
     private func fullscreenChromeOverlays(geometry: GeometryProxy) -> some View {
         let isLandscape = isRotatedFullscreen || geometry.size.width > geometry.size.height
+        // Close / bookmark / download stay available after finish; transport chrome does not.
+        let showTopChrome = fullscreenControlsVisible || vm.didFinishPlaying
+        let showPlaybackChrome = fullscreenControlsVisible && !vm.didFinishPlaying
         
-        return Color.clear
-            .frame(width: geometry.size.width, height: geometry.size.height)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                toggleFullscreenControls()
-            }
-            .overlay(alignment: .top) {
-                if fullscreenControlsVisible {
-                    fullscreenTopControls(geometry: geometry, isLandscape: isLandscape)
+        return ZStack {
+            // Surface gestures + center/bottom transport. Disabled when finished so the
+            // finished-playback overlay (replay / like / zap) can receive taps.
+            Color.clear
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    toggleFullscreenControls()
                 }
-            }
-            .overlay(alignment: .center) {
-                if fullscreenControlsVisible && !vm.didFinishPlaying && !shouldShowPlaybackSpinner {
-                    fullscreenCenterControls(isLandscape: isLandscape)
-                }
-            }
-            .overlay(alignment: .bottom) {
-                if fullscreenControlsVisible {
-                    fullscreenControls(isLandscape: isLandscape)
-                }
-            }
-            .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
-                .onEnded({ value in
-                    if value.translation.height > 0 {
-                        rotateToPortrait()
-                        vm.close()
+                .overlay(alignment: .center) {
+                    if showPlaybackChrome && !shouldShowPlaybackSpinner {
+                        fullscreenCenterControls(isLandscape: isLandscape)
                     }
-                }))
-            // The finished-playback overlay owns the full video surface and its gestures.
-            .allowsHitTesting(!vm.didFinishPlaying)
-            .ignoresSafeArea()
+                }
+                .overlay(alignment: .bottom) {
+                    if showPlaybackChrome {
+                        fullscreenControls(isLandscape: isLandscape)
+                    }
+                }
+                .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
+                    .onEnded({ value in
+                        if value.translation.height > 0 {
+                            rotateToPortrait()
+                            vm.close()
+                        }
+                    }))
+                .allowsHitTesting(!vm.didFinishPlaying)
+            
+            if showTopChrome {
+                VStack(spacing: 0) {
+                    fullscreenTopControls(geometry: geometry, isLandscape: isLandscape)
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .frame(width: geometry.size.width, height: geometry.size.height)
+        .ignoresSafeArea()
     }
     
     private func controlButton(systemName: String, label: String, size: CGFloat = 32, iconFont: Font = .title3, action: @escaping () -> Void) -> some View {
@@ -952,7 +961,9 @@ struct OverlayPlayer: View {
                 }
                 .onChange(of: vm.didFinishPlaying) { _ in
                     if vm.didFinishPlaying {
-                        hideFullscreenControls()
+                        // Keep top chrome (close / bookmark / download) reachable; center and
+                        // bottom transport stay suppressed by `showPlaybackChrome` in the view.
+                        showFullscreenControls()
                         hideDetailStreamControls()
                     }
                     else {
@@ -1121,8 +1132,14 @@ struct OverlayPlayer: View {
     /// Hide chrome only when the player is actually playing, not merely when play was requested.
     /// Otherwise a stuck autoplay leaves controls hidden and pause/play unreachable.
     private func applyChromeForActualPlayback() {
-        if vm.isLoading || vm.didFinishPlaying {
+        if vm.isLoading {
             hideFullscreenControls()
+            hideDetailStreamControls()
+            return
+        }
+        if vm.didFinishPlaying {
+            // Top chrome remains available after finish; transport is suppressed in the view.
+            showFullscreenControls()
             hideDetailStreamControls()
             return
         }
@@ -1137,6 +1154,8 @@ struct OverlayPlayer: View {
     }
     
     private func toggleFullscreenControls() {
+        // Finished state always shows top chrome; ignore toggles that would hide close/etc.
+        guard !vm.didFinishPlaying else { return }
         fullscreenControlsVisible.toggle()
         if fullscreenControlsVisible {
             scheduleFullscreenControlsAutoHide()
@@ -1146,10 +1165,15 @@ struct OverlayPlayer: View {
         }
     }
     
-    /// Hide chrome while loading, playing, or while the finished-playback overlay is shown.
+    /// Hide chrome while loading or playing. After finish, keep top chrome available
+    /// (close / bookmark / download); center/bottom transport is suppressed in the view.
     private func applyFullscreenControlsForPlaybackState() {
         guard vm.viewMode == .fullscreen else { return }
-        if vm.isLoading || vm.didFinishPlaying || vm.timeControlStatus == .playing {
+        if vm.didFinishPlaying {
+            showFullscreenControls()
+            return
+        }
+        if vm.isLoading || vm.timeControlStatus == .playing {
             hideFullscreenControls()
         }
         else {
@@ -1194,7 +1218,7 @@ struct OverlayPlayer: View {
         }
     }
     
-    /// Hide chrome while loading, playing, or while the finished-playback overlay is shown.
+    /// Hide transport chrome while loading, playing, or finished (toolbar still has close/save).
     private func applyDetailStreamControlsForPlaybackState() {
         guard vm.viewMode == .detailstream else { return }
         if vm.isLoading || vm.didFinishPlaying || vm.timeControlStatus == .playing {
