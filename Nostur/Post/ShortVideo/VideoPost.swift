@@ -50,6 +50,7 @@ struct VideoPost: View {
     @Environment(\.availableWidth) private var availableWidth: CGFloat
     @Environment(\.shortVideoAutoplayAudioEnabled) private var shortVideoAutoplayAudioEnabled
     @EnvironmentObject private var coordinator: VideoPostPlaybackCoordinator
+    @ObservedObject private var settings = SettingsStore.shared
     
     public let nrPost: NRPost
     public var isDetail: Bool = false
@@ -59,6 +60,7 @@ struct VideoPost: View {
     
     @State private var isPlaying = false
     @State private var isMuted = true
+    @State private var loadAnyway = false
     
     private var postID: String { nrPost.id }
     
@@ -84,6 +86,45 @@ struct VideoPost: View {
         }
         return availableHeight
     }
+
+    private var shouldBlockForLowDataMode: Bool {
+        settings.lowDataMode && !loadAnyway
+    }
+
+    @ViewBuilder
+    private func videoContent(url: URL) -> some View {
+        if shouldBlockForLowDataMode {
+            ZStack {
+                if let blurhash = nrPost.blurhash,
+                   let image = UIImage(blurHash: blurhash, size: CGSize(width: 32, height: 32)) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                }
+                else {
+                    Color.black
+                }
+
+                VStack(spacing: 10) {
+                    Text("Loading paused (Low data mode)", comment: "Displayed when a short video is blocked")
+                        .fontWeight(.bold)
+                    Button(String(localized: "Load anyway", comment: "Button to play a short video despite low data mode")) {
+                        loadAnyway = true
+                        coordinator.markUserPlaying(postID: postID)
+                        setPlaying(true, muted: false)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+                .padding()
+            }
+            .clipped()
+        }
+        else {
+            ShortVideoPlayer(url: url, isPlaying: $isPlaying, isMuted: $isMuted)
+        }
+    }
     
     @ViewBuilder
     private var muteButton: some View {
@@ -107,7 +148,7 @@ struct VideoPost: View {
         VideoPostLayout(nrPost: nrPost, theme: theme, isCompact: isCompactPreview) {
             if let videoURL = nrPost.eventUrl {
                 if #available(iOS 16.0, *) {
-                    ShortVideoPlayer(url: videoURL, isPlaying: $isPlaying, isMuted: $isMuted)
+                    videoContent(url: videoURL)
                         .frame(width: videoWidth, height: min((videoWidth*3), videoHeight))
                         .background(Color.black)
                         .frame(width: videoWidth, height: videoHeight)
@@ -149,7 +190,7 @@ struct VideoPost: View {
                         }
                 } else {
                     GeometryReader { geo in
-                        ShortVideoPlayer(url: videoURL, isPlaying: $isPlaying, isMuted: $isMuted)
+                        videoContent(url: videoURL)
                             .frame(width: videoWidth, height: min((videoWidth*3), videoHeight))
                             .background(Color.black)
                             .frame(width: videoWidth, height: videoHeight)
@@ -203,13 +244,18 @@ struct VideoPost: View {
         }
         .onAppear {
             // Detail has no feed-visibility autoplay; start when opening short-video detail.
-            guard isDetail else { return }
+            guard isDetail && !shouldBlockForLowDataMode else { return }
             coordinator.markUserPlaying(postID: postID)
             setPlaying(true, muted: !shortVideoAutoplayAudioEnabled)
         }
         .onValueChange(isVisible) { wasVisible, isVisibleNow in
             // When changing feed, don't continue playing
             guard isPlaying && !isVisibleNow else { return }
+            setPlaying(false)
+        }
+        .onValueChange(settings.lowDataMode) { _, lowDataMode in
+            guard lowDataMode else { return }
+            loadAnyway = false
             setPlaying(false)
         }
         .onReceive(receiveNotification(.voiceMessagePlayerDidStartPlayback)) { _ in
@@ -241,7 +287,9 @@ struct VideoPost: View {
     }
     
     private func updateAutoplayState() {
-        let shouldPlay = coordinator.mostVisiblePostID == postID && coordinator.canAutoPlay(postID: postID)
+        let shouldPlay = !shouldBlockForLowDataMode
+            && coordinator.mostVisiblePostID == postID
+            && coordinator.canAutoPlay(postID: postID)
         setPlaying(shouldPlay, muted: !shortVideoAutoplayAudioEnabled)
     }
     
@@ -315,4 +363,3 @@ struct VideoPost: View {
         .environmentObject(VideoPostPlaybackCoordinator())
     }
 }
-
