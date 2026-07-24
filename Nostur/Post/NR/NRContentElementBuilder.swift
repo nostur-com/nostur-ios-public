@@ -321,6 +321,8 @@ enum ContentElement: Hashable, Identifiable {
     case cashu(String)
     case link(String, URL)
     case image(GalleryItem)
+    /// 2×2 grid for rows when a post ends with 4+ images (not used in detail).
+    case imageGrid([GalleryItem])
     case video(MediaContent)
     case linkPreview(URL, id: UUID = UUID())
     case postPreviewImage(PostedImageMeta)
@@ -329,6 +331,66 @@ enum ContentElement: Hashable, Identifiable {
     case nprofile1(ShareableIdentifier)
     case nrPost(NRPost) // embedded post, already processed for rendering
     case naddr1(ShareableIdentifier)
+}
+
+// MARK: - Trailing image grid (Kind1 note rows)
+
+/// True when text is empty or only whitespace/newlines (can sit between image URLs).
+private func isWhitespaceOnlyText(_ element: ContentElement) -> Bool {
+    guard case .text(let attributed) = element else { return false }
+    return attributed.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+}
+
+/// Trailing consecutive images at the end of content (whitespace-only text ignored).
+/// Returns the list only when there are 4 or more — suitable for the 2×2 row grid.
+func trailingImagesForGrid(from elements: [ContentElement]) -> [GalleryItem]? {
+    var images: [GalleryItem] = []
+    
+    for element in elements.reversed() {
+        switch element {
+        case .image(let item):
+            images.insert(item, at: 0)
+        case .imageGrid:
+            // Already collapsed
+            return nil
+        default:
+            if isWhitespaceOnlyText(element) {
+                continue
+            }
+            // Meaningful non-image content ends the trailing-image scan
+            break
+        }
+    }
+    
+    return images.count >= 4 ? images : nil
+}
+
+/// Collapse a trailing group of 4+ images into a single `.imageGrid` element.
+/// Used for note rows only (not detail). Safe to call if already collapsed.
+func collapseTrailingImageGrid(_ elements: [ContentElement]) -> [ContentElement] {
+    guard let images = trailingImagesForGrid(from: elements) else { return elements }
+    
+    var imagesLeft = images.count
+    for i in elements.indices.reversed() {
+        switch elements[i] {
+        case .image:
+            imagesLeft -= 1
+            if imagesLeft == 0 {
+                var result = Array(elements.prefix(i))
+                while let last = result.last, isWhitespaceOnlyText(last) {
+                    result.removeLast()
+                }
+                result.append(.imageGrid(images))
+                return result
+            }
+        default:
+            if isWhitespaceOnlyText(elements[i]) {
+                continue
+            }
+            return elements
+        }
+    }
+    return elements
 }
 
 import MarkdownUI

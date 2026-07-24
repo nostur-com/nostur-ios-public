@@ -55,6 +55,11 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
                         imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
+                    case .imageGrid(let items):
+                        for mediaContent in items.prefix(4) {
+                            if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
+                        }
                     default:
                         continue
                     }
@@ -135,6 +140,11 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
                         imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
+                    case .imageGrid(let items):
+                        for mediaContent in items.prefix(4) {
+                            if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
+                        }
                     default:
                         continue
                     }
@@ -205,6 +215,11 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
                         imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
+                    case .imageGrid(let items):
+                        for mediaContent in items.prefix(4) {
+                            if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
+                        }
                     default:
                         continue
                     }
@@ -285,6 +300,11 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
                         imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
+                    case .imageGrid(let items):
+                        for mediaContent in items.prefix(4) {
+                            if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
+                        }
                     default:
                         continue
                     }

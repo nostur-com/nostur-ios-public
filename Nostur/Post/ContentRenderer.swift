@@ -31,7 +31,9 @@ struct ContentRenderer: View { // VIEW things
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
-        _contentElements = State(wrappedValue: isDetail ? nrPost.contentElementsDetail : nrPost.contentElements)
+        // Row only: collapse trailing 4+ images into a 2×2 grid. Detail keeps stacked images.
+        let baseElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
+        _contentElements = State(wrappedValue: isDetail ? baseElements : collapseTrailingImageGrid(baseElements))
         _mutedWords = State(initialValue: AppState.shared.bgAppState.mutedWords)
         _showMore = showMore
         self.forceAutoload = forceAutoload
@@ -225,6 +227,18 @@ struct ContentRenderer: View { // VIEW things
                         //  imageUrls: nrPost.imageUrls
                         // no full width no detial -> .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
                         
+                    case .imageGrid(let items):
+                        // Only used in rows (ContentRenderer collapses only when !isDetail)
+                        MediaImageGridView(
+                            items: items,
+                            availableWidth: availableWidth + (fullWidth ? 20 : 0),
+                            autoload: shouldAutoload,
+                            isNSFW: nrPost.isNSFW,
+                            zoomableId: zoomableId
+                        )
+                        .padding(.horizontal, fullWidth ? -10 : 0)
+                        .padding(.vertical, 10)
+                        
                     case .linkPreview(let url, _):
                         LinkPreviewView(url: url, autoload: shouldAutoload)
                             .padding(.vertical, 10)
@@ -287,7 +301,9 @@ struct ContentRenderer: View { // VIEW things
         .onChange(of: showMore) { [oldValue = self.showMore] newValue in
             if newValue && !oldValue {
                 withAnimation {
-                    self.contentElements = self.nrPost.contentElementsDetail
+                    // Keep 2×2 grid on rows when expanding text; detail uses full image list
+                    let detail = self.nrPost.contentElementsDetail
+                    self.contentElements = self.isDetail ? detail : collapseTrailingImageGrid(detail)
                 }
             }
         }
