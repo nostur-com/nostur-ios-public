@@ -1159,6 +1159,8 @@ public final class NewPostModel: ObservableObject {
                         if let savedEvent = try? Event.fetchEvent(id: rumorEvent.fallbackId(), context: bg()) {
                             if ([1,1111,1222,1244].contains(savedEvent.kind)) {
                                 savedEvent.flags = "sent"
+                                ViewUpdates.shared.updateNRPost.send(savedEvent)
+                                DataProvider.shared().saveToDisk()
                                 DispatchQueue.main.async {
                                     sendNotification(.newPostSaved, savedEvent)
                                 }

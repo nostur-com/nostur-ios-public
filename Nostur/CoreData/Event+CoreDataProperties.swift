@@ -1067,6 +1067,7 @@ extension Event {
                 if freshEvent.flags == "awaiting_send" && uniqueRelays.count > 0  {
                     freshEvent.flags = "sent"
                 }
+                ViewUpdates.shared.updateNRPost.send(freshEvent)
             } catch {
                 print("Failed to update relays: \(error)")
             }
