@@ -173,7 +173,15 @@ class NotificationsViewModel: ObservableObject {
         switch event.kind {
         case 1,1111,1222,1244,4,20,9802,30023,34235,1311: // TODO: Should check if not muted or blocked
             let before = needsUpdate
-            needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == pubkey })
+            let isMention = event.flags != "is_update"
+                && event.pubkey != pubkey
+                && event.fastPs.contains(where: { $0.1 == pubkey })
+            needsUpdate = isMention
+            if isMention {
+                ViewUpdates.shared.feedUpdates.send(
+                    FeedUpdate(type: .Mentions, accountPubkey: pubkey)
+                )
+            }
             if needsUpdate && needsUpdate != before {
                 self.checkForUnreadMentions(accountData: accountData)
             }

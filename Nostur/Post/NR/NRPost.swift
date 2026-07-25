@@ -1312,9 +1312,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     @MainActor public func unpublish() {
         guard let cancellationId = ownPostAttributes.cancellationId else { return }
-        _ = Unpublisher.shared.cancel(cancellationId)
+        let didCancel = Unpublisher.shared.cancel(cancellationId, eventId: id)
         self.ownPostAttributes.objectWillChange.send()
         self.ownPostAttributes.cancellationId = nil
+        guard didCancel else {
+            self.ownPostAttributes.flags = ""
+            L.og.info("🔴🔴 Undo failed: queued event not found")
+            return
+        }
         let postKind = self.kind
         let postPubkey = self.pubkey
         let postReplyToId = self.replyToPostOrZapId
@@ -1344,7 +1349,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     @MainActor public func sendNow() {
         guard let cancellationId = ownPostAttributes.cancellationId else { return }
-        let didSend = Unpublisher.shared.sendNow(cancellationId)
+        let didSend = Unpublisher.shared.sendNow(cancellationId, eventId: id)
         self.ownPostAttributes.objectWillChange.send()
         self.ownPostAttributes.cancellationId = nil
         self.ownPostAttributes.flags = ""

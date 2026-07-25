@@ -80,19 +80,24 @@ class Unpublisher {
         sendToRelays(nEvent, skipDB: skipDB, lockToThisRelay: lockToThisRelay)
     }
     
-    func cancel(_ cancellationId: UUID) -> Bool {
+    func cancel(_ cancellationId: UUID, eventId: String? = nil) -> Bool {
         let beforeCount = queue.count
-        queue.removeAll(where: { $0.cancellationId == cancellationId })
+        queue.removeAll {
+            $0.cancellationId == cancellationId
+                || (eventId != nil && $0.nEvent.id == eventId)
+        }
         return beforeCount != queue.count
     }
     
-    func sendNow(_ cancellationId: UUID) -> Bool {
-        let beforeCount = queue.count
-        if let queued = queue.first(where: { $0.cancellationId == cancellationId }) {
-            queue.removeAll(where: { $0.cancellationId == cancellationId })
-            sendToRelays(queued.nEvent, lockToThisRelay: queued.lockToThisRelay)
-        }
-        return beforeCount != queue.count
+    func sendNow(_ cancellationId: UUID, eventId: String? = nil) -> Bool {
+        guard let queued = queue.first(where: {
+            $0.cancellationId == cancellationId
+                || (eventId != nil && $0.nEvent.id == eventId)
+        }) else { return false }
+
+        queue.removeAll { $0.nEvent.id == queued.nEvent.id }
+        sendToRelays(queued.nEvent, lockToThisRelay: queued.lockToThisRelay)
+        return true
     }
     
     @objc func onNextTick(notification: NSNotification) {
