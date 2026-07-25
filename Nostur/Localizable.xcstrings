@@ -9315,6 +9315,9 @@
         }
       }
     },
+    "Delete repost" : {
+      "comment" : "Post context menu action to delete your repost"
+    },
     "Deleting in %lld seconds" : {
       "comment" : "Text that is counting down when you are deleting your account",
       "localizations" : {
@@ -12923,6 +12926,9 @@
           }
         }
       }
+    },
+    "Image is larger than 50 MB, not loaded." : {
+
     },
     "Image uploading" : {
       "comment" : "Setting heading on settings screen",
