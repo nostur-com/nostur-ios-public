@@ -995,7 +995,7 @@ struct Maintenance {
         guard !Self.didRun(migrationCode: migrationCode.backfillGiftwrappedReactionGroupIds, context: context) else { return }
 
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 7 AND otherId != nil AND kTag IN {14,15} AND groupId == nil")
+        fr.predicate = NSPredicate(format: "kind == 7 AND otherId != nil AND kTag IN {4,14,15} AND groupId == nil")
 
         var fixed = 0
         if let reactions = try? context.fetch(fr) {
@@ -1027,21 +1027,35 @@ struct Maintenance {
     }
 
     // Repair private post reactions that were mistaken for DM reactions solely
-    // because they arrived inside a gift wrap.
+    // because they arrived inside a gift wrap. Candidate set is small (giftwrapped
+    // kind-7 with groupId and non-DM k); resolve target only for those rows so
+    // legitimate no-k DM reactions keep their groupId when the target is a DM.
     static func runClearPrivatePostReactionGroupIds(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.clearPrivatePostReactionGroupIds, context: context) else { return }
 
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 7 AND otherId != nil AND NOT kTag IN {14,15} AND groupId != nil")
+        fr.predicate = NSPredicate(format: "kind == 7 AND otherId != nil AND NOT kTag IN {4,14,15} AND groupId != nil")
 
         var fixed = 0
+        var keptAsDM = 0
         if let reactions = try? context.fetch(fr) {
-            L.maintenance.info("🧹🧹 runClearPrivatePostReactionGroupIds: Found \(reactions.count) misclassified private post reactions")
+            L.maintenance.info("🧹🧹 runClearPrivatePostReactionGroupIds: Found \(reactions.count) candidates")
             for reaction in reactions {
+                let targetId = reaction.reactionToId ?? reaction.lastE()
+                if let targetId,
+                   let target = Event.fetchEvent(id: targetId, context: context),
+                   target.groupId != nil || DM_REACTION_TARGET_KINDS.contains(target.kind) {
+                    // Legitimate DM reaction missing k — keep groupId, backfill k
+                    if reaction.kTag == 0 {
+                        reaction.kTag = target.kind
+                    }
+                    keptAsDM += 1
+                    continue
+                }
                 reaction.groupId = nil
                 fixed += 1
             }
-            L.maintenance.info("🧹🧹 runClearPrivatePostReactionGroupIds: Fixed \(fixed) reactions")
+            L.maintenance.info("🧹🧹 runClearPrivatePostReactionGroupIds: Cleared \(fixed) post reactions, kept \(keptAsDM) as DM")
         }
 
         let migration = Migration(context: context)

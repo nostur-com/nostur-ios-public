@@ -10,12 +10,12 @@ import CoreData
 import NostrEssentials
 
 // Kind 4 handling, for now we can reuse for kind 14 and kind 15 (file messages)
-func handleDM(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, context: NSManagedObjectContext) {
+func handleDM(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, isDMReaction: Bool = false, context: NSManagedObjectContext) {
     guard nEvent.kind == .legacyDirectMessage || nEvent.kind == .directMessage || nEvent.kind == .fileMessage || nEvent.kind == .reaction else { return }
-    // Gift wrapping is only the transport. A kind-7 is a DM reaction only when
-    // it explicitly targets a NIP-17 DM message (kind 14/15); private post
-    // reactions are also gift-wrapped but must remain regular reactions.
-    guard nEvent.kind != .reaction || (wrapId != nil && [14, 15].contains(savedEvent.kTag)) else { return }
+    // Kind-7: only continue when classification already decided this is a DM reaction
+    // (k-tag 4/14/15, or giftwrap + target lookup). Gift wrap alone is not enough —
+    // private post reactions are also gift-wrapped.
+    guard nEvent.kind != .reaction || isDMReaction else { return }
     
     // needed to fetch contact in DMS: so event.firstP is in event.contacts
     

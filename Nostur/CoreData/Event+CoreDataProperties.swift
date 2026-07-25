@@ -1131,13 +1131,17 @@ extension Event {
         }
         
         // Specific handling per kind
+        // Classify kind-7 once (k-tag first; giftwrap+missing-k may do one target fetch)
+        let isDMReaction = event.kind == .reaction
+            ? isDMReactionEvent(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, context: context)
+            : false
         handleZap(nEvent: event, savedEvent: savedEvent, context: context)
-        handleReaction(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, context: context)
-        handleDMReaction(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, context: context)
+        handleReaction(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, isDM: isDMReaction, context: context)
+        handleDMReaction(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, isDM: isDMReaction, context: context)
         handleTextPost(nEvent: event, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
         handlePostRelations(nEvent: event, savedEvent: savedEvent, context: context)
         handleRepost(nEvent: event, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
-        handleDM(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, context: context)
+        handleDM(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, isDMReaction: isDMReaction, context: context)
         handleReplacableEvent(nEvent: event, context: context)
         handleAddressableReplacableEvent(nEvent: event, savedEvent: savedEvent, context: context)
         handleDelete(nEvent: event, context: context)
