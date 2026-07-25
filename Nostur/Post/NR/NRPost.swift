@@ -1102,9 +1102,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                                 return nrPost
                             }
   
-                    if (self.withGroupedReplies) {
+                    if self.withGroupedReplies {
                         DispatchQueue.main.async { [weak self] in
-                            self?.groupRepliesToRoot.send(nrReplies)
+                            // The replies snapshot is produced while the imported event's
+                            // relationships are still being updated. For grouped/nested
+                            // threads, refetch the direct and root replies together so an
+                            // open detail view gets the same complete tree as reopening it.
+                            self?.loadGroupedReplies()
                         }
                     }
                     else {
@@ -1570,7 +1574,10 @@ extension NRPost { // Helpers for grouped replies
     private func repliesToRootListener() {
         guard repliesToRootSubscription == nil else { return }
 
-        let id = self.id
+        // Descendants of a reply still publish their inverse relation update
+        // against the original thread root. Listen there so a detail view whose
+        // subject is itself a reply also receives newly added grandchildren.
+        let id = self.replyToRootId ?? self.id
         repliesToRootSubscription = ViewUpdates.shared.eventRelationUpdate
             .filter { $0.id == id && $0.relationType == .replyToRootInverse }
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
