@@ -27,7 +27,7 @@ struct AppearanceSettings: View {
                         VStack(alignment: .leading) {
                             MacTextSizePicker()
                             
-                            Text("Larger post text and UI labels on Mac", comment: "Setting on settings screen")
+                            Text("Larger post text", comment: "Setting on settings screen")
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                         }

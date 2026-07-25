@@ -13492,7 +13492,7 @@
     "Large" : {
       "comment" : "Mac text size setting: large"
     },
-    "Larger post text and UI labels on Mac" : {
+    "Larger post text" : {
       "comment" : "Setting on settings screen"
     },
     "Last 1 hour" : {
@@ -14254,7 +14254,7 @@
       }
     },
     "Load anyway" : {
-      "comment" : "Button to show the blocked content anyway",
+      "comment" : "Button to play a short video despite low data mode\nButton to show the blocked content anyway",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -14432,7 +14432,7 @@
       }
     },
     "Loading paused (Low data mode)" : {
-      "comment" : "Displayed when media in a post is blocked",
+      "comment" : "Displayed when a short video is blocked\nDisplayed when media in a post is blocked",
       "localizations" : {
         "es" : {
           "stringUnit" : {
