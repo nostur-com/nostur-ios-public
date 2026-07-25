@@ -16,6 +16,11 @@ let CONTROLS_HEIGHT: CGFloat = 60.0
 let FULLSCREEN_CONTROLS_HEIGHT: CGFloat = 86.0
 let TOOLBAR_HEIGHT: CGFloat = 160.0 // TODO: Fix magic number 160 or make sure its correct. This fixes "close" button and toolbar missing because video height is too high
 
+private struct ShareableVideo: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
 struct OverlayPlayer: View {
     
     @Environment(\.theme) private var theme
@@ -112,6 +117,9 @@ struct OverlayPlayer: View {
     // State variables for saving video
     @State private var isSaving = false
     @State private var didSave = false
+    @State private var isSharing = false
+    @State private var shareableVideo: ShareableVideo?
+    @State private var temporarySharedVideoURL: URL?
     @State private var bookmarkState = false
     
     private var hasSeekableDuration: Bool {
@@ -427,6 +435,18 @@ struct OverlayPlayer: View {
             }
             
             if !vm.isStream {
+                controlButton(systemName: "square.and.arrow.up", label: "Share Video") {
+                    shareVideo()
+                }
+                .overlay {
+                    if isSharing {
+                        ProgressView()
+                            .tint(.white)
+                    }
+                }
+                .disabled(isSaving || isSharing)
+                .opacity(isSharing ? 0.7 : 1)
+
                 Menu(content: {
                     Button("Save to Photo Library", systemImage: "square.and.arrow.down") {
                         saveAVAssetToPhotos()
@@ -463,7 +483,7 @@ struct OverlayPlayer: View {
                             .frame(width: 32, height: 32)
                     }
                 })
-                .disabled(isSaving)
+                .disabled(isSaving || isSharing)
                 .buttonStyle(.plain)
             }
         }
@@ -753,6 +773,23 @@ struct OverlayPlayer: View {
                                         .foregroundColor(theme.accent)
                                     }
                                 }
+
+                                // SHARE BUTTON
+                                ToolbarItem(placement: .topBarTrailing) {
+                                    if !vm.isStream && vm.viewMode == .detailstream, !vm.isNativePictureInPictureActive {
+                                        Button("Share Video", systemImage: "square.and.arrow.up") {
+                                            shareVideo()
+                                        }
+                                        .disabled(isSaving || isSharing)
+                                        .overlay {
+                                            if isSharing {
+                                                ProgressView()
+                                                    .tint(theme.accent)
+                                            }
+                                        }
+                                        .foregroundColor(theme.accent)
+                                    }
+                                }
                                 
                                 // SAVE BUTTON
                                 ToolbarItem(placement: .topBarTrailing) {
@@ -797,7 +834,7 @@ struct OverlayPlayer: View {
                                                     .offset(y: -6)
                                             }
                                         })
-                                        .disabled(isSaving)
+                                        .disabled(isSaving || isSharing)
                                         .font(.title2)
                                         .foregroundColor(theme.accent)
                                     }
@@ -1054,6 +1091,9 @@ struct OverlayPlayer: View {
                     else {
                         bookmarkState = false
                     }
+                }
+                .sheet(item: $shareableVideo, onDismiss: cleanupSharedVideo) { video in
+                    ActivityView(activityItems: [video.url])
                 }
             }
         }
@@ -1496,6 +1536,39 @@ struct OverlayPlayer: View {
             }
         }
     }
+
+    private func shareVideo() {
+        guard !isSaving, !isSharing else { return }
+        isSharing = true
+        vm.downloadProgress = 0
+
+        Task {
+            guard let avAsset = await vm.downloadVideo() else {
+                sendNotification(.anyStatus, ("Failed to get video", "APP_NOTICE"))
+                isSharing = false
+                return
+            }
+
+            exportAsset(avAsset) { exportedURL in
+                DispatchQueue.main.async {
+                    guard let exportedURL else {
+                        sendNotification(.anyStatus, ("Failed to export video", "APP_NOTICE"))
+                        isSharing = false
+                        return
+                    }
+                    temporarySharedVideoURL = exportedURL
+                    shareableVideo = ShareableVideo(url: exportedURL)
+                    isSharing = false
+                }
+            }
+        }
+    }
+
+    private func cleanupSharedVideo() {
+        guard let url = temporarySharedVideoURL else { return }
+        try? FileManager.default.removeItem(at: url)
+        temporarySharedVideoURL = nil
+    }
 }
 
 
@@ -1506,9 +1579,7 @@ func exportAsset(_ asset: AVAsset, completion: @escaping (URL?) -> Void) {
     }
 
     let exportDirectory = FileManager.default.temporaryDirectory
-    let exportURL = exportDirectory.appendingPathComponent("exportedVideo.mp4")
-
-    try? FileManager.default.removeItem(at: exportURL)
+    let exportURL = exportDirectory.appendingPathComponent("nostur_shared_\(UUID().uuidString).mp4")
 
     exportSession.outputURL = exportURL
     exportSession.outputFileType = .mp4

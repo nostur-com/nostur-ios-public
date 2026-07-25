@@ -258,48 +258,54 @@ struct GalleryFullScreenSwiper: View {
     }
     
     private var saveButton: some View {
-        // Save button
-        Menu(content: {
-            Button("Save to Photo Library") {
-                saveCurrentImageToPhotos()
+        HStack(spacing: 8) {
+            Button {
+                shareCurrentMedia()
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .foregroundColor(.white)
+                    .padding(10)
             }
-            .foregroundColor(theme.accent)
-            
-            if !isEncrypted, let activeIndex = activeIndex, activeIndex < items.count {
-                Button("Copy image URL") {
-                    UIPasteboard.general.string = items[activeIndex].url.absoluteString
-                    sendNotification(.anyStatus, ("Image URL copied to clipboard", "APP_NOTICE"))
+            .accessibilityLabel("Share")
+
+            // Save button
+            Menu(content: {
+                Button("Save to Photo Library") {
+                    saveCurrentImageToPhotos()
                 }
                 .foregroundColor(theme.accent)
-            }
-            
-            Button("Share...") {
-                shareCurrentMedia()
-            }
-            .foregroundColor(theme.accent)
-        }, label: {
-            Group {
-                if isSaving {
-                    ProgressView()
-                        .foregroundColor(.white)
-                        .tint(.white)
-                        .padding(10)
+
+                if !isEncrypted, let activeIndex = activeIndex, activeIndex < items.count {
+                    Button("Copy image URL") {
+                        UIPasteboard.general.string = items[activeIndex].url.absoluteString
+                        sendNotification(.anyStatus, ("Image URL copied to clipboard", "APP_NOTICE"))
+                    }
+                    .foregroundColor(theme.accent)
                 }
-                else if didSave {
-                    Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
-                        .foregroundColor(.white)
-                        .padding(10)
-                        .offset(y: -2)
+            }, label: {
+                Group {
+                    if isSaving {
+                        ProgressView()
+                            .foregroundColor(.white)
+                            .tint(.white)
+                            .padding(10)
+                    }
+                    else if didSave {
+                        Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
+                            .foregroundColor(.white)
+                            .padding(10)
+//                            .offset(y: -2)
+                    }
+                    else {
+                        Image(systemName: "square.and.arrow.down")
+                            .foregroundColor(.white)
+                            .padding(10)
+//                            .offset(y: -6)
+                    }
                 }
-                else {
-                    Image(systemName: "square.and.arrow.down")
-                        .foregroundColor(.white)
-                        .padding(10)
-                        .offset(y: -6)
-                }
-            }
-        })
-        .disabled(isSaving)
+            })
+            .disabled(isSaving)
+        }
         .font(.title2)
         .padding(.trailing, 10)
         .padding(.top, 10)
