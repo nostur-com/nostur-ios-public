@@ -12,6 +12,7 @@ import NukeUI
 import Nuke
 import NukeVideo
 import MediaPlayer
+import UniformTypeIdentifiers
 
 class AnyPlayerModel: ObservableObject {
     
@@ -19,6 +20,7 @@ class AnyPlayerModel: ObservableObject {
     
     // MARK: - State Variables
     @Published var player = AVPlayer()
+    private var hlsResourceLoaderDelegate: ZapStreamHLSResourceLoader?
     @Published var isPlaying = false
     @Published var didFinishPlaying = false // to show Like/Zap
     @Published var showsPlaybackControls = false
@@ -199,7 +201,9 @@ class AnyPlayerModel: ObservableObject {
             player.automaticallyWaitsToMinimizeStalling = false
             self.currentlyPlayingUrl = url.absoluteString
             Task.detached(priority: .userInitiated) {
-                let playerItem = AVPlayerItem(url: url)
+                let playerItem = await MainActor.run {
+                    self.makePlayerItem(for: url)
+                }
                 Task { @MainActor in
                     self.player.replaceCurrentItem(with: playerItem)
                     self.setupRemoteControl()
@@ -239,7 +243,9 @@ class AnyPlayerModel: ObservableObject {
             self.cachedFirstFrame = cachedFirstFrame
             
             if self.isStream {
-                let playerItem = AVPlayerItem(url: url)
+                let playerItem = await MainActor.run {
+                    self.makePlayerItem(for: url)
+                }
                 Task { @MainActor in
                     self.player.replaceCurrentItem(with: playerItem)
                     self.setupRemoteControl()
@@ -341,6 +347,20 @@ class AnyPlayerModel: ObservableObject {
         Task {
             await setupNowPlayingInfo(artist: nrPost?.anyName, mediaType: .anyVideo, duration: cachedFirstFrame?.duration?.seconds, pfpUrl: nrPost?.contact.pictureUrl, thumb: cachedFirstFrame?.uiImage )
         }
+    }
+
+    @MainActor
+    private func makePlayerItem(for url: URL) -> AVPlayerItem {
+        guard ZapStreamHLSResourceLoader.needsWorkaround(url) else {
+            hlsResourceLoaderDelegate = nil
+            return AVPlayerItem(url: url)
+        }
+
+        let resourceLoaderDelegate = ZapStreamHLSResourceLoader()
+        hlsResourceLoaderDelegate = resourceLoaderDelegate
+        let asset = AVURLAsset(url: resourceLoaderDelegate.interceptedURL(for: url))
+        asset.resourceLoader.setDelegate(resourceLoaderDelegate, queue: resourceLoaderDelegate.queue)
+        return AVPlayerItem(asset: asset)
     }
     
     func setupRemoteControl() {
@@ -761,4 +781,110 @@ enum AnyPlayerViewMode {
     case detailstream
     case fullscreen
     case audioOnlyBar
+}
+
+/// zap.stream currently emits LL-HLS playlists that AVPlayer cannot consume
+/// reliably. Intercepting only zap.stream assets lets us expose their complete
+/// segments as standard HLS while media bytes still come directly from the host.
+private final class ZapStreamHLSResourceLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecked Sendable {
+    static let interceptedScheme = "nostur-zap-hls"
+    let queue = DispatchQueue(label: "com.nostur.zap-stream-hls-loader", qos: .userInitiated)
+
+    static func needsWorkaround(_ url: URL) -> Bool {
+        guard url.pathExtension.lowercased() == "m3u8",
+              let host = url.host?.lowercased() else { return false }
+        return host == "zap.stream" || host.hasSuffix(".zap.stream")
+    }
+
+    func interceptedURL(for url: URL) -> URL {
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+        components.scheme = Self.interceptedScheme
+        return components.url!
+    }
+
+    private func originURL(for url: URL) -> URL? {
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        components?.scheme = "https"
+        return components?.url
+    }
+
+    func resourceLoader(
+        _ resourceLoader: AVAssetResourceLoader,
+        shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest
+    ) -> Bool {
+        guard let interceptedURL = loadingRequest.request.url,
+              let originURL = originURL(for: interceptedURL) else {
+            return false
+        }
+
+        // AVFoundation permits custom-scheme HLS playlists, but media segments
+        // must be redirected back to HTTP(S). Returning their bytes directly
+        // fails with CoreMedia -12881 ("custom url not redirect").
+        guard originURL.pathExtension.lowercased() == "m3u8" else {
+            loadingRequest.redirect = URLRequest(url: originURL)
+            loadingRequest.response = HTTPURLResponse(
+                url: interceptedURL,
+                statusCode: 302,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Location": originURL.absoluteString]
+            )
+            loadingRequest.finishLoading()
+            return true
+        }
+
+        var request = URLRequest(url: originURL)
+        if let dataRequest = loadingRequest.dataRequest {
+            let offset = max(dataRequest.currentOffset, dataRequest.requestedOffset)
+            let end = offset + Int64(dataRequest.requestedLength) - 1
+            request.setValue("bytes=\(offset)-\(end)", forHTTPHeaderField: "Range")
+        }
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error {
+                loadingRequest.finishLoading(with: error)
+                return
+            }
+            guard let data, let response else {
+                loadingRequest.finishLoading(with: URLError(.badServerResponse))
+                return
+            }
+
+            var responseData = data
+            if let playlist = String(data: data, encoding: .utf8) {
+                responseData = Self.correctedPlaylist(playlist).data(using: .utf8) ?? data
+            }
+
+            if let contentInformation = loadingRequest.contentInformationRequest {
+                contentInformation.contentType = response.mimeType
+                    .flatMap { UTType(mimeType: $0)?.identifier }
+                contentInformation.contentLength = Int64(responseData.count)
+                contentInformation.isByteRangeAccessSupported = true
+            }
+            loadingRequest.dataRequest?.respond(with: responseData)
+            loadingRequest.finishLoading()
+        }.resume()
+        return true
+    }
+
+    static func correctedPlaylist(_ playlist: String) -> String {
+        let lowLatencyPrefixes = [
+            "#EXT-X-PART-INF:",
+            "#EXT-X-SERVER-CONTROL:",
+            "#EXT-X-PART:",
+            "#EXT-X-PRELOAD-HINT:",
+            "#EXT-X-RENDITION-REPORT:"
+        ]
+        let corrected = playlist
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .filter { line in
+                !lowLatencyPrefixes.contains { line.hasPrefix($0) }
+            }
+            .joined(separator: "\n")
+
+        // Absolute child-playlist and segment URLs must keep going through this
+        // loader; relative URLs automatically inherit the intercepted scheme.
+        return corrected
+            .replacingOccurrences(of: "https://", with: "\(interceptedScheme)://")
+            .replacingOccurrences(of: "http://", with: "\(interceptedScheme)://")
+    }
 }
