@@ -62,6 +62,15 @@ struct ThemePicker: View {
             Text("App theme")
         }
         .pickerStyleCompatNavigationLink()
+        // Selected value is a Label (circle + name). Without this, Form aligns the
+        // row separator to that trailing Label and only draws a short stub under it.
+        .modifier {
+            if #available(iOS 16, *) {
+                $0.alignmentGuide(.listRowSeparatorLeading) { d in d[.leading] }
+            } else {
+                $0
+            }
+        }
         .onChange(of: selectedTheme) { theme in
             // switch .load
             
