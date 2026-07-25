@@ -28,7 +28,7 @@ public typealias SymbolicTraits = UIFontDescriptor.SymbolicTraits
 public typealias SystemTextView = UITextView
 public typealias SystemScrollView = UIScrollView
 
-let defaultEditorFont = UIFont.preferredFont(forTextStyle: .body)
+var defaultEditorFont: UIFont { UIFont.nosturBody() }
 let defaultEditorTextColor = UIColor.label
 
 #endif

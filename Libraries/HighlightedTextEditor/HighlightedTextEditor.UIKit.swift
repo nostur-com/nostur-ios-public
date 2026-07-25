@@ -207,7 +207,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
                 makeToolbar(textView, context: context)
             }
         }
-        textView.font = UIFont.systemFont(ofSize: UIFont.systemFontSize + 4.0)
+        textView.font = UIFont.nosturBody()
+        textView.adjustsFontForContentSizeCategory = true
         
         updateTextViewModifiers(textView)
         if (shouldBecomeFirstResponder) {
@@ -220,6 +221,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         uiView.isScrollEnabled = false
         context.coordinator.updatingUIView = true
         context.coordinator.parent = self
+        uiView.font = UIFont.nosturBody()
         
         uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Themes.default.theme.listBackground)
         
