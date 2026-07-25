@@ -20,7 +20,7 @@ class AnyPlayerModel: ObservableObject {
     
     // MARK: - State Variables
     @Published var player = AVPlayer()
-    private var hlsResourceLoaderDelegate: ZapStreamHLSResourceLoader?
+    private var hlsResourceLoaderDelegate: CompatibleHLSResourceLoader?
     @Published var isPlaying = false
     @Published var didFinishPlaying = false // to show Like/Zap
     @Published var showsPlaybackControls = false
@@ -351,12 +351,12 @@ class AnyPlayerModel: ObservableObject {
 
     @MainActor
     private func makePlayerItem(for url: URL) -> AVPlayerItem {
-        guard ZapStreamHLSResourceLoader.needsWorkaround(url) else {
+        guard CompatibleHLSResourceLoader.canLoad(url) else {
             hlsResourceLoaderDelegate = nil
             return AVPlayerItem(url: url)
         }
 
-        let resourceLoaderDelegate = ZapStreamHLSResourceLoader()
+        let resourceLoaderDelegate = CompatibleHLSResourceLoader()
         hlsResourceLoaderDelegate = resourceLoaderDelegate
         let asset = AVURLAsset(url: resourceLoaderDelegate.interceptedURL(for: url))
         asset.resourceLoader.setDelegate(resourceLoaderDelegate, queue: resourceLoaderDelegate.queue)
@@ -783,28 +783,37 @@ enum AnyPlayerViewMode {
     case audioOnlyBar
 }
 
-/// zap.stream currently emits LL-HLS playlists that AVPlayer cannot consume
-/// reliably. Intercepting only zap.stream assets lets us expose their complete
-/// segments as standard HLS while media bytes still come directly from the host.
-private final class ZapStreamHLSResourceLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecked Sendable {
-    static let interceptedScheme = "nostur-zap-hls"
-    let queue = DispatchQueue(label: "com.nostur.zap-stream-hls-loader", qos: .userInitiated)
+/// Makes malformed or unsupported LL-HLS output consumable by AVPlayer by
+/// exposing complete segments as standard HLS. Standard HLS playlists pass
+/// through unchanged, apart from URL interception.
+private final class CompatibleHLSResourceLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecked Sendable {
+    static let interceptedPlainScheme = "nostur-hls-http"
+    static let interceptedSecureScheme = "nostur-hls-https"
+    let queue = DispatchQueue(label: "com.nostur.compatible-hls-loader", qos: .userInitiated)
 
-    static func needsWorkaround(_ url: URL) -> Bool {
-        guard url.pathExtension.lowercased() == "m3u8",
-              let host = url.host?.lowercased() else { return false }
-        return host == "zap.stream" || host.hasSuffix(".zap.stream")
+    static func canLoad(_ url: URL) -> Bool {
+        url.pathExtension.lowercased() == "m3u8"
+            && (url.scheme == "http" || url.scheme == "https")
     }
 
     func interceptedURL(for url: URL) -> URL {
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
-        components.scheme = Self.interceptedScheme
+        components.scheme = url.scheme == "http"
+            ? Self.interceptedPlainScheme
+            : Self.interceptedSecureScheme
         return components.url!
     }
 
     private func originURL(for url: URL) -> URL? {
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        components?.scheme = "https"
+        switch url.scheme {
+        case Self.interceptedSecureScheme:
+            components?.scheme = "https"
+        case Self.interceptedPlainScheme:
+            components?.scheme = "http"
+        default:
+            return nil
+        }
         return components?.url
     }
 
@@ -884,7 +893,7 @@ private final class ZapStreamHLSResourceLoader: NSObject, AVAssetResourceLoaderD
         // Absolute child-playlist and segment URLs must keep going through this
         // loader; relative URLs automatically inherit the intercepted scheme.
         return corrected
-            .replacingOccurrences(of: "https://", with: "\(interceptedScheme)://")
-            .replacingOccurrences(of: "http://", with: "\(interceptedScheme)://")
+            .replacingOccurrences(of: "https://", with: "\(interceptedSecureScheme)://")
+            .replacingOccurrences(of: "http://", with: "\(interceptedPlainScheme)://")
     }
 }
