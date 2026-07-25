@@ -59,6 +59,10 @@ enum NestedThreadMetrics {
     /// Flip to `true` to show orange per-row nest debug labels in the UI.
     static let showDebugLabels = false
     
+    /// Hierarchical path badge on each reply PFP (e.g. `1.3.2`) for discussing nest layout.
+    /// Set to `false` when done debugging.
+    static let showPathLabels = true
+    
     static let lineWidth: CGFloat = 2.0
     /// Hit-test width for tap-to-collapse on the tree rail (kept outside Box navigation).
     static let railHitWidth: CGFloat = 32.0
@@ -88,41 +92,57 @@ enum NestedThreadMetrics {
         stepInset + DIMENSIONS.BOX_PADDING
     }
     
-    // MARK: - Tapered indentation
+    // MARK: - Branch-only indentation
     //
-    // Level 1 (under a top-level reply) uses firstLevelInset.
-    // Level 2+ uses deepLevelInset (slightly tighter).
-    // Cumulative indent is capped so deep threads do not run off-screen.
+    // Indent only when a parent has *multiple* children (a real branch).
+    // Linear chains (single reply → single reply → …) stay flush and share one
+    // straight spine — they do not consume indent budget.
+    // After a branch step, further linear descendants stay at that inset.
+    // Cumulative branch indent is capped so deep multi-branch trees do not run off-screen.
     
-    /// First nesting step (parent depth 0 → child depth 1).
-    static let firstLevelInset: CGFloat = 32.0
+    /// Horizontal step applied at each multi-child branch.
+    static let branchInset: CGFloat = 32.0
     
-    /// Deeper nesting steps (parent depth ≥ 1).
-    static let deepLevelInset: CGFloat = 30.0
+    /// Minimum step worth drawing as an L-branch (below this, treat as no indent).
+    static let minUsefulStep: CGFloat = 12.0
     
-    /// Stop growing indent after first + two deep steps.
+    /// Cap total indent from successive branches (≈ 3 branch steps).
     static var maxCumulativeInset: CGFloat {
-        firstLevelInset + deepLevelInset * 2
+        branchInset * 3
     }
     
-    /// Leading padding applied when nesting a child under a parent of `parentDepth`.
-    static func stepInset(fromParentDepth parentDepth: Int) -> CGFloat {
-        let childDepth = parentDepth + 1
-        return cumulativeInset(depth: childDepth) - cumulativeInset(depth: parentDepth)
+    /// Leading padding for a child given whether its parent branched and the
+    /// parent's current visual inset.
+    /// - Linear (parent has 1 child): `0` — straight spine, no indent.
+    /// - Branch (parent has 2+ children): `branchInset`, clamped to the remaining cap.
+    static func stepInset(
+        parentHasMultipleChildren: Bool,
+        currentVisualInset: CGFloat
+    ) -> CGFloat {
+        guard parentHasMultipleChildren else { return 0 }
+        let remaining = maxCumulativeInset - currentVisualInset
+        guard remaining >= minUsefulStep else { return 0 }
+        return min(branchInset, remaining)
     }
     
-    /// Total leading inset for a node at `depth` (0 = top-level reply under the detail post).
-    static func cumulativeInset(depth: Int) -> CGFloat {
-        guard depth > 0 else { return 0 }
-        let raw = firstLevelInset + CGFloat(depth - 1) * deepLevelInset
-        return min(raw, maxCumulativeInset)
+    /// How to draw the connector into a child.
+    enum RailStyle {
+        /// Parent has one child: vertical spine only, no indent.
+        case linear
+        /// Parent has multiple children and we have room to indent: classic L-rail.
+        case branch
+        /// Parent has multiple children but indent is capped: no L (avoids overlapping arms).
+        case flatBranch
     }
     
-    /// Horizontal run from parent spine to child spine for a given step inset.
-    static func branchWidth(stepInset: CGFloat) -> CGFloat {
-        max(lineWidth, branchEndX(stepInset: stepInset) - spineX)
+    static func railStyle(
+        parentHasMultipleChildren: Bool,
+        stepInset: CGFloat
+    ) -> RailStyle {
+        if !parentHasMultipleChildren { return .linear }
+        if stepInset >= minUsefulStep { return .branch }
+        return .flatBranch
     }
     
-    static let maxVisualDepth: Int = 8
     static let maxNodes: Int = 200
 }

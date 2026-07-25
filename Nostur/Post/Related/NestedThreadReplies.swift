@@ -4,6 +4,12 @@
 //
 //  Nested replies with continuous tree rails.
 //
+//  Indentation is branch-only:
+//  - A linear chain (one reply under another, repeatedly) stays flush with a
+//    straight vertical spine — no extra indent per level.
+//  - Indent (and an L-rail) is applied only when a parent has multiple children.
+//  - After that one step, further linear descendants under each sibling stay flat.
+//
 //  Collapse is per-node: tapping the tree line under a reply folds that reply
 //  plus all of its nested descendants. The collapsed post is replaced by
 //  "Show thread from Name (N)" (N includes the folded post). Sibling and
@@ -50,8 +56,8 @@ struct NestedThreadReplies: View {
                 Color.clear.frame(height: 30)
             }
             
-            ForEach(primaryNodes) { node in
-                NestedReplyRow(node: node)
+            ForEach(Array(primaryNodes.enumerated()), id: \.element.id) { index, node in
+                NestedReplyRow(node: node, path: "\(index + 1)", visualInset: 0)
             }
             
             if !secondaryNodes.isEmpty {
@@ -67,8 +73,10 @@ struct NestedThreadReplies: View {
                     .padding(.bottom, 10)
                 }
                 if showNotWoT || !WOT_FILTER_ENABLED() {
-                    ForEach(secondaryNodes) { node in
-                        NestedReplyRow(node: node)
+                    // Secondary list continues numbering after primary roots.
+                    let pathOffset = primaryNodes.count
+                    ForEach(Array(secondaryNodes.enumerated()), id: \.element.id) { index, node in
+                        NestedReplyRow(node: node, path: "\(pathOffset + index + 1)", visualInset: 0)
                     }
                 }
             }
@@ -88,15 +96,21 @@ struct NestedReplyRow: View {
     @Environment(\.availableWidth) private var availableWidth
     
     let node: NestedReplyNode
+    /// Hierarchical index for debug (e.g. `"1.3.2"`).
+    let path: String
+    /// Cumulative branch indent applied to this row (not logical depth).
+    let visualInset: CGFloat
     
     @State private var isCollapsed = false
     
     private var hasChildren: Bool { !node.children.isEmpty }
     
+    private var parentHasMultipleChildren: Bool { node.children.count > 1 }
+    
     private var lineColor: Color { theme.lineColor.opacity(0.65) }
     
     private var nestedAvailableWidth: CGFloat {
-        max(120, availableWidth - NestedThreadMetrics.cumulativeInset(depth: node.depth))
+        max(120, availableWidth - visualInset)
     }
     
     private var descendantCount: Int {
@@ -128,13 +142,26 @@ struct NestedReplyRow: View {
                 postBlock
                 
                 if hasChildren {
+                    let step = NestedThreadMetrics.stepInset(
+                        parentHasMultipleChildren: parentHasMultipleChildren,
+                        currentVisualInset: visualInset
+                    )
+                    let railStyle = NestedThreadMetrics.railStyle(
+                        parentHasMultipleChildren: parentHasMultipleChildren,
+                        stepInset: step
+                    )
+                    let childVisualInset = visualInset + step
+                    
                     VStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(node.children.enumerated()), id: \.element.id) { index, child in
                             NestedChildBranch(
                                 node: child,
+                                path: "\(path).\(index + 1)",
+                                visualInset: childVisualInset,
                                 isLastSibling: index == node.children.count - 1,
                                 lineColor: lineColor,
-                                stepInset: NestedThreadMetrics.stepInset(fromParentDepth: node.depth),
+                                stepInset: step,
+                                railStyle: railStyle,
                                 onRailTap: collapseSelf
                             )
                         }
@@ -168,6 +195,19 @@ struct NestedReplyRow: View {
                     bodySpine(onTap: collapseSelf)
                 }
             }
+            .overlay(alignment: .topLeading) {
+                if NestedThreadMetrics.showPathLabels {
+                    pathBadge
+                        // Center on the post PFP column.
+                        .frame(
+                            width: DIMENSIONS.POST_ROW_PFP_DIAMETER,
+                            height: DIMENSIONS.POST_ROW_PFP_DIAMETER
+                        )
+                        .padding(.leading, DIMENSIONS.BOX_PADDING)
+                        .padding(.top, DIMENSIONS.BOX_PADDING)
+                        .allowsHitTesting(false)
+                }
+            }
             
             if NestedThreadMetrics.showDebugLabels {
                 Text(node.debugLine)
@@ -178,6 +218,19 @@ struct NestedReplyRow: View {
                     .padding(.bottom, 2)
             }
         }
+    }
+    
+    /// Orange path chip for nest-layout debugging (e.g. `1.3.2`).
+    private var pathBadge: some View {
+        Text(path)
+            .font(.system(size: path.count > 6 ? 8 : 10, weight: .bold, design: .monospaced))
+            .foregroundColor(.white)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
+            .background(Color.orange.opacity(0.92))
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .shadow(color: .black.opacity(0.35), radius: 1, y: 0.5)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     private func bodySpine(onTap: @escaping () -> Void) -> some View {
@@ -219,11 +272,19 @@ struct NestedReplyRow: View {
             isCollapsed = false
         } label: {
             HStack(alignment: .center, spacing: 8) {
-                PFP(
-                    pubkey: node.nrPost.pubkey,
-                    nrContact: node.nrPost.contact,
-                    size: pfpSize
-                )
+                ZStack {
+                    PFP(
+                        pubkey: node.nrPost.pubkey,
+                        nrContact: node.nrPost.contact,
+                        size: pfpSize
+                    )
+                    .frame(width: pfpSize, height: pfpSize)
+                    
+                    if NestedThreadMetrics.showPathLabels {
+                        pathBadge
+                            .scaleEffect(0.85)
+                    }
+                }
                 .frame(width: pfpSize, height: pfpSize)
                 .allowsHitTesting(false)
                 
@@ -245,17 +306,21 @@ struct NestedReplyRow: View {
     }
 }
 
-/// Child under parent: content indented; L-rail in parent coordinates (aligned spine).
+/// Child under parent: optional indent + connector rail.
 /// Rail tap collapses the *parent* (the post this branch hangs from).
 ///
-/// Rails are overlaid in the indent gutter only: the L stops at the child Box /
-/// PFP left edge so ink never crosses avatars. A full `.background` rail would
-/// sit under the post’s opaque `listBackground` and disappear.
+/// Rail styles:
+/// - `.linear` — single child: vertical spine only, no indent
+/// - `.branch` — multi-child with room to indent: classic L into PFP
+/// - `.flatBranch` — multi-child at indent cap: no L (avoids overlapping arms)
 private struct NestedChildBranch: View {
     let node: NestedReplyNode
+    let path: String
+    let visualInset: CGFloat
     let isLastSibling: Bool
     let lineColor: Color
     let stepInset: CGFloat
+    let railStyle: NestedThreadMetrics.RailStyle
     let onRailTap: () -> Void
     
     private var yBranch: CGFloat { NestedThreadMetrics.branchY }
@@ -270,13 +335,15 @@ private struct NestedChildBranch: View {
     }
     
     var body: some View {
-        NestedReplyRow(node: node)
+        NestedReplyRow(node: node, path: path, visualInset: visualInset)
             .padding(.leading, stepInset)
             .fixedSize(horizontal: false, vertical: true)
             // Overlay so the rail is visible in the gutter; geometry is clipped
             // to end at the PFP column so it does not paint over avatars.
             .overlay {
-                connectingRail
+                if railStyle != .flatBranch {
+                    connectingRail
+                }
             }
     }
     
@@ -292,54 +359,84 @@ private struct NestedChildBranch: View {
                 }
                 return min(yBranch, max(cornerR + 1, h))
             }()
-            let endX = max(x + lineW + 4, branchEndX)
-            let r = min(cornerR, y - 2, max(0, endX - x - 2))
-            // Hit only where ink is drawn. A full-height column would steal taps
-            // meant for deeper rails that sit further to the right.
-            // Do not extend past endX into the PFP column — collapsed "Show thread"
-            // rows put a tappable avatar there that must expand, not collapse parent.
-            let verticalHitHeight = isLastSibling ? max(y, hit) : h
-            let horizontalHitWidth = max(0, endX - x)
             
             ZStack(alignment: .topLeading) {
-                Path { path in
-                    path.move(to: CGPoint(x: x, y: 0))
-                    path.addLine(to: CGPoint(x: x, y: max(0, y - r)))
-                    
-                    if r > 0 {
-                        path.addQuadCurve(
-                            to: CGPoint(x: x + r, y: y),
-                            control: CGPoint(x: x, y: y)
-                        )
-                    }
-                    
-                    path.addLine(to: CGPoint(x: endX, y: y))
-                    
-                    if !isLastSibling && h > y {
-                        path.move(to: CGPoint(x: x, y: y))
-                        path.addLine(to: CGPoint(x: x, y: h))
-                    }
+                switch railStyle {
+                case .linear:
+                    linearRail(height: h, spineX: x, midY: y)
+                case .branch:
+                    branchRail(height: h, spineX: x, midY: y)
+                case .flatBranch:
+                    EmptyView()
                 }
-                .stroke(lineColor, style: StrokeStyle(lineWidth: lineW, lineCap: .round, lineJoin: .round))
-                .allowsHitTesting(false)
-                
-                // Vertical segment of the L (and continuing spine for non-last siblings).
-                Color.clear
-                    .frame(width: hit, height: verticalHitHeight)
-                    .padding(.leading, x - hit / 2)
-                    .contentShape(Rectangle())
-                    .highPriorityGesture(TapGesture().onEnded(onRailTap))
-                    .accessibilityLabel(String(localized: "Collapse thread", comment: "A11y: tap tree line"))
-                
-                // Horizontal arm of the L into this child.
-                Color.clear
-                    .frame(width: horizontalHitWidth, height: hit)
-                    .padding(.leading, x)
-                    .padding(.top, max(0, y - hit / 2))
-                    .contentShape(Rectangle())
-                    .highPriorityGesture(TapGesture().onEnded(onRailTap))
-                    .accessibilityHidden(true)
             }
         }
+    }
+    
+    /// Straight vertical connector into a single-child chain (no indent, no L).
+    /// Into mid-PFP only; the child's bodySpine continues below when it has kids.
+    @ViewBuilder
+    private func linearRail(height h: CGFloat, spineX x: CGFloat, midY y: CGFloat) -> some View {
+        Path { path in
+            path.move(to: CGPoint(x: x, y: 0))
+            path.addLine(to: CGPoint(x: x, y: y))
+        }
+        .stroke(lineColor, style: StrokeStyle(lineWidth: lineW, lineCap: .square))
+        .allowsHitTesting(false)
+        
+        Color.clear
+            .frame(width: hit, height: max(y, hit))
+            .padding(.leading, x - hit / 2)
+            .contentShape(Rectangle())
+            .highPriorityGesture(TapGesture().onEnded(onRailTap))
+            .accessibilityLabel(String(localized: "Collapse thread", comment: "A11y: tap tree line"))
+    }
+    
+    /// Classic L-rail into an indented multi-child sibling.
+    @ViewBuilder
+    private func branchRail(height h: CGFloat, spineX x: CGFloat, midY y: CGFloat) -> some View {
+        let endX = max(x + lineW + 4, branchEndX)
+        let r = min(cornerR, y - 2, max(0, endX - x - 2))
+        // Hit only where ink is drawn. Do not extend past endX into the PFP column.
+        let verticalHitHeight = isLastSibling ? max(y, hit) : h
+        let horizontalHitWidth = max(0, endX - x)
+        
+        Path { path in
+            path.move(to: CGPoint(x: x, y: 0))
+            path.addLine(to: CGPoint(x: x, y: max(0, y - r)))
+            
+            if r > 0 {
+                path.addQuadCurve(
+                    to: CGPoint(x: x + r, y: y),
+                    control: CGPoint(x: x, y: y)
+                )
+            }
+            
+            path.addLine(to: CGPoint(x: endX, y: y))
+            
+            if !isLastSibling && h > y {
+                path.move(to: CGPoint(x: x, y: y))
+                path.addLine(to: CGPoint(x: x, y: h))
+            }
+        }
+        .stroke(lineColor, style: StrokeStyle(lineWidth: lineW, lineCap: .round, lineJoin: .round))
+        .allowsHitTesting(false)
+        
+        // Vertical segment of the L (and continuing spine for non-last siblings).
+        Color.clear
+            .frame(width: hit, height: verticalHitHeight)
+            .padding(.leading, x - hit / 2)
+            .contentShape(Rectangle())
+            .highPriorityGesture(TapGesture().onEnded(onRailTap))
+            .accessibilityLabel(String(localized: "Collapse thread", comment: "A11y: tap tree line"))
+        
+        // Horizontal arm of the L into this child.
+        Color.clear
+            .frame(width: horizontalHitWidth, height: hit)
+            .padding(.leading, x)
+            .padding(.top, max(0, y - hit / 2))
+            .contentShape(Rectangle())
+            .highPriorityGesture(TapGesture().onEnded(onRailTap))
+            .accessibilityHidden(true)
     }
 }

@@ -74,7 +74,9 @@ struct ComposePost: View {
         Container { // Needed because else we are stuck in ProgressView() forever
             if let account = vm.activeAccount {
                 if showAudioRecorder {
-                    VStack {
+                    // spacing 0 so only the composer top pad separates parent from composer;
+                    // that pad is filled by composerThreadBridge (matches PostLayout connect .top).
+                    VStack(spacing: 0) {
                         
                         if let replyToNRPost = replyToNRPost {
                             // Reply, so full-width false and connecting line to bottom
@@ -83,14 +85,16 @@ struct ComposePost: View {
                                 .onTapGesture { }
                         }
                         
-                    
-                        
-                     
-                        
                         HStack(alignment: .top) {
                             InlineAccountSwitcher(activeAccount: account, onChange: { account in
                                 vm.activeAccount = account
-                            }).equatable()
+                            })
+                            .equatable()
+                            .background(alignment: .top) {
+                                if replyToNRPost != nil {
+                                    composerThreadBridge
+                                }
+                            }
                             
                             VStack(alignment: .leading, spacing: 3) {
                                 if replyTo != nil {
@@ -110,7 +114,7 @@ struct ComposePost: View {
                                     .offset(x: 5.0, y: 4.0)
                             }
                         }
-                        .padding(.top, 10)
+                        .padding(.top, Self.composerThreadBridgeHeight)
                         
                         Spacer()
                         
@@ -423,7 +427,9 @@ struct ComposePost: View {
                                     }
                                     
                                 default: // (.textNote)
-                                    VStack {
+                                    // spacing 0 so only the composer top pad separates parent from composer;
+                                    // that pad is filled by composerThreadBridge (matches PostLayout connect .top).
+                                    VStack(spacing: 0) {
                                         if let replyToNRPost = replyToNRPost {
                                             // Reply, so full-width false and connecting line to bottom
                                             KindResolver(nrPost: replyToNRPost, fullWidth: false, hideFooter: true, missingReplyTo: true, isReply: false, isDetail: false, isEmbedded: false, connect: .bottom)
@@ -432,7 +438,6 @@ struct ComposePost: View {
                                                 .onTapGesture { }
                                         }
 
-
                                         HStack(alignment: .top) {
                                             InlineAccountSwitcher(
                                                 activeAccount: account,
@@ -440,13 +445,19 @@ struct ComposePost: View {
                                                 showAnonOption: (replyTo != nil && !vm.isPrivateReplyLocked),
                                                 isAnonSelected: vm.anonMode,
                                                 onSelectAnon: { vm.requestAnonMode() }
-                                            ).equatable()
+                                            )
+                                            .equatable()
+                                            .background(alignment: .top) {
+                                                if replyToNRPost != nil {
+                                                    composerThreadBridge
+                                                }
+                                            }
                                             
                                             textEntry
                                                 .frame(height: replyTo == nil && quotePost == nil ? max(50, (geo.size.height - 90)) : max(50, ((geo.size.height - 90) * 0.5 )) )
                                                 .id(textfield)
                                         }
-                                        .padding(.top, 10)
+                                        .padding(.top, replyToNRPost != nil ? Self.composerThreadBridgeHeight : 10)
                                         
                                         
                                         if let quotingNRPost = quotePost?.nrPost {
@@ -658,6 +669,18 @@ struct ComposePost: View {
         }
         .background(theme.listBackground)
         .environmentObject(VideoPostPlaybackCoordinator())
+    }
+    
+    /// Gap between parent post and composer PFP; bridge line height must match.
+    private static let composerThreadBridgeHeight: CGFloat = 10
+    
+    /// Short vertical segment above the composer PFP so `connect: .bottom` on the
+    /// parent post meets this row (same geometry as `PostLayout` connect `.top`).
+    private var composerThreadBridge: some View {
+        theme.lineColor
+            .frame(width: 1, height: Self.composerThreadBridgeHeight)
+            // Center of default 50pt account-switcher PFP (`background(alignment: .top)`).
+            .offset(x: -0.5, y: -Self.composerThreadBridgeHeight)
     }
     
     @ViewBuilder
