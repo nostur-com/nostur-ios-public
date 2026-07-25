@@ -320,7 +320,7 @@
       }
     },
     "--:--" : {
-
+      "shouldTranslate" : false
     },
     "-%@" : {
 
@@ -11079,7 +11079,27 @@
       }
     },
     "Extra Large" : {
-      "comment" : "Mac text size setting: extra large"
+      "comment" : "Mac text size setting: extra large",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra grande"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekstra besar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra groot"
+          }
+        }
+      }
     },
     "Failed to generate QR Code" : {
       "localizations" : {
@@ -12768,7 +12788,27 @@
       }
     },
     "Huge" : {
-      "comment" : "Mac text size setting: huge"
+      "comment" : "Mac text size setting: huge",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enorme"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sangat besar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supergroot"
+          }
+        }
+      }
     },
     "ID" : {
       "comment" : "Label for post identifier (ID)",
@@ -13490,10 +13530,50 @@
       "shouldTranslate" : false
     },
     "Large" : {
-      "comment" : "Mac text size setting: large"
+      "comment" : "Mac text size setting: large",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grande"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Besar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groter"
+          }
+        }
+      }
     },
     "Larger post text" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto de publicaciones más grande"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teks postingan lebih besar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beter leesbare tekst"
+          }
+        }
+      }
     },
     "Last 1 hour" : {
       "localizations" : {
@@ -24105,7 +24185,30 @@
         }
       }
     },
+    "Share Video" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir video"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan video"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video delen"
+          }
+        }
+      }
+    },
     "Share..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -26271,7 +26374,27 @@
       }
     },
     "Text size" : {
-      "comment" : "Setting on settings screen (Mac)"
+      "comment" : "Setting on settings screen (Mac)",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño del texto"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukuran teks"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekstgrootte"
+          }
+        }
+      }
     },
     "The account to post from. Defaults to the currently active account if not specified." : {
       "localizations" : {
