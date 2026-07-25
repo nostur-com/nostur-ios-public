@@ -211,22 +211,29 @@ struct NestedReplyRow: View {
     private var showThreadRepliesButton: some View {
         let count = threadPostCount
         let name = node.nrPost.anyName
-        let chevron = NestedThreadMetrics.collapsedChevronSize
-        // Left-align with the PFP column so the parent L-rail meets the chevron.
+        let pfpSize = NestedThreadMetrics.collapsedPfpSize
+        // Left-align with the PFP column so the parent L-rail meets the avatar.
+        // Entire row (PFP + label) expands; no chevron — parent rail hits used to
+        // steal chevron taps and collapse the parent instead.
         return Button {
             isCollapsed = false
         } label: {
             HStack(alignment: .center, spacing: 8) {
-                Image(systemName: "chevron.right.circle.fill")
-                    .font(.system(size: chevron, weight: .semibold))
-                    .frame(width: chevron, height: chevron)
+                PFP(
+                    pubkey: node.nrPost.pubkey,
+                    nrContact: node.nrPost.contact,
+                    size: pfpSize
+                )
+                .frame(width: pfpSize, height: pfpSize)
+                .allowsHitTesting(false)
+                
                 Text(String(localized: "Show thread from \(name) (\(count))", comment: "Expand collapsed reply thread; name and post count"))
                     .font(.caption.weight(.medium))
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .foregroundColor(theme.accent)
                 Spacer(minLength: 0)
             }
-            .foregroundColor(theme.accent)
             .padding(.leading, DIMENSIONS.BOX_PADDING)
             .padding(.trailing, 10)
             .padding(.vertical, 8)
@@ -257,7 +264,7 @@ private struct NestedChildBranch: View {
     private var hit: CGFloat { NestedThreadMetrics.railHitWidth }
     private var cornerR: CGFloat { NestedThreadMetrics.cornerRadius }
     
-    /// L arm ends at the left edge of the child PFP / chevron column.
+    /// L arm ends at the left edge of the child PFP column.
     private var branchEndX: CGFloat {
         NestedThreadMetrics.branchEndX(stepInset: stepInset)
     }
@@ -277,7 +284,7 @@ private struct NestedChildBranch: View {
         GeometryReader { geo in
             let h = geo.size.height
             let x = spineX
-            // Short collapsed rows: branch mid-row so the L hits the chevron.
+            // Short collapsed rows: branch mid-row so the L hits the small PFP.
             // Tall expanded posts: branch at mid-PFP.
             let y: CGFloat = {
                 if h < yBranch + 12 {
@@ -289,8 +296,10 @@ private struct NestedChildBranch: View {
             let r = min(cornerR, y - 2, max(0, endX - x - 2))
             // Hit only where ink is drawn. A full-height column would steal taps
             // meant for deeper rails that sit further to the right.
+            // Do not extend past endX into the PFP column — collapsed "Show thread"
+            // rows put a tappable avatar there that must expand, not collapse parent.
             let verticalHitHeight = isLastSibling ? max(y, hit) : h
-            let horizontalHitWidth = max(0, endX - x + hit / 2)
+            let horizontalHitWidth = max(0, endX - x)
             
             ZStack(alignment: .topLeading) {
                 Path { path in

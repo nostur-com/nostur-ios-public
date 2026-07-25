@@ -64,8 +64,8 @@ enum NestedThreadMetrics {
     static let railHitWidth: CGFloat = 32.0
     /// Corner radius for the L-branch into a child.
     static let cornerRadius: CGFloat = 8.0
-    /// Chevron in collapsed "Show thread…" rows (left-aligned with the PFP column).
-    static let collapsedChevronSize: CGFloat = 16.0
+    /// Small PFP in collapsed "Show thread…" rows (left-aligned with the PFP column).
+    static let collapsedPfpSize: CGFloat = 20.0
     
     /// Same X as `PostLayout` thread connect lines: Box pad + THREAD_LINE_OFFSET.
     static var spineX: CGFloat {
