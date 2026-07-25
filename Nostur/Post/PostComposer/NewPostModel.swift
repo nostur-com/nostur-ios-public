@@ -163,7 +163,11 @@ func enableAuthAndSendChallengeOnSingleRelay(usingAccount: CloudAccount? = nil) 
 }
 
 public final class NewPostModel: ObservableObject {
-    
+    enum ReplyPrivacy: Equatable {
+        case publicReply
+        case privateReply(to: String, locked: Bool)
+    }
+
     @Published var lockToSingleRelay: Bool = false {
         didSet {
             if lockToSingleRelay {
@@ -190,18 +194,43 @@ public final class NewPostModel: ObservableObject {
     private var uploadedImageImetasById: [String: Imeta] = [:]
     private var imageUploadCancellablesById: [String: AnyCancellable] = [:]
     var requiredP: String? = nil
+    private var privateReplyRecipient: String? = nil
     @Published var availableContacts: Set<NRContact> = [] // are available to toggle on/off for notifications
     
     @Published var previewNEvent: NEvent? // needed for AutoPilot preview (and probably should use this more and reduce use of Event)
     @Published var previewNRPost: NRPost?
     @Published var gifSheetShown = false
-    @Published var replyInPrivate: Bool = false
-    @Published var replyingToPrivatePost: Bool = false // Locks private reply on when replying to a private post
+    @Published private(set) var replyPrivacy: ReplyPrivacy = .publicReply
     @Published var recipientDMRelays: Set<String> = []
     @Published var ownDMRelays: Set<String> = []
+
+    var replyInPrivateTo: String? {
+        guard case let .privateReply(pubkey, _) = replyPrivacy else { return nil }
+        return pubkey
+    }
+
+    var isReplyInPrivate: Bool {
+        replyInPrivateTo != nil
+    }
+
+    var isPrivateReplyLocked: Bool {
+        guard case let .privateReply(_, locked) = replyPrivacy else { return false }
+        return locked
+    }
     
     var canReplyInPrivate: Bool {
-        !recipientDMRelays.isEmpty && !(activeAccount?.isNC ?? false)
+        isReplyInPrivate || (!recipientDMRelays.isEmpty && !(activeAccount?.isNC ?? false))
+    }
+
+    @MainActor
+    func togglePrivateReply() {
+        guard !isPrivateReplyLocked else { return }
+        if isReplyInPrivate {
+            replyPrivacy = .publicReply
+        }
+        else if let privateReplyRecipient {
+            replyPrivacy = .privateReply(to: privateReplyRecipient, locked: false)
+        }
     }
     
     @Published var contactSearchResults: [NRContact] = []
@@ -224,11 +253,10 @@ public final class NewPostModel: ObservableObject {
                 // Update DM relays
                 Task { @MainActor in
                     if let activeAccount {
-                        let ownRelays = await getDMrelays(for: activeAccount.publicKey)
-                        if ownRelays.isEmpty {
-                            self.replyInPrivate = false
-                        }
-                        else {
+                        let accountPubkey = activeAccount.publicKey
+                        let ownRelays = await getDMrelays(for: accountPubkey)
+                        guard self.activeAccount?.publicKey == accountPubkey else { return }
+                        if !ownRelays.isEmpty {
                             self.ownDMRelays = ownRelays
                         }
                     }
@@ -239,9 +267,10 @@ public final class NewPostModel: ObservableObject {
 
     @MainActor func enterAnonMode() {
         guard !anonMode else { return }
+        guard !isPrivateReplyLocked else { return }
         anonMode = true
         typingTextModel.savedRealDraftSnapshotAndClear()
-        replyInPrivate = false
+        replyPrivacy = .publicReply
         typingTextModel.pastedImages = []
         typingTextModel.pastedVideos = []
         typingTextModel.voiceRecording = nil
@@ -1053,7 +1082,7 @@ public final class NewPostModel: ObservableObject {
         self.typingTextModel.restoreDraft = self.typingTextModel.draft
         
         // MARK: - Private Reply (giftwrapped kind 1/1111/1244)
-        if replyInPrivate, let requiredP = requiredP, !recipientDMRelays.isEmpty {
+        if let recipientPubkey = replyInPrivateTo {
             guard !account.isNC else {
                 sendNotification(.anyStatus, ("Private replies not yet supported with remote signer", "NewPost"))
                 return
@@ -1069,17 +1098,30 @@ public final class NewPostModel: ObservableObject {
             let neEvent = finalEvent.toNostrEssentialsEvent()
             let rumorEvent = createRumor(neEvent)
             
-            let recipientPubkey = requiredP
             let ourPubkey = account.publicKey
             let recipientRelays = self.recipientDMRelays
             let ownRelays = self.ownDMRelays
+            let writeRelays = Set(
+                ConnectionPool.shared.connections
+                    .filter { $0.value.relayData.write }
+                    .map(\.key)
+            )
+            let fallbackRelays = recipientRelays
+                .union(ownRelays)
+                .union(writeRelays)
+            let relaysForSelf = ownRelays.isEmpty ? fallbackRelays : ownRelays
+            let relaysForRecipient = recipientRelays.isEmpty ? fallbackRelays : recipientRelays
+
+            guard !relaysForRecipient.isEmpty else {
+                sendNotification(.anyStatus, ("No relay is available for this private reply. Nothing was sent.", "NewPost"))
+                return
+            }
             
             Task {
                 // Wrap and send to self (backup)
                 do {
                     let selfWrap = try createGiftWrap(rumorEvent, receiverPubkey: ourPubkey, keys: ourkeys)
                     let selfWrapId = selfWrap.fallbackId()
-                    let relaysForSelf = ownRelays.isEmpty ? recipientRelays : ownRelays
                     
                     // Save rumor locally
                     await bg().perform {
@@ -1098,7 +1140,6 @@ public final class NewPostModel: ObservableObject {
                 // Wrap and send to recipient
                 do {
                     let recipientWrap = try createGiftWrap(rumorEvent, receiverPubkey: recipientPubkey, keys: ourkeys)
-                    let relaysForRecipient = recipientRelays.isEmpty ? ownRelays : recipientRelays
                     
                     MessageParser.shared.pendingOkWrapToRumorIdMap[recipientWrap.fallbackId()] = rumorEvent.fallbackId()
                     
@@ -2012,12 +2053,6 @@ public final class NewPostModel: ObservableObject {
             newReply.kind = .textNote // 1
         }
         
-        // If replying to a private post, force private reply mode
-        if replyTo.nrPost.isPrivate {
-            replyInPrivate = true
-            replyingToPrivatePost = true
-        }
-        
         // If we reply to ourselve we need to walk up to the parents until we find the original author who needs to receive the private reply
         guard let activeAccountPubkey = activeAccount?.publicKey ?? account()?.publicKey else {
             return
@@ -2029,8 +2064,12 @@ public final class NewPostModel: ObservableObject {
         } else {
             replyTo.nrPost.pubkey
         }
+        privateReplyRecipient = recipientPubkey
         
-        if replyInPrivate { // if we reply to ourselves, we need to overwrite requiredP with recipient from parent where we originally replied to
+        // Private replies carry their recipient as part of the privacy state. This
+        // makes "private, but recipient unknown" an unrepresentable state.
+        if replyTo.nrPost.isPrivate {
+            replyPrivacy = .privateReply(to: recipientPubkey, locked: true)
             requiredP = recipientPubkey
         }
         

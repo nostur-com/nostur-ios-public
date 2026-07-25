@@ -94,8 +94,8 @@ struct ComposePost: View {
                             
                             VStack(alignment: .leading, spacing: 3) {
                                 if replyTo != nil {
-                                    if vm.replyInPrivate, let requiredP = vm.requiredP {
-                                        ReplyingInPrivateTo(pubkey: requiredP, recipientDMRelays: vm.recipientDMRelays, ownDMRelays: vm.ownDMRelays)
+                                    if let recipient = vm.replyInPrivateTo {
+                                        ReplyingInPrivateTo(pubkey: recipient, recipientDMRelays: vm.recipientDMRelays, ownDMRelays: vm.ownDMRelays)
                                     }
                                     else {
                                         ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $vm.typingTextModel.selectedMentions, unselected: $vm.typingTextModel.unselectedMentions)
@@ -437,7 +437,7 @@ struct ComposePost: View {
                                             InlineAccountSwitcher(
                                                 activeAccount: account,
                                                 onChange: { account in vm.activeAccount = account },
-                                                showAnonOption: (replyTo != nil && !vm.replyingToPrivatePost),
+                                                showAnonOption: (replyTo != nil && !vm.isPrivateReplyLocked),
                                                 isAnonSelected: vm.anonMode,
                                                 onSelectAnon: { vm.requestAnonMode() }
                                             ).equatable()
@@ -662,7 +662,7 @@ struct ComposePost: View {
     
     @ViewBuilder
     var textEntry: some View {
-        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: kind, showAudioRecorder: $showAudioRecorder, replyInPrivate: $vm.replyInPrivate)
+        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: kind, showAudioRecorder: $showAudioRecorder)
     }
 }
 

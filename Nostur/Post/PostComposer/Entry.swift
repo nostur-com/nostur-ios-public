@@ -19,7 +19,6 @@ struct Entry: View {
     @Binding var gifSheetShown: Bool
     @Binding var cameraSheetShown: Bool
     @Binding var showAudioRecorder: Bool
-    @Binding var replyInPrivate: Bool
     
     @State private var showRemoveAuthor = false
     
@@ -59,7 +58,7 @@ struct Entry: View {
         return false
     }
     
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, showAudioRecorder: Binding<Bool>, replyInPrivate: Binding<Bool>) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, showAudioRecorder: Binding<Bool>) {
         self.replyTo = replyTo
         self.quotePost = quotePost
         self.directMention = directMention
@@ -73,7 +72,6 @@ struct Entry: View {
         _gifSheetShown = gifSheetShown
         _cameraSheetShown = cameraSheetShown
         _showAudioRecorder = showAudioRecorder
-        _replyInPrivate = replyInPrivate
     }
     
     var body: some View {
@@ -136,8 +134,8 @@ struct Entry: View {
                             .offset(x: 5.0, y: 4.0)
                     }
                     else {
-                        if replyInPrivate && !typingTextModel.anonMode, let requiredP = vm.requiredP {
-                            ReplyingInPrivateTo(pubkey: requiredP, recipientDMRelays: vm.recipientDMRelays, ownDMRelays: vm.ownDMRelays)
+                        if !typingTextModel.anonMode, let recipient = vm.replyInPrivateTo {
+                            ReplyingInPrivateTo(pubkey: recipient, recipientDMRelays: vm.recipientDMRelays, ownDMRelays: vm.ownDMRelays)
                                 .offset(x: 5.0, y: 4.0)
                         }
                         else {
@@ -184,11 +182,10 @@ struct Entry: View {
                     showAudioRecorder = true
                 },
                 privateReplyTapped: vm.canReplyInPrivate ? {
-                    guard !vm.replyingToPrivatePost else { return }
-                    replyInPrivate.toggle()
+                    vm.togglePrivateReply()
                 } : nil,
-                isPrivateReplyActive: replyInPrivate,
-                isPrivateReplyLocked: vm.replyingToPrivatePost
+                isPrivateReplyActive: vm.isReplyInPrivate,
+                isPrivateReplyLocked: vm.isPrivateReplyLocked
             )
             .introspect { editor in
                 // Needed so we can update cursors position on @mention autocomplete
@@ -608,14 +605,13 @@ struct Entry: View {
     @ViewBuilder
     private var privateReplyButton: some View {
         if replyTo != nil && vm.canReplyInPrivate && !typingTextModel.anonMode {
-            Button("Reply in private", systemImage: replyInPrivate ? "lock.fill" : "lock.open") {
-                guard !vm.replyingToPrivatePost else { return } // Can't turn off when replying to a private post
+            Button("Reply in private", systemImage: vm.isReplyInPrivate ? "lock.fill" : "lock.open") {
                 guard !typingTextModel.anonMode else { return }
-                replyInPrivate.toggle()
+                vm.togglePrivateReply()
             }
             .buttonStyle(.borderless)
-            .disabled(typingTextModel.uploading || vm.replyingToPrivatePost || typingTextModel.anonMode)
-            .help(vm.replyingToPrivatePost ? "Private reply required (replying to a private post)" : "Reply in private")
+            .disabled(typingTextModel.uploading || vm.isPrivateReplyLocked || typingTextModel.anonMode)
+            .help(vm.isPrivateReplyLocked ? "Private reply required (replying to a private post)" : "Reply in private")
         }
     }
     
