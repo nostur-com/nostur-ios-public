@@ -22,6 +22,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     private let fullWidth: Bool
     private let forceAutoload: Bool
     private let isItem: Bool  // true to put more emphasis on the item when it is not a text post
+    private let showsFooterForItem: Bool
     
     private let THREAD_LINE_OFFSET = 24.0
     
@@ -49,6 +50,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil,
          isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false,
+         showsFooterForItem: Bool = false,
          nxViewingContext: Set<NXViewingContextOptions> = [], containerID: String, theme: Theme, availableWidth: CGFloat, @ViewBuilder content: () -> Content, @ViewBuilder title: () -> TitleContent) {
         self.nrPost = nrPost
         self.nrContact = nrPost.contact
@@ -60,6 +62,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
         self.isDetail = isDetail
         self.forceAutoload = forceAutoload
         self.isItem = isItem
+        self.showsFooterForItem = showsFooterForItem
         self.content = content()
         self.titleContent = title()
         
@@ -153,7 +156,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     
     /// Footer interaction buttons (reply/repost/like/zap/bookmark) — not for chat messages
     private var showsInteractionFooter: Bool {
-        ((!hideFooter || showFooter) && settings.rowFooterEnabled) && !isItem && !nrPost.isLiveChatMessage
+        ((!hideFooter || showFooter) && settings.rowFooterEnabled) && (!isItem || showsFooterForItem) && !nrPost.isLiveChatMessage
     }
     
     @ViewBuilder
@@ -325,10 +328,11 @@ extension PostLayout where TitleContent == EmptyView {
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil,
          isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false,
-         isItem: Bool = false, nxViewingContext: Set<NXViewingContextOptions>, containerID: String, theme: Theme, availableWidth: CGFloat, @ViewBuilder content: () -> Content) {
+         isItem: Bool = false, showsFooterForItem: Bool = false, nxViewingContext: Set<NXViewingContextOptions>, containerID: String, theme: Theme, availableWidth: CGFloat, @ViewBuilder content: () -> Content) {
      
         self.init(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect,
                   isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, isItem: isItem,
+                  showsFooterForItem: showsFooterForItem,
                   nxViewingContext: nxViewingContext, containerID: containerID, theme: theme, availableWidth: availableWidth,
                   content: content, title: { EmptyView() })
         
