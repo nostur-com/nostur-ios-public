@@ -279,7 +279,10 @@ struct MediaPlaceholder: View {
                 Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
                     load(forceLoad: true)
                 }
+                .buttonStyle(.bordered)
+                .tint(theme.accent)
             }
+            .padding(.horizontal, 10)
         case .dontAutoLoad:
             theme.background.opacity(0.7)
                 .overlay {

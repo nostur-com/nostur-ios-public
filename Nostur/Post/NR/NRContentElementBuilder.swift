@@ -64,8 +64,19 @@ class NRContentElementBuilder {
                 }
                 else if !matchString.matchingStrings(regex: Self.otherUrlsPattern).isEmpty {
                     if let url = URL(string: matchString) {
-                        result.append(ContentElement.linkPreview(url))
-                        linkPreviewUrls.append(url)
+                        let iMeta = findImeta(fastTags, url: matchString)
+                        if iMeta?.mimeType?.hasPrefix("image/") == true {
+                            let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash)
+                            result.append(ContentElement.image(galleryItem))
+                            galleryItems.append(galleryItem)
+                        }
+                        else if iMeta?.mimeType?.hasPrefix("video/") == true {
+                            result.append(ContentElement.video(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash)))
+                        }
+                        else {
+                            result.append(ContentElement.linkPreview(url))
+                            linkPreviewUrls.append(url)
+                        }
                     }
                     else {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
@@ -498,6 +509,7 @@ private func getTagValues(_ tag: FastTag) -> [String?] {
 struct iMetaInfo {
     var size: CGSize?
     var blurHash: String?
+    var mimeType: String? = nil
     
     var aspect: CGFloat? {
         if let size {
@@ -537,30 +549,31 @@ func findImeta(_ fastTags: [FastTag], url:String) -> iMetaInfo? {
 }
 
 func iMetaFromFastTag(_ fastTag: FastTag) -> iMetaInfo? {
-    // Check each value in found imeta tag for 'dim'
     var size: CGSize?
+    var blurHash: String?
+    var mimeType: String?
+
     for value in getTagValues(fastTag) {
         guard let value = value else { continue }
         let parts = value.split(separator: " ", maxSplits: 1)
-        if parts.count == 2 && String(parts[0]) == "dim" {
+        guard parts.count == 2 else { continue }
+
+        if parts[0] == "dim" {
             let dim = parts[1].split(separator: "x", maxSplits: 1)
             if dim.count == 2, let width = Int(dim[0]), let height = Int(dim[1]) {
                 size = CGSize(width: width, height: height)
             }
         }
-    }
-    
-    var blurHash: String?
-    for value in getTagValues(fastTag) {
-        guard let value = value else { continue }
-        let parts = value.split(separator: " ", maxSplits: 1)
-        if parts.count == 2 && String(parts[0]) == "blurhash" {
+        else if parts[0] == "blurhash" {
             blurHash = String(parts[1])
+        }
+        else if parts[0] == "m" {
+            mimeType = String(parts[1]).lowercased()
         }
     }
     
-    if blurHash != nil || size != nil {
-        return iMetaInfo(size: size, blurHash: blurHash)
+    if blurHash != nil || size != nil || mimeType != nil {
+        return iMetaInfo(size: size, blurHash: blurHash, mimeType: mimeType)
     }
     
     return nil
@@ -595,6 +608,17 @@ func findImetaFromUrl(_ url: String) -> iMetaInfo? {
 
 func imageUrlFromIMetaFastTag(_ tag: FastTag) -> URL? {
     guard tag.0 == "imeta" else { return nil }
+
+    let mimeType = getTagValues(tag).compactMap { value -> String? in
+        guard let value else { return nil }
+        let parts = value.split(separator: " ", maxSplits: 1)
+        guard parts.count == 2, parts[0] == "m" else { return nil }
+        return String(parts[1]).lowercased()
+    }.first
+
+    // Keep supporting older image imeta tags without `m`, but respect an
+    // explicitly declared non-image MIME type.
+    guard mimeType == nil || mimeType?.hasPrefix("image/") == true else { return nil }
     
     for value in getTagValues(tag) {
         guard let value = value else { continue }
