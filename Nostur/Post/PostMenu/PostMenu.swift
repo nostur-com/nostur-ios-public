@@ -16,6 +16,9 @@ struct PostMenu: View {
     private var nrPost: NRPost {
         postMenuContext.nrPost
     }
+    private var deleteTarget: NRPost {
+        postMenuContext.deleteTarget ?? nrPost
+    }
     @ObservedObject private var nrContact: NRContact
     private func dismiss() {
         AppSheetsModel.shared.dismiss()
@@ -28,6 +31,7 @@ struct PostMenu: View {
     @State private var showMultiFollowSheet = false
     
     @State private var isOwnPost = false
+    @State private var canDelete = false
     @State private var isBlocked = false
     @State private var isFullAccount = false
     @State private var isFollowing = false
@@ -41,21 +45,26 @@ struct PostMenu: View {
     var body: some View {
         NXForm {
             
-            if isOwnPost && self.isFullAccount {
+            if canDelete && self.isFullAccount {
                 Section {
                     // Delete button
                     Button(role: .destructive, action: {
                         dismiss()
                         DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
-                            sendNotification(.requestDeletePost, nrPost.id)
+                            sendNotification(.requestDeletePost, deleteTarget.id)
                         }
                     }) {
-                        Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
+                        Label(
+                            deleteTarget.isRepost
+                                ? String(localized: "Delete repost", comment: "Post context menu action to delete your repost")
+                                : String(localized: "Delete", comment: "Post context menu action to Delete a post"),
+                            systemImage: "trash"
+                        )
                             .foregroundColor(theme.accent)
                     }
 
 #if DEBUG
-                    if !postMenuContext.isPinnedPost {
+                    if isOwnPost && !postMenuContext.isPinnedPost {
                         Button(action: {
                             showPinThisPostConfirmation = true
                         }) {
@@ -78,7 +87,7 @@ struct PostMenu: View {
                              Text("This will appear at the top of your profile and replace any previously pinned post.")
                          }
                     }
-                    else {
+                    else if isOwnPost {
                         Button(action: {
                             Task {
                                 await unpinPost(nrPost)
@@ -98,7 +107,7 @@ struct PostMenu: View {
                     }
 #endif
                     
-                    if nrPost.isRestricted {
+                    if isOwnPost && nrPost.isRestricted {
                         NavigationLink {
                             RepublishRestrictedPostSheet(nrPost: nrPost, rootDismiss: dismiss)
                                 .environmentObject(la)
@@ -262,6 +271,7 @@ struct PostMenu: View {
 //        
         .onAppear {
             isOwnPost = nrPost.pubkey == la.pubkey
+            canDelete = deleteTarget.pubkey == la.pubkey
             isBlocked = blocks().contains(nrPost.pubkey)
             self.isFullAccount = la.account.isFullAccount
         }
@@ -331,6 +341,7 @@ let NEXT_SHEET_DELAY = 0.05
 
 struct PostMenuButton: View {
     @Environment(\.pinnedPostId) var pinnedPostId
+    @Environment(\.repostMenuTarget) private var repostMenuTarget
     public let nrPost: NRPost
     public let theme: Theme
     
@@ -348,7 +359,11 @@ struct PostMenuButton: View {
             .highPriorityGesture(
                 TapGesture()
                     .onEnded { _ in
-                        AppSheetsModel.shared.postMenuContext = PostMenuContext(nrPost: nrPost, isPinnedPost: nrPost.id == pinnedPostId)
+                        AppSheetsModel.shared.postMenuContext = PostMenuContext(
+                            nrPost: nrPost,
+                            deleteTarget: repostMenuTarget,
+                            isPinnedPost: nrPost.id == pinnedPostId
+                        )
                     }
             )
     }
@@ -357,7 +372,19 @@ struct PostMenuButton: View {
 struct PostMenuContext: Identifiable {
     let id = UUID()
     let nrPost: NRPost
+    var deleteTarget: NRPost? = nil
     var isPinnedPost: Bool = false
+}
+
+private struct RepostMenuTargetKey: EnvironmentKey {
+    static let defaultValue: NRPost? = nil
+}
+
+extension EnvironmentValues {
+    var repostMenuTarget: NRPost? {
+        get { self[RepostMenuTargetKey.self] }
+        set { self[RepostMenuTargetKey.self] = newValue }
+    }
 }
 
 func unpinPost(_ pinnedPost: NRPost) async {

@@ -80,6 +80,7 @@ struct Repost: View {
                 }
                 else {
                     KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail: isDetail, connect: connect, forceAutoload: shouldForceAutoLoad)
+                        .environment(\.repostMenuTarget, nrPost)
 
                     // Extra padding reposted long form, because normal repost/post has 10, but longform uses 20
                     // so add the extra 10 here
