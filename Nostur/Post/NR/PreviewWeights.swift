@@ -66,8 +66,8 @@ func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement]
     let w = PreviewWeights()
     var isFirst = true
     
-    // Collapse trailing 4+ images into a single grid unit so weight/truncation treat them as one block
-    let elementsForFilter = collapseTrailingImageGrid(contentElements)
+    // Collapse leading or trailing 4+ images into one grid unit so weight/truncation treat them as one block
+    let elementsForFilter = collapseImageGrid(contentElements)
     
     let previewElements = elementsForFilter.filter { element in
         switch element {

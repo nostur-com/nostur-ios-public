@@ -2,7 +2,7 @@
 //  MediaImageGridView.swift
 //  Nostur
 //
-//  2×2 square image grid for Kind1 note rows when a post ends with 4+ images.
+//  2×2 square image grid for Kind1 note rows when a post starts or ends with 4+ images.
 //
 
 import SwiftUI

@@ -321,7 +321,7 @@ enum ContentElement: Hashable, Identifiable {
     case cashu(String)
     case link(String, URL)
     case image(GalleryItem)
-    /// 2×2 grid for rows when a post ends with 4+ images (not used in detail).
+    /// 2×2 grid for rows when a post starts or ends with 4+ images (not used in detail).
     case imageGrid([GalleryItem])
     case video(MediaContent)
     case linkPreview(URL, id: UUID = UUID())
@@ -333,7 +333,7 @@ enum ContentElement: Hashable, Identifiable {
     case naddr1(ShareableIdentifier)
 }
 
-// MARK: - Trailing image grid (Kind1 note rows)
+// MARK: - Image grid (Kind1 note rows)
 
 /// True when text is empty or only whitespace/newlines (can sit between image URLs).
 private func isWhitespaceOnlyText(_ element: ContentElement) -> Bool {
@@ -358,38 +358,86 @@ func trailingImagesForGrid(from elements: [ContentElement]) -> [GalleryItem]? {
                 continue
             }
             // Meaningful non-image content ends the trailing-image scan
-            break
+            return images.count >= 4 ? images : nil
+        }
+    }
+
+    return images.count >= 4 ? images : nil
+}
+
+/// Leading consecutive images at the start of content (whitespace-only text ignored).
+/// Returns the list only when there are 4 or more — suitable for the 2×2 row grid.
+func leadingImagesForGrid(from elements: [ContentElement]) -> [GalleryItem]? {
+    var images: [GalleryItem] = []
+
+    for element in elements {
+        switch element {
+        case .image(let item):
+            images.append(item)
+        case .imageGrid:
+            // Already collapsed
+            return nil
+        default:
+            if isWhitespaceOnlyText(element) {
+                continue
+            }
+            // Meaningful non-image content ends the leading-image scan
+            return images.count >= 4 ? images : nil
         }
     }
     
     return images.count >= 4 ? images : nil
 }
 
-/// Collapse a trailing group of 4+ images into a single `.imageGrid` element.
+/// Collapse a leading or trailing group of 4+ images into a single `.imageGrid` element.
 /// Used for note rows only (not detail). Safe to call if already collapsed.
-func collapseTrailingImageGrid(_ elements: [ContentElement]) -> [ContentElement] {
-    guard let images = trailingImagesForGrid(from: elements) else { return elements }
-    
-    var imagesLeft = images.count
-    for i in elements.indices.reversed() {
-        switch elements[i] {
-        case .image:
-            imagesLeft -= 1
-            if imagesLeft == 0 {
-                var result = Array(elements.prefix(i))
-                while let last = result.last, isWhitespaceOnlyText(last) {
-                    result.removeLast()
+func collapseImageGrid(_ elements: [ContentElement]) -> [ContentElement] {
+    if let images = trailingImagesForGrid(from: elements) {
+        var imagesLeft = images.count
+        for i in elements.indices.reversed() {
+            switch elements[i] {
+            case .image:
+                imagesLeft -= 1
+                if imagesLeft == 0 {
+                    var result = Array(elements.prefix(i))
+                    while let last = result.last, isWhitespaceOnlyText(last) {
+                        result.removeLast()
+                    }
+                    result.append(.imageGrid(images))
+                    return result
                 }
-                result.append(.imageGrid(images))
-                return result
+            default:
+                if isWhitespaceOnlyText(elements[i]) {
+                    continue
+                }
+                return elements
             }
-        default:
-            if isWhitespaceOnlyText(elements[i]) {
-                continue
-            }
-            return elements
         }
     }
+
+    if let images = leadingImagesForGrid(from: elements) {
+        var imagesLeft = images.count
+        for i in elements.indices {
+            switch elements[i] {
+            case .image:
+                imagesLeft -= 1
+                if imagesLeft == 0 {
+                    var suffixStart = elements.index(after: i)
+                    while suffixStart < elements.endIndex,
+                          isWhitespaceOnlyText(elements[suffixStart]) {
+                        suffixStart = elements.index(after: suffixStart)
+                    }
+                    return [.imageGrid(images)] + Array(elements[suffixStart...])
+                }
+            default:
+                if isWhitespaceOnlyText(elements[i]) {
+                    continue
+                }
+                return elements
+            }
+        }
+    }
+
     return elements
 }
 
