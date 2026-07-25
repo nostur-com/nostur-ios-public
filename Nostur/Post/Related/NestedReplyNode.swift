@@ -60,8 +60,8 @@ enum NestedThreadMetrics {
     static let showDebugLabels = false
     
     /// Hierarchical path badge on each reply PFP (e.g. `1.3.2`) for discussing nest layout.
-    /// Set to `false` when done debugging.
-    static let showPathLabels = true
+    /// Flip to `true` to show orange path chips while debugging nest layout.
+    static let showPathLabels = false
     
     static let lineWidth: CGFloat = 2.0
     /// Hit-test width for tap-to-collapse on the tree rail (kept outside Box navigation).
