@@ -116,6 +116,7 @@ struct Maintenance {
             Self.runPutRepostedPubkeyInOtherPubkey(context: context)
             Self.runPutReactionToPubkeyInOtherPubkey(context: context)
             Self.runBackfillGiftwrappedReactionGroupIds(context: context)
+            Self.runClearPrivatePostReactionGroupIds(context: context)
             Self.runUpdateKeychainInfo(context: context)
             Self.runSaveFullAccountFlag(context: context)
             Self.runUpgradeDMs(context: context)
@@ -994,7 +995,7 @@ struct Maintenance {
         guard !Self.didRun(migrationCode: migrationCode.backfillGiftwrappedReactionGroupIds, context: context) else { return }
 
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 7 AND otherId != nil AND groupId == nil")
+        fr.predicate = NSPredicate(format: "kind == 7 AND otherId != nil AND kTag IN {14,15} AND groupId == nil")
 
         var fixed = 0
         if let reactions = try? context.fetch(fr) {
@@ -1023,6 +1024,28 @@ struct Maintenance {
 
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.backfillGiftwrappedReactionGroupIds.rawValue
+    }
+
+    // Repair private post reactions that were mistaken for DM reactions solely
+    // because they arrived inside a gift wrap.
+    static func runClearPrivatePostReactionGroupIds(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.clearPrivatePostReactionGroupIds, context: context) else { return }
+
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind == 7 AND otherId != nil AND NOT kTag IN {14,15} AND groupId != nil")
+
+        var fixed = 0
+        if let reactions = try? context.fetch(fr) {
+            L.maintenance.info("🧹🧹 runClearPrivatePostReactionGroupIds: Found \(reactions.count) misclassified private post reactions")
+            for reaction in reactions {
+                reaction.groupId = nil
+                fixed += 1
+            }
+            L.maintenance.info("🧹🧹 runClearPrivatePostReactionGroupIds: Fixed \(fixed) reactions")
+        }
+
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.clearPrivatePostReactionGroupIds.rawValue
     }
     
     // Run once to put first A tag in .otherAtag, for fast reaction notification querying
@@ -1444,6 +1467,9 @@ struct Maintenance {
 
         // Backfill legacy missing groupId values on giftwrapped reactions.
         case backfillGiftwrappedReactionGroupIds = "backfillGiftwrappedReactionGroupIds"
+
+        // Undo groupIds incorrectly assigned to giftwrapped private post reactions.
+        case clearPrivatePostReactionGroupIds = "clearPrivatePostReactionGroupIds"
         
         // Migrate Private Notes to iCloud
         case migratePrivateNotes = "migratePrivateNotes"

@@ -748,6 +748,9 @@ class ConversionVM: ObservableObject {
 
         var tags: [Tag] = participants.map { Tag(["p", $0]) }
         tags.append(Tag(["e", message.id]))
+        // NIP-25: identify the kind being reacted to. Required so giftwrapped DM
+        // reactions (kind 14/15) are not confused with private post reactions.
+        tags.append(Tag(["k", String(message.nEvent.kind.id)]))
 
         if SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(ourAccountPubkey) {
             tags.append(Tag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))

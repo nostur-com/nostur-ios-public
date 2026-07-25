@@ -9,8 +9,8 @@ import Foundation
 import CoreData
 
 func handleReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, context: NSManagedObjectContext) {
-    // Only reactions, but not DM reactions
-    guard nEvent.kind == .reaction && savedEvent.kTag != 14 else { return }
+    // Only reactions, but not NIP-17 DM reactions (kind 14/15 targets)
+    guard nEvent.kind == .reaction && ![14, 15].contains(savedEvent.kTag) else { return }
     
     if let lastE = nEvent.lastE() {
         savedEvent.reactionToId = lastE
@@ -41,7 +41,7 @@ func handleReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, co
 }
 
 func handleDMReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, context: NSManagedObjectContext) {
-    guard nEvent.kind == .reaction, savedEvent.kTag == 14 else { return }
+    guard nEvent.kind == .reaction, [14, 15].contains(savedEvent.kTag) else { return }
     
     if let lastE = nEvent.lastE() {
         savedEvent.reactionToId = lastE
