@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import UIKit
 import ImageIO
+import Nuke
 
 extension NSAttributedString.Key {
     static let nosturCustomEmojiURL = NSAttributedString.Key("nostur.customEmojiURL")
@@ -74,10 +75,17 @@ final class NIP30CustomEmojiImageCache {
             return cached
         }
 
-        guard let data = try? Data(contentsOf: url), let image = UIImage(data: data) else { return nil }
-        let scaled = scale(image: image, pointSize: pointSize)
-        cache.setObject(scaled, forKey: key)
-        return scaled
+        // The actual remote image is loaded by NIP30InlineEmojiOverlayView.
+        // Never perform an unbounded synchronous network request while building
+        // attributed text; use a transparent attachment to reserve its layout.
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let placeholder = UIGraphicsImageRenderer(
+            size: CGSize(width: pointSize, height: pointSize),
+            format: format
+        ).image { _ in }
+        cache.setObject(placeholder, forKey: key)
+        return placeholder
     }
 
     private func scale(image: UIImage, pointSize: CGFloat) -> UIImage {
@@ -135,8 +143,7 @@ struct NIP30EmojiImage: View {
     
     private static let gifHeader87a: [UInt8] = [0x47, 0x49, 0x46, 0x38, 0x37, 0x61]
     private static let gifHeader89a: [UInt8] = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]
-    private static let maxEmojiBytes = 500_000
-    private static let maxEmojiPixelDimension = 2048
+    private static let maxEmojiBytes = ImageProcessing.EMOJI_DOWNLOAD_SIZE_LIMIT
     
     private var isAnimatedWebP: Bool {
         guard let data else { return false }
@@ -180,11 +187,8 @@ struct NIP30EmojiImage: View {
     private func loadEmojiData() async {
         guard data == nil, !loadFailed else { return }
         do {
-            var request = URLRequest(url: url)
-            request.timeoutInterval = 10
-            request.cachePolicy = .returnCacheDataElseLoad
-
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let request = ImageRequest(url: url)
+            let (data, response) = try await ImageProcessing.shared.emoji.data(for: request)
             guard Self.isValidEmojiPayload(data: data, response: response) else {
                 await MainActor.run {
                     self.loadFailed = true
@@ -206,7 +210,7 @@ struct NIP30EmojiImage: View {
         }
     }
 
-    private static func isValidEmojiPayload(data: Data, response: URLResponse) -> Bool {
+    private static func isValidEmojiPayload(data: Data, response: URLResponse?) -> Bool {
         guard !data.isEmpty, data.count <= maxEmojiBytes else { return false }
 
         if let httpResponse = response as? HTTPURLResponse,
@@ -216,15 +220,7 @@ struct NIP30EmojiImage: View {
             if !isImage && !isBinaryOctetStream { return false }
         }
 
-        guard let imageSource = CGImageSourceCreateWithData(data as CFData, nil) else { return false }
-        guard CGImageSourceGetCount(imageSource) > 0 else { return false }
-        guard let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any] else { return false }
-
-        let width = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue ?? 0
-        let height = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue ?? 0
-        guard width > 0, height > 0 else { return false }
-        guard width <= maxEmojiPixelDimension, height <= maxEmojiPixelDimension else { return false }
-        return true
+        return ProfileImageSafety.isSafeAnimatedImage(data, policy: .emoji)
     }
 
     private static func makeThumbnailPreview(from data: Data, pointSize: CGFloat) async -> UIImage? {

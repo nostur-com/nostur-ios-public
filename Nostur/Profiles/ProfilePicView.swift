@@ -179,7 +179,10 @@ struct InnerPFP: View {
                 case .animatedGif(let url):
                     LazyImage(request: pfpImageRequestFor(url), transaction: .init(animation: .easeIn)) { state in
                         if let container = state.imageContainer {
-                            if !ProcessInfo.processInfo.isLowPowerModeEnabled, container.type == .gif, let gifData = container.data {
+                            if !ProcessInfo.processInfo.isLowPowerModeEnabled,
+                               container.type == .gif,
+                               let gifData = container.data,
+                               ProfileImageSafety.isSafeAnimatedImage(gifData, policy: .profilePicture) {
                                 ZStack {
                                     if let image = state.image {
                                         image

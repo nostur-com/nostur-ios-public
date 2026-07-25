@@ -13,7 +13,7 @@ class MediaViewVM: ObservableObject {
     @Published var state: MediaViewState = .initial
     private var task: ImageTask?
     
-    public func load(_ url: URL, forceLoad: Bool = false, generateIMeta: Bool = false, usePFPpipeline: Bool = false) async {
+    public func load(_ url: URL, forceLoad: Bool = false, loadAnyway: Bool = false, generateIMeta: Bool = false, usePFPpipeline: Bool = false) async {
         if SettingsStore.shared.lowDataMode && !forceLoad {
             Task { @MainActor in
                 state = .lowDataMode
@@ -28,11 +28,20 @@ class MediaViewVM: ObservableObject {
             return
         }
         
-        self.task = usePFPpipeline
-            ? ImageProcessing.shared.pfp.imageTask(with: pfpImageRequestFor(url))
-            : ImageProcessing.shared.content.imageTask(with: makeImageRequest(url,
-                                                                              label: "MediaViewVM.load",
-                                                                              overrideLowDataMode: forceLoad))
+        let request = makeImageRequest(
+            url,
+            label: "MediaViewVM.load",
+            overrideLowDataMode: forceLoad
+        )
+        self.task = if usePFPpipeline {
+            ImageProcessing.shared.pfp.imageTask(with: pfpImageRequestFor(url))
+        }
+        else if loadAnyway {
+            ImageProcessing.shared.contentLoadAnyway.imageTask(with: request)
+        }
+        else {
+            ImageProcessing.shared.content.imageTask(with: request)
+        }
         
         guard let task = self.task else {
             Task { @MainActor in
@@ -71,7 +80,9 @@ class MediaViewVM: ObservableObject {
                 let cacheKey = ImageProcessing.shared.content.cache.makeDataCacheKey(for: request)
                 let rawData = ImageProcessing.shared.content.configuration.dataCache?.cachedData(for: cacheKey)
                     ?? response.container.data
-                if let rawData, isAnimatedWebPData(rawData) {
+                if let rawData,
+                   isAnimatedWebPData(rawData),
+                   ProfileImageSafety.isSafeAnimatedImage(rawData, policy: .post) {
                     Task { @MainActor in
                         state = .gif(GifInfo(gifData: rawData, realDimensions: response.container.image.size))
                         if generateIMeta {
@@ -86,7 +97,9 @@ class MediaViewVM: ObservableObject {
                     return
                 }
             }
-            if response.container.type == .gif, let gifData = response.container.data {
+            if response.container.type == .gif,
+               let gifData = response.container.data,
+               ProfileImageSafety.isSafeAnimatedImage(gifData, policy: .post) {
                 Task { @MainActor in
                     // Can't use withAnimation. Bug keeps sometimes stuck at loading %0
 //                    withAnimation(.smooth(duration: 0.15)) {
@@ -125,9 +138,25 @@ class MediaViewVM: ObservableObject {
                 // Paused is not error
                 if case .paused(_) = state { return }
                 
-                state = .error(error.localizedDescription)
+                if Self.isDownloadSizeLimitError(error) {
+                    state = .imageTooLarge
+                }
+                else {
+                    state = .error(error.localizedDescription)
+                }
             }
         }
+    }
+
+    private static func isDownloadSizeLimitError(_ error: Swift.Error) -> Bool {
+        if error is LimitedDataLoader.Error {
+            return true
+        }
+        if let pipelineError = error as? ImagePipeline.Error,
+           pipelineError.dataLoadingError is LimitedDataLoader.Error {
+            return true
+        }
+        return false
     }
     
     public func pause(_ atProgress: Int = 0) {
@@ -154,6 +183,7 @@ enum MediaViewState: Equatable {
     case dontAutoLoad
     case image(ImageInfo)
     case gif(GifInfo) // TODO: handle  if !dim.isScreenshot
+    case imageTooLarge
     case error(String) // error message
 }
 

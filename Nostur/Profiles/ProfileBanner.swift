@@ -25,7 +25,10 @@ struct ProfileBanner: View {
                 if (banner.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                     LazyImage(url: URL(string: banner)) { state in
                         if let container = state.imageContainer {
-                            if !ProcessInfo.processInfo.isLowPowerModeEnabled, container.type == .gif, let gifData = container.data {
+                            if !ProcessInfo.processInfo.isLowPowerModeEnabled,
+                               container.type == .gif,
+                               let gifData = container.data,
+                               ProfileImageSafety.isSafeAnimatedImage(gifData, policy: .banner) {
                                 GIFImage(data: gifData, isPlaying: .constant(true))
 //                                    .aspectRatio(contentMode: .fill)
                                     .frame(width: width, height: BANNER_HEIGHT)

@@ -8,6 +8,7 @@
 import SwiftUI
 import RepresentableKit
 import Gifu
+import Nuke
 
 private final class NIP30InlineEmojiTextView: UITextView {
     private var overlayViews: [UIView] = []
@@ -101,8 +102,11 @@ private final class NIP30InlineEmojiOverlayView: UIView {
         loadTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let (data, _) = try await URLSession.shared.data(from: self.url)
+                let (data, _) = try await ImageProcessing.shared.emoji.data(
+                    for: ImageRequest(url: self.url)
+                )
                 guard !Task.isCancelled else { return }
+                guard ProfileImageSafety.isSafeAnimatedImage(data, policy: .emoji) else { return }
                 Self.cache.setObject(data as NSData, forKey: key)
                 await MainActor.run {
                     self.render(data)

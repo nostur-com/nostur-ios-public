@@ -214,7 +214,9 @@ struct GifSearcher: View {
             throw URLError(.badURL)
         }
         
-        let (data, response) = try await URLSession.shared.data(from: gifUrl)
+        let (data, response) = try await ImageProcessing.shared.content.data(
+            for: ImageRequest(url: gifUrl)
+        )
         
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200 else {
@@ -260,7 +262,10 @@ struct GifSearcher: View {
         if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {
             let aspectRatio = gif.dims.count >= 2 ? CGFloat(gif.dims[0]) / CGFloat(gif.dims[1]) : 1.0
             LazyImage(url: url) { state in
-                if let container = state.imageContainer, container.type == .gif, let data = container.data {
+                if let container = state.imageContainer,
+                   container.type == .gif,
+                   let data = container.data,
+                   ProfileImageSafety.isSafeAnimatedImage(data, policy: .post) {
                     GIFImage(data: data, isPlaying: .constant(true))
                         .aspectRatio(aspectRatio, contentMode: .fit)
                         .background(theme.lineColor.opacity(0.2))

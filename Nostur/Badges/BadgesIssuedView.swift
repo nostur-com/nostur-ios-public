@@ -94,7 +94,9 @@ struct BadgeIssuedRow: View {
                     if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                         LazyImage(url: URL(string: pictureUrl)) { state in
                             if let container = state.imageContainer {
-                                if container.type == .gif, let gifData = container.data {
+                                if container.type == .gif,
+                                   let gifData = container.data,
+                                   ProfileImageSafety.isSafeAnimatedImage(gifData, policy: .badge) {
                                     GIFImage(data: gifData, isPlaying: .constant(true))
 //                                        .aspectRatio(contentMode: .fit)
                                         .frame(width: 50, height: 50)

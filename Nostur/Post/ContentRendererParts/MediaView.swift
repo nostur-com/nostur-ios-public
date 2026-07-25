@@ -556,43 +556,30 @@ struct MediaPlaceholder: View {
                     realDimensions = gifInfo.realDimensions
                 }
             }
+        case .imageTooLarge:
+            failedImageView {
+                VStack {
+                    Label("Image is larger than 50 MB, not loaded.", systemImage: "exclamationmark.triangle.fill")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Button("Load anyway") {
+                        load(forceLoad: true, loadAnyway: true)
+                    }
+                }
+            }
         case .error(_):
-            theme.background.opacity(0.7)
-                .overlay {
-                    if let blurImage {
-                        Image(uiImage: blurImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(
-                                width: availableWidth,
-                                height: height
-                            )
-                            .clipped()
-                            .contentShape(Rectangle())
+            failedImageView {
+                VStack {
+                    Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Text(galleryItem.url.absoluteString)
+                        .truncationMode(.middle)
+                        .fontItalic()
+                        .foregroundColor(theme.accent)
+                    Button(String(localized: "Try again", comment: "Button try again")) {
+                        load(forceLoad: true)
                     }
                 }
-                .frame(
-                    width: availableWidth,
-                    height: height
-                )
-                .clipped()
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    load(forceLoad: true)
-                }
-                .overlay(alignment: .center) {
-                    VStack {
-                        Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                            .frame(maxWidth: .infinity, alignment: .center)
-                        Text(galleryItem.url.absoluteString)
-                            .truncationMode(.middle)
-                            .fontItalic()
-                            .foregroundColor(theme.accent)
-                        Button(String(localized: "Try again", comment: "Button try again")) {
-                            load(forceLoad: true)
-                        }
-                    }
-                }
+            }
         default:
             if let imageInfo {
                 Color.clear
@@ -638,11 +625,40 @@ struct MediaPlaceholder: View {
             }
         }
     }
+
+    @ViewBuilder
+    private func failedImageView<Content: View>(
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+            theme.background.opacity(0.7)
+                .overlay {
+                    if let blurImage {
+                        Image(uiImage: blurImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(
+                                width: availableWidth,
+                                height: height
+                            )
+                            .clipped()
+                            .contentShape(Rectangle())
+                    }
+                }
+                .frame(
+                    width: availableWidth,
+                    height: height
+                )
+                .clipped()
+                .contentShape(Rectangle())
+                .overlay(alignment: .center) {
+                    content()
+                }
+    }
     
     @MainActor
-    private func load(forceLoad: Bool = false) {
+    private func load(forceLoad: Bool = false, loadAnyway: Bool = false) {
         Task { @MainActor in
-            await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta, usePFPpipeline: usePFPpipeline)
+            await vm.load(galleryItem.url, forceLoad: forceLoad, loadAnyway: loadAnyway, generateIMeta: generateIMeta, usePFPpipeline: usePFPpipeline)
         }
     }
     
@@ -821,4 +837,3 @@ struct MediaPostPreview: View {
     }
     .environmentObject(Themes.default)
 }
-
