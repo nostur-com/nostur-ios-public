@@ -12,7 +12,10 @@ struct ChatInputField: View {
     @Environment(\.theme) private var theme
     @Binding var message: String
     var startWithFocus: Bool = true
+    var highlightMentions: Bool = false
+    var mentionCompletionRevision: Int = 0
     var onSubmit: (() -> Void)?
+    @State private var highlightedEditorHeight: CGFloat = 36
         
     enum FocusedField {
         case message
@@ -80,10 +83,143 @@ struct ChatInputField: View {
     
     @ViewBuilder
     private var textField: some View {
-        if #available(iOS 16.0, *) {
+        if highlightMentions {
+            ZStack(alignment: .topLeading) {
+                if message.isEmpty {
+                    Text(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 8)
+                        .padding(.leading, 5)
+                        .allowsHitTesting(false)
+                }
+                MentionHighlightingTextView(
+                    text: $message,
+                    height: $highlightedEditorHeight,
+                    accentColor: UIColor(theme.accent),
+                    mentionCompletionRevision: mentionCompletionRevision,
+                    onSubmit: onSubmit
+                )
+            }
+            .frame(height: min(highlightedEditorHeight, 120))
+        }
+        else if #available(iOS 16.0, *) {
             TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message, axis: .vertical)
         } else {
             TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message)
+        }
+    }
+}
+
+private struct MentionHighlightingTextView: UIViewRepresentable {
+    @Binding var text: String
+    @Binding var height: CGFloat
+    let accentColor: UIColor
+    let mentionCompletionRevision: Int
+    let onSubmit: (() -> Void)?
+
+    private static let mentionRegex = try! NSRegularExpression(
+        pattern: "(?<!\\S)@(?:\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|\\w*)"
+    )
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.delegate = context.coordinator
+        textView.backgroundColor = .clear
+        textView.font = .nosturBody()
+        textView.adjustsFontForContentSizeCategory = true
+        textView.isScrollEnabled = false
+        textView.textContainerInset = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
+        textView.textContainer.lineFragmentPadding = 5
+        textView.returnKeyType = .send
+        textView.tintColor = accentColor
+        return textView
+    }
+
+    func updateUIView(_ textView: UITextView, context: Context) {
+        context.coordinator.parent = self
+        context.coordinator.applyHighlighting(to: textView, text: text)
+        context.coordinator.applyPendingMentionCompletion(to: textView)
+        context.coordinator.updateHeight(of: textView)
+    }
+
+    final class Coordinator: NSObject, UITextViewDelegate {
+        var parent: MentionHighlightingTextView
+        private var isUpdating = false
+        private var appliedMentionCompletionRevision: Int
+
+        init(parent: MentionHighlightingTextView) {
+            self.parent = parent
+            self.appliedMentionCompletionRevision = parent.mentionCompletionRevision
+        }
+
+        func textViewDidChange(_ textView: UITextView) {
+            guard !isUpdating else { return }
+            parent.text = textView.text
+            applyHighlighting(to: textView, text: textView.text, force: true)
+            updateHeight(of: textView)
+        }
+
+        func textView(
+            _ textView: UITextView,
+            shouldChangeTextIn range: NSRange,
+            replacementText replacement: String
+        ) -> Bool {
+            guard replacement == "\n" else { return true }
+            parent.onSubmit?()
+            return false
+        }
+
+        func applyHighlighting(to textView: UITextView, text: String, force: Bool = false) {
+            guard force || textView.text != text || textView.attributedText.length == 0 else { return }
+            isUpdating = true
+            let selectedRange = textView.selectedRange
+            let attributedText = NSMutableAttributedString(string: text)
+            let fullRange = NSRange(location: 0, length: attributedText.length)
+            attributedText.addAttributes([
+                .font: UIFont.nosturBody(),
+                .foregroundColor: UIColor.label
+            ], range: fullRange)
+
+            Self.parentMentionMatches(in: text).forEach { range in
+                attributedText.addAttributes([
+                    .font: UIFont.nosturBody().bold,
+                    .foregroundColor: parent.accentColor
+                ], range: range)
+            }
+
+            textView.attributedText = attributedText
+            textView.selectedRange = NSRange(
+                location: min(selectedRange.location, attributedText.length),
+                length: 0
+            )
+            isUpdating = false
+        }
+
+        func applyPendingMentionCompletion(to textView: UITextView) {
+            guard appliedMentionCompletionRevision != parent.mentionCompletionRevision else { return }
+            appliedMentionCompletionRevision = parent.mentionCompletionRevision
+            let end = textView.endOfDocument
+            textView.selectedTextRange = textView.textRange(from: end, to: end)
+            textView.becomeFirstResponder()
+        }
+
+        func updateHeight(of textView: UITextView) {
+            let fittingSize = CGSize(width: textView.bounds.width, height: .greatestFiniteMagnitude)
+            let newHeight = max(36, textView.sizeThatFits(fittingSize).height)
+            if abs(parent.height - newHeight) > 0.5 {
+                DispatchQueue.main.async {
+                    self.parent.height = newHeight
+                }
+            }
+        }
+
+        private static func parentMentionMatches(in text: String) -> [NSRange] {
+            let range = NSRange(text.startIndex..<text.endIndex, in: text)
+            return MentionHighlightingTextView.mentionRegex.matches(in: text, range: range).map(\.range)
         }
     }
 }

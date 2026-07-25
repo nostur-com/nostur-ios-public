@@ -21,6 +21,9 @@ struct ChatRoom: View {
     @State private var message: String = ""
     @State private var account: CloudAccount? = nil
     @State private var timer: Timer?
+    @State private var mentionTerm: String? = nil
+    @State private var selectedMentions: Set<NRContact> = []
+    @State private var mentionCompletionRevision = 0
     
     @Namespace private var bottom
     
@@ -127,9 +130,24 @@ struct ChatRoom: View {
                     }
                     
                     if !anonymous {
-                        HStack {
-                            MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
-                            ChatInputField(message: $message, startWithFocus: false, onSubmit: submitMessage)
+                        VStack(spacing: 0) {
+                            if let mentionTerm {
+                                ChatMentionChoices(
+                                    contacts: mentionChoices(for: mentionTerm, account: account),
+                                    onSelect: selectMention
+                                )
+                            }
+
+                            HStack {
+                                MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
+                                ChatInputField(
+                                    message: $message,
+                                    startWithFocus: false,
+                                    highlightMentions: true,
+                                    mentionCompletionRevision: mentionCompletionRevision,
+                                    onSubmit: submitMessage
+                                )
+                            }
                         }
                     }
                 }
@@ -145,38 +163,46 @@ struct ChatRoom: View {
             stopTimer()
             chatVM.pause()
         }
-        
-        
-        
+        .onChange(of: message) { newValue in
+            mentionTerm = trailingMentionTerm(in: newValue)
+        }
     }
     
     private func submitMessage() {
         // Create and send chat message (via unpublisher?)
         guard let account = self.account, account.privateKey != nil else { AppSheetsModel.shared.readOnlySheetVisible = true; return }
         guard !message.isEmpty else { return }
-        
+
         var content = message
         if SettingsStore.shared.replaceNsecWithHunter2Enabled {
             content = replaceNsecWithHunter2(content)
         }
-        
+
+        // Resolve contacts explicitly selected from autocomplete before handling raw @npubs.
+        if #available(iOS 16.0, *) {
+            content = replaceMentionsWithNpubs(content, selected: selectedMentions)
+        }
+        else {
+            content = replaceMentionsWithNpubs15(content, selected: selectedMentions)
+        }
+
         // @npub1... → nostr:npub1... and collect p-tags (same as post composer)
         let (contentNpubsReplaced, atNpubs) = replaceAtWithNostr(content)
         content = contentNpubsReplaced
         let atPtags = atNpubs.compactMap { Keys.hex(npub: $0) }
-        
+
         // nostr:npub1... already in content
         let nostrNpubTags = getNostrNpubs(content).compactMap { Keys.hex(npub: $0) }
-        
+
         var nEvent = NEvent(content: content)
         nEvent.kind = .chatMessage
         nEvent.tags.append(NostrTag(["a", aTag]))
-        
+
         // Mention p-tags so mentioned people get notifications
         for pubkey in Set(atPtags + nostrNpubTags) {
             nEvent.tags.append(NostrTag(["p", pubkey]))
         }
-        
+
         nEvent.publicKey = account.publicKey
                 
         if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
@@ -192,6 +218,7 @@ struct ChatRoom: View {
             })
             
             message = ""
+            selectedMentions = []
         }
         else {
             guard let signedEvent = try? account.signEvent(nEvent) else { return }
@@ -199,19 +226,92 @@ struct ChatRoom: View {
             Unpublisher.shared.publishNow(signedEvent, skipDB: false)
             sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
             message = ""
+            selectedMentions = []
         }
     }
-    
+
+    private func mentionChoices(for term: String, account: CloudAccount) -> [NRContact] {
+        let normalizedTerm = term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let followedPubkeys = account.followingPubkeys.union(account.privateFollowingPubkeys)
+        var seen = Set<String>()
+
+        // messages is newest-first: room participants naturally retain recency priority.
+        let recentContacts = chatVM.messages.compactMap { row -> NRContact? in
+            guard seen.insert(row.pubkey).inserted else { return nil }
+            return row.nrContact
+        }
+
+        let followedContacts = followedPubkeys.compactMap { pubkey -> NRContact? in
+            guard seen.insert(pubkey).inserted else { return nil }
+            return NRContact.instance(of: pubkey)
+        }
+        .sorted { $0.anyName.localizedCaseInsensitiveCompare($1.anyName) == .orderedAscending }
+
+        return (recentContacts + followedContacts)
+            .filter {
+                normalizedTerm.isEmpty
+                    || $0.anyName.localizedCaseInsensitiveContains(normalizedTerm)
+                    || ($0.fixedName?.localizedCaseInsensitiveContains(normalizedTerm) ?? false)
+            }
+            .prefix(20)
+            .map { $0 }
+    }
+
+    private func selectMention(_ contact: NRContact) {
+        guard let term = mentionTerm else { return }
+        let charactersToReplace = term.count + 1 // @ plus the current search term
+        guard message.count >= charactersToReplace else { return }
+
+        let marker = "@\u{2063}\u{2064}\(contact.anyName)\u{2064}\u{2063} "
+        message = "\(message.dropLast(charactersToReplace))\(marker)"
+        selectedMentions.insert(contact)
+        mentionTerm = nil
+        mentionCompletionRevision += 1
+    }
+
+    private func trailingMentionTerm(in text: String) -> String? {
+        guard let token = text.split(whereSeparator: \.isWhitespace).last,
+              token.first == "@",
+              !token.contains("\u{2063}"),
+              !token.contains("\u{2064}"),
+              !token.dropFirst().contains("@") else {
+            return nil
+        }
+        return String(token.dropFirst())
+    }
+
     private func startTimer() { // Make sure real time sub for chat messages stays active
         guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 120, repeats: true) { _ in
             chatVM.updateLiveSubscription()
         }
     }
-    
+
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
+    }
+}
+
+private struct ChatMentionChoices: View {
+    let contacts: [NRContact]
+    let onSelect: (NRContact) -> Void
+
+    var body: some View {
+        if !contacts.isEmpty {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(contacts) { contact in
+                        NRContactSearchResultRow(nrContact: contact) {
+                            onSelect(contact)
+                        }
+                        Divider()
+                    }
+                }
+            }
+            .frame(maxHeight: 260)
+            .padding(.horizontal, 10)
+        }
     }
 }
 
