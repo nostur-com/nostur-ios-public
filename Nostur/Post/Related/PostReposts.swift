@@ -28,65 +28,7 @@ struct PostReposts: View {
                         viewState = await loadReposts(id: id)
                     }
             case .ready(let contactsTuple):
-                NXList(plain: true, showListRowSeparator: true) {
-                    if contactsTuple.inWoT.isEmpty && contactsTuple.notWoT.isEmpty && contactsTuple.blocked.isEmpty {
-                        ZStack(alignment: .center) {
-                            theme.listBackground
-                            VStack(spacing: 20) {
-                                Text("Nothing here :(")
-                                Button(action: {
-                                    
-                                }) {
-                                    Label("Retry", systemImage: "arrow.clockwise")
-                                        .labelStyle(.iconOnly)
-                                        .foregroundColor(theme.accent)
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        ForEach(contactsTuple.inWoT) { nrContact in
-                            NRProfileRow(nrContact: nrContact)
-                        }
-                        
-                        if WOT_FILTER_ENABLED() && !contactsTuple.notWoT.isEmpty && !showNotWoT {
-                            Button {
-                                showNotWoT = true
-                                Task { fetchMissingPs(contactsTuple.notWoT) }
-                            } label: {
-                                Text("Show more (\(contactsTuple.notWoT.count))")
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .padding(10)
-                                    .contentShape(Rectangle())
-                            }
-                            .padding(.bottom, 10)
-                        }
-                        if showNotWoT {
-                            ForEach(contactsTuple.notWoT) { nrContact in
-                                NRProfileRow(nrContact: nrContact)
-                            }
-                        }
-                        
-                        if !contactsTuple.blocked.isEmpty && !showBlocked {
-                            Button {
-                                showBlocked = true
-                                Task { fetchMissingPs(contactsTuple.blocked) }
-                            } label: {
-                                Text("Show blocked (\(contactsTuple.blocked.count))")
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .padding(10)
-                                    .contentShape(Rectangle())
-                            }
-                            .padding(.bottom, 10)
-                        }
-                        
-                        if showBlocked {
-                            ForEach(contactsTuple.blocked) { nrContact in
-                                NRProfileRow(nrContact: nrContact)
-                            }
-                        }
-                    }
-                }
+                reposts(contactsTuple)
             case .error(let message):
                 Text(message ?? "Error")
                     .centered()
@@ -100,10 +42,98 @@ struct PostReposts: View {
                     viewState = await loadReposts(id: id)
                 }
         })
-        
+
         .navigationTitle("Reposted by")
     }
-    
+
+    @ViewBuilder
+    private func reposts(_ contactsTuple: (inWoT: [NRContact], notWoT: [NRContact], blocked: [NRContact])) -> some View {
+        if contactsTuple.inWoT.isEmpty && contactsTuple.notWoT.isEmpty && contactsTuple.blocked.isEmpty {
+            emptyState
+        }
+        else {
+            ScrollView {
+                VStack(spacing: GUTTER) {
+                    LazyVStack(spacing: GUTTER) {
+                        ForEach(contactsTuple.inWoT) { nrContact in
+                            NRProfileRow(nrContact: nrContact)
+                        }
+                    }
+
+                    if WOT_FILTER_ENABLED() && !contactsTuple.notWoT.isEmpty && !showNotWoT {
+                        showMoreButton(contactsTuple.notWoT)
+                    }
+
+                    if showNotWoT || !WOT_FILTER_ENABLED() {
+                        LazyVStack(spacing: GUTTER) {
+                            ForEach(contactsTuple.notWoT) { nrContact in
+                                NRProfileRow(nrContact: nrContact)
+                            }
+                        }
+                    }
+
+                    if !contactsTuple.blocked.isEmpty && !showBlocked {
+                        showBlockedButton(contactsTuple.blocked)
+                    }
+
+                    if showBlocked {
+                        LazyVStack(spacing: GUTTER) {
+                            ForEach(contactsTuple.blocked) { nrContact in
+                                NRProfileRow(nrContact: nrContact)
+                            }
+                        }
+                    }
+                }
+                .foregroundColor(theme.accent)
+            }
+            .background(theme.listBackground)
+        }
+    }
+
+    private var emptyState: some View {
+        ZStack(alignment: .center) {
+            theme.listBackground
+            VStack(spacing: 20) {
+                Text("Nothing here :(")
+                Button(action: {
+
+                }) {
+                    Label("Retry", systemImage: "arrow.clockwise")
+                        .labelStyle(.iconOnly)
+                        .foregroundColor(theme.accent)
+                }
+            }
+        }
+    }
+
+    private func showMoreButton(_ contacts: [NRContact]) -> some View {
+        Button {
+            showNotWoT = true
+            Task { fetchMissingPs(contacts) }
+        } label: {
+            Text("Show more (\(contacts.count))")
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(10)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, 10)
+    }
+
+    private func showBlockedButton(_ contacts: [NRContact]) -> some View {
+        Button {
+            showBlocked = true
+            Task { fetchMissingPs(contacts) }
+        } label: {
+            Text("Show blocked (\(contacts.count))")
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(10)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, 10)
+    }
+
     private func loadReposts(id: String) async -> ViewState {
         _ = try? await relayReq(Filters(kinds: [6], tagFilter: TagFilter(tag: "e", values: [id])), timeout: 5.5)
         
@@ -138,4 +168,3 @@ extension PostReposts {
 #Preview {
     PostReposts(id: "e94ac42f1f09ae06fa7b7eaaee199e29d6c45537308a198f89cad91624f999a2")
 }
-
