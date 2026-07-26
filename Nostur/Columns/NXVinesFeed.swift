@@ -15,7 +15,6 @@ struct NXVinesFeed: View {
     private var vm: NXColumnViewModel
     private let posts: [NRPost]
     private let isVisible: Bool
-    @ObservedObject private var vmInner: NXColumnViewModelInner
 
     // Track current index for paging and arrow navigation
     @State private var currentIndex: Int = 0
@@ -23,7 +22,6 @@ struct NXVinesFeed: View {
     init(vm: NXColumnViewModel, posts: [NRPost], isVisible: Bool) {
         self.vm = vm
         self.posts = posts
-        self.vmInner = vm.vmInner
         self.isVisible = isVisible
     }
 

@@ -249,10 +249,10 @@ class NXColumnViewModel: ObservableObject {
                     guard unreadIds.contains(postId) else { return }
                     
                     if case .posts(let existingPosts) = self.viewState {
-                        if vmInner.unreadIds.keys.contains(postId) { // <-- This check is redundant?
-                            vmInner.unreadIds[postId] = nil
-                            vmInner.updateIsAtTopSubject.send()
+                        vmInner.updateUnreadIds { unreadIds in
+                            unreadIds[postId] = nil
                         }
+                        vmInner.updateIsAtTopSubject.send()
                         withAnimation { [weak self] in // withAnimation and not at top keeps scroll position
                             self?.viewState = .posts(existingPosts.filter { $0.id != postId })
                         }
@@ -333,8 +333,10 @@ class NXColumnViewModel: ObservableObject {
 
         guard !postIdsToRemove.isEmpty else { return }
 
-        for key in postIdsToRemove {
-            vmInner.unreadIds[key] = nil
+        vmInner.updateUnreadIds { unreadIds in
+            for key in postIdsToRemove {
+                unreadIds[key] = nil
+            }
         }
         vmInner.updateIsAtTopSubject.send()
 
@@ -639,8 +641,17 @@ class NXColumnViewModel: ObservableObject {
                 if case .posts(let existingPosts) = viewState {
                     let mutedRootIds: Set<String> = notification.object as! Set<String>
                     
-                    for nrPost in existingPosts where (mutedRootIds.contains(nrPost.id) || mutedRootIds.contains(nrPost.replyToRootId ?? "!")) {
-                        vmInner.unreadIds[nrPost.id] = nil
+                    let unreadIdsToRemove = existingPosts.compactMap { nrPost in
+                        (mutedRootIds.contains(nrPost.id) || mutedRootIds.contains(nrPost.replyToRootId ?? "!"))
+                            ? nrPost.id
+                            : nil
+                    }
+                    vmInner.updateUnreadIds { unreadIds in
+                        for id in unreadIdsToRemove {
+                            unreadIds[id] = nil
+                        }
+                    }
+                    if !unreadIdsToRemove.isEmpty {
                         vmInner.updateIsAtTopSubject.send()
                     }
                     
@@ -665,8 +676,15 @@ class NXColumnViewModel: ObservableObject {
                 if case .posts(let existingPosts) = viewState {
                     let blocks: Set<String> = notification.object as! Set<String>
                     
-                    for nrPost in existingPosts where blocks.contains(nrPost.pubkey) {
-                        vmInner.unreadIds[nrPost.id] = nil
+                    let unreadIdsToRemove = existingPosts.compactMap { nrPost in
+                        blocks.contains(nrPost.pubkey) ? nrPost.id : nil
+                    }
+                    vmInner.updateUnreadIds { unreadIds in
+                        for id in unreadIdsToRemove {
+                            unreadIds[id] = nil
+                        }
+                    }
+                    if !unreadIdsToRemove.isEmpty {
                         vmInner.updateIsAtTopSubject.send()
                     }
                     
@@ -693,12 +711,17 @@ class NXColumnViewModel: ObservableObject {
                     return
                 }
                 
-                var removedAny = false
-                for nrPost in existingPosts where !notMutedWords(in: nrPost.plainText, mutedWords: mutedWords) {
-                    vmInner.unreadIds[nrPost.id] = nil
-                    removedAny = true
+                let unreadIdsToRemove = existingPosts.compactMap { nrPost in
+                    !notMutedWords(in: nrPost.plainText, mutedWords: mutedWords)
+                        ? nrPost.id
+                        : nil
                 }
-                if removedAny {
+                vmInner.updateUnreadIds { unreadIds in
+                    for id in unreadIdsToRemove {
+                        unreadIds[id] = nil
+                    }
+                }
+                if !unreadIdsToRemove.isEmpty {
                     vmInner.updateIsAtTopSubject.send()
                 }
                 
@@ -821,7 +844,9 @@ class NXColumnViewModel: ObservableObject {
                 guard let self else { return }
                 if case .posts(let existingPosts) = viewState {
                     let nrPost = notification.object as! NRPost
-                    vmInner.unreadIds[nrPost.id] = nil
+                    vmInner.updateUnreadIds { unreadIds in
+                        unreadIds[nrPost.id] = nil
+                    }
                     vmInner.updateIsAtTopSubject.send()
                     viewState = .posts(existingPosts.filter { $0.id != nrPost.id })
                 }
@@ -1066,11 +1091,11 @@ class NXColumnViewModel: ObservableObject {
                                 
                                 
                                 // Restore unread count
-                                for index in nrPosts.indices {
-                                    if index < restoreToIndex {
+                                vmInner.updateUnreadIds { unreadIds in
+                                    for index in nrPosts.indices where index < restoreToIndex {
                                         let nrPost = nrPosts[index]
-                                        if vmInner.unreadIds[nrPost.id] == nil {
-                                            vmInner.unreadIds[nrPost.id] = 1 + nrPost.parentPosts.count
+                                        if unreadIds[nrPost.id] == nil {
+                                            unreadIds[nrPost.id] = 1 + nrPost.parentPosts.count
                                         }
                                     }
                                 }
@@ -1097,7 +1122,7 @@ class NXColumnViewModel: ObservableObject {
                                 
                                 // After a very short delay, trigger the scroll
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                                    self.vmInner.scrollToIndex = restoreToIndex
+                                    self.vmInner.requestScroll(to: restoreToIndex)
                                     
                                     // Reset the preparation flag after a delay
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -2797,9 +2822,11 @@ extension NXColumnViewModel {
                 }
                 
                 // Update unread count
-                for post in onlyNewAddedPosts {
-                    if vmInner.unreadIds[post.id] == nil {
-                        vmInner.unreadIds[post.id] = 1 + post.parentPosts.count
+                vmInner.updateUnreadIds { unreadIds in
+                    for post in onlyNewAddedPosts {
+                        if unreadIds[post.id] == nil {
+                            unreadIds[post.id] = 1 + post.parentPosts.count
+                        }
                     }
                 }
                 
@@ -2840,7 +2867,7 @@ extension NXColumnViewModel {
                             
                             // After a very short delay, trigger the scroll
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                                self.vmInner.scrollToIndex = restoreToIndex
+                                self.vmInner.requestScroll(to: restoreToIndex)
                                 
                                 // Reset the preparation flag after a delay
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -3187,8 +3214,7 @@ extension NXColumnViewModel {
                 if let unreadCount = vmInner.unreadIds[post.id], unreadCount > 0 {
                     if let firstUnreadIndex = nrPosts.firstIndex(where: { $0.id == post.id }) {
                         DispatchQueue.main.async {
-                            self.vmInner.objectWillChange.send()
-                            self.vmInner.scrollToIndex = firstUnreadIndex
+                            self.vmInner.requestScroll(to: firstUnreadIndex)
                         }
                     }
                 }
@@ -3199,8 +3225,7 @@ extension NXColumnViewModel {
     @MainActor
     public func scrollToTop() {
         DispatchQueue.main.async {
-            self.vmInner.objectWillChange.send()
-            self.vmInner.scrollToIndex = 0
+            self.vmInner.requestScroll(to: 0)
         }
     }
     

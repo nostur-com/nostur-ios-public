@@ -17,15 +17,9 @@ struct NXPostsFeed: View {
     
     private var vm: NXColumnViewModel
     private let posts: [NRPost]
-    @ObservedObject private var vmInner: NXColumnViewModelInner
+    private let vmInner: NXColumnViewModelInner
 
     @State private var updateIsAtTopSubscription: AnyCancellable?
-    
-    // State variables for unread counter position
-    @AppStorage("nx_unread_counter_offset_x") private var nxUnreadCounterOffsetX: Double = 0
-    @AppStorage("nx_unread_counter_offset_y") private var nxUnreadCounterOffsetY: Double = 0
-    
-    @State private var dragOffset = CGSize.zero
     
     init(vm: NXColumnViewModel, posts: [NRPost]) {
         self.vm = vm
@@ -123,53 +117,21 @@ struct NXPostsFeed: View {
         }
         .scrollContentBackgroundHidden()
         .background(theme.listBackground)
-        .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
-            guard let scrollToIndex else { return }
-            guard !vmInner.isPerformingScroll else { return } // Prevent re-entrancy
-            guard !vmInner.isPerformingScrollToFirstUnread else { return } // Prevent re-entrancy
+        .onReceive(vmInner.scrollToIndexSubject.compactMap { $0 }) { scrollToIndex in
+            guard !vmInner.isPerformingScroll,
+                  !vmInner.isPerformingScrollToFirstUnread else {
+                vmInner.clearScrollRequest()
+                return
+            }
             
 #if DEBUG
-            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description) -[LOG]-")
+            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) scroll request \(scrollToIndex.description) -[LOG]-")
 #endif
             
             performScrollToIndex(scrollToIndex)
         }
         .overlay(alignment: .topTrailing) {
-            if vmInner.unreadCount != 0 {
-                unreadCounterView
-                    .offset(x: nxUnreadCounterOffsetX + dragOffset.width,
-                           y: nxUnreadCounterOffsetY + dragOffset.height)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                dragOffset = value.translation
-                            }
-                            .onEnded { value in
-                                let newX = nxUnreadCounterOffsetX + value.translation.width
-                                let newY = nxUnreadCounterOffsetY + value.translation.height
-                                
-                                // Constrain position within screen bounds with padding
-                                let minX: CGFloat = -(ScreenSpace.shared.mainTabSize.width - 91) // not offscreen to the left
-                                let minY: CGFloat = 0 // already top-right, don't move more
-                                let maxX: CGFloat = 0 // already top-right, don't move more
-                                let maxY: CGFloat = ScreenSpace.shared.mainTabSize.height - 296 // not too low
-                                
-                                let clampedX = min(max(newX, minX), maxX)
-                                let clampedY = min(max(newY, minY), maxY)
-                                
-                                // Save position to UserDefaults
-                                nxUnreadCounterOffsetX = clampedX
-                                nxUnreadCounterOffsetY = clampedY
-                                dragOffset = .zero
-                            }
-                    )
-                    .onTapGesture {
-                        scrollToFirstUnread()
-                    }
-                    .simultaneousGesture(LongPressGesture().onEnded { _ in
-                        scrollToTop()
-                    })
-            }
+            unreadCounterView
         }
         .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
             guard vm.isVisible else { return }
@@ -203,7 +165,11 @@ struct NXPostsFeed: View {
     
     @ViewBuilder
     public var unreadCounterView: some View {
-        NXUnreadCounterView(vm: vm.vmInner)
+        NXUnreadCounterView(
+            unreadState: vm.vmInner.unreadState,
+            onTap: scrollToFirstUnread,
+            onLongPress: scrollToTop
+        )
             .padding(.trailing, 10)
             .padding(.top, 5)
     }
@@ -259,7 +225,7 @@ struct NXPostsFeed: View {
             // Only proceed if we're in a valid scroll state
             guard proxy.offset >= 0 else {
                 vmInner.isPerformingScroll = false
-                vmInner.scrollToIndex = nil
+                vmInner.clearScrollRequest()
                 return
             }
             
@@ -282,7 +248,7 @@ struct NXPostsFeed: View {
                 }
             }
             
-            vmInner.scrollToIndex = nil
+            vmInner.clearScrollRequest()
             
             // Reset flag and update state after a brief delay
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
@@ -401,38 +367,40 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
     var idsToMarkAsRead: [String] = []
     var notificationPairs: [(String, UUID)] = []
     
-    // Current post
-    vmInner.unreadIds[nrPost.id] = 0
-    idsToMarkAsRead.append(nrPost.shortId)
-    notificationPairs.append((nrPost.id, vm.columnVMid))
-    
-    // Quote posts
-    if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
-        let shortQuoteId = String(firstQuoteId.prefix(8))
-        idsToMarkAsRead.append(shortQuoteId)
-        notificationPairs.append((firstQuoteId, vm.columnVMid))
-    }
-    
-    // Parent posts
-    if !nrPost.parentPosts.isEmpty {
-        let parentShortIds = nrPost.parentPosts.map { $0.shortId }
-        idsToMarkAsRead.append(contentsOf: parentShortIds)
-        notificationPairs.append(contentsOf: nrPost.parentPosts.map { ($0.id, vm.columnVMid) })
-    }
-        
-    // Mark remaining posts in feed as read (optimize this heavy operation)
-    if let appearedIndex = vm.currentNRPostsOnScreen.firstIndex(where: { $0.id == nrPost.id }) {
-        for i in appearedIndex..<vm.currentNRPostsOnScreen.count {
-            if vmInner.unreadIds[vm.currentNRPostsOnScreen[i].id] != 0 {
-                vmInner.unreadIds[vm.currentNRPostsOnScreen[i].id] = 0
-                idsToMarkAsRead.append(vm.currentNRPostsOnScreen[i].shortId)
-                
-                if vm.currentNRPostsOnScreen[i].isRepost, let firstQuoteId = vm.currentNRPostsOnScreen[i].firstQuoteId {
-                    idsToMarkAsRead.append(String(firstQuoteId.prefix(8)))
-                }
-                
-                if !vm.currentNRPostsOnScreen[i].parentPosts.isEmpty {
-                    idsToMarkAsRead.append(contentsOf: vm.currentNRPostsOnScreen[i].parentPosts.map { $0.shortId })
+    vmInner.updateUnreadIds { unreadIds in
+        // Current post
+        unreadIds[nrPost.id] = 0
+        idsToMarkAsRead.append(nrPost.shortId)
+        notificationPairs.append((nrPost.id, vm.columnVMid))
+
+        // Quote posts
+        if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
+            let shortQuoteId = String(firstQuoteId.prefix(8))
+            idsToMarkAsRead.append(shortQuoteId)
+            notificationPairs.append((firstQuoteId, vm.columnVMid))
+        }
+
+        // Parent posts
+        if !nrPost.parentPosts.isEmpty {
+            let parentShortIds = nrPost.parentPosts.map { $0.shortId }
+            idsToMarkAsRead.append(contentsOf: parentShortIds)
+            notificationPairs.append(contentsOf: nrPost.parentPosts.map { ($0.id, vm.columnVMid) })
+        }
+
+        // Mark remaining posts in feed as read (optimize this heavy operation)
+        if let appearedIndex = vm.currentNRPostsOnScreen.firstIndex(where: { $0.id == nrPost.id }) {
+            for i in appearedIndex..<vm.currentNRPostsOnScreen.count {
+                if unreadIds[vm.currentNRPostsOnScreen[i].id] != 0 {
+                    unreadIds[vm.currentNRPostsOnScreen[i].id] = 0
+                    idsToMarkAsRead.append(vm.currentNRPostsOnScreen[i].shortId)
+
+                    if vm.currentNRPostsOnScreen[i].isRepost, let firstQuoteId = vm.currentNRPostsOnScreen[i].firstQuoteId {
+                        idsToMarkAsRead.append(String(firstQuoteId.prefix(8)))
+                    }
+
+                    if !vm.currentNRPostsOnScreen[i].parentPosts.isEmpty {
+                        idsToMarkAsRead.append(contentsOf: vm.currentNRPostsOnScreen[i].parentPosts.map { $0.shortId })
+                    }
                 }
             }
         }

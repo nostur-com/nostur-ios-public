@@ -8,19 +8,52 @@
 import SwiftUI
 import Combine
 
-// These vars change a lot but trigger rerender on NXPostFeed when not needed
-// So moved to separate NXColumnViewModelInner
-class NXColumnViewModelInner: ObservableObject {
+private struct NXColumnUnreadSnapshot: Equatable {
+    var ids: [String: Int] = [:]
+    var count: Int = 0
+}
+
+/// Isolated from `NXColumnViewModelInner` so unread bookkeeping does not
+/// invalidate the entire feed. A mutation publishes one coherent snapshot.
+final class NXColumnUnreadState: ObservableObject {
+    @Published private var snapshot = NXColumnUnreadSnapshot()
+
+    var unreadIds: [String: Int] {
+        snapshot.ids
+    }
+
+    var unreadCount: Int {
+        snapshot.count
+    }
+
+    fileprivate func replaceUnreadIds(_ unreadIds: [String: Int]) {
+        guard unreadIds != snapshot.ids else { return }
+        snapshot = NXColumnUnreadSnapshot(
+            ids: unreadIds,
+            count: unreadIds.values.reduce(0, +)
+        )
+    }
+}
+
+/// Mutable feed coordination state. UI updates are exposed through narrowly
+/// scoped publishers instead of making the entire object observable.
+class NXColumnViewModelInner {
     
-    // Full IDs (not shortIds)
-    @Published public var unreadIds: [String: Int] = [:] {
-        didSet {
-            let previousUnreadCount = oldValue.reduce(0, { $0 + $1.value })
-            let newUnreadCount = unreadCount
-            if #available(iOS 16.0, *) {
-                if previousUnreadCount > 0 && newUnreadCount == 0 {
-                    AppReviewManager.shared.didJustReachEndOfFeed = true
-                }
+    let unreadState = NXColumnUnreadState()
+
+    // Compatibility accessors for callers that only need a snapshot or perform
+    // a single mutation. Use updateUnreadIds(_:) to batch multiple changes.
+    public var unreadIds: [String: Int] {
+        get { unreadState.unreadIds }
+        set {
+            let previousUnreadCount = unreadState.unreadCount
+            unreadState.replaceUnreadIds(newValue)
+            let newUnreadCount = unreadState.unreadCount
+
+            if #available(iOS 16.0, *),
+               previousUnreadCount > 0,
+               newUnreadCount == 0 {
+                AppReviewManager.shared.didJustReachEndOfFeed = true
             }
             
 #if DEBUG
@@ -30,7 +63,13 @@ class NXColumnViewModelInner: ObservableObject {
     }
     
     public var unreadCount: Int {
-        unreadIds.reduce(0, { $0 + $1.value })
+        unreadState.unreadCount
+    }
+
+    public func updateUnreadIds(_ update: (inout [String: Int]) -> Void) {
+        var unreadIds = unreadState.unreadIds
+        update(&unreadIds)
+        self.unreadIds = unreadIds
     }
     
 #if DEBUG
@@ -55,9 +94,19 @@ class NXColumnViewModelInner: ObservableObject {
     }
 #endif
     
-    @Published public var scrollToIndex: Int?
-    
-    @Published public var isAtTop: Bool = true
+    /// Retains the current command so a scroll restoration request is not lost
+    /// if it is sent just before NXPostsFeed subscribes.
+    public let scrollToIndexSubject = CurrentValueSubject<Int?, Never>(nil)
+
+    public func requestScroll(to index: Int) {
+        scrollToIndexSubject.send(index)
+    }
+
+    public func clearScrollRequest() {
+        scrollToIndexSubject.send(nil)
+    }
+
+    public var isAtTop: Bool = true
     
     public var updateIsAtTopSubject = PassthroughSubject<Void, Never>()
     

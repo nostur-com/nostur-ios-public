@@ -8,14 +8,52 @@
 import SwiftUI
 
 struct NXUnreadCounterView: View {
-    public var vm: NXColumnViewModelInner
+    @ObservedObject public var unreadState: NXColumnUnreadState
+    public var onTap: () -> Void = {}
+    public var onLongPress: () -> Void = {}
+
+    @AppStorage("nx_unread_counter_offset_x") private var offsetX: Double = 0
+    @AppStorage("nx_unread_counter_offset_y") private var offsetY: Double = 0
+    @State private var dragOffset = CGSize.zero
     
     var body: some View {
-        if #available(iOS 26.0, *) {
-            NXUnreadCounterView26(vm: vm)
-        }
-        else {
-            NXUnreadCounterView15(vm: vm)
+        if unreadState.unreadCount != 0 {
+            Group {
+                if #available(iOS 26.0, *) {
+                    NXUnreadCounterView26(unreadCount: unreadState.unreadCount)
+                }
+                else {
+                    NXUnreadCounterView15(unreadCount: unreadState.unreadCount)
+                }
+            }
+            .offset(x: offsetX + dragOffset.width,
+                    y: offsetY + dragOffset.height)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        dragOffset = value.translation
+                    }
+                    .onEnded { value in
+                        let newX = offsetX + value.translation.width
+                        let newY = offsetY + value.translation.height
+
+                        // Constrain position within screen bounds with padding
+                        let minX: CGFloat = -(ScreenSpace.shared.mainTabSize.width - 91)
+                        let minY: CGFloat = 0
+                        let maxX: CGFloat = 0
+                        let maxY: CGFloat = ScreenSpace.shared.mainTabSize.height - 296
+
+                        offsetX = min(max(newX, minX), maxX)
+                        offsetY = min(max(newY, minY), maxY)
+                        dragOffset = .zero
+                    }
+            )
+            .onTapGesture(perform: onTap)
+            .simultaneousGesture(
+                LongPressGesture().onEnded { _ in
+                    onLongPress()
+                }
+            )
         }
     }
 }
@@ -25,7 +63,7 @@ struct NXUnreadCounterView26: View {
     
     @Environment(\.theme) private var theme
     @Environment(\.colorScheme) private var colorScheme
-    @ObservedObject public var vm: NXColumnViewModelInner
+    public let unreadCount: Int
     
     var body: some View {
 //        RoundedRectangle(cornerRadius: 20)
@@ -33,10 +71,10 @@ struct NXUnreadCounterView26: View {
 //            .foregroundColor(theme.accent)
             .frame(width: 61, height: 36)
             .overlay(alignment: .leading) {
-                Text(vm.unreadCount.description)
+                Text(unreadCount.description)
                     .foregroundColor(.white)
-                    .font(.system(size: vm.unreadCount > 999 ? 13 : 16, weight: .bold))
-                    .animation(.snappy, value: vm.unreadCount)
+                    .font(.system(size: unreadCount > 999 ? 13 : 16, weight: .bold))
+                    .animation(.snappy, value: unreadCount)
                     .rollingNumber()
                     .fixedSize()
                     .frame(width: 35, alignment: .center)
@@ -67,16 +105,16 @@ struct NXUnreadCounterView26: View {
 struct NXUnreadCounterView15: View {
     
     @Environment(\.theme) private var theme
-    @ObservedObject public var vm: NXColumnViewModelInner
+    public let unreadCount: Int
     
     var body: some View {
         RoundedRectangle(cornerRadius: 20)
             .foregroundColor(theme.accent)
             .frame(width: 61, height: 36)
             .overlay(alignment: .leading) {
-                Text(vm.unreadCount.description)
-                    .font(.system(size: vm.unreadCount > 999 ? 13 : 16, weight: .bold))
-                    .animation(.snappy, value: vm.unreadCount)
+                Text(unreadCount.description)
+                    .font(.system(size: unreadCount > 999 ? 13 : 16, weight: .bold))
+                    .animation(.snappy, value: unreadCount)
                     .rollingNumber()
                     .fixedSize()
                     .frame(width: 35, alignment: .center)
@@ -109,25 +147,25 @@ struct NXUnreadCounterView15: View {
         Themes.default.theme.background
         
         VStack(spacing: 20) {
-            NXUnreadCounterView(vm: vmInner)
+            NXUnreadCounterView(unreadState: vmInner.unreadState)
                 .environmentObject(Themes.default)
                 .onAppear {
                     vmInner.unreadIds["test"] = 5
                 }
             
-            NXUnreadCounterView(vm: vmInner2)
+            NXUnreadCounterView(unreadState: vmInner2.unreadState)
                 .environmentObject(Themes.default)
                 .onAppear {
                     vmInner2.unreadIds["test"] = 27
                 }
             
-            NXUnreadCounterView(vm: vmInner3)
+            NXUnreadCounterView(unreadState: vmInner3.unreadState)
                 .environmentObject(Themes.default)
                 .onAppear {
                     vmInner3.unreadIds["test"] = 342
                 }
             
-            NXUnreadCounterView(vm: vmInner4)
+            NXUnreadCounterView(unreadState: vmInner4.unreadState)
                 .environmentObject(Themes.default)
                 .onAppear {
                     vmInner4.unreadIds["test"] = 3420
@@ -173,25 +211,25 @@ struct NXUnreadCounterView15: View {
             }
             
             VStack(spacing: 20) {
-                NXUnreadCounterView(vm: vmInner)
+                NXUnreadCounterView(unreadState: vmInner.unreadState)
                     .environmentObject(Themes.default)
                     .onAppear {
                         vmInner.unreadIds["test"] = 5
                     }
                 
-                NXUnreadCounterView(vm: vmInner2)
+                NXUnreadCounterView(unreadState: vmInner2.unreadState)
                     .environmentObject(Themes.default)
                     .onAppear {
                         vmInner2.unreadIds["test"] = 27
                     }
                 
-                NXUnreadCounterView(vm: vmInner3)
+                NXUnreadCounterView(unreadState: vmInner3.unreadState)
                     .environmentObject(Themes.default)
                     .onAppear {
                         vmInner3.unreadIds["test"] = 342
                     }
                 
-                NXUnreadCounterView(vm: vmInner4)
+                NXUnreadCounterView(unreadState: vmInner4.unreadState)
                     .environmentObject(Themes.default)
                     .onAppear {
                         vmInner4.unreadIds["test"] = 3420
