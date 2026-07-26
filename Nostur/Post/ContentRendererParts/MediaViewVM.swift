@@ -10,6 +10,9 @@ import NukeUI
 import Nuke
 
 class MediaViewVM: ObservableObject {
+    private static let progressStep = 5
+    private static let minimumProgressUpdateInterval: TimeInterval = 0.1
+
     @Published var state: MediaViewState = .initial
     private var task: ImageTask?
     
@@ -63,23 +66,50 @@ class MediaViewVM: ObservableObject {
             return
         }
         
-        if !preserveCurrentImage {
-            Task { @MainActor in
-                // resume from paused?
-                let progress = if case .paused(let progress) = state { progress }
-                else { 0 } // resume from 0
-                state = .loading(progress)
+        let initialProgress = await MainActor.run {
+            if preserveCurrentImage {
+                return 0
             }
+
+            // resume from paused?
+            let progress = if case .paused(let progress) = state { progress }
+            else { 0 } // resume from 0
+            state = .loading(progress)
+            return progress
         }
-        
-        for await progress in task.progress {            
-            Task { @MainActor in
-                // Don't update loading if not loading, (could already be finished) (because async out of order)
-                if case .loading(let currentProgress) = state {
-                    let newProgress = Int(ceil(progress.fraction * 100))
-                    if currentProgress != newProgress { // Only rerender if progress actually changed
-                        state = .loading(newProgress)
-                    }
+
+        if !preserveCurrentImage {
+            var lastPublishedProgress = initialProgress
+            var lastProgressUpdateTime = -Double.infinity
+
+            for await progress in task.progress {
+                guard progress.fraction.isFinite else { continue }
+                let fraction = min(max(progress.fraction, 0), 1)
+                let rawProgress = Int(ceil(fraction * 100))
+                let steppedProgress = min(
+                    95,
+                    (rawProgress / Self.progressStep) * Self.progressStep
+                )
+
+                guard steppedProgress >= lastPublishedProgress + Self.progressStep
+                else { continue }
+
+                let now = ProcessInfo.processInfo.systemUptime
+                guard now - lastProgressUpdateTime >= Self.minimumProgressUpdateInterval
+                else { continue }
+
+                let didPublish = await MainActor.run {
+                    guard case .loading(let currentProgress) = state,
+                          steppedProgress > currentProgress
+                    else { return false }
+
+                    state = .loading(steppedProgress)
+                    return true
+                }
+
+                if didPublish {
+                    lastPublishedProgress = steppedProgress
+                    lastProgressUpdateTime = now
                 }
             }
         }
@@ -173,12 +203,11 @@ class MediaViewVM: ObservableObject {
         return false
     }
     
+    @MainActor
     public func pause(_ atProgress: Int = 0) {
         task?.cancel()
-        Task { @MainActor in
-            if case .loading(_) = state { // only if loading, could be already finished so don't reset to paused
-                state = .paused(atProgress)
-            }
+        if case .loading(_) = state { // only if loading, could be already finished so don't reset to paused
+            state = .paused(atProgress)
         }
     }
     
