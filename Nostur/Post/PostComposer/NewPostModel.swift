@@ -168,6 +168,12 @@ public final class NewPostModel: ObservableObject {
         case privateReply(to: String, locked: Bool)
     }
 
+    private enum DraftSendState: Equatable {
+        case idle
+        case committing
+        case committed
+    }
+
     @Published var lockToSingleRelay: Bool = false {
         didSet {
             if lockToSingleRelay {
@@ -193,7 +199,7 @@ public final class NewPostModel: ObservableObject {
     @Published var uploadError: String?
     private var uploadedImageImetasById: [String: Imeta] = [:]
     private var imageUploadCancellablesById: [String: AnyCancellable] = [:]
-    private var didSendWithUploadedImages = false
+    private var draftSendState: DraftSendState = .idle
     var requiredP: String? = nil
     private var privateReplyRecipient: String? = nil
     @Published var availableContacts: Set<NRContact> = [] // are available to toggle on/off for notifications
@@ -385,8 +391,6 @@ public final class NewPostModel: ObservableObject {
         pruneImageUploadState()
         let orderedIMetas = typingTextModel.pastedImages.compactMap { uploadedImageImetasById[$0.uniqueId] }
         guard orderedIMetas.count == typingTextModel.pastedImages.count else { return false }
-        guard !didSendWithUploadedImages else { return true }
-        didSendWithUploadedImages = true
         _sendNow(imetas: orderedIMetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
         return true
     }
@@ -404,6 +408,18 @@ public final class NewPostModel: ObservableObject {
         typingTextModel.sending = false
         uploadError = message
         sendNotification(.anyStatus, (message, "NewPost"))
+    }
+
+    @MainActor
+    private func beginDraftSend() -> Bool {
+        guard draftSendState == .idle else { return false }
+        draftSendState = .committing
+        return true
+    }
+
+    @MainActor
+    private func finishDraftSend() {
+        draftSendState = .committed
     }
 
     @MainActor
@@ -1073,6 +1089,7 @@ public final class NewPostModel: ObservableObject {
     
     @MainActor
     private func _sendNow(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
+        guard draftSendState == .idle else { return }
         Importer.shared.delayProcessing()
         guard let account = activeAccount else { return }
         account.lastLoginAt = .now
@@ -1119,7 +1136,8 @@ public final class NewPostModel: ObservableObject {
                 sendNotification(.anyStatus, ("No relay is available for this private reply. Nothing was sent.", "NewPost"))
                 return
             }
-            
+
+            guard beginDraftSend() else { return }
             Task {
                 // Wrap and send to self (backup)
                 do {
@@ -1172,6 +1190,7 @@ public final class NewPostModel: ObservableObject {
                     }
                 }
             }
+            finishDraftSend()
             
             if let replyTo {
                 bg().perform { // update ui
@@ -1193,7 +1212,8 @@ public final class NewPostModel: ObservableObject {
         let cancellationId = UUID()
         if account.isNC {
             finalEvent = finalEvent.withId()
-            
+
+            guard beginDraftSend() else { return }
             // Save unsigned event:
             let bgContext = bg()
             bgContext.perform {
@@ -1236,7 +1256,13 @@ public final class NewPostModel: ObservableObject {
                 }
             }
         }
-        else if let signedEvent = try? account.signEvent(finalEvent) {
+        else {
+            guard let signedEvent = try? account.signEvent(finalEvent) else {
+                typingTextModel.sending = false
+                sendNotification(.anyStatus, ("Could not sign post", "NewPost"))
+                return
+            }
+            guard beginDraftSend() else { return }
             let bgContext = bg()
             bgContext.perform {
                 let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send", context: bgContext)
@@ -1260,7 +1286,8 @@ public final class NewPostModel: ObservableObject {
             }
             _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
         }
-        
+        finishDraftSend()
+
         if let replyTo {
             let shouldRepublish = !replyTo.nrPost.isRestricted && !replyTo.nrPost.isPrivate
             
@@ -1303,6 +1330,7 @@ public final class NewPostModel: ObservableObject {
 
     @MainActor
     func sendNowAnon(replyTo: ReplyTo, onDismiss: @escaping () -> Void) async {
+        guard draftSendState == .idle else { return }
         let keys: Keys
         do { keys = try Keys.newKeys() }
         catch { typingTextModel.sending = false
@@ -1324,6 +1352,7 @@ public final class NewPostModel: ObservableObject {
             sendNotification(.anyStatus, ("Anon reply blocked: identity check failed", "NewPost")); return
         }
 
+        guard beginDraftSend() else { return }
         AnonReplySession.shared.register(keys.publicKeyHex)
         let parentAuthor = replyTo.nrPost.kind == 9735 ? (replyTo.nrPost.fromPubkey ?? replyTo.nrPost.pubkey) : replyTo.nrPost.pubkey
 #if DEBUG
@@ -1332,6 +1361,7 @@ public final class NewPostModel: ObservableObject {
         AnonPublisher.shared.publish(signedEvent: signed, parentAuthorPubkey: parentAuthor)
         // `keys` goes out of scope here → private key discarded. publish() returns immediately;
         // relay delivery runs in the background so the composer dismisses without waiting on relays.
+        finishDraftSend()
         typingTextModel.sending = false
         onDismiss()
     }
