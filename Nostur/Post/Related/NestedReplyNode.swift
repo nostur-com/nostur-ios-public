@@ -144,5 +144,5 @@ enum NestedThreadMetrics {
         return .flatBranch
     }
     
-    static let maxNodes: Int = 200
+    static let maxNodes: Int = 300
 }

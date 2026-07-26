@@ -21,6 +21,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct NestedThreadReplies: View {
     @Environment(\.theme) private var theme
@@ -94,6 +95,7 @@ struct NestedThreadReplies: View {
 struct NestedReplyRow: View {
     @Environment(\.theme) private var theme
     @Environment(\.availableWidth) private var availableWidth
+    @Environment(\.colorScheme) private var colorScheme
     
     let node: NestedReplyNode
     /// Hierarchical index for debug (e.g. `"1.3.2"`).
@@ -107,7 +109,46 @@ struct NestedReplyRow: View {
     
     private var parentHasMultipleChildren: Bool { node.children.count > 1 }
     
-    private var lineColor: Color { theme.lineColor.opacity(0.65) }
+    /// Pre-blend with the known background instead of applying opacity.
+    /// This lets adjoining rail segments overlap slightly without producing
+    /// a darker/thicker-looking seam where their alpha would accumulate.
+    private var lineColor: Color {
+        let style: UIUserInterfaceStyle = colorScheme == .dark ? .dark : .light
+        let traits = UITraitCollection(userInterfaceStyle: style)
+        let foreground = UIColor(theme.lineColor).resolvedColor(with: traits)
+        let background = UIColor(theme.listBackground).resolvedColor(with: traits)
+        
+        var foregroundRed: CGFloat = 0
+        var foregroundGreen: CGFloat = 0
+        var foregroundBlue: CGFloat = 0
+        var foregroundAlpha: CGFloat = 0
+        var backgroundRed: CGFloat = 0
+        var backgroundGreen: CGFloat = 0
+        var backgroundBlue: CGFloat = 0
+        var backgroundAlpha: CGFloat = 0
+        
+        guard foreground.getRed(
+            &foregroundRed,
+            green: &foregroundGreen,
+            blue: &foregroundBlue,
+            alpha: &foregroundAlpha
+        ), background.getRed(
+            &backgroundRed,
+            green: &backgroundGreen,
+            blue: &backgroundBlue,
+            alpha: &backgroundAlpha
+        ) else {
+            return theme.lineColor
+        }
+        
+        let alpha = foregroundAlpha * 0.65
+        return Color(
+            red: foregroundRed * alpha + backgroundRed * (1 - alpha),
+            green: foregroundGreen * alpha + backgroundGreen * (1 - alpha),
+            blue: foregroundBlue * alpha + backgroundBlue * (1 - alpha),
+            opacity: 1
+        )
+    }
     
     private var nestedAvailableWidth: CGFloat {
         max(120, availableWidth - visualInset)
@@ -174,7 +215,10 @@ struct NestedReplyRow: View {
     }
     
     private var postBlock: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        // Keep the Box flush with the children container below it. A VStack
+        // spacing here creates a real gap between bodySpine (on the Box) and
+        // the incoming rail (on the first child).
+        VStack(alignment: .leading, spacing: 0) {
             Box(nrPost: node.nrPost, showGutter: false) {
                 PostRowDeletable(
                     nrPost: node.nrPost,
@@ -215,6 +259,7 @@ struct NestedReplyRow: View {
                     .foregroundColor(.orange)
                     .textSelection(.enabled)
                     .padding(.leading, 8)
+                    .padding(.top, 2)
                     .padding(.bottom, 2)
             }
         }
@@ -244,8 +289,8 @@ struct NestedReplyRow: View {
             ZStack(alignment: .topLeading) {
                 Path { path in
                     guard geo.size.height > y0 else { return }
-                    path.move(to: CGPoint(x: x, y: y0))
-                    path.addLine(to: CGPoint(x: x, y: geo.size.height))
+                    path.move(to: CGPoint(x: x, y: y0+1))
+                    path.addLine(to: CGPoint(x: x, y: geo.size.height ))
                 }
                 .stroke(lineColor, style: StrokeStyle(lineWidth: lineW, lineCap: .square))
                 .allowsHitTesting(false)
@@ -374,14 +419,17 @@ private struct NestedChildBranch: View {
     }
     
     /// Straight vertical connector into a single-child chain (no indent, no L).
-    /// Into mid-PFP only; the child's bodySpine continues below when it has kids.
+    /// Stop at the top of the PFP; the child's bodySpine continues below it.
+    /// The hit target still extends to mid-PFP for comfortable collapsing.
     @ViewBuilder
     private func linearRail(height h: CGFloat, spineX x: CGFloat, midY y: CGFloat) -> some View {
+        let pfpTopY = max(1, y - DIMENSIONS.POST_ROW_PFP_DIAMETER / 2.0)
+        
         Path { path in
             path.move(to: CGPoint(x: x, y: 0))
-            path.addLine(to: CGPoint(x: x, y: y))
+            path.addLine(to: CGPoint(x: x, y: pfpTopY))
         }
-        .stroke(lineColor, style: StrokeStyle(lineWidth: lineW, lineCap: .square))
+        .stroke(lineColor, style: StrokeStyle(lineWidth: lineW, lineCap: .butt))
         .allowsHitTesting(false)
         
         Color.clear
@@ -397,13 +445,14 @@ private struct NestedChildBranch: View {
     private func branchRail(height h: CGFloat, spineX x: CGFloat, midY y: CGFloat) -> some View {
         let endX = max(x + lineW + 4, branchEndX)
         let r = min(cornerR, y - 2, max(0, endX - x - 2))
+        let incomingHeight = max(0, y - r)
         // Hit only where ink is drawn. Do not extend past endX into the PFP column.
         let verticalHitHeight = isLastSibling ? max(y, hit) : h
         let horizontalHitWidth = max(0, endX - x)
         
         Path { path in
-            path.move(to: CGPoint(x: x, y: 0))
-            path.addLine(to: CGPoint(x: x, y: max(0, y - r)))
+            path.move(to: CGPoint(x: x, y: -5))
+            path.addLine(to: CGPoint(x: x, y: incomingHeight))
             
             if r > 0 {
                 path.addQuadCurve(
@@ -412,14 +461,14 @@ private struct NestedChildBranch: View {
                 )
             }
             
-            path.addLine(to: CGPoint(x: endX, y: y))
+            path.addLine(to: CGPoint(x: endX - 1, y: y))
             
             if !isLastSibling && h > y {
-                path.move(to: CGPoint(x: x, y: y))
-                path.addLine(to: CGPoint(x: x, y: h))
+                path.move(to: CGPoint(x: x, y: y - 5))
+                path.addLine(to: CGPoint(x: x, y: h + 5))
             }
         }
-        .stroke(lineColor, style: StrokeStyle(lineWidth: lineW, lineCap: .round, lineJoin: .round))
+        .stroke(lineColor, style: StrokeStyle(lineWidth: lineW, lineCap: .square, lineJoin: .round))
         .allowsHitTesting(false)
         
         // Vertical segment of the L (and continuing spine for non-last siblings).
