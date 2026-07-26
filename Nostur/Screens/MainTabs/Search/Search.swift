@@ -22,18 +22,22 @@ struct Search: View {
 
     @State private var searchText = ""
     @State var searchTask: Task<Void, Never>? = nil
+    @State var searchID = UUID()
+    @State var searchCancellationToken: SearchCancellationToken? = nil
+    @State var remainingSearchPostIDs: [PostID] = []
+    @State var loadingMoreSearchResults = false
     @State var backlog = Backlog(timeout: 12, backlogDebugName: "Search")
     @ObservedObject var settings: SettingsStore = .shared
-    
+
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     private let containerID: String
     private let showsNavigationTitle: Bool
-    
+
     init(containerID: String = "Search", showsNavigationTitle: Bool = true) {
         self.containerID = containerID
         self.showsNavigationTitle = showsNavigationTitle
     }
-    
+
     private var isSearchingHashtag: Bool {
         let term = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         return isHashtag(term)
@@ -64,7 +68,7 @@ struct Search: View {
                                     NRContactSearchResultRow(nrContact: nrContact, onSelect: {
                                         navigateTo(NRContactPath(nrContact: nrContact), context: containerID)
                                     }, showFollowButton: true)
-                                        
+
                                     HStack {
                                         Spacer()
                                         LazyFollowedBy(pubkey: nrContact.pubkey, alignment: .trailing, minimal: true)
@@ -103,6 +107,13 @@ struct Search: View {
                                     }
                                 }
                                 .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                                .onAppear {
+                                    loadMoreSearchResultsIfNeeded(after: nrPost)
+                                }
+                            }
+                            if loadingMoreSearchResults {
+                                ProgressView()
+                                    .padding()
                             }
                         }
 
@@ -132,7 +143,7 @@ struct Search: View {
                                                             to: nil, from: nil, for: nil)
                     }
                 }
-                
+
                 AudioOnlyBarSpace()
             }
             .overlay(alignment: .bottom) {
@@ -161,33 +172,45 @@ struct Search: View {
                 }
             }
             .onChange(of: searchText) { searchInput in
+                searchTask?.cancel()
+                searchTask = nil
+                searchCancellationToken?.cancel()
+                searchCancellationToken = nil
+                backlog.clear()
+
+                let newSearchID = UUID()
+                searchID = newSearchID
                 nrPosts = []
                 contacts = []
+                remainingSearchPostIDs = []
+                loadingMoreSearchResults = false
+                searching = false
 
                 navPath.removeLast(navPath.count)
                 switch typeOfSearch(searchInput) {
                 case .nprofile1(let term):
-                    nprofileSearch(term)
+                    nprofileSearch(term, searchID: newSearchID)
                 case .naddr1(let term):
-                    naddrSearch(term)
+                    naddrSearch(term, searchID: newSearchID)
                 case .nevent1(let term):
-                    neventSearch(term)
+                    neventSearch(term, searchID: newSearchID)
                 case .npub1(let term):
-                    npubSearch(term)
+                    npubSearch(term, searchID: newSearchID)
                 case .nametag(let term):
-                    nametagSearch(term)
+                    nametagSearch(term, searchID: newSearchID)
                 case .hashtag(let term):
-                    hashtagSearch(term)
+                    hashtagSearch(term, searchID: newSearchID)
                 case .note1(let term):
-                    note1Search(term)
+                    note1Search(term, searchID: newSearchID)
                 case .hexId(let term):
-                    hexIdSearch(term)
+                    hexIdSearch(term, searchID: newSearchID)
                 case .nip05(let nip05parts):
-                    nip05Search(nip05parts)
+                    nip05Search(nip05parts, searchID: newSearchID)
                 case .url(let term):
-                    urlSearch(term)
+                    urlSearch(term, searchID: newSearchID)
                 case .other(let term):
-                    otherSearch(term)
+                    guard !term.isEmpty else { return }
+                    otherSearch(term, searchID: newSearchID)
                 }
             }
             .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
@@ -203,7 +226,7 @@ struct Search: View {
                 let destination = notification.object as! NavigationDestination
                 guard !IS_IPAD || horizontalSizeClass == .compact else { return }
                 guard destination.context == containerID else { return }
-                
+
                 if (type(of: destination.destination) == HashtagPath.self) {
                     navPath.removeLast(navPath.count)
                     let hashtag = (destination.destination as! HashtagPath).hashTag
@@ -231,7 +254,7 @@ struct Search: View {
         }
         .nbUseNavigationStack(.never)
     }
-    
+
     @ViewBuilder
     private var replyButton: some View {
         Image("ReplyIcon")
