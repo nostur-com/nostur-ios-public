@@ -9,11 +9,28 @@ import SwiftUI
 
 struct SearchBox: View {
     @Environment(\.theme) private var theme
-    @StateObject var debounceObject = DebounceObject()
-    var prompt: String
+    @StateObject private var debounceObject: DebounceObject
+    private var prompt: String
     @Binding var text: String
-    var autoFocus: Bool = true
+    private var autoFocus: Bool
+    private var onImmediateTextChange: ((String) -> Void)?
     @FocusState private var isFocused: Bool
+
+    init(
+        prompt: String,
+        text: Binding<String>,
+        autoFocus: Bool = true,
+        debounceDelay: @escaping (String) -> TimeInterval = { _ in 0.5 },
+        onImmediateTextChange: ((String) -> Void)? = nil
+    ) {
+        self.prompt = prompt
+        self._text = text
+        self.autoFocus = autoFocus
+        self.onImmediateTextChange = onImmediateTextChange
+        self._debounceObject = StateObject(
+            wrappedValue: DebounceObject(delayProvider: debounceDelay)
+        )
+    }
     
     var body: some View {
         TextField(text: $debounceObject.text, prompt: Text(prompt).foregroundColor(Color.secondary), label: {
@@ -59,6 +76,9 @@ struct SearchBox: View {
             if newText != debounceObject.text {
                 debounceObject.text = newText
             }
+        }
+        .onChange(of: debounceObject.text) { rawText in
+            onImmediateTextChange?(rawText)
         }
         .onChange(of: debounceObject.debouncedText) { searchString in
             if searchString != text {
@@ -106,4 +126,3 @@ struct SearchBox_Previews: PreviewProvider {
 //        }
 //    }
 //}
-

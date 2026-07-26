@@ -27,12 +27,19 @@ final class SearchCancellationToken: @unchecked Sendable {
     }
 }
 
-struct SearchResults {
+struct SearchContactStage {
     let contacts: [NRContact]
-    let posts: [NRPost]
-    let remainingPostIDs: [PostID]
+    let matchedTermsByPubkey: [Pubkey: UInt64]
 
-    static let empty = SearchResults(contacts: [], posts: [], remainingPostIDs: [])
+    static let empty = SearchContactStage(contacts: [], matchedTermsByPubkey: [:])
+}
+
+struct SearchPostResult: Identifiable {
+    let id: PostID
+    let pubkey: Pubkey
+    let createdAt: Date
+    let content: String
+    let author: NRContact?
 }
 
 private struct ContactSearchCandidate {
@@ -44,11 +51,10 @@ private struct PostSearchCandidate {
     let id: PostID
     let pubkey: Pubkey
     let createdAt: Int64
+    let content: String
 }
 
 class SearchModel {
-    static let postPageSize = 25
-
     private static let contactCandidateLimit = 500
     private static let contactResultLimit = 50
     private static let postCandidateLimit = 500
@@ -56,10 +62,10 @@ class SearchModel {
     private static let maximumTermCount = 63
 
     @MainActor
-    static func searchInNames(
+    static func searchContacts(
         _ searchText: String,
         cancellationToken: SearchCancellationToken
-    ) async -> SearchResults {
+    ) async -> SearchContactStage {
         let terms = normalizedTerms(searchText)
         guard !terms.isEmpty, !cancellationToken.isCancelled else {
             return .empty
@@ -68,15 +74,102 @@ class SearchModel {
         let blockedPubkeys = blocks()
         let context = bg()
         return await withCheckedContinuation {
-            (continuation: CheckedContinuation<SearchResults, Never>) in
+            (continuation: CheckedContinuation<SearchContactStage, Never>) in
             context.perform {
+                guard !cancellationToken.isCancelled else {
+                    continuation.resume(returning: .empty)
+                    return
+                }
+
+                let allTermsMask = maskForAllTerms(terms)
+                let candidates = fetchContactCandidates(
+                    terms: terms,
+                    blockedPubkeys: blockedPubkeys,
+                    context: context
+                )
+                guard !cancellationToken.isCancelled else {
+                    continuation.resume(returning: .empty)
+                    return
+                }
+
+                let termMasks = Dictionary(
+                    uniqueKeysWithValues: candidates.map { ($0.pubkey, $0.matchedTerms) }
+                )
+                let matchingPubkeys = candidates
+                    .filter { $0.matchedTerms == allTermsMask }
+                    .sorted { rankedBefore($0, $1) }
+                    .prefix(contactResultLimit)
+                    .map(\.pubkey)
+                let contacts = fetchContacts(
+                    pubkeys: matchingPubkeys,
+                    context: context
+                )
+
                 continuation.resume(
-                    returning: performSearch(
-                        terms: terms,
-                        blockedPubkeys: blockedPubkeys,
-                        cancellationToken: cancellationToken,
-                        context: context
+                    returning: cancellationToken.isCancelled
+                        ? .empty
+                        : SearchContactStage(
+                            contacts: contacts,
+                            matchedTermsByPubkey: termMasks
+                        )
+                )
+            }
+        }
+    }
+
+    @MainActor
+    static func searchPosts(
+        _ searchText: String,
+        contactTermMasks: [Pubkey: UInt64],
+        cancellationToken: SearchCancellationToken
+    ) async -> [SearchPostResult] {
+        let terms = normalizedTerms(searchText)
+        guard !terms.isEmpty, !cancellationToken.isCancelled else { return [] }
+
+        let blockedPubkeys = blocks()
+        let context = bg()
+        return await withCheckedContinuation {
+            (continuation: CheckedContinuation<[SearchPostResult], Never>) in
+            context.perform {
+                guard !cancellationToken.isCancelled else {
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                let candidates = fetchPostCandidates(
+                    terms: terms,
+                    allTermsMask: maskForAllTerms(terms),
+                    contactTermMasks: contactTermMasks,
+                    blockedPubkeys: blockedPubkeys,
+                    context: context
+                )
+                .sorted { rankedBefore($0, $1) }
+                .prefix(postResultLimit)
+
+                guard !cancellationToken.isCancelled else {
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                var seenAuthorPubkeys = Set<Pubkey>()
+                let authorPubkeys = candidates
+                    .map(\.pubkey)
+                    .filter { seenAuthorPubkeys.insert($0).inserted }
+                let authors = fetchContacts(pubkeys: authorPubkeys, context: context)
+                let authorsByPubkey = Dictionary(
+                    uniqueKeysWithValues: authors.map { ($0.pubkey, $0) }
+                )
+                let results = candidates.map { candidate in
+                    SearchPostResult(
+                        id: candidate.id,
+                        pubkey: candidate.pubkey,
+                        createdAt: Date(timeIntervalSince1970: TimeInterval(candidate.createdAt)),
+                        content: String(candidate.content.prefix(1000)),
+                        author: authorsByPubkey[candidate.pubkey]
                     )
+                }
+                continuation.resume(
+                    returning: cancellationToken.isCancelled ? [] : results
                 )
             }
         }
@@ -106,7 +199,7 @@ class SearchModel {
         }
     }
 
-    private static func normalizedTerms(_ searchText: String) -> [SearchTerm] {
+    static func normalizedTerms(_ searchText: String) -> [SearchTerm] {
         var seen = Set<SearchTerm>()
         return searchText
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -117,59 +210,16 @@ class SearchModel {
             .map { $0 }
     }
 
-    private static func performSearch(
+    static func matches(
         terms: [SearchTerm],
-        blockedPubkeys: Set<Pubkey>,
-        cancellationToken: SearchCancellationToken,
-        context: NSManagedObjectContext
-    ) -> SearchResults {
-        guard !cancellationToken.isCancelled else { return .empty }
+        searchableValues: [String]
+    ) -> Bool {
+        termMask(terms: terms, searchableValues: searchableValues) == maskForAllTerms(terms)
+    }
 
-        let allTermsMask = (UInt64(1) << UInt64(terms.count)) - 1
-        let contactCandidates = fetchContactCandidates(
-            terms: terms,
-            blockedPubkeys: blockedPubkeys,
-            context: context
-        )
-        guard !cancellationToken.isCancelled else { return .empty }
-
-        let contactTermMasks = Dictionary(
-            uniqueKeysWithValues: contactCandidates.map { ($0.pubkey, $0.matchedTerms) }
-        )
-        let matchingContacts = contactCandidates
-            .filter { $0.matchedTerms == allTermsMask }
-            .sorted { rankedBefore($0, $1) }
-        let matchingContactPubkeys = matchingContacts
-            .prefix(contactResultLimit)
-            .map(\.pubkey)
-
-        let matchingPosts = fetchPostCandidates(
-            terms: terms,
-            allTermsMask: allTermsMask,
-            contactTermMasks: contactTermMasks,
-            blockedPubkeys: blockedPubkeys,
-            context: context
-        )
-        .sorted { rankedBefore($0, $1) }
-        let selectedPostIDs = matchingPosts
-            .prefix(postResultLimit)
-            .map(\.id)
-
-        guard !cancellationToken.isCancelled else { return .empty }
-
-        let contacts = fetchContacts(
-            pubkeys: matchingContactPubkeys,
-            context: context
-        )
-        let firstPageIDs = Array(selectedPostIDs.prefix(postPageSize))
-        let posts = fetchPosts(ids: firstPageIDs, context: context)
-
-        guard !cancellationToken.isCancelled else { return .empty }
-        return SearchResults(
-            contacts: contacts,
-            posts: posts,
-            remainingPostIDs: Array(selectedPostIDs.dropFirst(firstPageIDs.count))
-        )
+    private static func maskForAllTerms(_ terms: [SearchTerm]) -> UInt64 {
+        guard !terms.isEmpty else { return 0 }
+        return (UInt64(1) << UInt64(terms.count)) - 1
     }
 
     private static func fetchContactCandidates(
@@ -250,7 +300,8 @@ class SearchModel {
             return PostSearchCandidate(
                 id: id,
                 pubkey: pubkey,
-                createdAt: row["created_at"] as? Int64 ?? 0
+                createdAt: row["created_at"] as? Int64 ?? 0,
+                content: content
             )
         }
     }

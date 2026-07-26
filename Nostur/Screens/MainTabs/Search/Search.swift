@@ -24,13 +24,20 @@ struct Search: View {
     @State var searchTask: Task<Void, Never>? = nil
     @State var searchID = UUID()
     @State var searchCancellationToken: SearchCancellationToken? = nil
-    @State var remainingSearchPostIDs: [PostID] = []
-    @State var loadingMoreSearchResults = false
+    @State var searchPostResults: [SearchPostResult] = []
+    @State var unfilteredContacts: [NRContact] = []
+    @State var unfilteredSearchPostResults: [SearchPostResult] = []
+    @State var contactResultsQuery = ""
+    @State var postResultsQuery = ""
+    @State var rawSearchText = ""
+    @State var materializedSearchPosts: [PostID: NRPost] = [:]
+    @State var materializingSearchPostIDs = Set<PostID>()
+    @State var searchMaterializationTask: Task<Void, Never>? = nil
     @State var backlog = Backlog(timeout: 12, backlogDebugName: "Search")
     @ObservedObject var settings: SettingsStore = .shared
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    private let containerID: String
+    let containerID: String
     private let showsNavigationTitle: Bool
 
     init(containerID: String = "Search", showsNavigationTitle: Bool = true) {
@@ -50,7 +57,12 @@ struct Search: View {
         NBNavigationStack(path: $navPath) {
             VStack(spacing: 0) {
                 Box { // @FocusState doesn't work when TextField is in ToolBarItem sigh...
-                    SearchBox(prompt: String(localized: "Search...", comment: "Placeholder text in a search input box"), text: $searchText)
+                    SearchBox(
+                        prompt: String(localized: "Search...", comment: "Placeholder text in a search input box"),
+                        text: $searchText,
+                        debounceDelay: searchDebounceDelay,
+                        onImmediateTextChange: refineDisplayedSearchResults
+                    )
                         .padding(10)
                 }
                 AvailableWidthContainer {
@@ -59,7 +71,7 @@ struct Search: View {
                             FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:la.account)
                                 .padding([.top, .horizontal], 10)
                         }
-                        if (contacts.isEmpty && nrPosts.isEmpty && searching) {
+                        if (contacts.isEmpty && nrPosts.isEmpty && searchPostResults.isEmpty && searching) {
                             CenteredProgressView()
                         }
                         LazyVStack(spacing: GUTTER) {
@@ -85,35 +97,24 @@ struct Search: View {
                                 }
                             }
                             ForEach(nrPosts) { nrPost in
-                                Box(nrPost: nrPost) {
-                                    if nrPost.kind == 443 {
-                                        VStack {
-                                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
-                                            HStack(spacing: 0) {
-                                                self.replyButton
-                                                    .foregroundColor(theme.footerButtons)
-                                                    .padding(.leading, 10)
-                                                    .padding(.vertical, 5)
-                                                    .contentShape(Rectangle())
-                                                    .onTapGesture {
-                                                        navigateTo(nrPost, context: containerID)
-                                                    }
-                                                Spacer()
-                                            }
-                                        }
-                                    }
-                                    else {
-                                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
-                                    }
-                                }
-                                .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                                .onAppear {
-                                    loadMoreSearchResultsIfNeeded(after: nrPost)
-                                }
+                                fullPostResultRow(nrPost)
                             }
-                            if loadingMoreSearchResults {
-                                ProgressView()
-                                    .padding()
+                            ForEach(searchPostResults) { result in
+                                if let nrPost = materializedSearchPosts[result.id] {
+                                    fullPostResultRow(nrPost)
+                                }
+                                else {
+                                    SearchPostPreviewRow(
+                                        result: result,
+                                        theme: theme,
+                                        onSelect: {
+                                            openSearchPost(result)
+                                        }
+                                    )
+                                    .onAppear {
+                                        materializeSearchPosts(startingAt: result.id)
+                                    }
+                                }
                             }
                         }
 
@@ -174,20 +175,34 @@ struct Search: View {
             .onChange(of: searchText) { searchInput in
                 searchTask?.cancel()
                 searchTask = nil
+                searchMaterializationTask?.cancel()
+                searchMaterializationTask = nil
                 searchCancellationToken?.cancel()
                 searchCancellationToken = nil
                 backlog.clear()
 
                 let newSearchID = UUID()
                 searchID = newSearchID
-                nrPosts = []
-                contacts = []
-                remainingSearchPostIDs = []
-                loadingMoreSearchResults = false
                 searching = false
 
                 navPath.removeLast(navPath.count)
-                switch typeOfSearch(searchInput) {
+                let searchType = typeOfSearch(searchInput)
+                if case .other(let term) = searchType, !term.isEmpty {
+                    nrPosts = []
+                }
+                else {
+                    nrPosts = []
+                    contacts = []
+                    searchPostResults = []
+                    unfilteredContacts = []
+                    unfilteredSearchPostResults = []
+                    contactResultsQuery = ""
+                    postResultsQuery = ""
+                    materializedSearchPosts = [:]
+                    materializingSearchPostIDs = []
+                }
+
+                switch searchType {
                 case .nprofile1(let term):
                     nprofileSearch(term, searchID: newSearchID)
                 case .naddr1(let term):
@@ -260,6 +275,82 @@ struct Search: View {
         Image("ReplyIcon")
         Text("Comments")
     }
+
+    @ViewBuilder
+    private func fullPostResultRow(_ nrPost: NRPost) -> some View {
+        Box(nrPost: nrPost) {
+            if nrPost.kind == 443 {
+                VStack {
+                    PostRowDeletable(
+                        nrPost: nrPost,
+                        missingReplyTo: true,
+                        fullWidth: settings.fullWidthImages,
+                        theme: theme
+                    )
+                    HStack(spacing: 0) {
+                        self.replyButton
+                            .foregroundColor(theme.footerButtons)
+                            .padding(.leading, 10)
+                            .padding(.vertical, 5)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                navigateTo(nrPost, context: containerID)
+                            }
+                        Spacer()
+                    }
+                }
+            }
+            else {
+                PostRowDeletable(
+                    nrPost: nrPost,
+                    missingReplyTo: true,
+                    fullWidth: settings.fullWidthImages,
+                    theme: theme
+                )
+            }
+        }
+        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+    }
+}
+
+private struct SearchPostPreviewRow: View {
+    let result: SearchPostResult
+    let theme: Theme
+    let onSelect: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            if let author = result.author {
+                ObservedPFP(nrContact: author, size: 40)
+            }
+            else {
+                PFP(pubkey: result.pubkey, size: 40)
+            }
+
+            VStack(alignment: .leading, spacing: 5) {
+                HStack {
+                    Text(result.author?.anyName ?? String(result.pubkey.suffix(11)))
+                        .font(.headline)
+                        .lineLimit(1)
+                    Spacer()
+                    Text(result.createdAt, style: .relative)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Text(result.content)
+                    .foregroundColor(.primary)
+                    .lineLimit(6)
+                    .multilineTextAlignment(.leading)
+            }
+        }
+        .padding(10)
+        .background(theme.listBackground)
+        .overlay(alignment: .bottom) {
+            theme.background.frame(height: GUTTER)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onSelect)
+    }
 }
 
 public final class DebounceObject: ObservableObject {
@@ -267,15 +358,26 @@ public final class DebounceObject: ObservableObject {
     @Published var debouncedText: String = ""
     private var bag = Set<AnyCancellable>()
 
-    public init(dueTime: TimeInterval = 0.5) {
+    public init(delayProvider: @escaping (String) -> TimeInterval = { _ in 0.5 }) {
         $text
             .removeDuplicates()
             .filter { $0.count > 1 || $0 == "" }
-            .debounce(for: .seconds(dueTime), scheduler: DispatchQueue.main)
+            .map { value in
+                Just(value)
+                    .delay(
+                        for: .seconds(delayProvider(value)),
+                        scheduler: DispatchQueue.main
+                    )
+            }
+            .switchToLatest()
             .sink(receiveValue: { [weak self] value in
                 self?.debouncedText = value
             })
             .store(in: &bag)
+    }
+
+    public convenience init(dueTime: TimeInterval) {
+        self.init(delayProvider: { _ in dueTime })
     }
 }
 

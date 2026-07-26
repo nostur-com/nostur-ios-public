@@ -509,30 +509,53 @@ extension Search {
         let cancellationToken = SearchCancellationToken()
         searchCancellationToken = cancellationToken
         searchTask = Task { @MainActor in
-            let results = await SearchModel.searchInNames(
+            let contactStage = await SearchModel.searchContacts(
                 term,
                 cancellationToken: cancellationToken
             )
             guard !Task.isCancelled, self.searchID == searchID else { return }
-            self.nrPosts = results.posts
-            self.contacts = results.contacts
-            self.remainingSearchPostIDs = results.remainingPostIDs
+
+            self.unfilteredContacts = contactStage.contacts
+            self.contactResultsQuery = term
+            self.applyContactRefinement(for: self.rawSearchText)
+
+            let postResults = await SearchModel.searchPosts(
+                term,
+                contactTermMasks: contactStage.matchedTermsByPubkey,
+                cancellationToken: cancellationToken
+            )
+            guard !Task.isCancelled, self.searchID == searchID else { return }
+
+            self.unfilteredSearchPostResults = postResults
+            self.postResultsQuery = term
+            self.materializedSearchPosts = self.materializedSearchPosts.filter { entry in
+                postResults.contains(where: { $0.id == entry.key })
+            }
+            self.materializingSearchPostIDs = []
+            self.applyPostRefinement(for: self.rawSearchText)
             searching = false
         }
     }
 
-    func loadMoreSearchResultsIfNeeded(after nrPost: NRPost) {
-        guard nrPost.id == nrPosts.last?.id,
-              !loadingMoreSearchResults,
-              !remainingSearchPostIDs.isEmpty,
+    func materializeSearchPosts(startingAt postID: PostID) {
+        guard materializedSearchPosts[postID] == nil,
+              !materializingSearchPostIDs.contains(postID),
+              let index = searchPostResults.firstIndex(where: { $0.id == postID }),
               let cancellationToken = searchCancellationToken
         else { return }
 
-        let pageIDs = Array(remainingSearchPostIDs.prefix(SearchModel.postPageSize))
-        let currentSearchID = searchID
-        loadingMoreSearchResults = true
+        let pageIDs = searchPostResults[index...]
+            .prefix(8)
+            .map(\.id)
+            .filter {
+                materializedSearchPosts[$0] == nil
+                    && !materializingSearchPostIDs.contains($0)
+            }
+        guard !pageIDs.isEmpty else { return }
 
-        searchTask = Task { @MainActor in
+        materializingSearchPostIDs.formUnion(pageIDs)
+        let currentSearchID = searchID
+        searchMaterializationTask = Task { @MainActor in
             let posts = await SearchModel.loadPosts(
                 ids: pageIDs,
                 cancellationToken: cancellationToken
@@ -542,12 +565,118 @@ extension Search {
                   !cancellationToken.isCancelled
             else { return }
 
-            let existingIDs = Set(self.nrPosts.map(\.id))
-            self.nrPosts.append(contentsOf: posts.filter { !existingIDs.contains($0.id) })
-            self.remainingSearchPostIDs.removeFirst(
-                min(pageIDs.count, self.remainingSearchPostIDs.count)
+            posts.forEach { self.materializedSearchPosts[$0.id] = $0 }
+            self.materializingSearchPostIDs.subtract(pageIDs)
+        }
+    }
+
+    func openSearchPost(_ result: SearchPostResult) {
+        if let nrPost = materializedSearchPosts[result.id] {
+            navigateTo(nrPost, context: containerID)
+            return
+        }
+        guard let cancellationToken = searchCancellationToken else { return }
+
+        let currentSearchID = searchID
+        Task { @MainActor in
+            guard let nrPost = await SearchModel.loadPosts(
+                ids: [result.id],
+                cancellationToken: cancellationToken
+            ).first else { return }
+            guard self.searchID == currentSearchID, !cancellationToken.isCancelled else {
+                return
+            }
+            self.materializedSearchPosts[nrPost.id] = nrPost
+            navigateTo(nrPost, context: containerID)
+        }
+    }
+
+    func refineDisplayedSearchResults(_ rawText: String) {
+        rawSearchText = rawText
+        let trimmed = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            contacts = []
+            searchPostResults = []
+            return
+        }
+        guard case .other = typeOfSearch(trimmed) else { return }
+
+        applyContactRefinement(for: trimmed)
+        applyPostRefinement(for: trimmed)
+    }
+
+    private func applyContactRefinement(for rawText: String) {
+        let raw = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard isRefinement(raw, of: contactResultsQuery) else { return }
+
+        let terms = SearchModel.normalizedTerms(raw)
+        contacts = unfilteredContacts.filter { contact in
+            SearchModel.matches(
+                terms: terms,
+                searchableValues: [
+                    contact.anyName,
+                    contact.fixedName,
+                    contact.nip05
+                ].compactMap { $0 }
             )
-            self.loadingMoreSearchResults = false
+        }
+    }
+
+    private func applyPostRefinement(for rawText: String) {
+        let raw = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard isRefinement(raw, of: postResultsQuery) else { return }
+
+        let terms = SearchModel.normalizedTerms(raw)
+        searchPostResults = unfilteredSearchPostResults.filter { result in
+            SearchModel.matches(
+                terms: terms,
+                searchableValues: [
+                    result.content,
+                    result.author?.anyName,
+                    result.author?.fixedName,
+                    result.author?.nip05
+                ].compactMap { $0 }
+            )
+        }
+    }
+
+    private func isRefinement(_ rawText: String, of resultQuery: String) -> Bool {
+        let normalizedRaw = rawText.folding(
+            options: [.caseInsensitive, .diacriticInsensitive],
+            locale: .current
+        )
+        let normalizedResultQuery = resultQuery.folding(
+            options: [.caseInsensitive, .diacriticInsensitive],
+            locale: .current
+        )
+        return !normalizedResultQuery.isEmpty
+            && normalizedRaw.hasPrefix(normalizedResultQuery)
+    }
+
+    func searchDebounceDelay(_ rawText: String) -> TimeInterval {
+        let term = removeUriPrefix(
+            rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        guard !term.isEmpty else { return 0 }
+
+        switch typeOfSearch(term) {
+        case .nprofile1, .naddr1, .nevent1:
+            return (try? ShareableIdentifier(term)) == nil ? 0.35 : 0
+        case .npub1:
+            return Keys.hex(npub: term) == nil ? 0.35 : 0
+        case .note1:
+            return (try? NIP19(displayString: term)) == nil ? 0.35 : 0
+        case .hexId:
+            return NostrRegexes.default.matchingStrings(
+                term,
+                regex: NostrRegexes.default.cache[.hexId]!
+            ).count == 1 ? 0 : 0.35
+        case .nametag:
+            return 0.2
+        case .hashtag, .nip05, .url:
+            return 0.25
+        case .other:
+            return 0.35
         }
     }
 
