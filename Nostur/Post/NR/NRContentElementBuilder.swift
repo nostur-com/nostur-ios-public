@@ -35,7 +35,10 @@ class NRContentElementBuilder {
             if let match = match {
                 let matchRange = match.range
                 let nonMatchRange = NSRange(location: lastMatchEnd, length: matchRange.location - lastMatchEnd)
-                let nonMatch = (input as NSString).substring(with: nonMatchRange)
+                let nonMatch = textAfterExtractedMedia(
+                    (input as NSString).substring(with: nonMatchRange),
+                    elements: result
+                )
                 let matchString = (input as NSString).substring(with: matchRange)
                 
                 if !nonMatch.isEmpty {
@@ -167,7 +170,10 @@ class NRContentElementBuilder {
         }
         
         let nonMatchRange = NSRange(location: lastMatchEnd, length: input.utf16.count - lastMatchEnd)
-        let nonMatch = (input as NSString).substring(with: nonMatchRange)
+        let nonMatch = textAfterExtractedMedia(
+            (input as NSString).substring(with: nonMatchRange),
+            elements: result
+        )
         
         if !nonMatch.isEmpty {
             result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:nonMatch, primaryColor: primaryColor)))
@@ -342,6 +348,20 @@ enum ContentElement: Hashable, Identifiable {
     case nprofile1(ShareableIdentifier)
     case nrPost(NRPost) // embedded post, already processed for rendering
     case naddr1(ShareableIdentifier)
+}
+
+/// Media URLs and their surrounding text are rendered as separate elements.
+/// Whitespace immediately after extracted media only separated the URL from the
+/// following content and should not become leading whitespace in the text view.
+private func textAfterExtractedMedia(_ text: String, elements: [ContentElement]) -> String {
+    guard let previousElement = elements.last else { return text }
+
+    switch previousElement {
+    case .image, .video, .postPreviewImage, .postPreviewVideo:
+        return String(text.drop(while: { $0.isWhitespace }))
+    default:
+        return text
+    }
 }
 
 // MARK: - Image grid (Kind1 note rows)

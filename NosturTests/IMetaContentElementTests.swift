@@ -52,4 +52,48 @@ struct IMetaContentElementTests {
         #expect(linkPreviewURLs.map(\.absoluteString) == [url])
         #expect(galleryItems.isEmpty)
     }
+
+    @Test func separatorWhitespaceAfterLeadingMediaIsNotRenderedAsText() {
+        let urls = [
+            "https://cdn.example.com/first.jpg",
+            "https://cdn.example.com/second.jpg",
+            "https://cdn.example.com/third.jpg",
+            "https://cdn.example.com/fourth.jpg"
+        ]
+        let postText = "The off grid cabin we are building is all dried in."
+        let input = urls.joined(separator: " ") + " " + postText
+
+        let (elements, _, _) = NRContentElementBuilder.shared.buildElements(
+            input: input,
+            fastTags: []
+        )
+
+        #expect(elements.count == 5)
+        for element in elements.prefix(4) {
+            guard case .image = element else {
+                Issue.record("Expected each leading media URL to be extracted as an image")
+                return
+            }
+        }
+        guard case .text(let text) = elements.last else {
+            Issue.record("Expected text after the leading media")
+            return
+        }
+        #expect(text.input == postText)
+    }
+
+    @Test func leadingWhitespaceInTextOnlyContentIsPreserved() {
+        let input = " Intentionally indented text"
+
+        let (elements, _, _) = NRContentElementBuilder.shared.buildElements(
+            input: input,
+            fastTags: []
+        )
+
+        guard case .text(let text) = elements.first else {
+            Issue.record("Expected a text element")
+            return
+        }
+        #expect(text.input == input)
+    }
 }
