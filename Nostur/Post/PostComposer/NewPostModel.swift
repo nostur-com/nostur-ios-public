@@ -193,6 +193,7 @@ public final class NewPostModel: ObservableObject {
     @Published var uploadError: String?
     private var uploadedImageImetasById: [String: Imeta] = [:]
     private var imageUploadCancellablesById: [String: AnyCancellable] = [:]
+    private var didSendWithUploadedImages = false
     var requiredP: String? = nil
     private var privateReplyRecipient: String? = nil
     @Published var availableContacts: Set<NRContact> = [] // are available to toggle on/off for notifications
@@ -384,6 +385,8 @@ public final class NewPostModel: ObservableObject {
         pruneImageUploadState()
         let orderedIMetas = typingTextModel.pastedImages.compactMap { uploadedImageImetasById[$0.uniqueId] }
         guard orderedIMetas.count == typingTextModel.pastedImages.count else { return false }
+        guard !didSendWithUploadedImages else { return true }
+        didSendWithUploadedImages = true
         _sendNow(imetas: orderedIMetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
         return true
     }
