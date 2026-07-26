@@ -379,16 +379,55 @@ func pfpImageRequestFor(_ pictureUrl: URL, overrideLowDataMode: Bool = false) ->
 }
 
 
+/// Uses coarse width buckets so small layout differences inside a feed row
+/// still resolve to the exact same processed-image cache key as prefetching.
+func feedImageRequestTargetSize(
+    for availableWidth: CGFloat,
+    availableHeight: CGFloat
+) -> CGSize {
+    let widthStep: CGFloat = 200
+    let width = ceil(max(1, availableWidth) / widthStep) * widthStep
+    let height = min(
+        DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+        max(1, availableHeight)
+    )
+    return CGSize(width: width, height: height)
+}
+
+/// Grid cells are square and approximately half the feed media width. Feed
+/// widths are bucketed in 200-point steps, so halving the bucket produces a
+/// stable 100-point grid bucket shared by rendering and prefetching.
+func gridImageRequestTargetSize(for feedTargetSize: CGSize) -> CGSize {
+    let side = max(100, feedTargetSize.width / 2)
+    return CGSize(width: side, height: side)
+}
+
 // Use this function to make sure the image request is same in SingleImageViewer, SmoothList prefetch and SmoothList cancel prefetch.
 // else Nuke will prefetch wrong request
-func makeImageRequest(_ url: URL, label: String = "", overrideLowDataMode: Bool = false, size: CGFloat? = nil) -> ImageRequest {
+func makeImageRequest(
+    _ url: URL,
+    label: String = "",
+    overrideLowDataMode: Bool = false,
+    targetSize: CGSize? = nil,
+    contentMode: ImageProcessingOptions.ContentMode = .aspectFit,
+    crop: Bool = false
+) -> ImageRequest {
 #if DEBUG
     L.og.debug("ImageRequest: \(url.absoluteString), \(label) -[LOG]-")
 #endif
     let options: ImageRequest.Options = (!overrideLowDataMode && SettingsStore.shared.lowDataMode) ? [.returnCacheDataDontLoad] : []
+    let targetSize = targetSize ?? ScreenSpace.shared.screenSize
     return ImageRequest(url: url,
                  processors: [
-                    .resize(size: CGSize(width: size ?? ScreenSpace.shared.screenSize.width, height: size ?? ScreenSpace.shared.screenSize.height), contentMode: .aspectFit, upscale: false)
+                    .resize(
+                        size: CGSize(
+                            width: max(1, targetSize.width),
+                            height: max(1, targetSize.height)
+                        ),
+                        contentMode: contentMode,
+                        crop: crop,
+                        upscale: false
+                    )
                  ],
                 options: options,
                 userInfo: [.scaleKey: UIScreen.main.scale]

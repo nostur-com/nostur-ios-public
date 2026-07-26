@@ -137,6 +137,28 @@ extension EnvironmentValues {
     }
 }
 
+struct FeedImageRequestTargetSizeEnvironmentKey: EnvironmentKey {
+    static let defaultValue: CGSize? = nil
+}
+
+extension EnvironmentValues {
+    var feedImageRequestTargetSize: CGSize? {
+        get { self[FeedImageRequestTargetSizeEnvironmentKey.self] }
+        set { self[FeedImageRequestTargetSizeEnvironmentKey.self] = newValue }
+    }
+}
+
+struct CropImageRequestToTargetEnvironmentKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var cropImageRequestToTarget: Bool {
+        get { self[CropImageRequestToTargetEnvironmentKey.self] }
+        set { self[CropImageRequestToTargetEnvironmentKey.self] = newValue }
+    }
+}
+
 struct AvailableHeightEnvironmentKey: EnvironmentKey {
     static let defaultValue: CGFloat = UIScreen.main.bounds.height
 }

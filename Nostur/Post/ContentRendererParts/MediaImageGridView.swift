@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct MediaImageGridView: View {
+    @Environment(\.feedImageRequestTargetSize) private var feedImageRequestTargetSize
+
     public let items: [GalleryItem]
     public let availableWidth: CGFloat
     public var autoload: Bool = false
@@ -22,6 +24,12 @@ struct MediaImageGridView: View {
     
     private var displayItems: [GalleryItem] {
         Array(items.prefix(4))
+    }
+
+    private var gridImageRequestTargetSize: CGSize? {
+        feedImageRequestTargetSize.map {
+            Nostur.gridImageRequestTargetSize(for: $0)
+        }
     }
     
     /// Images beyond the 3 fully visible cells. The 4th cell is covered by the
@@ -50,6 +58,11 @@ struct MediaImageGridView: View {
                     isNSFW: isNSFW,
                     zoomableId: zoomableId
                 )
+                .environment(
+                    \.feedImageRequestTargetSize,
+                    gridImageRequestTargetSize
+                )
+                .environment(\.cropImageRequestToTarget, true)
                 .frame(width: cellSize, height: cellSize)
                 .clipped()
                 .contentShape(Rectangle())

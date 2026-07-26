@@ -12,11 +12,13 @@ import Nuke
 class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
         
     weak var columnViewModel: NXColumnViewModel?
+    var imageRequestTargetSize: CGSize?
     
     func collectionView(_: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         guard let columnViewModel, case .posts(let nrPosts) = columnViewModel.viewState else {
             return
         }
+        let imageRequestTargetSize = imageRequestTargetSize
         
         let postsForIndexPaths = indexPaths.compactMap { nrPosts[safe: $0.row] }
         guard !postsForIndexPaths.isEmpty else { return }
@@ -54,11 +56,24 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                     case .image(let mediaContent):
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
-                        imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
+                        imageRequests.append(makeImageRequest(
+                            mediaContent.url,
+                            label: "prefetch",
+                            targetSize: imageRequestTargetSize
+                        ))
                     case .imageGrid(let items):
+                        let gridTargetSize = imageRequestTargetSize.map {
+                            gridImageRequestTargetSize(for: $0)
+                        }
                         for mediaContent in items.prefix(4) {
                             if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
+                            imageRequests.append(makeImageRequest(
+                                mediaContent.url,
+                                label: "prefetch",
+                                targetSize: gridTargetSize,
+                                contentMode: .aspectFill,
+                                crop: true
+                            ))
                         }
                     default:
                         continue
@@ -104,6 +119,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
         guard let columnViewModel, case .posts(let nrPosts) = columnViewModel.viewState else {
             return
         }
+        let imageRequestTargetSize = imageRequestTargetSize
         
         let postsForIndexPaths = indexPaths.compactMap { nrPosts[safe: $0.row] }
         guard !postsForIndexPaths.isEmpty else { return }
@@ -139,11 +155,24 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                     case .image(let mediaContent):
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
-                        imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
+                        imageRequests.append(makeImageRequest(
+                            mediaContent.url,
+                            label: "cancel prefetch",
+                            targetSize: imageRequestTargetSize
+                        ))
                     case .imageGrid(let items):
+                        let gridTargetSize = imageRequestTargetSize.map {
+                            gridImageRequestTargetSize(for: $0)
+                        }
                         for mediaContent in items.prefix(4) {
                             if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
+                            imageRequests.append(makeImageRequest(
+                                mediaContent.url,
+                                label: "cancel prefetch",
+                                targetSize: gridTargetSize,
+                                contentMode: .aspectFill,
+                                crop: true
+                            ))
                         }
                     default:
                         continue
@@ -172,11 +201,13 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
 class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
         
     weak var columnViewModel: NXColumnViewModel?
+    var imageRequestTargetSize: CGSize?
     
     func tableView(_: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
         guard let columnViewModel, case .posts(let nrPosts) = columnViewModel.viewState else {
             return
         }
+        let imageRequestTargetSize = imageRequestTargetSize
         
         let postsForIndexPaths = indexPaths.compactMap { nrPosts[safe: $0.row] }
         guard !postsForIndexPaths.isEmpty else { return }
@@ -214,11 +245,24 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                     case .image(let mediaContent):
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
-                        imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
+                        imageRequests.append(makeImageRequest(
+                            mediaContent.url,
+                            label: "prefetch",
+                            targetSize: imageRequestTargetSize
+                        ))
                     case .imageGrid(let items):
+                        let gridTargetSize = imageRequestTargetSize.map {
+                            gridImageRequestTargetSize(for: $0)
+                        }
                         for mediaContent in items.prefix(4) {
                             if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
+                            imageRequests.append(makeImageRequest(
+                                mediaContent.url,
+                                label: "prefetch",
+                                targetSize: gridTargetSize,
+                                contentMode: .aspectFill,
+                                crop: true
+                            ))
                         }
                     default:
                         continue
@@ -264,6 +308,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
         guard let columnViewModel, case .posts(let nrPosts) = columnViewModel.viewState else {
             return
         }
+        let imageRequestTargetSize = imageRequestTargetSize
         
         let postsForIndexPaths = indexPaths.compactMap { nrPosts[safe: $0.row] }
         guard !postsForIndexPaths.isEmpty else { return }
@@ -299,11 +344,24 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                     case .image(let mediaContent):
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
-                        imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
+                        imageRequests.append(makeImageRequest(
+                            mediaContent.url,
+                            label: "cancel prefetch",
+                            targetSize: imageRequestTargetSize
+                        ))
                     case .imageGrid(let items):
+                        let gridTargetSize = imageRequestTargetSize.map {
+                            gridImageRequestTargetSize(for: $0)
+                        }
                         for mediaContent in items.prefix(4) {
                             if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
+                            imageRequests.append(makeImageRequest(
+                                mediaContent.url,
+                                label: "cancel prefetch",
+                                targetSize: gridTargetSize,
+                                contentMode: .aspectFill,
+                                crop: true
+                            ))
                         }
                     default:
                         continue

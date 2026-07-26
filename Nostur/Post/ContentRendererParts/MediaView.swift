@@ -81,6 +81,8 @@ struct MediaContentView: View {
 
 struct MediaPlaceholder: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.feedImageRequestTargetSize) private var feedImageRequestTargetSize
+    @Environment(\.cropImageRequestToTarget) private var cropImageRequestToTarget
     @StateObject private var vm = MediaViewVM()
     @Environment(\.theme) private var theme
     
@@ -135,6 +137,16 @@ struct MediaPlaceholder: View {
 
         // if .fit scale up height, but not bigger than maxHeight
         return min(availableWidth / aspect, maxHeight)
+    }
+
+    private var imageRequestTargetSize: CGSize? {
+        if fullScreen {
+            return CGSize(
+                width: max(1, availableWidth),
+                height: max(1, maxHeight)
+            )
+        }
+        return feedImageRequestTargetSize
     }
     
     var body: some View {
@@ -588,6 +600,11 @@ struct MediaPlaceholder: View {
                 Color.clear
                     .onAppear {
                         vm.state = .image(imageInfo)
+                        if fullScreen,
+                           !usePFPpipeline,
+                           needsFullscreenUpgrade(imageInfo) {
+                            load(forceLoad: true, preserveCurrentImage: true)
+                        }
                     }
             }
             else if let gifInfo {
@@ -659,10 +676,42 @@ struct MediaPlaceholder: View {
     }
     
     @MainActor
-    private func load(forceLoad: Bool = false, loadAnyway: Bool = false) {
+    private func load(
+        forceLoad: Bool = false,
+        loadAnyway: Bool = false,
+        preserveCurrentImage: Bool = false
+    ) {
         Task { @MainActor in
-            await vm.load(galleryItem.url, forceLoad: forceLoad, loadAnyway: loadAnyway, generateIMeta: generateIMeta, usePFPpipeline: usePFPpipeline)
+            await vm.load(
+                galleryItem.url,
+                forceLoad: forceLoad,
+                loadAnyway: loadAnyway,
+                generateIMeta: generateIMeta,
+                usePFPpipeline: usePFPpipeline,
+                targetSize: imageRequestTargetSize,
+                cropToTarget: cropImageRequestToTarget && !fullScreen,
+                preserveCurrentImage: preserveCurrentImage
+            )
         }
+    }
+
+    private func needsFullscreenUpgrade(_ imageInfo: ImageInfo) -> Bool {
+        guard let targetSize = imageRequestTargetSize,
+              imageInfo.realDimensions.width > 0,
+              imageInfo.realDimensions.height > 0
+        else { return false }
+
+        let imageAspect = imageInfo.realDimensions.width / imageInfo.realDimensions.height
+        let targetAspect = targetSize.width / targetSize.height
+        let fittedSize = if imageAspect > targetAspect {
+            CGSize(width: targetSize.width, height: targetSize.width / imageAspect)
+        }
+        else {
+            CGSize(width: targetSize.height * imageAspect, height: targetSize.height)
+        }
+
+        return imageInfo.uiImage.size.width + 1 < fittedSize.width
+            || imageInfo.uiImage.size.height + 1 < fittedSize.height
     }
     
     @MainActor // Pause is because onDisappear, and will resume automatically on onAppear

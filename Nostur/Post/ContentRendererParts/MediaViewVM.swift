@@ -13,7 +13,16 @@ class MediaViewVM: ObservableObject {
     @Published var state: MediaViewState = .initial
     private var task: ImageTask?
     
-    public func load(_ url: URL, forceLoad: Bool = false, loadAnyway: Bool = false, generateIMeta: Bool = false, usePFPpipeline: Bool = false) async {
+    public func load(
+        _ url: URL,
+        forceLoad: Bool = false,
+        loadAnyway: Bool = false,
+        generateIMeta: Bool = false,
+        usePFPpipeline: Bool = false,
+        targetSize: CGSize? = nil,
+        cropToTarget: Bool = false,
+        preserveCurrentImage: Bool = false
+    ) async {
         if SettingsStore.shared.lowDataMode && !forceLoad {
             Task { @MainActor in
                 state = .lowDataMode
@@ -31,7 +40,10 @@ class MediaViewVM: ObservableObject {
         let request = makeImageRequest(
             url,
             label: "MediaViewVM.load",
-            overrideLowDataMode: forceLoad
+            overrideLowDataMode: forceLoad,
+            targetSize: targetSize,
+            contentMode: cropToTarget ? .aspectFill : .aspectFit,
+            crop: cropToTarget
         )
         self.task = if usePFPpipeline {
             ImageProcessing.shared.pfp.imageTask(with: pfpImageRequestFor(url))
@@ -44,19 +56,20 @@ class MediaViewVM: ObservableObject {
         }
         
         guard let task = self.task else {
+            guard !preserveCurrentImage else { return }
             Task { @MainActor in
                 state = .error("Error loading media")
             }
             return
         }
         
-        Task { @MainActor in
-            
-            // resume from paused?
-            let progress = if case .paused(let progress) = state { progress }
-            else { 0 } // resume from 0
-            
-            state = .loading(progress)
+        if !preserveCurrentImage {
+            Task { @MainActor in
+                // resume from paused?
+                let progress = if case .paused(let progress) = state { progress }
+                else { 0 } // resume from 0
+                state = .loading(progress)
+            }
         }
         
         for await progress in task.progress {            
@@ -133,6 +146,7 @@ class MediaViewVM: ObservableObject {
             }
         }
         catch {
+            guard !preserveCurrentImage else { return }
             Task { @MainActor in
                 
                 // Paused is not error

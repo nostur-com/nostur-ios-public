@@ -39,6 +39,13 @@ struct NXPostsFeed: View {
             return []
         }
     }
+
+    private var feedImageTargetSize: CGSize {
+        feedImageRequestTargetSize(
+            for: availableWidth,
+            availableHeight: availableHeight
+        )
+    }
     
     var body: some View {
         // Keep List as the top-level scroll container (no GeometryReader parent) so iOS 26
@@ -48,6 +55,10 @@ struct NXPostsFeed: View {
                 PostOrThread(nrPost: nrPost, theme: theme)
                     .environment(\.availableHeight, availableHeight)
                     .environment(\.availableWidth, availableWidth)
+                    .environment(
+                        \.feedImageRequestTargetSize,
+                        feedImageTargetSize
+                    )
                     .environment(\.relayFeedRelays, relayFeedRelays)
             }
             .onDisappear {
@@ -70,6 +81,8 @@ struct NXPostsFeed: View {
                     view.isPrefetchingEnabled = true
                     view.prefetchDataSource = vm.tablePrefetcher
                 }
+                vm.tablePrefetcher?.imageRequestTargetSize =
+                    feedImageTargetSize
             }
             
             // Special handling for the anti-flicker approach
@@ -98,6 +111,8 @@ struct NXPostsFeed: View {
                     view.isPrefetchingEnabled = true
                     view.prefetchDataSource = vm.collectionPrefetcher
                 }
+                vm.collectionPrefetcher?.imageRequestTargetSize =
+                    feedImageTargetSize
             }
             
             // Special handling for the anti-flicker approach
@@ -117,6 +132,9 @@ struct NXPostsFeed: View {
         }
         .scrollContentBackgroundHidden()
         .background(theme.listBackground)
+        .onChange(of: feedImageTargetSize) { newTargetSize in
+            updatePrefetchImageTargetSize(newTargetSize)
+        }
         .onReceive(vmInner.scrollToIndexSubject.compactMap { $0 }) { scrollToIndex in
             guard !vmInner.isPerformingScroll,
                   !vmInner.isPerformingScrollToFirstUnread else {
@@ -146,6 +164,7 @@ struct NXPostsFeed: View {
         // Handle going to detail and back
         .onAppear {
             vm.resumeViewUpdates()
+            updatePrefetchImageTargetSize(feedImageTargetSize)
             
             // Add updateIsAtTop() debounces - increase debounce time for better performance
             guard updateIsAtTopSubscription == nil else { return }
@@ -161,6 +180,11 @@ struct NXPostsFeed: View {
             // so we pause() updates (and resume() in onAppear {})
             vm.pauseViewUpdates()
         }
+    }
+
+    private func updatePrefetchImageTargetSize(_ targetSize: CGSize) {
+        vm.tablePrefetcher?.imageRequestTargetSize = targetSize
+        vm.collectionPrefetcher?.imageRequestTargetSize = targetSize
     }
     
     @ViewBuilder
