@@ -62,7 +62,7 @@ struct NestParticipantView: View {
                 }
                 .overlay(alignment: .bottomTrailing) {
                     if showControls {
-                        MicButton(volume: nrContact.volume, isMuted: nrContact.isMuted)
+                        NestParticipantMicButton(liveAudio: nrContact.liveAudio)
                             .offset(x: 15.0, y: 5)
                     }
                 }
@@ -123,12 +123,22 @@ struct NestParticipantView: View {
         pe.loadContacts()
     }) {
         if let nrContact = PreviewFetcher.fetchNRContact() {
-            let _ = nrContact.volume = 0.25
+            let _ = nrContact.liveAudio.setVolume(0.25)
             NestParticipantView(nrContact: nrContact, role: "Moderator", aTag: "30311:07c058945239c541e7875ec21285e89d53afacc34a8e81b2c5ecdf028c198729:07056f33-cd48-4126-8b2e-ee68eeefafd9")
         }
     }
 }
 
+private struct NestParticipantMicButton: View {
+    @ObservedObject var liveAudio: NRContactLiveAudioState
+
+    var body: some View {
+        MicButton(
+            volume: liveAudio.volume,
+            isMuted: liveAudio.isMuted
+        )
+    }
+}
 
 struct MicButton: View {
     public var volume: CGFloat

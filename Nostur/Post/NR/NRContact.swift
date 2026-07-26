@@ -9,9 +9,46 @@ import SwiftUI
 import Combine
 import CoreData
 
+private struct NRContactLiveAudioSnapshot: Equatable {
+    var volume: CGFloat = 0.0
+    var isMuted: Bool = true
+}
+
+/// High-frequency LiveKit state kept separate from profile metadata so audio
+/// level updates do not invalidate every view observing the cached contact.
+final class NRContactLiveAudioState: ObservableObject {
+    @Published private var snapshot = NRContactLiveAudioSnapshot()
+
+    var volume: CGFloat {
+        snapshot.volume
+    }
+
+    var isMuted: Bool {
+        snapshot.isMuted
+    }
+
+    func update(volume: CGFloat, isMuted: Bool) {
+        let newSnapshot = NRContactLiveAudioSnapshot(
+            volume: volume,
+            isMuted: isMuted
+        )
+        guard newSnapshot != snapshot else { return }
+        snapshot = newSnapshot
+    }
+
+    func setVolume(_ volume: CGFloat) {
+        update(volume: volume, isMuted: snapshot.isMuted)
+    }
+
+    func setMuted(_ isMuted: Bool) {
+        update(volume: snapshot.volume, isMuted: isMuted)
+    }
+}
+
 class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestination {
 
     public let pubkey: String
+    let liveAudio = NRContactLiveAudioState()
 
     // FOR VIEW
     @Published var anyName: String
@@ -127,9 +164,6 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                 }
             }
     }
-    
-    @Published public var volume: CGFloat = 0.0
-    @Published public var isMuted: Bool = true
     
     @MainActor
     private func configureFromProfileInfo(_ profileInfo: ProfileInfo, animate: Bool = false) {

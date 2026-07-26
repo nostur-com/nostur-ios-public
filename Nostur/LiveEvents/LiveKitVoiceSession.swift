@@ -253,7 +253,7 @@ class LiveKitVoiceSession: ObservableObject {
                 if nrContact.pubkey == self.anonymousPubkeyCached {
                     DispatchQueue.main.async {
                         nrContact.anyName = "You"
-                        nrContact.isMuted = isMuted
+                        nrContact.liveAudio.setMuted(isMuted)
                     }
                 }
 
@@ -326,8 +326,10 @@ extension LiveKitVoiceSession: RoomDelegate {
             if let nrContact = self.nrLiveEvent?.participantsOrSpeakers.first(where: { $0.pubkey == participantPubkey }) {
                 Task { @MainActor in
                     withAnimation {
-                        nrContact.volume = CGFloat(participant.audioLevel)
-                        nrContact.isMuted = participant.firstAudioPublication?.isMuted ?? false
+                        nrContact.liveAudio.update(
+                            volume: CGFloat(participant.audioLevel),
+                            isMuted: participant.firstAudioPublication?.isMuted ?? false
+                        )
                     }
                 }
             }
@@ -544,8 +546,10 @@ extension LiveKitVoiceSession: RoomDelegate {
         if let nrContact = self.nrLiveEvent?.participantsOrSpeakers.first(where: { $0.pubkey == participantPubkey }) {
             Task { @MainActor in
                 withAnimation {
-                    nrContact.volume = isMuted ? 0 : CGFloat(participant.audioLevel)
-                    nrContact.isMuted = isMuted
+                    nrContact.liveAudio.update(
+                        volume: isMuted ? 0 : CGFloat(participant.audioLevel),
+                        isMuted: isMuted
+                    )
                 }
             }
         }
