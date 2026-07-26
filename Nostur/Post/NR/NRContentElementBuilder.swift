@@ -332,7 +332,7 @@ enum ContentElement: Hashable, Identifiable {
     case cashu(String)
     case link(String, URL)
     case image(GalleryItem)
-    /// 2×2 grid for rows when a post starts or ends with 4+ images (not used in detail).
+    /// Adaptive grid for rows containing 2+ consecutive images (not used in detail).
     case imageGrid([GalleryItem])
     case video(MediaContent)
     case linkPreview(URL, id: UUID = UUID())
@@ -352,104 +352,64 @@ private func isWhitespaceOnlyText(_ element: ContentElement) -> Bool {
     return attributed.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 }
 
-/// Trailing consecutive images at the end of content (whitespace-only text ignored).
-/// Returns the list only when there are 4 or more — suitable for the 2×2 row grid.
-func trailingImagesForGrid(from elements: [ContentElement]) -> [GalleryItem]? {
-    var images: [GalleryItem] = []
-    
-    for element in elements.reversed() {
-        switch element {
-        case .image(let item):
-            images.insert(item, at: 0)
-        case .imageGrid:
-            // Already collapsed
-            return nil
-        default:
-            if isWhitespaceOnlyText(element) {
-                continue
-            }
-            // Meaningful non-image content ends the trailing-image scan
-            return images.count >= 4 ? images : nil
+/// Collapse every uninterrupted group of 2+ images into an `.imageGrid`.
+/// Whitespace-only text between image URLs is ignored. Used for note rows only
+/// (not detail), and safe to call when some groups are already collapsed.
+func collapseImageGrids(_ elements: [ContentElement]) -> [ContentElement] {
+    var result: [ContentElement] = []
+    var index = elements.startIndex
+
+    while index < elements.endIndex {
+        guard case .image = elements[index] else {
+            result.append(elements[index])
+            index = elements.index(after: index)
+            continue
         }
-    }
 
-    return images.count >= 4 ? images : nil
-}
+        var images: [GalleryItem] = []
+        var cursor = index
 
-/// Leading consecutive images at the start of content (whitespace-only text ignored).
-/// Returns the list only when there are 4 or more — suitable for the 2×2 row grid.
-func leadingImagesForGrid(from elements: [ContentElement]) -> [GalleryItem]? {
-    var images: [GalleryItem] = []
-
-    for element in elements {
-        switch element {
-        case .image(let item):
-            images.append(item)
-        case .imageGrid:
-            // Already collapsed
-            return nil
-        default:
-            if isWhitespaceOnlyText(element) {
-                continue
-            }
-            // Meaningful non-image content ends the leading-image scan
-            return images.count >= 4 ? images : nil
-        }
-    }
-    
-    return images.count >= 4 ? images : nil
-}
-
-/// Collapse a leading or trailing group of 4+ images into a single `.imageGrid` element.
-/// Used for note rows only (not detail). Safe to call if already collapsed.
-func collapseImageGrid(_ elements: [ContentElement]) -> [ContentElement] {
-    if let images = trailingImagesForGrid(from: elements) {
-        var imagesLeft = images.count
-        for i in elements.indices.reversed() {
-            switch elements[i] {
-            case .image:
-                imagesLeft -= 1
-                if imagesLeft == 0 {
-                    var result = Array(elements.prefix(i))
-                    while let last = result.last, isWhitespaceOnlyText(last) {
-                        result.removeLast()
-                    }
-                    result.append(.imageGrid(images))
-                    return result
-                }
+        imageRun: while cursor < elements.endIndex {
+            switch elements[cursor] {
+            case .image(let item):
+                images.append(item)
+                cursor = elements.index(after: cursor)
             default:
-                if isWhitespaceOnlyText(elements[i]) {
-                    continue
+                guard isWhitespaceOnlyText(elements[cursor]) else {
+                    break imageRun
                 }
-                return elements
+                var nextIndex = elements.index(after: cursor)
+                while nextIndex < elements.endIndex,
+                      isWhitespaceOnlyText(elements[nextIndex]) {
+                    nextIndex = elements.index(after: nextIndex)
+                }
+                guard nextIndex < elements.endIndex,
+                      case .image = elements[nextIndex] else {
+                    break imageRun
+                }
+                cursor = nextIndex
             }
+        }
+
+        if images.count >= 2 {
+            while let last = result.last, isWhitespaceOnlyText(last) {
+                result.removeLast()
+            }
+            result.append(.imageGrid(images))
+
+            var nextIndex = cursor
+            while nextIndex < elements.endIndex, isWhitespaceOnlyText(elements[nextIndex]) {
+                nextIndex = elements.index(after: nextIndex)
+            }
+            index = nextIndex
+        }
+        else {
+            result.append(elements[index])
+            index = elements.index(after: index)
         }
     }
 
-    if let images = leadingImagesForGrid(from: elements) {
-        var imagesLeft = images.count
-        for i in elements.indices {
-            switch elements[i] {
-            case .image:
-                imagesLeft -= 1
-                if imagesLeft == 0 {
-                    var suffixStart = elements.index(after: i)
-                    while suffixStart < elements.endIndex,
-                          isWhitespaceOnlyText(elements[suffixStart]) {
-                        suffixStart = elements.index(after: suffixStart)
-                    }
-                    return [.imageGrid(images)] + Array(elements[suffixStart...])
-                }
-            default:
-                if isWhitespaceOnlyText(elements[i]) {
-                    continue
-                }
-                return elements
-            }
-        }
-    }
-
-    return elements
+    return result
 }
 
 import MarkdownUI

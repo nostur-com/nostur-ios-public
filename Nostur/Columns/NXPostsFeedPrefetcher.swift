@@ -63,7 +63,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                         ))
                     case .imageGrid(let items):
                         let gridTargetSize = imageRequestTargetSize.map {
-                            gridImageRequestTargetSize(for: $0)
+                            gridImageRequestTargetSize(for: $0, columnCount: items.count == 3 ? 3 : 2)
                         }
                         for mediaContent in items.prefix(4) {
                             if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
@@ -162,7 +162,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                         ))
                     case .imageGrid(let items):
                         let gridTargetSize = imageRequestTargetSize.map {
-                            gridImageRequestTargetSize(for: $0)
+                            gridImageRequestTargetSize(for: $0, columnCount: items.count == 3 ? 3 : 2)
                         }
                         for mediaContent in items.prefix(4) {
                             if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
@@ -252,7 +252,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                         ))
                     case .imageGrid(let items):
                         let gridTargetSize = imageRequestTargetSize.map {
-                            gridImageRequestTargetSize(for: $0)
+                            gridImageRequestTargetSize(for: $0, columnCount: items.count == 3 ? 3 : 2)
                         }
                         for mediaContent in items.prefix(4) {
                             if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
@@ -351,7 +351,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                         ))
                     case .imageGrid(let items):
                         let gridTargetSize = imageRequestTargetSize.map {
-                            gridImageRequestTargetSize(for: $0)
+                            gridImageRequestTargetSize(for: $0, columnCount: items.count == 3 ? 3 : 2)
                         }
                         for mediaContent in items.prefix(4) {
                             if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }

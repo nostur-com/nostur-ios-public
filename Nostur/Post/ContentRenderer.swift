@@ -31,9 +31,9 @@ struct ContentRenderer: View { // VIEW things
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
-        // Row only: collapse leading or trailing 4+ images into a 2×2 grid. Detail keeps stacked images.
+        // Row only: collapse consecutive images into adaptive grids. Detail keeps stacked images.
         let baseElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
-        _contentElements = State(wrappedValue: isDetail ? baseElements : collapseImageGrid(baseElements))
+        _contentElements = State(wrappedValue: isDetail ? baseElements : collapseImageGrids(baseElements))
         _mutedWords = State(initialValue: AppState.shared.bgAppState.mutedWords)
         _showMore = showMore
         self.forceAutoload = forceAutoload
@@ -301,9 +301,9 @@ struct ContentRenderer: View { // VIEW things
         .onChange(of: showMore) { [oldValue = self.showMore] newValue in
             if newValue && !oldValue {
                 withAnimation {
-                    // Keep 2×2 grid on rows when expanding text; detail uses full image list
+                    // Keep adaptive grids on rows when expanding text; detail uses the full image list
                     let detail = self.nrPost.contentElementsDetail
-                    self.contentElements = self.isDetail ? detail : collapseImageGrid(detail)
+                    self.contentElements = self.isDetail ? detail : collapseImageGrids(detail)
                 }
             }
         }

@@ -66,8 +66,8 @@ func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement]
     let w = PreviewWeights()
     var isFirst = true
     
-    // Collapse leading or trailing 4+ images into one grid unit so weight/truncation treat them as one block
-    let elementsForFilter = collapseImageGrid(contentElements)
+    // Collapse each consecutive image group so weight/truncation treat it as one visual unit
+    let elementsForFilter = collapseImageGrids(contentElements)
     
     let previewElements = elementsForFilter.filter { element in
         switch element {
@@ -104,7 +104,7 @@ func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement]
             isFirst = false
             return true
         case .imageGrid:
-            // One visual unit (2×2 grid); remaining images are shown via +N overlay, not "show more"
+            // One visual unit; images beyond four are shown via +N overlay, not "show more"
             w.pictures += 1;
             guard isFirst || w.weight < 2 else {
                 w.morePictures += 1

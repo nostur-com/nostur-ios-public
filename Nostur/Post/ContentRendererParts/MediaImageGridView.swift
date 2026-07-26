@@ -2,7 +2,7 @@
 //  MediaImageGridView.swift
 //  Nostur
 //
-//  2×2 square image grid for Kind1 note rows when a post starts or ends with 4+ images.
+//  Adaptive image grid for consecutive images in Kind1 note rows.
 //
 
 import SwiftUI
@@ -17,9 +17,14 @@ struct MediaImageGridView: View {
     public var zoomableId: String = "Default"
     
     private let spacing: CGFloat = 2
-    
+
+    private var columnCount: Int {
+        items.count == 3 ? 3 : 2
+    }
+
     private var cellSize: CGFloat {
-        max(1, (availableWidth - spacing) / 2)
+        let totalSpacing = spacing * CGFloat(columnCount - 1)
+        return max(1, (availableWidth - totalSpacing) / CGFloat(columnCount))
     }
     
     private var displayItems: [GalleryItem] {
@@ -28,7 +33,7 @@ struct MediaImageGridView: View {
 
     private var gridImageRequestTargetSize: CGSize? {
         feedImageRequestTargetSize.map {
-            Nostur.gridImageRequestTargetSize(for: $0)
+            Nostur.gridImageRequestTargetSize(for: $0, columnCount: columnCount)
         }
     }
     
@@ -40,10 +45,10 @@ struct MediaImageGridView: View {
     }
     
     var body: some View {
-        let columns = [
-            GridItem(.fixed(cellSize), spacing: spacing),
-            GridItem(.fixed(cellSize), spacing: spacing)
-        ]
+        let columns = Array(
+            repeating: GridItem(.fixed(cellSize), spacing: spacing),
+            count: columnCount
+        )
         
         LazyVGrid(columns: columns, spacing: spacing) {
             ForEach(Array(displayItems.enumerated()), id: \.element.id) { index, item in
@@ -82,6 +87,22 @@ struct MediaImageGridView: View {
         }
         .frame(width: availableWidth)
     }
+}
+
+#Preview("Media Image Grid 2") {
+    let items = (0..<2).map { i in
+        GalleryItem(url: URL(string: "https://picsum.photos/seed/\(i)/400")!)
+    }
+    return MediaImageGridView(items: items, availableWidth: 320, autoload: true)
+        .padding()
+}
+
+#Preview("Media Image Grid 3") {
+    let items = (0..<3).map { i in
+        GalleryItem(url: URL(string: "https://picsum.photos/seed/\(i)/400")!)
+    }
+    return MediaImageGridView(items: items, availableWidth: 320, autoload: true)
+        .padding()
 }
 
 #Preview("Media Image Grid 4") {

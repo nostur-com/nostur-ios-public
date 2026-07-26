@@ -394,11 +394,10 @@ func feedImageRequestTargetSize(
     return CGSize(width: width, height: height)
 }
 
-/// Grid cells are square and approximately half the feed media width. Feed
-/// widths are bucketed in 200-point steps, so halving the bucket produces a
-/// stable 100-point grid bucket shared by rendering and prefetching.
-func gridImageRequestTargetSize(for feedTargetSize: CGSize) -> CGSize {
-    let side = max(100, feedTargetSize.width / 2)
+/// Grid cells are square. Feed widths are bucketed in 200-point steps, so
+/// dividing the bucket produces a stable target shared by rendering and prefetching.
+func gridImageRequestTargetSize(for feedTargetSize: CGSize, columnCount: Int = 2) -> CGSize {
+    let side = max(100, feedTargetSize.width / CGFloat(columnCount))
     return CGSize(width: side, height: side)
 }
 
