@@ -10,6 +10,7 @@ import QuickLook
 
 struct DMFileMessageView: View {
     let fileInfo: FileMessageInfo
+    let conversationId: String
     let isSentByCurrentUser: Bool
     let isAccepted: Bool
     
@@ -105,14 +106,10 @@ struct DMFileMessageView: View {
                     .overlay { ProgressView() }
             }
         }
-        .task {
+        .task(id: "\(isAccepted)-\(manuallyTriggered)") {
             // Only auto-load for accepted chats
             guard isAccepted || manuallyTriggered else { return }
             await loadAndDecryptImage()
-        }
-        .onChange(of: manuallyTriggered) { triggered in
-            guard triggered else { return }
-            Task { await loadAndDecryptImage() }
         }
     }
     
@@ -180,7 +177,7 @@ struct DMFileMessageView: View {
         error = nil
         
         do {
-            let data = try await downloadAndDecrypt()
+            let data = try await DMFileCache.shared.data(fileInfo: fileInfo, conversationId: conversationId)
             guard let image = UIImage(data: data) else {
                 self.error = "Invalid image data"
                 isLoading = false
@@ -200,40 +197,15 @@ struct DMFileMessageView: View {
         error = nil
         
         do {
-            let data = try await downloadAndDecrypt()
-            
-            // Save to temp file for QuickLook
-            let tempDir = FileManager.default.temporaryDirectory
-            let fileName = "dm_file.\(fileInfo.fileExtension)"
-            let fileURL = tempDir.appendingPathComponent(fileName)
-            try data.write(to: fileURL)
-            
-            self.quickLookURL = fileURL
+            self.quickLookURL = try await DMFileCache.shared.previewURL(
+                fileInfo: fileInfo,
+                conversationId: conversationId
+            )
         } catch {
             L.og.error("🔴 DMFileMessage downloadAndPreviewDocument error: \(error) url: \(fileInfo.url)")
             self.error = error.localizedDescription
         }
         isLoading = false
-    }
-    
-    private func downloadAndDecrypt() async throws -> Data {
-        guard let url = URL(string: fileInfo.url) else {
-            throw DMFileError.uploadFailed("Invalid URL: \(fileInfo.url)")
-        }
-        
-        let (data, response) = try await URLSession.shared.data(from: url)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-            throw DMFileError.uploadFailed("HTTP \(statusCode)")
-        }
-        
-        return try decryptFileFromDM(
-            encryptedData: data,
-            key: fileInfo.decryptionKey,
-            nonce: fileInfo.decryptionNonce
-        )
     }
     
     // MARK: - Helpers
@@ -259,5 +231,3 @@ struct DMFileMessageView: View {
         }
     }
 }
-
-

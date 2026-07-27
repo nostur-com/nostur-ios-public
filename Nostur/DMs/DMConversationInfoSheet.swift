@@ -20,6 +20,11 @@ struct DMConversationInfoSheet: View {
     @State var backlog = Backlog(timeout: 10, auto: true, backlogDebugName: "SelectDMRecipientSheet")
     
     @State private var disappearingMessages: CloudDMState.DisappearingMessagesSetting = .off
+    @State private var keepDownloadedFiles = false
+    @State private var downloadedFilesSize: Int64 = 0
+    @State private var downloadedFilesCount = 0
+    @State private var isClearingDownloadedFiles = false
+    @State private var showClearDownloadedFilesConfirmation = false
     
     var body: some View {
         NXForm {
@@ -46,7 +51,7 @@ struct DMConversationInfoSheet: View {
                 } header: {
                     Text("DM relays")
                 }
-                
+
                 if vm.participants.count <= 2 {
                     Section {
                         Toggle(isOn: $useImprovedFormat) {
@@ -141,12 +146,40 @@ struct DMConversationInfoSheet: View {
             } header: {
                 Text("Disappearing Messages")
             }
+
+            Section {
+                HStack {
+                    Text("Disk usage")
+                    Spacer()
+                    HStack {
+                        Text(formattedDownloadedFilesSize)
+                            .foregroundStyle(.secondary)
+                        Button("Clear now", role: .destructive) {
+                            showClearDownloadedFilesConfirmation = true
+                        }
+                        .disabled(isClearingDownloadedFiles || downloadedFilesCount == 0)
+                    }
+                }
+                VStack(alignment: .leading) {
+                    Toggle("Keep downloaded files", isOn: $keepDownloadedFiles)
+                    Text("Do not automatically clean up downloaded files")
+                        .font(.footnote)
+                        .foregroundColor(.gray)
+                }
+
+            } header: {
+                Text("Downloaded files")
+            }
         }
         .onAppear {
             if vm.conversationVersion == 17 {
                 useImprovedFormat = true
             }
             disappearingMessages = pickerSetting(for: vm.dmState?.disappearingMessagesSetting ?? .off)
+            Task {
+                keepDownloadedFiles = await DMFileCache.shared.isKept(conversationId: vm.conversationId)
+                await refreshDownloadedFilesUsage()
+            }
         }
         .onValueChange(disappearingMessages) { _, newValue in
             guard let dmState = vm.dmState, dmState.disappearingMessagesSetting != newValue else { return }
@@ -173,6 +206,31 @@ struct DMConversationInfoSheet: View {
                 vm.dmState?.version = 0
             }
         }
+        .onValueChange(keepDownloadedFiles) { _, newValue in
+            Task {
+                await DMFileCache.shared.setKept(newValue, conversationId: vm.conversationId)
+                if !newValue {
+                    await DMFileCache.shared.trimIfNeeded()
+                }
+            }
+        }
+        .confirmationDialog(
+            "Clear downloaded files?",
+            isPresented: $showClearDownloadedFilesConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Clear downloaded files", role: .destructive) {
+                isClearingDownloadedFiles = true
+                Task {
+                    try? await DMFileCache.shared.clear(conversationId: vm.conversationId)
+                    await refreshDownloadedFilesUsage()
+                    isClearingDownloadedFiles = false
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will delete all downloaded files and media for this conversation.")
+        }
         .navigationTitle(String(localized:"Conversation info", comment:"Navigation title for screen with DM conversation info"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -186,6 +244,20 @@ struct DMConversationInfoSheet: View {
 
     private func pickerSetting(for setting: CloudDMState.DisappearingMessagesSetting) -> CloudDMState.DisappearingMessagesSetting {
         setting == .undecided ? .off : setting
+    }
+
+    private var formattedDownloadedFilesSize: String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.countStyle = .file
+        return "\(formatter.string(fromByteCount: downloadedFilesSize)) · \(downloadedFilesCount) \(downloadedFilesCount == 1 ? "file" : "files") · "
+    }
+
+    @MainActor
+    private func refreshDownloadedFilesUsage() async {
+        let usage = await DMFileCache.shared.usage().first { $0.id == vm.conversationId }
+        downloadedFilesSize = usage?.bytes ?? 0
+        downloadedFilesCount = usage?.fileCount ?? 0
     }
 
     private func checkDMRelays(_ pubkeys: Set<String>) {

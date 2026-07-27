@@ -54,7 +54,12 @@ struct BalloonView17: View {
                 }
                 
                 if let fileInfo = nrChatMessage.fileMessageInfo {
-                    DMFileMessageView(fileInfo: fileInfo, isSentByCurrentUser: isSentByCurrentUser, isAccepted: vm.isAccepted)
+                    DMFileMessageView(
+                        fileInfo: fileInfo,
+                        conversationId: vm.conversationId,
+                        isSentByCurrentUser: isSentByCurrentUser,
+                        isAccepted: vm.isAccepted
+                    )
                         .padding(.trailing, 16)
                 }
                 else {
