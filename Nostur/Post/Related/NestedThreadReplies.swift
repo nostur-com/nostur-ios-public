@@ -34,6 +34,44 @@ private struct VerticalCollapseModifier: ViewModifier {
     }
 }
 
+private struct BranchRailShape: Shape {
+    var railHeight: CGFloat
+    let spineX: CGFloat
+    let midY: CGFloat
+    let endX: CGFloat
+    let cornerRadius: CGFloat
+    let isLastSibling: Bool
+
+    var animatableData: CGFloat {
+        get { railHeight }
+        set { railHeight = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let radius = min(cornerRadius, midY - 2, max(0, endX - spineX - 2))
+        let incomingHeight = max(0, midY - radius)
+
+        return Path { path in
+            path.move(to: CGPoint(x: spineX, y: -5))
+            path.addLine(to: CGPoint(x: spineX, y: incomingHeight))
+
+            if radius > 0 {
+                path.addQuadCurve(
+                    to: CGPoint(x: spineX + radius, y: midY),
+                    control: CGPoint(x: spineX, y: midY)
+                )
+            }
+
+            path.addLine(to: CGPoint(x: endX - 1, y: midY))
+
+            if !isLastSibling && railHeight > midY {
+                path.move(to: CGPoint(x: spineX, y: midY - 5))
+                path.addLine(to: CGPoint(x: spineX, y: railHeight + 5))
+            }
+        }
+    }
+}
+
 struct NestedThreadReplies: View {
     @Environment(\.theme) private var theme
     @ObservedObject var nrPost: NRPost
@@ -586,31 +624,20 @@ private struct NestedChildBranch: View {
     @ViewBuilder
     private func branchRail(height h: CGFloat, spineX x: CGFloat, midY y: CGFloat) -> some View {
         let endX = max(x + lineW + 4, branchEndX)
-        let r = min(cornerR, y - 2, max(0, endX - x - 2))
-        let incomingHeight = max(0, y - r)
         // Hit only where ink is drawn. Do not extend past endX into the PFP column.
         let verticalHitHeight = isLastSibling ? max(y, hit) : h
         let horizontalHitWidth = max(0, endX - x)
         
-        Path { path in
-            path.move(to: CGPoint(x: x, y: -5))
-            path.addLine(to: CGPoint(x: x, y: incomingHeight))
-            
-            if r > 0 {
-                path.addQuadCurve(
-                    to: CGPoint(x: x + r, y: y),
-                    control: CGPoint(x: x, y: y)
-                )
-            }
-            
-            path.addLine(to: CGPoint(x: endX - 1, y: y))
-            
-            if !isLastSibling && h > y {
-                path.move(to: CGPoint(x: x, y: y - 5))
-                path.addLine(to: CGPoint(x: x, y: h + 5))
-            }
-        }
+        BranchRailShape(
+            railHeight: h,
+            spineX: x,
+            midY: y,
+            endX: endX,
+            cornerRadius: cornerR,
+            isLastSibling: isLastSibling
+        )
         .stroke(lineColor, style: StrokeStyle(lineWidth: lineW, lineCap: .square, lineJoin: .round))
+        .animation(.easeInOut(duration: 0.28), value: h)
         .allowsHitTesting(false)
         
         // Vertical segment of the L (and continuing spine for non-last siblings).
