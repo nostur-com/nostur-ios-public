@@ -7,9 +7,21 @@
 
 import SwiftUI
 
+private struct NestedReplyPFPHiddenKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var nestedReplyPFPHidden: Bool {
+        get { self[NestedReplyPFPHiddenKey.self] }
+        set { self[NestedReplyPFPHiddenKey.self] = newValue }
+    }
+}
+
 struct PostLayout<Content: View, TitleContent: View>: View {
     
     @ObservedObject private var settings: SettingsStore = .shared
+    @Environment(\.nestedReplyPFPHidden) private var nestedReplyPFPHidden
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
     @State private var showFooter = false
@@ -115,7 +127,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     private var normalLayout: some View {
         HStack(alignment: .top, spacing: 10) {
             if !isItem {
-                regularPFP
+                animatedRegularPFP
             }
             
             VStack(alignment: .leading, spacing: 3) { // Post container
@@ -168,7 +180,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     titleContent
                 }
                 else {
-                    regularPFP
+                    animatedRegularPFP
                     NRPostHeaderContainer(nrPost: nrPost, singleLine: false, isDetail: isDetail)
                 }
                 
@@ -207,6 +219,12 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private var animatedRegularPFP: some View {
+        regularPFP
+            .opacity(nestedReplyPFPHidden ? 0 : 1)
     }
     
     

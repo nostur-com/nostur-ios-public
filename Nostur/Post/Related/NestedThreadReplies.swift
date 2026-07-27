@@ -23,6 +23,17 @@
 import SwiftUI
 import UIKit
 
+private struct VerticalCollapseModifier: ViewModifier {
+    let progress: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(x: 1, y: progress, anchor: .top)
+            .opacity(progress)
+            .clipped()
+    }
+}
+
 struct NestedThreadReplies: View {
     @Environment(\.theme) private var theme
     @ObservedObject var nrPost: NRPost
@@ -102,10 +113,27 @@ struct NestedReplyRow: View {
     let path: String
     /// Cumulative branch indent applied to this row (not logical depth).
     let visualInset: CGFloat
+    /// Connector style entering this row; roots have no incoming connector.
+    var incomingRailStyle: NestedThreadMetrics.RailStyle? = nil
     
     @State private var isCollapsed = false
+    @State private var isAnimatingPFP = false
+    @State private var animatedPFPIsCollapsed = false
     
     private var hasChildren: Bool { !node.children.isEmpty }
+
+    /// Collapse the surrounding content vertically. The PFP hero is rendered
+    /// by the row overlay, outside this transformed subtree.
+    private var collapseAnimation: Animation {
+        .easeInOut(duration: 0.28)
+    }
+
+    private var collapseTransition: AnyTransition {
+        .modifier(
+            active: VerticalCollapseModifier(progress: 0),
+            identity: VerticalCollapseModifier(progress: 1)
+        )
+    }
     
     private var parentHasMultipleChildren: Bool { node.children.count > 1 }
     
@@ -170,7 +198,29 @@ struct NestedReplyRow: View {
     /// Collapse this node and its descendants only.
     private func collapseSelf() {
         guard hasChildren else { return }
-        isCollapsed = true
+        setCollapsed(true)
+    }
+
+    /// Animate one temporary PFP in this row's coordinate space, following the
+    /// same explicit scale/position approach used by the fullscreen image hero.
+    private func setCollapsed(_ collapsed: Bool) {
+        guard collapsed != isCollapsed, !isAnimatingPFP else { return }
+
+        animatedPFPIsCollapsed = isCollapsed
+        isAnimatingPFP = true
+
+        // Give SwiftUI one render pass to place the hero at the source frame
+        // before changing both the layout and its destination.
+        DispatchQueue.main.async {
+            withAnimation(collapseAnimation) {
+                isCollapsed = collapsed
+                animatedPFPIsCollapsed = collapsed
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
+                isAnimatingPFP = false
+            }
+        }
     }
     
     var body: some View {
@@ -178,40 +228,51 @@ struct NestedReplyRow: View {
             // Folded subtree: hide this post + nested; only a show control remains.
             if isCollapsed && hasChildren {
                 showThreadRepliesButton
+                    .transition(collapseTransition)
             }
             else {
-                postBlock
-                
-                if hasChildren {
-                    let step = NestedThreadMetrics.stepInset(
-                        parentHasMultipleChildren: parentHasMultipleChildren,
-                        currentVisualInset: visualInset
-                    )
-                    let railStyle = NestedThreadMetrics.railStyle(
-                        parentHasMultipleChildren: parentHasMultipleChildren,
-                        stepInset: step
-                    )
-                    let childVisualInset = visualInset + step
+                VStack(alignment: .leading, spacing: 0) {
+                    postBlock
                     
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(node.children.enumerated()), id: \.element.id) { index, child in
-                            NestedChildBranch(
-                                node: child,
-                                path: "\(path).\(index + 1)",
-                                visualInset: childVisualInset,
-                                isLastSibling: index == node.children.count - 1,
-                                lineColor: lineColor,
-                                stepInset: step,
-                                railStyle: railStyle,
-                                onRailTap: collapseSelf
-                            )
+                    if hasChildren {
+                        let step = NestedThreadMetrics.stepInset(
+                            parentHasMultipleChildren: parentHasMultipleChildren,
+                            currentVisualInset: visualInset
+                        )
+                        let railStyle = NestedThreadMetrics.railStyle(
+                            parentHasMultipleChildren: parentHasMultipleChildren,
+                            stepInset: step
+                        )
+                        let childVisualInset = visualInset + step
+
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(Array(node.children.enumerated()), id: \.element.id) { index, child in
+                                NestedChildBranch(
+                                    node: child,
+                                    path: "\(path).\(index + 1)",
+                                    visualInset: childVisualInset,
+                                    isLastSibling: index == node.children.count - 1,
+                                    lineColor: lineColor,
+                                    stepInset: step,
+                                    railStyle: railStyle,
+                                    onRailTap: collapseSelf
+                                )
+                            }
                         }
                     }
                 }
+                .transition(collapseTransition)
             }
         }
         .background(theme.listBackground)
-        .animation(.easeInOut(duration: 0.15), value: isCollapsed)
+        .overlay(alignment: .topLeading) {
+            if isAnimatingPFP {
+                if case .branch? = incomingRailStyle {
+                    animatedBranchConnectorExtension
+                }
+                animatedPFP
+            }
+        }
     }
     
     private var postBlock: some View {
@@ -220,14 +281,15 @@ struct NestedReplyRow: View {
         // the incoming rail (on the first child).
         VStack(alignment: .leading, spacing: 0) {
             Box(nrPost: node.nrPost, showGutter: false) {
-                PostRowDeletable(
-                    nrPost: node.nrPost,
+            PostRowDeletable(
+                nrPost: node.nrPost,
                     missingReplyTo: false,
                     connect: nil,
                     fullWidth: false,
                     isDetail: false,
-                    theme: theme
-                )
+                theme: theme
+            )
+            .environment(\.nestedReplyPFPHidden, isAnimatingPFP)
             }
             .id(node.id)
             .environment(\.availableWidth, nestedAvailableWidth)
@@ -310,11 +372,14 @@ struct NestedReplyRow: View {
         let count = threadPostCount
         let name = node.nrPost.anyName
         let pfpSize = NestedThreadMetrics.collapsedPfpSize
-        // Left-align with the PFP column so the parent L-rail meets the avatar.
+        let pfpColumnWidth = DIMENSIONS.POST_ROW_PFP_DIAMETER
+        let collapsedTopPadding = NestedThreadMetrics.branchY - pfpSize / 2
+        // Center the smaller PFP in the same column used by regular post PFPs,
+        // keeping both the avatar center and the following text aligned.
         // Entire row (PFP + label) expands; no chevron — parent rail hits used to
         // steal chevron taps and collapse the parent instead.
         return Button {
-            isCollapsed = false
+            setCollapsed(false)
         } label: {
             HStack(alignment: .center, spacing: 8) {
                 ZStack {
@@ -324,6 +389,7 @@ struct NestedReplyRow: View {
                         size: pfpSize
                     )
                     .frame(width: pfpSize, height: pfpSize)
+                    .opacity(isAnimatingPFP ? 0 : 1)
                     
                     if NestedThreadMetrics.showPathLabels {
                         pathBadge
@@ -331,6 +397,7 @@ struct NestedReplyRow: View {
                     }
                 }
                 .frame(width: pfpSize, height: pfpSize)
+                .frame(width: pfpColumnWidth, alignment: .center)
                 .allowsHitTesting(false)
                 
                 Text(String(localized: "Show thread from \(name) (\(count))", comment: "Expand collapsed reply thread; name and post count"))
@@ -342,12 +409,87 @@ struct NestedReplyRow: View {
             }
             .padding(.leading, DIMENSIONS.BOX_PADDING)
             .padding(.trailing, 10)
-            .padding(.vertical, 8)
+            .padding(.top, collapsedTopPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(String(localized: "Show collapsed reply thread", comment: "A11y"))
+        .overlay(alignment: .topLeading) {
+            collapsedConnectorExtension
+        }
+    }
+
+    @ViewBuilder
+    private var collapsedConnectorExtension: some View {
+        let normalRadius = DIMENSIONS.POST_ROW_PFP_DIAMETER / 2
+        let collapsedRadius = NestedThreadMetrics.collapsedPfpSize / 2
+        let extensionLength = normalRadius - collapsedRadius
+        let centerY = NestedThreadMetrics.branchY
+
+        switch incomingRailStyle {
+        case .linear:
+            Path { path in
+                path.move(to: CGPoint(x: NestedThreadMetrics.spineX, y: centerY - normalRadius))
+                path.addLine(to: CGPoint(x: NestedThreadMetrics.spineX, y: centerY - collapsedRadius))
+            }
+            .stroke(lineColor, style: StrokeStyle(lineWidth: NestedThreadMetrics.lineWidth, lineCap: .butt))
+            .allowsHitTesting(false)
+        case .branch:
+            if !isAnimatingPFP {
+                Path { path in
+                    path.move(to: CGPoint(x: DIMENSIONS.BOX_PADDING, y: centerY))
+                    path.addLine(to: CGPoint(x: DIMENSIONS.BOX_PADDING + extensionLength, y: centerY))
+                }
+                .stroke(lineColor, style: StrokeStyle(lineWidth: NestedThreadMetrics.lineWidth, lineCap: .square))
+                .allowsHitTesting(false)
+            }
+        case .flatBranch, .none:
+            EmptyView()
+        }
+    }
+
+    private var animatedBranchConnectorExtension: some View {
+        let extensionLength = (
+            DIMENSIONS.POST_ROW_PFP_DIAMETER - NestedThreadMetrics.collapsedPfpSize
+        ) / 2
+
+        return Path { path in
+            path.move(to: CGPoint(x: DIMENSIONS.BOX_PADDING, y: NestedThreadMetrics.branchY))
+            path.addLine(
+                to: CGPoint(
+                    x: DIMENSIONS.BOX_PADDING + extensionLength,
+                    y: NestedThreadMetrics.branchY
+                )
+            )
+        }
+        .trim(from: 0, to: animatedPFPIsCollapsed ? 1 : 0)
+        .stroke(
+            lineColor,
+            style: StrokeStyle(lineWidth: NestedThreadMetrics.lineWidth, lineCap: .square)
+        )
+        .allowsHitTesting(false)
+        .zIndex(9)
+    }
+
+    private var animatedPFP: some View {
+        let expandedSize = DIMENSIONS.POST_ROW_PFP_DIAMETER
+        let collapsedSize = NestedThreadMetrics.collapsedPfpSize
+        let centerX = DIMENSIONS.BOX_PADDING + expandedSize / 2
+        let centerY = animatedPFPIsCollapsed
+            ? NestedThreadMetrics.branchY
+            : DIMENSIONS.BOX_PADDING + expandedSize / 2
+
+        return PFP(
+            pubkey: node.nrPost.pubkey,
+            nrContact: node.nrPost.contact,
+            size: expandedSize
+        )
+        .frame(width: expandedSize, height: expandedSize)
+        .scaleEffect(animatedPFPIsCollapsed ? collapsedSize / expandedSize : 1)
+        .position(x: centerX, y: centerY)
+        .allowsHitTesting(false)
+        .zIndex(10)
     }
 }
 
@@ -380,7 +522,12 @@ private struct NestedChildBranch: View {
     }
     
     var body: some View {
-        NestedReplyRow(node: node, path: path, visualInset: visualInset)
+        NestedReplyRow(
+            node: node,
+            path: path,
+            visualInset: visualInset,
+            incomingRailStyle: railStyle
+        )
             .padding(.leading, stepInset)
             .fixedSize(horizontal: false, vertical: true)
             // Overlay so the rail is visible in the gutter; geometry is clipped
@@ -396,14 +543,9 @@ private struct NestedChildBranch: View {
         GeometryReader { geo in
             let h = geo.size.height
             let x = spineX
-            // Short collapsed rows: branch mid-row so the L hits the small PFP.
-            // Tall expanded posts: branch at mid-PFP.
-            let y: CGFloat = {
-                if h < yBranch + 12 {
-                    return max(cornerR + 1, h / 2)
-                }
-                return min(yBranch, max(cornerR + 1, h))
-            }()
+            // Keep the endpoint fixed at the normal PFP center. The collapsed
+            // control uses this same center, so the rail never jumps.
+            let y = yBranch
             
             ZStack(alignment: .topLeading) {
                 switch railStyle {
@@ -420,7 +562,7 @@ private struct NestedChildBranch: View {
     
     /// Straight vertical connector into a single-child chain (no indent, no L).
     /// Stop at the top of the PFP; the child's bodySpine continues below it.
-    /// The hit target still extends to mid-PFP for comfortable collapsing.
+    /// Keep the hit target off the PFP so a collapsed row always receives taps.
     @ViewBuilder
     private func linearRail(height h: CGFloat, spineX x: CGFloat, midY y: CGFloat) -> some View {
         let pfpTopY = max(1, y - DIMENSIONS.POST_ROW_PFP_DIAMETER / 2.0)
@@ -433,7 +575,7 @@ private struct NestedChildBranch: View {
         .allowsHitTesting(false)
         
         Color.clear
-            .frame(width: hit, height: max(y, hit))
+            .frame(width: hit, height: pfpTopY)
             .padding(.leading, x - hit / 2)
             .contentShape(Rectangle())
             .highPriorityGesture(TapGesture().onEnded(onRailTap))
