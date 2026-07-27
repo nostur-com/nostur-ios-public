@@ -380,6 +380,7 @@ private final class ShareExtensionModel: ObservableObject {
                 id: vm.id,
                 preview: newPreview,
                 uploadState: vm.uploadState,
+                serverResults: vm.serverResults,
                 containsLocationMetadata: vm.containsLocationMetadata
             )
         }
@@ -397,6 +398,7 @@ private final class ShareExtensionModel: ObservableObject {
 
         if let index = indexOfViewModel(with: item.id) {
             mediaViewModels[index].uploadState = .idle
+            mediaViewModels[index].serverResults = []
         }
 
         startMediaUploadIfPossible()
@@ -533,7 +535,10 @@ private final class ShareExtensionModel: ObservableObject {
 
         if completedCount == total {
             if !isPosting {
-                statusMessage = "Media uploaded."
+                let mirrorFailed = mediaViewModels.contains { viewModel in
+                    viewModel.serverResults.contains { $0.role == .mirror && !$0.succeeded }
+                }
+                statusMessage = mirrorFailed ? "Media uploaded; some mirrors failed." : "Media uploaded."
             }
             return
         }
@@ -575,6 +580,7 @@ private final class ShareExtensionModel: ObservableObject {
     private func resetMediaUploadStates() {
         for i in mediaViewModels.indices {
             mediaViewModels[i].uploadState = .idle
+            mediaViewModels[i].serverResults = []
         }
     }
 
@@ -589,6 +595,7 @@ private final class ShareExtensionModel: ObservableObject {
         for index in mediaViewModels.indices {
             if case .failed = mediaViewModels[index].uploadState {
                 mediaViewModels[index].uploadState = .idle
+                mediaViewModels[index].serverResults = []
                 uploadedMediaById[mediaViewModels[index].id] = nil
                 mediaItemUploadTasks[mediaViewModels[index].id]?.cancel()
                 mediaItemUploadTasks[mediaViewModels[index].id] = nil
@@ -789,23 +796,42 @@ private final class ShareExtensionModel: ObservableObject {
         ShareDebugLog.mark("media \(id) upload complete")
 
         if mirrorServers.isEmpty {
-            progressSink.set(1, forMediaWithId: id)
+            setUploadProgress(
+                1,
+                forMediaWithId: id,
+                uploadGeneration: generation,
+                serverResults: [ShareMediaServerResult(server: server.absoluteString, role: .primary, succeeded: true)]
+            )
         } else {
-            progressSink.set(0.9, forMediaWithId: id)
-            let mirrorSucceeded = await ShareBlossomMirrorer(servers: mirrorServers).mirror(imeta: imeta, signer: signer) { progress in
+            let primaryResult = ShareMediaServerResult(server: server.absoluteString, role: .primary, succeeded: true)
+            setUploadProgress(0.9, forMediaWithId: id, uploadGeneration: generation, serverResults: [primaryResult])
+            let mirrorResults = await ShareBlossomMirrorer(servers: mirrorServers).mirror(imeta: imeta, signer: signer) { progress in
                 progressSink.set(0.9 + (progress * 0.1), forMediaWithId: id)
             }
             try Task.checkCancellation()
-            progressSink.set(1, forMediaWithId: id, mirrorFailed: !mirrorSucceeded)
+            setUploadProgress(
+                1,
+                forMediaWithId: id,
+                uploadGeneration: generation,
+                serverResults: [primaryResult] + mirrorResults
+            )
         }
 
         return imeta
     }
 
-    fileprivate func setUploadProgress(_ progress: Double, forMediaWithId id: UUID, uploadGeneration: Int, mirrorFailed: Bool = false) {
+    fileprivate func setUploadProgress(
+        _ progress: Double,
+        forMediaWithId id: UUID,
+        uploadGeneration: Int,
+        serverResults: [ShareMediaServerResult]? = nil
+    ) {
         guard self.mediaUploadGeneration == uploadGeneration else { return }
         guard let index = indexOfViewModel(with: id) else { return }
-        mediaViewModels[index].uploadState = .progress(min(max(progress, 0), 1), mirrorFailed: mirrorFailed)
+        mediaViewModels[index].uploadState = .progress(min(max(progress, 0), 1))
+        if let serverResults {
+            mediaViewModels[index].serverResults = serverResults
+        }
     }
 
     fileprivate func setUploadFailed(forMediaWithId id: UUID, uploadGeneration: Int) {
@@ -928,9 +954,18 @@ private final class ShareUploadProgressSink: @unchecked Sendable {
         self.uploadGeneration = uploadGeneration
     }
 
-    func set(_ progress: Double, forMediaWithId id: UUID, mirrorFailed: Bool = false) {
+    func set(
+        _ progress: Double,
+        forMediaWithId id: UUID,
+        serverResults: [ShareMediaServerResult]? = nil
+    ) {
         Task { @MainActor in
-            model?.setUploadProgress(progress, forMediaWithId: id, uploadGeneration: uploadGeneration, mirrorFailed: mirrorFailed)
+            model?.setUploadProgress(
+                progress,
+                forMediaWithId: id,
+                uploadGeneration: uploadGeneration,
+                serverResults: serverResults
+            )
         }
     }
 
@@ -943,11 +978,11 @@ private final class ShareUploadProgressSink: @unchecked Sendable {
 
 private enum ShareMediaUploadState: Equatable {
     case idle
-    case progress(Double, mirrorFailed: Bool)
+    case progress(Double)
     case failed
 
     var progress: Double? {
-        guard case .progress(let progress, _) = self else { return nil }
+        guard case .progress(let progress) = self else { return nil }
         return progress
     }
 
@@ -955,7 +990,7 @@ private enum ShareMediaUploadState: Equatable {
         switch self {
         case .idle:
             return 0.02
-        case .progress(let progress, _):
+        case .progress(let progress):
             return progress
         case .failed:
             return nil
@@ -965,11 +1000,6 @@ private enum ShareMediaUploadState: Equatable {
     var hasFailed: Bool {
         if case .failed = self { return true }
         return false
-    }
-
-    var mirrorFailed: Bool {
-        guard case .progress(_, let mirrorFailed) = self else { return false }
-        return mirrorFailed
     }
 }
 
@@ -1647,6 +1677,17 @@ private struct ShareMediaMetadata {
     let blurhash: String?
 }
 
+private struct ShareMediaServerResult: Equatable, Sendable {
+    enum Role: Equatable, Sendable {
+        case primary
+        case mirror
+    }
+
+    let server: String
+    let role: Role
+    let succeeded: Bool
+}
+
 private enum ShareFileHasher {
     static func sha256Hex(for fileURL: URL) throws -> String {
         let handle = try FileHandle(forReadingFrom: fileURL)
@@ -1853,41 +1894,61 @@ private final class ShareUploadProgressDelegate: NSObject, URLSessionTaskDelegat
 private struct ShareBlossomMirrorer {
     let servers: [URL]
 
-    func mirror(imeta: ShareMediaMetadata, signer: ShareEventSigner, onProgress: @escaping (Double) -> Void = { _ in }) async -> Bool {
+    func mirror(
+        imeta: ShareMediaMetadata,
+        signer: ShareEventSigner,
+        onProgress: @escaping (Double) -> Void = { _ in }
+    ) async -> [ShareMediaServerResult] {
         guard !servers.isEmpty else {
             onProgress(1)
-            return true
+            return []
         }
         guard let hash = imeta.hash, !hash.isEmpty else {
             onProgress(1)
-            return false
+            return failedResults()
         }
         guard let authHeader = try? await signer.blossomAuthorizationHeader(sha256hex: hash) else {
             onProgress(1)
-            return false
+            return failedResults()
         }
 
         let totalServers = servers.count
-        return await withTaskGroup(of: Bool.self) { group in
-            for server in servers {
+        let attempts = await withTaskGroup(of: MirrorAttempt.self, returning: [MirrorAttempt].self) { group in
+            for (index, server) in servers.enumerated() {
                 group.addTask {
                     do {
                         try await mirror(url: imeta.url, to: server, authHeader: authHeader)
-                        return true
+                        return MirrorAttempt(index: index, succeeded: true)
                     } catch {
-                        return false
+                        return MirrorAttempt(index: index, succeeded: false)
                     }
                 }
             }
 
             var completedServers = 0
-            var allSucceeded = true
-            for await didSucceed in group {
+            var attempts: [MirrorAttempt] = []
+            attempts.reserveCapacity(totalServers)
+            for await attempt in group {
                 completedServers += 1
-                allSucceeded = allSucceeded && didSucceed
+                attempts.append(attempt)
                 onProgress(Double(completedServers) / Double(totalServers))
             }
-            return allSucceeded
+            return attempts
+        }
+
+        let attemptByIndex = Dictionary(uniqueKeysWithValues: attempts.map { ($0.index, $0.succeeded) })
+        return servers.enumerated().map { index, server in
+            ShareMediaServerResult(
+                server: server.absoluteString,
+                role: .mirror,
+                succeeded: attemptByIndex[index] ?? false
+            )
+        }
+    }
+
+    private func failedResults() -> [ShareMediaServerResult] {
+        servers.map {
+            ShareMediaServerResult(server: $0.absoluteString, role: .mirror, succeeded: false)
         }
     }
 
@@ -1916,6 +1977,11 @@ private struct ShareBlossomMirrorer {
 
     private struct MirrorRequest: Encodable {
         let url: String
+    }
+
+    private struct MirrorAttempt: Sendable {
+        let index: Int
+        let succeeded: Bool
     }
 }
 
@@ -2175,6 +2241,7 @@ private struct ShareMediaPreviews: View {
                 MediaThumbnail(
                     preview: vm.preview,
                     uploadState: vm.uploadState,
+                    serverResults: vm.serverResults,
                     accentColor: accentColor,
                     showRemoveButton: canRemove,
                     showMirrorWarning: !isPosting,
@@ -2189,11 +2256,31 @@ private struct ShareMediaPreviews: View {
 private struct MediaThumbnail: View {
     let preview: ShareMediaPreview
     let uploadState: ShareMediaUploadState
+    let serverResults: [ShareMediaServerResult]
     let accentColor: Color
     let showRemoveButton: Bool
     let showMirrorWarning: Bool
     let remove: () -> Void
     let retry: () -> Void
+
+    @State private var showServerResults = false
+
+    private var mirrorFailed: Bool {
+        serverResults.contains { $0.role == .mirror && !$0.succeeded }
+    }
+
+    private var serverResultsMessage: String {
+        let explanation = mirrorFailed
+            ? "The primary upload succeeded, but one or more mirrors failed. You can still post."
+            : "Media server results:"
+        let results = serverResults.map { result in
+            let symbol = result.succeeded ? "✓" : "✕"
+            let role = result.role == .primary ? "Primary" : "Mirror"
+            let status = result.succeeded ? "succeeded" : "failed"
+            return "\(symbol) \(role): \(result.server) — \(status)"
+        }
+        return ([explanation] + results).joined(separator: "\n")
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -2241,26 +2328,36 @@ private struct MediaThumbnail: View {
                     }
                 }
                 .overlay(alignment: .topTrailing) {
-                    if showRemoveButton {
-                        Button(action: remove) {
-                            Image(systemName: "xmark.circle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .foregroundStyle(.black)
-                                .background(Circle().foregroundStyle(.white))
-                                .frame(width: 20, height: 20)
+                    HStack(spacing: 2) {
+                        if showMirrorWarning, mirrorFailed {
+                            Button {
+                                showServerResults = true
+                            } label: {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                    .foregroundStyle(.white)
+                                    .padding(5)
+                                    .background(Color.orange)
+                                    .clipShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Show media server results")
+                            .accessibilityHint("Explains which media servers succeeded or failed")
                         }
-                        .buttonStyle(.plain)
-                        .padding(5)
-                    } else if showMirrorWarning, uploadState.mirrorFailed {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.caption)
-                            .foregroundStyle(.white)
-                            .padding(5)
-                            .background(Color.orange)
-                            .clipShape(Circle())
-                            .padding(6)
+
+                        if showRemoveButton {
+                            Button(action: remove) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .foregroundStyle(.black)
+                                    .background(Circle().foregroundStyle(.white))
+                                    .frame(width: 20, height: 20)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
+                    .padding(5)
                 }
                 .overlay(alignment: .bottom) {
                     if let uploadProgress = uploadState.displayProgress {
@@ -2272,6 +2369,11 @@ private struct MediaThumbnail: View {
         }
         .aspectRatio(preview.aspectRatio, contentMode: .fit)
         .frame(maxWidth: .infinity)
+        .alert("Media upload details", isPresented: $showServerResults) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(serverResultsMessage)
+        }
     }
 }
 
@@ -2666,6 +2768,7 @@ private struct ShareMediaViewModel: Identifiable {
     let id: UUID
     let preview: ShareMediaPreview
     var uploadState: ShareMediaUploadState
+    var serverResults: [ShareMediaServerResult]
     /// True when file-level GPS/location metadata was detected (videos only today).
     let containsLocationMetadata: Bool
 
@@ -2673,11 +2776,13 @@ private struct ShareMediaViewModel: Identifiable {
         id: UUID = UUID(),
         preview: ShareMediaPreview,
         uploadState: ShareMediaUploadState = .idle,
+        serverResults: [ShareMediaServerResult] = [],
         containsLocationMetadata: Bool = false
     ) {
         self.id = id
         self.preview = preview
         self.uploadState = uploadState
+        self.serverResults = serverResults
         self.containsLocationMetadata = containsLocationMetadata
     }
     
