@@ -21,15 +21,6 @@ public final class TypingTextModel: ObservableObject {
         }
     }
     
-    var restoreDraft: String {
-        get { Drafts.shared.restoreDraft  }
-        set {
-            DispatchQueue.main.async {
-                Drafts.shared.restoreDraft = newValue
-            }
-        }
-    }
-    
     @Published var anonMode: Bool = false
     private var savedRealDraft: String = ""
 
@@ -77,7 +68,6 @@ public final class TypingTextModel: ObservableObject {
                 text = draft
             }
         }
-        restoreDraft = ""
     }
 }
 
@@ -1188,6 +1178,7 @@ public final class NewPostModel: ObservableObject {
                 }
             }
             finishDraftSend()
+            clearActiveDraftKeepingUndoSnapshot()
             
             if let replyTo {
                 bg().perform { // update ui
@@ -1284,6 +1275,7 @@ public final class NewPostModel: ObservableObject {
             _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
         }
         finishDraftSend()
+        clearActiveDraftKeepingUndoSnapshot()
 
         if let replyTo {
             let shouldRepublish = !replyTo.nrPost.isRestricted && !replyTo.nrPost.isPrivate
@@ -1323,6 +1315,12 @@ public final class NewPostModel: ObservableObject {
         }
         onDismiss()
         sendNotification(.didSend)
+    }
+
+    @MainActor
+    private func clearActiveDraftKeepingUndoSnapshot() {
+        typingTextModel.text = ""
+        Drafts.shared.clearActiveDraftAfterSchedulingSend()
     }
 
     @MainActor

@@ -258,13 +258,40 @@ struct ComposerTextEditingTests {
         drafts.draftMentions = [record]
 
         drafts.preserveDraftForUndoSend()
-        drafts.draft = ""
+        drafts.clearActiveDraftAfterSchedulingSend()
+        #expect(drafts.draft.isEmpty)
+        #expect(drafts.draftMentions.isEmpty)
+        #expect(drafts.restoreDraft == "@Fabian hello")
+        #expect(drafts.restoreDraftMentions == [record])
+
         drafts.restoreDraftAfterUndoSend()
 
         #expect(drafts.draft == "@Fabian hello")
         #expect(drafts.draftMentions == [record])
         #expect(drafts.restoreDraft.isEmpty)
         #expect(drafts.restoreDraftMentions.isEmpty)
+    }
+
+    @Test func openingAnotherComposerDoesNotClearUndoSendDraft() async {
+        let drafts = Drafts.shared
+        let originalDraft = drafts.draft
+        let originalDraftMentions = drafts.draftMentions
+        let originalRestoreDraft = drafts.restoreDraft
+        let originalRestoreMentions = drafts.restoreDraftMentions
+        defer {
+            drafts.draft = originalDraft
+            drafts.draftMentions = originalDraftMentions
+            drafts.restoreDraft = originalRestoreDraft
+            drafts.restoreDraftMentions = originalRestoreMentions
+        }
+
+        drafts.draft = ""
+        drafts.restoreDraft = "Currently awaiting send"
+        _ = TypingTextModel()
+        await Task.yield()
+
+        #expect(drafts.draft.isEmpty)
+        #expect(drafts.restoreDraft == "Currently awaiting send")
     }
 
     @Test func editingSemanticMentionInvalidatesItsPubkey() {

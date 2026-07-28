@@ -63,6 +63,10 @@ class Drafts {
         restoreDraftMentions = mentions
     }
 
+    func clearActiveDraftAfterSchedulingSend() {
+        draft = ""
+    }
+
     func restoreDraftAfterUndoSend() {
         let mentions = restoreDraftMentions
         draft = restoreDraft
