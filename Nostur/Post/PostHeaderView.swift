@@ -131,13 +131,13 @@ struct PostHeaderView: View {
                     Text(String(format: "via %@", via))
                         .font(.subheadline)
                         .lineLimit(1)
-                        .layoutPriority(3)
+                        .layoutPriority(0)
                         .foregroundColor(.secondary)
                 }
                 
                 if shouldShowFollowButton {
                     FollowLink(pubkey: pubkey)
-                        .layoutPriority(2)
+                        .layoutPriority(1)
                         .lineLimit(1)
                 }
             }
@@ -157,7 +157,7 @@ struct PostHeaderView: View {
                     Text(String(format: "via %@", via))
                         .font(.subheadline)
                         .lineLimit(1)
-                        .layoutPriority(1)
+                        .layoutPriority(0)
                         .foregroundColor(.secondary)
                 }
                 
@@ -174,7 +174,7 @@ struct PostHeaderView: View {
                 
                 if shouldShowFollowButton {
                     FollowLink(pubkey: pubkey)
-                        .layoutPriority(2)
+                        .layoutPriority(1)
                         .lineLimit(1)
                 }
             }
