@@ -7,146 +7,23 @@
 
 import Foundation
 
-@available(iOS 16.0, *)
-func replaceMentionsWithNpubs(_ text: String, selected: Set<NRContact> = []) -> String {
-    let blocked:Set<String> = blocks()
-    let mentions = text.matches(of: /(?:^|\s)((@(\x{2063}\x{2064}[^\x{2063}\x{2064}]+\x{2064}\x{2063}|\w+)))/)
-    var newText = text
-    let mentionsByLongest = mentions.sorted(by: { $0.output.3.count > $1.output.3.count })
-    for mention in mentionsByLongest {
-        //        print("replaceMentionsWithNpubs")
-        //        print(mention.output.0) // @Tester
-        //        print(mention.output.1) // @Tester
-        //        print(mention.output.2) // @Tester
-        //        print(mention.output.3) // Tester
-        let term = mention.output.3.trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-            .replacingOccurrences(of: "\u{2063}", with: "")
-            .replacingOccurrences(of: "\u{2064}", with: "")
-        let fr = Contact.fetchRequest()
-        fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@ OR fixedName CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, term, blocked)
-        
-        // prio selected contacts - exact result
-        if let result = selected.first(where: {
-            let anyName = $0.anyName.lowercased()
-            let fixedName = ($0.fixedName ?? "").lowercased()
-            
-            if anyName == term { return true }
-            if fixedName != "" && fixedName == term { return true }
-            return false
-        }) {
-            //            print("selected [exact!] result: \(result.authorName)")
-            if let npub = (result.npub ?? (try? NIP19(prefix: "npub", hexString: result.pubkey).displayString)) {
-                newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(npub)", options: [.caseInsensitive])
-            }
-            continue
-        }
-        
-        // prio selected contacts - contains result
-        else if let result = selected.first(where: {
-            let anyName = $0.anyName.lowercased()
-            let fixedName = ($0.fixedName ?? "").lowercased()
-            
-            if anyName.contains(term) { return true }
-            if fixedName != "" && fixedName.contains(term) { return true }
-            return false
-        }) {
-            //            print("selected [contains!] result: \(result.authorName)")
-            if let npub = (result.npub ?? (try? NIP19(prefix: "npub", hexString: result.pubkey).displayString)) {
-                newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(npub)", options: [.caseInsensitive])
-            }
-            continue
-        }
-        
-        
-        else if let result = try? DataProvider.shared().viewContext.fetch(fr).first {
-            //            print("any! result \(result.handle) \(result.npub)")
-            newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(result.npub)", options: [.caseInsensitive])
-        }
+func replaceSemanticMentionsWithNpubs(_ attributedText: NSAttributedString) -> String {
+    let mutableText = NSMutableString(string: attributedText.string)
+    let mentionRuns = attributedText.nosturMentionRuns()
+        .sorted { $0.range.location > $1.range.location }
+
+    for mention in mentionRuns {
+        guard let npub = try? NIP19(
+            prefix: "npub",
+            hexString: mention.pubkey
+        ).displayString else { continue }
+        mutableText.replaceCharacters(
+            in: mention.range,
+            with: "nostr:\(npub)"
+        )
     }
-    return newText
+    return mutableText as String
 }
-
-func replaceMentionsWithNpubs15(_ text: String, selected: Set<NRContact> = []) -> String {
-    let blocked: Set<String> = blocks()
-    let regexPattern = "(?:^|\\s)((@(\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|\\w+)))"
-    var newText = text
-
-    do {
-        let regex = try NSRegularExpression(pattern: regexPattern, options: [])
-        let nsRange = NSRange(text.startIndex..<text.endIndex, in: text)
-        let matches = regex.matches(in: text, options: [], range: nsRange)
-
-        let mentionsByLongest = matches.sorted(by: {
-            let range1 = Range($0.range(at: 3), in: text)!
-            let range2 = Range($1.range(at: 3), in: text)!
-            return text.distance(from: range1.lowerBound, to: range1.upperBound) >
-                   text.distance(from: range2.lowerBound, to: range2.upperBound)
-        })
-
-        for match in mentionsByLongest {
-            let termRange = match.range(at: 3)
-            guard let termSwiftRange = Range(termRange, in: text),
-                  let mentionRange = Range(match.range(at: 2), in: text) else {
-                continue
-            }
-
-            let term = text[termSwiftRange].trimmingCharacters(in: .whitespacesAndNewlines)
-                        .lowercased()
-                        .replacingOccurrences(of: "\u{2063}", with: "")
-                        .replacingOccurrences(of: "\u{2064}", with: "")
-            let mention = text[mentionRange]
-
-            let fr = Contact.fetchRequest()
-            fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@ OR fixedName CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, term, blocked)
-
-            // prio selected contacts - exact result
-            if let result = selected.first(where: {
-                let anyName = $0.anyName.lowercased()
-                let fixedName = ($0.fixedName ?? "").lowercased()
-                
-                if anyName == term { return true }
-                if fixedName != "" && fixedName == term { return true }
-                return false
-            }) {
-                //            print("selected [exact!] result: \(result.authorName)")
-                if let npub = (result.npub ?? (try? NIP19(prefix: "npub", hexString: result.pubkey).displayString)) {
-                    newText = newText.replacingOccurrences(of: mention, with: "nostr:\(npub)", options: [.caseInsensitive])
-                }
-                continue
-            }
-            
-            // prio selected contacts - contains result
-            else if let result = selected.first(where: {
-                let anyName = $0.anyName.lowercased()
-                let fixedName = ($0.fixedName ?? "").lowercased()
-                
-                if anyName.contains(term) { return true }
-                if fixedName != "" && fixedName.contains(term) { return true }
-                return false
-            }) {
-                //            print("selected [contains!] result: \(result.authorName)")
-                if let npub = (result.npub ?? (try? NIP19(prefix: "npub", hexString: result.pubkey).displayString)) {
-                    newText = newText.replacingOccurrences(of: mention, with: "nostr:\(npub)", options: [.caseInsensitive])
-                }
-                continue
-            }
-            
-            
-            else if let result = try? DataProvider.shared().viewContext.fetch(fr).first {
-                //            print("any! result \(result.handle) \(result.npub)")
-                newText = newText.replacingOccurrences(of: mention, with: "nostr:\(result.npub)", options: [.caseInsensitive])
-            }
-        }
-    } catch {
-        L.og.debug("Regex error: \(error)")
-        return newText
-    }
-
-    return newText
-}
-
-
 
 // Replace "@npub1..." with "nostr:npub1..." and return an array of all
 // replaced npubs for turning into pTags

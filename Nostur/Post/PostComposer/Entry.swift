@@ -191,7 +191,7 @@ struct Entry: View {
                 // Needed so we can update cursors position on @mention autocomplete
                 if (vm.textView == nil) {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                        vm.textView = editor.textView
+                        vm.attachTextView(editor.textView)
                         if let directMention = directMention {
                             vm.directMention(directMention)
                         }

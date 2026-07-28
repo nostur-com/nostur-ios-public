@@ -22,8 +22,7 @@ struct ChatRoom: View {
     @State private var account: CloudAccount? = nil
     @State private var timer: Timer?
     @State private var mentionTerm: String? = nil
-    @State private var selectedMentions: Set<NRContact> = []
-    @State private var mentionCompletionRevision = 0
+    @State private var attributedMessage = NSAttributedString()
     
     @Namespace private var bottom
     
@@ -134,7 +133,9 @@ struct ChatRoom: View {
                             if let mentionTerm {
                                 ChatMentionChoices(
                                     contacts: mentionChoices(for: mentionTerm, account: account),
-                                    onSelect: selectMention
+                                    onSelect: { contact in
+                                        selectMention(contact, term: mentionTerm)
+                                    }
                                 )
                             }
 
@@ -142,9 +143,9 @@ struct ChatRoom: View {
                                 MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
                                 ChatInputField(
                                     message: $message,
+                                    attributedMessage: $attributedMessage,
                                     startWithFocus: false,
                                     highlightMentions: true,
-                                    mentionCompletionRevision: mentionCompletionRevision,
                                     onSubmit: submitMessage
                                 )
                             }
@@ -173,17 +174,13 @@ struct ChatRoom: View {
         guard let account = self.account, account.privateKey != nil else { AppSheetsModel.shared.readOnlySheetVisible = true; return }
         guard !message.isEmpty else { return }
 
-        var content = message
+        let semanticMessage = semanticChatMessage(
+            message: message,
+            attributedMessage: attributedMessage
+        )
+        var content = replaceSemanticMentionsWithNpubs(semanticMessage)
         if SettingsStore.shared.replaceNsecWithHunter2Enabled {
             content = replaceNsecWithHunter2(content)
-        }
-
-        // Resolve contacts explicitly selected from autocomplete before handling raw @npubs.
-        if #available(iOS 16.0, *) {
-            content = replaceMentionsWithNpubs(content, selected: selectedMentions)
-        }
-        else {
-            content = replaceMentionsWithNpubs15(content, selected: selectedMentions)
         }
 
         // @npub1... → nostr:npub1... and collect p-tags (same as post composer)
@@ -217,16 +214,14 @@ struct ChatRoom: View {
                 sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
             })
             
-            message = ""
-            selectedMentions = []
+            clearMessage()
         }
         else {
             guard let signedEvent = try? account.signEvent(nEvent) else { return }
             // Save own chat to DB so reopen can load without relying only on relays
             Unpublisher.shared.publishNow(signedEvent, skipDB: false)
             sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
-            message = ""
-            selectedMentions = []
+            clearMessage()
         }
     }
 
@@ -257,27 +252,37 @@ struct ChatRoom: View {
             .map { $0 }
     }
 
-    private func selectMention(_ contact: NRContact) {
-        guard let term = mentionTerm else { return }
-        let charactersToReplace = term.count + 1 // @ plus the current search term
-        guard message.count >= charactersToReplace else { return }
+    private func selectMention(_ contact: NRContact, term selectedTerm: String) {
+        guard let completedMessage = completingChatMention(
+            message: message,
+            attributedMessage: attributedMessage,
+            term: selectedTerm,
+            name: contact.anyName,
+            pubkey: contact.pubkey
+        ) else { return }
 
-        let marker = "@\u{2063}\u{2064}\(contact.anyName)\u{2064}\u{2063} "
-        message = "\(message.dropLast(charactersToReplace))\(marker)"
-        selectedMentions.insert(contact)
+        // Update both source-of-truth values synchronously. The UIKit editor then
+        // receives this as an external attributed-text update; no coordinator
+        // callback or marked-text timing is involved.
+        attributedMessage = completedMessage
+        message = completedMessage.string
         mentionTerm = nil
-        mentionCompletionRevision += 1
     }
 
     private func trailingMentionTerm(in text: String) -> String? {
-        guard let token = text.split(whereSeparator: \.isWhitespace).last,
+        guard let lastCharacter = text.last,
+              !lastCharacter.isWhitespace,
+              let token = text.split(whereSeparator: \.isWhitespace).last,
               token.first == "@",
-              !token.contains("\u{2063}"),
-              !token.contains("\u{2064}"),
               !token.dropFirst().contains("@") else {
             return nil
         }
         return String(token.dropFirst())
+    }
+
+    private func clearMessage() {
+        message = ""
+        attributedMessage = NSAttributedString()
     }
 
     private func startTimer() { // Make sure real time sub for chat messages stays active
@@ -291,6 +296,46 @@ struct ChatRoom: View {
         timer?.invalidate()
         timer = nil
     }
+}
+
+func semanticChatMessage(
+    message: String,
+    attributedMessage: NSAttributedString
+) -> NSAttributedString {
+    attributedMessage.string == message
+        ? attributedMessage
+        : NSAttributedString(string: message)
+}
+
+func completingChatMention(
+    message: String,
+    attributedMessage: NSAttributedString,
+    term: String,
+    name: String,
+    pubkey: String
+) -> NSAttributedString? {
+    let result = attributedMessage.string == message
+        ? NSMutableAttributedString(attributedString: attributedMessage)
+        : NSMutableAttributedString(string: message)
+    let nsMessage = message as NSString
+    let token = "@\(term)"
+    let tokenLength = (token as NSString).length
+    guard tokenLength <= nsMessage.length else { return nil }
+
+    let tokenRange = NSRange(
+        location: nsMessage.length - tokenLength,
+        length: tokenLength
+    )
+    guard nsMessage.substring(with: tokenRange) == token else { return nil }
+
+    result.replaceCharacters(
+        in: tokenRange,
+        with: composerMention(
+            name: name,
+            pubkey: pubkey
+        )
+    )
+    return result
 }
 
 private struct ChatMentionChoices: View {

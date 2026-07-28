@@ -11,9 +11,9 @@ import SwiftUI
 struct ChatInputField: View {
     @Environment(\.theme) private var theme
     @Binding var message: String
+    var attributedMessage: Binding<NSAttributedString>? = nil
     var startWithFocus: Bool = true
     var highlightMentions: Bool = false
-    var mentionCompletionRevision: Int = 0
     var onSubmit: (() -> Void)?
     @State private var highlightedEditorHeight: CGFloat = 36
         
@@ -94,9 +94,9 @@ struct ChatInputField: View {
                 }
                 MentionHighlightingTextView(
                     text: $message,
+                    attributedText: attributedMessage,
                     height: $highlightedEditorHeight,
                     accentColor: UIColor(theme.accent),
-                    mentionCompletionRevision: mentionCompletionRevision,
                     onSubmit: onSubmit
                 )
             }
@@ -112,14 +112,10 @@ struct ChatInputField: View {
 
 private struct MentionHighlightingTextView: UIViewRepresentable {
     @Binding var text: String
+    let attributedText: Binding<NSAttributedString>?
     @Binding var height: CGFloat
     let accentColor: UIColor
-    let mentionCompletionRevision: Int
     let onSubmit: (() -> Void)?
-
-    private static let mentionRegex = try! NSRegularExpression(
-        pattern: "(?<!\\S)@(?:\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|\\w*)"
-    )
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -136,30 +132,33 @@ private struct MentionHighlightingTextView: UIViewRepresentable {
         textView.textContainer.lineFragmentPadding = 5
         textView.returnKeyType = .send
         textView.tintColor = accentColor
+        if #available(iOS 17.0, *) {
+            textView.inlinePredictionType = .default
+        }
         return textView
     }
 
     func updateUIView(_ textView: UITextView, context: Context) {
         context.coordinator.parent = self
-        context.coordinator.applyHighlighting(to: textView, text: text)
-        context.coordinator.applyPendingMentionCompletion(to: textView)
+        context.coordinator.applyExternalTextIfNeeded(to: textView)
+        context.coordinator.styleSemanticMentions(in: textView)
+        context.coordinator.syncAttributedText(from: textView)
         context.coordinator.updateHeight(of: textView)
     }
 
     final class Coordinator: NSObject, UITextViewDelegate {
         var parent: MentionHighlightingTextView
         private var isUpdating = false
-        private var appliedMentionCompletionRevision: Int
 
         init(parent: MentionHighlightingTextView) {
             self.parent = parent
-            self.appliedMentionCompletionRevision = parent.mentionCompletionRevision
         }
 
         func textViewDidChange(_ textView: UITextView) {
             guard !isUpdating else { return }
             parent.text = textView.text
-            applyHighlighting(to: textView, text: textView.text, force: true)
+            styleSemanticMentions(in: textView)
+            syncAttributedText(from: textView)
             updateHeight(of: textView)
         }
 
@@ -168,43 +167,112 @@ private struct MentionHighlightingTextView: UIViewRepresentable {
             shouldChangeTextIn range: NSRange,
             replacementText replacement: String
         ) -> Bool {
-            guard replacement == "\n" else { return true }
-            parent.onSubmit?()
-            return false
+            if replacement == "\n" {
+                parent.onSubmit?()
+                return false
+            }
+
+            invalidateSemanticMentions(in: range, textView: textView)
+            return true
         }
 
-        func applyHighlighting(to textView: UITextView, text: String, force: Bool = false) {
-            guard force || textView.text != text || textView.attributedText.length == 0 else { return }
+        func applyExternalTextIfNeeded(to textView: UITextView) {
+            guard textView.text != parent.text else { return }
             isUpdating = true
+            defer { isUpdating = false }
+
+            let oldText = textView.text ?? ""
             let selectedRange = textView.selectedRange
-            let attributedText = NSMutableAttributedString(string: text)
-            let fullRange = NSRange(location: 0, length: attributedText.length)
-            attributedText.addAttributes([
+            let replacement = NSMutableAttributedString(string: parent.text)
+            let fullRange = NSRange(location: 0, length: replacement.length)
+            replacement.addAttributes([
                 .font: UIFont.nosturBody(),
                 .foregroundColor: UIColor.label
             ], range: fullRange)
 
-            Self.parentMentionMatches(in: text).forEach { range in
-                attributedText.addAttributes([
-                    .font: UIFont.nosturBody().bold,
-                    .foregroundColor: parent.accentColor
-                ], range: range)
+            if let attributedText = parent.attributedText?.wrappedValue,
+               attributedText.string == parent.text {
+                for run in attributedText.nosturMentionRuns()
+                where NSMaxRange(run.range) <= replacement.length
+                    && replacement.attributedSubstring(from: run.range).string == run.text {
+                    replacement.addAttribute(
+                        .nosturMentionPubkey,
+                        value: run.pubkey,
+                        range: run.range
+                    )
+                }
             }
 
-            textView.attributedText = attributedText
-            textView.selectedRange = NSRange(
-                location: min(selectedRange.location, attributedText.length),
-                length: 0
+            textView.textStorage.setAttributedString(replacement)
+            textView.selectedRange = selectionAfterExternalTextChange(
+                from: oldText,
+                to: parent.text,
+                selectedRange: selectedRange
             )
-            isUpdating = false
         }
 
-        func applyPendingMentionCompletion(to textView: UITextView) {
-            guard appliedMentionCompletionRevision != parent.mentionCompletionRevision else { return }
-            appliedMentionCompletionRevision = parent.mentionCompletionRevision
-            let end = textView.endOfDocument
-            textView.selectedTextRange = textView.textRange(from: end, to: end)
-            textView.becomeFirstResponder()
+        func styleSemanticMentions(in textView: UITextView) {
+            let fullRange = NSRange(location: 0, length: textView.textStorage.length)
+            if fullRange.length > 0 {
+                textView.textStorage.addAttributes([
+                    .font: UIFont.nosturBody(),
+                    .foregroundColor: UIColor.label
+                ], range: fullRange)
+            }
+            for run in textView.attributedText.nosturMentionRuns() {
+                textView.textStorage.addAttributes([
+                    .font: UIFont.nosturBody().bold,
+                    .foregroundColor: parent.accentColor
+                ], range: run.range)
+            }
+            setDefaultTypingAttributes(on: textView)
+        }
+
+        private func setDefaultTypingAttributes(on textView: UITextView) {
+            textView.typingAttributes = [
+                .font: UIFont.nosturBody(),
+                .foregroundColor: UIColor.label
+            ]
+        }
+
+        func syncAttributedText(from textView: UITextView) {
+            guard parent.attributedText?.wrappedValue != textView.attributedText else { return }
+            parent.attributedText?.wrappedValue = NSAttributedString(
+                attributedString: textView.attributedText
+            )
+        }
+
+        private func invalidateSemanticMentions(in range: NSRange, textView: UITextView) {
+            let storage = textView.textStorage
+            let inspectionRange: NSRange
+            if range.length > 0 {
+                inspectionRange = range
+            } else if range.location < storage.length {
+                inspectionRange = NSRange(location: range.location, length: 1)
+            } else {
+                return
+            }
+
+            var mentionRanges: [NSRange] = []
+            for location in inspectionRange.location..<NSMaxRange(inspectionRange) {
+                var effectiveRange = NSRange()
+                if storage.attribute(
+                    .nosturMentionPubkey,
+                    at: location,
+                    effectiveRange: &effectiveRange
+                ) != nil,
+                   !mentionRanges.contains(effectiveRange) {
+                    mentionRanges.append(effectiveRange)
+                }
+            }
+
+            for mentionRange in mentionRanges {
+                storage.removeAttribute(.nosturMentionPubkey, range: mentionRange)
+                storage.addAttributes([
+                    .font: UIFont.nosturBody(),
+                    .foregroundColor: UIColor.label
+                ], range: mentionRange)
+            }
         }
 
         func updateHeight(of textView: UITextView) {
@@ -216,12 +284,48 @@ private struct MentionHighlightingTextView: UIViewRepresentable {
                 }
             }
         }
-
-        private static func parentMentionMatches(in text: String) -> [NSRange] {
-            let range = NSRange(text.startIndex..<text.endIndex, in: text)
-            return MentionHighlightingTextView.mentionRegex.matches(in: text, range: range).map(\.range)
-        }
     }
+}
+
+func selectionAfterExternalTextChange(
+    from oldText: String,
+    to newText: String,
+    selectedRange: NSRange
+) -> NSRange {
+    let oldText = oldText as NSString
+    let newText = newText as NSString
+    let comparableLength = min(oldText.length, newText.length)
+
+    var commonPrefixLength = 0
+    while commonPrefixLength < comparableLength,
+          oldText.character(at: commonPrefixLength) == newText.character(at: commonPrefixLength) {
+        commonPrefixLength += 1
+    }
+
+    var commonSuffixLength = 0
+    while commonSuffixLength < oldText.length - commonPrefixLength,
+          commonSuffixLength < newText.length - commonPrefixLength,
+          oldText.character(at: oldText.length - commonSuffixLength - 1)
+            == newText.character(at: newText.length - commonSuffixLength - 1) {
+        commonSuffixLength += 1
+    }
+
+    let oldChangedEnd = oldText.length - commonSuffixLength
+    let newChangedEnd = newText.length - commonSuffixLength
+    let newLocation: Int
+    if selectedRange.location < commonPrefixLength
+        || (selectedRange.location == commonPrefixLength && oldChangedEnd > commonPrefixLength) {
+        newLocation = selectedRange.location
+    } else if selectedRange.location >= oldChangedEnd {
+        newLocation = selectedRange.location + (newChangedEnd - oldChangedEnd)
+    } else {
+        newLocation = newChangedEnd
+    }
+
+    return NSRange(
+        location: min(max(0, newLocation), newText.length),
+        length: 0
+    )
 }
 
 // Copy pasta with replyingNow and quotingNow added

@@ -353,17 +353,12 @@ public final class NewPostModel: ObservableObject {
     }
     
     static let rules: [HighlightRule] = [
-        HighlightRule(pattern: NewPostModel.mentionRegex, formattingRules: [
-            TextFormattingRule(key: .foregroundColor, value: UIColor(Themes.default.theme.accent)),
-            TextFormattingRule(fontTraits: .traitBold)
-        ]),
-        HighlightRule(pattern: NewPostModel.typingRegex, formattingRules: [
+        HighlightRule(pattern: NewPostModel.hashtagRegex, formattingRules: [
             TextFormattingRule(key: .foregroundColor, value: UIColor(Themes.default.theme.accent)),
             TextFormattingRule(fontTraits: .traitBold)
         ])
     ]
-    static let typingRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|(?<![/\\?])#)", options: [])
-    static let mentionRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\w+|(?<![/\\?])#\\S+)", options: [])
+    static let hashtagRegex = try! NSRegularExpression(pattern: "(?<![/\\?])#\\S*", options: [])
 
     @MainActor
     func removePastedImage(_ image: PostedImageMeta) {
@@ -1099,7 +1094,8 @@ public final class NewPostModel: ObservableObject {
         guard var finalEvent = buildFinalEvent(imetas: imetas, replyTo: replyTo, quotePost: quotePost) else { return }
         
         // Need draft here because it might be cleared before we need it because async later
-        self.typingTextModel.restoreDraft = self.typingTextModel.draft
+        persistDraftMentionAttributes()
+        Drafts.shared.preserveDraftForUndoSend()
         
         // MARK: - Private Reply (giftwrapped kind 1/1111/1244)
         if let recipientPubkey = replyInPrivateTo {
@@ -1386,7 +1382,13 @@ public final class NewPostModel: ObservableObject {
             }
         }
         
-        var content: String = typingTextModel.text // put this eventually in .content or comment tag, depending on kind 9802 or not
+        var content: String
+        if let attributedText = textView?.attributedText,
+           attributedText.string == typingTextModel.text {
+            content = replaceSemanticMentionsWithNpubs(attributedText)
+        } else {
+            content = typingTextModel.text
+        }
         
         // Handle voice message
         if (nEvent.kind == .shortVoiceMessage || nEvent.kind == .shortVoiceMessageComment), let imeta = imetas.first {
@@ -1536,14 +1538,6 @@ public final class NewPostModel: ObservableObject {
                 }
                 
             }
-        }
-        
-        // Typed @mentions to nostr:npub
-        if #available(iOS 16.0, *) {
-            content = replaceMentionsWithNpubs(content, selected: typingTextModel.selectedMentions)
-        }
-        else {
-            content = replaceMentionsWithNpubs15(content, selected: typingTextModel.selectedMentions)
         }
         
         // @npubs to nostr:npub and return pTags
@@ -1711,60 +1705,37 @@ public final class NewPostModel: ObservableObject {
     
     func selectContactSearchResult(_ nrContact: NRContact) {
         guard let textView = textView else { return }
+        guard let currentTerm = mentionTerm(textView.text, textView: textView) else { return }
         let mentionName = nrContact.anyName
-        let mentionText = "\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} " // invisible characters to replace later
+        let replacement = composerMention(
+            name: mentionName,
+            pubkey: nrContact.pubkey
+        )
+        guard let replacementRange = autocompleteReplacementRange(
+            trigger: "@",
+            term: currentTerm,
+            textView: textView
+        ) else { return }
+        guard textView.replaceTextStorageCharacters(
+            in: replacementRange,
+            with: replacement,
+            undoActionName: "Mention"
+        ) != nil else { return }
 
-        if let selectedRange = textView.selectedTextRange {
-            let cursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
-            var currentText = textView.text ?? ""
-            
-            // Insert the mention text at the cursor position
-            let textBeforeCursor = currentText.prefix(cursorPosition)
-            
-            // #0    (null) in Swift runtime failure: Can't take a suffix of negative length from a collection () <-- Maybe fix with max(,)
-            let textAfterCursor = currentText.suffix(max(0,currentText.count - cursorPosition))
-            currentText = "\(textBeforeCursor.dropLast(term.count))\(mentionText)\(textAfterCursor)"
-            
-            // Update the text storage
-//            textView.text = currentText
-            
-            let mentionLength = "\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} ".count - term.count // "@fa" becomes "@fabian " and we count "bian "
-            
-            // Change cursor position to after replacement
-            // so from "@fa" to "@fabian "
-            if let selectedRange = self.textView!.selectedTextRange {
-                let currentPosition = selectedRange.end
-                
-                // move the cursor
-                if let newPosition = self.textView!.position(from: currentPosition, offset: mentionLength) {
-                    textView.text = currentText
-                    self.textView!.selectedTextRange = self.textView!.textRange(from: newPosition, to: newPosition)
-                }
-                else {
-                    // or if for some reason the cursor is out of range, just move to end
-                    textView.text = currentText
-                    let newPosition = self.textView!.endOfDocument
-                    self.textView!.selectedTextRange = self.textView!.textRange(from: newPosition, to: newPosition)
-                }
-            }
-            
-            // Update the typingTextModel text
-            typingTextModel.text = currentText
-            
-            // Update the available contacts and selected mentions
-            availableContacts.insert(nrContact)
-            typingTextModel.selectedMentions.insert(nrContact)
-            mentioning = false
-            contactSearchResults = []
-            lastHit = mentionName
+        typingTextModel.text = textView.text
 
-            
-            term = ""
-        }
+        // Update the available contacts and selected mentions
+        availableContacts.insert(nrContact)
+        typingTextModel.selectedMentions.insert(nrContact)
+        mentioning = false
+        contactSearchResults = []
+        lastHit = mentionName
+        term = ""
     }
     
     public func textChanged(_ newText:String) {
         guard textView != nil else { return }
+        persistDraftMentionAttributes()
         if anonMode { showCustomEmojiPicker = false; return }
         if let emojiTerm = customEmojiTerm(newText, textView: textView) {
             mentioning = false
@@ -1818,31 +1789,20 @@ public final class NewPostModel: ObservableObject {
 
     func selectCustomEmoji(_ customEmoji: ComposerCustomEmoji) {
         guard let textView = textView else { return }
-        guard let selectedRange = textView.selectedTextRange else { return }
-
-        let cursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
-        var currentText = textView.text ?? ""
-        let textBeforeCursor = currentText.prefix(cursorPosition)
-        let textAfterCursor = currentText.suffix(max(0, currentText.count - cursorPosition))
+        guard let currentTerm = customEmojiTerm(textView.text, textView: textView) else { return }
         let replacement = ":\(customEmoji.shortcode): "
-        let replaceLength = emojiTypingTerm.count + 1 // + ":" trigger
+        guard let replacementRange = autocompleteReplacementRange(
+            trigger: ":",
+            term: currentTerm,
+            textView: textView
+        ) else { return }
+        guard textView.replaceTextStorageCharacters(
+            in: replacementRange,
+            with: replacement,
+            undoActionName: "Emoji"
+        ) != nil else { return }
 
-        let trimmedPrefix = textBeforeCursor.count >= replaceLength
-            ? textBeforeCursor.dropLast(replaceLength)
-            : Substring("")
-
-        currentText = "\(trimmedPrefix)\(replacement)\(textAfterCursor)"
-        textView.text = currentText
-        typingTextModel.text = currentText
-
-        let delta = replacement.count - replaceLength
-        if let newPosition = textView.position(from: selectedRange.end, offset: delta) {
-            textView.selectedTextRange = textView.textRange(from: newPosition, to: newPosition)
-        }
-        else {
-            let end = textView.endOfDocument
-            textView.selectedTextRange = textView.textRange(from: end, to: end)
-        }
+        typingTextModel.text = textView.text
 
         selectedCustomEmojiURLByShortcode[customEmoji.shortcode] = customEmoji.url
         markCustomEmojiAsRecentlyUsed(customEmoji)
@@ -2186,17 +2146,65 @@ public final class NewPostModel: ObservableObject {
     }
     
     func directMention(_ contact: NRContact) {
-        guard textView != nil else { return }
+        guard let textView else { return }
         guard let pubkey = account()?.publicKey, pubkey != contact.pubkey else { return }
         let mentionName = contact.anyName
-        typingTextModel.text = "@\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} "
+        let replacement = composerMention(
+            name: mentionName,
+            pubkey: contact.pubkey
+        )
+        let fullRange = NSRange(location: 0, length: textView.textStorage.length)
+        guard textView.replaceTextStorageCharacters(
+            in: fullRange,
+            with: replacement,
+            undoActionName: "Mention"
+        ) != nil else { return }
+        typingTextModel.text = textView.text
         availableContacts.insert(contact)
         typingTextModel.selectedMentions.insert(contact)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            // after 0.3 sec to get the new .endOfDocument
-            let newPosition: UITextPosition = self.textView!.endOfDocument
-            self.textView!.selectedTextRange = self.textView!.textRange(from: newPosition, to: newPosition)
+    }
+
+    func attachTextView(_ textView: SystemTextView) {
+        self.textView = textView
+        restoreDraftMentionAttributes(in: textView)
+    }
+
+    private func persistDraftMentionAttributes() {
+        guard !typingTextModel.anonMode,
+              let attributedText = textView?.attributedText,
+              attributedText.string == typingTextModel.text else { return }
+        Drafts.shared.draftMentions = attributedText.nosturMentionRuns().map {
+            ComposerMentionRecord(
+                location: $0.range.location,
+                length: $0.range.length,
+                pubkey: $0.pubkey,
+                text: $0.text
+            )
+        }
+    }
+
+    private func restoreDraftMentionAttributes(in textView: SystemTextView) {
+        let storage = textView.textStorage
+        guard storage.string == typingTextModel.text else { return }
+
+        for mention in Drafts.shared.draftMentions {
+            guard NSMaxRange(mention.range) <= storage.length,
+                  storage.attributedSubstring(from: mention.range).string == mention.text else { continue }
+            storage.addAttribute(
+                .nosturMentionPubkey,
+                value: mention.pubkey,
+                range: mention.range
+            )
+            storage.addAttribute(
+                .foregroundColor,
+                value: UIColor(Themes.default.theme.accent),
+                range: mention.range
+            )
+            storage.addAttribute(
+                .font,
+                value: UIFont.nosturBody().with(.traitBold),
+                range: mention.range
+            )
         }
     }
 
@@ -2216,28 +2224,41 @@ public final class NewPostModel: ObservableObject {
 #endif
 }
 
+func composerMention(name: String, pubkey: String) -> NSAttributedString {
+    let visibleMention = "@\(name)"
+    let attributedMention = NSMutableAttributedString(string: visibleMention + " ")
+    attributedMention.addAttribute(
+        .nosturMentionPubkey,
+        value: pubkey,
+        range: NSRange(location: 0, length: (visibleMention as NSString).length)
+    )
+    return attributedMention
+}
+
 func mentionTerm(_ text: String, textView: SystemTextView?) -> String? {
     guard let textView else { return nil }
-    
-    if let selectedRange = textView.selectedTextRange {
-        let cursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
-        let textUntilCursor = String(text.prefix(cursorPosition))
-        
-        if let atRange = textUntilCursor.range(of: "@", options: .backwards) {
-            let textAfterAt = String(textUntilCursor[atRange.upperBound...])
-            return textAfterAt
-        }
+
+    let cursorPosition = textView.selectedRange.location
+    let nsText = text as NSString
+    guard cursorPosition <= nsText.length else { return nil }
+    let textUntilCursor = nsText.substring(to: cursorPosition)
+
+    if let atRange = textUntilCursor.range(of: "@", options: .backwards) {
+        let term = String(textUntilCursor[atRange.upperBound...])
+        guard !term.contains(where: \.isWhitespace),
+              !term.contains("\u{2063}"),
+              !term.contains("\u{2064}") else { return nil }
+        return term
     }
     return nil
 }
 
 func customEmojiTerm(_ text: String, textView: SystemTextView?) -> String? {
     guard let textView else { return nil }
-    guard let selectedRange = textView.selectedTextRange else { return nil }
-
-    let cursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
-    guard cursorPosition >= 0, cursorPosition <= text.count else { return nil }
-    let textUntilCursor = String(text.prefix(cursorPosition))
+    let cursorPosition = textView.selectedRange.location
+    let nsText = text as NSString
+    guard cursorPosition <= nsText.length else { return nil }
+    let textUntilCursor = nsText.substring(to: cursorPosition)
     guard let colonRange = textUntilCursor.range(of: ":", options: .backwards) else { return nil }
 
     if colonRange.lowerBound != textUntilCursor.startIndex {
@@ -2252,6 +2273,24 @@ func customEmojiTerm(_ text: String, textView: SystemTextView?) -> String? {
         return nil
     }
     return textAfterColon
+}
+
+func autocompleteReplacementRange(
+    trigger: String,
+    term: String,
+    textView: SystemTextView
+) -> NSRange? {
+    guard textView.markedTextRange == nil, textView.selectedRange.length == 0 else { return nil }
+
+    let token = trigger + term
+    let tokenLength = (token as NSString).length
+    let cursorPosition = textView.selectedRange.location
+    guard tokenLength <= cursorPosition else { return nil }
+
+    let range = NSRange(location: cursorPosition - tokenLength, length: tokenLength)
+    let text = textView.text as NSString
+    guard NSMaxRange(range) <= text.length, text.substring(with: range) == token else { return nil }
+    return range
 }
 
 struct Imeta {

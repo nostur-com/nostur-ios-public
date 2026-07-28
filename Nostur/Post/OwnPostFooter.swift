@@ -108,8 +108,7 @@ struct OwnPostFooter: View {
                         unpublishing = true
                         nrPost.unpublish()
                         DispatchQueue.main.async {
-                            Drafts.shared.draft = Drafts.shared.restoreDraft
-                            Drafts.shared.restoreDraft = ""
+                            Drafts.shared.restoreDraftAfterUndoSend()
                         }
                         
                     }

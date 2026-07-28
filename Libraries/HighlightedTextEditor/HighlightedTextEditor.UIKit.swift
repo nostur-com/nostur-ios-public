@@ -9,6 +9,36 @@
 import SwiftUI
 import UIKit
 
+extension NSAttributedString.Key {
+    static let nosturMentionPubkey = NSAttributedString.Key("com.nostur.composer.mention-pubkey")
+}
+
+struct NosturMentionAttributeRun {
+    let pubkey: String
+    let range: NSRange
+    let text: String
+}
+
+extension NSAttributedString {
+    func nosturMentionRuns() -> [NosturMentionAttributeRun] {
+        guard length > 0 else { return [] }
+
+        var runs: [NosturMentionAttributeRun] = []
+        enumerateAttribute(
+            .nosturMentionPubkey,
+            in: NSRange(location: 0, length: length)
+        ) { value, range, _ in
+            guard let pubkey = value as? String else { return }
+            runs.append(NosturMentionAttributeRun(
+                pubkey: pubkey,
+                range: range,
+                text: attributedSubstring(from: range).string
+            ))
+        }
+        return runs
+    }
+}
+
 public typealias PhotoPickerTappedCallback = () -> Void
 public typealias VideoPickerTappedCallback = () -> Void
 public typealias GifsTappedCallback = () -> Void
@@ -113,6 +143,61 @@ class NosturTextView: UITextView {
     
 }
 
+extension UITextView {
+    /// Replaces editor content using TextKit's backing storage and moves the
+    /// insertion point using UTF-16 offsets, matching NSRange and UITextView.
+    @discardableResult
+    func replaceTextStorageCharacters(
+        in range: NSRange,
+        with replacement: String,
+        undoActionName: String? = nil
+    ) -> NSRange? {
+        replaceTextStorageCharacters(
+            in: range,
+            with: NSAttributedString(string: replacement),
+            undoActionName: undoActionName
+        )
+    }
+
+    /// Attributed replacement variant used for semantic composer tokens.
+    @discardableResult
+    func replaceTextStorageCharacters(
+        in range: NSRange,
+        with replacement: NSAttributedString,
+        undoActionName: String? = nil
+    ) -> NSRange? {
+        guard markedTextRange == nil else { return nil }
+        guard range.location <= textStorage.length,
+              range.length <= textStorage.length - range.location else { return nil }
+
+        let replacedText = textStorage.attributedSubstring(from: range)
+        let selectionBeforeReplacement = selectedRange
+        textStorage.beginEditing()
+        textStorage.replaceCharacters(in: range, with: replacement)
+        textStorage.endEditing()
+
+        let insertionPoint = NSRange(
+            location: range.location + replacement.length,
+            length: 0
+        )
+        selectedRange = insertionPoint
+
+        if let undoActionName, let undoManager {
+            let undoRange = NSRange(location: range.location, length: replacement.length)
+            undoManager.registerUndo(withTarget: self) { textView in
+                _ = textView.replaceTextStorageCharacters(
+                    in: undoRange,
+                    with: replacedText,
+                    undoActionName: undoActionName
+                )
+                textView.selectedRange = selectionBeforeReplacement
+            }
+            undoManager.setActionName(undoActionName)
+        }
+        return insertionPoint
+    }
+}
+
 public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor {
     
     public struct Internals {
@@ -189,9 +274,9 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
 //        _ = textView.layoutManager // force an UITextView to fallback to Text Kit 1 - Maybe fixes crashes on iOS17 beta
         
         if #available(iOS 17.0, *) {
-            // iOS 17 inline prediction and HighlightedTextEditor don't mix well, spits out double text
-            // so disable for now
-            textView.inlinePredictionType = .no
+            // Local edits no longer replace the full attributed string, so the
+            // system can safely manage inline prediction state.
+            textView.inlinePredictionType = .default
         }
         
         textView.smartInsertDeleteType = .no
@@ -260,20 +345,32 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             uiView.reloadInputViews()
         }
         
-        let highlightedText = HighlightedTextEditor.getHighlightedText(
-            text: text,
-            highlightRules: highlightRules
-        )
-        
-        if let range = uiView.markedTextNSRange {
-            uiView.setAttributedMarkedText(highlightedText, selectedRange: range)
-        } else {
-            uiView.attributedText = highlightedText
+        // While the user is editing, UITextView owns its text storage. SwiftUI
+        // updates normally echo text that is already in the view, so only replace
+        // characters when the binding contains a genuine external change.
+        if uiView.markedTextRange == nil {
+            if uiView.text != text {
+                let mentionRuns = uiView.attributedText.nosturMentionRuns()
+                let highlightedText = HighlightedTextEditor.getHighlightedText(
+                    text: text,
+                    highlightRules: highlightRules
+                )
+                uiView.textStorage.setAttributedString(highlightedText)
+                context.coordinator.restoreMentionRuns(mentionRuns, in: uiView)
+                context.coordinator.didHighlightAllText(text)
+            } else {
+                context.coordinator.applyHighlighting(to: uiView)
+            }
         }
         updateTextViewModifiers(uiView)
         runIntrospect(uiView)
         uiView.isScrollEnabled = true
-        uiView.selectedTextRange = context.coordinator.selectedTextRange
+        if let selectedRange = context.coordinator.selectedRange {
+            let textLength = uiView.attributedText.length
+            let location = min(selectedRange.location, textLength)
+            let length = min(selectedRange.length, textLength - location)
+            uiView.selectedRange = NSRange(location: location, length: length)
+        }
         context.coordinator.updatingUIView = false
     }
     
@@ -552,8 +649,14 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         }
         
         var parent: HighlightedTextEditor
-        var selectedTextRange: UITextRange?
+        // Store offsets rather than UITextPosition objects. Replacing attributedText
+        // rebuilds the text storage, which can invalidate UITextRange on newer iOS
+        // versions and cause the insertion point to jump to the end.
+        var selectedRange: NSRange?
         var updatingUIView = false
+        private var applyingHighlighting = false
+        private var pendingEditedRange: NSRange?
+        private var lastHighlightedText: String?
         
         init(_ markdownEditorView: HighlightedTextEditor) {
             self.parent = markdownEditorView
@@ -561,21 +664,148 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             self.lastPrivateReplyActive = markdownEditorView.isPrivateReplyActive
             self.lastPrivateReplyLocked = markdownEditorView.isPrivateReplyLocked
         }
+
+        func applyHighlighting(to textView: UITextView, editedRange: NSRange? = nil) {
+            guard !applyingHighlighting, textView.markedTextRange == nil else { return }
+            let storage = textView.textStorage
+            if editedRange == nil, lastHighlightedText == storage.string {
+                return
+            }
+
+            let mentionRuns = textView.attributedText.nosturMentionRuns()
+            let targetRange = highlightingRange(
+                in: storage.string as NSString,
+                editedRange: editedRange
+            )
+            guard targetRange.length > 0 else {
+                lastHighlightedText = storage.string
+                return
+            }
+            let targetText = (storage.string as NSString).substring(with: targetRange)
+            let highlightedText = HighlightedTextEditor.getHighlightedText(
+                text: targetText,
+                highlightRules: parent.highlightRules
+            )
+            guard highlightedText.string == targetText else { return }
+
+            applyingHighlighting = true
+            defer { applyingHighlighting = false }
+            storage.beginEditing()
+            highlightedText.enumerateAttributes(
+                in: NSRange(location: 0, length: highlightedText.length)
+            ) { attributes, range, _ in
+                storage.setAttributes(
+                    attributes,
+                    range: NSRange(
+                        location: targetRange.location + range.location,
+                        length: range.length
+                    )
+                )
+            }
+            storage.endEditing()
+            restoreMentionRuns(mentionRuns, in: textView)
+            lastHighlightedText = storage.string
+        }
+
+        func didHighlightAllText(_ text: String) {
+            lastHighlightedText = text
+        }
+
+        private func highlightingRange(
+            in text: NSString,
+            editedRange: NSRange?
+        ) -> NSRange {
+            guard let editedRange, text.length > 0 else {
+                return NSRange(location: 0, length: text.length)
+            }
+
+            let location = min(editedRange.location, text.length)
+            let start = max(0, location - 1)
+            let proposedEnd = location + max(editedRange.length, 1) + 1
+            let end = min(text.length, proposedEnd)
+            return text.paragraphRange(
+                for: NSRange(location: start, length: max(0, end - start))
+            )
+        }
+
+        func restoreMentionRuns(_ runs: [NosturMentionAttributeRun], in textView: UITextView) {
+            let storage = textView.textStorage
+            for run in runs {
+                guard NSMaxRange(run.range) <= storage.length,
+                      storage.attributedSubstring(from: run.range).string == run.text else { continue }
+
+                storage.addAttribute(.nosturMentionPubkey, value: run.pubkey, range: run.range)
+                storage.addAttribute(
+                    .foregroundColor,
+                    value: UIColor(Themes.default.theme.accent),
+                    range: run.range
+                )
+                storage.addAttribute(
+                    .font,
+                    value: UIFont.nosturBody().with(.traitBold),
+                    range: run.range
+                )
+            }
+        }
+
+        public func textView(
+            _ textView: UITextView,
+            shouldChangeTextIn range: NSRange,
+            replacementText text: String
+        ) -> Bool {
+            pendingEditedRange = NSRange(
+                location: range.location,
+                length: (text as NSString).length
+            )
+
+            // Editing inside an attributed mention turns it back into ordinary
+            // text, preventing a changed label from retaining the old pubkey.
+            let storage = textView.textStorage
+            let inspectionRange: NSRange
+            if range.length > 0 {
+                inspectionRange = range
+            } else if range.location < storage.length {
+                inspectionRange = NSRange(location: range.location, length: 1)
+            } else {
+                return true
+            }
+
+            var mentionRanges: [NSRange] = []
+            for location in inspectionRange.location..<NSMaxRange(inspectionRange) {
+                var effectiveRange = NSRange()
+                if storage.attribute(
+                    .nosturMentionPubkey,
+                    at: location,
+                    effectiveRange: &effectiveRange
+                ) != nil,
+                   !mentionRanges.contains(effectiveRange) {
+                    mentionRanges.append(effectiveRange)
+                }
+            }
+            for mentionRange in mentionRanges {
+                storage.removeAttribute(.nosturMentionPubkey, range: mentionRange)
+            }
+            return true
+        }
         
         
         public func textViewDidChange(_ textView: UITextView) {
+            guard !applyingHighlighting else { return }
             textView.backgroundColor = textView.text.isEmpty && textView.markedTextRange == nil ? UIColor.clear : UIColor(Themes.default.theme.listBackground)
             
             // For Multistage Text Input
             guard textView.markedTextRange == nil else { return }
 
+            let editedRange = pendingEditedRange
+            pendingEditedRange = nil
+            applyHighlighting(to: textView, editedRange: editedRange)
             parent.text = textView.text
-            selectedTextRange = textView.selectedTextRange
+            selectedRange = textView.selectedRange
         }
         
         public func textViewDidChangeSelection(_ textView: UITextView) {
             guard !updatingUIView else { return }
-            selectedTextRange = textView.selectedTextRange
+            selectedRange = textView.selectedRange
         }
     }
 }
