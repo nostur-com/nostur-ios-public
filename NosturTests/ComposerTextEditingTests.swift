@@ -83,10 +83,34 @@ struct ComposerTextEditingTests {
 
     @Test func completedMentionDoesNotRestartAutocomplete() {
         let textView = UITextView()
-        textView.text = "Hello @Fabian "
+        let completedMention = composerMention(
+            name: "Fabian",
+            pubkey: String(repeating: "01", count: 32)
+        )
+        let text = NSMutableAttributedString(string: "Hello ")
+        text.append(completedMention)
+        textView.attributedText = text
         textView.selectedRange = NSRange(location: textView.textStorage.length, length: 0)
 
         #expect(mentionTerm(textView.text, textView: textView) == nil)
+    }
+
+    @Test func mentionQueryAllowsSpacesInDisplayNames() {
+        let text = "Testing @Space "
+
+        #expect(mentionQueryTerm(
+            in: text,
+            cursorUTF16Location: (text as NSString).length
+        ) == "Space ")
+    }
+
+    @Test func mentionQueryDoesNotStartInsideAnEmailAddress() {
+        let text = "test@example.com"
+
+        #expect(mentionQueryTerm(
+            in: text,
+            cursorUTF16Location: (text as NSString).length
+        ) == nil)
     }
 
     @Test func semanticMentionPublishesUsingItsPubkey() throws {
@@ -123,6 +147,20 @@ struct ComposerTextEditingTests {
         )
 
         #expect(semanticMessage == nil)
+    }
+
+    @Test func liveChatCompletesANameContainingSpaces() throws {
+        let pubkey = String(repeating: "01", count: 32)
+        let semanticMessage = try #require(completingChatMention(
+            message: "Testing @Space ",
+            attributedMessage: NSAttributedString(string: "Testing @Space "),
+            term: "Space ",
+            name: "Space Testur",
+            pubkey: pubkey
+        ))
+
+        #expect(semanticMessage.string == "Testing @Space Testur ")
+        #expect(semanticMessage.nosturMentionRuns().first?.pubkey == pubkey)
     }
 
     @Test func liveChatCursorMovesPastExpandedMention() {

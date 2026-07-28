@@ -21,7 +21,6 @@ struct ChatRoom: View {
     @State private var message: String = ""
     @State private var account: CloudAccount? = nil
     @State private var timer: Timer?
-    @State private var mentionTerm: String? = nil
     @State private var attributedMessage = NSAttributedString()
     
     @Namespace private var bottom
@@ -130,7 +129,11 @@ struct ChatRoom: View {
                     
                     if !anonymous {
                         VStack(spacing: 0) {
-                            if let mentionTerm {
+                            if let mentionTerm = mentionQueryTerm(
+                                in: message,
+                                cursorUTF16Location: (message as NSString).length,
+                                attributedText: attributedMessage
+                            ) {
                                 ChatMentionChoices(
                                     contacts: mentionChoices(for: mentionTerm, account: account),
                                     onSelect: { contact in
@@ -163,9 +166,6 @@ struct ChatRoom: View {
         .onDisappear {
             stopTimer()
             chatVM.pause()
-        }
-        .onChange(of: message) { newValue in
-            mentionTerm = trailingMentionTerm(in: newValue)
         }
     }
     
@@ -266,18 +266,6 @@ struct ChatRoom: View {
         // callback or marked-text timing is involved.
         attributedMessage = completedMessage
         message = completedMessage.string
-        mentionTerm = nil
-    }
-
-    private func trailingMentionTerm(in text: String) -> String? {
-        guard let lastCharacter = text.last,
-              !lastCharacter.isWhitespace,
-              let token = text.split(whereSeparator: \.isWhitespace).last,
-              token.first == "@",
-              !token.dropFirst().contains("@") else {
-            return nil
-        }
-        return String(token.dropFirst())
     }
 
     private func clearMessage() {

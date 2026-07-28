@@ -299,6 +299,7 @@ public final class NewPostModel: ObservableObject {
     @Published var selectedAuthor: Contact? // To include in 9802 highlight
     
     private var subscriptions = Set<AnyCancellable>()
+    private var contactSearchRevision = 0
     private var emojiTypingTerm: String = ""
     private var availableCustomEmojis: [ComposerCustomEmoji] = []
     private var customEmojiURLByShortcode: [String: URL] = [:]
@@ -1764,8 +1765,11 @@ public final class NewPostModel: ObservableObject {
             else {
                 mentioning = true
                 term = mentionTerm
-                if mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines) != "" {
-                    self.searchContacts(mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines))
+                let normalizedTerm = mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !normalizedTerm.isEmpty {
+                    contactSearchResults = []
+                    showMentioning = false
+                    self.searchContacts(normalizedTerm)
                 }
             }
             
@@ -1810,6 +1814,8 @@ public final class NewPostModel: ObservableObject {
     }
     
     private func searchContacts(_ mentionTerm: String) {
+        contactSearchRevision += 1
+        let searchRevision = contactSearchRevision
         Importer.shared.delayProcessing()
         bg().perform {
             let fr = Contact.fetchRequest()
@@ -1820,7 +1826,14 @@ public final class NewPostModel: ObservableObject {
                 .map { NRContact.instance(of: $0.pubkey, contact: $0) }
             
             Task { @MainActor [weak self] in
-                self?.contactSearchResults = contactSearchResults
+                guard let self,
+                      self.contactSearchRevision == searchRevision,
+                      self.mentioning,
+                      self.term.trimmingCharacters(in: .whitespacesAndNewlines) == mentionTerm else {
+                    return
+                }
+                self.contactSearchResults = contactSearchResults
+                self.showMentioning = !self.filteredContactSearchResults.isEmpty
             }
         }
     }
@@ -2237,20 +2250,54 @@ func composerMention(name: String, pubkey: String) -> NSAttributedString {
 
 func mentionTerm(_ text: String, textView: SystemTextView?) -> String? {
     guard let textView else { return nil }
+    return mentionQueryTerm(
+        in: text,
+        cursorUTF16Location: textView.selectedRange.location,
+        attributedText: textView.attributedText
+    )
+}
 
-    let cursorPosition = textView.selectedRange.location
+func mentionQueryTerm(
+    in text: String,
+    cursorUTF16Location: Int,
+    attributedText: NSAttributedString? = nil
+) -> String? {
     let nsText = text as NSString
-    guard cursorPosition <= nsText.length else { return nil }
-    let textUntilCursor = nsText.substring(to: cursorPosition)
+    guard cursorUTF16Location <= nsText.length else { return nil }
+    let textUntilCursor = nsText.substring(to: cursorUTF16Location) as NSString
+    let atRange = textUntilCursor.range(of: "@", options: .backwards)
+    guard atRange.location != NSNotFound else { return nil }
 
-    if let atRange = textUntilCursor.range(of: "@", options: .backwards) {
-        let term = String(textUntilCursor[atRange.upperBound...])
-        guard !term.contains(where: \.isWhitespace),
-              !term.contains("\u{2063}"),
-              !term.contains("\u{2064}") else { return nil }
-        return term
+    if atRange.location > 0 {
+        let previousUTF16Unit = textUntilCursor.character(at: atRange.location - 1)
+        guard let scalar = UnicodeScalar(previousUTF16Unit),
+              CharacterSet.whitespacesAndNewlines.contains(scalar) else {
+            return nil
+        }
     }
-    return nil
+
+    if let attributedText,
+       atRange.location < attributedText.length,
+       attributedText.attribute(
+        .nosturMentionPubkey,
+        at: atRange.location,
+        effectiveRange: nil
+       ) != nil {
+        return nil
+    }
+
+    let termRange = NSRange(
+        location: NSMaxRange(atRange),
+        length: cursorUTF16Location - NSMaxRange(atRange)
+    )
+    let term = nsText.substring(with: termRange)
+    guard !term.contains("@"),
+          term.rangeOfCharacter(from: .newlines) == nil,
+          !term.contains("\u{2063}"),
+          !term.contains("\u{2064}") else {
+        return nil
+    }
+    return term
 }
 
 func customEmojiTerm(_ text: String, textView: SystemTextView?) -> String? {
