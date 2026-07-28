@@ -199,6 +199,11 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
             self?.bg_metadata_created_at = profileInfo.metadata_created_at
         }
     }
+
+    @MainActor
+    func refreshForSearch(from profileInfo: ProfileInfo) {
+        configureFromProfileInfo(profileInfo)
+    }
     
     private func configureFromBgContact(_ bgContact: Contact, animate: Bool = false) {
         let profileInfo = profileInfo(bgContact)

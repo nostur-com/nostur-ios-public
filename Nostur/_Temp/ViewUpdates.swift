@@ -86,7 +86,7 @@ public enum ZapState: String {
     case cancelled = "CANCELLED" // (by Undo)
 }
 
-struct ProfileInfo {
+struct ProfileInfo: Sendable {
     let pubkey: String
     var anyName: String?
     var fixedName: String?

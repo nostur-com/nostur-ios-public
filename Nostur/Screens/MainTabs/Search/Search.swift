@@ -329,9 +329,14 @@ private struct SearchPostPreviewRow: View {
 
             VStack(alignment: .leading, spacing: 5) {
                 HStack {
-                    Text(result.author?.anyName ?? String(result.pubkey.suffix(11)))
-                        .font(.headline)
-                        .lineLimit(1)
+                    if let author = result.author {
+                        SearchPostPreviewAuthor(author: author)
+                    }
+                    else {
+                        Text(String(result.pubkey.suffix(11)))
+                            .font(.headline)
+                            .lineLimit(1)
+                    }
                     Spacer()
                     Text(result.createdAt, style: .relative)
                         .font(.caption)
@@ -350,6 +355,28 @@ private struct SearchPostPreviewRow: View {
         }
         .contentShape(Rectangle())
         .onTapGesture(perform: onSelect)
+    }
+}
+
+private struct SearchPostPreviewAuthor: View {
+    @ObservedObject var author: NRContact
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(author.anyName)
+                .font(.headline)
+                .lineLimit(1)
+            if author.similarToPubkey == nil,
+               author.nip05verified,
+               let nip05 = author.nip05 {
+                NostrAddress(
+                    nip05: nip05,
+                    shortened: author.anyName.lowercased() == author.nip05nameOnly?.lowercased()
+                )
+                .layoutPriority(3)
+                .lineLimit(1)
+            }
+        }
     }
 }
 

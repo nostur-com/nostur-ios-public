@@ -47,11 +47,21 @@ private struct ContactSearchCandidate {
     let matchedTerms: UInt64
 }
 
-private struct PostSearchCandidate {
+private struct ContactSearchFetchResult: Sendable {
+    let profiles: [ProfileInfo]
+    let matchedTermsByPubkey: [Pubkey: UInt64]
+}
+
+private struct PostSearchCandidate: Sendable {
     let id: PostID
     let pubkey: Pubkey
     let createdAt: Int64
     let content: String
+}
+
+private struct PostSearchFetchResult: Sendable {
+    let candidates: [PostSearchCandidate]
+    let authorProfiles: [ProfileInfo]
 }
 
 class SearchModel {
@@ -73,11 +83,11 @@ class SearchModel {
 
         let blockedPubkeys = blocks()
         let context = bg()
-        return await withCheckedContinuation {
-            (continuation: CheckedContinuation<SearchContactStage, Never>) in
+        let fetchResult = await withCheckedContinuation {
+            (continuation: CheckedContinuation<ContactSearchFetchResult?, Never>) in
             context.perform {
                 guard !cancellationToken.isCancelled else {
-                    continuation.resume(returning: .empty)
+                    continuation.resume(returning: nil)
                     return
                 }
 
@@ -88,7 +98,7 @@ class SearchModel {
                     context: context
                 )
                 guard !cancellationToken.isCancelled else {
-                    continuation.resume(returning: .empty)
+                    continuation.resume(returning: nil)
                     return
                 }
 
@@ -100,21 +110,32 @@ class SearchModel {
                     .sorted { rankedBefore($0, $1) }
                     .prefix(contactResultLimit)
                     .map(\.pubkey)
-                let contacts = fetchContacts(
+                let profiles = fetchContactProfiles(
                     pubkeys: matchingPubkeys,
                     context: context
                 )
 
                 continuation.resume(
                     returning: cancellationToken.isCancelled
-                        ? .empty
-                        : SearchContactStage(
-                            contacts: contacts,
+                        ? nil
+                        : ContactSearchFetchResult(
+                            profiles: profiles,
                             matchedTermsByPubkey: termMasks
                         )
                 )
             }
         }
+
+        guard let fetchResult, !cancellationToken.isCancelled else { return .empty }
+        let contacts = fetchResult.profiles.map { profile in
+            let contact = NRContact.instance(of: profile.pubkey)
+            contact.refreshForSearch(from: profile)
+            return contact
+        }
+        return SearchContactStage(
+            contacts: contacts,
+            matchedTermsByPubkey: fetchResult.matchedTermsByPubkey
+        )
     }
 
     @MainActor
@@ -128,15 +149,15 @@ class SearchModel {
 
         let blockedPubkeys = blocks()
         let context = bg()
-        return await withCheckedContinuation {
-            (continuation: CheckedContinuation<[SearchPostResult], Never>) in
+        let fetchResult = await withCheckedContinuation {
+            (continuation: CheckedContinuation<PostSearchFetchResult?, Never>) in
             context.perform {
                 guard !cancellationToken.isCancelled else {
-                    continuation.resume(returning: [])
+                    continuation.resume(returning: nil)
                     return
                 }
 
-                let candidates = fetchPostCandidates(
+                let candidates = Array(fetchPostCandidates(
                     terms: terms,
                     allTermsMask: maskForAllTerms(terms),
                     contactTermMasks: contactTermMasks,
@@ -144,10 +165,10 @@ class SearchModel {
                     context: context
                 )
                 .sorted { rankedBefore($0, $1) }
-                .prefix(postResultLimit)
+                .prefix(postResultLimit))
 
                 guard !cancellationToken.isCancelled else {
-                    continuation.resume(returning: [])
+                    continuation.resume(returning: nil)
                     return
                 }
 
@@ -155,23 +176,38 @@ class SearchModel {
                 let authorPubkeys = candidates
                     .map(\.pubkey)
                     .filter { seenAuthorPubkeys.insert($0).inserted }
-                let authors = fetchContacts(pubkeys: authorPubkeys, context: context)
-                let authorsByPubkey = Dictionary(
-                    uniqueKeysWithValues: authors.map { ($0.pubkey, $0) }
+                let authorProfiles = fetchContactProfiles(
+                    pubkeys: authorPubkeys,
+                    context: context
                 )
-                let results = candidates.map { candidate in
-                    SearchPostResult(
-                        id: candidate.id,
-                        pubkey: candidate.pubkey,
-                        createdAt: Date(timeIntervalSince1970: TimeInterval(candidate.createdAt)),
-                        content: String(candidate.content.prefix(1000)),
-                        author: authorsByPubkey[candidate.pubkey]
-                    )
-                }
                 continuation.resume(
-                    returning: cancellationToken.isCancelled ? [] : results
+                    returning: cancellationToken.isCancelled
+                        ? nil
+                        : PostSearchFetchResult(
+                            candidates: candidates,
+                            authorProfiles: authorProfiles
+                        )
                 )
             }
+        }
+
+        guard let fetchResult, !cancellationToken.isCancelled else { return [] }
+        let authors = fetchResult.authorProfiles.map { profile in
+            let contact = NRContact.instance(of: profile.pubkey)
+            contact.refreshForSearch(from: profile)
+            return contact
+        }
+        let authorsByPubkey = Dictionary(
+            uniqueKeysWithValues: authors.map { ($0.pubkey, $0) }
+        )
+        return fetchResult.candidates.map { candidate in
+            SearchPostResult(
+                id: candidate.id,
+                pubkey: candidate.pubkey,
+                createdAt: Date(timeIntervalSince1970: TimeInterval(candidate.createdAt)),
+                content: String(candidate.content.prefix(1000)),
+                author: authorsByPubkey[candidate.pubkey]
+            )
         }
     }
 
@@ -306,10 +342,10 @@ class SearchModel {
         }
     }
 
-    private static func fetchContacts(
+    private static func fetchContactProfiles(
         pubkeys: [Pubkey],
         context: NSManagedObjectContext
-    ) -> [NRContact] {
+    ) -> [ProfileInfo] {
         guard !pubkeys.isEmpty else { return [] }
 
         let request = Contact.fetchRequest()
@@ -319,7 +355,7 @@ class SearchModel {
         let contactsByPubkey = Dictionary(uniqueKeysWithValues: contacts.map { ($0.pubkey, $0) })
         return pubkeys.compactMap { pubkey in
             guard let contact = contactsByPubkey[pubkey] else { return nil }
-            return NRContact.instance(of: pubkey, contact: contact)
+            return profileInfo(contact)
         }
     }
 
