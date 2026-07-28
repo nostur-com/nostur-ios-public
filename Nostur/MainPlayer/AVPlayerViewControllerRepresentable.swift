@@ -94,12 +94,14 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     }
     
     static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: Coordinator) {
-        coordinator.unregisterNativePiPHandlers()
+        let didFinishTeardown = coordinator.teardownNativePictureInPicture()
+        if didFinishTeardown {
+            coordinator.unregisterNativePiPHandlers()
+        }
         // Always release on dismantle so the next mount can attach cleanly on device.
         uiViewController.delegate = nil
         uiViewController.player = nil
         uiViewController.view.gestureRecognizers?.removeAll()
-        coordinator.teardownNativePictureInPicture()
         coordinator.avpc = nil
     }
     
@@ -152,6 +154,14 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         private var possibleObservation: NSKeyValueObservation?
         private var startWhenPossible = false
         private var pipStartFallbackWorkItem: DispatchWorkItem?
+        private var isTearingDown = false
+        private enum PictureInPictureState {
+            case idle
+            case starting
+            case active
+            case stopping
+        }
+        private var pictureInPictureState: PictureInPictureState = .idle
         
         init(parent: AVPlayerViewControllerRepresentable) {
             self.parent = parent
@@ -161,17 +171,24 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         func registerNativePiPHandlers() {
             guard !didRegisterHandlers else { return }
             didRegisterHandlers = true
+            AnyPlayerModel.shared.nativePictureInPictureHandlerOwner = self
             AnyPlayerModel.shared.startNativePictureInPictureHandler = { [weak self] in
                 self?.startNativePictureInPicture() ?? false
             }
-            AnyPlayerModel.shared.stopNativePictureInPictureHandler = { [weak self] in
-                self?.stopNativePictureInPicture()
+            // Keep the coordinator alive while AVKit owns a PiP window. During SwiftUI
+            // dismantle this handler is the last strong owner until didStop completes.
+            AnyPlayerModel.shared.stopNativePictureInPictureHandler = { [self] in
+                stopNativePictureInPicture()
             }
         }
         
         func unregisterNativePiPHandlers() {
             guard didRegisterHandlers else { return }
             didRegisterHandlers = false
+            // A new player host may already have replaced these handlers while an older
+            // PiP session was completing its asynchronous teardown.
+            guard AnyPlayerModel.shared.nativePictureInPictureHandlerOwner === self else { return }
+            AnyPlayerModel.shared.nativePictureInPictureHandlerOwner = nil
             AnyPlayerModel.shared.startNativePictureInPictureHandler = nil
             AnyPlayerModel.shared.stopNativePictureInPictureHandler = nil
         }
@@ -182,6 +199,15 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         /// Required after audio-only (and other hide cycles): reusing a poisoned layer never becomes PiP-possible again.
         func rebuildCatalystSurface(player: AVPlayer, reason: String) {
             guard IS_CATALYST, let avpc else { return }
+            // Releasing the controller/layer while AVKit is starting or presenting PiP can
+            // orphan the system PiP window. A quick second click used to rebuild here before
+            // didStart arrived, leaving a frozen window that AVKit could no longer dismiss.
+            guard pictureInPictureState == .idle else {
+#if DEBUG
+                L.og.debug("Native PiP: ignored surface rebuild (\(reason)) while session is in flight")
+#endif
+                return
+            }
 #if DEBUG
             L.og.debug("Native PiP: rebuild surface (\(reason))")
 #endif
@@ -252,14 +278,17 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         
         /// Drop only the PiP controller (optionally keep the player layer host).
         func invalidatePipControllerOnly() {
+            guard pictureInPictureState == .idle else {
+#if DEBUG
+                L.og.debug("Native PiP: deferred controller invalidation while session is in flight")
+#endif
+                return
+            }
             startWhenPossible = false
             pipStartFallbackWorkItem?.cancel()
             pipStartFallbackWorkItem = nil
             possibleObservation?.invalidate()
             possibleObservation = nil
-            if pipController?.isPictureInPictureActive == true {
-                pipController?.stopPictureInPicture()
-            }
             pipController?.delegate = nil
             pipController = nil
         }
@@ -313,11 +342,25 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
 #endif
         }
         
-        func teardownNativePictureInPicture() {
+        @discardableResult
+        func teardownNativePictureInPicture() -> Bool {
+            if pictureInPictureState != .idle {
+                isTearingDown = true
+                stopNativePictureInPicture()
+                // Keep the controller, its delegate, and source layer alive until AVKit sends
+                // didStop. Detaching them here is what leaves Catalyst PiP orphaned.
+                return false
+            }
+            finishNativePictureInPictureTeardown()
+            return true
+        }
+
+        private func finishNativePictureInPictureTeardown() {
             invalidatePipControllerOnly()
             catalystPlayerLayerView?.playerLayer.player = nil
             catalystPlayerLayerView?.removeFromSuperview()
             catalystPlayerLayerView = nil
+            isTearingDown = false
             Task { @MainActor in
                 if AnyPlayerModel.shared.isNativePictureInPictureActive {
                     AnyPlayerModel.shared.isNativePictureInPictureActive = false
@@ -328,6 +371,11 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         @discardableResult
         func startNativePictureInPicture() -> Bool {
             guard IS_CATALYST else { return false }
+            guard pictureInPictureState == .idle else {
+                // Treat repeated clicks while start/stop is in flight as handled. In
+                // particular, never replace the controller used by an outstanding start.
+                return true
+            }
             guard AVPictureInPictureController.isPictureInPictureSupported() else {
 #if DEBUG
                 L.og.debug("Native PiP start: not supported")
@@ -363,6 +411,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
             }
             
             if pip.isPictureInPictureActive {
+                pictureInPictureState = .active
                 return true
             }
             
@@ -370,6 +419,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
 #if DEBUG
                 L.og.debug("Native PiP start: starting now")
 #endif
+                pictureInPictureState = .starting
                 pip.startPictureInPicture()
                 return true
             }
@@ -379,12 +429,14 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
             L.og.debug("Native PiP start: waiting until possible")
 #endif
             startWhenPossible = true
+            pictureInPictureState = .starting
             pipStartFallbackWorkItem?.cancel()
             let work = DispatchWorkItem { [weak self] in
                 guard let self else { return }
                 guard self.startWhenPossible else { return }
                 self.startWhenPossible = false
                 if self.pipController?.isPictureInPictureActive == true { return }
+                self.pictureInPictureState = .idle
 #if DEBUG
                 L.og.debug("Native PiP start: timed out — falling back to overlay")
 #endif
@@ -401,7 +453,16 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         }
         
         func stopNativePictureInPicture() {
-            guard let pipController, pipController.isPictureInPictureActive else { return }
+            guard let pipController else { return }
+            guard pictureInPictureState != .stopping else { return }
+            guard pipController.isPictureInPictureActive else {
+                // A stop can race with start. Keep the session intact; didStart will stop it.
+                if pictureInPictureState == .starting {
+                    pictureInPictureState = .stopping
+                }
+                return
+            }
+            pictureInPictureState = .stopping
             pipController.stopPictureInPicture()
         }
         
@@ -409,6 +470,12 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         private func restoreInlinePlaybackAfterPiP() {
             Task { @MainActor in
                 AnyPlayerModel.shared.isNativePictureInPictureActive = false
+
+                if self.isTearingDown {
+                    self.finishNativePictureInPictureTeardown()
+                    self.unregisterNativePiPHandlers()
+                    return
+                }
                 
                 // Rebind on a healthy surface (PiP can leave the old layer unable to render).
                 self.rebuildCatalystSurface(player: self.parent.player, reason: "pipDidStop")
@@ -513,6 +580,11 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
             startWhenPossible = false
             pipStartFallbackWorkItem?.cancel()
             pipStartFallbackWorkItem = nil
+            if pictureInPictureState == .stopping {
+                pictureInPictureController.stopPictureInPicture()
+                return
+            }
+            pictureInPictureState = .active
             Task { @MainActor in
                 AnyPlayerModel.shared.isNativePictureInPictureActive = true
             }
@@ -522,6 +594,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
 #if DEBUG
             L.og.debug("Native PiP did stop")
 #endif
+            pictureInPictureState = .idle
             restoreInlinePlaybackAfterPiP()
         }
         
@@ -548,6 +621,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
             startWhenPossible = false
             pipStartFallbackWorkItem?.cancel()
             pipStartFallbackWorkItem = nil
+            pictureInPictureState = .idle
             Task { @MainActor in
                 AnyPlayerModel.shared.isNativePictureInPictureActive = false
                 if AnyPlayerModel.shared.availableViewModes.contains(.overlay) {

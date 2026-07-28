@@ -37,6 +37,7 @@ class AnyPlayerModel: ObservableObject {
     }
     
     /// Wired by `AVPlayerViewControllerRepresentable` while the player host is mounted.
+    weak var nativePictureInPictureHandlerOwner: AnyObject?
     var startNativePictureInPictureHandler: (() -> Bool)?
     var stopNativePictureInPictureHandler: (() -> Void)?
     
