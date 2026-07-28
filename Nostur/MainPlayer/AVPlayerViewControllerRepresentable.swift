@@ -459,7 +459,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         
         private func restorePortraitOrientation() {
 #if !targetEnvironment(macCatalyst)
-            AppDelegate.supportedOrientations = .allButUpsideDown
+            AppDelegate.supportedOrientations = .portrait
             UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
             UINavigationController.attemptRotationToDeviceOrientation()
             

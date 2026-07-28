@@ -11,7 +11,9 @@ import UserNotifications
 
 // AppDelegate is needed to handle notification taps
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
-    static var supportedOrientations: UIInterfaceOrientationMask = .allButUpsideDown
+    // Keep the app portrait-only by default. Full-screen video temporarily changes
+    // this to landscape and restores portrait when playback leaves full screen.
+    static var supportedOrientations: UIInterfaceOrientationMask = .portrait
     
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         Self.supportedOrientations

@@ -1356,7 +1356,7 @@ struct OverlayPlayer: View {
             exitNativeMacFullScreenFromPlayerIfNeeded()
         }
         else {
-            AppDelegate.supportedOrientations = .allButUpsideDown
+            AppDelegate.supportedOrientations = .portrait
             refreshSupportedOrientations()
             UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
             UINavigationController.attemptRotationToDeviceOrientation()
@@ -1382,7 +1382,7 @@ struct OverlayPlayer: View {
             return
         }
         isRotatedFullscreen = false
-        AppDelegate.supportedOrientations = .allButUpsideDown
+        AppDelegate.supportedOrientations = .portrait
         refreshSupportedOrientations()
     }
     
