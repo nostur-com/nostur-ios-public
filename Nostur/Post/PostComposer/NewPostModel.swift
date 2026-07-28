@@ -200,6 +200,8 @@ public final class NewPostModel: ObservableObject {
     @Published private(set) var replyPrivacy: ReplyPrivacy = .publicReply
     @Published var recipientDMRelays: Set<String> = []
     @Published var ownDMRelays: Set<String> = []
+    /// True while kind 10050 is being requested so the lock can stay visible but disabled.
+    @Published private(set) var isFetchingRecipientDMRelays: Bool = false
 
     var replyInPrivateTo: String? {
         guard case let .privateReply(pubkey, _) = replyPrivacy else { return nil }
@@ -2122,10 +2124,42 @@ public final class NewPostModel: ObservableObject {
         
         
         Task { @MainActor in
-            let recipientRelays = await getDMrelays(for: recipientPubkey)
+            var recipientRelays = await getDMrelays(for: recipientPubkey)
             let ownRelays = await getDMrelays(for: activeAccountPubkey)
             self.recipientDMRelays = recipientRelays
             self.ownDMRelays = ownRelays
+            
+            // Local-only lookup is not enough: kind 10050 (DM relay list) is only
+            // fetched when opening a profile (or DM flows). Without it, canReplyInPrivate
+            // stays false and the lock stays disabled. Fetch from relays when missing.
+            // Outbox + search run in parallel (timeout 2.0s each) so worst case is ~2s,
+            // not sequential 5s.
+            guard recipientRelays.isEmpty, !(self.activeAccount?.isNC ?? false) else { return }
+            
+            self.isFetchingRecipientDMRelays = true
+            defer { self.isFetchingRecipientDMRelays = false }
+            
+            let filters = Filters(
+                authors: [recipientPubkey],
+                kinds: [10050],
+                limit: 5
+            )
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    _ = try? await relayReq(filters, timeout: 2.0, useOutbox: true)
+                }
+                group.addTask {
+                    _ = try? await relayReq(filters, timeout: 2.0, relayType: .SEARCH_ONLY)
+                }
+            }
+            
+            recipientRelays = await getDMrelays(for: recipientPubkey)
+            
+            // Composer may have switched to another reply while we were fetching
+            guard self.privateReplyRecipient == recipientPubkey else { return }
+            if !recipientRelays.isEmpty {
+                self.recipientDMRelays = recipientRelays
+            }
         }
         
         bg().perform {

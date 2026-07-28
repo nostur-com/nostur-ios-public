@@ -181,11 +181,13 @@ struct Entry: View {
                     guard !typingTextModel.anonMode else { return }
                     showAudioRecorder = true
                 },
-                privateReplyTapped: vm.canReplyInPrivate ? {
+                // Always show the lock for replies so toolbar buttons don't jump when
+                // recipient DM relays arrive; disable until private reply is available.
+                privateReplyTapped: (replyTo != nil && !typingTextModel.anonMode) ? {
                     vm.togglePrivateReply()
                 } : nil,
                 isPrivateReplyActive: vm.isReplyInPrivate,
-                isPrivateReplyLocked: vm.isPrivateReplyLocked
+                isPrivateReplyLocked: vm.isPrivateReplyLocked || !vm.canReplyInPrivate
             )
             .introspect { editor in
                 // Needed so we can update cursors position on @mention autocomplete
@@ -604,14 +606,27 @@ struct Entry: View {
     
     @ViewBuilder
     private var privateReplyButton: some View {
-        if replyTo != nil && vm.canReplyInPrivate && !typingTextModel.anonMode {
+        // Always show for replies (disabled until available) so toolbar layout stays stable.
+        if replyTo != nil && !typingTextModel.anonMode {
             Button("Reply in private", systemImage: vm.isReplyInPrivate ? "lock.fill" : "lock.open") {
                 guard !typingTextModel.anonMode else { return }
                 vm.togglePrivateReply()
             }
             .buttonStyle(.borderless)
-            .disabled(typingTextModel.uploading || vm.isPrivateReplyLocked || typingTextModel.anonMode)
-            .help(vm.isPrivateReplyLocked ? "Private reply required (replying to a private post)" : "Reply in private")
+            .disabled(typingTextModel.uploading || vm.isPrivateReplyLocked || !vm.canReplyInPrivate || typingTextModel.anonMode)
+            .help(privateReplyHelpText)
+        }
+    }
+    
+    private var privateReplyHelpText: String {
+        if vm.isPrivateReplyLocked {
+            String(localized: "Private reply required (replying to a private post)")
+        } else if vm.isFetchingRecipientDMRelays {
+            String(localized: "Looking up recipient DM relays…")
+        } else if !vm.canReplyInPrivate {
+            String(localized: "Private reply unavailable (recipient has no DM relays)")
+        } else {
+            String(localized: "Reply in private")
         }
     }
     
