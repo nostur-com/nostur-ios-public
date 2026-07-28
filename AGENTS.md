@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to Codex-style coding agents when working in this repository.
+This file provides guidance coding agents when working in this repository.
 
 ## About Nostur
 
@@ -8,7 +8,7 @@ Nostur is a social media client for the Nostr protocol, built for Mac, iPhone, a
 
 ## Build And Setup
 
-1. Requirements: Xcode 15.x, iOS SDK 16.x
+1. Requirements: Xcode 26.x, iOS SDK 26.x
 2. Copy `Config.xcconfig.dist` to `Config.xcconfig` and set required API keys
 3. Open `Nostur.xcodeproj` in Xcode
 4. Dependencies are managed by Swift Package Manager (`Package.resolved`)
@@ -26,9 +26,9 @@ xcodebuild -scheme Nostur -destination 'platform=iOS,id=<device_id>' build
 xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
 ```
 
-### When Finishing UI / App Work
+### When finishing code changes
 
-After UI or app behavior changes that should be verified on device:
+After changes are mode:
 
 1. Build and launch with `./scripts/run-sim.sh` (shares Xcode’s default DerivedData; use `--no-build` only if the app is already built and only reinstall/launch is needed).
 2. Tell the user the app is ready to test — do **not** only print the command for them to run.
@@ -112,17 +112,8 @@ Agents should avoid these unless the user explicitly asks:
 
 Prefer listing, grepping, and reading under `Nostur/` feature code; skip dummy fixtures and secrets.
 
-## Path Canonicalization For File Edits
-
-- Never pass Xcode navigator paths directly to `apply_patch` or shell edit commands.
-- Always resolve the real filesystem path before patching.
-- Prefer `XcodeRead` / `XcodeUpdate` / `XcodeWrite` for files already in the Xcode project tree.
-- If patching with `apply_patch`, verify the path exists on disk first.
-- If a patch fails with path mismatch or file-not-found, stop and re-resolve path; do not retry the same path.
-
 ## Notes about Core Data
 - Different Core Data managed object contexts are used, leading to crashes when accessing attributes from the wrong context. 
 - Usually there is a main context and a bg context. 
-- Usually CloudAccount is accessed from main and Event frorm bg
+- Usually CloudAccount is accessed from main and Event from bg
 - Look for bg().perform { } or Task { @MainActor } or DispatchQueue.main... to make sure we are in the right context.
-

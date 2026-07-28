@@ -6609,9 +6609,6 @@
         }
       }
     },
-    "Clear all non-kept DM files" : {
-
-    },
     "Clear all non-kept DM files?" : {
 
     },
@@ -6640,6 +6637,9 @@
           }
         }
       }
+    },
+    "Clear DM files (kept conversations excluded)" : {
+
     },
     "Clear downloaded files" : {
 
@@ -14761,6 +14761,9 @@
         }
       }
     },
+    "Looking up recipient DM relays…" : {
+
+    },
     "Low Data mode" : {
       "comment" : "Setting on settings screen",
       "extractionState" : "stale",
@@ -19695,6 +19698,9 @@
           }
         }
       }
+    },
+    "Private reply unavailable (recipient has no DM relays)" : {
+
     },
     "Private zap" : {
       "localizations" : {
