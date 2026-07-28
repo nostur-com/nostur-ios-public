@@ -44,6 +44,18 @@ struct ContentRenderer: View { // VIEW things
         return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
+    /// When truncated, tapping content expands in place instead of opening detail.
+    /// (Show-more is chevron-only so it doesn't steal taps from nested embeds.)
+    private func handleContentTap() {
+        guard !nxViewingContext.contains(.preview) else { return }
+        guard !isDetail else { return }
+        if !showMore && (nrPost.previewWeights?.moreItems ?? false) {
+            showMore = true
+            return
+        }
+        navigateTo(nrPost, context: containerID)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if availableWidth < 200 {
@@ -57,9 +69,7 @@ struct ContentRenderer: View { // VIEW things
                     }
                     .contentShape(Rectangle())
                     .highPriorityGesture(TapGesture().onEnded {
-                        guard !nxViewingContext.contains(.preview) else { return }
-                        guard !isDetail else { return }
-                        navigateTo(nrPost, context: containerID)
+                        handleContentTap()
                     })
             }
             else {
@@ -126,9 +136,7 @@ struct ContentRenderer: View { // VIEW things
     //                            .withoutAnimation()
     //                            .transaction { t in t.animation = nil }
                                 .onTapGesture {
-                                    guard !nxViewingContext.contains(.preview) else { return }
-                                    guard !isDetail else { return }
-                                    navigateTo(nrPost, context: containerID)
+                                    handleContentTap()
                                 }
                         }
                         else {
@@ -143,18 +151,14 @@ struct ContentRenderer: View { // VIEW things
     //                        .withoutAnimation()
     //                        .transaction { t in t.animation = nil }
                             .onTapGesture {
-                                guard !nxViewingContext.contains(.preview) else { return }
-                                guard !isDetail else { return }
-                                navigateTo(nrPost, context: containerID)
+                                handleContentTap()
                             }
                         
                     case .code(let code): // For text notes
                         Text(verbatim: code)
                             .font(.system(.body, design: .monospaced))
                             .onTapGesture {
-                                guard !nxViewingContext.contains(.preview) else { return }
-                                guard !isDetail else { return }
-                                navigateTo(nrPost, context: containerID)
+                                handleContentTap()
                             }
                         
                     case .text(let attributedStringWithPs): // For text notes
@@ -168,18 +172,14 @@ struct ContentRenderer: View { // VIEW things
     //                            navigateTo(nrPost, context: childDIM.id)
     //                        }
                         NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: $showMore, availableWidth: availableWidth, isDetail: isDetail, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
-                                guard !nxViewingContext.contains(.preview) else { return }
-                                guard !isDetail else { return }
-                                navigateTo(nrPost, context: containerID)
+                                handleContentTap()
                         }, theme: theme, nxViewingContext: nxViewingContext)
                         .equatable()
                         
                     case .md(let markdownContentWithPs): // For long form articles
                         NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, maxWidth: availableWidth)
                             .onTapGesture {
-                                guard !nxViewingContext.contains(.preview) else { return }
-                                guard !isDetail else { return }
-                                navigateTo(nrPost, context: containerID)
+                                handleContentTap()
                             }
                         
                     case .lnbc(let text):
@@ -290,9 +290,7 @@ struct ContentRenderer: View { // VIEW things
                     default:
                         EmptyView()
                             .onTapGesture {
-                                guard !nxViewingContext.contains(.preview) else { return }
-                                guard !isDetail else { return }
-                                navigateTo(nrPost, context: containerID)
+                                handleContentTap()
                             }
                     }
                 }

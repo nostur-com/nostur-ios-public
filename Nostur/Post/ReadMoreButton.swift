@@ -7,6 +7,33 @@
 
 import SwiftUI
 
+/// Compact chevron to expand truncated post content.
+///
+/// Hit-testing is limited to the chevron (plus padding). Do **not** wrap this in a
+/// full-size `Color.clear` overlay — that steals taps from nested embeds' own
+/// show-more controls (first tap expands the outer post, second tap expands the embed).
+struct ShowMoreChevronButton: View {
+    @Environment(\.theme) private var theme
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "chevron.compact.down")
+                .foregroundColor(.white)
+                .padding(5)
+                .padding(.top, 5)
+                .background {
+                    RoundedRectangle(cornerRadius: 5)
+                        .foregroundColor(theme.accent)
+                }
+        }
+        .buttonStyle(.plain)
+        // Slightly larger hit target around the chevron only
+        .padding(10)
+        .contentShape(Rectangle())
+    }
+}
+
 struct ReadMoreButton: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.containerID) private var containerID

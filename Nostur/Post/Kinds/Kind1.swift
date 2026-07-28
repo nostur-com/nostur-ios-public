@@ -62,15 +62,39 @@ struct Kind1: View {
     }
     
     var body: some View {
-        if nrPost.plainTextOnly {
-            Text("TODO PLAINTEXTONLY") // TODO: PLAIN TEXTO ONLY
+        Group {
+            if nrPost.plainTextOnly {
+                Text("TODO PLAINTEXTONLY") // TODO: PLAIN TEXTO ONLY
+            }
+            else if isEmbedded {
+                self.embeddedView
+            }
+            else {
+                self.normalView
+            }
         }
-        else if isEmbedded {
-            self.embeddedView
+        // Text/chevron path sets showMore; keep clip in sync.
+        .onChange(of: showMore) { newValue in
+            if newValue {
+                clipBottomHeight = 28000.0
+            }
         }
-        else {
-            self.normalView
+        // Nested embed expanded: lift our clip only (don't set showMore — that remounts content).
+        .onPreferenceChange(NestedContentExpandedPreferenceKey.self) { expanded in
+            if expanded {
+                clipBottomHeight = 28000.0
+            }
         }
+        .background {
+            if showMore {
+                Color.clear.preference(key: NestedContentExpandedPreferenceKey.self, value: true)
+            }
+        }
+    }
+    
+    private func expandContent() {
+        showMore = true
+        clipBottomHeight = 28000.0
     }
     
     private var shouldAutoload: Bool {
@@ -132,23 +156,9 @@ struct Kind1: View {
                     .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
                     .clipBottom(height: clipBottomHeight)
                     .overlay(alignment: .bottomTrailing) {
+                        // Chevron only — a full-size Color.clear overlay steals taps from nested embeds.
                         if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
-                            ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
-                                Color.clear
-                                Image(systemName: "chevron.compact.down")
-                                    .foregroundColor(.white)
-                                    .padding(5)
-                                    .padding(.top, 5)
-                                    .background {
-                                        RoundedRectangle(cornerRadius: 5)
-                                            .foregroundColor(theme.accent)
-                                    }
-                            }
-                            .contentShape(Rectangle())
-                            .highPriorityGesture(TapGesture().onEnded {
-                                showMore = true
-                                clipBottomHeight = 28000.0
-                            })
+                            ShowMoreChevronButton(action: expandContent)
                         }
                     }
 //                    .overlay(alignment: .topLeading) {
@@ -202,23 +212,7 @@ struct Kind1: View {
                 .clipBottom(height: clipBottomHeight)
                 .overlay(alignment: .bottomTrailing) {
                     if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
-                        ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
-                            Color.clear
-                            
-                            Image(systemName: "chevron.compact.down")
-                                .foregroundColor(.white)
-                                .padding(5)
-                                .padding(.top, 5)
-                                .background {
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .foregroundColor(theme.accent)
-                                }
-                        }
-                        .contentShape(Rectangle())
-                        .highPriorityGesture(TapGesture().onEnded {
-                            showMore = true
-                            clipBottomHeight = 28000.0
-                        })
+                        ShowMoreChevronButton(action: expandContent)
                     }
                 }
         }

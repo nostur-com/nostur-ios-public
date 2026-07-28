@@ -132,22 +132,10 @@ struct NRContentTextRendererInner: View {
             
                 .overlay(alignment: .bottomTrailing) {
                     if shouldShowMoreButton {
-                        ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
-                            Color.clear
-                            
-                            Image(systemName: "chevron.compact.down")
-                                .foregroundColor(.white)
-                                .padding(5)
-                                .padding(.top, 5)
-                                .background {
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .foregroundColor(theme.accent)
-                                }
-                        }
-                        .contentShape(Rectangle())
-                        .highPriorityGesture(TapGesture().onEnded {
+                        // Chevron only — full-area overlay would sit on top of nested content
+                        ShowMoreChevronButton {
                             showMore = true
-                        })
+                        }
                     }
                 }
         }
@@ -169,7 +157,14 @@ struct NRContentTextRendererInner: View {
             else {
                 if #available(iOS 16.0, *) { // because 15.0 doesn't have sizeThatFits(_ proposal: ProposedViewSize...
                     
-                    NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight, onTap: onTap)
+                    NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight, onTap: {
+                            // Expand truncated text before navigating
+                            if shouldShowMoreButton {
+                                showMore = true
+                            } else {
+                                onTap?()
+                            }
+                        })
                         .onReceive(
                             ViewUpdates.shared.profileUpdates
                                 .receive(on: RunLoop.main)
@@ -203,29 +198,21 @@ struct NRContentTextRendererInner: View {
                     
                         .overlay(alignment: .bottomTrailing) {
                             if shouldShowMoreButton {
-                                ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
-                                    Color.clear
-                                    
-                                    Image(systemName: "chevron.compact.down")
-                                        .foregroundColor(.white)
-                                        .padding(5)
-                                        .padding(.top, 5)
-                                        .background {
-                                            RoundedRectangle(cornerRadius: 5)
-                                                .foregroundColor(theme.accent)
-                                        }
-                                }
-                                .contentShape(Rectangle())
-                                .highPriorityGesture(TapGesture().onEnded {
+                                ShowMoreChevronButton {
                                     showMore = true
-                                })
+                                }
                             }
                         }
                 }
                 else {
                     NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
                         .onTapGesture {
-                            onTap?()
+                            // Expand truncated text before navigating
+                            if shouldShowMoreButton {
+                                showMore = true
+                            } else {
+                                onTap?()
+                            }
                         }
                         .onReceive(
                             ViewUpdates.shared.profileUpdates
@@ -254,22 +241,9 @@ struct NRContentTextRendererInner: View {
                     
                         .overlay(alignment: .bottomTrailing) {
                             if shouldShowMoreButton {
-                                ZStack(alignment: .bottomTrailing) { // Make whole area tappable for expand / show more
-                                    Color.clear
-                                    
-                                    Image(systemName: "chevron.compact.down")
-                                        .foregroundColor(.white)
-                                        .padding(5)
-                                        .padding(.top, 5)
-                                        .background {
-                                            RoundedRectangle(cornerRadius: 5)
-                                                .foregroundColor(theme.accent)
-                                        }
-                                }
-                                .contentShape(Rectangle())
-                                .highPriorityGesture(TapGesture().onEnded {
+                                ShowMoreChevronButton {
                                     showMore = true
-                                })
+                                }
                             }
                         }
                 }
