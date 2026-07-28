@@ -22,6 +22,8 @@ struct ChatRoom: View {
     @State private var account: CloudAccount? = nil
     @State private var timer: Timer?
     @State private var attributedMessage = NSAttributedString()
+    @State private var mentionSearchResults: [NRContact] = []
+    @State private var mentionSearchCancellationToken: SearchCancellationToken?
     
     @Namespace private var bottom
     
@@ -140,6 +142,12 @@ struct ChatRoom: View {
                                         selectMention(contact, term: mentionTerm)
                                     }
                                 )
+                                .task(id: mentionTerm) {
+                                    await refreshMentionChoices(
+                                        for: mentionTerm,
+                                        account: account
+                                    )
+                                }
                             }
 
                             HStack {
@@ -226,8 +234,8 @@ struct ChatRoom: View {
     }
 
     private func mentionChoices(for term: String, account: CloudAccount) -> [NRContact] {
-        let normalizedTerm = term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let followedPubkeys = account.followingPubkeys.union(account.privateFollowingPubkeys)
+        let terms = SearchModel.normalizedTerms(term)
+        let allowedPubkeys = account.followingPubkeys.union(account.privateFollowingPubkeys)
         var seen = Set<String>()
 
         // messages is newest-first: room participants naturally retain recency priority.
@@ -236,23 +244,57 @@ struct ChatRoom: View {
             return row.nrContact
         }
 
-        let followedContacts = followedPubkeys.compactMap { pubkey -> NRContact? in
-            guard seen.insert(pubkey).inserted else { return nil }
-            return NRContact.instance(of: pubkey)
+        let searchedContacts = terms.isEmpty ? [] : mentionSearchResults.filter {
+            allowedPubkeys.contains($0.pubkey) && seen.insert($0.pubkey).inserted
         }
-        .sorted { $0.anyName.localizedCaseInsensitiveCompare($1.anyName) == .orderedAscending }
 
-        return (recentContacts + followedContacts)
+        return (recentContacts + searchedContacts)
             .filter {
-                normalizedTerm.isEmpty
-                    || $0.anyName.localizedCaseInsensitiveContains(normalizedTerm)
-                    || ($0.fixedName?.localizedCaseInsensitiveContains(normalizedTerm) ?? false)
+                terms.isEmpty || SearchModel.matches(
+                    terms: terms,
+                    searchableValues: [
+                        $0.anyName,
+                        $0.fixedName,
+                        $0.nip05
+                    ].compactMap { $0 }
+                )
             }
             .prefix(20)
             .map { $0 }
     }
 
+    @MainActor
+    private func refreshMentionChoices(
+        for term: String,
+        account: CloudAccount
+    ) async {
+        mentionSearchCancellationToken?.cancel()
+        let cancellationToken = SearchCancellationToken()
+        mentionSearchCancellationToken = cancellationToken
+        let normalizedTerm = term.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedTerm.isEmpty else {
+            mentionSearchResults = []
+            return
+        }
+
+        let allowedPubkeys = account.followingPubkeys.union(account.privateFollowingPubkeys)
+        let contactStage = await SearchModel.searchContacts(
+            normalizedTerm,
+            cancellationToken: cancellationToken
+        )
+        guard !Task.isCancelled,
+              !cancellationToken.isCancelled,
+              mentionSearchCancellationToken === cancellationToken else {
+            return
+        }
+        mentionSearchResults = contactStage.contacts.filter {
+            allowedPubkeys.contains($0.pubkey)
+        }
+    }
+
     private func selectMention(_ contact: NRContact, term selectedTerm: String) {
+        mentionSearchCancellationToken?.cancel()
+        mentionSearchCancellationToken = nil
         guard let completedMessage = completingChatMention(
             message: message,
             attributedMessage: attributedMessage,

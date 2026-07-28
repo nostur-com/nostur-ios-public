@@ -113,6 +113,21 @@ struct ComposerTextEditingTests {
         ) == nil)
     }
 
+    @Test func activeMentionQueriesUseShorterDebounce() {
+        #expect(composerTextChangeDelay(
+            for: "Ordinary composer text",
+            defaultDelay: 0.2
+        ) == 0.2)
+        #expect(composerTextChangeDelay(
+            for: "Testing @tes",
+            defaultDelay: 0.2
+        ) == 0.06)
+        #expect(composerTextChangeDelay(
+            for: "Testing @Space ",
+            defaultDelay: 0.2
+        ) == 0.06)
+    }
+
     @Test func semanticMentionPublishesUsingItsPubkey() throws {
         let pubkey = String(repeating: "01", count: 32)
         let mention = composerMention(name: "Different Display Name", pubkey: pubkey)

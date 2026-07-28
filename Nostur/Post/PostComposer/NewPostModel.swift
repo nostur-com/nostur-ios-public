@@ -290,6 +290,8 @@ public final class NewPostModel: ObservableObject {
     
     private var subscriptions = Set<AnyCancellable>()
     private var contactSearchRevision = 0
+    private var contactSearchTask: Task<Void, Never>?
+    private var contactSearchCancellationToken: SearchCancellationToken?
     private var emojiTypingTerm: String = ""
     private var availableCustomEmojis: [ComposerCustomEmoji] = []
     private var customEmojiURLByShortcode: [String: URL] = [:]
@@ -317,7 +319,17 @@ public final class NewPostModel: ObservableObject {
     public init(dueTime: TimeInterval = 0.2) {
         self.typingTextModel.$text
             .removeDuplicates()
-            .debounce(for: .seconds(dueTime), scheduler: DispatchQueue.main)
+            .map { value in
+                Just(value)
+                    .delay(
+                        for: .seconds(composerTextChangeDelay(
+                            for: value,
+                            defaultDelay: dueTime
+                        )),
+                        scheduler: DispatchQueue.main
+                    )
+            }
+            .switchToLatest()
             .sink(receiveValue: { [weak self] value in
                 Importer.shared.delayProcessing()
                 self?.textChanged(value)
@@ -326,9 +338,22 @@ public final class NewPostModel: ObservableObject {
     }
     
     var filteredContactSearchResults: [NRContact] {
+        let terms = SearchModel.normalizedTerms(term)
+        let matchingResults = terms.isEmpty
+            ? contactSearchResults
+            : contactSearchResults.filter { contact in
+                SearchModel.matches(
+                    terms: terms,
+                    searchableValues: [
+                        contact.anyName,
+                        contact.fixedName,
+                        contact.nip05
+                    ].compactMap { $0 }
+                )
+            }
         let wot = WebOfTrust.shared
         if WOT_FILTER_ENABLED() {
-            return contactSearchResults
+            return matchingResults
                 // WoT enabled, so put in-WoT before non-WoT
                 .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
                 // Put following before non-following
@@ -337,7 +362,7 @@ public final class NewPostModel: ObservableObject {
         }
         else {
             // WoT disabled, just following before non-following
-            return contactSearchResults
+            return matchingResults
                 .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
                 // TODO: Put mention in thread before all
         }
@@ -1727,6 +1752,7 @@ public final class NewPostModel: ObservableObject {
         availableContacts.insert(nrContact)
         typingTextModel.selectedMentions.insert(nrContact)
         mentioning = false
+        cancelContactSearch()
         contactSearchResults = []
         lastHit = mentionName
         term = ""
@@ -1735,9 +1761,14 @@ public final class NewPostModel: ObservableObject {
     public func textChanged(_ newText:String) {
         guard textView != nil else { return }
         persistDraftMentionAttributes()
-        if anonMode { showCustomEmojiPicker = false; return }
+        if anonMode {
+            cancelContactSearch()
+            showCustomEmojiPicker = false
+            return
+        }
         if let emojiTerm = customEmojiTerm(newText, textView: textView) {
             mentioning = false
+            cancelContactSearch()
             term = ""
             emojiTypingTerm = emojiTerm
             refreshCustomEmojiSearchResults(for: emojiTerm)
@@ -1765,8 +1796,9 @@ public final class NewPostModel: ObservableObject {
                 term = mentionTerm
                 let normalizedTerm = mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !normalizedTerm.isEmpty {
-                    contactSearchResults = []
-                    showMentioning = false
+                    // Keep and synchronously refine the previous result set while
+                    // the next bounded database lookup is running.
+                    showMentioning = !filteredContactSearchResults.isEmpty
                     self.searchContacts(normalizedTerm)
                 }
             }
@@ -1776,6 +1808,7 @@ public final class NewPostModel: ObservableObject {
             if mentioning {
                 mentioning = false
             }
+            cancelContactSearch()
         }
         
         let showMentioning = mentioning && !filteredContactSearchResults.isEmpty
@@ -1814,26 +1847,34 @@ public final class NewPostModel: ObservableObject {
     private func searchContacts(_ mentionTerm: String) {
         contactSearchRevision += 1
         let searchRevision = contactSearchRevision
+        contactSearchTask?.cancel()
+        contactSearchCancellationToken?.cancel()
+        let cancellationToken = SearchCancellationToken()
+        contactSearchCancellationToken = cancellationToken
         Importer.shared.delayProcessing()
-        bg().perform {
-            let fr = Contact.fetchRequest()
-            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)]
-            fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@ OR fixedName CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm, mentionTerm, mentionTerm, AppState.shared.bgAppState.blockedPubkeys)
-            
-            let contactSearchResults: [NRContact] = Array(((try? bg().fetch(fr)) ?? []).prefix(60))
-                .map { NRContact.instance(of: $0.pubkey, contact: $0) }
-            
-            Task { @MainActor [weak self] in
-                guard let self,
-                      self.contactSearchRevision == searchRevision,
-                      self.mentioning,
-                      self.term.trimmingCharacters(in: .whitespacesAndNewlines) == mentionTerm else {
-                    return
-                }
-                self.contactSearchResults = contactSearchResults
-                self.showMentioning = !self.filteredContactSearchResults.isEmpty
+        contactSearchTask = Task { @MainActor [weak self] in
+            let contactStage = await SearchModel.searchContacts(
+                mentionTerm,
+                cancellationToken: cancellationToken
+            )
+            guard let self,
+                  !Task.isCancelled,
+                  !cancellationToken.isCancelled,
+                  self.contactSearchRevision == searchRevision,
+                  self.mentioning,
+                  self.term.trimmingCharacters(in: .whitespacesAndNewlines) == mentionTerm else {
+                return
             }
+            self.contactSearchResults = contactStage.contacts
+            self.showMentioning = !self.filteredContactSearchResults.isEmpty
         }
+    }
+
+    private func cancelContactSearch() {
+        contactSearchTask?.cancel()
+        contactSearchTask = nil
+        contactSearchCancellationToken?.cancel()
+        contactSearchCancellationToken = nil
     }
 
     private func loadCustomEmojisFromFollowedSets() {
@@ -2296,6 +2337,17 @@ func mentionQueryTerm(
         return nil
     }
     return term
+}
+
+func composerTextChangeDelay(
+    for text: String,
+    defaultDelay: TimeInterval
+) -> TimeInterval {
+    let cursor = (text as NSString).length
+    return mentionQueryTerm(
+        in: text,
+        cursorUTF16Location: cursor
+    ) == nil ? defaultDelay : min(defaultDelay, 0.06)
 }
 
 func customEmojiTerm(_ text: String, textView: SystemTextView?) -> String? {
