@@ -63,9 +63,6 @@ class NXColumnViewModel: ObservableObject {
         
         vmInner.updateIsAtTopSubject.send()
      
-        loadMoreIfNeeded(vm: self)
-        
-        
         // Optimize ID collection operations
         performIDCollectionUpdates(for: nrPost, vm: self)
         
@@ -148,6 +145,7 @@ class NXColumnViewModel: ObservableObject {
     public var saveLocalStateSub: AnyCancellable?
     private var subscriptions = Set<AnyCancellable>()
     public var onAppearSubject = PassthroughSubject<Int64,Never>()
+    private var lastPaginationRequest: (until: Int64, requestedAt: Date)?
     
     @MainActor
     public var currentNRPostsOnScreen: [NRPost] {
@@ -3206,6 +3204,26 @@ extension NXColumnViewModel {
 
 // -- MARK: SCROLLING
 extension NXColumnViewModel {
+    @MainActor
+    public func requestNextPageIfNeeded(until: Int64) {
+        guard isVisible,
+              !isPaused,
+              !isViewPaused,
+              !AppState.shared.appIsInBackground || IS_CATALYST
+        else {
+            return
+        }
+
+        let now = Date()
+        if let previousRequest = lastPaginationRequest,
+           previousRequest.until == until,
+           now.timeIntervalSince(previousRequest.requestedAt) < 5 {
+            return
+        }
+
+        lastPaginationRequest = (until, now)
+        onAppearSubject.send(until)
+    }
     
     @MainActor
     public func scrollToFirstUnread() {

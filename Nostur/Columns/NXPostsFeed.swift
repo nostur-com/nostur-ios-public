@@ -50,22 +50,35 @@ struct NXPostsFeed: View {
     var body: some View {
         // Keep List as the top-level scroll container (no GeometryReader parent) so iOS 26
         // tabBarMinimizeBehavior(.onScrollDown) can observe it as the primary scroller.
-        List(posts) { nrPost in
-            NXListRow(nrPost: nrPost, vm: vm) {
-                PostOrThread(nrPost: nrPost, theme: theme)
-                    .environment(\.availableHeight, availableHeight)
-                    .environment(\.availableWidth, availableWidth)
-                    .environment(
-                        \.feedImageRequestTargetSize,
-                        feedImageTargetSize
-                    )
-                    .environment(\.relayFeedRelays, relayFeedRelays)
+        List {
+            ForEach(posts) { nrPost in
+                NXListRow(nrPost: nrPost, vm: vm) {
+                    PostOrThread(nrPost: nrPost, theme: theme)
+                        .environment(\.availableHeight, availableHeight)
+                        .environment(\.availableWidth, availableWidth)
+                        .environment(
+                            \.feedImageRequestTargetSize,
+                            feedImageTargetSize
+                        )
+                        .environment(\.relayFeedRelays, relayFeedRelays)
+                }
+                .onDisappear {
+                    onPostDisappear(nrPost)
+                }
+                .listRowSeparator(.hidden)
+                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
-            .onDisappear {
-                onPostDisappear(nrPost)
+
+            if let oldestPost = posts.last {
+                Color.clear
+                    .frame(height: 1)
+                    .id("pagination-\(oldestPost.id)")
+                    .onAppear {
+                        vm.requestNextPageIfNeeded(until: oldestPost.created_at)
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(.init())
             }
-            .listRowSeparator(.hidden)
-            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
         }
         .withContainerTopOffsetEnvironmentKey()
         .scrollOffsetID(vm.columnVMid)
@@ -438,25 +451,4 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
     
     // Update UI immediately for responsiveness
     vmInner.updateIsAtTopSubject.send()
-}
-
-@MainActor
-func loadMoreIfNeeded(vm: NXColumnViewModel) {
-    guard let lastPost = vm.currentNRPostsOnScreen.last else { return }
-    if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
-        if let vmCollectionView = vm.collectionView,
-           let lastItem = vmCollectionView.indexPathsForVisibleItems.last,
-           lastItem.row > (vmCollectionView.numberOfItems(inSection: 0) - 10)
-        {
-            vm.onAppearSubject.send(lastPost.created_at)
-        }
-    }
-    else { // iOS 15 UITableView
-        if let vmTableView = vm.tableView,
-           let lastItem = vmTableView.indexPathsForVisibleRows?.last,
-           lastItem.row > (vmTableView.numberOfRows(inSection: 0) - 10)
-        {
-            vm.onAppearSubject.send(lastPost.created_at)
-        }
-    }
 }
