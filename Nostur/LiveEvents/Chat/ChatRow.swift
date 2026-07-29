@@ -12,17 +12,20 @@ struct ChatRow: View, Equatable {
     public let content: ChatRowContent
     public let displayUserAgent: Bool
     public var zoomableId: String = "Default"
+    public let onReplyPreviewTap: (String) -> Void
     @Binding var selectedContact: NRContact?
 
     init(
         content: ChatRowContent,
         displayUserAgent: Bool = SettingsStore.shared.displayUserAgentEnabled,
         zoomableId: String = "Default",
-        selectedContact: Binding<NRContact?>
+        selectedContact: Binding<NRContact?>,
+        onReplyPreviewTap: @escaping (String) -> Void = { _ in }
     ) {
         self.content = content
         self.displayUserAgent = displayUserAgent
         self.zoomableId = zoomableId
+        self.onReplyPreviewTap = onReplyPreviewTap
         _selectedContact = selectedContact
     }
 
@@ -39,7 +42,13 @@ struct ChatRow: View, Equatable {
             case .chatPendingZap(let pendingZap):
                 ChatPendingZapRow(pendingZap: pendingZap, displayUserAgent: displayUserAgent, zoomableId: zoomableId, selectedContact: $selectedContact)
             case .chatMessage(let nrChat):
-                ChatMessageRow(nrChat: nrChat, displayUserAgent: displayUserAgent, zoomableId: zoomableId, selectedContact: $selectedContact)
+                ChatMessageRow(
+                    nrChat: nrChat,
+                    displayUserAgent: displayUserAgent,
+                    zoomableId: zoomableId,
+                    selectedContact: $selectedContact,
+                    onReplyPreviewTap: onReplyPreviewTap
+                )
         }
     }
 }

@@ -11574,6 +11574,9 @@
         }
       }
     },
+    "File" : {
+
+    },
     "File Storage Server address" : {
       "comment" : "File Storage Server address",
       "localizations" : {
@@ -13434,6 +13437,9 @@
         }
       }
     },
+    "Jumps to the original message" : {
+
+    },
     "just now" : {
       "comment" : "Time ago (less than 30 seconds)",
       "localizations" : {
@@ -14622,6 +14628,9 @@
         }
       }
     },
+    "Loading replied message…" : {
+
+    },
     "Loading selected photo..." : {
       "comment" : "Shown while a selected photo is being imported into the post composer"
     },
@@ -15338,6 +15347,9 @@
           }
         }
       }
+    },
+    "Message" : {
+
     },
     "Message Delivery" : {
       "localizations" : {
@@ -18046,6 +18058,9 @@
           }
         }
       }
+    },
+    "Original message unavailable" : {
+
     },
     "Other" : {
       "localizations" : {

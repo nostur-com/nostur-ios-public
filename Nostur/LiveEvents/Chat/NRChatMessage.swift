@@ -18,6 +18,12 @@ struct DMReaction: Identifiable, Hashable {
 
 // NRChatMessage SHOULD BE CREATED IN BACKGROUND THREAD
 class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
+    enum ReplyResolution {
+        case none
+        case loading
+        case resolved
+        case unavailable
+    }
 
     let SPAM_LIMIT_P: Int = 50
  
@@ -82,9 +88,10 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     public var dmSendResult: [String: RecipientResult] = [:] // [pubkey: RecipientResult]
     
     public var replyToId: String?
-    public var replyTo: NRChatMessage? {
+    @Published public var replyTo: NRChatMessage? {
         didSet { self.stopListeningForEmbeddedContent() }
     }
+    @Published public var replyResolution: ReplyResolution = .none
     
     public var quoteId: String?
     public var quotedEvent: NRChatMessage? {
@@ -181,8 +188,10 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     private func loadEmbeddedContent(_ keyPair: (publicKey: String, privateKey: String)? = nil) {
         if let replyToId = nEvent.firstE() {
             self.replyToId = replyToId
+            self.replyResolution = .loading
             if let replyToEvent = Event.fetchEvent(id: replyToId, context: context()) {
                 self.replyTo = NRChatMessage(nEvent: replyToEvent.toNEvent(), keyPair: keyPair)
+                self.replyResolution = .resolved
             }
         }
         if let quoteId = nEvent.tags.first(where: { $0.type == "q" })?.value {
@@ -192,7 +201,10 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
             }
         }
         
-        if (self.replyToId != nil && self.replyTo == nil) || (self.quoteId != nil && self.quotedEvent == nil) {
+        // Live-chat parents are resolved by ChatRoomViewModel, including targeted
+        // relay fetching. importedDMSub only publishes private-message imports.
+        if nEvent.kind != .chatMessage,
+           (self.replyToId != nil && self.replyTo == nil) || (self.quoteId != nil && self.quotedEvent == nil) {
             self.listenForEmbeddedContent(keyPair)
         }
     }
@@ -206,6 +218,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
                 if let replyToId = self.replyToId, self.replyTo == nil {
                     if let replyToEvent = Event.fetchEvent(id: replyToId, context: context()) {
                         self.replyTo = NRChatMessage(nEvent: replyToEvent.toNEvent(), keyPair: keyPair)
+                        self.replyResolution = .resolved
                     }
                 }
                 else if let quoteId = self.quoteId, self.quotedEvent == nil {
@@ -219,11 +232,24 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     // if replyTo or quotedEvent are no longer missing, cancel subscription
     private func stopListeningForEmbeddedContent() {
         if embeddedContentListener == nil { return }
-        if (self.replyToId != nil && self.replyTo != nil) || (self.quoteId != nil && self.quotedEvent != nil) {
+        if (self.replyToId != nil && self.replyTo == nil) || (self.quoteId != nil && self.quotedEvent == nil) {
             return
         }
         embeddedContentListener?.cancel()
         embeddedContentListener = nil
+    }
+
+    @MainActor
+    func resolveReply(with parent: NRChatMessage) {
+        guard replyToId == parent.id else { return }
+        replyTo = parent
+        replyResolution = .resolved
+    }
+
+    @MainActor
+    func markReplyUnavailable() {
+        guard replyToId != nil, replyTo == nil else { return }
+        replyResolution = .unavailable
     }
     
 

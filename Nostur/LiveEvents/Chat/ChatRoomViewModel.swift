@@ -45,6 +45,7 @@ class ChatRoomViewModel: ObservableObject {
     private var bgMessages: [ChatRowContent] = []
     private var visibleMessageLimit = messagePageSize
     private var isLoadingOlderMessages = false
+    private var replyFetches: [String: Set<String>] = [:]
     
     private var renderMessages = PassthroughSubject<Void, Never>()
     private var fetchMissingPs = PassthroughSubject<Void, Never>()
@@ -194,6 +195,7 @@ class ChatRoomViewModel: ObservableObject {
         visibleMessageLimit = Self.messagePageSize
         state = .initializing
         alreadyFetchedMissingPs = []
+        replyFetches = [:]
     }
 
     @MainActor
@@ -203,6 +205,17 @@ class ChatRoomViewModel: ObservableObject {
         visibleMessageLimit += Self.messagePageSize
         publishVisibleMessages(from: bgMessages)
         isLoadingOlderMessages = false
+    }
+
+    @MainActor
+    @discardableResult
+    public func revealMessage(id: String) -> Bool {
+        guard let index = bgMessages.firstIndex(where: { $0.id == id }) else { return false }
+        if index >= visibleMessageLimit {
+            visibleMessageLimit = index + 1
+            publishVisibleMessages(from: bgMessages)
+        }
+        return true
     }
 
     @MainActor
@@ -271,6 +284,9 @@ class ChatRoomViewModel: ObservableObject {
             self.fetchMissingPs.send()
             self.renderMessages.send()
             self.updateTopZaps()
+            DispatchQueue.main.async { [weak self] in
+                self?.resolveAndFetchReplyParents()
+            }
             onComplete?()
         }
     }
@@ -337,6 +353,16 @@ class ChatRoomViewModel: ObservableObject {
                     }
                     return
                 }
+
+                if message.type == .EOSE,
+                   let subscriptionId = message.subscriptionId {
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self,
+                              let requestedIds = self.replyFetches.removeValue(forKey: subscriptionId) else { return }
+                        self.markMissingRepliesUnavailable(requestedIds)
+                    }
+                    return
+                }
                 guard let event = message.event else { return }
                 guard !blocks().contains(event.publicKey) else { return }
                 guard event.kind == .chatMessage || event.kind == .zapNote else { return }
@@ -399,6 +425,9 @@ class ChatRoomViewModel: ObservableObject {
                     self.fetchMissingPs.send()
                     self.renderMessages.send()
                     self.updateTopZaps()
+                    DispatchQueue.main.async { [weak self] in
+                        self?.resolveAndFetchReplyParents()
+                    }
                 }
             }
             .store(in: &subscriptions)
@@ -416,6 +445,47 @@ class ChatRoomViewModel: ObservableObject {
                 }
             }
             .store(in: &subscriptions)
+    }
+
+    @MainActor
+    private func resolveAndFetchReplyParents() {
+        let chatMessages = bgMessages.compactMap { row -> NRChatMessage? in
+            guard case .chatMessage(let message) = row else { return nil }
+            return message
+        }
+        let messagesById = Dictionary(uniqueKeysWithValues: chatMessages.map { ($0.id, $0) })
+
+        for message in chatMessages {
+            guard let replyToId = message.replyToId, message.replyTo == nil else { continue }
+            if let parent = messagesById[replyToId] {
+                message.resolveReply(with: parent)
+            }
+        }
+
+        let alreadyRequestedIds = Set(replyFetches.values.flatMap { $0 })
+        let missingIds = Set(chatMessages.compactMap { message -> String? in
+            guard message.replyTo == nil,
+                  message.replyResolution == .loading,
+                  let replyToId = message.replyToId,
+                  messagesById[replyToId] == nil,
+                  !alreadyRequestedIds.contains(replyToId) else { return nil }
+            return replyToId
+        })
+        guard !missingIds.isEmpty else { return }
+
+        let subscriptionId = "CHAT-REPLIES-\(UUID().uuidString)"
+        replyFetches[subscriptionId] = missingIds
+        req(RM.getEvents(ids: Array(missingIds), limit: missingIds.count, subscriptionId: subscriptionId))
+    }
+
+    @MainActor
+    private func markMissingRepliesUnavailable(_ ids: Set<String>) {
+        for row in bgMessages {
+            guard case .chatMessage(let message) = row,
+                  let replyToId = message.replyToId,
+                  ids.contains(replyToId) else { continue }
+            message.markReplyUnavailable()
+        }
     }
     
     private func listenForBlocks() {

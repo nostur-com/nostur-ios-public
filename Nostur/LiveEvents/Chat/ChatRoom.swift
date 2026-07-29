@@ -24,6 +24,7 @@ struct ChatRoom: View {
     @State private var attributedMessage = NSAttributedString()
     @State private var mentionSearchResults: [NRContact] = []
     @State private var mentionSearchCancellationToken: SearchCancellationToken?
+    @State private var highlightedMessageId: String?
     
     @Namespace private var bottom
     
@@ -66,12 +67,22 @@ struct ChatRoom: View {
                                                 content: rowContent,
                                                 displayUserAgent: settings.displayUserAgentEnabled,
                                                 zoomableId: zoomableId,
-                                                selectedContact: $selectedContact
+                                                selectedContact: $selectedContact,
+                                                onReplyPreviewTap: { parentId in
+                                                    jumpToMessage(parentId, proxy: proxy)
+                                                }
                                             )
                                             .equatable()
                                         }
                                         .padding(.vertical, 5)
+                                        .background {
+                                            if highlightedMessageId == rowContent.id {
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .fill(theme.accent.opacity(0.18))
+                                            }
+                                        }
                                         .scaleEffect(x: 1, y: -1, anchor: .center)
+                                        .id(rowContent.id)
                                     }
                                     .listRowInsets(.init())
                                     .listRowSeparator(.hidden)
@@ -174,6 +185,24 @@ struct ChatRoom: View {
         .onDisappear {
             stopTimer()
             chatVM.pause()
+        }
+    }
+
+    @MainActor
+    private func jumpToMessage(_ id: String, proxy: ScrollViewProxy) {
+        guard chatVM.revealMessage(id: id) else { return }
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                proxy.scrollTo(id, anchor: .center)
+            }
+            highlightedMessageId = id
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation(.easeOut(duration: 0.25)) {
+                    if highlightedMessageId == id {
+                        highlightedMessageId = nil
+                    }
+                }
+            }
         }
     }
     
