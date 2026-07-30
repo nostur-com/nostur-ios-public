@@ -205,7 +205,9 @@ func scheduleMentionNotification(_ mentions: [Mention], pubkey: String) {
     // Create the notificatgion
     let content = UNMutableNotificationContent()
     let title = Set(mentions.map { $0.name }).formatted(.list(type: .and)) // "John and Jim"
+    let roomTitles = Set(mentions.compactMap(\.roomTitle)).formatted(.list(type: .and))
     content.title = if title.isEmpty { "New reply" } else { title } // if title == "" then iOS will show the App title instead, which makes it look like there is a message from "Nostur", so we change the title to "New reply"
+    content.subtitle = roomTitles
     content.body = mentions.count == 1 ? (mentions.first?.message ?? "Message") : "\(mentions.count) messages" // "What's up" or "2 messages"
     content.sound = .default
     content.userInfo = ["tapDestination": "Mentions"] // For navigating to the Notifications->Mentions tab
@@ -218,6 +220,13 @@ func scheduleMentionNotification(_ mentions: [Mention], pubkey: String) {
 struct Mention {
     let name: String
     let message: String
+    let roomTitle: String?
+
+    init(name: String, message: String, roomTitle: String? = nil) {
+        self.name = name
+        self.message = message
+        self.roomTitle = roomTitle
+    }
 }
 
 // Schedule a local notification for 1 direct message

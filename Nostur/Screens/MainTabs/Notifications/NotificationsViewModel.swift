@@ -42,6 +42,33 @@ func migrateNotificationTimestampsIfNeeded() {
     defaults.setValue(true, forKey: migrationKey)
 }
 
+private func notificationMention(from event: Event, context: NSManagedObjectContext) -> Mention {
+    let roomTitle: String? = {
+        guard event.kind == 1311,
+              let aTag = event.otherAtag ?? event.firstA(),
+              let liveEvent = Event.fetchReplacableEvent(aTag: aTag, context: context)
+        else { return nil }
+
+        if let title = liveEvent.eventTitle?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !title.isEmpty {
+            return title
+        }
+
+        if let summary = liveEvent.eventSummary?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !summary.isEmpty {
+            return summary
+        }
+
+        return nil
+    }()
+
+    return Mention(
+        name: event.contact?.anyName ?? "",
+        message: event.plainText,
+        roomTitle: roomTitle
+    )
+}
+
 class NotificationsViewModel: ObservableObject {
     
     @Published public var tab = "Mentions" // This is for per column tabs. Use @AppStorage("selected_notifications_tab") for pre-Desktop columns
@@ -605,7 +632,7 @@ class NotificationsViewModel: ObservableObject {
         // For now we just track the timestamp since last notification. (potential problems: inaccurate timestamps? time zones? not account-based?)
         let mentionsForNotification = !isMain ? [] : unreadMentions
             .filter { ($0.created_at > lastLocalNotificationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || accountData.followingPubkeys.contains($0.pubkey)) }
-            .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
+            .map { notificationMention(from: $0, context: bg()) }
         
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -679,7 +706,7 @@ class NotificationsViewModel: ObservableObject {
                 // For now we just track the timestamp since last notification. (potential problems: inaccurate timestamps? time zones? not account-based?)
                 let mentionsForNotification = unreadMentions
                     .filter { ($0.created_at > self.lastLocalNotificationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || accountData.followingPubkeys.contains($0.pubkey)) }
-                    .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
+                    .map { notificationMention(from: $0, context: bg()) }
                 
 #if DEBUG
                 L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground() \(accountData.anyName): mentions for notifications: \(mentionsForNotification.count)")
