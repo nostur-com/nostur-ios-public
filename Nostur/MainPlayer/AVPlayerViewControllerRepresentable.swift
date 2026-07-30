@@ -155,6 +155,10 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         private var startWhenPossible = false
         private var pipStartFallbackWorkItem: DispatchWorkItem?
         private var isTearingDown = false
+        private var shouldRestoreInlineAfterPipStop = false
+        private weak var pipTimelinePrimedItem: AVPlayerItem?
+        private var isPrimingPipTimeline = false
+        private var pipTimelinePrimingGeneration = 0
         private enum PictureInPictureState {
             case idle
             case starting
@@ -344,6 +348,11 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         
         @discardableResult
         func teardownNativePictureInPicture() -> Bool {
+            pipTimelinePrimingGeneration += 1
+            if isPrimingPipTimeline {
+                isPrimingPipTimeline = false
+                parent.player.currentItem?.cancelPendingSeeks()
+            }
             if pictureInPictureState != .idle {
                 isTearingDown = true
                 stopNativePictureInPicture()
@@ -371,6 +380,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         @discardableResult
         func startNativePictureInPicture() -> Bool {
             guard IS_CATALYST else { return false }
+            guard !isPrimingPipTimeline else { return true }
             guard pictureInPictureState == .idle else {
                 // Treat repeated clicks while start/stop is in flight as handled. In
                 // particular, never replace the controller used by an outstanding start.
@@ -389,9 +399,16 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
                 return false
             }
             
-            // Always rebuild a fresh surface before start. Reusing a layer that went through
-            // audio-only (or prior PiP) is the main reason "works first time only".
-            rebuildCatalystSurface(player: parent.player, reason: "startPiP")
+            // Reuse the surface prepared by make/leave-audio-only. Reattaching an
+            // already-playing on-demand item immediately before every start makes Catalyst's
+            // PiP chrome treat that attachment as time zero, even though AVPlayer playback
+            // correctly continues at its current time.
+            //
+            // Audio-only transitions rebuild their surfaces at the transition boundary. Only
+            // repair the surface here when it is actually missing or stale.
+            if catalystPlayerLayerView?.playerLayer.player !== parent.player || pipController == nil {
+                rebuildCatalystSurface(player: parent.player, reason: "startPiPRepair")
+            }
             
             // Ensure playback intent is applied on the new layer.
             if parent.isPlaying, parent.player.timeControlStatus != .playing {
@@ -405,11 +422,44 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
             
             guard let pip = pipController else {
 #if DEBUG
-                L.og.debug("Native PiP start: no controller after rebuild")
+                L.og.debug("Native PiP start: no controller after surface preparation")
 #endif
                 return false
             }
             
+            // Catalyst can initially present an AVPlayerLayer-backed PiP timeline from 00:00
+            // until the item emits its first seek/discontinuity update. Prime that transport
+            // state once per on-demand item with a position-preserving seek, then start PiP.
+            // This is the same update the system receives when the user taps ±10 seconds, but
+            // without changing the video's actual playback position.
+            if !AnyPlayerModel.shared.isStream,
+               let item = parent.player.currentItem,
+               pipTimelinePrimedItem !== item {
+                let currentTime = parent.player.currentTime()
+                if currentTime.isNumeric, currentTime > .zero {
+                    isPrimingPipTimeline = true
+                    pipTimelinePrimingGeneration += 1
+                    let generation = pipTimelinePrimingGeneration
+                    parent.player.seek(
+                        to: currentTime,
+                        toleranceBefore: .zero,
+                        toleranceAfter: .zero
+                    ) { [weak self, weak item] _ in
+                        DispatchQueue.main.async {
+                            guard let self, generation == self.pipTimelinePrimingGeneration else { return }
+                            self.isPrimingPipTimeline = false
+                            guard !self.isTearingDown,
+                                  let item,
+                                  item === self.parent.player.currentItem
+                            else { return }
+                            self.pipTimelinePrimedItem = item
+                            self.startNativePictureInPicture()
+                        }
+                    }
+                    return true
+                }
+            }
+
             if pip.isPictureInPictureActive {
                 pictureInPictureState = .active
                 return true
@@ -477,8 +527,20 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
                     return
                 }
                 
-                // Rebind on a healthy surface (PiP can leave the old layer unable to render).
-                self.rebuildCatalystSurface(player: self.parent.player, reason: "pipDidStop")
+                if AnyPlayerModel.shared.isStream {
+                    // Live HLS can leave the old layer unable to render after PiP. Its timeline
+                    // is unbounded, so rebuilding the surface doesn't reset an elapsed-time UI.
+                    self.rebuildCatalystSurface(player: self.parent.player, reason: "streamPipDidStop")
+                }
+                else {
+                    // Preserve the exact layer/controller pair for on-demand video. A new
+                    // AVPlayerLayer starts a new Catalyst PiP presentation timeline at zero,
+                    // which makes the next PiP window show 00:00 despite correct AVPlayer time.
+                    self.catalystPlayerLayerView?.isHidden = false
+                    self.avpc?.view.isHidden = false
+                    self.avpc?.view.setNeedsLayout()
+                    self.avpc?.view.layoutIfNeeded()
+                }
                 
                 // System PiP often leaves rate at 0 while our intent is still "playing".
                 if AnyPlayerModel.shared.isPlaying, !AnyPlayerModel.shared.didFinishPlaying {
@@ -502,6 +564,25 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
                         }
                     }
                 }
+            }
+        }
+
+        /// The system's return-to-app control requests UI restoration before PiP stops. The
+        /// X button stops PiP without that request and should close playback altogether.
+        private func handleNativePictureInPictureDidStop() {
+            if isTearingDown {
+                restoreInlinePlaybackAfterPiP()
+                return
+            }
+
+            if shouldRestoreInlineAfterPipStop {
+                shouldRestoreInlineAfterPipStop = false
+                restoreInlinePlaybackAfterPiP()
+                return
+            }
+
+            Task { @MainActor in
+                AnyPlayerModel.shared.close()
             }
         }
         
@@ -549,19 +630,21 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         // MARK: - AVPlayerViewControllerDelegate (system-driven PiP)
         
         func playerViewControllerDidStartPictureInPicture(_ playerViewController: AVPlayerViewController) {
+            shouldRestoreInlineAfterPipStop = false
             Task { @MainActor in
                 AnyPlayerModel.shared.isNativePictureInPictureActive = true
             }
         }
         
         func playerViewControllerDidStopPictureInPicture(_ playerViewController: AVPlayerViewController) {
-            restoreInlinePlaybackAfterPiP()
+            handleNativePictureInPictureDidStop()
         }
         
         func playerViewController(
             _ playerViewController: AVPlayerViewController,
             restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void
         ) {
+            shouldRestoreInlineAfterPipStop = true
             Task { @MainActor in
                 if !AnyPlayerModel.shared.isShown {
                     AnyPlayerModel.shared.isShown = true
@@ -585,6 +668,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
                 return
             }
             pictureInPictureState = .active
+            shouldRestoreInlineAfterPipStop = false
             Task { @MainActor in
                 AnyPlayerModel.shared.isNativePictureInPictureActive = true
             }
@@ -595,13 +679,14 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
             L.og.debug("Native PiP did stop")
 #endif
             pictureInPictureState = .idle
-            restoreInlinePlaybackAfterPiP()
+            handleNativePictureInPictureDidStop()
         }
         
         func pictureInPictureController(
             _ pictureInPictureController: AVPictureInPictureController,
             restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void
         ) {
+            shouldRestoreInlineAfterPipStop = true
             Task { @MainActor in
                 if !AnyPlayerModel.shared.isShown {
                     AnyPlayerModel.shared.isShown = true
