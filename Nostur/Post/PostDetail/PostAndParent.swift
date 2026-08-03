@@ -47,8 +47,12 @@ struct PostAndParent: View {
                     let connect:ThreadConnectDirection? = replyTo.replyToPostOrZapId != nil ? .both : .bottom
                     PostAndParent(nrPost: replyTo, connect: connect)
                         .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
-                        .padding(.bottom, 10)
+                        .padding(.bottom, isPicturePost(replyTo) ? 0 : 10)
                         .background(theme.listBackground)
+                    if isPicturePost(replyTo) {
+                        Divider()
+                            .padding(.bottom, 24)
+                    }
                 }
                 else {
                     Text("_Deleted by author_", comment: "Message shown when a post is deleted")
@@ -89,7 +93,7 @@ struct PostAndParent: View {
             // MARK: A POST 
             VStack(alignment: .leading, spacing: 0) {
                 if nxViewingContext.contains(.postParent) {
-                    PostRowDeletable(nrPost: nrPost, hideFooter: true, connect: connect, theme: theme)
+                    PostRowDeletable(nrPost: nrPost, hideFooter: true, connect: postParentConnect, theme: theme)
                         .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                         .background(
@@ -102,7 +106,7 @@ struct PostAndParent: View {
                         .padding(.bottom, 10)
                 }
                 else {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != nil && nrPost.replyTo == nil, connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != nil && nrPost.replyTo == nil, connect: detailConnect, fullWidth: true, isDetail: true, theme: theme)
                         .environment(\.nxViewingContext, [.selectableText, .postDetail, .detailPane])
 //                        .id(nrPost.id)
 //                        .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
@@ -153,6 +157,29 @@ struct PostAndParent: View {
                 }
             }
         }
+    }
+
+    private var detailConnect: ThreadConnectDirection? {
+        guard nrPost.replyToPostOrZapId != nil else { return nil }
+        guard let replyTo = nrPost.replyTo, isPicturePost(replyTo) else { return .top }
+        return nil
+    }
+
+    private var postParentConnect: ThreadConnectDirection? {
+        guard let replyTo = nrPost.replyTo, isPicturePost(replyTo) else { return connect }
+
+        switch connect {
+        case .both:
+            return .bottom
+        case .top:
+            return nil
+        case .bottom, .none:
+            return connect
+        }
+    }
+
+    private func isPicturePost(_ post: NRPost) -> Bool {
+        post.kind == 20 || (post.kind == 1 && post.kTag == "20")
     }
     
     @ViewBuilder

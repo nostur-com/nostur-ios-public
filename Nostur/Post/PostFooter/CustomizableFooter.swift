@@ -52,7 +52,7 @@ struct CustomizableFooterFragmentView: View {
         }
         .padding(.top, 5)
         // Base 16; extra when MiniPFPs are overlaid under ReplyButton (offset y:19 + 20pt size)
-        .padding(.bottom, showsReplyMiniPFPs ? 23 : 16)
+        .padding(.bottom, isDetail ? 5 : (showsReplyMiniPFPs ? 23 : 16))
         .foregroundColor(theme.footerButtons)
         .font(.system(size: 14))
     }

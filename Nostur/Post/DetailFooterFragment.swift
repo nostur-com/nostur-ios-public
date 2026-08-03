@@ -22,7 +22,7 @@ struct DetailFooterFragment: View {
     
     var body: some View {
         Divider()
-        if !viewingContext.contains(.preview) {
+        if !viewingContext.contains(.preview) && footerAttributes.zapsCount > 0 {
             TopZaps(id: nrPost.id)
         }
         VStack(spacing: 5) {
