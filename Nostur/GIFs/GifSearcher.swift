@@ -8,21 +8,21 @@
 import SwiftUI
 import NukeUI
 
-struct MasonryLayout<Content: View>: View {
+struct MasonryLayout<Item: Identifiable, Content: View>: View {
     let columns: Int
     let spacing: CGFloat
-    let content: [Content]
-    let contentIDs: [String]
+    let items: [Item]
+    @ViewBuilder let content: (Item) -> Content
     
     var body: some View {
         HStack(alignment: .top, spacing: spacing) {
             ForEach(0..<columns, id: \.self) { columnIndex in
                 LazyVStack(spacing: spacing) {
-                    ForEach(0..<content.count, id: \.self) { itemIndex in
-                        if itemIndex % columns == columnIndex {
-                            content[itemIndex]
-                                .id(contentIDs[safe: itemIndex] ?? "\(columnIndex)-\(itemIndex)")
-                        }
+                    let columnItems = items.enumerated()
+                        .filter { $0.offset % columns == columnIndex }
+                        .map(\.element)
+                    ForEach(columnItems) { item in
+                        content(item)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -31,28 +31,115 @@ struct MasonryLayout<Content: View>: View {
     }
 }
 
+@MainActor
+private final class GifSearchModel: ObservableObject {
+    @Published private(set) var searchResults: [TenorResult] = []
+    @Published private(set) var topResults: [TenorResult] = []
+    @Published private(set) var autocompleteResults: [String] = []
+    @Published private(set) var suggestionResults: [String] = []
+    @Published private(set) var activeSearchTerm = ""
+    @Published private(set) var scrollUpdater = UUID()
+
+    private var searchTask: Task<Void, Never>?
+    private var featuredTask: Task<Void, Never>?
+
+    var gifItems: [TenorResult] {
+        activeSearchTerm.isEmpty ? topResults : searchResults
+    }
+
+    var bothResults: [String] {
+        autocompleteResults + suggestionResults.filter { !autocompleteResults.contains($0) }
+    }
+
+    func loadFeatured() {
+        featuredTask?.cancel()
+        featuredTask = Task { [weak self] in
+            guard let url = gifAPIURL(
+                path: "featured",
+                queryItems: [URLQueryItem(name: "limit", value: "10")]
+            ) else { return }
+
+            let response: TenorResponse? = await Self.fetch(URLRequest(url: url))
+            guard !Task.isCancelled, let self, let results = response?.results else { return }
+            self.topResults = results
+        }
+    }
+
+    func search(_ rawSearchTerm: String) {
+        searchTask?.cancel()
+
+        let searchTerm = rawSearchTerm.trimmingCharacters(in: .whitespacesAndNewlines)
+        activeSearchTerm = searchTerm
+
+        guard !searchTerm.isEmpty else {
+            searchResults = []
+            autocompleteResults = []
+            suggestionResults = []
+            return
+        }
+
+        searchTask = Task { [weak self] in
+            guard let searchURL = gifAPIURL(
+                path: "search",
+                queryItems: [
+                    URLQueryItem(name: "q", value: searchTerm),
+                    URLQueryItem(name: "limit", value: "30"),
+                    URLQueryItem(name: "media_filter", value: "gif,nanogif")
+                ]
+            ), let autocompleteURL = gifAPIURL(
+                path: "autocomplete",
+                queryItems: [
+                    URLQueryItem(name: "q", value: searchTerm),
+                    URLQueryItem(name: "limit", value: "5")
+                ]
+            ), let suggestionsURL = gifAPIURL(
+                path: "search_suggestions",
+                queryItems: [
+                    URLQueryItem(name: "q", value: searchTerm),
+                    URLQueryItem(name: "limit", value: "10")
+                ]
+            ) else { return }
+
+            async let searchResponse: TenorResponse? = Self.fetch(URLRequest(url: searchURL))
+            async let autocompleteResponse: AutoCompleteResponse? = Self.fetch(URLRequest(url: autocompleteURL))
+            async let suggestionsResponse: AutoCompleteResponse? = Self.fetch(URLRequest(url: suggestionsURL))
+            let responses = await (searchResponse, autocompleteResponse, suggestionsResponse)
+
+            guard !Task.isCancelled, let self, self.activeSearchTerm == searchTerm else { return }
+            self.searchResults = responses.0?.results ?? []
+            self.autocompleteResults = responses.1?.results ?? []
+            self.suggestionResults = responses.2?.results ?? []
+            self.scrollUpdater = UUID()
+        }
+    }
+
+    func cancel() {
+        searchTask?.cancel()
+        featuredTask?.cancel()
+    }
+
+    private nonisolated static func fetch<T: Decodable>(_ request: URLRequest) async -> T? {
+        do {
+            return try await makeWebRequest(urlRequest: request)
+        } catch is CancellationError {
+            return nil
+        } catch let error as URLError where error.code == .cancelled {
+            return nil
+        } catch {
+            L.og.error("GIF API error: \(error)")
+            return nil
+        }
+    }
+}
+
 struct GifSearcher: View {
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     @State private var searchTerm = ""
-    @State private var searchResults: [TenorResult] = []
-    @State private var topResults: [TenorResult] = []
-    @State private var tags: [TenorCategory] = []
-    @State private var autocompleteResults: [String] = []
-    @State private var _suggestionResults: [String] = []
-    @State private var scrollUpdater = UUID()
-    @State private var activeSearchTerm = ""
+    @StateObject private var searchModel = GifSearchModel()
     @AppStorage("use_blossom_for_gifs") private var useBlossom = false
     
-    var bothResults: [String] {
-        (autocompleteResults + (_suggestionResults.filter { !autocompleteResults.contains($0) }))
-    }
-    
     var onSelect: (String) -> ()
-    
-    private var gifItems: [TenorResult] {
-        searchResults.isEmpty ? topResults : searchResults
-    }
     
     @State private var blossomViewState: ViewState = .none
     
@@ -75,18 +162,18 @@ struct GifSearcher: View {
                 .background(theme.lineColor)
                 .containerShape(.rect(cornerRadius: 8.0))
             
-            if let account = account(), SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
+            if account() != nil, SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
                 Toggle(isOn: $useBlossom) {
                     Text("Post GIF using Blossom")
                 }
             }
             
-            if !autocompleteResults.isEmpty {
+            if !searchModel.autocompleteResults.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack {
-                        ForEach(bothResults.indices, id:\.self) { index in
-                            Button(bothResults[safe: index] ?? "") {
-                                searchTerm = bothResults[safe: index] ?? ""
+                        ForEach(searchModel.bothResults, id: \.self) { result in
+                            Button(result) {
+                                searchTerm = result
 //                                autocompleteResults = []
 //                                suggestionResults = []
                             }
@@ -101,19 +188,16 @@ struct GifSearcher: View {
                     MasonryLayout(
                         columns: 3,
                         spacing: 5,
-                        content: gifItems.map { gifResult in
-                            AnyView(
-                                gifItemView(gifResult: gifResult)
-                            )
-                        },
-                        contentIDs: gifItems.map { $0.id }
-                    )
+                        items: searchModel.gifItems
+                    ) { gifResult in
+                        gifItemView(gifResult: gifResult)
+                    }
                     .id("top")
                 }
                 .onChange(of: searchTerm) { newValue in
-                    search(newValue)
+                    searchModel.search(newValue)
                 }
-                .onChange(of: scrollUpdater) { _ in
+                .onChange(of: searchModel.scrollUpdater) { _ in
                     withAnimation {
                         proxy.scrollTo("top", anchor: .top)
                     }
@@ -197,7 +281,10 @@ struct GifSearcher: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 1)
         .onAppear {
-            initial()
+            searchModel.loadFeatured()
+        }
+        .onDisappear {
+            searchModel.cancel()
         }
     }
     
@@ -297,115 +384,6 @@ struct GifSearcher: View {
         }
     }
     
-    func search(_ searchTerm: String) {
-        activeSearchTerm = searchTerm
-        guard let searchTerm = searchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else { return }
-        
-        // Define the results upper limit
-        let limit = 30
-        
-        // make initial search request for the first 8 items
-        if let url = URL(string: String(format: "https://\(GIF_API)/v2/search?q=%@&key=%@&client_key=%@&limit=%d&media_filter=gif,nanogif",
-                                        searchTerm,
-                                        apikey,
-                                        clientkey,
-                                        limit)) {
-            let searchRequest = URLRequest(url: url)
-            makeWebRequest(urlRequest: searchRequest) { response in
-                self.tenorSearchHandler(response: response, for: searchTerm)
-            }
-        }
-        
-        
-        // Get up to 5 results from the autocomplete suggestions - using the default locale of en_US
-        if let url = URL(string: String(format: "https://\(GIF_API)/v2/autocomplete?key=%@&client_key=%@&q=%@&limit=%d",
-                                        apikey,
-                                        clientkey,
-                                        searchTerm,
-                                        5)) {
-            let autoRequest = URLRequest(url: url)
-            makeWebRequest(urlRequest: autoRequest) { response in
-                self.tenorAutoCompleteResultsHandler(response: response, for: searchTerm)
-            }
-        }
-        
-        if let url = URL(string: String(format: "https://\(GIF_API)/v2/search_suggestions?key=%@&client_key=%@&q=%@&limit=%d",
-                                        apikey,
-                                        clientkey,
-                                        searchTerm,
-                                        10)) {
-            // Get the top 10 search suggestions - using the default locale of en_US
-            let suggestRequest = URLRequest(url: url)
-            makeWebRequest(urlRequest: suggestRequest) { response in
-                self.tenorSuggestionResultsHandler(response: response, for: searchTerm)
-            }
-        }
-    }
-    
-    func initial() {
-        searchTerm = ""
-        searchResults = []
-        topResults = []
-        tags = []
-        autocompleteResults = []
-        _suggestionResults = []
-        
-        // Get the top 10 featured GIFs (updated throughout the day) - using the default locale of en_US
-        if let url = URL(string: String(format: "https://\(GIF_API)/v2/featured?key=%@&client_key=%@&limit=%d",
-                                        apikey,
-                                        clientkey,
-                                        10)) {
-            let featuredRequest = URLRequest(url: url)
-            
-            makeWebRequest(urlRequest: featuredRequest, callback: tenorFeaturedResultsHandler)
-        }
-
-
-//           // Get the current list of categories - using the default locale of en_US
-//           let categoryRequest = URLRequest(url: URL(string: String(format: "https://\(GIF_API)/v2/categories?key=%@&client_key=%@&limit=%d",
-//                                                                    apikey, clientkey, 10))!)
-//           makeWebRequest(urlRequest: categoryRequest, callback: tenorCategoryResultsHandler)
-
-    }
-    
-    func tenorSearchHandler(response: TenorResponse, for encodedSearchTerm: String)
-    {
-        guard activeSearchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) == encodedSearchTerm else { return }
-        if let results = response.results {
-            self.scrollUpdater = UUID()
-            self.searchResults = results
-        }
-    }
-    
-    func tenorCategoryResultsHandler(response: TenorResponse)
-    {
-        if let tags = response.tags {
-            self.tags = tags
-        }
-    }
-    
-    func tenorFeaturedResultsHandler(response: TenorResponse)
-    {
-        if let results = response.results {
-            self.topResults = results
-        }
-    }
-    
-    func tenorAutoCompleteResultsHandler(response: AutoCompleteResponse, for encodedSearchTerm: String)
-    {
-        guard activeSearchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) == encodedSearchTerm else { return }
-        if let results = response.results {
-            self.autocompleteResults = results
-        }
-    }
-    
-    func tenorSuggestionResultsHandler(response: AutoCompleteResponse, for encodedSearchTerm: String)
-    {
-        guard activeSearchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) == encodedSearchTerm else { return }
-        if let results = response.results {
-            self._suggestionResults = results
-        }
-    }
 }
 
 import NavigationBackport

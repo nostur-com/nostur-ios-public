@@ -7,6 +7,11 @@
 
 import Foundation
 
+enum GifAPIError: Error {
+    case invalidResponse
+    case httpStatus(Int)
+}
+
 let GIF_API = if Date.now.timeIntervalSince1970 > 1782597600 { // if date is after june 29 2026
     "api.klipy.com"
 } else {
@@ -19,8 +24,8 @@ let apikey = if Date.now.timeIntervalSince1970 > 1782597600 { // if date is afte
     Bundle.main.infoDictionary?["TENOR_API_KEY"] as? String ?? ""
 }
 
-let clientkey = if Date.now.timeIntervalSince1970 > 1782597600 { // if date is after june 29 2026
-    Bundle.main.infoDictionary?["KLIPY_CLIENT_KEY"] as? String ?? ""
+let clientkey = if Date.now.timeIntervalSince1970 > 1782597600 { // Klipy only requires its API key
+    ""
 } else {
     Bundle.main.infoDictionary?["TENOR_CLIENT_KEY"] as? String ?? ""
 }
@@ -28,23 +33,19 @@ let clientkey = if Date.now.timeIntervalSince1970 > 1782597600 { // if date is a
 /**
  Async URL requesting function.
  */
-func makeWebRequest<T: Decodable>(urlRequest: URLRequest, callback: @escaping (T) -> ()) {
-    // Make the async request and pass the resulting JSON object to the callback
+func makeWebRequest<T: Decodable>(urlRequest: URLRequest) async throws -> T {
     var request = urlRequest
     request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
-    
-    let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-        do {
-            let decoder = JSONDecoder()
-            if let data {
-                let result = try decoder.decode(T.self, from: data)
-                callback(result)
-            }
-        } catch {
-            L.og.error("Tenor gif error: \(error)")
-        }
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+    guard let httpResponse = response as? HTTPURLResponse else {
+        throw GifAPIError.invalidResponse
     }
-    task.resume()
+    guard (200...299).contains(httpResponse.statusCode) else {
+        throw GifAPIError.httpStatus(httpResponse.statusCode)
+    }
+
+    return try JSONDecoder().decode(T.self, from: data)
 }
 
 
@@ -52,16 +53,38 @@ func makeWebRequest<T: Decodable>(urlRequest: URLRequest, callback: @escaping (T
 // In a production application, the GIF id should be the "id" field of the GIF response object that the user selected
 // to share. The search term should be the user's last search.
 func registerShare(gifId: String, searchTerm: String) {
-    
-    // Register the user's share - using the default locale of en_US
-    let shareRequest = URLRequest(url: URL(string: String(format: "https://\(GIF_API)/v2/registershare?key=%@&client_key=%@&id=%@&q=%@",
-                                                          apikey,
-                                                          clientkey,
-                                                          gifId,
-                                                          searchTerm))!)
-    makeWebRequest(urlRequest: shareRequest, callback: tenorShareHandler)
-    
-    // Data will be loaded by each request's callback
+    guard let url = gifAPIURL(
+        path: "registershare",
+        queryItems: [
+            URLQueryItem(name: "id", value: gifId),
+            URLQueryItem(name: "q", value: searchTerm)
+        ]
+    ) else { return }
+
+    Task {
+        do {
+            let response: TenorResponse = try await makeWebRequest(urlRequest: URLRequest(url: url))
+            tenorShareHandler(response: response)
+        } catch {
+            L.og.error("GIF share registration error: \(error)")
+        }
+    }
+}
+
+func gifAPIURL(path: String, queryItems: [URLQueryItem] = []) -> URL? {
+    var components = URLComponents()
+    components.scheme = "https"
+    components.host = GIF_API
+    components.path = "/v2/\(path)"
+
+    var authenticatedQueryItems = [URLQueryItem(name: "key", value: apikey)]
+    if !clientkey.isEmpty {
+        authenticatedQueryItems.append(URLQueryItem(name: "client_key", value: clientkey))
+    }
+    authenticatedQueryItems.append(contentsOf: queryItems)
+    components.queryItems = authenticatedQueryItems
+
+    return components.url
 }
 
 
