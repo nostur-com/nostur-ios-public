@@ -2794,7 +2794,8 @@
             "value" : "🫥"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "😂" : {
       "localizations" : {
@@ -2886,7 +2887,7 @@
       }
     },
     "1 GB" : {
-
+      "shouldTranslate" : false
     },
     "1 year" : {
       "comment" : "DM expiration duration label",
@@ -3026,7 +3027,7 @@
       }
     },
     "2 GB" : {
-
+      "shouldTranslate" : false
     },
     "2) Reinstall the app and start fresh" : {
       "localizations" : {
@@ -3095,7 +3096,7 @@
       }
     },
     "5 GB" : {
-
+      "shouldTranslate" : false
     },
     "7 days" : {
       "comment" : "A label for a 7-day message expiration.",
@@ -3144,7 +3145,7 @@
       }
     },
     "10 GB" : {
-
+      "shouldTranslate" : false
     },
     "12h" : {
       "localizations" : {
@@ -3191,7 +3192,7 @@
       }
     },
     "25 GB" : {
-
+      "shouldTranslate" : false
     },
     "30 days" : {
       "comment" : "A label for a 30-day message expiration.",
@@ -3240,10 +3241,10 @@
       }
     },
     "50 GB" : {
-
+      "shouldTranslate" : false
     },
     "100 MB" : {
-
+      "shouldTranslate" : false
     },
     "250" : {
       "localizations" : {
@@ -3268,7 +3269,7 @@
       }
     },
     "250 MB" : {
-
+      "shouldTranslate" : false
     },
     "500" : {
       "localizations" : {
@@ -3293,7 +3294,7 @@
       }
     },
     "500 MB" : {
-
+      "shouldTranslate" : false
     },
     "1000" : {
       "localizations" : {
@@ -6610,10 +6611,48 @@
       }
     },
     "Clear all non-kept DM files?" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Borrar todos los archivos de mensajes directos no conservados?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus semua file DM yang tidak disimpan?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder alle niet-bewaarde bestanden?"
+          }
+        }
+      }
     },
     "Clear all non-kept files" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar todos los archivos no conservados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus semua file yang tidak disimpan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder alle niet-bewaarde bestanden"
+          }
+        }
+      }
     },
     "Clear cache" : {
       "extractionState" : "stale",
@@ -6639,16 +6678,92 @@
       }
     },
     "Clear DM files (kept conversations excluded)" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar archivos de mensajes directos (se excluyen las conversaciones conservadas)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus file DM (percakapan yang disimpan tidak termasuk)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder privéberichten bestanden (excl. bewaarde gesprekken)"
+          }
+        }
+      }
     },
     "Clear downloaded files" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar archivos descargados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus file yang diunduh"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedownloade bestanden verwijderen"
+          }
+        }
+      }
     },
     "Clear downloaded files?" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Borrar los archivos descargados?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus file yang diunduh?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedownloade bestanden verwijderen?"
+          }
+        }
+      }
     },
     "Clear now" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar ahora"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus sekarang"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu verwijderen"
+          }
+        }
+      }
     },
     "Clearing..." : {
       "comment" : "Message shown when clearing cache",
@@ -9374,7 +9489,27 @@
       }
     },
     "Delete repost" : {
-      "comment" : "Post context menu action to delete your repost"
+      "comment" : "Post context menu action to delete your repost",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar republicación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus repost"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repost verwijderen"
+          }
+        }
+      }
     },
     "Deleting in %lld seconds" : {
       "comment" : "Text that is counting down when you are deleting your account",
@@ -9853,7 +9988,26 @@
       }
     },
     "Disk usage" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uso del disco"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penggunaan disk"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schijfgebruik"
+          }
+        }
+      }
     },
     "Display" : {
       "comment" : "Setting heading on settings screen",
@@ -9951,10 +10105,48 @@
       }
     },
     "DM disk usage" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uso del disco de mensajes directos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penggunaan disk DM"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privéberichten schijfgebruik"
+          }
+        }
+      }
     },
     "DM files and media" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivos y contenido multimedia de mensajes directos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File dan media DM"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privéberichten bestanden en media"
+          }
+        }
+      }
     },
     "DM relays" : {
       "localizations" : {
@@ -10023,7 +10215,26 @@
       }
     },
     "Do not automatically clean up downloaded files" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No borrar automáticamente los archivos descargados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jangan bersihkan file yang diunduh secara otomatis"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedownloade bestanden niet automatisch opgeschonen"
+          }
+        }
+      }
     },
     "Done" : {
       "localizations" : {
@@ -10070,7 +10281,26 @@
       }
     },
     "Downloaded files" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivos descargados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File yang diunduh"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedownloade bestanden"
+          }
+        }
+      }
     },
     "Downloading..." : {
       "localizations" : {
@@ -11575,7 +11805,26 @@
       }
     },
     "File" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestand"
+          }
+        }
+      }
     },
     "File Storage Server address" : {
       "comment" : "File Storage Server address",
@@ -13464,10 +13713,48 @@
       }
     },
     "Keep downloaded files" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservar archivos descargados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simpan file yang diunduh"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedownloade bestanden bewaren"
+          }
+        }
+      }
     },
     "Keep files permanently" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservar archivos permanentemente"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simpan file secara permanen"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewaar bestanden voor altijd"
+          }
+        }
+      }
     },
     "Keep messages" : {
       "localizations" : {
@@ -13537,7 +13824,26 @@
       }
     },
     "Kept conversations do not count toward automatic cleanup, but their size is included in the total." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las conversaciones conservadas no se tienen en cuenta para la limpieza automática, pero su tamaño se incluye en el total."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Percakapan yang disimpan tidak diperhitungkan dalam pembersihan otomatis, tetapi ukurannya disertakan dalam total."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestanden van bewaarde gesprekken worden nooit automatisch verwijderd, maar tellen wel mee bij het totaal."
+          }
+        }
+      }
     },
     "Keys" : {
       "localizations" : {
@@ -15050,7 +15356,26 @@
       }
     },
     "Maximum disk usage" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uso máximo del disco"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penggunaan disk maksimum"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maximum schijfgebruik"
+          }
+        }
+      }
     },
     "May be required to access special features on this relay" : {
       "localizations" : {
@@ -15349,7 +15674,26 @@
       }
     },
     "Message" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensaje"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pesan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht"
+          }
+        }
+      }
     },
     "Message Delivery" : {
       "localizations" : {
@@ -16932,7 +17276,26 @@
       }
     },
     "No downloaded DM files" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay archivos de mensajes directos descargados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada file DM yang diunduh"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen opgeslagen bestanden"
+          }
+        }
+      }
     },
     "No internet connection" : {
       "comment" : "Relay no internet status",
@@ -25807,6 +26170,12 @@
             "state" : "translated",
             "value" : "Memulai kamera…"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera starten..."
+          }
         }
       }
     },
@@ -27092,7 +27461,26 @@
       }
     },
     "This permanently deletes all downloaded files and media from conversations that are not marked Keep. The messages themselves will not be deleted." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto elimina permanentemente todos los archivos descargados y el contenido multimedia de las conversaciones que no están marcadas como «Conservar». Los mensajes no se eliminarán."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tindakan ini akan menghapus secara permanen semua file dan media yang diunduh dari percakapan yang tidak ditandai Simpan. Pesan itu sendiri tidak akan dihapus."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit verwijderd alle gedownloade bestanden en media van gesprekken die niet als bewaard zijn opgegeven. Berichten worden niet verwijderen."
+          }
+        }
+      }
     },
     "This post" : {
       "comment" : "Menu choice",
@@ -27249,7 +27637,26 @@
       }
     },
     "This will delete all downloaded files and media for this conversation." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto eliminará todos los archivos descargados y el contenido multimedia de esta conversación."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tindakan ini akan menghapus semua file dan media yang diunduh untuk percakapan ini."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit verwijderd opgeslagen media en bestanden van dit gesprek"
+          }
+        }
+      }
     },
     "Thread" : {
       "comment" : "Navigation title when viewing a Thread",
@@ -28823,7 +29230,26 @@
       }
     },
     "Usage by conversation" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uso por conversación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penggunaan per percakapan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbruik per gesprek"
+          }
+        }
+      }
     },
     "Use additional relays from contacts in this feed to fetch posts" : {
       "localizations" : {
