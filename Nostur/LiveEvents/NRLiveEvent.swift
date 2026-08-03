@@ -132,6 +132,9 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
             nil
         }
         self.isNSFW = self.hasNSFWContent()
+        Task { @MainActor [weak self] in
+            self?.configureChatPins()
+        }
     }
     
     public var missingPs: Set<String>
@@ -191,6 +194,53 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.liveKitConnectUrl = params.liveKitConnectUrl
         self.scheduledAt = params.scheduledAt
         self.hostPubkey = fastPs.first(where: { $0.3?.lowercased() == "host" })?.1 ?? params.nEvent.publicKey
+        Task { @MainActor [weak self] in
+            self?.configureChatPins()
+        }
+    }
+
+    @MainActor
+    private func configureChatPins() {
+        chatVM.configurePins(
+            ownerPubkey: pubkey,
+            messageIds: nEvent.tags.pinnedMessageIds
+        ) { [weak self] messageId, shouldPin, account in
+            self?.setChatMessage(messageId, pinned: shouldPin, account: account)
+        }
+    }
+
+    @MainActor
+    private func setChatMessage(_ messageId: String, pinned: Bool, account: CloudAccount) {
+        guard account.publicKey == pubkey else { return }
+
+        var updatedEvent = nEvent
+        updatedEvent.createdAt = NTimestamp(date: .now)
+        updatedEvent.tags = updatedEvent.tags.updatingPinnedMessage(messageId, pinned: pinned)
+
+        let didSign: (NEvent) -> Void = { [weak self] signedEvent in
+            guard let self else { return }
+            Unpublisher.shared.publishNow(signedEvent, skipDB: true)
+            MessageParser.shared.handleNormalMessage(
+                message: NXRelayMessage(relays: "local", type: .EVENT, message: "", event: signedEvent),
+                nEvent: signedEvent,
+                relayUrl: "local"
+            )
+            Task { @MainActor in
+                self.nEvent = signedEvent
+                self.configureChatPins()
+            }
+        }
+
+        if account.isNC {
+            RemoteSignerManager.shared.requestSignature(
+                forEvent: updatedEvent,
+                usingAccount: account,
+                whenSigned: didSign
+            )
+        }
+        else if let signedEvent = try? account.signEvent(updatedEvent) {
+            didSign(signedEvent)
+        }
     }
     
     func role(forPubkey pubkey: String) -> String? {
@@ -580,6 +630,26 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                 self.status = "live"
             }
         }
+    }
+}
+
+extension Array where Element == NostrTag {
+    var pinnedMessageIds: [String] {
+        var seen = Set<String>()
+        return compactMap { tag in
+            guard tag.type == "pinned",
+                  !tag.value.isEmpty,
+                  seen.insert(tag.value).inserted else { return nil }
+            return tag.value
+        }
+    }
+
+    func updatingPinnedMessage(_ messageId: String, pinned: Bool) -> [NostrTag] {
+        var updated = filter { !($0.type == "pinned" && $0.value == messageId) }
+        if pinned {
+            updated.append(NostrTag(["pinned", messageId]))
+        }
+        return updated
     }
 }
 

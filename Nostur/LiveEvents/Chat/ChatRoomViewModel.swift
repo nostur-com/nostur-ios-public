@@ -41,6 +41,8 @@ class ChatRoomViewModel: ObservableObject {
     
     @Published public var messages: [ChatRowContent] = []
     @Published public var topZaps: [NRChatConfirmedZap] = []
+    @Published private(set) var pinnedMessageIds: [String] = []
+    @Published private(set) var pinnedMessages: [NRChatMessage] = []
     @Published private(set) var hasOlderMessages = false
     private var bgMessages: [ChatRowContent] = []
     private var visibleMessageLimit = messagePageSize
@@ -53,6 +55,37 @@ class ChatRoomViewModel: ObservableObject {
     
     private var didStart = false
     private var isVisible = false
+    private var pinOwnerPubkey: String?
+    private var togglePinAction: ((String, Bool, CloudAccount) -> Void)?
+
+    @MainActor
+    public func configurePins(
+        ownerPubkey: String,
+        messageIds: [String],
+        onToggle: @escaping (String, Bool, CloudAccount) -> Void
+    ) {
+        pinOwnerPubkey = ownerPubkey
+        togglePinAction = onToggle
+        pinnedMessageIds = messageIds
+        refreshPinnedMessages()
+
+        let loadedIds = Set(bgMessages.map(\.id))
+        let missingIds = messageIds.filter { !loadedIds.contains($0) }
+        if !missingIds.isEmpty {
+            QueuedFetcher.shared.enqueue(ids: missingIds)
+        }
+    }
+
+    public func canManagePins(account: CloudAccount?) -> Bool {
+        guard let account else { return false }
+        return account.publicKey == pinOwnerPubkey && (account.privateKey != nil || account.isNC)
+    }
+
+    @MainActor
+    public func togglePin(messageId: String, account: CloudAccount) {
+        let shouldPin = !pinnedMessageIds.contains(messageId)
+        togglePinAction?(messageId, shouldPin, account)
+    }
     
     @MainActor
     public func start(aTag: String) throws {
@@ -192,6 +225,8 @@ class ChatRoomViewModel: ObservableObject {
         messages = []
         bgMessages = []
         topZaps = []
+        pinnedMessageIds = []
+        pinnedMessages = []
         visibleMessageLimit = Self.messagePageSize
         state = .initializing
         alreadyFetchedMissingPs = []
@@ -222,6 +257,16 @@ class ChatRoomViewModel: ObservableObject {
     private func publishVisibleMessages(from messages: [ChatRowContent]) {
         self.messages = Array(messages.prefix(visibleMessageLimit))
         self.hasOlderMessages = messages.count > visibleMessageLimit
+        refreshPinnedMessages()
+    }
+
+    @MainActor
+    private func refreshPinnedMessages() {
+        pinnedMessages = pinnedMessageIds.compactMap { pinnedId in
+            guard let row = bgMessages.first(where: { $0.id == pinnedId }),
+                  case .chatMessage(let message) = row else { return nil }
+            return message
+        }
     }
     
     private func fetchFromDB(_ onComplete: (() -> ())? = nil) {
@@ -252,7 +297,9 @@ class ChatRoomViewModel: ObservableObject {
             }
                         
             let rows: [ChatRowContent] = events
-                .filter { $0.inWoT }
+                // A room owner explicitly endorses pinned chat messages, so they
+                // remain visible even when their author is outside the local WoT.
+                .filter { $0.inWoT || self.pinnedMessageIds.contains($0.id) }
                 .compactMap { event in
                 let row: ChatRowContent? = if event.kind == 9735, let nZapRequest = Event.extractZapRequest(tags: event.tags()) {
                     ChatRowContent.chatConfirmedZap(
@@ -366,7 +413,7 @@ class ChatRoomViewModel: ObservableObject {
                 guard let event = message.event else { return }
                 guard !blocks().contains(event.publicKey) else { return }
                 guard event.kind == .chatMessage || event.kind == .zapNote else { return }
-                guard event.inWoT else { return }
+                guard event.inWoT || self.pinnedMessageIds.contains(event.id) else { return }
                 guard event.tags.first(where: { $0.type == "a" && $0.value == aTag }) != nil else { return }
 
                 if self.state != .ready {

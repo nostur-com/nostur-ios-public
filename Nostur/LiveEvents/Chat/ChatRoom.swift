@@ -81,6 +81,14 @@ struct ChatRoom: View {
                                                     .fill(theme.accent.opacity(0.18))
                                             }
                                         }
+                                        .overlay(alignment: .topTrailing) {
+                                            if chatVM.pinnedMessageIds.contains(rowContent.id) {
+                                                Image(systemName: "pin.fill")
+                                                    .font(.caption)
+                                                    .foregroundColor(theme.accent)
+                                                    .accessibilityLabel("Pinned message")
+                                            }
+                                        }
                                         .scaleEffect(x: 1, y: -1, anchor: .center)
                                         .id(rowContent.id)
                                     }
@@ -120,12 +128,23 @@ struct ChatRoom: View {
                     .safeAreaScroll()
                     .scaleEffect(x: 1, y: -1, anchor: .center)
                     .padding(.top, 20)
-                    .overlay(alignment: .topTrailing) {
-                        if !chatVM.topZaps.isEmpty {
-                            ChatTopZaps(messages: chatVM.topZaps)
-                                .padding(.top, 45)
-                                .padding(.trailing, 5)
+                    .overlay(alignment: .top) {
+                        VStack(alignment: .trailing, spacing: 4) {
+                            if !chatVM.pinnedMessages.isEmpty {
+                                PinnedChatMessages(
+                                    messages: chatVM.pinnedMessages,
+                                    canManage: chatVM.canManagePins(account: account),
+                                    onTap: { jumpToMessage($0, proxy: proxy) },
+                                    onUnpin: { chatVM.togglePin(messageId: $0, account: account) }
+                                )
+                            }
+
+                            if !chatVM.topZaps.isEmpty {
+                                ChatTopZaps(messages: chatVM.topZaps)
+                            }
                         }
+                        .padding(.top, 45)
+                        .padding(.horizontal, 5)
                     }
                     .onChange(of: chatVM.state) { newValue in
                         if newValue == .ready {
@@ -354,6 +373,76 @@ struct ChatRoom: View {
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
+    }
+}
+
+private struct PinnedChatMessages: View {
+    @Environment(\.theme) private var theme
+
+    let messages: [NRChatMessage]
+    let canManage: Bool
+    let onTap: (String) -> Void
+    let onUnpin: (String) -> Void
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 6) {
+                ForEach(messages) { message in
+                    HStack(spacing: 6) {
+                        Button {
+                            onTap(message.id)
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "pin.fill")
+                                    .font(.caption)
+                                    .foregroundColor(theme.accent)
+                                MiniPFP(pictureUrl: message.nrContact.pictureUrl, size: 20)
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(message.nrContact.anyName)
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(theme.accent)
+                                        .lineLimit(1)
+                                    Text(message.content ?? "Message")
+                                        .font(.footnote)
+                                        .foregroundColor(theme.primary)
+                                        .lineLimit(1)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+
+                        if canManage {
+                            Button {
+                                onUnpin(message.id)
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.caption2)
+                                    .foregroundColor(theme.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Unpin message")
+                        }
+                    }
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .modifier {
+                        if #available(iOS 26.0, *) {
+                            $0.glassEffect(.clear.tint(theme.listBackground.opacity(0.35)))
+                        }
+                        else {
+                            $0.background(theme.listBackground.opacity(0.92))
+                        }
+                    }
+                    .clipShape(Capsule())
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 44)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Pinned messages")
     }
 }
 
