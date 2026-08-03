@@ -228,6 +228,7 @@ struct ChatRoom: View {
                                     onRemoveReference: clearComposerReference,
                                     onSubmit: submitMessage
                                 )
+                                .frame(maxWidth: .infinity)
                             }
                         }
                     }

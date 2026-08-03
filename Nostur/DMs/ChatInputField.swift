@@ -135,10 +135,13 @@ struct ChatInputField: View {
                     onSubmit: onSubmit
                 )
             }
+            .frame(maxWidth: .infinity)
             .frame(height: min(highlightedEditorHeight, 120))
+            .clipped()
         }
         else if #available(iOS 16.0, *) {
             TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message, axis: .vertical)
+                .lineLimit(1...5)
         } else {
             TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message)
         }
@@ -163,8 +166,10 @@ private struct MentionHighlightingTextView: UIViewRepresentable {
         textView.font = .nosturBody()
         textView.adjustsFontForContentSizeCategory = true
         textView.isScrollEnabled = false
+        textView.alwaysBounceVertical = true
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
         textView.textContainer.lineFragmentPadding = 5
+        textView.textContainer.widthTracksTextView = true
         textView.returnKeyType = .send
         textView.tintColor = accentColor
         if #available(iOS 17.0, *) {
@@ -313,6 +318,7 @@ private struct MentionHighlightingTextView: UIViewRepresentable {
         func updateHeight(of textView: UITextView) {
             let fittingSize = CGSize(width: textView.bounds.width, height: .greatestFiniteMagnitude)
             let newHeight = max(36, textView.sizeThatFits(fittingSize).height)
+            textView.isScrollEnabled = newHeight > 120
             if abs(parent.height - newHeight) > 0.5 {
                 DispatchQueue.main.async {
                     self.parent.height = newHeight
