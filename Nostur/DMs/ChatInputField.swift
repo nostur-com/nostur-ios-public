@@ -14,6 +14,10 @@ struct ChatInputField: View {
     var attributedMessage: Binding<NSAttributedString>? = nil
     var startWithFocus: Bool = true
     var highlightMentions: Bool = false
+    var replyingTo: NRChatMessage? = nil
+    var quoting: NRChatMessage? = nil
+    var focusRequest: Int = 0
+    var onRemoveReference: (() -> Void)?
     var onSubmit: (() -> Void)?
     @State private var highlightedEditorHeight: CGFloat = 36
         
@@ -25,23 +29,36 @@ struct ChatInputField: View {
     
     var body: some View {
         HStack(alignment: .center) {
-            self.textField
-                .textInputAutocapitalization(.sentences)
-                .padding(10)
-                .padding(.trailing, 40)
-                .background(Color.clear)
-                .focused($focusedField, equals: .message)
-                .submitLabel(.send)
-                .onSubmit {
-                    if let onSubmit {
-                        onSubmit()
-                    }
-                    if IS_CATALYST {
-                        focusedField = .message
-                    }
+            VStack(spacing: 0) {
+                if let replyingTo {
+                    referencePreview(replyingTo)
+                        .padding(.horizontal, 10)
+                        .padding(.top, 10)
                 }
-            
-            
+
+                self.textField
+                    .textInputAutocapitalization(.sentences)
+                    .padding(10)
+                    .padding(.trailing, 40)
+                    .background(Color.clear)
+                    .focused($focusedField, equals: .message)
+                    .submitLabel(.send)
+                    .onSubmit {
+                        if let onSubmit {
+                            onSubmit()
+                        }
+                        if IS_CATALYST {
+                            focusedField = .message
+                        }
+                    }
+
+                if let quoting {
+                    referencePreview(quoting)
+                        .padding(.horizontal, 10)
+                        .padding(.bottom, 10)
+                }
+            }
+            .frame(maxWidth: .infinity)
                 .overlay(alignment: .bottomTrailing) {
                     Button("Send", systemImage: "arrow.up") {
                         if let onSubmit {
@@ -79,6 +96,24 @@ struct ChatInputField: View {
                 focusedField = .message 
             }
         }
+        .onChange(of: focusRequest) { _ in
+            focusedField = .message
+        }
+    }
+
+    private func referencePreview(_ message: NRChatMessage) -> some View {
+        EmbeddedChatMessage(nrChatMessage: message, isSentByCurrentUser: false)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .clipShape(.rect(cornerRadius: 14))
+            .overlay(alignment: .topTrailing) {
+                Button("Remove", systemImage: "xmark.circle.fill") {
+                    withAnimation {
+                        onRemoveReference?()
+                    }
+                }
+                .labelStyle(.iconOnly)
+                .offset(x: -3, y: 3)
+            }
     }
     
     @ViewBuilder

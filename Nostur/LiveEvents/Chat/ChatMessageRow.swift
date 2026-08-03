@@ -93,6 +93,18 @@ struct ChatMessageRow: View {
             else {
                 renderedMessage(widthInset: 10)
             }
+
+            if let quotedEvent = nrChat.quotedEvent {
+                Button {
+                    onReplyPreviewTap(quotedEvent.id)
+                } label: {
+                    EmbeddedChatMessage(nrChatMessage: quotedEvent, isSentByCurrentUser: false)
+                        .clipShape(.rect(cornerRadius: 14))
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 10)
+                .accessibilityHint("Jumps to the quoted message")
+            }
         }
     }
 

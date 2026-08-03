@@ -503,20 +503,36 @@ class ChatRoomViewModel: ObservableObject {
         let messagesById = Dictionary(uniqueKeysWithValues: chatMessages.map { ($0.id, $0) })
 
         for message in chatMessages {
-            guard let replyToId = message.replyToId, message.replyTo == nil else { continue }
-            if let parent = messagesById[replyToId] {
+            if let replyToId = message.replyToId,
+               message.replyTo == nil,
+               let parent = messagesById[replyToId] {
                 message.resolveReply(with: parent)
+            }
+            if let quoteId = message.quoteId,
+               message.quotedEvent == nil,
+               let quoted = messagesById[quoteId] {
+                message.resolveQuote(with: quoted)
             }
         }
 
         let alreadyRequestedIds = Set(replyFetches.values.flatMap { $0 })
-        let missingIds = Set(chatMessages.compactMap { message -> String? in
-            guard message.replyTo == nil,
-                  message.replyResolution == .loading,
-                  let replyToId = message.replyToId,
-                  messagesById[replyToId] == nil,
-                  !alreadyRequestedIds.contains(replyToId) else { return nil }
-            return replyToId
+        let missingIds = Set(chatMessages.flatMap { message -> [String] in
+            var ids: [String] = []
+            if message.replyTo == nil,
+               message.replyResolution == .loading,
+               let replyToId = message.replyToId,
+               messagesById[replyToId] == nil,
+               !alreadyRequestedIds.contains(replyToId) {
+                ids.append(replyToId)
+            }
+            if message.quotedEvent == nil,
+               message.quoteResolution == .loading,
+               let quoteId = message.quoteId,
+               messagesById[quoteId] == nil,
+               !alreadyRequestedIds.contains(quoteId) {
+                ids.append(quoteId)
+            }
+            return ids
         })
         guard !missingIds.isEmpty else { return }
 
@@ -528,10 +544,13 @@ class ChatRoomViewModel: ObservableObject {
     @MainActor
     private func markMissingRepliesUnavailable(_ ids: Set<String>) {
         for row in bgMessages {
-            guard case .chatMessage(let message) = row,
-                  let replyToId = message.replyToId,
-                  ids.contains(replyToId) else { continue }
-            message.markReplyUnavailable()
+            guard case .chatMessage(let message) = row else { continue }
+            if let replyToId = message.replyToId, ids.contains(replyToId) {
+                message.markReplyUnavailable()
+            }
+            if let quoteId = message.quoteId, ids.contains(quoteId) {
+                message.markQuoteUnavailable()
+            }
         }
     }
     

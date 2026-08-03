@@ -94,9 +94,10 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     @Published public var replyResolution: ReplyResolution = .none
     
     public var quoteId: String?
-    public var quotedEvent: NRChatMessage? {
+    @Published public var quotedEvent: NRChatMessage? {
         didSet { self.stopListeningForEmbeddedContent() }
     }
+    @Published public var quoteResolution: ReplyResolution = .none
 
     @Published public var reactions: [DMReaction] = []
     private var reactionIds: Set<String> = []
@@ -196,8 +197,10 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         }
         if let quoteId = nEvent.tags.first(where: { $0.type == "q" })?.value {
             self.quoteId = quoteId
+            self.quoteResolution = .loading
             if let quotedEvent = Event.fetchEvent(id: quoteId, context: context()) {
                 self.quotedEvent = NRChatMessage(nEvent: quotedEvent.toNEvent(), keyPair: keyPair)
+                self.quoteResolution = .resolved
             }
         }
         
@@ -250,6 +253,19 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     func markReplyUnavailable() {
         guard replyToId != nil, replyTo == nil else { return }
         replyResolution = .unavailable
+    }
+
+    @MainActor
+    func resolveQuote(with quoted: NRChatMessage) {
+        guard quoteId == quoted.id else { return }
+        quotedEvent = quoted
+        quoteResolution = .resolved
+    }
+
+    @MainActor
+    func markQuoteUnavailable() {
+        guard quoteId != nil, quotedEvent == nil else { return }
+        quoteResolution = .unavailable
     }
     
 

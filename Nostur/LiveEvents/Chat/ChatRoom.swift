@@ -25,6 +25,9 @@ struct ChatRoom: View {
     @State private var mentionSearchResults: [NRContact] = []
     @State private var mentionSearchCancellationToken: SearchCancellationToken?
     @State private var highlightedMessageId: String?
+    @State private var replyingTo: NRChatMessage?
+    @State private var quoting: NRChatMessage?
+    @State private var composerFocusRequest = 0
     
     @Namespace private var bottom
     
@@ -91,6 +94,38 @@ struct ChatRoom: View {
                                         }
                                         .scaleEffect(x: 1, y: -1, anchor: .center)
                                         .id(rowContent.id)
+                                        .contextMenu {
+                                            if case .chatMessage(let chatMessage) = rowContent {
+                                                Button("Reply", systemImage: "arrowshape.turn.up.left") {
+                                                    withAnimation {
+                                                        quoting = nil
+                                                        replyingTo = chatMessage
+                                                        composerFocusRequest += 1
+                                                    }
+                                                }
+
+                                                Button("Quote", systemImage: "quote.bubble") {
+                                                    withAnimation {
+                                                        replyingTo = nil
+                                                        quoting = chatMessage
+                                                        composerFocusRequest += 1
+                                                    }
+                                                }
+
+                                                if chatVM.canManagePins(account: account) {
+                                                    let isPinned = chatVM.pinnedMessageIds.contains(rowContent.id)
+                                                    Divider()
+                                                    Button {
+                                                        chatVM.togglePin(messageId: rowContent.id, account: account)
+                                                    } label: {
+                                                        Label(
+                                                            isPinned ? "Unpin message" : "Pin message",
+                                                            systemImage: isPinned ? "pin.slash" : "pin"
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                     .listRowInsets(.init())
                                     .listRowSeparator(.hidden)
@@ -187,6 +222,10 @@ struct ChatRoom: View {
                                     attributedMessage: $attributedMessage,
                                     startWithFocus: false,
                                     highlightMentions: true,
+                                    replyingTo: replyingTo,
+                                    quoting: quoting,
+                                    focusRequest: composerFocusRequest,
+                                    onRemoveReference: clearComposerReference,
                                     onSubmit: submitMessage
                                 )
                             }
@@ -251,8 +290,16 @@ struct ChatRoom: View {
         nEvent.kind = .chatMessage
         nEvent.tags.append(NostrTag(["a", aTag]))
 
+        if let replyingTo {
+            nEvent.tags.append(NostrTag(["e", replyingTo.id]))
+        }
+        else if let quoting {
+            nEvent.tags.append(NostrTag(["q", quoting.id]))
+        }
+
         // Mention p-tags so mentioned people get notifications
-        for pubkey in Set(atPtags + nostrNpubTags) {
+        let referencedPubkeys = [replyingTo?.pubkey, quoting?.pubkey].compactMap { $0 }
+        for pubkey in Set(atPtags + nostrNpubTags + referencedPubkeys) {
             nEvent.tags.append(NostrTag(["p", pubkey]))
         }
 
@@ -361,6 +408,12 @@ struct ChatRoom: View {
     private func clearMessage() {
         message = ""
         attributedMessage = NSAttributedString()
+        clearComposerReference()
+    }
+
+    private func clearComposerReference() {
+        replyingTo = nil
+        quoting = nil
     }
 
     private func startTimer() { // Make sure real time sub for chat messages stays active
