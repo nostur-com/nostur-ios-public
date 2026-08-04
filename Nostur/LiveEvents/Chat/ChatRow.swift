@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 struct ChatRow: View, Equatable {
     @Environment(\.theme) private var theme
@@ -49,6 +50,8 @@ struct ChatRow: View, Equatable {
                     selectedContact: $selectedContact,
                     onReplyPreviewTap: onReplyPreviewTap
                 )
+            case .roomPresence(let presence):
+                RoomPresenceRow(presence: presence)
         }
     }
 }
@@ -57,6 +60,7 @@ enum ChatRowContent: Identifiable {
     case chatMessage(NRChatMessage)
     case chatPendingZap(NRChatPendingZap)
     case chatConfirmedZap(NRChatConfirmedZap)
+    case roomPresence(NRRoomPresence)
     
     var pubkey: String {
         switch self {
@@ -66,6 +70,8 @@ enum ChatRowContent: Identifiable {
                 pendingZap.pubkey
             case .chatMessage(let nrChat):
                 nrChat.pubkey
+            case .roomPresence(let presence):
+                presence.pubkey
         }
     }
     
@@ -77,6 +83,8 @@ enum ChatRowContent: Identifiable {
                 pendingZap.createdAt
             case .chatMessage(let nrChat):
                 nrChat.createdAt
+            case .roomPresence(let presence):
+                presence.createdAt
         }
     }
     
@@ -88,6 +96,8 @@ enum ChatRowContent: Identifiable {
                 pendingZap.id
             case .chatMessage(let nrChat):
                 nrChat.id
+            case .roomPresence(let presence):
+                presence.id
         }
     }
 
@@ -102,6 +112,8 @@ enum ChatRowContent: Identifiable {
                 "pending:\(id):\(pendingZap.amount)"
             case .chatMessage:
                 "message:\(id)"
+            case .roomPresence:
+                "presence:\(id)"
         }
     }
     
@@ -113,6 +125,8 @@ enum ChatRowContent: Identifiable {
                 pendingZap.nxEvent
             case .chatMessage(let nrChat):
                 nrChat.nxEvent
+            case .roomPresence(let presence):
+                presence.nxEvent
         }
     }
     
@@ -124,6 +138,8 @@ enum ChatRowContent: Identifiable {
                 pendingZap.nrContact
             case .chatMessage(let nrChat):
                 nrChat.nrContact
+            case .roomPresence(let presence):
+                presence.nrContact
         }
     }
     
@@ -135,7 +151,53 @@ enum ChatRowContent: Identifiable {
                 pendingZap.nrContact.metadata_created_at == 0 ? Set([pendingZap.pubkey]) : Set<String>()
             case .chatMessage(let nrChat):
                 nrChat.missingPs
+            case .roomPresence(let presence):
+                presence.nrContact.metadata_created_at == 0 ? Set([presence.pubkey]) : Set<String>()
         }
+    }
+}
+
+struct NRRoomPresence {
+    let id: String
+    let pubkey: String
+    let createdAt: Date
+    let nxEvent: NXEvent
+    let nrContact: NRContact
+
+    init(event: NEvent) {
+        id = event.id
+        pubkey = event.publicKey
+        createdAt = Date(timeIntervalSince1970: TimeInterval(event.createdAt.timestamp))
+        nxEvent = NXEvent(pubkey: event.publicKey, kind: event.kind.id)
+        nrContact = NRContact.instance(of: event.publicKey)
+    }
+}
+
+private struct RoomPresenceRow: View {
+    @Environment(\.theme) private var theme
+    let presence: NRRoomPresence
+    @ObservedObject private var nrContact: NRContact
+
+    init(presence: NRRoomPresence) {
+        self.presence = presence
+        _nrContact = ObservedObject(wrappedValue: presence.nrContact)
+    }
+
+    var body: some View {
+        HStack {
+            MiniPFP(pictureUrl: nrContact.pictureUrl)
+
+            Text(nrContact.anyName)
+                .foregroundColor(theme.accent)
+                .lineLimit(1)
+
+            Text("joined")
+                .foregroundColor(theme.secondary)
+
+            Ago(presence.createdAt)
+                .foregroundColor(theme.secondary)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 

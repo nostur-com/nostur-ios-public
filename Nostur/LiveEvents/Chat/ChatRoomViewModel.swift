@@ -12,6 +12,7 @@ import Combine
 
 class ChatRoomViewModel: ObservableObject {
     private static let messagePageSize = 25
+    private static let presenceFreshnessWindow = 120
     
     enum Errors: Error {
         case invalidATagError(String)
@@ -36,6 +37,12 @@ class ChatRoomViewModel: ObservableObject {
         let sha256data = SHA256.hash(data: "hist-1311-\(pubkey)-\(dTag)".data(using: .utf8)!)
         return String("-DB-HIST-1311-" + String(bytes: sha256data.bytes).prefix(32))
     }
+
+    private var presenceSubId: String {
+        guard let pubkey, let dTag else { return "-OPEN-ROOMPRESENCE-??" }
+        let sha256data = SHA256.hash(data: "presence-10312-\(pubkey)-\(dTag)".data(using: .utf8)!)
+        return String("-OPEN-ROOMPRESENCE-" + String(bytes: sha256data.bytes).prefix(24))
+    }
     
     private var subscriptions = Set<AnyCancellable>()
     
@@ -48,6 +55,7 @@ class ChatRoomViewModel: ObservableObject {
     private var visibleMessageLimit = messagePageSize
     private var isLoadingOlderMessages = false
     private var replyFetches: [String: Set<String>] = [:]
+    private var presenceTracker = RoomPresenceTracker(freshnessWindow: presenceFreshnessWindow)
     
     private var renderMessages = PassthroughSubject<Void, Never>()
     private var fetchMissingPs = PassthroughSubject<Void, Never>()
@@ -167,11 +175,13 @@ class ChatRoomViewModel: ObservableObject {
             .store(in: &subscriptions)
         
         self.listenForChats()
+        self.listenForPresence()
         self.listenForBlocks()
         self.fetchFromDB { [weak self] in
             self?.fetchChatHistory()
         }
         self.updateLiveSubscription()
+        self.updatePresenceSubscription()
     }
     
     /// Called when chat UI reappears on an already-started VM.
@@ -200,6 +210,7 @@ class ChatRoomViewModel: ObservableObject {
         // Re-REQ after close is enqueued on ConnectionPool's barrier queue
         DispatchQueue.main.async { [weak self] in
             self?.updateLiveSubscription()
+            self?.updatePresenceSubscription()
         }
     }
     
@@ -231,6 +242,7 @@ class ChatRoomViewModel: ObservableObject {
         state = .initializing
         alreadyFetchedMissingPs = []
         replyFetches = [:]
+        presenceTracker.reset()
     }
 
     @MainActor
@@ -373,14 +385,62 @@ class ChatRoomViewModel: ObservableObject {
             req(cm, activeSubscriptionId: subId)
         }
     }
+
+    /// Room presence is intentionally receive-only. Publishing will be added behind
+    /// explicit user consent in a separate flow.
+    public func updatePresenceSubscription() {
+        guard let aTag else { return }
+        let subId = presenceSubId
+        let since = Int(Date.now.timeIntervalSince1970) - Self.presenceFreshnessWindow
+
+        if let cm = NostrEssentials
+            .ClientMessage(type: .REQ,
+                           subscriptionId: subId,
+                           filters: [Filters(
+                            kinds: [10312],
+                            tagFilter: TagFilter(tag: "a", values: [aTag]),
+                            since: since
+                           )]
+            ).json() {
+            req(cm, activeSubscriptionId: subId)
+        }
+    }
     
     @MainActor
     public func closeLiveSubscription() {
         guard pubkey != nil, dTag != nil else { return }
         // Must close the realtime id (and clear nreqSubscriptions) or reopen skips re-REQ
         ConnectionPool.shared.closeSubscription(realTimeSubId)
+        ConnectionPool.shared.closeSubscription(presenceSubId)
         // Also clear any leftover history sub if still open
         ConnectionPool.shared.closeSubscription(historySubId)
+    }
+
+
+    private func listenForPresence() {
+        guard let aTag else { return }
+        receiveNotification(.receivedMessage)
+            .sink { [weak self] notification in
+                guard let self, self.isVisible else { return }
+                let message = notification.object as! NXRelayMessage
+                guard let event = message.event,
+                      event.kind == .custom(10312),
+                      !blocks().contains(event.publicKey),
+                      event.tags.contains(where: { $0.type == "a" && $0.value == aTag }) else { return }
+
+                let now = Int(Date.now.timeIntervalSince1970)
+                guard self.presenceTracker.shouldShowPresence(
+                    pubkey: event.publicKey,
+                    timestamp: event.createdAt.timestamp,
+                    now: now
+                ) else { return }
+
+                let presence = ChatRowContent.roomPresence(NRRoomPresence(event: event))
+                self.bgMessages = (self.bgMessages + [presence]).sorted { $0.createdAt > $1.createdAt }
+                self.fetchMissingPs.send()
+                self.renderMessages.send()
+            }
+            .store(in: &subscriptions)
     }
     
     private func listenForChats() {
@@ -632,11 +692,13 @@ class ChatRoomViewModel: ObservableObject {
         // closeLiveSubscription is @MainActor; close realtime id from deinit via ConnectionPool
         let realtimeId = realTimeSubId
         let histId = historySubId
+        let presenceId = presenceSubId
         let ids = (bgMessages.isEmpty ? messages : bgMessages).map { $0.id }
         
         Task { @MainActor in
             ConnectionPool.shared.closeSubscription(realtimeId)
             ConnectionPool.shared.closeSubscription(histId)
+            ConnectionPool.shared.closeSubscription(presenceId)
         }
         
         guard !ids.isEmpty else { return }
@@ -645,6 +707,33 @@ class ChatRoomViewModel: ObservableObject {
                 Importer.shared.existingIds[id] = nil
             }
         }
+    }
+}
+
+struct RoomPresenceTracker {
+    let freshnessWindow: Int
+    private var latestTimestamps: [String: Int] = [:]
+
+    init(freshnessWindow: Int) {
+        self.freshnessWindow = freshnessWindow
+    }
+
+    mutating func shouldShowPresence(pubkey: String, timestamp: Int, now: Int) -> Bool {
+        let cutoff = now - freshnessWindow
+        guard timestamp > cutoff else { return false }
+
+        if let latestTimestamp = latestTimestamps[pubkey] {
+            guard timestamp > latestTimestamp else { return false }
+            latestTimestamps[pubkey] = timestamp
+            return latestTimestamp <= cutoff
+        }
+
+        latestTimestamps[pubkey] = timestamp
+        return true
+    }
+
+    mutating func reset() {
+        latestTimestamps.removeAll()
     }
 }
 
