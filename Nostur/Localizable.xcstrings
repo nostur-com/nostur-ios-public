@@ -18160,6 +18160,9 @@
         }
       }
     },
+    "Earlier replies are unavailable." : {
+      "comment" : "Shown between a thread root and a visible reply when intermediate private or missing replies cannot be fetched"
+    },
     "Only connect to additional relays when a VPN is active" : {
       "localizations" : {
         "es" : {
@@ -28377,7 +28380,7 @@
       }
     },
     "Try to fetch" : {
-      "comment" : "Button to fetch missing reply in thread",
+      "comment" : "Button to fetch missing reply in thread\nButton to retry fetching a missing reply in a thread",
       "localizations" : {
         "es" : {
           "stringUnit" : {

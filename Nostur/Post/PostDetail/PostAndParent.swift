@@ -26,6 +26,8 @@ struct PostAndParent: View {
     @State private var timerTask: Task<Void, Never>?
     @State private var didLoad = false
     @State private var didFetchParent = false
+    @State private var parentLookupTimedOut = false
+    @State private var locallyResolvedReplyToRoot: NRPost? = nil
     
     init(nrPost: NRPost, navTitleHidden: Bool = false, connect: ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
@@ -60,48 +62,29 @@ struct PostAndParent: View {
                 }
             }
             else if let replyToPostOrZapId = nrPost.replyToPostOrZapId {
-                CenteredProgressView()
-                    .onAppear {
-                        guard !didFetchParent else { return }
-                        didFetchParent = true
-                        
-                        bg().perform {
-                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
-                        }
-                        
-                        if replyToPostOrZapId.count > 64 && replyToPostOrZapId.contains(":") {
-                            QueuedFetcher.shared.enqueue(aTag: replyToPostOrZapId)
-                        }
-                        else {
-                            QueuedFetcher.shared.enqueue(id: replyToPostOrZapId)
-                        }
-                        
-                        timerTask = Task {
-                            do {
-                                try await Task.sleep(nanoseconds: UInt64(2.25) * NSEC_PER_SEC)
-                                nrPost.loadReplyTo()
-                                if nrPost.replyTo == nil {
-                                    // try search relays
-                                    if replyToPostOrZapId.count > 64 && replyToPostOrZapId.contains(":"), let aTag = try? ATag(replyToPostOrZapId) {
-                                        req(RM.getArticle(pubkey: aTag.pubkey, kind: Int(aTag.kind), definition: aTag.definition))
-                                    }
-                                    else {
-                                        req(RM.getEvent(id: replyToPostOrZapId), relayType: .SEARCH)
-                                    }
-                                    
-                                    // try relay hint
-                                    guard vpnGuardOK() else { return }
-                                    fetchEventFromRelayHint(replyToPostOrZapId, fastTags: nrPost.fastTags)
-                                }
-                            }
-                            catch { }
-                        }
+                Group {
+                    if let replyToRoot = distinctReplyToRoot(from: replyToPostOrZapId) {
+                        PostAndParent(nrPost: replyToRoot, connect: .bottom)
+                            .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
+                            .padding(.bottom, 10)
+                            .background(theme.listBackground)
                     }
-                    .background(theme.listBackground)
-                    .onDisappear {
-                        timerTask?.cancel()
-                        timerTask = nil
+
+                    if parentLookupTimedOut {
+                        missingReplyConnector
                     }
+                    else {
+                        CenteredProgressView()
+                    }
+                }
+                .onAppear {
+                    startParentLookup(replyToPostOrZapId)
+                }
+                .background(theme.listBackground)
+                .onDisappear {
+                    timerTask?.cancel()
+                    timerTask = nil
+                }
             }
             // MARK: A POST 
             VStack(alignment: .leading, spacing: 0) {
@@ -176,6 +159,138 @@ struct PostAndParent: View {
     private var replyButton: some View {
         Image("ReplyIcon")
         Text("Add comment")
+    }
+
+    @ViewBuilder
+    private var missingReplyConnector: some View {
+        HStack(spacing: 10) {
+            Color.clear
+                .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 44)
+
+            Text(String(localized: "Earlier replies are unavailable.", comment: "Shown between a thread root and a visible reply when intermediate private or missing replies cannot be fetched"))
+                .foregroundColor(theme.secondary)
+
+            Spacer(minLength: 0)
+
+            Button(String(localized: "Try to fetch", comment: "Button to retry fetching a missing reply in a thread")) {
+                retryParentLookup()
+            }
+            .buttonStyle(.plain)
+            .foregroundColor(theme.accent)
+            .disabled(nxViewingContext.contains(.preview))
+        }
+        .font(.footnote)
+        .padding(.vertical, 8)
+        .overlay(alignment: .leading) {
+            GeometryReader { geometry in
+                Path { path in
+                    path.move(to: CGPoint(x: 0.5, y: 0))
+                    path.addLine(to: CGPoint(x: 0.5, y: geometry.size.height))
+                }
+                .stroke(
+                    theme.lineColor,
+                    style: StrokeStyle(lineWidth: 1, dash: [4, 4])
+                )
+            }
+            .frame(width: 1)
+            .offset(x: THREAD_LINE_OFFSET)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func distinctReplyToRoot(from replyToPostOrZapId: String) -> NRPost? {
+        guard nrPost.replyToRootId != replyToPostOrZapId else { return nil }
+        return nrPost.replyToRoot ?? locallyResolvedReplyToRoot
+    }
+
+    private func startParentLookup(_ replyToPostOrZapId: String) {
+        guard !didFetchParent else { return }
+        didFetchParent = true
+        parentLookupTimedOut = false
+
+        bg().perform {
+            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
+        }
+
+        enqueueReference(replyToPostOrZapId)
+        if let replyToRootId = nrPost.replyToRootId, replyToRootId != replyToPostOrZapId {
+            resolveReplyToRootFromLocalStorage(replyToRootId)
+            enqueueReference(replyToRootId)
+        }
+
+        timerTask?.cancel()
+        timerTask = Task {
+            do {
+                try await Task.sleep(nanoseconds: UInt64(2.25) * NSEC_PER_SEC)
+                nrPost.loadReplyTo()
+
+                guard nrPost.replyTo == nil else { return }
+                searchForReference(replyToPostOrZapId)
+                if let replyToRootId = nrPost.replyToRootId, replyToRootId != replyToPostOrZapId, nrPost.replyToRoot == nil {
+                    searchForReference(replyToRootId)
+                }
+
+                try await Task.sleep(nanoseconds: UInt64(4) * NSEC_PER_SEC)
+                nrPost.loadReplyTo()
+                if nrPost.replyTo == nil {
+                    if let replyToRootId = nrPost.replyToRootId, replyToRootId != replyToPostOrZapId {
+                        resolveReplyToRootFromLocalStorage(replyToRootId)
+                    }
+                    parentLookupTimedOut = true
+                }
+            }
+            catch { }
+        }
+    }
+
+    private func retryParentLookup() {
+        timerTask?.cancel()
+        timerTask = nil
+        didFetchParent = false
+        if let replyToPostOrZapId = nrPost.replyToPostOrZapId {
+            startParentLookup(replyToPostOrZapId)
+        }
+    }
+
+    private func enqueueReference(_ reference: String) {
+        if reference.count > 64 && reference.contains(":") {
+            QueuedFetcher.shared.enqueue(aTag: reference)
+        }
+        else {
+            QueuedFetcher.shared.enqueue(id: reference)
+        }
+    }
+
+    private func resolveReplyToRootFromLocalStorage(_ replyToRootId: String) {
+        let bgContext = bg()
+        bgContext.perform {
+            let rootEvent: Event? = if replyToRootId.contains(":") {
+                Event.fetchReplacableEvent(aTag: replyToRootId, context: bgContext)
+            }
+            else {
+                Event.fetchEvent(id: replyToRootId, context: bgContext)
+            }
+
+            guard let rootEvent else { return }
+            let rootPost = NRPost(event: rootEvent, withReplyTo: true)
+            DispatchQueue.main.async {
+                guard nrPost.replyToRootId == replyToRootId else { return }
+                locallyResolvedReplyToRoot = rootPost
+            }
+        }
+    }
+
+    private func searchForReference(_ reference: String) {
+        if reference.count > 64 && reference.contains(":"), let aTag = try? ATag(reference) {
+            req(RM.getArticle(pubkey: aTag.pubkey, kind: Int(aTag.kind), definition: aTag.definition))
+        }
+        else {
+            req(RM.getEvent(id: reference), relayType: .SEARCH)
+        }
+
+        if vpnGuardOK() {
+            fetchEventFromRelayHint(reference, fastTags: nrPost.fastTags)
+        }
     }
     
     private func fetchMentions() async {
