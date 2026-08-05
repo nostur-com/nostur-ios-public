@@ -35,6 +35,7 @@ struct Search: View {
     @State var searchMaterializationTask: Task<Void, Never>? = nil
     @State var backlog = Backlog(timeout: 12, backlogDebugName: "Search")
     @ObservedObject var settings: SettingsStore = .shared
+    @ObservedObject private var searchNavigation = SearchNavigationModel.shared
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     let containerID: String
@@ -236,6 +237,14 @@ struct Search: View {
                         task.process()
                     }
                 }
+            }
+            .onReceive(searchNavigation.$pendingRequest.compactMap { $0 }) { request in
+                // Search columns have their own container IDs. Only the primary
+                // Search tab should consume app-wide search navigation.
+                guard containerID == "Search" else { return }
+                navPath.removeLast(navPath.count)
+                searchText = request.query
+                searchNavigation.acknowledge(request)
             }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination

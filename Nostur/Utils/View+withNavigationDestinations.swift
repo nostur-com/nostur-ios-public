@@ -476,19 +476,12 @@ func handleUrl(_ url: URL) {
 #if DEBUG
         L.og.info("nostr: nevent1/nprofile1: \(nostrSharable[0][2])\(nostrSharable[0][3])")
 #endif
-        setSelectedTab("Search")
         if nostrSharable[0][2] == "nevent1" {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                // TODO: Make proper loading into Search tab, instead of hoping the tab has loaded in time for .onReceive(receiveNotification(.navigateTo))
-                navigateTo(Nevent1Path(nevent1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"), context: "Search")
-            }
+            SearchNavigationModel.shared.openSearch("\(nostrSharable[0][2])\(nostrSharable[0][3])")
             return
         }
         if nostrSharable[0][2] == "nprofile1" {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                // TODO: Make proper loading into Search tab, instead of hoping the tab has loaded in time for .onReceive(receiveNotification(.navigateTo))
-                navigateTo(Nprofile1Path(nprofile1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"), context: "Search")
-            }
+            SearchNavigationModel.shared.openSearch("\(nostrSharable[0][2])\(nostrSharable[0][3])")
             return
         }
     }
@@ -539,10 +532,7 @@ func handleUrl(_ url: URL) {
 #if DEBUG
         L.og.info("nostur: hashtag: \(nosturHashtag[0][2])")
 #endif
-        setSelectedTab("Search")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]), context: "Search")
-        }
+        SearchNavigationModel.shared.openSearch("#\(nosturHashtag[0][2])")
         return
     }
 
