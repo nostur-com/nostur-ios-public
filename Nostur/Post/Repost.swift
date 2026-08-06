@@ -10,6 +10,7 @@ import SwiftUI
 struct Repost: View {
     @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.containerID) private var containerID
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var noteRowAttributes: NoteRowAttributes
     private var hideFooter = true // For rendering in NewReply
@@ -18,6 +19,7 @@ struct Repost: View {
     private let fullWidth: Bool
     private let isReply: Bool // is reply on PostDetail (needs 2*10 less box width)
     private let isDetail: Bool
+    private let isEmbedded: Bool
     private let grouped: Bool
     
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
@@ -28,7 +30,7 @@ struct Repost: View {
 //    @State private var kind6Source: String?
 //#endif
     
-    init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, grouped: Bool = false) {
+    init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, grouped: Bool = false) {
         self.nrPost = nrPost
         self.noteRowAttributes = nrPost.noteRowAttributes
         self.hideFooter = hideFooter
@@ -37,6 +39,7 @@ struct Repost: View {
         self.fullWidth = fullWidth
         self.isReply = isReply
         self.isDetail = isDetail
+        self.isEmbedded = isEmbedded
         self.grouped = grouped
         _mutedWords = State(initialValue: AppState.shared.bgAppState.mutedWords)
     }
@@ -46,50 +49,31 @@ struct Repost: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading) {
-            RepostHeader(nrContact: nrPost.contact)
-                .onAppear { self.enqueue() }
-                .onDisappear { self.dequeue() }
-            
-            if let firstQuote = noteRowAttributes.firstQuote {
-                // CASE - WE HAVE REPOSTED POST ALREADY
-                if firstQuote.blocked || firstQuote.muted || (!notMutedWords(in: firstQuote.plainText, mutedWords: mutedWords) && !revealMutedFirstQuoteByWords) {
-                    HStack {
-                        if firstQuote.blocked {
-                            Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
-                        }
-                        else if firstQuote.muted {
-                            Text("_Muted post hidden_", comment: "Message shown when a post is muted")
-                        }
-                        else {
-                            Text("_Muted post hidden_", comment: "Message shown when a quoted post is hidden because it matches muted words")
-                        }
-                        Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) {
-                            nrPost.unblockFirstQuote()
-                            nrPost.unmuteFirstQuote()
-                            revealMutedFirstQuoteByWords = true
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                    .padding(.leading, 8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                    )
-                    .hCentered()
+        Group {
+            if isEmbedded {
+                VStack(alignment: .leading, spacing: 6) {
+                    RepostHeader(nrContact: nrPost.contact, nrPost: nrPost, embedded: true)
+                    repostedPost(embedded: true)
                 }
-                else {
-                    KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail: isDetail, connect: connect, forceAutoload: shouldForceAutoLoad)
-                        .environment(\.repostMenuTarget, nrPost)
-
-                    // Extra padding reposted long form, because normal repost/post has 10, but longform uses 20
-                    // so add the extra 10 here
-                        .padding(.horizontal, firstQuote.kind == 30023 ? 10 : 0)
-                }
+                .padding(.horizontal, 10)
+                .padding(.top, 10)
+                .padding(.bottom, 5)
+                .background(
+                    theme.listBackground
+                        .cornerRadius(8)
+                        .onTapGesture(perform: navigateToRepostedPost)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.lineColor, lineWidth: 1)
+                )
+                .clipped()
             }
             else {
-                theme.background
-                    .frame(height: 475)
+                VStack(alignment: .leading) {
+                    RepostHeader(nrContact: nrPost.contact)
+                    repostedPost(embedded: false)
+                }
             }
         }
         .overlay {
@@ -173,6 +157,48 @@ struct Repost: View {
             revealMutedFirstQuoteByWords = false
             mutedWords = AppState.shared.bgAppState.mutedWords
         }
+        .onAppear { self.enqueue() }
+        .onDisappear { self.dequeue() }
+    }
+
+    @ViewBuilder
+    private func repostedPost(embedded: Bool) -> some View {
+        if let firstQuote = noteRowAttributes.firstQuote {
+            if firstQuote.blocked || firstQuote.muted || (!notMutedWords(in: firstQuote.plainText, mutedWords: mutedWords) && !revealMutedFirstQuoteByWords) {
+                HStack {
+                    if firstQuote.blocked {
+                        Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                    }
+                    else if firstQuote.muted {
+                        Text("_Muted post hidden_", comment: "Message shown when a post is muted")
+                    }
+                    else {
+                        Text("_Muted post hidden_", comment: "Message shown when a quoted post is hidden because it matches muted words")
+                    }
+                    Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) {
+                        nrPost.unblockFirstQuote()
+                        nrPost.unmuteFirstQuote()
+                        revealMutedFirstQuoteByWords = true
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(.leading, 8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+                .hCentered()
+            }
+            else {
+                KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail: isDetail, isEmbedded: embedded, connect: connect, forceAutoload: shouldForceAutoLoad)
+                    .environment(\.repostMenuTarget, nrPost)
+                    .padding(.horizontal, !embedded && firstQuote.kind == 30023 ? 10 : 0)
+            }
+        }
+        else {
+            theme.background
+                .frame(height: embedded ? 120 : 475)
+        }
     }
     
     private func enqueue() {
@@ -189,6 +215,16 @@ struct Repost: View {
             QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
         }
     }
+
+    private func navigateToRepostedPost() {
+        guard !nxViewingContext.contains(.preview) else { return }
+        if let firstQuote = noteRowAttributes.firstQuote {
+            navigateTo(firstQuote, context: containerID)
+        }
+        else if let firstQuoteId = nrPost.firstQuoteId {
+            navigateTo(NotePath(id: firstQuoteId), context: containerID)
+        }
+    }
 }
 
 struct RepostHeader: View {
@@ -196,6 +232,8 @@ struct RepostHeader: View {
 
     @ObservedObject public var nrContact: NRContact
     public var iconName: String = "arrow.2.squarepath"
+    public var nrPost: NRPost? = nil
+    public var embedded = false
     
     var body: some View {
         HStack(spacing: 4) {
@@ -217,11 +255,24 @@ struct RepostHeader: View {
             
             PossibleImposterLabelView(nrContact: nrContact)
                 .layoutPriority(2)
+
+            if let nrPost {
+                Group {
+                    Text(verbatim: "·")
+                    Ago(nrPost.createdAt)
+                        .equatable()
+                    if let via = nrPost.via {
+                        Text("· via \(via)")
+                    }
+                }
+                .font(.subheadline)
+                .lineLimit(1)
+            }
         }
         .foregroundColor(.gray)
         .onTapGesture {
             navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
         }
-        .padding(.leading, 30)
+        .padding(.leading, embedded ? 0 : 30)
     }
 }
