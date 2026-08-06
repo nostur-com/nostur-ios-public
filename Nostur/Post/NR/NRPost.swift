@@ -650,6 +650,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             self.highlightAttributes = HighlightAttributes(contact: highlightContact, authorPubkey: highlightAuthorPubkey, url: highlightUrl)
         case 30000, 39089:
             eventTitle = event.eventTitle
+
+        case 30009:
+            let nBadge = event.toNEvent()
+            eventTitle = nBadge.badgeName?.value ?? event.dTag
+            eventSummary = nBadge.badgeDescription?.value
+            eventImageUrl = badgeArtworkURL(for: nBadge, targetWidth: 128)
             
         case 30023, 30311:
             eventId = event.eventId

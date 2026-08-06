@@ -112,6 +112,9 @@ struct ArticleByNaddr: View {
                 if nrPost.kind == 30023 {
                     ArticleView(nrPost, isDetail: true, navTitleHidden: navTitleHidden)
                 }
+                else if nrPost.kind == 30009 {
+                    BadgeDetailFromNRPost(nrPost: nrPost)
+                }
                 else {
                     PostDetailView(nrPost: nrPost, navTitleHidden: navTitleHidden)
                 }

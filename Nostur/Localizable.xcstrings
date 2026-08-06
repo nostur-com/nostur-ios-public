@@ -3243,6 +3243,9 @@
     "50 GB" : {
       "shouldTranslate" : false
     },
+    "99+" : {
+
+    },
     "100 MB" : {
       "shouldTranslate" : false
     },
@@ -3361,6 +3364,9 @@
           }
         }
       }
+    },
+    "About badge publishing" : {
+
     },
     "Accept" : {
       "comment" : "Button to accept terms and conditions",
@@ -4525,6 +4531,9 @@
         }
       }
     },
+    "Advanced" : {
+
+    },
     "After the specified time messages will be deleted. This is a collaborative feature and only works if all participants have it enabled and use relays that support it (NIP-40 Expiration Timestamp)." : {
       "localizations" : {
         "es" : {
@@ -4546,6 +4555,9 @@
           }
         }
       }
+    },
+    "ago" : {
+
     },
     "AirPlay and output" : {
 
@@ -4952,6 +4964,9 @@
         }
       }
     },
+    "Artwork" : {
+
+    },
     "auth required" : {
       "comment" : "Small label to indicate auth is required",
       "localizations" : {
@@ -5219,6 +5234,15 @@
         }
       }
     },
+    "Available badges" : {
+
+    },
+    "Award history" : {
+
+    },
+    "Award recipients" : {
+
+    },
     "Award to" : {
       "comment" : "Navigation title of screen where you choose who to award badge to",
       "localizations" : {
@@ -5265,6 +5289,12 @@
         }
       }
     },
+    "Awarded by" : {
+
+    },
+    "Awarded to" : {
+
+    },
     "Awarded to %lld people" : {
       "comment" : "Text showing how many badges have been awarded",
       "localizations" : {
@@ -5290,6 +5320,7 @@
     },
     "Awarded to %lld people on %@" : {
       "comment" : "Showing how many people received this badge on which date",
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -5334,8 +5365,20 @@
         }
       }
     },
+    "Badge" : {
+
+    },
+    "Badge address" : {
+
+    },
+    "Badge identifier" : {
+
+    },
+    "Badge name and description" : {
+
+    },
     "Badges" : {
-      "comment" : "Navigation title of Bagdes screen\nSide bar navigation button",
+      "comment" : "Side bar navigation button",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -5941,6 +5984,7 @@
       }
     },
     "by" : {
+      "comment" : "Prefix before badge issuer name",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -6168,6 +6212,9 @@
           }
         }
       }
+    },
+    "Change photo" : {
+
     },
     "chat" : {
       "comment" : "Label next to time indicating a live chat mention notification"
@@ -6477,6 +6524,12 @@
         }
       }
     },
+    "Choose file" : {
+
+    },
+    "Choose from Files" : {
+
+    },
     "Choose from library" : {
       "localizations" : {
         "es" : {
@@ -6499,6 +6552,9 @@
         }
       }
     },
+    "Choose from Photos" : {
+
+    },
     "Choose one or more public relays you read from so you can receive notifications when others mention you." : {
       "localizations" : {
         "es" : {
@@ -6520,6 +6576,9 @@
           }
         }
       }
+    },
+    "Choose photo" : {
+
     },
     "Choose relays for private messages" : {
       "localizations" : {
@@ -6913,6 +6972,7 @@
     },
     "Code (bravery, verified_human, early_adoptor)" : {
       "comment" : "Label for input field for badge code on Badge creation screen",
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -7115,6 +7175,12 @@
         }
       }
     },
+    "Community Builder" : {
+
+    },
+    "community_builder" : {
+
+    },
     "Configure" : {
       "comment" : "Navigation title for screen to create a new feed",
       "localizations" : {
@@ -7137,6 +7203,9 @@
           }
         }
       }
+    },
+    "Configure a media upload service in Settings before uploading badge artwork." : {
+
     },
     "Configure announced relays" : {
       "localizations" : {
@@ -8121,6 +8190,9 @@
         }
       }
     },
+    "Copy %@" : {
+
+    },
     "Copy image URL" : {
       "localizations" : {
         "es" : {
@@ -8393,6 +8465,9 @@
         }
       }
     },
+    "Could not award badge" : {
+
+    },
     "Could not convert data" : {
       "comment" : "Error message",
       "localizations" : {
@@ -8415,6 +8490,9 @@
           }
         }
       }
+    },
+    "Could not create badge" : {
+
     },
     "Could not create private zap request" : {
       "comment" : "Error message",
@@ -8569,6 +8647,9 @@
         }
       }
     },
+    "Could not publish badges" : {
+
+    },
     "Could not send NWC request" : {
       "comment" : "Error message",
       "extractionState" : "stale",
@@ -8616,6 +8697,9 @@
         }
       }
     },
+    "Could not update badge" : {
+
+    },
     "Counters for replies, likes, zaps etc." : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -8661,6 +8745,9 @@
         }
       }
     },
+    "Create a badge, then award it from its detail screen." : {
+
+    },
     "Create a short video" : {
       "localizations" : {
         "es" : {
@@ -8682,6 +8769,9 @@
           }
         }
       }
+    },
+    "Create badge" : {
+
     },
     "Create new account" : {
       "comment" : "Button to create a new account\nButton to start creating a new account\nNavigation title of create new account screen",
@@ -8707,7 +8797,7 @@
       }
     },
     "Create new badge" : {
-      "comment" : "Button to create a new badge\nNavigation title for Badge creation screen",
+      "comment" : "Navigation title for Badge creation screen",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -9827,6 +9917,12 @@
         }
       }
     },
+    "Discard changes" : {
+
+    },
+    "Discard this badge?" : {
+
+    },
     "Disconnect" : {
       "comment" : "Button to disconnect NWC (Nostr Wallet Connection)\nButton to disconnect from relay",
       "localizations" : {
@@ -10346,6 +10442,9 @@
         }
       }
     },
+    "Drag while editing to change their order." : {
+
+    },
     "Drop image..." : {
       "localizations" : {
         "es" : {
@@ -10413,6 +10512,9 @@
         }
       }
     },
+    "Earlier replies are unavailable." : {
+      "comment" : "Shown between a thread root and a visible reply when intermediate private or missing replies cannot be fetched"
+    },
     "earlyLoad" : {
       "localizations" : {
         "es" : {
@@ -10429,6 +10531,9 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "Edit badge" : {
+
     },
     "Edit muted word" : {
       "comment" : "Navigation title for screen to edit muted word",
@@ -11247,6 +11352,12 @@
           }
         }
       }
+    },
+    "Event details" : {
+
+    },
+    "Event ID" : {
+
     },
     "eventId: %@" : {
       "localizations" : {
@@ -13281,6 +13392,7 @@
     },
     "Image URL (1024x1024)" : {
       "comment" : "Label for input field for badge image on Badge creation screen",
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -13686,7 +13798,13 @@
         }
       }
     },
+    "joined" : {
+
+    },
     "Jumps to the original message" : {
+
+    },
+    "Jumps to the quoted message" : {
 
     },
     "just now" : {
@@ -13733,6 +13851,9 @@
           }
         }
       }
+    },
+    "Keep editing" : {
+
     },
     "Keep files permanently" : {
       "localizations" : {
@@ -16269,7 +16390,7 @@
       }
     },
     "Name" : {
-      "comment" : "Label for input field for badge name on Badge creation screen\nLabel of Name text field on Create new account screen",
+      "comment" : "Label of Name text field on Create new account screen",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -16514,6 +16635,9 @@
           }
         }
       }
+    },
+    "New badge" : {
+
     },
     "New contacts list feed" : {
       "localizations" : {
@@ -17177,6 +17301,9 @@
         }
       }
     },
+    "No additional valid badge awards found" : {
+
+    },
     "No articles found from your follow list in selected time frame." : {
       "localizations" : {
         "es" : {
@@ -17198,6 +17325,12 @@
           }
         }
       }
+    },
+    "No badges issued" : {
+
+    },
+    "No badges selected for your profile" : {
+
     },
     "No Blossom server configured. Please configure a Blossom server in Nostur settings to upload images." : {
       "localizations" : {
@@ -17364,6 +17497,9 @@
           }
         }
       }
+    },
+    "No verified wearers found" : {
+
     },
     "non-https media blocked" : {
       "comment" : "Displayed when an image in a post is blocked",
@@ -17639,6 +17775,9 @@
           }
         }
       }
+    },
+    "Nostur crops the image to a square and creates the required sizes automatically." : {
+
     },
     "Nostur does not have permissions to set a reminder" : {
       "comment" : "Error message",
@@ -18159,9 +18298,6 @@
           }
         }
       }
-    },
-    "Earlier replies are unavailable." : {
-      "comment" : "Shown between a thread root and a visible reply when intermediate private or missing replies cannot be fetched"
     },
     "Only connect to additional relays when a VPN is active" : {
       "localizations" : {
@@ -18928,6 +19064,9 @@
         }
       }
     },
+    "Pin message" : {
+
+    },
     "Pin on tab bar" : {
       "comment" : "Toggle to pin/unpin a feed on tab bar",
       "localizations" : {
@@ -19062,6 +19201,12 @@
           }
         }
       }
+    },
+    "Pinned message" : {
+
+    },
+    "Pinned messages" : {
+
     },
     "Please read these Terms and Conditions (\"Terms\", \"Terms and Conditions\") carefully before using Nostur (the \"App\") operated by the independent developer (\"Developer\")." : {
       "comment" : "Terms and conditions paragraph",
@@ -19804,6 +19949,9 @@
         }
       }
     },
+    "Preparing artwork…" : {
+
+    },
     "Preparing video..." : {
       "localizations" : {
         "es" : {
@@ -20447,6 +20595,7 @@
       }
     },
     "Publish selected badges on profile" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -20596,6 +20745,9 @@
           }
         }
       }
+    },
+    "Publishing badge…" : {
+
     },
     "Purple" : {
       "localizations" : {
@@ -21248,6 +21400,9 @@
           }
         }
       }
+    },
+    "Recipients" : {
+
     },
     "Recommended by" : {
       "localizations" : {
@@ -22077,6 +22232,9 @@
         }
       }
     },
+    "Remove artwork" : {
+
+    },
     "Remove audio" : {
       "localizations" : {
         "es" : {
@@ -22165,6 +22323,9 @@
           }
         }
       }
+    },
+    "Remove from your profile" : {
+
     },
     "Remove imposter label" : {
       "comment" : "Button to remove 'possible imposter' label from a contact",
@@ -22321,6 +22482,9 @@
           }
         }
       }
+    },
+    "Reply" : {
+
     },
     "Reply anonymously" : {
       "localizations" : {
@@ -23464,6 +23628,9 @@
           }
         }
       }
+    },
+    "Save profile badges" : {
+
     },
     "Save to file..." : {
       "localizations" : {
@@ -25253,6 +25420,9 @@
       },
       "shouldTranslate" : false
     },
+    "Show on your profile" : {
+
+    },
     "Show post stats on timeline" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -25546,6 +25716,9 @@
           }
         }
       }
+    },
+    "Shown on your profile" : {
+
     },
     "Shows 'Shared from Nostur' caption when sharing post screenshots" : {
       "comment" : "Setting on settings screen",
@@ -26937,6 +27110,9 @@
         }
       }
     },
+    "The artwork upload could not be authorized." : {
+
+    },
     "The database could not be loaded." : {
       "localizations" : {
         "es" : {
@@ -27117,6 +27293,18 @@
         }
       }
     },
+    "The identifier “%@” already exists. Publishing will replace its name, description, and artwork." : {
+
+    },
+    "The identifier cannot be changed because it is the permanent address of this badge." : {
+
+    },
+    "The media service did not return a usable image URL." : {
+
+    },
+    "The media service took too long to process the artwork." : {
+
+    },
     "The profile above was found to be similar to one below that you are already following:" : {
       "localizations" : {
         "es" : {
@@ -27154,6 +27342,12 @@
           }
         }
       }
+    },
+    "The selected image could not be prepared." : {
+
+    },
+    "The selected image could not be read." : {
+
     },
     "The text content of the post to publish." : {
       "localizations" : {
@@ -27373,6 +27567,15 @@
         }
       }
     },
+    "This award event has no valid recipients." : {
+
+    },
+    "This badge or its recipients are invalid." : {
+
+    },
+    "This becomes part of the badge’s permanent Nostr address. Changing it creates a different badge." : {
+
+    },
     "This can be caused by the receiver switching to a different lightning address" : {
       "localizations" : {
         "es" : {
@@ -27417,6 +27620,9 @@
           }
         }
       }
+    },
+    "This identifier is already used by “%@”. Creating will update that badge." : {
+
     },
     "This list is public" : {
       "localizations" : {
@@ -27686,6 +27892,7 @@
     },
     "Thumbnail URL (256x256)" : {
       "comment" : "Label for input field for badge image on Badge creation screen",
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -28571,6 +28778,9 @@
         }
       }
     },
+    "Unable to fetch badge" : {
+
+    },
     "Unable to fetch contacts" : {
       "localizations" : {
         "es" : {
@@ -28725,6 +28935,9 @@
           }
         }
       }
+    },
+    "Unable to open badge" : {
+
     },
     "Unavailable" : {
       "extractionState" : "stale",
@@ -29006,6 +29219,9 @@
         }
       }
     },
+    "Unnamed badge" : {
+
+    },
     "Unpin" : {
       "localizations" : {
         "es" : {
@@ -29050,6 +29266,9 @@
           }
         }
       }
+    },
+    "Unpin message" : {
+
     },
     "Unsigned or invalid event" : {
       "comment" : "Error message",
@@ -29119,6 +29338,12 @@
           }
         }
       }
+    },
+    "Update badge" : {
+
+    },
+    "Update existing badge?" : {
+
     },
     "Updates refer to people added or removed from this list, not posts or content." : {
       "localizations" : {
@@ -29209,6 +29434,9 @@
           }
         }
       }
+    },
+    "Uploading artwork…" : {
+
     },
     "Uploading to Blossom server(s)..." : {
       "localizations" : {
@@ -29990,6 +30218,9 @@
       },
       "shouldTranslate" : false
     },
+    "What did someone do to earn this badge?" : {
+
+    },
     "What do you want to talk about?" : {
       "localizations" : {
         "es" : {
@@ -30236,6 +30467,12 @@
           }
         }
       }
+    },
+    "Worn by" : {
+
+    },
+    "Worn by 0 people" : {
+
     },
     "WOT_NORMAL" : {
       "extractionState" : "manual",
@@ -30677,6 +30914,12 @@
           }
         }
       }
+    },
+    "Your badge definition will be signed by your current account and published publicly to Nostr." : {
+
+    },
+    "Your badge details and selected artwork will be lost." : {
+
     },
     "Your balance:" : {
       "localizations" : {

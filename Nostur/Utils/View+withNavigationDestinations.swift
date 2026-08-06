@@ -143,6 +143,10 @@ struct NavigationDestinationsModifier: ViewModifier {
                     ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
                         .environment(\.containerID, self.containerID)
                         .environmentObject(VideoPostPlaybackCoordinator())
+                case 30009:
+                    BadgeDetailFromNRPost(nrPost: nrPost)
+                        .environment(\.containerID, self.containerID)
+                        .environmentObject(VideoPostPlaybackCoordinator())
                 case 30311:
                     if let nrLiveEvent = nrPost.nrLiveEvent {
                         LiveEventDetail(liveEvent: nrLiveEvent)
@@ -168,6 +172,10 @@ struct NavigationDestinationsModifier: ViewModifier {
                 switch path.kind {
                 case 30311:
                     LiveEventByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
+                        .environment(\.containerID, self.containerID)
+                        .environmentObject(VideoPostPlaybackCoordinator())
+                case 30009:
+                    BadgeByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
                         .environment(\.containerID, self.containerID)
                         .environmentObject(VideoPostPlaybackCoordinator())
                 default:

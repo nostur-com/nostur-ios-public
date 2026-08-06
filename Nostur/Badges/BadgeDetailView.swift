@@ -9,6 +9,7 @@ import NavigationBackport
 struct BadgeDetailView: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
 
     let badge: Event
     @FetchRequest private var awards: FetchedResults<Event>
@@ -16,11 +17,13 @@ struct BadgeDetailView: View {
     @State private var isEditingBadge = false
     @State private var selectedAward: Event?
     @State private var errorMessage: String?
+    @ObservedObject private var issuerContact: NRContact
 
     private var nBadge: NEvent { badge.toNEvent() }
 
     init(badge: Event) {
         self.badge = badge
+        self._issuerContact = ObservedObject(wrappedValue: NRContact.instance(of: badge.pubkey))
         let request = Event.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         if badge.badgeAddress != nil {
@@ -55,33 +58,68 @@ struct BadgeDetailView: View {
     var body: some View {
         List {
             Section {
-                HStack(alignment: .top, spacing: 16) {
-                    BadgeIcon(badge: badge, size: 80)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge"))
-                            .font(.title3.bold())
-                        if let description = nBadge.badgeDescription?.value, !description.isEmpty {
-                            Text(description).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .top, spacing: 16) {
+                        BadgeIcon(badge: badge, size: 80)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge"))
+                                .font(.title3.bold())
+                            if let description = nBadge.badgeDescription?.value, !description.isEmpty {
+                                Text(description).foregroundStyle(.secondary)
+                            }
+                            Text("Awarded to \(recipients.count) people")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                        Text("Awarded to \(recipients.count) people")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                    }
+
+                    // Match embedded badge card: [pfp + name + · + ago] trailing
+                    HStack(spacing: 5) {
+                        Spacer()
+                        ObservedPFP(nrContact: issuerContact, size: 20)
+                            .onTapGesture {
+                                navigateToContact(
+                                    pubkey: badge.pubkey,
+                                    nrContact: issuerContact,
+                                    context: containerID
+                                )
+                            }
+                        Text(issuerContact.anyName)
+                            .animation(.easeIn, value: issuerContact.anyName)
+                            .font(.body)
+                            .foregroundColor(.primary)
+                            .fontWeightBold()
+                            .lineLimit(1)
+                            .onTapGesture {
+                                navigateToContact(
+                                    pubkey: badge.pubkey,
+                                    nrContact: issuerContact,
+                                    context: containerID
+                                )
+                            }
+                        Group {
+                            Text(verbatim: "·")
+                            Ago(badge.created_at)
+                                .equatable()
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                    }
+                    .padding(.top, 8)
+
+                    if badge.pubkey == la.account.publicKey {
+                        Button("Award to people", systemImage: "person.badge.plus") {
+                            guard isFullAccount() else { showReadOnlyMessage(); return }
+                            isChoosingRecipients = true
+                        }
+                        .disabled(badge.badgeA == nil)
                     }
                 }
                 .padding(.vertical, 8)
             }
             .listRowBackground(theme.background)
-
-            if badge.pubkey == la.account.publicKey {
-                Section {
-                    Button("Award to people", systemImage: "person.badge.plus") {
-                        guard isFullAccount() else { showReadOnlyMessage(); return }
-                        isChoosingRecipients = true
-                    }
-                    .disabled(badge.badgeA == nil)
-                }
-                .listRowBackground(theme.background)
-            }
+            .listRowSeparator(.hidden)
 
             if !recipients.isEmpty {
                 Section("Recipients") {
@@ -128,8 +166,12 @@ struct BadgeDetailView: View {
             }
         }
         .task(id: badge.badgeA) {
+            QueuedFetcher.shared.enqueue(pTag: badge.pubkey)
             guard let address = badge.badgeAddress else { return }
             await BadgeRelayLoader.fetchAwards(for: address, accountPubkey: la.account.publicKey)
+        }
+        .onDisappear {
+            QueuedFetcher.shared.dequeue(pTag: badge.pubkey)
         }
         .sheet(isPresented: $isChoosingRecipients) {
             NBNavigationStack {

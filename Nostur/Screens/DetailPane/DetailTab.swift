@@ -71,6 +71,10 @@ struct DetailTab: View {
                         LiveEventByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
                             .withNavigationDestinations(navPath: $navPath)
                             .environment(\.containerID, containerID)
+                    case 30009:
+                        BadgeByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
+                            .withNavigationDestinations(navPath: $navPath)
+                            .environment(\.containerID, containerID)
                     default:
                         ArticleByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
                             .withNavigationDestinations(navPath: $navPath)

@@ -6,8 +6,9 @@
 import SwiftUI
 import NavigationBackport
 
-struct Badge: Hashable {
+struct Badge: Hashable, IdentifiableDestination {
     let badge: Event
+    var id: String { badge.id }
     init(_ badge: Event) { self.badge = badge }
 }
 
