@@ -182,7 +182,6 @@ private struct MentionHighlightingTextView: UIViewRepresentable {
         context.coordinator.parent = self
         context.coordinator.applyExternalTextIfNeeded(to: textView)
         context.coordinator.styleSemanticMentions(in: textView)
-        context.coordinator.syncAttributedText(from: textView)
         context.coordinator.updateHeight(of: textView)
     }
 
