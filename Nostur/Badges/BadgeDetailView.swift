@@ -13,6 +13,7 @@ struct BadgeDetailView: View {
     let badge: Event
     @FetchRequest private var awards: FetchedResults<Event>
     @State private var isChoosingRecipients = false
+    @State private var isEditingBadge = false
     @State private var selectedAward: Event?
     @State private var errorMessage: String?
 
@@ -71,14 +72,16 @@ struct BadgeDetailView: View {
             }
             .listRowBackground(theme.background)
 
-            Section {
-                Button("Award to people", systemImage: "person.badge.plus") {
-                    guard isFullAccount() else { showReadOnlyMessage(); return }
-                    isChoosingRecipients = true
+            if badge.pubkey == la.account.publicKey {
+                Section {
+                    Button("Award to people", systemImage: "person.badge.plus") {
+                        guard isFullAccount() else { showReadOnlyMessage(); return }
+                        isChoosingRecipients = true
+                    }
+                    .disabled(badge.badgeA == nil)
                 }
-                .disabled(badge.badgeA == nil)
+                .listRowBackground(theme.background)
             }
-            .listRowBackground(theme.background)
 
             if !recipients.isEmpty {
                 Section("Recipients") {
@@ -102,22 +105,7 @@ struct BadgeDetailView: View {
                         Button {
                             selectedAward = award
                         } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    let count = Set(award.pTags()).count
-                                    Text("\(count) recipients")
-                                        .foregroundStyle(count == 0 ? Color.red : Color.primary)
-                                    Text(Date(timeIntervalSince1970: Double(award.created_at)).formatted())
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.tertiary)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
+                            awardHistoryRow(award)
                         }
                         .buttonStyle(.plain)
                     }
@@ -129,6 +117,16 @@ struct BadgeDetailView: View {
         .background(theme.listBackground)
         .listStyle(.insetGrouped)
         .navigationTitle(nBadge.badgeName?.value ?? String(localized: "Badge"))
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                if badge.pubkey == la.account.publicKey {
+                    Button("Edit badge", systemImage: "pencil") {
+                        guard isFullAccount() else { showReadOnlyMessage(); return }
+                        isEditingBadge = true
+                    }
+                }
+            }
+        }
         .task(id: badge.badgeA) {
             guard let address = badge.badgeAddress else { return }
             await BadgeRelayLoader.fetchAwards(for: address, accountPubkey: la.account.publicKey)
@@ -138,6 +136,7 @@ struct BadgeDetailView: View {
                 ContactsSearch(
                     followingPubkeys: follows(),
                     prompt: "Search contacts",
+                    doneButtonText: "Done",
                     onSelectContacts: award(to:)
                 )
                 .background(theme.listBackground)
@@ -150,6 +149,15 @@ struct BadgeDetailView: View {
                         Button("Cancel", systemImage: "xmark") { isChoosingRecipients = false }
                     }
                 }
+            }
+            .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(theme.listBackground)
+        }
+        .sheet(isPresented: $isEditingBadge) {
+            NBNavigationStack {
+                CreateNewBadgeSheet(badge: badge)
+                    .environmentObject(la)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
@@ -171,6 +179,25 @@ struct BadgeDetailView: View {
         } message: {
             Text(errorMessage ?? "")
         }
+    }
+
+    private func awardHistoryRow(_ award: Event) -> some View {
+        let count = Set(award.pTags()).count
+        return HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: "\(count) recipients")
+                    .foregroundStyle(count == 0 ? Color.red : Color.primary)
+                Text(Date(timeIntervalSince1970: Double(award.created_at)).formatted())
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 
     private func award(to contacts: Set<Contact>) {
