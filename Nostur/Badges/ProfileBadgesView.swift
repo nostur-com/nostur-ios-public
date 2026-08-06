@@ -57,6 +57,7 @@ struct ProfileBadgesContainer: View {
 private struct ResolvedProfileBadgesView: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
 
     let profile: Event
     private let references: [BadgeReference]
@@ -130,10 +131,34 @@ private struct ResolvedProfileBadgesView: View {
         .sheet(isPresented: $isShowingAll) {
             NBNavigationStack {
                 List(resolvedBadges) { profileBadge in
-                    BadgeIssuedRow(badge: profileBadge.badge)
+                    NBNavigationLink(value: Badge(profileBadge.badge)) {
+                        BadgeReceivedRow(
+                            badge: profileBadge.badge,
+                            isSelected: true,
+                            receivedAt: profileBadge.badgeAward.created_at,
+                            wearerPubkeys: [],
+                            onShowWearers: { },
+                            showsSelectionIndicator: false,
+                            showsWearers: false
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .listRowBackground(theme.background)
                 }
-                .listStyle(.plain)
+                .scrollContentBackgroundCompat(.hidden)
+                .background(theme.listBackground)
+                .listStyle(.insetGrouped)
                 .navigationTitle(String(localized: "Badges"))
+                .nbNavigationDestination(for: Badge.self) { badge in
+                    BadgeDetailView(badge: badge.badge)
+                        .environmentObject(la)
+                        .environment(\.theme, theme)
+                }
+                .nbNavigationDestination(for: ContactPath.self) { path in
+                    ProfileByPubkey(pubkey: path.key, tab: path.tab)
+                        .environment(\.containerID, containerID)
+                        .environmentObject(VideoPostPlaybackCoordinator())
+                }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Close", systemImage: "xmark") { isShowingAll = false }

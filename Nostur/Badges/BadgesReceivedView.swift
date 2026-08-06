@@ -442,6 +442,8 @@ struct BadgeReceivedRow: View {
     let receivedAt: Int64
     let wearerPubkeys: [String]
     let onShowWearers: () -> Void
+    var showsSelectionIndicator = true
+    var showsWearers = true
 
     private var nBadge: NEvent { badge.toNEvent() }
 
@@ -473,15 +475,19 @@ struct BadgeReceivedRow: View {
                         .foregroundStyle(.primary)
                         .lineLimit(2)
                 }
-                BadgeWornBy(pubkeys: wearerPubkeys, onShowAll: onShowWearers)
+                if showsWearers {
+                    BadgeWornBy(pubkeys: wearerPubkeys, onShowAll: onShowWearers)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .overlay(alignment: .topTrailing) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "plus.circle")
-                    .font(.title3)
-                    .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                    .padding(.top, 2)
-                    .accessibilityHidden(true)
+                if showsSelectionIndicator {
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "plus.circle")
+                        .font(.title3)
+                        .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                        .padding(.top, 2)
+                        .accessibilityHidden(true)
+                }
             }
         }
         .padding(.vertical, 6)
@@ -501,37 +507,45 @@ private struct BadgeWornBy: View {
     private var visiblePubkeys: ArraySlice<String> { pubkeys.prefix(5) }
 
     var body: some View {
-        Button(action: onShowAll) {
-            HStack(alignment: .top, spacing: 4) {
-                Text("Worn by")
+        Group {
+            if pubkeys.isEmpty {
+                Text("Worn by 0 people")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .fixedSize()
-                    .padding(.top, 2)
-                VStack(alignment: .trailing, spacing: 2) {
-                    HStack(spacing: 2) {
-                        ForEach(Array(visiblePubkeys), id: \.self) { pubkey in
-                            ObservedPFP(pubkey: pubkey, size: 20, forceFlat: true)
-                                .highPriorityGesture(
-                                    TapGesture().onEnded {
-                                        navigateTo(ContactPath(key: pubkey), context: containerID)
-                                    }
-                                )
-                        }
-                    }
-                    if pubkeys.count > visiblePubkeys.count {
-                        Text("+\(pubkeys.count - visiblePubkeys.count) others")
+            } else {
+                Button(action: onShowAll) {
+                    HStack(alignment: .top, spacing: 4) {
+                        Text("Worn by")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize()
+                            .padding(.top, 2)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            HStack(spacing: 2) {
+                                ForEach(Array(visiblePubkeys), id: \.self) { pubkey in
+                                    ObservedPFP(pubkey: pubkey, size: 20, forceFlat: true)
+                                        .highPriorityGesture(
+                                            TapGesture().onEnded {
+                                                navigateTo(ContactPath(key: pubkey), context: containerID)
+                                            }
+                                        )
+                                }
+                            }
+                            if pubkeys.count > visiblePubkeys.count {
+                                Text("+\(pubkeys.count - visiblePubkeys.count) others")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize()
+                            }
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .contentShape(Rectangle())
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
-        .buttonStyle(.plain)
         .task(id: pubkeys.joined(separator: ",")) {
             for pubkey in visiblePubkeys {
                 QueuedFetcher.shared.enqueue(pTag: pubkey)
