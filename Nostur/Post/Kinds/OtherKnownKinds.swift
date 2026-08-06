@@ -106,6 +106,8 @@ func fallbackDescription(for nrPost: NRPost) -> String {
     case 8:
         "A badge award"
     case 30008:
+        "A badge set update"
+    case 10008:
         "A profile badge update"
     default:
         "A nostr event of kind: \(nrPost.kind)"

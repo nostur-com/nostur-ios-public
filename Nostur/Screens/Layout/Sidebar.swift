@@ -207,14 +207,31 @@ struct SideBar: View {
                                         .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
                                 },
                                 icon: {
-                                    if #available(iOS 16, *) {
-                                        Image(systemName: "medal")
-                                            .frame(width: Self.ICON_WIDTH)
+                                    BadgeUnreadReader(pubkey: account.publicKey) { unread, _ in
+                                        Group {
+                                            if #available(iOS 16, *) {
+                                                Image(systemName: "medal")
+                                            }
+                                            else {
+                                                Image(systemName: "rosette")
+                                            }
+                                        }
+                                        .frame(width: Self.ICON_WIDTH)
+                                        .overlay(alignment: .topTrailing) {
+                                            if unread > 0 {
+                                                Text(unread > 99 ? "99+" : "\(unread)")
+                                                    .font(.caption2)
+                                                    .fontWeight(.semibold)
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, unread > 99 ? 4 : 6)
+                                                    .padding(.vertical, 2)
+                                                    .background(theme.badge)
+                                                    .clipShape(Capsule())
+                                                    .offset(x: 5, y: -6)
+                                            }
+                                        }
                                     }
-                                    else {
-                                        Image(systemName: "rosette")
-                                            .frame(width: Self.ICON_WIDTH)
-                                    }
+                                    .id(account.publicKey)
                                 }
                             )
                             .padding(.vertical, Self.BUTTON_VPADDING)

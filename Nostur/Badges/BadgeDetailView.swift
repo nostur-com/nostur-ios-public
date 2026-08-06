@@ -2,170 +2,283 @@
 //  BadgeDetailView.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 01/03/2023.
-//
 
 import SwiftUI
-import Nuke
-import NukeUI
 import NavigationBackport
 
 struct BadgeDetailView: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
-    @Environment(\.managedObjectContext) var viewContext
-    @Environment(\.dismiss) var dismiss
-    
-    @State var awardToPeopleIsShown = false
-    
-    var badge:Event
-    var nBadge: NEvent { badge.toNEvent() }
-    
-    @FetchRequest
-    var badgeAwards: FetchedResults<Event>
-    //    var nBadgeAwards:[NEvent] { badgeAwards.map { $0.toNEvent() }.filter { $0.badgeDescription != nil && $0.badgeDefinition!.value == nBadge.badgeDefinition!.value } }
-    
+
+    let badge: Event
+    @FetchRequest private var awards: FetchedResults<Event>
+    @State private var isChoosingRecipients = false
+    @State private var selectedAward: Event?
+    @State private var errorMessage: String?
+
+    private var nBadge: NEvent { badge.toNEvent() }
+
     init(badge: Event) {
         self.badge = badge
-        let r = Event.fetchRequest()
-        r.predicate = NSPredicate(format: "kind == 8 AND tagsSerialized CONTAINS %@", "[\"a\",\"\(badge.toNEvent().badgeCode!.value)") // OPTIMISATION HACK
-        r.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        _badgeAwards = FetchRequest(fetchRequest: r)
+        let request = Event.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        if badge.badgeAddress != nil {
+            request.predicate = NSPredicate(
+                format: "kind == %d AND pubkey == %@",
+                BadgeKinds.award,
+                badge.pubkey
+            )
+        } else {
+            request.predicate = NSPredicate(value: false)
+        }
+        _awards = FetchRequest(fetchRequest: request)
     }
-    
+
+    private var matchingAwards: [Event] {
+        guard let address = badge.badgeAddress else { return [] }
+        return awards.filter { $0.isBadgeAward(for: address) }
+    }
+
+    private var recipients: [BadgeRecipient] {
+        var latestAwardByPubkey: [String: Int64] = [:]
+        for award in matchingAwards {
+            for pubkey in Set(award.pTags()) {
+                latestAwardByPubkey[pubkey] = max(latestAwardByPubkey[pubkey] ?? 0, award.created_at)
+            }
+        }
+        return latestAwardByPubkey
+            .map { BadgeRecipient(pubkey: $0.key, awardedAt: $0.value) }
+            .sorted { $0.awardedAt > $1.awardedAt }
+    }
+
     var body: some View {
-//#if DEBUG
-//        let _ = nxLogChanges(of: Self.self)
-//#endif
-        ScrollView {
-            HStack(alignment: .top) {
-                VStack(alignment: .center) {
-                    if let pictureUrl = nBadge.badgeImage?.tag[safe: 1] {
-                        if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                            LazyImage(url: URL(string: pictureUrl)) { state in
-                                if let container = state.imageContainer {
-                                    if container.type == .gif,
-                                       let gifData = container.data,
-                                       ProfileImageSafety.isSafeAnimatedImage(gifData, policy: .badge) {
-                                        GIFImage(data: gifData, isPlaying: .constant(true))
-//                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 50, height: 50)
-                                            .clipped()
-                                            .padding(10)
-                                    }
-                                    else if let image = state.image {
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 50, height: 50)
-                                            .clipped()
-                                            .padding(10)
-                                    }
-                                    else {
-                                        CenteredProgressView()
-                                    }
-                                }
-                                else {
-                                    CenteredProgressView()
-                                }
-                            }
-                            .pipeline(ImageProcessing.shared.badges) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+        List {
+            Section {
+                HStack(alignment: .top, spacing: 16) {
+                    BadgeIcon(badge: badge, size: 80)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge"))
+                            .font(.title3.bold())
+                        if let description = nBadge.badgeDescription?.value, !description.isEmpty {
+                            Text(description).foregroundStyle(.secondary)
                         }
-                        else {
-                            LazyImage(request: ImageRequest(url: URL(string:pictureUrl),
-                                                            processors: [.resize(width: 50)],
-                                                            options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
-                                                            userInfo: [.scaleKey: UIScreen.main.scale])) { state in
-                                if let image = state.image {
-                                    image
-                                    //                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 50, height: 50)
-                                        .clipped()
-                                        .padding(10)
-                                }
-                                else {
-                                    CenteredProgressView()
-                                }
+                        Text("Awarded to \(recipients.count) people")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+            .listRowBackground(theme.background)
+
+            Section {
+                Button("Award to people", systemImage: "person.badge.plus") {
+                    guard isFullAccount() else { showReadOnlyMessage(); return }
+                    isChoosingRecipients = true
+                }
+                .disabled(badge.badgeA == nil)
+            }
+            .listRowBackground(theme.background)
+
+            if !recipients.isEmpty {
+                Section("Recipients") {
+                    ForEach(recipients) { recipient in
+                        NBNavigationLink(value: ContactPath(key: recipient.pubkey)) {
+                            HStack(spacing: 8) {
+                                PFPandName(pubkey: recipient.pubkey)
+                                Ago(recipient.awardedAt)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
-                            //                            .processors([.resize(width: 50)])
-                                                            .pipeline(ImageProcessing.shared.badges)
-                            //                    .priority(.low)
                         }
                     }
                 }
-                .frame(width: 60)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(nBadge.badgeName?.value ?? "No name")
-                        .font(.subheadline)
-                    Text(nBadge.badgeDescription?.value ?? "No description").font(.caption2)
-                    Text("Awarded to \(badge.awardedTo.count) people").font(.caption)
-                }.padding(10)
+                .listRowBackground(theme.background)
             }
-            Spacer()
-            
-            
-            Button { awardToPeopleIsShown = true } label: { Text("Award to people", comment: "Button to award a badge to people") }
-                .buttonStyle(NRButtonStyle(style: .borderedProminent))
-            // award to people
-            
-            // lazy vstack foreach award p
-            ForEach(badge.badgeAwards) { award in
-                Text("Awarded to \(award.toNEvent().pTags().count) people on \(Date(timeIntervalSince1970: Double(award.created_at)).formatted())", comment: "Showing how many people received this badge on which date")
+
+            if !matchingAwards.isEmpty {
+                Section("Award history") {
+                    ForEach(matchingAwards) { award in
+                        Button {
+                            selectedAward = award
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    let count = Set(award.pTags()).count
+                                    Text("\(count) recipients")
+                                        .foregroundStyle(count == 0 ? Color.red : Color.primary)
+                                    Text(Date(timeIntervalSince1970: Double(award.created_at)).formatted())
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.tertiary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .listRowBackground(theme.background)
             }
         }
-        .sheet(isPresented: $awardToPeopleIsShown) {
+        .scrollContentBackgroundCompat(.hidden)
+        .background(theme.listBackground)
+        .listStyle(.insetGrouped)
+        .navigationTitle(nBadge.badgeName?.value ?? String(localized: "Badge"))
+        .task(id: badge.badgeA) {
+            guard let address = badge.badgeAddress else { return }
+            await BadgeRelayLoader.fetchAwards(for: address, accountPubkey: la.account.publicKey)
+        }
+        .sheet(isPresented: $isChoosingRecipients) {
             NBNavigationStack {
-                ContactsSearch(followingPubkeys: follows(), prompt: "Search contacts", onSelectContacts: { selectedContacts in
-                    awardToPeopleIsShown = false
-                    guard !selectedContacts.isEmpty else { return }
-                    let newBadgeAwards = createBadgeAward(la.account.publicKey,
-                                                          badgeCode: nBadge.badgeCode!.definition,
-                                                          pubkeys: selectedContacts.map { $0.pubkey })
-                    do {
-                        guard let newBadgeAwardsSigned = try? la.account.signEvent(newBadgeAwards) else { throw "could not create newBadgeAwardsSigned " }
-                        let bgContext = bg()
-                        bgContext.perform {
-                            _ = Event.saveEvent(event: newBadgeAwardsSigned, context: bgContext)
-                            DataProvider.shared().saveToDiskNow(.bgContext)
-                        }
-                        Unpublisher.shared.publishNow(newBadgeAwardsSigned)
-                    }
-                    catch {
-                        L.og.error("🔴🔴 could not create badge \(error)")
-                    }
-                })
-                .navigationTitle(String(localized:"Award to", comment: "Navigation title of screen where you choose who to award badge to"))
+                ContactsSearch(
+                    followingPubkeys: follows(),
+                    prompt: "Search contacts",
+                    onSelectContacts: award(to:)
+                )
+                .background(theme.listBackground)
+                .navigationTitle(String(localized: "Award to"))
                 .navigationBarTitleDisplayMode(.inline)
                 .environment(\.theme, theme)
                 .environmentObject(la)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel", systemImage: "xmark") {
-                            dismiss()
-                        }
+                        Button("Cancel", systemImage: "xmark") { isChoosingRecipients = false }
                     }
                 }
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
         }
+        .sheet(item: $selectedAward) { award in
+            NBNavigationStack {
+                BadgeAwardRecipientsView(award: award)
+                    .environment(\.theme, theme)
+                    .environmentObject(la)
+            }
+            .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(theme.listBackground)
+        }
+        .alert("Could not award badge", isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { errorMessage = nil }
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    private func award(to contacts: Set<Contact>) {
+        guard !contacts.isEmpty else { return }
+        guard let address = badge.badgeA,
+              let award = createBadgeAward(
+                definitionAddress: address,
+                pubkeys: contacts.map(\.pubkey)
+              ) else {
+            errorMessage = String(localized: "This badge or its recipients are invalid.")
+            return
+        }
+
+        do {
+            let signedAward = try la.account.signEvent(award)
+            let context = bg()
+            context.perform {
+                _ = Event.saveEvent(event: signedAward, context: context)
+                DataProvider.shared().saveToDiskNow(.bgContext)
+            }
+            Unpublisher.shared.publishNow(signedAward)
+            isChoosingRecipients = false
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }
 
-struct BadgeDetailView_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        let id = "6215b9fee3834ff25da4962dfb0d72e3dd648a454491dc213da5bdf735d7ddd9"
-        
-        PreviewContainer({ pe in pe.loadBadges() }) {
-            NBNavigationStack {
-                if let badge = PreviewFetcher.fetchEvent(id) {
-                    BadgeDetailView(badge: badge)
+private struct BadgeRecipient: Identifiable {
+    let pubkey: String
+    let awardedAt: Int64
+    var id: String { pubkey }
+}
+
+private struct BadgeAwardRecipientsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
+    @State private var copiedValue: String?
+
+    let award: Event
+
+    private var recipientPubkeys: [String] {
+        Array(Set(award.pTags().filter { $0.count == 64 })).sorted()
+    }
+
+    var body: some View {
+        List {
+            if recipientPubkeys.isEmpty {
+                Section {
+                    Label("This award event has no valid recipients.", systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.secondary)
+                }
+                .listRowBackground(theme.background)
+            } else {
+                Section("Awarded to") {
+                    ForEach(recipientPubkeys, id: \.self) { pubkey in
+                        PFPandName(pubkey: pubkey)
+                    }
+                }
+                .listRowBackground(theme.background)
+            }
+
+            Section("Event details") {
+                copyRow(title: String(localized: "Event ID"), value: award.id)
+                if let address = award.firstA() {
+                    copyRow(title: String(localized: "Badge address"), value: address)
                 }
             }
+            .listRowBackground(theme.background)
         }
-        
+        .scrollContentBackgroundCompat(.hidden)
+        .background(theme.listBackground)
+        .listStyle(.insetGrouped)
+        .navigationTitle(String(localized: "Award recipients"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") { dismiss() }
+            }
+        }
+    }
+
+    private func copyRow(title: String, value: String) -> some View {
+        Button {
+            UIPasteboard.general.string = value
+            copiedValue = value
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                if copiedValue == value { copiedValue = nil }
+            }
+        } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.caption).foregroundStyle(.secondary)
+                    Text(verbatim: value)
+                        .font(.caption.monospaced())
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .foregroundStyle(.primary)
+                }
+                Spacer()
+                Image(systemName: copiedValue == value ? "checkmark" : "doc.on.doc")
+                    .foregroundStyle(copiedValue == value ? Color.green : Color.accentColor)
+                    .accessibilityHidden(true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Copy \(title)")
     }
 }

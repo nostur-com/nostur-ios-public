@@ -204,7 +204,7 @@ final class SettingsStore: ObservableObject {
             Keys.showFiat: true,
             Keys.preferredFiatCurrency: Self.deviceDefaultFiatCurrency,
 //            Keys.hideEmojisInNames: false,
-            Keys.hideBadges: defaultZapAmount,
+            Keys.hideBadges: false,
             Keys.autoDownloadFrom: AutodownloadLevel.onlyWoT.rawValue,
             Keys.thunderzapLevel: ThunderzapLevel.normal.rawValue,
             Keys.restrictAutoDownload: false,

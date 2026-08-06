@@ -2,146 +2,141 @@
 //  ProfileBadgesView.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 01/03/2023.
-//
 
 import SwiftUI
+import CoreData
 import Nuke
 import NukeUI
-import CoreData
 import NavigationBackport
 
 struct ProfileBadgesContainer: View {
-    let pubkey:String
-    
-    @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false))
-    var profileBadges:FetchedResults<Event>
-    
-    var profileBadgesSorted:[Event] {
-        profileBadges.sorted(by: { $0.created_at > $1.created_at})
-    }
-    
-    @State var refreshHack = false
-    
-    init(pubkey:String) {
+    let pubkey: String
+
+    @FetchRequest private var profileEvents: FetchedResults<Event>
+
+    init(pubkey: String) {
         self.pubkey = pubkey
-        
-        let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "kind == 30008 AND pubkey == %@ AND mostRecentId == nil", pubkey)
-        
-        _profileBadges = FetchRequest(fetchRequest: fr)
+        let request = Event.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            NSPredicate(format: "pubkey == %@ AND mostRecentId == nil", pubkey),
+            NSCompoundPredicate(orPredicateWithSubpredicates: [
+                NSPredicate(format: "kind == %d", BadgeKinds.profile),
+                NSPredicate(
+                    format: "kind == %d AND dTag == %@",
+                    BadgeKinds.legacyProfile,
+                    BadgeKinds.legacyProfileIdentifier
+                )
+            ])
+        ])
+        _profileEvents = FetchRequest(fetchRequest: request)
     }
-    
+
+    private var preferredProfile: Event? {
+        profileEvents.first(where: { $0.kind == Int64(BadgeKinds.profile) }) ?? profileEvents.first
+    }
+
     var body: some View {
-//#if DEBUG
-//        let _ = nxLogChanges(of: Self.self)
-//#endif
-        if let first = profileBadgesSorted.first  {
-            ProfileBadgesView(verifiedBadges:first.verifiedBadges)
-                .task {
-                    // 30008 is already fetched when profile loads
-                    // here we fetch any related 30009 + 8
-                    let allEs = first.tags()
-                        .filter { $0.type == "e" }
-                        .map { $0.id }
-                    
-                    var filters: [(Int64, String, String)] = []
-                    first.tags()
-                        .filter { $0.type == "a" }
-                        .forEach {
-                            let a = BadgeATag($0)
-                            let filter = (a.kind, a.badgeCode, a.pubkey)
-                            if a.pubkey == "NONE" { return }
-                            filters.append(filter)
-                        }
-                    
-#if DEBUG
-                    L.og.debug("🚺🚺 \(allEs.count)")
-#endif
-                    if (!allEs.isEmpty) {
-                        // Get badge awards (kind .8)
-                        req(RM.getEvents(ids: allEs))
-                    }
-                    
-                    if (!filters.isEmpty) {
-                        // Get badge definitions (kind 30009)
-                        req(RM.getBadgeDefinitions(filters: Array(filters.prefix(10))))
-                    }
-                }
-                .onChange(of: profileBadgesSorted.first) { newValue in
-                    if (newValue != nil) {
-                        let allEs = newValue!.tags()
-                            .filter { $0.type == "e" }
-                            .map { $0.id }
-                        
-                        var filters: [(Int64, String, String)] = []
-                        newValue!.tags()
-                            .filter { $0.type == "a" }
-                            .forEach {
-                                let a = BadgeATag($0)
-                                let filter = (a.kind, a.badgeCode, a.pubkey)
-                                filters.append(filter)
-                            }
-                        
-                        L.og.debug("🚺🚺🚺🚺🚺 \(allEs.count)")
-                        if (!allEs.isEmpty) {
-                            // Get badge awards (kind .8)
-                            req(RM.getEvents(ids: allEs))
-                        }
-                        
-                        if (!filters.isEmpty) {
-                            // Get badge definitions (kind 30009)
-                            req(RM.getBadgeDefinitions(filters: filters))
-                        }
-                        refreshHack.toggle()
-                    }
-                }
+        Group {
+            if let preferredProfile {
+                ResolvedProfileBadgesView(profile: preferredProfile)
+                    .id(preferredProfile.id)
+            }
         }
-        else {
-            EmptyView()
+        .task(id: pubkey, priority: .background) {
+            do {
+                try await Task.sleep(nanoseconds: 2_000_000_000)
+            } catch {
+                return
+            }
+            await BadgeRefreshCoordinator.shared.refreshProfile(pubkey: pubkey)
         }
-        
     }
 }
 
-struct ProfileBadgesView: View {
+private struct ResolvedProfileBadgesView: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
-    var verifiedBadges: [ProfileBadge]
-    @State var selectedBadge: Event? = nil
-    @State var badgeInfoIsShown = false
-    @State var refreshHack = false
-    
+
+    let profile: Event
+    private let references: [BadgeReference]
+    private let dependencyKey: String
+
+    @FetchRequest private var awards: FetchedResults<Event>
+    @FetchRequest private var definitions: FetchedResults<Event>
+    @State private var isShowingAll = false
+
+    init(profile: Event) {
+        self.profile = profile
+        let references = badgeReferences(from: profile.toNEvent())
+        self.references = references
+        dependencyKey = references.map(\.id).joined(separator: ",")
+
+        let awardRequest = Event.fetchRequest()
+        awardRequest.sortDescriptors = []
+        let awardIds = references.map(\.awardEventId)
+        awardRequest.predicate = awardIds.isEmpty
+            ? NSPredicate(value: false)
+            : NSPredicate(format: "kind == %d AND id IN %@", BadgeKinds.award, awardIds)
+        _awards = FetchRequest(fetchRequest: awardRequest)
+
+        let definitionRequest = Event.fetchRequest()
+        definitionRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        let addressPredicates = references.map {
+            NSPredicate(
+                format: "kind == %d AND pubkey == %@ AND dTag == %@ AND mostRecentId == nil",
+                BadgeKinds.definition,
+                $0.address.issuerPubkey,
+                $0.address.identifier
+            )
+        }
+        definitionRequest.predicate = addressPredicates.isEmpty
+            ? NSPredicate(value: false)
+            : NSCompoundPredicate(orPredicateWithSubpredicates: addressPredicates)
+        _definitions = FetchRequest(fetchRequest: definitionRequest)
+    }
+
+    private var resolvedBadges: [ProfileBadge] {
+        let awardsById = Dictionary(uniqueKeysWithValues: awards.map { ($0.id, $0) })
+        let definitionsByAddress = Dictionary(
+            definitions.compactMap { definition in
+                definition.badgeAddress.map { ($0, definition) }
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
+        return references.compactMap { reference in
+            guard let award = awardsById[reference.awardEventId],
+                  let definition = definitionsByAddress[reference.address],
+                  isValidBadge(
+                    reference: reference,
+                    profilePubkey: profile.pubkey,
+                    award: award.toNEvent(),
+                    definition: definition.toNEvent()
+                  ) else { return nil }
+            return ProfileBadge(reference: reference, badge: definition, badgeAward: award)
+        }
+    }
+
     var body: some View {
-//#if DEBUG
-//        let _ = nxLogChanges(of: Self.self)
-//#endif
         HStack {
-            ForEach(Array(verifiedBadges.prefix(3))) { profileBadge in
+            ForEach(resolvedBadges.prefix(3)) { profileBadge in
                 BadgeIcon(badge: profileBadge.badge)
                     .frame(width: 32, height: 32)
-                    .onTapGesture { badgeInfoIsShown = true }
             }
             Spacer()
         }
-        .sheet(isPresented: $badgeInfoIsShown) {
+        .contentShape(Rectangle())
+        .onTapGesture { isShowingAll = !resolvedBadges.isEmpty }
+        .sheet(isPresented: $isShowingAll) {
             NBNavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading) {
-                        ForEach(verifiedBadges) { profileBadge in
-                            BadgeIssuedRow(badge: profileBadge.badge)
-                        }
-                        Spacer()
-                    }
+                List(resolvedBadges) { profileBadge in
+                    BadgeIssuedRow(badge: profileBadge.badge)
                 }
-                .padding(20)
-                .presentationDetents250medium()
+                .listStyle(.plain)
+                .navigationTitle(String(localized: "Badges"))
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Close", systemImage: "xmark") {
-                            badgeInfoIsShown = false
-                        }
+                        Button("Close", systemImage: "xmark") { isShowingAll = false }
                     }
                 }
                 .environment(\.theme, theme)
@@ -150,83 +145,76 @@ struct ProfileBadgesView: View {
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
         }
+        .task(id: dependencyKey, priority: .background) {
+            do {
+                try await Task.sleep(nanoseconds: 2_300_000_000)
+            } catch {
+                return
+            }
+            await BadgeRelayLoader.fetchDependencies(for: references)
+        }
     }
+}
+
+func badgeArtworkURL(for badge: NEvent, targetWidth: Int) -> URL? {
+    let candidates: [(url: String, width: Int?)] = badge.badgeThumbs.compactMap { tag in
+        guard let url = tag.tag[safe: 1], !url.isEmpty else { return nil }
+        let width = tag.tag[safe: 2]
+            .flatMap { $0.split(separator: "x").first }
+            .flatMap { Int($0) }
+        return (url, width)
+    }
+    let best = candidates.min {
+        abs(($0.width ?? targetWidth) - targetWidth) < abs(($1.width ?? targetWidth) - targetWidth)
+    }?.url ?? badge.badgeImage?.tag[safe: 1]
+    return best.flatMap(URL.init(string:))
 }
 
 struct BadgeIcon: View {
-    var badge:Event
-    var nBadge:NEvent { badge.toNEvent() }
-    
+    let badge: Event
+    var size: CGFloat = 32
+
     var body: some View {
-        if let pictureUrl = nBadge.badgeThumb?.tag[safe: 1] {
-            if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                LazyImage(url: URL(string: pictureUrl)) { state in
-                    if let container = state.imageContainer {
-                        if container.type == .gif,
-                           let gifData = container.data,
-                           ProfileImageSafety.isSafeAnimatedImage(gifData, policy: .badge) {
-                            GIFImage(data: gifData, isPlaying: .constant(true))
-//                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 32, height: 32)
-                                .clipped()
-                        }
-                        else if let image = state.image {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 32, height: 32)
-                                .clipped()
-                        }
-                        else if state.isLoading {
-                            ProgressView()
-                        }
-                        else {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                        }
-                    }
-                    else {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                    }
-                }
-                .pipeline(ImageProcessing.shared.badges) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
-                .priority(.low)
-            }
-            else {
-                LazyImage(request: ImageRequest(url: URL(string:pictureUrl),
-                                                processors: [.resize(width: 32)],
-                                                options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
-                                                userInfo: [.scaleKey: UIScreen.main.scale])) { state in
-                    if let image = state.image {
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 32, height: 32)
-                            .clipped()
-                    }
-                    else if state.isLoading {
-                        CenteredProgressView()
-                    }
-                    else {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                    }
-                }
-                                                .pipeline(ImageProcessing.shared.badges)
-            }
-        }
+        BadgeArtwork(nBadge: badge.toNEvent(), size: size)
     }
 }
 
-struct ProfileBadgesView_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in pe.loadBadges() }) {
-            NBNavigationStack {
-                let pb = "d7df976260e394f6708d4071ef1baa450e7390967c5dab640d528dd8a7d72894" // kind 30008
-                if let profileBadgesEvent = PreviewFetcher.fetchEvent(pb) {
-                    ProfileBadgesView(verifiedBadges: profileBadgesEvent.verifiedBadges)
-                    
+struct BadgeArtwork: View {
+    let nBadge: NEvent
+    let size: CGFloat
+
+    var body: some View {
+        if let url = badgeArtworkURL(for: nBadge, targetWidth: Int(size)) {
+            LazyImage(
+                request: ImageRequest(
+                    url: url,
+                    processors: [.resize(width: size)],
+                    options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
+                    userInfo: [.scaleKey: UIScreen.main.scale]
+                )
+            ) { state in
+                if let image = state.image {
+                    image.resizable().aspectRatio(contentMode: .fit)
+                } else if state.isLoading {
+                    ProgressView()
+                } else {
+                    Image(systemName: "seal")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .foregroundStyle(.secondary)
                 }
             }
+            .pipeline(ImageProcessing.shared.badges)
+            .frame(width: size, height: size)
+            .clipped()
+            .accessibilityHidden(true)
+        } else {
+            Image(systemName: "seal")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .foregroundStyle(.secondary)
+                .frame(width: size, height: size)
+                .accessibilityHidden(true)
         }
     }
-    
 }

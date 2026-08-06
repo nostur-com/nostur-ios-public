@@ -17,6 +17,7 @@ struct NosturMainView: View {
     @State private var previousUnreadNotifications = 0
     @State private var wasInBackground = false
 #endif
+    @State private var badgeRefreshTrigger = 0
     
     var body: some View {
         AppEnvironment(la: la) {
@@ -38,7 +39,13 @@ struct NosturMainView: View {
             startFirstNotificationMeasurement()
 #endif
         }
+        .task(id: "\(la.account.publicKey):\(badgeRefreshTrigger)", priority: .background) {
+            await BadgeRefreshCoordinator.shared.refreshReceivedAfterDelay(pubkey: la.account.publicKey)
+        }
         .onChange(of: scenePhase) { newPhase in
+            if newPhase == .active {
+                badgeRefreshTrigger += 1
+            }
 #if DEBUG
             if newPhase == .background {
                 wasInBackground = true

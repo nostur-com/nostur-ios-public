@@ -2,289 +2,399 @@
 //  Badges.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 01/03/2023.
+//  NIP-58 domain model, validation and relay loading.
 //
 
-// TODO: NIP-58: Badge definitions can be updated.
-// TODO: Badges could use a rewrite
-
 import Foundation
+import CoreData
+import NostrEssentials
 
-// createBadgeDefinition("nostur_og", name:"Nostur OG", description: "Early adopter of Nostur", image1024:"", thumb50:"")
-func createBadgeDefinition(_ code:String, name:String, description:String, image1024:String, thumb256:String) -> NEvent {
-    var badgeDef = NEvent(content: "")
-    badgeDef.kind = .badgeDefinition
-    badgeDef.tags.append(NostrTag(["d", code]))
-    badgeDef.tags.append(NostrTag(["name", name]))
-    badgeDef.tags.append(NostrTag(["description", description]))
-    badgeDef.tags.append(NostrTag(["image", image1024, "1024x1024"]))
-    badgeDef.tags.append(NostrTag(["thumb", thumb256, "256x256"]))
-    return badgeDef
+enum BadgeKinds {
+    static let award = 8
+    static let profile = 10008
+    static let legacyProfile = 30008
+    static let definition = 30009
+    static let legacyProfileIdentifier = "profile_badges"
 }
 
+struct BadgeAddress: Hashable, Identifiable {
+    let issuerPubkey: String
+    let identifier: String
 
-// createBadgeAward("nostur_og", pubkeys:pubkeys)
-func createBadgeAward(_ pubkey:String, badgeCode:String, pubkeys:[String]) -> NEvent {
-    var badgeAward = NEvent(content: "")
-    badgeAward.kind = .badgeAward
-    badgeAward.tags.append(NostrTag(["a", "30009:\(pubkey):\(badgeCode)"]))
-    for p in pubkeys {
-        badgeAward.tags.append(NostrTag(["p", p]))
+    var id: String { value }
+    var value: String { "\(BadgeKinds.definition):\(issuerPubkey):\(identifier)" }
+
+    init?(value: String) {
+        let parts = value.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
+        guard parts.count == 3,
+              parts[0] == Substring(String(BadgeKinds.definition)),
+              Self.isHex64(String(parts[1])),
+              !parts[2].isEmpty else { return nil }
+        issuerPubkey = String(parts[1])
+        identifier = String(parts[2])
     }
-    return badgeAward
-}
 
-// createProfileBadges(awards: awards)
-func createProfileBadges(awards:[NEvent]) -> NEvent {
-    var profileBadges = NEvent(content: "")
-    profileBadges.kind = .profileBadges
-    profileBadges.tags.append(NostrTag(["d", "profile_badges"]))
-    var noDuplicateATags:Set<String> = []
-    for award in awards {
-        if let awardFirstA = award.firstA() {
-            guard !noDuplicateATags.contains(awardFirstA) else { continue }
-            profileBadges.tags.append(NostrTag(["a", awardFirstA]))
-            profileBadges.tags.append(NostrTag(["e", award.id]))
-            noDuplicateATags.insert(awardFirstA)
+    init?(definition: NEvent) {
+        guard definition.kind.id == BadgeKinds.definition,
+              Self.isHex64(definition.publicKey),
+              let identifier = definition.tags.first(where: { $0.type == "d" })?.value,
+              !identifier.isEmpty else { return nil }
+        issuerPubkey = definition.publicKey
+        self.identifier = identifier
+    }
+
+    private static func isHex64(_ value: String) -> Bool {
+        value.count == 64 && value.unicodeScalars.allSatisfy {
+            (48...57).contains($0.value) || (97...102).contains($0.value)
         }
     }
-    return profileBadges
+}
+
+struct BadgeReference: Hashable, Identifiable {
+    let address: BadgeAddress
+    let awardEventId: String
+    let definitionRelay: String?
+    let awardRelay: String?
+
+    var id: String { "\(address.value)|\(awardEventId)" }
+}
+
+struct ProfileBadge: Identifiable {
+    var id: String { reference.id }
+    let reference: BadgeReference
+    let badge: Event
+    let badgeAward: Event
+}
+
+func badgeReferences(from profile: NEvent) -> [BadgeReference] {
+    let isModern = profile.kind.id == BadgeKinds.profile
+    let isLegacy = profile.kind.id == BadgeKinds.legacyProfile
+        && profile.tags.contains(where: { $0.type == "d" && $0.value == BadgeKinds.legacyProfileIdentifier })
+    guard isModern || isLegacy else { return [] }
+
+    var references: [BadgeReference] = []
+    var index = 0
+    while index + 1 < profile.tags.count {
+        let addressTag = profile.tags[index]
+        let awardTag = profile.tags[index + 1]
+        guard addressTag.type == "a",
+              awardTag.type == "e",
+              let address = BadgeAddress(value: addressTag.value),
+              awardTag.value.count == 64 else {
+            index += 1
+            continue
+        }
+        references.append(BadgeReference(
+            address: address,
+            awardEventId: awardTag.value,
+            definitionRelay: addressTag.tag[safe: 2],
+            awardRelay: awardTag.tag[safe: 2]
+        ))
+        index += 2
+    }
+    return references
+}
+
+func isValidBadge(
+    reference: BadgeReference,
+    profilePubkey: String,
+    award: NEvent,
+    definition: NEvent
+) -> Bool {
+    guard award.id == reference.awardEventId,
+          award.isBadgeAward(for: reference.address),
+          definition.kind.id == BadgeKinds.definition,
+          definition.publicKey == reference.address.issuerPubkey,
+          BadgeAddress(definition: definition) == reference.address else { return false }
+
+    return award.tags.contains { $0.type == "p" && $0.value == profilePubkey }
+}
+
+func receivedBadgeAddresses(from awards: [NEvent], recipientPubkey: String) -> Set<BadgeAddress> {
+    Set(awards.compactMap { award in
+        let addressTags = award.tags.filter { $0.type == "a" }
+        guard award.kind.id == BadgeKinds.award,
+              addressTags.count == 1,
+              award.tags.contains(where: { $0.type == "p" && $0.value == recipientPubkey }),
+              let address = BadgeAddress(value: addressTags[0].value),
+              award.publicKey == address.issuerPubkey else { return nil }
+        return address
+    })
+}
+
+func badgeWearerPubkeys(
+    for address: BadgeAddress,
+    profiles: [NEvent],
+    awardsById: [String: NEvent]
+) -> Set<String> {
+    badgeWearersByAddress(
+        addresses: [address],
+        profiles: profiles,
+        awardsById: awardsById
+    )[address] ?? []
+}
+
+func badgeWearersByAddress(
+    addresses: Set<BadgeAddress>,
+    profiles: [NEvent],
+    awardsById: [String: NEvent]
+) -> [BadgeAddress: Set<String>] {
+    var wearersByAddress: [BadgeAddress: Set<String>] = [:]
+    for profile in profiles {
+        for reference in badgeReferences(from: profile) where addresses.contains(reference.address) {
+            guard let award = awardsById[reference.awardEventId],
+                  award.id == reference.awardEventId,
+                  award.isBadgeAward(for: reference.address),
+                  award.tags.contains(where: { $0.type == "p" && $0.value == profile.publicKey }) else { continue }
+            wearersByAddress[reference.address, default: []].insert(profile.publicKey)
+        }
+    }
+    return wearersByAddress
+}
+
+func createBadgeDefinition(
+    _ code: String,
+    name: String,
+    description: String,
+    image1024: String,
+    thumb256: String
+) -> NEvent {
+    var badge = NEvent(content: "")
+    badge.kind = .badgeDefinition
+    badge.tags.append(NostrTag(["d", code.trimmingCharacters(in: .whitespacesAndNewlines)]))
+    if !name.isEmpty { badge.tags.append(NostrTag(["name", name])) }
+    if !description.isEmpty { badge.tags.append(NostrTag(["description", description])) }
+    if !image1024.isEmpty { badge.tags.append(NostrTag(["image", image1024, "1024x1024"])) }
+    if !thumb256.isEmpty { badge.tags.append(NostrTag(["thumb", thumb256, "256x256"])) }
+    return badge
+}
+
+func createBadgeAward(definitionAddress: String, pubkeys: [String]) -> NEvent? {
+    guard BadgeAddress(value: definitionAddress) != nil else { return nil }
+    let recipients = Array(Set(pubkeys.filter { $0.count == 64 })).sorted()
+    guard !recipients.isEmpty else { return nil }
+
+    var award = NEvent(content: "")
+    award.kind = .badgeAward
+    award.tags.append(NostrTag(["a", definitionAddress]))
+    award.tags.append(contentsOf: recipients.map { NostrTag(["p", $0]) })
+    return award
+}
+
+func createProfileBadges(references: [BadgeReference]) -> NEvent {
+    var profile = NEvent(content: "")
+    profile.kind = .profileBadges
+    var seen = Set<String>()
+    for reference in references where seen.insert(reference.address.value).inserted {
+        var addressTag = ["a", reference.address.value]
+        if let relay = reference.definitionRelay, !relay.isEmpty { addressTag.append(relay) }
+        var awardTag = ["e", reference.awardEventId]
+        if let relay = reference.awardRelay, !relay.isEmpty { awardTag.append(relay) }
+        profile.tags.append(NostrTag(addressTag))
+        profile.tags.append(NostrTag(awardTag))
+    }
+    return profile
 }
 
 extension NEvent {
-    
-    // ON KIND:30009 - BADGE DEFINITION - TAGS/FIELDS
-    var badgeCode:NostrTag? {
-        tags.first(where: { $0.type == "d" })
-    }
-    
-    var badgeName:NostrTag? {
-        tags.first(where: { $0.type == "name" })
-    }
-    
-    var badgeDescription:NostrTag? {
-        tags.first(where: { $0.type == "description" })
-    }
-    
-    var badgeImage:NostrTag? {
-        tags.first(where: { $0.type == "image" })
-    }
-    
-    var badgeThumb:NostrTag? {
-        tags.first(where: { $0.type == "thumb" })
-    }
-    
-    // compiles the badge tags into a badge "a" tag: ["a", "30009:alice:bravery"],
-    var badgeA:String { kind == .badgeDefinition ? "\(String(kind.id)):\(publicKey):\(badgeCode?.value ?? "ERROR")" : "ERRORERRORERRORERRORERRORERRORERRORERROR" }
-    
-    
-    // ON KIND:8 - BADGE AWARD - ["a","30009:alice:bravery"],
-    var badgeAtag:NostrTag? {
-        tags.first(where: { $0.type == "a" })
+    var badgeCode: NostrTag? { tags.first(where: { $0.type == "d" }) }
+    var badgeName: NostrTag? { tags.first(where: { $0.type == "name" }) }
+    var badgeDescription: NostrTag? { tags.first(where: { $0.type == "description" }) }
+    var badgeImage: NostrTag? { tags.first(where: { $0.type == "image" }) }
+    var badgeThumbs: [NostrTag] { tags.filter { $0.type == "thumb" } }
+    var badgeThumb: NostrTag? { badgeThumbs.first }
+    var badgeAddress: BadgeAddress? { BadgeAddress(definition: self) }
+    var badgeA: String? { badgeAddress?.value }
+    var badgeAtag: NostrTag? { tags.first(where: { $0.type == "a" }) }
+
+    func isBadgeAward(for address: BadgeAddress) -> Bool {
+        let addressTags = tags.filter { $0.type == "a" }
+        return kind.id == BadgeKinds.award
+            && publicKey == address.issuerPubkey
+            && addressTags.count == 1
+            && addressTags[0].value == address.value
     }
 }
-
-extension NostrTag {
-    public var definition: String {
-        return tag[1]
-    }
-}
-
 
 extension Event {
-    
-    /**
-     {
-         "id": "badgedef_11023e6a3fe605677095cb4015f7b8cec576d3f5614ef5a958af07a3b49381eb",
-         "pubkey": "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-         "created_at": 1677602715,
-         "kind": 30009,
-         "tags": [
-             ["d","nostur_og"],
-             ["name","Nostur OG"],
-             ["description","Early user of Nostur"],
-             ["image", "", "1024x1024"],
-             ["thumb", "", "50x50"]
-         ],
-         "sig": "cf08316c5af3d42f32024bd93de05226390019088eb9ef88439da3d2389625852c1b5fc80b4f99f4bf5062a67c3771c1f74990b17f98ae60995db80d677617ed"
-     }
+    var badgeAddress: BadgeAddress? { BadgeAddress(definition: toNEvent()) }
+    var badgeA: String? { badgeAddress?.value }
 
-     */
-    
-    // BADGE DEFINITION HELPERS - RETURNS ALL KIND:8 FOR THIS KIND:30009
-    var badgeAwards:[Event] {
-        get {
-            let r = Event.fetchRequest()
-            r.predicate = NSPredicate(format: "kind == 8 and pubkey == %@", pubkey)
-            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            let awards = (try? managedObjectContext?.fetch(r)) ?? []
-            let awardsForThisBadge = awards.filter { award in
-                let badgeA = "\(String(kind)):\(pubkey):\(firstD() ?? "ERROR")"
-                guard let awardsFirstA = award.firstA() else { return false }
-                guard awardsFirstA == badgeA else { return false }
-                return true
-            }
-            return awardsForThisBadge
-        }
+    func isBadgeAward(for address: BadgeAddress) -> Bool {
+        toNEvent().isBadgeAward(for: address)
     }
-    
-    // compiles the badge tags from KIND 30009 into a badge "a" tag
-    var badgeA:String { kind == 30009 ? "\(String(kind)):\(pubkey):\(firstD() ?? "ERROR")" : "ERRORERRORERRORERRORERRORERROR" }
-    
-    // ALL THE P's this BADGE AWARD is awarding
-    var awardedTo:[NostrTag] {
-        return badgeAwards.reduce([]) { partialResult, award in
-            return (partialResult + (award.tags().filter { $0.type == "p" }))
-        }
+
+    var badgeAwards: [Event] {
+        guard let context = managedObjectContext, let badgeAddress else { return [] }
+        let request = Event.fetchRequest()
+        request.predicate = NSPredicate(
+            format: "kind == %d AND pubkey == %@",
+            BadgeKinds.award,
+            pubkey
+        )
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        return ((try? context.fetch(request)) ?? []).filter { $0.isBadgeAward(for: badgeAddress) }
     }
-    
-    
-    /**
-     {
-         "id": "badgeaward_11023e6a3fe605677095cb4015f7b8cec576d3f5614ef5a958af07a3b49381eb",
-         "pubkey": "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-         "created_at": 1677602715,
-         "kind": 8,
-         "tags": [
-             ["a", "30009:9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e:bravery"],
-             ["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]
-             ["p","8be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]
-         ],
-         "sig": "cf08316c5af3d42f32024bd93de05226390019088eb9ef88439da3d2389625852c1b5fc80b4f99f4bf5062a67c3771c1f74990b17f98ae60995db80d677617ed"
-     }
-     */
-    
-    // BADGE AWARDS HELPERS
-    // BADGE DEFINITION HELPERS
-    var badgeDefinition:Event? {
-        get {
-            guard let aTag = tags().first(where: { $0.type == "a" }) else { return nil }
-            let badgeATag = BadgeATag(aTag)
-            if let definitionEvent = Event.fetchReplacableEvent(badgeATag.kind, pubkey: badgeATag.pubkey, definition: badgeATag.badgeCode, context: managedObjectContext!) {
-                return definitionEvent
-            }
-            return nil
-        }
+
+    var awardedTo: [NostrTag] {
+        let uniquePubkeys = Set(badgeAwards.flatMap { $0.pTags() })
+        return uniquePubkeys.sorted().map { NostrTag(["p", $0]) }
     }
-    
-}
 
+    var badgeDefinition: Event? {
+        guard let context = managedObjectContext,
+              kind == Int64(BadgeKinds.award),
+              let addressValue = firstA(),
+              let address = BadgeAddress(value: addressValue),
+              pubkey == address.issuerPubkey else { return nil }
+        return Event.fetchReplacableEvent(
+            Int64(BadgeKinds.definition),
+            pubkey: address.issuerPubkey,
+            definition: address.identifier,
+            context: context
+        )
+    }
 
-extension Event {
-    
-    /**
-     {
-         "pubkey": "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-         "content": "",
-         "id": "da4b67f4789999190498d647b119a27dfc00076219957781dc5c27f08e349ced",
-         "created_at": 1677697678,
-         "sig": "ff70e7bb7be4070381012cdf9d840672288f0482acf0eae162b0fa6e065a370726b60be76ebc4063cfc3195e9cbbc04a0714afa9e3e83f36b75eab1222294658",
-         "kind": 30008,
-         "tags": [
-             [
-                 "d",
-                 "profile_badges"
-             ],
-             [
-                 "a",
-                 "30009:9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e:bravery"
-             ],
-             [
-                 "e",
-                 "51196b78f843c3abfc037b5b375e75900416fb33c328f2df999e883520411916"
-             ]
-         ]
-     }
-     */
-    
-    // PROFILE BADGES HELPERS
-    var verifiedBadges:[ProfileBadge] {
-        get {
-            var badges:[ProfileBadge] = []
-            let nTags = tags()
-            
-            var badgeCollector: (Event?, NostrTag?, Event?) // Tuple of kind 30009, aTag, and kind 8 for readability
-            
-            // NIP-58: MUST BE PRESENT: A d tag with the unique identifier profile_badges
-            if !nTags.contains(where: { nTag in
-                nTag.type == "d" && nTag.value == "profile_badges"
-            }) { return [] }
-            
-            for index in nTags.indices {
-                if nTags[index].type == "a" { //  ["a", "30009:alice:bravery"],
-                    let aTag = BadgeATag(nTags[index])
-                    if let definitionEvent = Event.fetchReplacableEvent(aTag.kind, pubkey: aTag.pubkey, definition: aTag.badgeCode, context: managedObjectContext!) {
-                        badgeCollector = (definitionEvent, nTags[index], nil)
-                    }
-                    else {
-                        badgeCollector = (nil, nil, nil)
-                    }
-                }
-                if nTags[index].type == "e" && badgeCollector.0 != nil { // ["e", "<bravery badge award event id>", "wss://nostr.academy"],
-                    if let badgeAwardEvent = Event.fetchEvent(id: nTags[index].value, context: managedObjectContext!) {
-                        // NIP-58: .Badge Awards referenced by the e tags should contain the same a tag.
-                        guard let badgeAwardATag = badgeAwardEvent.firstA(), badgeAwardATag == badgeCollector.1!.value else {
-                            badgeCollector = (nil, nil, nil)
-                            continue
-                        }
-                        // Check 30009.pubkey == 8.pubkey?
-                        guard badgeAwardEvent.pubkey == badgeCollector.0!.pubkey  else {
-                            badgeCollector = (nil, nil, nil)
-                            continue
-                        }
-                        badgeCollector = (badgeCollector.0, badgeCollector.1, badgeAwardEvent)
-                        badges.append(ProfileBadge(badge: badgeCollector.0!, badgeAward: badgeCollector.2!))
-                        badgeCollector = (nil, nil, nil)
-                    }
-                    else {
-                        badgeCollector = (nil, nil, nil)
-                    }
-                }
-            }
-
-            return badges
-            // NIP-58: Clients SHOULD ignore a without corresponding e tag and vice-versa. Badge Awards referenced by the e tags should contain the same a tag.
-//            return badges.compactMap {
-//                $0.badgeAward.toNEvent().badgeAtag?.value == $0.badge.badgeA ? $0 : nil
-//            }
+    var verifiedBadges: [ProfileBadge] {
+        guard let context = managedObjectContext else { return [] }
+        return badgeReferences(from: toNEvent()).compactMap { reference in
+            guard let award = Event.fetchEvent(id: reference.awardEventId, context: context),
+                  let definition = Event.fetchReplacableEvent(
+                    Int64(BadgeKinds.definition),
+                    pubkey: reference.address.issuerPubkey,
+                    definition: reference.address.identifier,
+                    context: context
+                  ),
+                  isValidBadge(
+                    reference: reference,
+                    profilePubkey: pubkey,
+                    award: award.toNEvent(),
+                    definition: definition.toNEvent()
+                  ) else { return nil }
+            return ProfileBadge(reference: reference, badge: definition, badgeAward: award)
         }
     }
 }
 
-struct BadgeATag {
-    let kind:Int64
-    let pubkey:String
-    let badgeCode:String
-    init(_ a:NostrTag) {
-        let elements = a.value.split(separator: ":")
-        guard elements.count >= 3 else {
-            kind = 30009
-            pubkey = "NONE"
-            badgeCode = "NONE"
+enum BadgeRelayLoader {
+    static func fetchProfile(pubkey: String) async {
+        _ = try? await relayReq(
+            Filters(authors: [pubkey], kinds: [BadgeKinds.profile, BadgeKinds.legacyProfile], limit: 10),
+            timeout: 4.5,
+            accountPubkey: pubkey,
+            useOutbox: true
+        )
+    }
+
+    static func fetchReceived(pubkey: String) async {
+        _ = try? await relayReq(
+            Filters(kinds: [BadgeKinds.award], tagFilter: TagFilter(tag: "p", values: [pubkey]), limit: 500),
+            timeout: 5.5,
+            accountPubkey: pubkey
+        )
+    }
+
+    static func fetchIssued(pubkey: String) async {
+        _ = try? await relayReq(
+            Filters(authors: [pubkey], kinds: [BadgeKinds.definition, BadgeKinds.award], limit: 500),
+            timeout: 5.5,
+            accountPubkey: pubkey,
+            useOutbox: true
+        )
+    }
+
+    static func fetchAwards(for address: BadgeAddress, accountPubkey: String? = nil) async {
+        _ = try? await relayReq(
+            Filters(
+                authors: [address.issuerPubkey],
+                kinds: [BadgeKinds.award],
+                tagFilter: TagFilter(tag: "a", values: [address.value]),
+                limit: 500
+            ),
+            timeout: 5.5,
+            accountPubkey: accountPubkey,
+            useOutbox: true
+        )
+    }
+
+    static func fetchWearers(for addresses: Set<BadgeAddress>, accountPubkey: String? = nil) async {
+        guard !addresses.isEmpty else { return }
+        _ = try? await relayReq(
+            Filters(
+                kinds: [BadgeKinds.profile, BadgeKinds.legacyProfile],
+                tagFilter: TagFilter(tag: "a", values: Set(addresses.map(\.value))),
+                limit: 500
+            ),
+            timeout: 5.5,
+            accountPubkey: accountPubkey
+        )
+    }
+
+    static func fetchDependencies(for references: [BadgeReference], accountPubkey: String? = nil) async {
+        let awardIds = Set(references.map(\.awardEventId))
+        if !awardIds.isEmpty {
+            _ = try? await relayReq(Filters(ids: awardIds), timeout: 4.5, accountPubkey: accountPubkey)
+        }
+
+        let definitionsByIssuer = Dictionary(grouping: references.map(\.address), by: \.issuerPubkey)
+        for (issuer, addresses) in definitionsByIssuer {
+            _ = try? await relayReq(
+                Filters(
+                    authors: [issuer],
+                    kinds: [BadgeKinds.definition],
+                    tagFilter: TagFilter(tag: "d", values: Set(addresses.map(\.identifier)))
+                ),
+                timeout: 4.5,
+                accountPubkey: accountPubkey,
+                useOutbox: true
+            )
+        }
+    }
+}
+
+actor BadgeRefreshCoordinator {
+    static let shared = BadgeRefreshCoordinator()
+
+    private let startupDelayNanoseconds: UInt64 = 10_000_000_000
+    private let receivedRefreshInterval: TimeInterval = 15 * 60
+    private let profileRefreshInterval: TimeInterval = 5 * 60
+    private var activeRefreshes = Set<String>()
+    private var lastProfileRefresh: [String: Date] = [:]
+
+    func refreshReceivedAfterDelay(pubkey: String) async {
+        do {
+            try await Task.sleep(nanoseconds: startupDelayNanoseconds)
+        } catch {
             return
         }
-        self.kind = Int64(elements[safe: 0] ?? "30009") ?? 30009
-        self.pubkey = String(elements[safe: 1] ?? "ERROR")
-        self.badgeCode = String(elements[safe: 2] ?? "ERROR")
+        await refreshReceived(pubkey: pubkey, force: false)
     }
-    
-    init(_ a:String) {
-        let elements = a.split(separator: ":")
-        guard elements.count >= 3 else {
-            kind = 30009
-            pubkey = "NONE"
-            badgeCode = "NONE"
-            return
-        }
-        self.kind = Int64(elements[safe: 0] ?? "30009") ?? 30009
-        self.pubkey = String(elements[safe: 1] ?? "ERROR")
-        self.badgeCode = String(elements[safe: 2] ?? "ERROR")
-    }
-                    
-}
 
-struct ProfileBadge:Identifiable {
-    var id:String { badgeAward.id } // Not sure, but should be good enough to make unique for ForEach
-    var badge:Event // The badge definition
-    var badgeAward:Event // The event the badge was awarded in
+    func refreshReceived(pubkey: String, force: Bool) async {
+        let operationKey = "received:\(pubkey)"
+        guard !activeRefreshes.contains(operationKey) else { return }
+
+        let defaultsKey = accountSpecificKey(pubkey, forKey: "last_badge_awards_refresh_timestamp")
+        if !force {
+            let lastRefresh = UserDefaults.standard.double(forKey: defaultsKey)
+            guard Date.now.timeIntervalSince1970 - lastRefresh >= receivedRefreshInterval else { return }
+        }
+
+        activeRefreshes.insert(operationKey)
+        UserDefaults.standard.set(Date.now.timeIntervalSince1970, forKey: defaultsKey)
+        await BadgeRelayLoader.fetchReceived(pubkey: pubkey)
+        activeRefreshes.remove(operationKey)
+    }
+
+    func refreshProfile(pubkey: String) async {
+        let operationKey = "profile:\(pubkey)"
+        guard !activeRefreshes.contains(operationKey) else { return }
+        if let lastRefresh = lastProfileRefresh[pubkey],
+           Date.now.timeIntervalSince(lastRefresh) < profileRefreshInterval { return }
+
+        activeRefreshes.insert(operationKey)
+        lastProfileRefresh[pubkey] = .now
+        await BadgeRelayLoader.fetchProfile(pubkey: pubkey)
+        activeRefreshes.remove(operationKey)
+    }
 }

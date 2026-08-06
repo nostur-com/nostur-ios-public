@@ -130,6 +130,7 @@ public enum NEventKind: Codable, Equatable, Hashable {
     case badgeDefinition
     case badgeAward
     case profileBadges
+    case badgeSet
     case article
     case video
     case shortVideos // (Vines)
@@ -173,7 +174,8 @@ public enum NEventKind: Codable, Equatable, Hashable {
         case 30000: self = .followSet
         case 30009: self = .badgeDefinition
         case     8: self = .badgeAward
-        case 30008: self = .profileBadges
+        case 10008: self = .profileBadges
+        case 30008: self = .badgeSet
         case 30023: self = .article
         case 34235: self = .video
         case 34236: self = .shortVideos
@@ -223,7 +225,8 @@ public enum NEventKind: Codable, Equatable, Hashable {
         case .badgeDefinition:          return 30009
         case .badgeAward:               return 8
         case .followSet:                return 30000
-        case .profileBadges:            return 30008
+        case .profileBadges:            return 10008
+        case .badgeSet:                 return 30008
         case .article:                  return 30023
         case .video:                    return 34235
         case .shortVideos:              return 34236

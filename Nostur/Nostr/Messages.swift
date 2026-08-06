@@ -110,10 +110,10 @@ public struct RequestMessage {
 ["REQ", "\(subscriptionId ?? ("SS-" + UUID().uuidString))", {"ids": \(JSON.shared.toString(ids)), "limit": \(limit)}]
 """
     }
-    // FETCH A SINGLE EVENT AND REFERENCES
+    // FETCH BADGE AWARDS RECEIVED BY A PUBKEY
     static func getBadgesReceived(_ pubkey:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"kinds": [8]}, {"#p": ["\(pubkey)"]}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"kinds": [8], "#p": ["\(pubkey)"]}]
 """
     }
     
@@ -357,7 +357,7 @@ public struct RequestMessage {
     
     static func getUserMetadataAndBadges(pubkey:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0,30008], "limit": 10}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0,10008,30008], "limit": 10}]
 """
     }
     
@@ -368,7 +368,7 @@ public struct RequestMessage {
     }
     
     static func getUserProfileKinds(pubkey:String, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
-        let kindsJsonArr = JSON.shared.toString(kinds ?? [0,3,30008,10002,10050,10063])
+        let kindsJsonArr = JSON.shared.toString(kinds ?? [0,3,10008,30008,10002,10050,10063])
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": \(kindsJsonArr), "limit": 25}]
 """

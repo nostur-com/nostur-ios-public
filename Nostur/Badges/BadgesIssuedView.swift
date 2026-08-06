@@ -2,75 +2,93 @@
 //  BadgesIssuedView.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 01/03/2023.
-//
+
 import SwiftUI
-import Nuke
-import NukeUI
 import NavigationBackport
 
 struct Badge: Hashable {
-    var badge: Event
-    init(_ badge: Event) {
-        self.badge = badge
-    }
+    let badge: Event
+    init(_ badge: Event) { self.badge = badge }
 }
 
-struct BadgesIssuedContainer:View {
-    @EnvironmentObject var la: LoggedInAccount
-    var body: some View {
-        BadgesIssuedView(pubkey: la.account.publicKey)
-    }
+struct BadgesIssuedContainer: View {
+    @EnvironmentObject private var la: LoggedInAccount
+    var body: some View { BadgesIssuedView(pubkey: la.account.publicKey) }
 }
 
 struct BadgesIssuedView: View {
-    @EnvironmentObject var la: LoggedInAccount
+    @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
-    @State var createNewBadgeSheetShown = false
-    @FetchRequest
-    var badges: FetchedResults<Event>
-    var pubkey: String
-    
+    @State private var isCreatingBadge = false
+
+    let pubkey: String
+    @FetchRequest private var badges: FetchedResults<Event>
+    @FetchRequest private var awards: FetchedResults<Event>
+
     init(pubkey: String) {
         self.pubkey = pubkey
-        let r = Event.fetchRequest()
-        r.predicate = NSPredicate(format: "kind == 30009 AND pubkey == %@ AND mostRecentId == nil", pubkey)
-        r.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        _badges = FetchRequest(fetchRequest: r)
+
+        let badgeRequest = Event.fetchRequest()
+        badgeRequest.predicate = NSPredicate(
+            format: "kind == %d AND pubkey == %@ AND mostRecentId == nil",
+            BadgeKinds.definition,
+            pubkey
+        )
+        badgeRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        _badges = FetchRequest(fetchRequest: badgeRequest)
+
+        let awardRequest = Event.fetchRequest()
+        awardRequest.predicate = NSPredicate(
+            format: "kind == %d AND pubkey == %@",
+            BadgeKinds.award,
+            pubkey
+        )
+        awardRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        _awards = FetchRequest(fetchRequest: awardRequest)
     }
-    
+
+    private func recipientCount(for badge: Event) -> Int {
+        guard let address = badge.badgeAddress else { return 0 }
+        return Set(
+            awards
+                .filter { $0.isBadgeAward(for: address) }
+                .flatMap { $0.pTags() }
+        ).count
+    }
+
     var body: some View {
-//#if DEBUG
-//        let _ = nxLogChanges(of: Self.self)
-//#endif
-        VStack {
-            List(badges) { badge in
-                NBNavigationLink(value: Badge(badge)) {
-                    BadgeIssuedRow(badge: badge)
-                }
-                .listRowBackground(theme.background)
+        List(badges) { badge in
+            NBNavigationLink(value: Badge(badge)) {
+                BadgeIssuedRow(badge: badge, recipientCount: recipientCount(for: badge))
             }
-            .scrollContentBackgroundHidden()
-            .background(theme.listBackground)
+            .listRowBackground(theme.background)
         }
+        .scrollContentBackgroundHidden()
         .background(theme.listBackground)
-        .onAppear {
-            // fetch missing badge definitions:
-            // or just all...
-            req(RM.getBadgesCreatedAndAwarded(pubkey: pubkey))
+        .overlay {
+            if badges.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "seal").font(.largeTitle).foregroundStyle(.secondary)
+                    Text("No badges issued").font(.headline)
+                    Text("Create a badge, then award it from its detail screen.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+            }
         }
+        .task(id: pubkey) { await BadgeRelayLoader.fetchIssued(pubkey: pubkey) }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button(action: {
+                Button("Create new badge", systemImage: "plus") {
                     guard isFullAccount() else { showReadOnlyMessage(); return }
-                    createNewBadgeSheetShown = true
-                }, label: {
-                    Text("Create new badge", comment: "Button to create a new badge")
-                })
+                    isCreatingBadge = true
+                }
             }
         }
-        .navigationTitle(String(localized:"Badges", comment:"Navigation title of Bagdes screen"))
-        .sheet(isPresented: $createNewBadgeSheetShown) {
+        .navigationTitle(String(localized: "Badges"))
+        .sheet(isPresented: $isCreatingBadge) {
             NBNavigationStack {
                 CreateNewBadgeSheet()
                     .environmentObject(la)
@@ -83,86 +101,29 @@ struct BadgesIssuedView: View {
 }
 
 struct BadgeIssuedRow: View {
-    @Environment(\.theme) private var theme
-    var badge: Event
-    var nBadge:NEvent { badge.toNEvent() }
-    
+    let badge: Event
+    var recipientCount: Int? = nil
+
+    private var nBadge: NEvent { badge.toNEvent() }
+
     var body: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .center) {
-                if let pictureUrl = nBadge.badgeImage?.tag[safe: 1] {
-                    if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                        LazyImage(url: URL(string: pictureUrl)) { state in
-                            if let container = state.imageContainer {
-                                if container.type == .gif,
-                                   let gifData = container.data,
-                                   ProfileImageSafety.isSafeAnimatedImage(gifData, policy: .badge) {
-                                    GIFImage(data: gifData, isPlaying: .constant(true))
-//                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 50, height: 50)
-                                        .clipped()
-                                        .padding(10)
-                                }
-                                else if let image = state.image {
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 50, height: 50)
-                                        .clipped()
-                                        .padding(10)
-                                }
-                                else {
-                                    CenteredProgressView()
-                                }
-                            }
-                            else {
-                                CenteredProgressView()
-                            }
-                        }
-                        .pipeline(ImageProcessing.shared.badges) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
-                    }
-                    else {
-                        LazyImage(request: ImageRequest(url: URL(string:pictureUrl),
-                                                        processors: [.resize(width: 50)],
-                                                        options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
-                                                        userInfo: [.scaleKey: UIScreen.main.scale])) { state in
-                            if let image = state.image {
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 50, height: 50)
-                                    .clipped()
-                                    .padding(10)
-                            }
-                            else {
-                                CenteredProgressView()
-                            }
-                        }
-                                                        .pipeline(ImageProcessing.shared.badges)
-                    }
+        HStack(alignment: .top, spacing: 12) {
+            BadgeIcon(badge: badge, size: 52)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge"))
+                    .font(.headline)
+                if let description = nBadge.badgeDescription?.value, !description.isEmpty {
+                    Text(description).font(.caption).foregroundStyle(.secondary)
+                }
+                if let recipientCount {
+                    Text("Awarded to \(recipientCount) people", comment: "Text showing how many badges have been awarded")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .frame(width: 60)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(nBadge.badgeName?.value ?? "No name")
-                    .font(.subheadline)
-                Text(nBadge.badgeDescription?.value ?? "No description").font(.caption2)
-                Text("Awarded to \(badge.awardedTo.count) people", comment: "Text showing how many badges have been awarded").font(.caption)
-            }.padding(10)
+            Spacer()
         }
-        .background(theme.background)
-        .navigationTitle("")
-    }
-    
-}
-
-struct BadgesIssuedView_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in pe.loadBadges() }) {
-            NBNavigationStack {
-                BadgesIssuedContainer()
-            }
-        }
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .combine)
     }
 }
