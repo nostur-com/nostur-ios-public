@@ -1633,6 +1633,10 @@ public final class NewPostModel: ObservableObject {
             nEvent = addRootScopeTags(nEvent: nEvent, replyTo: replyTo, anon: anonPubkey != nil)
             nEvent = addReplyToTags(nEvent: nEvent, replyTo: replyTo, anon: anonPubkey != nil)
         }
+
+        if let recipientPubkey = replyInPrivateTo {
+            nEvent = restrictPrivateReplyPTags(nEvent, to: recipientPubkey)
+        }
         
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             content = replaceNsecWithHunter2(content)
@@ -2679,6 +2683,13 @@ let NIP22_COMMENT_KINDS: Set<Int> = [1111,1244] // default and voice message com
 
 // All roots that use NIP22 replies/comments
 let NIP22_ROOT_KINDS: Set<Int> = [1222,20,30023,34236,9735] // voice messages / pictures / articles / vines
+
+func restrictPrivateReplyPTags(_ input: NEvent, to recipientPubkey: String) -> NEvent {
+    var nEvent = input
+    nEvent.tags.removeAll(where: { $0.type == "p" })
+    nEvent.tags.append(NostrTag(["p", recipientPubkey]))
+    return nEvent
+}
 
 // NIP-22
 // Comments MUST point to the root scope using uppercase tag names (e.g. K, E, A or I)
