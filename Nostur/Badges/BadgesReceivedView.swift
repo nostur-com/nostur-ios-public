@@ -435,6 +435,8 @@ private struct BadgeSelectionView: View {
 }
 
 struct BadgeReceivedRow: View {
+    @Environment(\.containerID) private var containerID
+
     let badge: Event
     let isSelected: Bool
     let receivedAt: Int64
@@ -451,8 +453,15 @@ struct BadgeReceivedRow: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
+                    .padding(.trailing, 28)
                 HStack(spacing: 3) {
-                    Text("Received")
+                    Text("Awarded by")
+                    ObservedPFP(pubkey: badge.pubkey, size: 20, forceFlat: true)
+                        .highPriorityGesture(
+                            TapGesture().onEnded {
+                                navigateTo(ContactPath(key: badge.pubkey), context: containerID)
+                            }
+                        )
                     Ago(receivedAt)
                     Text("ago")
                 }
@@ -460,21 +469,26 @@ struct BadgeReceivedRow: View {
                 .foregroundStyle(.secondary)
                 if let description = nBadge.badgeDescription?.value, !description.isEmpty {
                     Text(description)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.body)
+                        .foregroundStyle(.primary)
                         .lineLimit(2)
                 }
                 BadgeWornBy(pubkeys: wearerPubkeys, onShowAll: onShowWearers)
             }
-            Spacer(minLength: 4)
-            Image(systemName: isSelected ? "checkmark.circle.fill" : "plus.circle")
-                .font(.title3)
-                .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                .padding(.top, 2)
-                .accessibilityHidden(true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(alignment: .topTrailing) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "plus.circle")
+                    .font(.title3)
+                    .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                    .padding(.top, 2)
+                    .accessibilityHidden(true)
+            }
         }
         .padding(.vertical, 6)
         .contentShape(Rectangle())
+        .task(id: badge.pubkey) {
+            QueuedFetcher.shared.enqueue(pTag: badge.pubkey)
+        }
     }
 }
 
@@ -488,19 +502,22 @@ private struct BadgeWornBy: View {
 
     var body: some View {
         Button(action: onShowAll) {
-            HStack(spacing: 4) {
+            HStack(alignment: .top, spacing: 4) {
                 Text("Worn by")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize()
-                HStack(spacing: 2) {
-                    ForEach(Array(visiblePubkeys), id: \.self) { pubkey in
-                        ObservedPFP(pubkey: pubkey, size: 20, forceFlat: true)
-                            .highPriorityGesture(
-                                TapGesture().onEnded {
-                                    navigateTo(ContactPath(key: pubkey), context: containerID)
-                                }
-                            )
+                    .padding(.top, 2)
+                VStack(alignment: .trailing, spacing: 2) {
+                    HStack(spacing: 2) {
+                        ForEach(Array(visiblePubkeys), id: \.self) { pubkey in
+                            ObservedPFP(pubkey: pubkey, size: 20, forceFlat: true)
+                                .highPriorityGesture(
+                                    TapGesture().onEnded {
+                                        navigateTo(ContactPath(key: pubkey), context: containerID)
+                                    }
+                                )
+                        }
                     }
                     if pubkeys.count > visiblePubkeys.count {
                         Text("+\(pubkeys.count - visiblePubkeys.count) others")
@@ -510,8 +527,10 @@ private struct BadgeWornBy: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .trailing)
             .contentShape(Rectangle())
         }
+        .frame(maxWidth: .infinity, alignment: .trailing)
         .buttonStyle(.plain)
         .task(id: pubkeys.joined(separator: ",")) {
             for pubkey in visiblePubkeys {
