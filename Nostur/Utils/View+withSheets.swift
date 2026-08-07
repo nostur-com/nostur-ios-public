@@ -420,6 +420,8 @@ struct NewPostInfo: Identifiable, Hashable {
     let id = UUID()
     let kind: NEventKind
     var directMention: NRContact? = nil
+    var initialText: String? = nil
+    var initialImages: [PostedImageMeta] = []
 }
 
 struct ReplyTo: Identifiable, Hashable {
@@ -555,4 +557,88 @@ struct ActivityView: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+/// A stable, branded canvas for content shared outside Nostur. Feature-specific
+/// cards provide only their content, so the export framing can be reused.
+struct ShareCardCanvas<Content: View>: View {
+    @Environment(\.theme) private var theme
+
+    private let content: Content
+    private let showsBranding: Bool
+
+    init(showsBranding: Bool = false, @ViewBuilder content: () -> Content) {
+        self.showsBranding = showsBranding
+        self.content = content()
+    }
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [theme.accent.opacity(0.18), theme.listBackground, theme.listBackground],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            VStack(spacing: 16) {
+                content
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(theme.background.opacity(0.88))
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .shadow(color: Color.black.opacity(0.08), radius: 14, y: 6)
+
+                if showsBranding {
+                    HStack(spacing: 7) {
+                        Image("NosturLogoCreature")
+                            .resizable()
+                            .renderingMode(.template)
+                            .aspectRatio(contentMode: .fit)
+                            .foregroundStyle(theme.accent)
+                            .frame(width: 18, height: 22)
+                        Text(verbatim: "Nostur · nostur.com")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .foregroundStyle(theme.secondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+            }
+            .padding(22)
+        }
+        .frame(width: 390)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// Renders any SwiftUI share card at export quality. The short settling window
+/// lets cached or asynchronously loaded artwork update before the final frame.
+@available(iOS 16.0, *)
+@MainActor
+enum ShareCardRenderer {
+    static func render<Content: View>(
+        _ content: Content,
+        scale: CGFloat = 3
+    ) async -> UIImage? {
+        let renderer = ImageRenderer(content: content.fixedSize(horizontal: false, vertical: true))
+        renderer.scale = scale
+        _ = renderer.uiImage
+
+        do {
+            try await Task.sleep(nanoseconds: 650_000_000)
+        } catch {
+            return nil
+        }
+        return renderer.uiImage
+    }
+}
+
+func shareCardComposerImage(_ image: UIImage, altText: String) -> PostedImageMeta? {
+    guard let data = image.pngData() else { return nil }
+    return PostedImageMeta(
+        index: 0,
+        data: data,
+        type: .png,
+        uniqueId: UUID().uuidString,
+        altText: altText
+    )
 }

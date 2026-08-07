@@ -45,6 +45,7 @@ public struct PostedImageMeta: Hashable, Identifiable, Equatable {
         hasher.combine(data)
         hasher.combine(type)
         hasher.combine(isGifPlaceholder)
+        hasher.combine(altText)
     }
     
     public var id: String { uniqueId }
@@ -52,6 +53,7 @@ public struct PostedImageMeta: Hashable, Identifiable, Equatable {
     public let data: Data
     public let type: ImageType
     public let uniqueId: String
+    public var altText: String? = nil
     
     public var isGifPlaceholder = false // to show spinner why fetching actual GIF (Safari copy paste)
 

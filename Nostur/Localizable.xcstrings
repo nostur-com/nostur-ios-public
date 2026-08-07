@@ -1502,6 +1502,26 @@
         }
       }
     },
+    "%@ badge awarded to %@ by %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ badge awarded to %2$@ by %3$@."
+          }
+        }
+      }
+    },
+    "%@ badge issued by %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ badge issued by %2$@."
+          }
+        }
+      }
+    },
     "%@ by" : {
       "localizations" : {
         "es" : {
@@ -2287,6 +2307,9 @@
         }
       }
     },
+    "%lld recipients" : {
+
+    },
     "%lld relays disabled" : {
       "localizations" : {
         "es" : {
@@ -2888,6 +2911,9 @@
     },
     "1 GB" : {
       "shouldTranslate" : false
+    },
+    "1 recipient" : {
+
     },
     "1 year" : {
       "comment" : "DM expiration duration label",
@@ -4556,9 +4582,6 @@
         }
       }
     },
-    "ago" : {
-
-    },
     "AirPlay and output" : {
 
     },
@@ -5289,9 +5312,6 @@
         }
       }
     },
-    "Awarded by" : {
-
-    },
     "Awarded to" : {
 
     },
@@ -5342,6 +5362,9 @@
         }
       }
     },
+    "Awarding…" : {
+
+    },
     "Back" : {
       "comment" : "Button to go back",
       "localizations" : {
@@ -5369,6 +5392,12 @@
 
     },
     "Badge address" : {
+
+    },
+    "Badge award" : {
+
+    },
+    "Badge awarded" : {
 
     },
     "Badge identifier" : {
@@ -6218,6 +6247,9 @@
     },
     "chat" : {
       "comment" : "Label next to time indicating a live chat mention notification"
+    },
+    "Check out the “%@” badge." : {
+
     },
     "Checked" : {
       "localizations" : {
@@ -10442,9 +10474,6 @@
         }
       }
     },
-    "Drag while editing to change their order." : {
-
-    },
     "Drop image..." : {
       "localizations" : {
         "es" : {
@@ -12532,6 +12561,9 @@
         }
       }
     },
+    "From" : {
+
+    },
     "Funny" : {
       "comment" : "Feed title\nTab title for the Funny feed",
       "localizations" : {
@@ -13249,6 +13281,12 @@
         }
       }
     },
+    "I created the “%@” badge." : {
+
+    },
+    "I was awarded the “%@” badge! 🎉" : {
+
+    },
     "ID" : {
       "comment" : "Label for post identifier (ID)",
       "extractionState" : "stale",
@@ -13663,6 +13701,9 @@
         }
       }
     },
+    "Invalid badge award" : {
+
+    },
     "Invalid key" : {
       "comment" : "Message shown when user has entered an invalid key",
       "localizations" : {
@@ -13753,6 +13794,9 @@
           }
         }
       }
+    },
+    "Issued by" : {
+
     },
     "It looks like %lld contacts were removed from your following list, perhaps from another nostr app%@" : {
       "localizations" : {
@@ -17329,9 +17373,6 @@
     "No badges issued" : {
 
     },
-    "No badges selected for your profile" : {
-
-    },
     "No Blossom server configured. Please configure a Blossom server in Nostur settings to upload images." : {
       "localizations" : {
         "es" : {
@@ -17613,6 +17654,9 @@
           }
         }
       }
+    },
+    "Nostr badge" : {
+
     },
     "Nostr Dunbar Number" : {
       "localizations" : {
@@ -21333,6 +21377,9 @@
         }
       }
     },
+    "Received from" : {
+
+    },
     "Received from:" : {
       "comment" : "Heading for list of relays received from",
       "localizations" : {
@@ -24720,6 +24767,18 @@
         }
       }
     },
+    "Share as image" : {
+
+    },
+    "Share badge" : {
+
+    },
+    "Share badge as image" : {
+
+    },
+    "Share badge in a post" : {
+
+    },
     "Share highlight" : {
       "comment" : "Navigation title for screen to Share a Highlighted Text",
       "localizations" : {
@@ -24742,6 +24801,9 @@
           }
         }
       }
+    },
+    "Share in a post" : {
+
     },
     "Share link" : {
       "comment" : "Post context menu button",
@@ -24810,6 +24872,9 @@
           }
         }
       }
+    },
+    "Share this badge" : {
+
     },
     "Share this list with a different title" : {
       "localizations" : {
@@ -29504,6 +29569,9 @@
         }
       }
     },
+    "Use Edit to reorder the badges shown on your profile." : {
+
+    },
     "Use existing account" : {
       "comment" : "Button to start using an existing account",
       "localizations" : {
@@ -30469,9 +30537,6 @@
       }
     },
     "Worn by" : {
-
-    },
-    "Worn by 0 people" : {
 
     },
     "WOT_NORMAL" : {

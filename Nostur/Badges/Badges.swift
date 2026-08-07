@@ -317,6 +317,20 @@ enum BadgeRelayLoader {
         )
     }
 
+    static func fetchDefinition(for address: BadgeAddress, accountPubkey: String? = nil) async {
+        _ = try? await relayReq(
+            Filters(
+                authors: [address.issuerPubkey],
+                kinds: [BadgeKinds.definition],
+                tagFilter: TagFilter(tag: "d", values: [address.identifier]),
+                limit: 1
+            ),
+            timeout: 4.5,
+            accountPubkey: accountPubkey,
+            useOutbox: true
+        )
+    }
+
     static func fetchWearers(for addresses: Set<BadgeAddress>, accountPubkey: String? = nil) async {
         guard !addresses.isEmpty else { return }
         _ = try? await relayReq(

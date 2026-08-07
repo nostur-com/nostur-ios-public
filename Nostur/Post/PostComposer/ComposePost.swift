@@ -19,6 +19,8 @@ struct ComposePost: View {
     public var onDismiss: () -> Void
     public var kind: NEventKind = .textNote
     public var highlight: NewHighlight?
+    public var initialText: String?
+    public var initialImages: [PostedImageMeta] = []
     
     @State private var isAuthorSelectionShown = false
     
@@ -655,6 +657,12 @@ struct ComposePost: View {
             }
             else {
                 vm.nEvent = NEvent(content: "")
+            }
+            if let initialText {
+                vm.typingTextModel.text = initialText
+            }
+            if !initialImages.isEmpty {
+                vm.typingTextModel.pastedImages = initialImages
             }
             ConnectionPool.shared.connectAllWrite()
         }

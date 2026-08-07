@@ -577,7 +577,13 @@ public final class NewPostModel: ObservableObject {
                             guard let self else { return }
                             blossomUploader.processResponse(uploadItem: uploadItem)
                             guard let url = uploadItem.downloadUrl else { return }
-                            self.uploadedImageImetasById[imageId] = Imeta(url: url, dim: uploadItem.dim, hash: uploadItem.sha256processed, blurhash: uploadItem.blurhash)
+                            self.uploadedImageImetasById[imageId] = Imeta(
+                                url: url,
+                                dim: uploadItem.dim,
+                                hash: uploadItem.sha256processed,
+                                blurhash: uploadItem.blurhash,
+                                alt: self.typingTextModel.pastedImages.first(where: { $0.uniqueId == imageId })?.altText
+                            )
                             self.typingTextModel.pastedImageUploadStates[imageId] = .uploaded
                             if self.sendWithUploadedImagesIfComplete(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss) {
                                 self.typingTextModel.uploading = false
@@ -703,7 +709,13 @@ public final class NewPostModel: ObservableObject {
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .uploading(percentage: percentage)
                             case .success:
                                 guard let url = mediaRequestBag.downloadUrl else { return }
-                                self.uploadedImageImetasById[imageId] = Imeta(url: url, dim: mediaRequestBag.dim, hash: mediaRequestBag.sha256, blurhash: mediaRequestBag.blurhash)
+                                self.uploadedImageImetasById[imageId] = Imeta(
+                                    url: url,
+                                    dim: mediaRequestBag.dim,
+                                    hash: mediaRequestBag.sha256,
+                                    blurhash: mediaRequestBag.blurhash,
+                                    alt: self.typingTextModel.pastedImages.first(where: { $0.uniqueId == imageId })?.altText
+                                )
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .uploaded
                                 if self.sendWithUploadedImagesIfComplete(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss) {
                                     self.typingTextModel.uploading = false
@@ -786,7 +798,7 @@ public final class NewPostModel: ObservableObject {
                     }
                 }, receiveValue: { [weak self] url in
                     guard let self else { return }
-                    self.uploadedImageImetasById[image.uniqueId] = Imeta(url: url)
+                    self.uploadedImageImetasById[image.uniqueId] = Imeta(url: url, alt: image.altText)
                     self.typingTextModel.pastedImageUploadStates[image.uniqueId] = .uploaded
                     if self.sendWithUploadedImagesIfComplete(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss) {
                         self.typingTextModel.uploading = false
@@ -1508,6 +1520,9 @@ public final class NewPostModel: ObservableObject {
                 }
                 if let hash = imeta.hash, !hash.isEmpty {
                     imetaParts.append("sha256 \(hash)")
+                }
+                if let alt = imeta.alt, !alt.isEmpty {
+                    imetaParts.append("alt \(alt)")
                 }
 
                 nEvent.tags.append(NostrTag(imetaParts))
@@ -2435,6 +2450,7 @@ struct Imeta {
     var blurhash: String?
     var duration: Int?
     var waveform: [Int]?
+    var alt: String?
 }
 
 

@@ -98,14 +98,8 @@ struct CreateNewBadgeSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", systemImage: "xmark") { cancel() }
+                Button("Cancel") { cancel() }
                     .disabled(isCreating)
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button("About badge publishing", systemImage: "info.circle") {
-                    showPublishingInfo = true
-                }
-                .labelStyle(.iconOnly)
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button(createButtonTitle) { submit() }
@@ -170,6 +164,12 @@ struct CreateNewBadgeSheet: View {
         badgeDetailsSection
         advancedSection
 
+        Section {
+            Button("About badge publishing", systemImage: "info.circle") {
+                showPublishingInfo = true
+            }
+        }
+
         if let creationStatus {
             Section {
                 HStack(spacing: 8) {
@@ -203,20 +203,30 @@ struct CreateNewBadgeSheet: View {
 
     private var badgeDetailsSection: some View {
         Section("Badge name and description") {
-            TextField("Name", text: $name, prompt: Text("Community Builder"))
-                .textContentType(.name)
-                .submitLabel(.next)
-                .focused($focusedField, equals: .name)
-                .onSubmit { focusedField = .description }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Name")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                TextField("Name", text: $name, prompt: Text("Community Builder"))
+                    .textContentType(.name)
+                    .submitLabel(.next)
+                    .focused($focusedField, equals: .name)
+                    .onSubmit { focusedField = .description }
+            }
 
-            TextField(
-                "Description",
-                text: $badgeDescription,
-                prompt: Text("What did someone do to earn this badge?")
-            )
-            .submitLabel(.done)
-            .focused($focusedField, equals: .description)
-            .onSubmit { focusedField = nil }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Description")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                TextField(
+                    "Description",
+                    text: $badgeDescription,
+                    prompt: Text("What did someone do to earn this badge?")
+                )
+                .submitLabel(.done)
+                .focused($focusedField, equals: .description)
+                .onSubmit { focusedField = nil }
+            }
         }
     }
 

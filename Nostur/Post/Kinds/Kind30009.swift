@@ -10,6 +10,216 @@ import Nuke
 import NukeUI
 import CoreData
 
+/// NIP-58 badge award (kind 8) presentation. The award points to its badge
+/// definition with an `a` tag, so the card resolves that definition on demand.
+struct Kind8BadgeAward: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
+    @Environment(\.availableWidth) private var availableWidth
+
+    private let nrPost: NRPost
+    private let hideFooter: Bool
+    private let missingReplyTo: Bool
+    private var connect: ThreadConnectDirection? = nil
+    private let isReply: Bool
+    private let isDetail: Bool
+    private let isEmbedded: Bool
+    private let fullWidth: Bool
+    private let forceAutoload: Bool
+    private let address: BadgeAddress?
+    private let recipientPubkeys: [String]
+
+    @FetchRequest private var definitions: FetchedResults<Event>
+
+    private var definition: Event? {
+        guard let address else { return nil }
+        return definitions.first { $0.badgeAddress == address }
+    }
+
+    private var nBadge: NEvent? { definition?.toNEvent() }
+
+    private var badgeName: String {
+        nBadge?.badgeName?.value
+            ?? nBadge?.badgeCode?.value
+            ?? address?.identifier
+            ?? String(localized: "Badge award")
+    }
+
+    private var badgeDescription: String? {
+        guard let value = nBadge?.badgeDescription?.value, !value.isEmpty else { return nil }
+        return value
+    }
+
+    init(
+        nrPost: NRPost,
+        hideFooter: Bool = true,
+        missingReplyTo: Bool = false,
+        connect: ThreadConnectDirection? = nil,
+        isReply: Bool = false,
+        isDetail: Bool = false,
+        isEmbedded: Bool = false,
+        fullWidth: Bool,
+        forceAutoload: Bool = false
+    ) {
+        self.nrPost = nrPost
+        self.hideFooter = hideFooter
+        self.missingReplyTo = missingReplyTo
+        self.connect = connect
+        self.isReply = isReply
+        self.isDetail = isDetail
+        self.isEmbedded = isEmbedded
+        self.fullWidth = fullWidth
+        self.forceAutoload = forceAutoload
+
+        let addressTags = nrPost.fastTags.filter { $0.0 == "a" }
+        let parsedAddress = addressTags.count == 1 ? BadgeAddress(value: addressTags[0].1) : nil
+        self.address = parsedAddress.flatMap { $0.issuerPubkey == nrPost.pubkey ? $0 : nil }
+        self.recipientPubkeys = Array(Set(
+            nrPost.fastTags
+                .filter { $0.0 == "p" && $0.1.count == 64 }
+                .map(\.1)
+        )).sorted()
+
+        let request = Event.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        if let address = self.address {
+            request.predicate = NSPredicate(
+                format: "kind == %d AND pubkey == %@",
+                BadgeKinds.definition,
+                address.issuerPubkey
+            )
+        } else {
+            request.predicate = NSPredicate(value: false)
+        }
+        _definitions = FetchRequest(fetchRequest: request)
+    }
+
+    var body: some View {
+        Group {
+            if isEmbedded {
+                PostEmbeddedLayout(nrPost: nrPost, authorAtBottom: true) {
+                    awardCard(iconSize: 64, descriptionLines: 2)
+                }
+            } else {
+                PostLayout(
+                    nrPost: nrPost,
+                    hideFooter: hideFooter,
+                    missingReplyTo: missingReplyTo,
+                    connect: connect,
+                    isReply: isReply,
+                    isDetail: isDetail,
+                    fullWidth: fullWidth,
+                    forceAutoload: forceAutoload,
+                    isItem: true,
+                    showsFooterForItem: !isDetail,
+                    nxViewingContext: nxViewingContext,
+                    containerID: containerID,
+                    theme: theme,
+                    availableWidth: availableWidth
+                ) {
+                    awardCard(iconSize: isDetail ? 96 : 72, descriptionLines: isDetail ? 6 : 3)
+                }
+            }
+        }
+        .task(id: address?.value) {
+            recipientPubkeys.forEach { QueuedFetcher.shared.enqueue(pTag: $0) }
+            guard definition == nil, let address else { return }
+            await BadgeRelayLoader.fetchDefinition(for: address)
+        }
+    }
+
+    private func awardCard(iconSize: CGFloat, descriptionLines: Int) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Group {
+                if let definition {
+                    BadgeIcon(badge: definition, size: iconSize)
+                } else if address != nil {
+                    ProgressView()
+                        .frame(width: iconSize, height: iconSize)
+                } else {
+                    Image(systemName: "exclamationmark.seal")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .foregroundStyle(.secondary)
+                        .frame(width: iconSize, height: iconSize)
+                }
+            }
+            .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Badge awarded")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Text(badgeName)
+                    .font(.headline)
+                    .foregroundStyle(theme.primary)
+                    .lineLimit(2)
+
+                if let badgeDescription {
+                    Text(badgeDescription)
+                        .font(.body)
+                        .foregroundStyle(theme.primary)
+                        .lineLimit(descriptionLines)
+                }
+
+                recipientSummary
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, isEmbedded ? 2 : 6)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: openBadgeDetail)
+    }
+
+    @ViewBuilder
+    private var recipientSummary: some View {
+        if recipientPubkeys.count == 1, let pubkey = recipientPubkeys.first {
+            HStack(spacing: 5) {
+                Text("Awarded to")
+                ObservedPFP(pubkey: pubkey, size: 18, forceFlat: nxViewingContext.contains(.screenshot))
+                ContactName(pubkey: pubkey)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        } else if !recipientPubkeys.isEmpty {
+            HStack(spacing: 5) {
+                HStack(spacing: -5) {
+                    ForEach(recipientPubkeys.prefix(4), id: \.self) { pubkey in
+                        ObservedPFP(pubkey: pubkey, size: 18, forceFlat: nxViewingContext.contains(.screenshot))
+                    }
+                }
+                Text("\(recipientPubkeys.count) recipients")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        } else {
+            Label("Invalid badge award", systemImage: "exclamationmark.triangle")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func openBadgeDetail() {
+        guard !nxViewingContext.contains(.preview), let address else { return }
+        if let definition {
+            navigateTo(Badge(definition), context: containerID)
+            return
+        }
+        guard let naddr = try? ShareableIdentifier(
+            prefix: "naddr",
+            kind: Int64(BadgeKinds.definition),
+            pubkey: address.issuerPubkey,
+            dTag: address.identifier,
+            relays: []
+        ).bech32string else { return }
+        navigateTo(Naddr1Path(naddr1: naddr, navigationTitle: badgeName), context: containerID)
+    }
+}
+
 struct Kind30009: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme

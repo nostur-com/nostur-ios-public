@@ -290,17 +290,16 @@ private struct BadgeSelectionView: View {
         let wearerSnapshot = wearerPubkeysByAddress
 
         List {
-            Section {
-                if model.selected.isEmpty {
-                    Text("No badges selected for your profile")
-                        .foregroundStyle(.secondary)
-                } else {
+            if !model.selected.isEmpty {
+                Section {
                     ForEach(model.selected) { reference in
                         if let candidate = candidateByReference[reference.id]
                             ?? resolvedCandidates.first(where: { $0.reference.address == reference.address }) {
                             let wearerPubkeys = wearerSnapshot[reference.address] ?? []
                             BadgeReceivedRow(
                                 badge: candidate.badge,
+                                award: candidate.award,
+                                recipientPubkey: pubkey,
                                 isSelected: true,
                                 receivedAt: candidate.award.created_at,
                                 wearerPubkeys: wearerPubkeys,
@@ -310,7 +309,7 @@ private struct BadgeSelectionView: View {
                             .accessibilityAddTraits(.isButton)
                             .accessibilityAction { model.remove(reference) }
                             .accessibilityHint("Remove from your profile")
-                            .listRowBackground(theme.accent.opacity(0.08))
+                            .listRowBackground(theme.background)
                         } else {
                             Label(reference.address.identifier, systemImage: "seal")
                                 .foregroundStyle(.secondary)
@@ -318,11 +317,13 @@ private struct BadgeSelectionView: View {
                     }
                     .onDelete(perform: model.remove)
                     .onMove(perform: model.move)
+                } header: {
+                    Text(verbatim: selectedSectionTitle)
+                } footer: {
+                    if model.selected.count > 1 {
+                        Text("Use Edit to reorder the badges shown on your profile.")
+                    }
                 }
-            } header: {
-                Text(verbatim: selectedSectionTitle)
-            } footer: {
-                Text("Drag while editing to change their order.")
             }
 
             Section("Available badges") {
@@ -334,6 +335,8 @@ private struct BadgeSelectionView: View {
                         let wearerPubkeys = wearerSnapshot[candidate.reference.address] ?? []
                         BadgeReceivedRow(
                             badge: candidate.badge,
+                            award: candidate.award,
+                            recipientPubkey: pubkey,
                             isSelected: false,
                             receivedAt: candidate.award.created_at,
                             wearerPubkeys: wearerPubkeys,
@@ -436,14 +439,22 @@ private struct BadgeSelectionView: View {
 
 struct BadgeReceivedRow: View {
     @Environment(\.containerID) private var containerID
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.theme) private var theme
 
     let badge: Event
+    let award: Event
+    let recipientPubkey: String
     let isSelected: Bool
     let receivedAt: Int64
     let wearerPubkeys: [String]
     let onShowWearers: () -> Void
     var showsSelectionIndicator = true
     var showsWearers = true
+
+    @State private var isShowingShareOptions = false
+    @State private var isPreparingImage = false
+    @State private var shareableImage: ShareablePostImage?
 
     private var nBadge: NEvent { badge.toNEvent() }
 
@@ -455,17 +466,19 @@ struct BadgeReceivedRow: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
-                    .padding(.trailing, 28)
                 HStack(spacing: 3) {
-                    Text("Awarded by")
+                    Text("Received from")
                     ObservedPFP(pubkey: badge.pubkey, size: 20, forceFlat: true)
                         .highPriorityGesture(
                             TapGesture().onEnded {
                                 navigateTo(ContactPath(key: badge.pubkey), context: containerID)
                             }
                         )
-                    Ago(receivedAt)
-                    Text("ago")
+                    ContactName(pubkey: badge.pubkey)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                    Text(verbatim: "·")
+                    BadgeRelativeTime(receivedAt)
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -480,14 +493,21 @@ struct BadgeReceivedRow: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .topTrailing) {
+            VStack(spacing: 12) {
                 if showsSelectionIndicator {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "plus.circle")
                         .font(.title3)
                         .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                        .padding(.top, 2)
                         .accessibilityHidden(true)
                 }
+                Button("Share this badge", systemImage: "square.and.arrow.up") {
+                    isShowingShareOptions = true
+                }
+                .labelStyle(.iconOnly)
+                .font(.body)
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Share this badge")
+                .disabled(isPreparingImage)
             }
         }
         .padding(.vertical, 6)
@@ -495,6 +515,170 @@ struct BadgeReceivedRow: View {
         .task(id: badge.pubkey) {
             QueuedFetcher.shared.enqueue(pTag: badge.pubkey)
         }
+        .confirmationDialog("Share badge", isPresented: $isShowingShareOptions, titleVisibility: .visible) {
+            Button("Share in a post", systemImage: "square.and.pencil") {
+                shareBadgeReceiptInPost()
+            }
+            if #available(iOS 16.0, *) {
+                Button("Share as image", systemImage: "photo") {
+                    Task { await shareBadgeReceiptAsImage() }
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        }
+        .sheet(item: $shareableImage) { image in
+            ActivityView(activityItems: [image])
+        }
+    }
+
+    private func shareBadgeReceiptInPost() {
+        guard isFullAccount() else { showReadOnlyMessage(); return }
+        guard let awardIdentifier = try? ShareableIdentifier(
+                prefix: "nevent",
+                kind: Int64(BadgeKinds.award),
+                pubkey: award.pubkey,
+                eventId: award.id,
+                relays: Array(resolveRelayHint(forPubkey: award.pubkey, receivedFromRelays: award.relays_))
+              ) else { return }
+
+        let badgeName = nBadge.badgeName?.value
+            ?? nBadge.badgeCode?.value
+            ?? String(localized: "Unnamed badge")
+        let text = String(localized: "I was awarded the “\(badgeName)” badge! 🎉")
+            + "\n\nnostr:\(awardIdentifier.bech32string)"
+
+        guard #available(iOS 16.0, *) else {
+            AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .textNote, initialText: text)
+            return
+        }
+
+        Task { @MainActor in
+            guard !isPreparingImage else { return }
+            isPreparingImage = true
+            defer { isPreparingImage = false }
+
+            let image = await renderBadgeReceiptImage()
+            let recipientName = NRContact.instance(of: recipientPubkey).anyName
+            let issuerName = NRContact.instance(of: badge.pubkey).anyName
+            let altText = String(localized: "\(badgeName) badge awarded to \(recipientName) by \(issuerName).")
+            let initialImages = image.flatMap { shareCardComposerImage($0, altText: altText) }.map { [$0] } ?? []
+            AppSheetsModel.shared.newPostInfo = NewPostInfo(
+                kind: .textNote,
+                initialText: text,
+                initialImages: initialImages
+            )
+        }
+    }
+
+    @available(iOS 16.0, *)
+    @MainActor
+    private func shareBadgeReceiptAsImage() async {
+        guard !isPreparingImage else { return }
+        isPreparingImage = true
+        defer { isPreparingImage = false }
+
+        guard let image = await renderBadgeReceiptImage() else { return }
+        let badgeName = nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Badge")
+        shareableImage = ShareablePostImage(
+            image: image,
+            title: badgeName,
+            subtitle: String(localized: "Badge awarded")
+        )
+    }
+
+    @available(iOS 16.0, *)
+    @MainActor
+    private func renderBadgeReceiptImage() async -> UIImage? {
+        let card = ShareCardCanvas {
+            BadgeReceiptShareCard(
+                badge: badge,
+                recipientPubkey: recipientPubkey,
+                awardedAt: award.created_at
+            )
+        }
+        .environment(\.colorScheme, colorScheme)
+        .environment(\.theme, theme)
+        .environment(\.managedObjectContext, DataProvider.shared().viewContext)
+        return await ShareCardRenderer.render(card)
+    }
+}
+
+private struct BadgeReceiptShareCard: View {
+    @Environment(\.theme) private var theme
+
+    let badge: Event
+    let recipientPubkey: String
+    let awardedAt: Int64
+
+    private var nBadge: NEvent { badge.toNEvent() }
+    private var name: String {
+        nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .firstTextBaseline) {
+                Label("Badge awarded", systemImage: "seal.fill")
+                    .font(.caption.weight(.semibold))
+                    .textCase(.uppercase)
+                    .foregroundStyle(theme.accent)
+                Spacer()
+                Text(Date(timeIntervalSince1970: TimeInterval(awardedAt)), style: .date)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(alignment: .top, spacing: 16) {
+                BadgeIcon(badge: badge, size: 96)
+
+                VStack(alignment: .leading, spacing: 7) {
+                    Text(name)
+                        .font(.title2.bold())
+                        .lineLimit(3)
+                    if let description = nBadge.badgeDescription?.value, !description.isEmpty {
+                        Text(description)
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(5)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            recipientHighlight
+
+            HStack(spacing: 8) {
+                Text("From")
+                    .foregroundStyle(.secondary)
+                ObservedPFP(pubkey: badge.pubkey, size: 18, forceFlat: true)
+                ContactName(pubkey: badge.pubkey)
+                    .font(.caption.weight(.medium))
+                    .lineLimit(1)
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+    }
+
+    private var recipientHighlight: some View {
+        HStack(spacing: 12) {
+            ObservedPFP(pubkey: recipientPubkey, size: 42, forceFlat: true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Awarded to")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ContactName(pubkey: recipientPubkey)
+                    .font(.headline)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "checkmark.seal.fill")
+                .font(.title2)
+                .foregroundStyle(theme.accent)
+        }
+        .padding(12)
+        .background(theme.accent.opacity(0.10))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -504,48 +688,39 @@ private struct BadgeWornBy: View {
     let pubkeys: [String]
     let onShowAll: () -> Void
 
-    private var visiblePubkeys: ArraySlice<String> { pubkeys.prefix(5) }
+    private var visiblePubkeys: ArraySlice<String> { pubkeys.prefix(4) }
 
     var body: some View {
         Group {
-            if pubkeys.isEmpty {
-                Text("Worn by 0 people")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
+            if !pubkeys.isEmpty {
                 Button(action: onShowAll) {
-                    HStack(alignment: .top, spacing: 4) {
+                    HStack(spacing: 4) {
                         Text("Worn by")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize()
-                            .padding(.top, 2)
-                        VStack(alignment: .trailing, spacing: 2) {
-                            HStack(spacing: 2) {
-                                ForEach(Array(visiblePubkeys), id: \.self) { pubkey in
-                                    ObservedPFP(pubkey: pubkey, size: 20, forceFlat: true)
-                                        .highPriorityGesture(
-                                            TapGesture().onEnded {
-                                                navigateTo(ContactPath(key: pubkey), context: containerID)
-                                            }
-                                        )
-                                }
-                            }
-                            if pubkeys.count > visiblePubkeys.count {
-                                Text("+\(pubkeys.count - visiblePubkeys.count) others")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .fixedSize()
-                            }
+                        ForEach(Array(visiblePubkeys), id: \.self) { pubkey in
+                            ObservedPFP(pubkey: pubkey, size: 20, forceFlat: true)
+                                .highPriorityGesture(
+                                    TapGesture().onEnded {
+                                        navigateTo(ContactPath(key: pubkey), context: containerID)
+                                    }
+                                )
+                        }
+                        if pubkeys.count > visiblePubkeys.count {
+                            Text("+\(pubkeys.count - visiblePubkeys.count)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize()
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .task(id: pubkeys.joined(separator: ",")) {
             for pubkey in visiblePubkeys {
                 QueuedFetcher.shared.enqueue(pTag: pubkey)

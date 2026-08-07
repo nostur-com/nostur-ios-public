@@ -134,6 +134,8 @@ private struct ResolvedProfileBadgesView: View {
                     NBNavigationLink(value: Badge(profileBadge.badge)) {
                         BadgeReceivedRow(
                             badge: profileBadge.badge,
+                            award: profileBadge.badgeAward,
+                            recipientPubkey: profile.pubkey,
                             isSelected: true,
                             receivedAt: profileBadge.badgeAward.created_at,
                             wearerPubkeys: [],
