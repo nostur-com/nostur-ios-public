@@ -51,6 +51,20 @@ struct Kind8BadgeAward: View {
         return value
     }
 
+    private var activeAccountPubkey: String {
+        AccountsState.shared.activeAccountPublicKey
+    }
+
+    private var isActiveAccountRecipient: Bool {
+        !activeAccountPubkey.isEmpty && recipientPubkeys.contains(activeAccountPubkey)
+    }
+
+    private var awardStateLabel: LocalizedStringKey {
+        if isActiveAccountRecipient { return "Badge received" }
+        if nrPost.pubkey == activeAccountPubkey { return "Badge awarded" }
+        return "Badge award"
+    }
+
     init(
         nrPost: NRPost,
         hideFooter: Bool = true,
@@ -148,7 +162,7 @@ struct Kind8BadgeAward: View {
             .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 5) {
-                Text("Badge awarded")
+                Text(awardStateLabel)
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -175,7 +189,29 @@ struct Kind8BadgeAward: View {
 
     @ViewBuilder
     private var recipientSummary: some View {
-        if recipientPubkeys.count == 1, let pubkey = recipientPubkeys.first {
+        if isActiveAccountRecipient, recipientPubkeys.count == 1 {
+            HStack(spacing: 5) {
+                Text("Received from")
+                PFP(
+                    pubkey: nrPost.pubkey,
+                    pictureUrl: nrPost.contact.pictureUrl,
+                    size: 18,
+                    forceFlat: nxViewingContext.contains(.screenshot)
+                )
+                Text(nrPost.contact.anyName)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        } else if isActiveAccountRecipient {
+            HStack(spacing: 5) {
+                Image(systemName: "person.2")
+                Text("Awarded to you and \(recipientPubkeys.count - 1) others")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        } else if recipientPubkeys.count == 1, let pubkey = recipientPubkeys.first {
             HStack(spacing: 5) {
                 Text("Awarded to")
                 ObservedPFP(pubkey: pubkey, size: 18, forceFlat: nxViewingContext.contains(.screenshot))

@@ -10,16 +10,18 @@ import Combine
 
 struct ContactsSearch: View, Equatable {
     static func == (lhs: ContactsSearch, rhs: ContactsSearch) -> Bool {
-        lhs.followingPubkeys == rhs.followingPubkeys
+        lhs.followingPubkeys == rhs.followingPubkeys && lhs.compactRows == rhs.compactRows
     }
     
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
 
     @State private var searchText = ""
 
     public let followingPubkeys: Set<String>
     public var prompt: String
     public var doneButtonText: String = "Add"
+    public var compactRows = false
     public var disabledPubkeys: Set<String> = []
     public var onSelectContacts: ((Set<Contact>) -> Void)?
     public var onSelectContact: ((Contact) -> Void)?
@@ -82,7 +84,7 @@ struct ContactsSearch: View, Equatable {
                 }
                 LazyVStack {
                     ForEach(filteredContacts) { contact in
-                        HStack(alignment: .top) {
+                        HStack(alignment: compactRows ? .center : .top, spacing: compactRows ? 10 : 8) {
                             if onSelectContacts != nil {
                                 Button {
                                     guard !disabledPubkeys.contains(contact.pubkey) else { return }
@@ -96,39 +98,36 @@ struct ContactsSearch: View, Equatable {
                                 } label: {
                                     if selectedContacts.contains(contact) {
                                         Image(systemName:  "checkmark.circle.fill")
-                                            .padding(.top, 18)
+                                            .foregroundStyle(theme.accent)
+                                            .padding(.top, compactRows ? 0 : 18)
                                     }
                                     else {
                                         Image(systemName:  "circle")
                                             .foregroundColor(Color.secondary)
-                                            .padding(.top, 18)
+                                            .padding(.top, compactRows ? 0 : 18)
                                     }
                                 }
                                 .opacity(disabledPubkeys.contains(contact.pubkey) ? 0 : 1.0)
+                                .buttonStyle(.plain)
                             }
-                            VStack {
-                                ContactSearchResultRow(contact: contact) {
-                                    guard !disabledPubkeys.contains(contact.pubkey) else { return }
-                                    if let onSelectContact {
-                                        onSelectContact(contact)
+                            VStack(spacing: 0) {
+                                if compactRows {
+                                    CompactContactSelectionRow(contact: contact) {
+                                        toggle(contact)
                                     }
-                                    else {
-                                        if selectedContacts.contains(contact) {
-                                            selectedContacts.remove(contact)
-                                        }
-                                        else {
-                                            selectedContacts.insert(contact)
-                                            onToggleOn?(contact.pubkey)
-                                        }
+                                } else {
+                                    ContactSearchResultRow(contact: contact) {
+                                        toggle(contact)
                                     }
+                                    LazyFollowedBy(pubkey: contact.pubkey, alignment: .trailing, minimal: true)
                                 }
-                                LazyFollowedBy(pubkey: contact.pubkey, alignment: .trailing, minimal: true)
                             }
                         }
                         Divider()
+                            .padding(.leading, compactRows ? 64 : 0)
                     }
                     
-                    if onSelectContacts != nil {
+                    if onSelectContacts != nil && !compactRows {
                         if selectedContacts.count > 0 {
                             Text("\(selectedContacts.count) contacts selected")
                                 .frame(maxWidth: .infinity, alignment: .center)
@@ -180,6 +179,47 @@ struct ContactsSearch: View, Equatable {
                 }
             }
         }
+    }
+
+    private func toggle(_ contact: Contact) {
+        guard !disabledPubkeys.contains(contact.pubkey) else { return }
+        if let onSelectContact {
+            onSelectContact(contact)
+        } else if selectedContacts.contains(contact) {
+            selectedContacts.remove(contact)
+        } else {
+            selectedContacts.insert(contact)
+            onToggleOn?(contact.pubkey)
+        }
+    }
+}
+
+private struct CompactContactSelectionRow: View {
+    @ObservedObject var contact: Contact
+    let onSelect: () -> Void
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 12) {
+                PFP(pubkey: contact.pubkey, contact: contact, size: 44)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(contact.anyName)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    if let about = contact.about, !about.isEmpty {
+                        Text(about)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 

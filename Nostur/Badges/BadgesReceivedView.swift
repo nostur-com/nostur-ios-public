@@ -259,7 +259,7 @@ private struct BadgeSelectionView: View {
     }
 
     private var selectedSectionTitle: String {
-        String(localized: "Shown on your profile") + " · \(model.selected.count)"
+        String(localized: "On your profile") + " · \(model.selected.count)"
     }
 
     private var wearerPubkeysByAddress: [BadgeAddress: [String]] {
@@ -303,13 +303,12 @@ private struct BadgeSelectionView: View {
                                 isSelected: true,
                                 receivedAt: candidate.award.created_at,
                                 wearerPubkeys: wearerPubkeys,
-                                onShowWearers: { showWearers(candidate, pubkeys: wearerPubkeys) }
+                                onShowWearers: { showWearers(candidate, pubkeys: wearerPubkeys) },
+                                opensDetail: true,
+                                onToggleProfile: { model.remove(reference) }
                             )
-                            .onTapGesture { model.remove(reference) }
-                            .accessibilityAddTraits(.isButton)
-                            .accessibilityAction { model.remove(reference) }
-                            .accessibilityHint("Remove from your profile")
                             .listRowBackground(theme.background)
+                            .listRowSeparator(.hidden)
                         } else {
                             Label(reference.address.identifier, systemImage: "seal")
                                 .foregroundStyle(.secondary)
@@ -326,9 +325,11 @@ private struct BadgeSelectionView: View {
                 }
             }
 
-            Section("Available badges") {
+            Section("Not on your profile") {
                 if availableCandidates.isEmpty {
-                    Text("No additional valid badge awards found")
+                    Text(resolvedCandidates.isEmpty
+                         ? "No valid badge awards found"
+                         : "All received badges are on your profile")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(availableCandidates) { candidate in
@@ -340,13 +341,12 @@ private struct BadgeSelectionView: View {
                             isSelected: false,
                             receivedAt: candidate.award.created_at,
                             wearerPubkeys: wearerPubkeys,
-                            onShowWearers: { showWearers(candidate, pubkeys: wearerPubkeys) }
+                            onShowWearers: { showWearers(candidate, pubkeys: wearerPubkeys) },
+                            opensDetail: true,
+                            onToggleProfile: { model.add(candidate.reference) }
                         )
-                        .onTapGesture { model.add(candidate.reference) }
-                        .accessibilityAddTraits(.isButton)
-                        .accessibilityAction { model.add(candidate.reference) }
-                        .accessibilityHint("Show on your profile")
                         .listRowBackground(theme.background)
+                        .listRowSeparator(.hidden)
                     }
                 }
             }
@@ -451,8 +451,9 @@ struct BadgeReceivedRow: View {
     let onShowWearers: () -> Void
     var showsSelectionIndicator = true
     var showsWearers = true
+    var opensDetail = false
+    var onToggleProfile: (() -> Void)? = nil
 
-    @State private var isShowingShareOptions = false
     @State private var isPreparingImage = false
     @State private var shareableImage: ShareablePostImage?
 
@@ -460,54 +461,35 @@ struct BadgeReceivedRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            BadgeIcon(badge: badge, size: 56)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge"))
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-                HStack(spacing: 3) {
-                    Text("Received from")
-                    ObservedPFP(pubkey: badge.pubkey, size: 20, forceFlat: true)
-                        .highPriorityGesture(
-                            TapGesture().onEnded {
-                                navigateTo(ContactPath(key: badge.pubkey), context: containerID)
-                            }
-                        )
-                    ContactName(pubkey: badge.pubkey)
-                        .font(.caption.weight(.semibold))
-                        .lineLimit(1)
-                    Text(verbatim: "·")
-                    BadgeRelativeTime(receivedAt)
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                if let description = nBadge.badgeDescription?.value, !description.isEmpty {
-                    Text(description)
-                        .font(.body)
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-                }
-                if showsWearers {
-                    BadgeWornBy(pubkeys: wearerPubkeys, onShowAll: onShowWearers)
+            Group {
+                if opensDetail {
+                    badgeSummary
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        navigateTo(Badge(badge), context: containerID)
+                    }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction {
+                        navigateTo(Badge(badge), context: containerID)
+                    }
+                    .accessibilityHint("View badge details")
+                } else {
+                    badgeSummary
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            VStack(spacing: 12) {
-                if showsSelectionIndicator {
+
+            if showsSelectionIndicator, let onToggleProfile {
+                Button(action: onToggleProfile) {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "plus.circle")
                         .font(.title3)
-                        .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                        .accessibilityHidden(true)
-                }
-                Button("Share this badge", systemImage: "square.and.arrow.up") {
-                    isShowingShareOptions = true
+                        .foregroundStyle(isSelected ? theme.accent : .secondary)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
                 }
                 .labelStyle(.iconOnly)
-                .font(.body)
                 .buttonStyle(.borderless)
-                .accessibilityLabel("Share this badge")
-                .disabled(isPreparingImage)
+                .accessibilityLabel(isSelected ? "Remove from profile" : "Add to profile")
             }
         }
         .padding(.vertical, 6)
@@ -515,7 +497,7 @@ struct BadgeReceivedRow: View {
         .task(id: badge.pubkey) {
             QueuedFetcher.shared.enqueue(pTag: badge.pubkey)
         }
-        .confirmationDialog("Share badge", isPresented: $isShowingShareOptions, titleVisibility: .visible) {
+        .contextMenu {
             Button("Share in a post", systemImage: "square.and.pencil") {
                 shareBadgeReceiptInPost()
             }
@@ -524,10 +506,46 @@ struct BadgeReceivedRow: View {
                     Task { await shareBadgeReceiptAsImage() }
                 }
             }
-            Button("Cancel", role: .cancel) { }
         }
         .sheet(item: $shareableImage) { image in
             ActivityView(activityItems: [image])
+        }
+    }
+
+    private var badgeSummary: some View {
+        HStack(alignment: .top, spacing: 12) {
+            BadgeIcon(badge: badge, size: 56)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge"))
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+
+                if let description = nBadge.badgeDescription?.value, !description.isEmpty {
+                    Text(description)
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                }
+
+                HStack(spacing: 4) {
+                    Text("Received from")
+                    ObservedPFP(pubkey: badge.pubkey, size: 18, forceFlat: true)
+                    ContactName(pubkey: badge.pubkey)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                    Text(verbatim: "·")
+                    BadgeRelativeTime(receivedAt)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+                if showsWearers {
+                    BadgeWornBy(pubkeys: wearerPubkeys, onShowAll: onShowWearers)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

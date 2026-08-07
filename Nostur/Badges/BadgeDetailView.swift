@@ -68,45 +68,12 @@ struct BadgeDetailView: View {
     var body: some View {
         List {
             Section {
-                HStack(alignment: .top, spacing: 16) {
-                    BadgeIcon(badge: badge, size: 72)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge"))
-                            .font(.title3.bold())
-                        if let description = nBadge.badgeDescription?.value, !description.isEmpty {
-                            Text(description)
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        Label(recipientCountText, systemImage: "person.2")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.vertical, 4)
+                badgeHeader
+            }
+            .listRowBackground(theme.background)
 
-                HStack(spacing: 12) {
-                    Label("Issued by", systemImage: "person.crop.circle")
-                    Spacer(minLength: 12)
-                    Button {
-                        navigateToContact(
-                            pubkey: badge.pubkey,
-                            nrContact: issuerContact,
-                            context: containerID
-                        )
-                    } label: {
-                        HStack(spacing: 6) {
-                        ObservedPFP(nrContact: issuerContact, size: 20)
-                            Text(issuerContact.anyName)
-                                .animation(.easeIn, value: issuerContact.anyName)
-                                .font(.body.weight(.semibold))
-                                .lineLimit(1)
-                            Text(verbatim: "·")
-                            BadgeRelativeTime(badge.created_at)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
+            Section {
+                issuerRow
 
                 if badge.pubkey == la.account.publicKey {
                     if isAwarding {
@@ -117,10 +84,20 @@ struct BadgeDetailView: View {
                         }
                         .foregroundStyle(.secondary)
                     } else {
-                        Button("Award to people", systemImage: "person.badge.plus") {
+                        Button {
                             guard isFullAccount() else { showReadOnlyMessage(); return }
                             isChoosingRecipients = true
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "person.badge.plus")
+                                    .frame(width: 24)
+                                Text("Award to people")
+                                    .font(.body.weight(.semibold))
+                                Spacer()
+                            }
+                            .foregroundStyle(theme.accent)
                         }
+                        .buttonStyle(.plain)
                         .disabled(badge.badgeA == nil)
                     }
                 }
@@ -130,13 +107,27 @@ struct BadgeDetailView: View {
             if !recipients.isEmpty {
                 Section("Recipients") {
                     ForEach(recipients) { recipient in
-                        NBNavigationLink(value: ContactPath(key: recipient.pubkey)) {
-                            HStack(spacing: 8) {
-                                PFPandName(pubkey: recipient.pubkey)
-                                BadgeRelativeTime(recipient.awardedAt)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+                        HStack(spacing: 10) {
+                            ObservedPFP(pubkey: recipient.pubkey, size: 32)
+                            ContactName(pubkey: recipient.pubkey)
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                            Spacer(minLength: 8)
+                            BadgeRelativeTime(recipient.awardedAt)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.forward")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.vertical, 2)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            navigateTo(ContactPath(key: recipient.pubkey), context: containerID)
+                        }
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityAction {
+                            navigateTo(ContactPath(key: recipient.pubkey), context: containerID)
                         }
                     }
                 }
@@ -189,11 +180,12 @@ struct BadgeDetailView: View {
                 ContactsSearch(
                     followingPubkeys: follows(),
                     prompt: "Search contacts",
-                    doneButtonText: "Done",
+                    doneButtonText: "Award",
+                    compactRows: true,
                     onSelectContacts: award(to:)
                 )
                 .background(theme.listBackground)
-                .navigationTitle(String(localized: "Award to"))
+                .navigationTitle(String(localized: "Award badge"))
                 .navigationBarTitleDisplayMode(.inline)
                 .environment(\.theme, theme)
                 .environmentObject(la)
@@ -246,6 +238,77 @@ struct BadgeDetailView: View {
         } message: {
             Text(errorMessage ?? "")
         }
+    }
+
+    private var badgeHeader: some View {
+        HStack(alignment: .top, spacing: 16) {
+            BadgeIcon(badge: badge, size: 88)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge"))
+                    .font(.title2.bold())
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let description = nBadge.badgeDescription?.value, !description.isEmpty {
+                    Text(description)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                HStack(spacing: 6) {
+                    Image(systemName: "person.2")
+                        .frame(width: 18)
+                    Text(recipientCountText)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var issuerRow: some View {
+        Button {
+            navigateToContact(
+                pubkey: badge.pubkey,
+                nrContact: issuerContact,
+                context: containerID
+            )
+        } label: {
+            HStack(spacing: 12) {
+                ObservedPFP(nrContact: issuerContact, size: 36)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Issued by")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(issuerContact.anyName)
+                        .animation(.easeIn, value: issuerContact.anyName)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 12)
+
+                HStack(spacing: 3) {
+                    Text("Published")
+                    BadgeRelativeTime(badge.created_at)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+                Image(systemName: "chevron.forward")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private var recipientCountText: String {
@@ -487,6 +550,7 @@ private struct BadgeAwardRecipientsView: View {
     @State private var isShowingShareOptions = false
     @State private var isPreparingShareImage = false
     @State private var shareableImage: ShareablePostImage?
+    @State private var showsTechnicalDetails = false
 
     let badge: Event
     let award: Event
@@ -497,6 +561,30 @@ private struct BadgeAwardRecipientsView: View {
 
     var body: some View {
         List {
+            Section {
+                HStack(alignment: .top, spacing: 12) {
+                    BadgeIcon(badge: badge, size: 56)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(badgeName)
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                            .lineLimit(2)
+                        Text(Date(timeIntervalSince1970: Double(award.created_at)).formatted(date: .long, time: .shortened))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 6) {
+                            Image(systemName: "person.2")
+                                .frame(width: 16)
+                            Text(recipientCountText)
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            .listRowBackground(theme.background)
+
             if recipientPubkeys.isEmpty {
                 Section {
                     Label("This award event has no valid recipients.", systemImage: "exclamationmark.triangle")
@@ -506,16 +594,24 @@ private struct BadgeAwardRecipientsView: View {
             } else {
                 Section("Awarded to") {
                     ForEach(recipientPubkeys, id: \.self) { pubkey in
-                        PFPandName(pubkey: pubkey)
+                        HStack(spacing: 10) {
+                            ObservedPFP(pubkey: pubkey, size: 32)
+                            ContactName(pubkey: pubkey)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                        }
+                        .padding(.vertical, 2)
                     }
                 }
                 .listRowBackground(theme.background)
             }
 
-            Section("Event details") {
-                copyRow(title: String(localized: "Event ID"), value: award.id)
-                if let address = award.firstA() {
-                    copyRow(title: String(localized: "Badge address"), value: address)
+            Section {
+                DisclosureGroup("Technical details", isExpanded: $showsTechnicalDetails) {
+                    copyRow(title: String(localized: "Event ID"), value: award.id)
+                    if let address = award.firstA() {
+                        copyRow(title: String(localized: "Badge address"), value: address)
+                    }
                 }
             }
             .listRowBackground(theme.background)
@@ -523,7 +619,7 @@ private struct BadgeAwardRecipientsView: View {
         .scrollContentBackgroundCompat(.hidden)
         .background(theme.listBackground)
         .listStyle(.insetGrouped)
-        .navigationTitle(String(localized: "Award recipients"))
+        .navigationTitle(String(localized: "Award details"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -555,6 +651,12 @@ private struct BadgeAwardRecipientsView: View {
     private var badgeName: String {
         let nBadge = badge.toNEvent()
         return nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge")
+    }
+
+    private var recipientCountText: String {
+        recipientPubkeys.count == 1
+            ? String(localized: "1 recipient")
+            : String(localized: "\(recipientPubkeys.count) recipients")
     }
 
     private func shareAwardInPost() {
@@ -651,7 +753,7 @@ private struct BadgeAwardRecipientsView: View {
                 }
                 Spacer()
                 Image(systemName: copiedValue == value ? "checkmark" : "doc.on.doc")
-                    .foregroundStyle(copiedValue == value ? Color.green : Color.accentColor)
+                    .foregroundStyle(copiedValue == value ? Color.green : theme.accent)
                     .accessibilityHidden(true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

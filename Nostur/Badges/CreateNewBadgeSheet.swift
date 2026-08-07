@@ -202,7 +202,7 @@ struct CreateNewBadgeSheet: View {
     }
 
     private var badgeDetailsSection: some View {
-        Section("Badge name and description") {
+        Section("Details") {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Name")
                     .font(.caption)
@@ -218,14 +218,27 @@ struct CreateNewBadgeSheet: View {
                 Text("Description")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                TextField(
-                    "Description",
-                    text: $badgeDescription,
-                    prompt: Text("What did someone do to earn this badge?")
-                )
-                .submitLabel(.done)
-                .focused($focusedField, equals: .description)
-                .onSubmit { focusedField = nil }
+                if #available(iOS 16.0, *) {
+                    TextField(
+                        "Description",
+                        text: $badgeDescription,
+                        prompt: Text("What did someone do to earn this badge?"),
+                        axis: .vertical
+                    )
+                    .lineLimit(3...6)
+                    .submitLabel(.done)
+                    .focused($focusedField, equals: .description)
+                    .onSubmit { focusedField = nil }
+                } else {
+                    TextField(
+                        "Description",
+                        text: $badgeDescription,
+                        prompt: Text("What did someone do to earn this badge?")
+                    )
+                    .submitLabel(.done)
+                    .focused($focusedField, equals: .description)
+                    .onSubmit { focusedField = nil }
+                }
             }
         }
     }
@@ -261,24 +274,7 @@ struct CreateNewBadgeSheet: View {
 
     private var artworkPicker: some View {
         HStack(spacing: 14) {
-            artworkPreview(size: 64)
-                .overlay(alignment: .topTrailing) {
-                    if hasArtwork {
-                        Button {
-                            selectedArtwork = nil
-                            removesExistingArtwork = true
-                            artworkError = nil
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.caption2.bold())
-                                .frame(width: 24, height: 24)
-                                .background(.regularMaterial, in: Circle())
-                        }
-                        .buttonStyle(.plain)
-                        .padding(3)
-                        .accessibilityLabel("Remove artwork")
-                    }
-                }
+            artworkPreview(size: 88)
 
             VStack(alignment: .leading, spacing: 8) {
                 if #available(iOS 16.0, *) {
@@ -303,6 +299,18 @@ struct CreateNewBadgeSheet: View {
                 .font(.subheadline)
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Choose from Files")
+
+                if hasArtwork {
+                    Button(role: .destructive) {
+                        selectedArtwork = nil
+                        removesExistingArtwork = true
+                        artworkError = nil
+                    } label: {
+                        Label("Remove artwork", systemImage: "trash")
+                    }
+                    .font(.subheadline)
+                    .buttonStyle(.borderless)
+                }
             }
 
             Spacer(minLength: 0)
