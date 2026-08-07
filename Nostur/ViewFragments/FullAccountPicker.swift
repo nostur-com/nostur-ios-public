@@ -30,18 +30,18 @@ struct AccountPicker: View {
     var body: some View {
         ZStack {
             if !accounts.isEmpty { // .accounts needs to be set or "(CloudAccount) is invalid and does not have an associated tag, this will give undefined results."
-                Picker(selection: $selectedAccount) {
+                Picker(selection: selectedPubkey) {
                     ForEach(accounts) { account in
                         HStack {
                             PFP(pubkey: account.publicKey, account: account, size: 20.0)
                             Text(account.anyName)
                         }
-                        .tag(account)
+                        .tag(account.publicKey as String?)
                         .foregroundColor(theme.primary)
                     }
                     if !required {
                         Text("None")
-                            .tag(nil as CloudAccount?)
+                            .tag(nil as String?)
                     }
                     
                 } label: {
@@ -56,6 +56,15 @@ struct AccountPicker: View {
                 .sorted(by: { $0.publicKey == AccountsState.shared.activeAccountPublicKey && $1.publicKey != AccountsState.shared.activeAccountPublicKey })
         }
         
+    }
+
+    private var selectedPubkey: Binding<String?> {
+        Binding(
+            get: { selectedAccount?.publicKey },
+            set: { pubkey in
+                selectedAccount = accounts.first { $0.publicKey == pubkey }
+            }
+        )
     }
 }
 

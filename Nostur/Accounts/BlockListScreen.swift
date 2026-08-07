@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct BlockListScreen: View {
     @Environment(\.theme) private var theme
@@ -54,6 +55,8 @@ struct BlockedContactsView: View {
     var blockedPubkeys: FetchedResults<CloudBlocked>
     
     @State private var blocksUntil: [String: Date] = [:] // [pubkey: blocked until]
+    @State private var showImportMutes = false
+    @State private var showExportMutes = false
     
     var body: some View {
         List {
@@ -111,6 +114,14 @@ struct BlockedContactsView: View {
             }
         }
         .toolbar {
+            Menu("Import or export blocks", systemImage: "document.badge.ellipsis") {
+                Button("Import from relays…", systemImage: "arrow.down.doc") {
+                    showImportMutes = true
+                }
+                Button("Export to relays…", systemImage: "arrow.up.doc") {
+                    showExportMutes = true
+                }
+            }
             EditButton()
         }
         .environment(\.defaultMinListRowHeight, 50)
@@ -122,6 +133,20 @@ struct BlockedContactsView: View {
                 }
             
             removeDuplicates()
+        }
+        .sheet(isPresented: $showImportMutes) {
+            NBNavigationStack {
+                MuteListImportSheet()
+            }
+            .nbUseNavigationStack(.never)
+            .environment(\.theme, theme)
+        }
+        .sheet(isPresented: $showExportMutes) {
+            NBNavigationStack {
+                MuteListExportSheet()
+            }
+            .nbUseNavigationStack(.never)
+            .environment(\.theme, theme)
         }
     }
     
