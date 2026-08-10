@@ -59,7 +59,7 @@ struct ProfileToolbar: View {
                 $0
             }
         }
-        .offset(y: max(2, scrollPosition.position.y))
+        .offset(y: scrollPosition.toolbarOffset)
         .frame(height: 55)
         .clipped()
     }

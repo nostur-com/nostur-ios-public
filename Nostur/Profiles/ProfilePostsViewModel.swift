@@ -34,6 +34,7 @@ class ProfilePostsViewModel: ObservableObject {
 //    private static let POSTS_LIMIT = 300
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
+    private var didPrefetchOlderPosts = false
         
     @Published var posts: [NRPost] = [] {
         didSet {
@@ -182,10 +183,8 @@ class ProfilePostsViewModel: ObservableObject {
                 
                 DispatchQueue.main.async { [weak self] in
                     onComplete?()
-                    withAnimation {
-                        self?.posts = nrLists
-                        self?.state = .ready
-                    }
+                    self?.posts = nrLists
+                    self?.state = .ready
                 }
             }
             else { // Fetch others
@@ -214,10 +213,8 @@ class ProfilePostsViewModel: ObservableObject {
                 
                 DispatchQueue.main.async { [weak self] in
                     onComplete?()
-                    withAnimation {
-                        self?.posts = posts
-                        self?.state = .ready
-                    }
+                    self?.posts = posts
+                    self?.state = .ready
                 }
             }
             
@@ -238,8 +235,8 @@ class ProfilePostsViewModel: ObservableObject {
     // Fetch post stats (if enabled)
     // And: after user scrolls we prefetch the next 50 posts
     // We detect this by using .task on the 6th post
-    public func prefetch(_ post: NRPost) {
-        guard let index = self.posts.firstIndex(of: post) else { return }
+    public func prefetch(_ post: NRPost, at index: Int) {
+        guard self.posts[safe: index]?.id == post.id else { return }
         
         if index == 5 {
             self.prefetchOnSixthPost()
@@ -249,7 +246,9 @@ class ProfilePostsViewModel: ObservableObject {
     }
     
     private func prefetchOnSixthPost() {
+        guard !didPrefetchOlderPosts else { return }
         guard let oldestPostDate = self.posts.last?.createdAt else { return }
+        didPrefetchOlderPosts = true
         let kinds = switch self.type {
         case .posts:
             PROFILE_KINDS
@@ -375,9 +374,7 @@ class ProfilePostsViewModel: ObservableObject {
             guard !posts.isEmpty else { return }
             
             DispatchQueue.main.async { [weak self] in
-                withAnimation {
-                    self?.posts.append(contentsOf: posts)
-                }
+                self?.posts.append(contentsOf: posts)
             }
             
             guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }

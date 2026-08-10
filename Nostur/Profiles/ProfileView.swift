@@ -31,7 +31,8 @@ struct ProfileView: View {
 
     @State private var editingAccount: CloudAccount?
     
-    @State private var scrollPosition = NXScrollPosition()
+    @StateObject private var scrollPosition = NXScrollPosition()
+    @State private var mainContact: Contact?
     
     @State private var showFollowing = false
     @State private var showFollowers = false
@@ -79,7 +80,7 @@ struct ProfileView: View {
                             .lineLimit(1)
                             .frame(width: 140, alignment: .leading)
                         
-                        if let mainContact = Contact.fetchByPubkey(nrContact.pubkey, context: viewContext())  {
+                        if let mainContact {
                             ContactPrivateNoteToggle(contact: mainContact)
                         }
                         Menu {
@@ -162,7 +163,6 @@ struct ProfileView: View {
                     FollowedBy(pubkey: nrContact.pubkey, showHeaderText: false)
                 }
                 .padding([.top, .leading, .trailing], 10.0)
-                .onTapGesture { }
             }
             .listRowInsets(EdgeInsets())
             .lineSpacing(0)
@@ -235,6 +235,10 @@ struct ProfileView: View {
             vm.load(nrContact)
             lastSeenVM.checkLastSeen(nrContact.pubkey)
         }
+
+        .task(id: nrContact.pubkey) {
+            mainContact = Contact.fetchByPubkey(nrContact.pubkey, context: viewContext())
+        }
         
         .task {
             try? await Task.sleep(nanoseconds: 5_100_000_000) // Try .SEARCH relays if we don't have info
@@ -259,7 +263,7 @@ struct ProfileView: View {
                     }
                 }
                 .onPreferenceChange(NXScrollOffset.self) { position in
-                    self.scrollPosition.position = position
+                    scrollPosition.update(position)
                 }
         }, frameSize: CGSize(width: DIMENSIONS.PFP_BIG, height: DIMENSIONS.PFP_BIG)) {
             if let pictureUrl = nrContact.pictureUrl {
@@ -541,11 +545,27 @@ struct ProfileView: View {
     }
 }
 
-class NXScrollPosition: ObservableObject {
-    @Published var position: CGPoint = .zero
+final class NXScrollPosition: ObservableObject {
+    /// The latest PFP location is retained for effects that need an origin, but it
+    /// deliberately does not invalidate views on every scroll frame.
+    private(set) var position: CGPoint = .zero
+
+    /// Only the toolbar observes this value. Once it is pinned at the top, further
+    /// upward scrolling no longer causes view updates.
+    @Published private(set) var toolbarOffset: CGFloat = 2
+
+    func update(_ position: CGPoint) {
+        self.position = position
+
+        let newToolbarOffset = max(2, position.y)
+        guard abs(newToolbarOffset - toolbarOffset) >= 0.5 else { return }
+        toolbarOffset = newToolbarOffset
+    }
 }
 
 struct NXScrollOffset: PreferenceKey {
     static let defaultValue: CGPoint = .zero
-    static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) { }
+    static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) {
+        value = nextValue()
+    }
 }

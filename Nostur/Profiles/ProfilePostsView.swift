@@ -40,7 +40,7 @@ struct ProfilePostsView: View {
                     } catch { }
                 }
         case .ready:
-            ForEach(vm.posts) { nrPost in
+            ForEach(Array(vm.posts.enumerated()), id: \.element.id) { index, nrPost in
                 ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                     Box(nrPost: nrPost) {
                         PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: theme)
@@ -48,10 +48,10 @@ struct ProfilePostsView: View {
                 }
                 .task {
                     // SettingsStore.shared.fetchCounts should be true for below to work
-                    vm.prefetch(nrPost)
+                    vm.prefetch(nrPost, at: index)
                     
                     // on iPhone we can use vm.posts.last but on macOS it only works on second to last?? wtf!
-                    guard nrPost == vm.posts[safe: vm.posts.count - 2] else { return }
+                    guard nrPost.id == vm.posts[safe: vm.posts.count - 2]?.id else { return }
                     
                     guard lastFetchAtId != nrPost.id else { return }
                     vm.loadMore(after: nrPost, amount: 10)
