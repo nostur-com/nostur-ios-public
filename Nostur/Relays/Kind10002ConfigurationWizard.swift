@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 struct Kind10002ConfigurationWizard: View {
     @Environment(\.dismiss) private var dismiss
@@ -40,6 +41,7 @@ struct Kind10002ConfigurationWizard: View {
     @State private var selectedReadRelays: Set<CloudRelay> = []
     @State private var selectedWriteRelays: Set<CloudRelay> = []
     @State private var selectedDMRelays: Set<CloudRelay> = []
+    @State private var didLoadExistingConfiguration = false
     
     private var allSelectedRelays: [CloudRelay] {
         Array(selectedReadRelays.union(selectedWriteRelays).union(selectedDMRelays))
@@ -240,6 +242,32 @@ struct Kind10002ConfigurationWizard: View {
                                 insertion:.move(edge: isBack ? .leading : .trailing),
                                 removal: .move(edge: isBack ? .trailing : .leading))
                             )
+            }
+        }
+        .onAppear {
+            loadExistingConfiguration()
+        }
+    }
+
+    private func loadExistingConfiguration() {
+        guard !didLoadExistingConfiguration else { return }
+        didLoadExistingConfiguration = true
+
+        let configuredRelays = account.accountRelays
+        for relay in allRelays {
+            guard let relayUrl = relay.url_ else { continue }
+            guard let configuration = configuredRelays.first(where: {
+                normalizeRelayUrl($0.url) == normalizeRelayUrl(relayUrl)
+            }) else { continue }
+
+            if configuration.read {
+                selectedReadRelays.insert(relay)
+            }
+            if configuration.write {
+                selectedWriteRelays.insert(relay)
+            }
+            if configuration.dm {
+                selectedDMRelays.insert(relay)
             }
         }
     }
