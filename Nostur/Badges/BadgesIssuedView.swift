@@ -20,7 +20,6 @@ struct BadgesIssuedContainer: View {
 struct BadgesIssuedView: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
-    @Environment(\.containerID) private var containerID
     @State private var isCreatingBadge = false
 
     let pubkey: String
@@ -61,19 +60,16 @@ struct BadgesIssuedView: View {
     var body: some View {
         List(badges) { badge in
             let badgeAwards = awards(for: badge)
-            BadgeIssuedRow(
-                badge: badge,
-                recipientCount: recipientCount(for: badgeAwards),
-                lastAwardedAt: badgeAwards.map(\.created_at).max()
-            )
-            .contentShape(Rectangle())
-            .onTapGesture {
-                navigateTo(Badge(badge), context: containerID)
+            NBNavigationLink(value: Badge(badge)) {
+                BadgeIssuedRow(
+                    badge: badge,
+                    recipientCount: recipientCount(for: badgeAwards),
+                    lastAwardedAt: badgeAwards.map(\.created_at).max()
+                )
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction {
-                navigateTo(Badge(badge), context: containerID)
-            }
+            .buttonStyle(.plain)
             .listRowBackground(theme.background)
             .listRowSeparator(.hidden)
         }
