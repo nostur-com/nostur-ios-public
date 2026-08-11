@@ -61,6 +61,7 @@ struct VideoPost: View {
     @State private var isPlaying = false
     @State private var isMuted = true
     @State private var loadAnyway = false
+    @State private var hasStartedPlayback = false
     
     private var postID: String { nrPost.id }
     
@@ -89,6 +90,28 @@ struct VideoPost: View {
 
     private var shouldBlockForLowDataMode: Bool {
         settings.lowDataMode && !loadAnyway
+    }
+
+    @ViewBuilder
+    private var posterPreview: some View {
+        if !hasStartedPlayback,
+           !shouldBlockForLowDataMode,
+           let posterURL = nrPost.eventImageUrl {
+            MediaContentView(
+                galleryItem: GalleryItem(
+                    url: posterURL,
+                    pubkey: nrPost.pubkey,
+                    eventId: nrPost.id,
+                    blurhash: nrPost.blurhash
+                ),
+                availableWidth: videoWidth,
+                placeholderAspect: videoWidth / videoHeight,
+                maxHeight: videoHeight,
+                contentMode: .fill,
+                autoload: true
+            )
+            .allowsHitTesting(false)
+        }
     }
 
     @ViewBuilder
@@ -152,6 +175,7 @@ struct VideoPost: View {
                         .frame(width: videoWidth, height: min((videoWidth*3), videoHeight))
                         .background(Color.black)
                         .frame(width: videoWidth, height: videoHeight)
+                        .overlay { posterPreview }
                         .overlay(alignment: .topLeading) {
                             muteButton
                         }
@@ -194,6 +218,7 @@ struct VideoPost: View {
                             .frame(width: videoWidth, height: min((videoWidth*3), videoHeight))
                             .background(Color.black)
                             .frame(width: videoWidth, height: videoHeight)
+                            .overlay { posterPreview }
                             .overlay(alignment: .topLeading) {
                                 muteButton
                             }
@@ -300,6 +325,9 @@ struct VideoPost: View {
     }
     
     private func setPlaying(_ playing: Bool, muted: Bool = true) {
+        if playing {
+            hasStartedPlayback = true
+        }
         guard isPlaying != playing else { return }
         if playing {
             isMuted = muted
