@@ -67,30 +67,23 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
             controller.allowsVideoFrameAnalysis = false
         }
         
+        let playbackURLs = shortVideoPlaybackURLs(for: url)
+
         // Critical for smoothness
-        controller.player = Self.getPlayer(for: url)
+        controller.player = Self.getPlayer(for: playbackURLs[0])
         controller.player?.isMuted = isMuted
-        
-        // Observe when video reaches end → loop
-        NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: controller.player?.currentItem,
-            queue: .main
-        ) { _ in
-            controller.player?.seek(to: .zero)
-            if isPlaying {
-                controller.player?.play()
-            }
-        }
-        
+
         context.coordinator.playerController = controller
         context.coordinator.player = controller.player
+        context.coordinator.updatePlaybackURLs(playbackURLs)
         
         return controller
     }
     
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
         guard let player = uiViewController.player else { return }
+
+        context.coordinator.updatePlaybackURLs(shortVideoPlaybackURLs(for: url))
         
         player.isMuted = isMuted
         
@@ -109,22 +102,116 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
         var player: AVPlayer?
         var playerController: AVPlayerViewController?
         @Binding var isPlaying: Bool
+
+        private var playbackURLs: [URL] = []
+        private var playbackURLIndex = 0
+        private var itemStatusObservation: NSKeyValueObservation?
+        private var didPlayToEndObserver: NSObjectProtocol?
+        private var failedToPlayToEndObserver: NSObjectProtocol?
         
         init(isPlaying: Binding<Bool>) {
             self._isPlaying = isPlaying
         }
+
+        func updatePlaybackURLs(_ urls: [URL]) {
+            guard !urls.isEmpty else { return }
+            guard playbackURLs != urls else { return }
+
+            playbackURLs = urls
+            playbackURLIndex = 0
+            replaceCurrentItemIfNeeded(with: urls[0])
+            observeCurrentItem()
+        }
+
+        private func replaceCurrentItemIfNeeded(with url: URL) {
+            guard let player else { return }
+            let currentURL = (player.currentItem?.asset as? AVURLAsset)?.url
+            guard currentURL != url else { return }
+
+            let item = AVPlayerItem(url: url)
+            item.preferredForwardBufferDuration = 10
+            player.replaceCurrentItem(with: item)
+        }
+
+        private func observeCurrentItem() {
+            itemStatusObservation?.invalidate()
+            if let didPlayToEndObserver {
+                NotificationCenter.default.removeObserver(didPlayToEndObserver)
+            }
+            if let failedToPlayToEndObserver {
+                NotificationCenter.default.removeObserver(failedToPlayToEndObserver)
+            }
+
+            guard let item = player?.currentItem else { return }
+
+            itemStatusObservation = item.observe(\.status, options: [.initial, .new]) { [weak self, weak item] _, _ in
+                guard let self, let item, item.status == .failed else { return }
+                DispatchQueue.main.async {
+                    self.advanceAfterFailure(of: item)
+                }
+            }
+
+            didPlayToEndObserver = NotificationCenter.default.addObserver(
+                forName: .AVPlayerItemDidPlayToEndTime,
+                object: item,
+                queue: .main
+            ) { [weak self, weak item] _ in
+                guard let self, let item, self.player?.currentItem === item else { return }
+                self.player?.seek(to: .zero)
+                if self.isPlaying {
+                    self.player?.play()
+                }
+            }
+
+            failedToPlayToEndObserver = NotificationCenter.default.addObserver(
+                forName: .AVPlayerItemFailedToPlayToEndTime,
+                object: item,
+                queue: .main
+            ) { [weak self, weak item] _ in
+                guard let self, let item else { return }
+                self.advanceAfterFailure(of: item)
+            }
+        }
+
+        private func advanceAfterFailure(of failedItem: AVPlayerItem) {
+            guard player?.currentItem === failedItem else { return }
+            let nextIndex = playbackURLIndex + 1
+            guard playbackURLs.indices.contains(nextIndex) else { return }
+
+            playbackURLIndex = nextIndex
+            replaceCurrentItemIfNeeded(with: playbackURLs[nextIndex])
+            observeCurrentItem()
+
+            if isPlaying {
+                player?.playImmediately(atRate: 1.0)
+            }
+        }
+
+        fileprivate func stopObserving() {
+            itemStatusObservation?.invalidate()
+            itemStatusObservation = nil
+            if let didPlayToEndObserver {
+                NotificationCenter.default.removeObserver(didPlayToEndObserver)
+                self.didPlayToEndObserver = nil
+            }
+            if let failedToPlayToEndObserver {
+                NotificationCenter.default.removeObserver(failedToPlayToEndObserver)
+                self.failedToPlayToEndObserver = nil
+            }
+        }
         
         deinit {
+            stopObserving()
             if let player = player {
                 ShortVideoPlayer.returnPlayer(player)
             }
-            NotificationCenter.default.removeObserver(self)
         }
     }
     
     // Clean up on disappear
     static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: Coordinator) {
         uiViewController.player?.pause()
+        coordinator.stopObserving()
     }
 }
 
