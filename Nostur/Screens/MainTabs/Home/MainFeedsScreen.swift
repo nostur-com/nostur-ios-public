@@ -20,10 +20,7 @@ struct MainFeedsScreen: View {
     @Environment(\.availableWidth) private var availableWidth
     @Binding var showingOtherContact: NRContact?
     @ObservedObject private var ss: SettingsStore = .shared
-    private var selectedTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
-        set { setSelectedTab(newValue) }
-    }
+    @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @AppStorage("selected_listId") private var selectedListId = ""
     
@@ -307,7 +304,7 @@ struct MainFeedsScreen: View {
                 else {
                     if let followingConfig {
                         AvailableWidthContainer {
-                            NXColumnView(config: followingConfig, isVisible: selectedSubTab == "Following")
+                            NXColumnView(config: followingConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Following")
                         }
                         // Keep inactive columns mounted, but only the visible one may receive scroll/hits
                         // so tabBarMinimizeBehavior can bind to a single primary scroller.
@@ -319,7 +316,7 @@ struct MainFeedsScreen: View {
                 
                 if let pictureConfig, la.viewFollowingPublicKeys.count > 10  {
                     AvailableWidthContainer {
-                        NXColumnView(config: pictureConfig, isVisible: selectedSubTab == "Picture")
+                        NXColumnView(config: pictureConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Picture")
                     }
                     .opacity(selectedSubTab == "Picture" ? 1.0 : 0)
                     .allowsHitTesting(selectedSubTab == "Picture")
@@ -328,7 +325,7 @@ struct MainFeedsScreen: View {
                 
                 if let yakConfig, la.viewFollowingPublicKeys.count > 10  {
                     AvailableWidthContainer {
-                        NXColumnView(config: yakConfig, isVisible: selectedSubTab == "Yak")
+                        NXColumnView(config: yakConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Yak")
                     }
                     .opacity(selectedSubTab == "Yak" ? 1.0 : 0)
                     .allowsHitTesting(selectedSubTab == "Yak")
@@ -337,7 +334,7 @@ struct MainFeedsScreen: View {
                 
                 if let vineConfig, la.viewFollowingPublicKeys.count > 10  {
                     AvailableWidthContainer {
-                        NXColumnView(config: vineConfig, isVisible: selectedSubTab == "Vine")
+                        NXColumnView(config: vineConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Vine")
                     }
                     .opacity(selectedSubTab == "Vine" ? 1.0 : 0)
                     .allowsHitTesting(selectedSubTab == "Vine")
@@ -346,7 +343,7 @@ struct MainFeedsScreen: View {
                 
                 // LISTS
                 ForEach(columnConfigs) { config in
-                    let isActiveList = selectedSubTab == "List" && selectedList?.subscriptionId == config.id
+                    let isActiveList = selectedTab == "Main" && selectedSubTab == "List" && selectedList?.subscriptionId == config.id
                     AvailableWidthContainer {
                         NXColumnView(config: config, isVisible: isActiveList)
                     }
@@ -359,7 +356,7 @@ struct MainFeedsScreen: View {
                 // EXPLORE
                 if enableExploreFeed, let exploreConfig = exploreConfig {
                     AvailableWidthContainer {
-                        NXColumnView(config: exploreConfig, isVisible: selectedSubTab == "Explore")
+                        NXColumnView(config: exploreConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Explore")
                     }
                     .id(exploreConfig.id)
                     .opacity(selectedSubTab == "Explore" ? 1.0 : 0)

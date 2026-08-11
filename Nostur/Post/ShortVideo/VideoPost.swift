@@ -273,10 +273,14 @@ struct VideoPost: View {
             coordinator.markUserPlaying(postID: postID)
             setPlaying(true, muted: !shortVideoAutoplayAudioEnabled)
         }
-        .onValueChange(isVisible) { wasVisible, isVisibleNow in
-            // When changing feed, don't continue playing
-            guard isPlaying && !isVisibleNow else { return }
-            setPlaying(false)
+        .onValueChange(isVisible) { _, isVisibleNow in
+            canPlay = isVisibleNow
+            if isVisibleNow {
+                updateAutoplayState()
+            }
+            else {
+                setPlaying(false)
+            }
         }
         .onValueChange(settings.lowDataMode) { _, lowDataMode in
             guard lowDataMode else { return }
@@ -312,7 +316,9 @@ struct VideoPost: View {
     }
     
     private func updateAutoplayState() {
-        let shouldPlay = !shouldBlockForLowDataMode
+        let shouldPlay = isVisible
+            && canPlay
+            && !shouldBlockForLowDataMode
             && coordinator.mostVisiblePostID == postID
             && coordinator.canAutoPlay(postID: postID)
         setPlaying(shouldPlay, muted: !shortVideoAutoplayAudioEnabled)
