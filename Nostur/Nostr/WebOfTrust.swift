@@ -311,6 +311,17 @@ class WebOfTrust: ObservableObject {
         
         return false
     }
+
+    public func allowedPubkeysSnapshot() -> Set<String> {
+        switch webOfTrustLevel {
+        case SettingsStore.WebOfTrustLevel.strict.rawValue:
+            return followingPubkeys
+        case SettingsStore.WebOfTrustLevel.normal.rawValue:
+            return followingPubkeys.union(followingFollowingPubkeys)
+        default:
+            return []
+        }
+    }
     
     // This is for "normal" mode (follows + follows of follows)
     public func loadNormal(wotFollowingPubkeys: Set<String>, force: Bool = false) { // force = true to force fetching (update)

@@ -11,6 +11,7 @@ import Combine
 
 struct NXVinesFeed: View {
     @Environment(\.theme) private var theme
+    @AppStorage("vine_autoplay_audio_enabled") private var autoplayAudioEnabled = true
 
     private var vm: NXColumnViewModel
     private let posts: [NRPost]
@@ -134,6 +135,6 @@ struct NXVinesFeed: View {
                 }
             }
         }
-        .environment(\.shortVideoAutoplayAudioEnabled, true)
+        .environment(\.shortVideoAutoplayAudioEnabled, autoplayAudioEnabled)
     }
 }

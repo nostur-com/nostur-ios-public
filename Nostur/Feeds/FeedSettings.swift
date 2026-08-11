@@ -23,6 +23,9 @@ struct FeedSettings: View {
             
         case "yak":
             YakFeedSettings(feed: feed)
+
+        case "vine":
+            VineFeedSettings(feed: feed)
             
         case "relays":
             RelayFeedSettings(feed: feed)

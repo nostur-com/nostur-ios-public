@@ -60,6 +60,51 @@ struct NXColumnView<HeaderContent: View>: View {
         return true
     }
 
+    private var mediaLoadingMessage: String? {
+        switch config.columnType {
+        case .picture, .vine, .yak:
+            switch viewModel.activeMediaFeedSource ?? .follows {
+            case .follows:
+                return String(localized: "Looking for posts from people you follow…")
+            case .webOfTrust:
+                return String(localized: "Looking for posts from your web of trust…")
+            case .selectedRelays:
+                return String(localized: "Looking for posts on the selected relays…")
+            }
+        default:
+            return nil
+        }
+    }
+
+    private var mediaEmptyMessage: String? {
+        switch config.columnType {
+        case .picture, .vine, .yak:
+            break
+        default:
+            return nil
+        }
+
+        switch viewModel.activeMediaFeedSource ?? .follows {
+        case .follows:
+            return String(localized: "Nothing new from your follows")
+        case .webOfTrust:
+            return String(localized: "Nothing found in your network")
+        case .selectedRelays:
+            return String(localized: "Nothing found on the selected relays")
+        }
+    }
+
+    private var connectionRelaysData: Set<RelayData> {
+        switch config.columnType {
+        case .relays(let feed):
+            return feed.relaysData
+        case .picture(let feed), .vine(let feed), .yak(let feed):
+            return feed.mediaFeedSource == .selectedRelays ? feed.mediaDiscoveryRelays : []
+        default:
+            return []
+        }
+    }
+
     private func loadRelayInfoHiddenState() {
         guard let relayInfoDismissKey else {
             relayInfoHiddenForFeed = false
@@ -83,7 +128,15 @@ struct NXColumnView<HeaderContent: View>: View {
             case .loading:
                 ZStack(alignment: .center) {
                     theme.listBackground
-                    CenteredProgressView()
+                    VStack(spacing: 14) {
+                        CenteredProgressView()
+                        if let mediaLoadingMessage {
+                            Text(mediaLoadingMessage)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
                 }
             case .posts(let nrPosts):
                 VStack(spacing: 0) {
@@ -113,16 +166,26 @@ struct NXColumnView<HeaderContent: View>: View {
                 ZStack(alignment: .center) {
                     theme.listBackground
                     VStack(spacing: 20) {
-                        Text("Nothing here :(")
-                        Button(action: {
-                            viewModel.reload(config)
-                        }) {
-                            Label("Retry", systemImage: "arrow.clockwise")
-                                .labelStyle(.iconOnly)
-                                .foregroundColor(theme.accent)
+                        Text(mediaEmptyMessage ?? String(localized: "Nothing here :(") )
+                            .multilineTextAlignment(.center)
+                        if mediaEmptyMessage != nil && viewModel.canExploreMore {
+                            Button("Explore more", systemImage: "sparkles") {
+                                viewModel.exploreMore(config)
+                            }
+                            .buttonStyle(.borderedProminent)
                         }
+                        HStack(spacing: 20) {
+                            Button("Retry", systemImage: "arrow.clockwise") {
+                                viewModel.reload(config)
+                            }
+                            if mediaEmptyMessage != nil, let feed = config.feed {
+                                Button("Feed Settings", systemImage: "gearshape") {
+                                    AppSheetsModel.shared.feedSettingsFeed = feed
+                                }
+                            }
+                        }
+                        .foregroundColor(theme.accent)
                     }
-                    
                     .centered()
                 }
             case .error(let errorMessage):
@@ -178,7 +241,8 @@ struct NXColumnView<HeaderContent: View>: View {
             
             guard !didLoad else { return }
             didLoad = true
-            if isVisible, let relaysData = config.feed?.relaysData {
+            if isVisible {
+                let relaysData = connectionRelaysData
                 
                 // prepare auth
                 for relayData in relaysData {
@@ -209,7 +273,8 @@ struct NXColumnView<HeaderContent: View>: View {
 #endif
             
             if newValue {
-                if isVisible, let relaysData = config.feed?.relaysData {
+                if isVisible {
+                    let relaysData = connectionRelaysData
                     for relay in relaysData {
                         ConnectionPool.shared.addConnection(relay) { conn in
                             conn.connect()
@@ -235,7 +300,16 @@ struct NXColumnView<HeaderContent: View>: View {
 #endif
             guard viewModel.config != newConfig else { return }
             loadRelayInfoHiddenState()
-            if let relaysData = newConfig.feed?.relaysData {
+            let relaysData: Set<RelayData>
+            switch newConfig.columnType {
+            case .relays(let feed):
+                relaysData = feed.relaysData
+            case .picture(let feed), .vine(let feed), .yak(let feed):
+                relaysData = feed.mediaFeedSource == .selectedRelays ? feed.mediaDiscoveryRelays : []
+            default:
+                relaysData = []
+            }
+            if !relaysData.isEmpty {
                 for relay in relaysData {
                     ConnectionPool.shared.addConnection(relay) { conn in
                         conn.connect()

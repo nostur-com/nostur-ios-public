@@ -18,6 +18,11 @@ struct NXColumnConfig: Identifiable, Equatable {
     var columnType: NXColumnType?
     var accountPubkey: String?
     var name: String
+    // Value-type snapshots for media filtering on the background context.
+    // Never dereference the main-context CloudFeed from feed processing code.
+    var mediaFeedSourceSnapshot: MediaFeedSource? = nil
+    var mediaAllowedPubkeysSnapshot: Set<String> = []
+    var mediaRelaysSnapshot: Set<RelayData> = []
     
     @MainActor
     var wotEnabled: Bool {

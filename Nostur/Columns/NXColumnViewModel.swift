@@ -144,6 +144,26 @@ class NXColumnViewModel: ObservableObject {
     public var watchForFirstConnection = false
     public var saveLocalStateSub: AnyCancellable?
     private var subscriptions = Set<AnyCancellable>()
+    private var initialMediaTimeoutTask: Task<Void, Never>?
+    private var autoExploreRelaysAfterWoTTimeout = false
+
+    @MainActor
+    var activeMediaFeedSource: MediaFeedSource? {
+        config?.mediaFeedSourceSnapshot
+    }
+
+    @MainActor
+    var canExploreMore: Bool {
+        guard let config else { return false }
+        switch config.mediaFeedSourceSnapshot {
+        case .follows:
+            return !WebOfTrust.shared.allowedPubkeysSnapshot().isEmpty || !config.mediaRelaysSnapshot.isEmpty
+        case .webOfTrust:
+            return !config.mediaRelaysSnapshot.isEmpty
+        default:
+            return false
+        }
+    }
     public var onAppearSubject = PassthroughSubject<Int64,Never>()
     private var lastPaginationRequest: (until: Int64, requestedAt: Date)?
     
@@ -396,6 +416,9 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     public func initialize(_ config: NXColumnConfig, speedTest: NXSpeedTest) {
+        var config = config
+        refreshMediaSnapshots(in: &config)
+        autoExploreRelaysAfterWoTTimeout = false
         // get initial feed state from
         self.subscriptions.forEach { $0.cancel() }
         self.subscriptions.removeAll()
@@ -558,6 +581,7 @@ class NXColumnViewModel: ObservableObject {
         let resumeWhereLeftOff = config.continue
         isViewPaused = false
         speedTest?.start()
+        scheduleInitialMediaTimeout(for: config)
 #if DEBUG
         startFirstUnreadMeasurementIfNeeded(config, reason: "firstLoad")
 #endif
@@ -574,6 +598,18 @@ class NXColumnViewModel: ObservableObject {
             }
         }
         else { // Else we can start as normal with loadLocal
+            if config.mediaFeedSourceSnapshot == .selectedRelays {
+                switch config.columnType {
+                case .picture, .vine, .yak:
+                    for relayData in config.mediaRelaysSnapshot {
+                        ConnectionPool.shared.addConnection(relayData) { connection in
+                            connection.connect()
+                        }
+                    }
+                default:
+                    break
+                }
+            }
             
             // if relay feed, make sure relay is added to ConnectionPool
             if case .relays(let feed) = config.columnType {
@@ -854,6 +890,9 @@ class NXColumnViewModel: ObservableObject {
     // Reload (after toggle replies enabled etc)
     @MainActor
     public func reload(_ config: NXColumnConfig) {
+        var config = config
+        refreshMediaSnapshots(in: &config)
+        self.config = config
         if case .timeout = viewState {
             viewState = .loading
             firstLoad(config)
@@ -864,6 +903,7 @@ class NXColumnViewModel: ObservableObject {
         }
         else {
             viewState = .loading
+            scheduleInitialMediaTimeout(for: config)
             if SettingsStore.shared.appWideSeenTracker {
                 Deduplicator.shared.onScreenSeen = []
             }
@@ -877,6 +917,117 @@ class NXColumnViewModel: ObservableObject {
                 Task { [weak self] in
                     await self?.loadRemote(config)
                 }
+            }
+        }
+    }
+
+    @MainActor
+    private func refreshMediaSnapshots(in config: inout NXColumnConfig, sourceOverride: MediaFeedSource? = nil) {
+        guard let feed = config.feed else {
+            config.mediaFeedSourceSnapshot = nil
+            config.mediaAllowedPubkeysSnapshot = []
+            config.mediaRelaysSnapshot = []
+            return
+        }
+
+        switch config.columnType {
+        case .picture, .vine, .yak:
+            let source = sourceOverride ?? feed.mediaFeedSource
+            config.mediaFeedSourceSnapshot = source
+            config.mediaRelaysSnapshot = feed.mediaDiscoveryRelays
+            switch source {
+            case .follows:
+                if let account = feed.account {
+                    config.mediaAllowedPubkeysSnapshot = account.followingPubkeys
+                        .union(account.privateFollowingPubkeys)
+                        .union([account.publicKey])
+                }
+                else {
+                    config.mediaAllowedPubkeysSnapshot = []
+                }
+            case .webOfTrust:
+                config.mediaAllowedPubkeysSnapshot = WebOfTrust.shared.allowedPubkeysSnapshot()
+            case .selectedRelays:
+                config.mediaAllowedPubkeysSnapshot = []
+            }
+        default:
+            config.mediaFeedSourceSnapshot = nil
+            config.mediaAllowedPubkeysSnapshot = []
+            config.mediaRelaysSnapshot = []
+        }
+    }
+
+    @MainActor
+    private func scheduleInitialMediaTimeout(for config: NXColumnConfig) {
+        initialMediaTimeoutTask?.cancel()
+        switch config.columnType {
+        case .picture, .vine, .yak:
+            break
+        default:
+            return
+        }
+
+        let configId = config.id
+        initialMediaTimeoutTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 12_000_000_000)
+            guard !Task.isCancelled else { return }
+            guard let self, self.config?.id == configId else { return }
+            guard case .loading = self.viewState else { return }
+            if self.autoExploreRelaysAfterWoTTimeout,
+               config.mediaFeedSourceSnapshot == .webOfTrust,
+               !config.mediaRelaysSnapshot.isEmpty {
+                self.autoExploreRelaysAfterWoTTimeout = false
+                self.loadTemporaryMediaSource(.selectedRelays, from: config)
+                return
+            }
+            self.speedTest?.otherTimeout()
+            self.viewState = .timeout
+        }
+    }
+
+    @MainActor
+    func exploreMore(_ fallbackConfig: NXColumnConfig) {
+        let currentConfig = config ?? fallbackConfig
+        switch currentConfig.mediaFeedSourceSnapshot {
+        case .follows:
+            var wotConfig = currentConfig
+            refreshMediaSnapshots(in: &wotConfig, sourceOverride: .webOfTrust)
+            if wotConfig.mediaAllowedPubkeysSnapshot.isEmpty {
+                guard !wotConfig.mediaRelaysSnapshot.isEmpty else { return }
+                loadTemporaryMediaSource(.selectedRelays, from: wotConfig)
+            }
+            else {
+                autoExploreRelaysAfterWoTTimeout = true
+                loadTemporaryMediaSource(.webOfTrust, from: wotConfig)
+            }
+        case .webOfTrust:
+            guard !currentConfig.mediaRelaysSnapshot.isEmpty else { return }
+            autoExploreRelaysAfterWoTTimeout = false
+            loadTemporaryMediaSource(.selectedRelays, from: currentConfig)
+        default:
+            break
+        }
+    }
+
+    @MainActor
+    private func loadTemporaryMediaSource(_ source: MediaFeedSource, from currentConfig: NXColumnConfig) {
+        var temporaryConfig = currentConfig
+        refreshMediaSnapshots(in: &temporaryConfig, sourceOverride: source)
+        config = temporaryConfig
+        viewState = .loading
+        ConnectionPool.shared.closeSubscription(temporaryConfig.id)
+
+        if source == .selectedRelays {
+            for relay in temporaryConfig.mediaRelaysSnapshot {
+                ConnectionPool.shared.addConnection(relay) { $0.connect() }
+            }
+        }
+
+        scheduleInitialMediaTimeout(for: temporaryConfig)
+        startFetchFeedTimer()
+        loadLocal(temporaryConfig) { [weak self] in
+            Task { @MainActor in
+                await self?.loadRemote(temporaryConfig)
             }
         }
     }
@@ -1220,15 +1371,9 @@ class NXColumnViewModel: ObservableObject {
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
-        case .picture(let feed), .vine(let feed), .yak(let feed):
-            
-            let followingPubkeys: Set<String> = if let account = feed.account {
-                account.followingPubkeys.union(Set([account.publicKey]))
-                    .union(account.privateFollowingPubkeys)
-            }
-            else {
-                []
-            }
+        case .picture, .vine, .yak:
+            let source = config.mediaFeedSourceSnapshot ?? .follows
+            let mediaRelays = config.mediaRelaysSnapshot
             
             let kinds: Set<Int> = switch config.columnType {
             case .vine:
@@ -1240,21 +1385,26 @@ class NXColumnViewModel: ObservableObject {
             }
 
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) loadLocal(.picture/.vine) (\(kinds.description) \(older ? "older" : "") \(followingPubkeys.count) pubkeys - loadAnyFlag:\(self.loadAnyFlag) -[LOG]-")
+            L.og.debug("☘️☘️ \(config.name) loadLocal(.picture/.vine/.yak) (\(kinds.description) \(older ? "older" : "") source: \(source.rawValue) - loadAnyFlag:\(self.loadAnyFlag) -[LOG]-")
 #endif
-            
-            let hashtagRegex: String? = if let account = feed.account {
-                makeHashtagRegex(account.followingHashtags)
-            }
-            else { nil }
             
             bg().perform { [weak self] in
                 guard let self else { return }
-                let fr = if !older {
-                    Event.postsByPubkeys(followingPubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
+                let fr = if source == .selectedRelays {
+                    if !older {
+                        Event.postsByRelays(mediaRelays, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, fetchLimit: QUERY_FETCH_LIMIT, kinds: kinds)
+                    }
+                    else {
+                        Event.postsByRelays(mediaRelays, until: untilTimestamp, hideReplies: !repliesEnabled, fetchLimit: QUERY_FETCH_LIMIT, kinds: kinds)
+                    }
                 }
                 else {
-                    Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
+                    if !older {
+                        Event.mediaPosts(lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
+                    }
+                    else {
+                        Event.mediaPosts(until: untilTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
+                    }
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
@@ -1404,6 +1554,33 @@ class NXColumnViewModel: ObservableObject {
         }
     }
         
+    private func broadMediaFilters(_ config: NXColumnConfig, since: Int? = nil, until: Int? = nil, limit: Int? = nil) -> [Filters] {
+        switch config.columnType {
+        case .vine:
+            return [Filters(kinds: [34236], since: since, until: until, limit: limit)]
+        case .yak:
+            return [Filters(kinds: [1222, 1244], since: since, until: until, limit: limit)]
+        case .picture:
+            return [
+                Filters(kinds: [20], since: since, until: until, limit: limit),
+                Filters(kinds: [1], tagFilter: TagFilter(tag: "k", values: ["20"]), since: since, until: until, limit: limit)
+            ]
+        default:
+            return []
+        }
+    }
+
+    @MainActor
+    private func sendBroadMediaReq(_ config: NXColumnConfig, subscriptionId: String, since: Int? = nil, until: Int? = nil, limit: Int? = nil, isActiveSubscription: Bool = false) {
+        let relays = config.mediaFeedSourceSnapshot == .selectedRelays ? config.mediaRelaysSnapshot : []
+        guard config.mediaFeedSourceSnapshot != .selectedRelays || !relays.isEmpty else { return }
+        let filters = broadMediaFilters(config, since: since, until: until, limit: limit)
+        guard !filters.isEmpty,
+              let message = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters).json()
+        else { return }
+        req(message, activeSubscriptionId: isActiveSubscription ? subscriptionId : nil, relays: relays)
+    }
+
     @MainActor
     private func sendRealtimeReq(_ config: NXColumnConfig) {
         switch config.columnType {
@@ -1455,6 +1632,16 @@ class NXColumnViewModel: ObservableObject {
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
         case .picture(let feed), .vine(let feed), .yak(let feed):
+            if config.mediaFeedSourceSnapshot != .follows {
+                sendBroadMediaReq(
+                    config,
+                    subscriptionId: config.id,
+                    since: NTimestamp(date: .now).timestamp,
+                    isActiveSubscription: true
+                )
+                return
+            }
+
             // Make sure max pubkeys is < 2000 (relay limits)
             let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
             let ownPubkey: Set<String> = if let account = feed.account {
@@ -1665,6 +1852,19 @@ class NXColumnViewModel: ObservableObject {
             }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
 
         case .picture(let feed), .vine(let feed), .yak(let feed):
+            if config.mediaFeedSourceSnapshot != .follows {
+                let subId = "MEDIA-RESUME-" + config.id + "-" + (since?.description ?? "any")
+                return (cmd: { [weak self] in
+                    self?.sendBroadMediaReq(
+                        config,
+                        subscriptionId: subId,
+                        since: since,
+                        until: until,
+                        limit: !config.continue ? 150 : nil
+                    )
+                }, subId: subId)
+            }
+
             // Make sure max pubkeys is < 2000 (relay limits)
             let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
             let ownPubkey: Set<String> = if let account = feed.account {
@@ -1928,6 +2128,16 @@ class NXColumnViewModel: ObservableObject {
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
             
         case .picture(let feed), .vine(let feed), .yak(let feed):
+            if config.mediaFeedSourceSnapshot != .follows {
+                sendBroadMediaReq(
+                    config,
+                    subscriptionId: "MEDIA-PAGE-" + config.id,
+                    until: Int(until),
+                    limit: 150
+                )
+                return
+            }
+
             // Make sure max pubkeys is < 2000 (relay limits)
             let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
             let ownPubkey: Set<String> = if let account = feed.account {
@@ -2278,17 +2488,18 @@ class NXColumnViewModel: ObservableObject {
                 .receive(on: RunLoop.main) // main because .haltedProcessing must access .isDelaying on main
                 .sink { [weak self] subscriptionIds in
                     guard let self else { return }
+                    let activeConfig = self.config ?? config
                     guard isVisible && !isPaused && (!AppState.shared.appIsInBackground || IS_CATALYST) else {
                         queuedSubscriptionIds.add(subscriptionIds)
                         return
                     }
-                    guard subscriptionIds.contains(config.id) else { return }
+                    guard subscriptionIds.contains(activeConfig.id) else { return }
                     
 #if DEBUG
                     L.og.debug("☘️☘️ \(config.name) listenForNewPosts.subscriptionIds \(subscriptionIds) -[LOG]-")
 #endif
                     
-                    self.loadLocal(config)
+                    self.loadLocal(activeConfig)
                 }
         }
  
@@ -2348,6 +2559,17 @@ class NXColumnViewModel: ObservableObject {
 #endif
                     self?.reload(config)
                 }
+            }
+            .store(in: &subscriptions)
+
+        receiveNotification(.mediaFeedConfigurationChanged)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] notification in
+                guard let changedFeedId = notification.object as? UUID,
+                      changedFeedId == feed.id
+                else { return }
+                ConnectionPool.shared.closeSubscription(config.id)
+                self?.reload(config)
             }
             .store(in: &subscriptions)
     }
@@ -2505,6 +2727,7 @@ class NXColumnViewModel: ObservableObject {
     }
     
     deinit {
+        initialMediaTimeoutTask?.cancel()
 #if DEBUG
         if let config {
             let configId = config.id
@@ -2573,6 +2796,7 @@ extension NXColumnViewModel {
         
         guard !partialThreadsWithParent.isEmpty else {
             Task { @MainActor in
+                guard self.shouldAcceptResults(for: config) else { return }
                 if let speedTest, !speedTest.relaysFinishedAt.isEmpty {
 #if DEBUG
                     L.og.debug("🏁🏁 \(config.name) processToScreen loadingBarViewState = .finalLoad -[LOG]-")
@@ -2587,8 +2811,19 @@ extension NXColumnViewModel {
         }
         
         Task { @MainActor in
+            guard self.shouldAcceptResults(for: config) else { return }
             self.putOnScreen(partialThreadsWithParent, config: config, insertAtEnd: older, completion: completion)
         }
+    }
+
+    @MainActor
+    private func shouldAcceptResults(for incomingConfig: NXColumnConfig) -> Bool {
+        guard incomingConfig.mediaFeedSourceSnapshot != nil else { return true }
+        guard config?.id == incomingConfig.id,
+              config?.mediaFeedSourceSnapshot == incomingConfig.mediaFeedSourceSnapshot
+        else { return false }
+        if case .timeout = viewState { return false }
+        return true
     }
     
     // -- MARK: Subfunctions used by processToScreen():
@@ -2596,7 +2831,11 @@ extension NXColumnViewModel {
     // Prepare events: apply WoT filter, remove already on screen, load .parentEvents
     private func prepareEvents(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool) -> [Event] {
         shouldBeBg()
-        let wotFilteredEvents: [Event] = (wotEnabled ? applyWoT(events, config: config) : events) // Apply WoT filter or not
+        let isMediaFeed: Bool = switch config.columnType {
+        case .picture, .vine, .yak: true
+        default: false
+        }
+        let wotFilteredEvents: [Event] = ((wotEnabled || isMediaFeed) ? applyWoT(events, config: config) : events)
             
         let seenFilteredEvents: [Event] = wotFilteredEvents
             .filter { // Apply (app wide) already-seen filter
@@ -2659,19 +2898,11 @@ extension NXColumnViewModel {
             return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
         }
         
-        // if picture feed, always show all the pubkeys
-        if case .picture(_) = config.columnType {
-            return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
-        }
-        
-        // if vine feed, always show all the pubkeys
-        if case .vine(_) = config.columnType {
-            return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
-        }
-        
-        // if yak feed, always show all the pubkeys
-        if case .yak(_) = config.columnType {
-            return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
+        switch config.columnType {
+        case .picture, .vine, .yak:
+            return applyMediaSource(events, config: config)
+        default:
+            break
         }
         
         guard WOT_FILTER_ENABLED() else { return events }  // Return all if globally disabled
@@ -2682,6 +2913,15 @@ extension NXColumnViewModel {
         }
                 
         return events
+    }
+
+    private func applyMediaSource(_ events: [Event], config: NXColumnConfig) -> [Event] {
+        switch config.mediaFeedSourceSnapshot ?? .follows {
+        case .follows, .webOfTrust:
+            return events.filter { config.mediaAllowedPubkeysSnapshot.contains($0.pubkey) }
+        case .selectedRelays:
+            return events
+        }
     }
     
     private func transformToNRPosts(_ events: [Event], config: NXColumnConfig, older: Bool = false, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost], repliesEnabled: Bool) -> [NRPost] { // call from bg
@@ -3502,6 +3742,52 @@ extension Event {
     }
 }
 
+// Broad local media fetches used by WoT feeds. Fetching by kind first avoids
+// putting a potentially very large WoT pubkey set into a Core Data predicate.
+extension Event {
+    static func mediaPosts(lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, kinds: Set<Int>) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        let eightHoursAgo = Int64(Date.now.timeIntervalSince1970) - 28_800
+        let lowerBound = lastAppearedCreatedAt == 0 ? eightHoursAgo : min(lastAppearedCreatedAt, eightHoursAgo)
+        let upperBound = Int64(Date.now.timeIntervalSince1970) + 10_800
+
+        let request = Event.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        request.fetchLimit = 1_000
+
+        var predicate = "created_at >= %i AND created_at < %i"
+        predicate += kinds.contains(20)
+            ? " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
+            : " AND kind IN %@"
+        if hideReplies {
+            predicate += " AND replyToRootId == nil AND replyToId == nil"
+        }
+        predicate += " AND flags != \"is_update\" AND NOT pubkey IN %@"
+        request.predicate = NSPredicate(format: predicate, lowerBound, upperBound, kinds, blockedPubkeys)
+        return request
+    }
+
+    static func mediaPosts(until cutOffPoint: Int64, hideReplies: Bool = false, kinds: Set<Int>) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        let cutOffNotInFuture = min(cutOffPoint, Int64(Date.now.timeIntervalSince1970) + 10_800)
+
+        let request = Event.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        request.fetchLimit = 1_000
+
+        var predicate = "created_at <= %i"
+        predicate += kinds.contains(20)
+            ? " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
+            : " AND kind IN %@"
+        if hideReplies {
+            predicate += " AND replyToRootId == nil AND replyToId == nil"
+        }
+        predicate += " AND flags != \"is_update\" AND NOT pubkey IN %@"
+        request.predicate = NSPredicate(format: predicate, cutOffNotInFuture, kinds, blockedPubkeys)
+        return request
+    }
+}
+
 // LVM relays
 extension Event {
     private static func relayTokenRegex(_ relays: Set<RelayData>) -> String {
@@ -3519,6 +3805,7 @@ extension Event {
     static func postsByRelays(_ relays: Set<RelayData>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, fetchLimit: Int = 50, force: Bool = false, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let regex = relayTokenRegex(relays)
+        let kindClause = kinds.contains(20) ? "(kind IN %@ OR (kind = 1 AND kTag = 20))" : "kind IN %@"
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - 28_800 // 8 hours ago
         
         // Take oldest timestamp: 8 hours ago OR lastAppearedCreatedAt
@@ -3534,10 +3821,10 @@ extension Event {
         frBefore.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         
         if hideReplies {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffNotInFuture, kinds, blockedPubkeys, regex)
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND \(kindClause) AND NOT pubkey IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffNotInFuture, kinds, blockedPubkeys, regex)
         }
         else {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", cutOffNotInFuture, kinds, blockedPubkeys, regex)
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND \(kindClause) AND NOT pubkey IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", cutOffNotInFuture, kinds, blockedPubkeys, regex)
         }
         
         let newFirstEvent = try? bg().fetch(frBefore).last
@@ -3554,13 +3841,13 @@ extension Event {
         
         if hideReplies {
             fr.predicate = !force
-                ? NSPredicate(format: "created_at >= %i AND created_at < %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, threeHoursFromNow, kinds, regex)
-                : NSPredicate(format: "kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", kinds, regex)
+                ? NSPredicate(format: "created_at >= %i AND created_at < %i AND \(kindClause) AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, threeHoursFromNow, kinds, regex)
+                : NSPredicate(format: "\(kindClause) AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", kinds, regex)
         }
         else {
             fr.predicate = !force
-                ? NSPredicate(format: "created_at >= %i AND created_at < %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", newCutOffPoint, threeHoursFromNow, kinds, regex)
-                : NSPredicate(format: "kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", kinds, regex)
+                ? NSPredicate(format: "created_at >= %i AND created_at < %i AND \(kindClause) AND relays MATCHES %@ AND flags != \"is_update\"", newCutOffPoint, threeHoursFromNow, kinds, regex)
+                : NSPredicate(format: "\(kindClause) AND relays MATCHES %@ AND flags != \"is_update\"", kinds, regex)
         }
         return fr
     }
@@ -3569,6 +3856,7 @@ extension Event {
     static func postsByRelays(_ relays: Set<RelayData>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let regex = relayTokenRegex(relays)
+        let kindClause = kinds.contains(20) ? "(kind IN %@ OR (kind = 1 AND kTag = 20))" : "kind IN %@"
         
         let cutOffNotInFuture: Int64 = min(cutOffPoint, Int64(Date().timeIntervalSince1970) + 10800) // Never show posts too far into the future (fake timestamp)
         
@@ -3579,10 +3867,10 @@ extension Event {
         fr.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffNotInFuture, kinds, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND \(kindClause) AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffNotInFuture, kinds, regex, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffNotInFuture, kinds, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND \(kindClause) AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffNotInFuture, kinds, regex, blockedPubkeys)
         }
         return fr
     }

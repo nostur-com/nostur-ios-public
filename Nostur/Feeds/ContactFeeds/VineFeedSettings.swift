@@ -1,22 +1,25 @@
 //
-//  PictureFeedSettings.swift
+//  VineFeedSettings.swift
 //  Nostur
-//
-//  Created by Fabian Lachman on 08/09/2025.
 //
 
 import SwiftUI
 
-struct PictureFeedSettings: View {
+struct VineFeedSettings: View {
     @ObservedObject public var feed: CloudFeed
-    
+
+    @AppStorage("vine_autoplay_audio_enabled") private var autoplayAudioEnabled = true
+
     var body: some View {
         NXForm {
             MediaFeedSourceSettings(feed: feed)
 
             Section(header: Text("Feed settings", comment: "Header for feed settings")) {
-                
-                // CONTINUE WHERE LEFT OFF
+                Toggle(isOn: $autoplayAudioEnabled) {
+                    Text("Play sound automatically")
+                    Text("Start Divine videos with sound")
+                }
+
                 Toggle(isOn: Binding(get: {
                     feed.continue
                 }, set: { newValue in
@@ -27,15 +30,14 @@ struct PictureFeedSettings: View {
                 }
             }
         }
-        
-        .navigationTitle("Photos Feed settings")
+        .navigationTitle("Divine Feed settings")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #Preview {
     PreviewContainer({ pe in pe.loadCloudFeeds() }) {
-        if let feed = PreviewFetcher.fetchCloudFeed(type: "picture") {
+        if let feed = PreviewFetcher.fetchCloudFeed(type: "vine") {
             FeedSettings(feed: feed)
         }
     }

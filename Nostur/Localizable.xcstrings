@@ -8026,6 +8026,9 @@
         }
       }
     },
+    "Content relays" : {
+
+    },
     "Content types" : {
       "comment" : "Header for a feed setting",
       "localizations" : {
@@ -10160,6 +10163,9 @@
           }
         }
       }
+    },
+    "Divine Feed settings" : {
+
     },
     "diVines" : {
       "comment" : "Feed title\nTab title for short videos feed of people you follow",
@@ -13634,6 +13640,9 @@
         }
       }
     },
+    "Includes people outside your web of trust" : {
+
+    },
     "Increase privacy" : {
       "localizations" : {
         "es" : {
@@ -16433,6 +16442,9 @@
         }
       }
     },
+    "My web of trust" : {
+
+    },
     "Name" : {
       "comment" : "Label of Name text field on Create new account screen",
       "localizations" : {
@@ -18009,6 +18021,12 @@
         }
       }
     },
+    "Nothing found in your network" : {
+
+    },
+    "Nothing found on the selected relays" : {
+
+    },
     "Nothing here :(" : {
       "localizations" : {
         "es" : {
@@ -19252,6 +19270,9 @@
     "Pinned messages" : {
 
     },
+    "Play sound automatically" : {
+
+    },
     "Please read these Terms and Conditions (\"Terms\", \"Terms and Conditions\") carefully before using Nostur (the \"App\") operated by the independent developer (\"Developer\")." : {
       "comment" : "Terms and conditions paragraph",
       "localizations" : {
@@ -19947,6 +19968,9 @@
           }
         }
       }
+    },
+    "Posts from your follows and their follows" : {
+
     },
     "Posts most liked or reposted by people you follow" : {
       "extractionState" : "manual",
@@ -24071,6 +24095,9 @@
         }
       }
     },
+    "Select at least one relay first" : {
+
+    },
     "Select contacts" : {
       "comment" : "Section header for adding contacts to a feed",
       "localizations" : {
@@ -25211,6 +25238,9 @@
         }
       }
     },
+    "Show content from" : {
+
+    },
     "Show extra relays used on post preview" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -26286,6 +26316,9 @@
           }
         }
       }
+    },
+    "Start Divine videos with sound" : {
+
     },
     "Start listening" : {
       "localizations" : {
@@ -29662,6 +29695,9 @@
         }
       }
     },
+    "Used when everyone on selected relays is selected. Blocked accounts and muted content are always hidden." : {
+
+    },
     "User does not have a lightning address set" : {
       "localizations" : {
         "es" : {
@@ -30736,6 +30772,9 @@
           }
         }
       }
+    },
+    "wss://relay.example.com" : {
+
     },
     "WTF" : {
       "localizations" : {

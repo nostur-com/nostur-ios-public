@@ -879,6 +879,10 @@ struct MainFeedsScreen: View {
             })
         
         if let feed = feedsNewest.first {
+            if feed.relays == nil {
+                feed.relays = "wss://relay.divine.video"
+                DataProvider.shared().saveToDiskNow(.viewContext)
+            }
             vineConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .vine(feed), accountPubkey: account.publicKey, name: feed.feedTitle())
             
             guard feeds.count > 1 else { return }
@@ -895,6 +899,7 @@ struct MainFeedsScreen: View {
             newFeed.createdAt = .now
             newFeed.accountPubkey = account.publicKey
             newFeed.type = CloudFeedType.vine.rawValue
+            newFeed.relays = "wss://relay.divine.video"
             newFeed.repliesEnabled = false
             newFeed.order = 0
             newFeed.name = "\(newFeed.feedTitle()) for \(account.anyName)"

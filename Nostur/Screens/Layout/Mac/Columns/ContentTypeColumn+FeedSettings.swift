@@ -12,6 +12,8 @@ struct YakFeedSettings: View {
     
     var body: some View {
         NXForm {
+            MediaFeedSourceSettings(feed: feed)
+
             Section(header: Text("Feed settings", comment: "Header for feed settings")) {
                 
                 // TOGGLE REPLIES
