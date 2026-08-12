@@ -121,12 +121,13 @@ struct NotificationsNewPosts: View {
     }
 }
 
+@available(iOS 26.0, *)
 #Preview("Notifications New Posts") {
    PreviewContainer({ pe in
         pe.loadContacts()
         pe.loadNewPostsNotification()
     }) {
-        VStack {
+        PreviewApp {
             NotificationsNewPosts(navPath: .constant(NBNavigationPath()))
         }
     }
