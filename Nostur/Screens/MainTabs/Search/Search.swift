@@ -238,13 +238,11 @@ struct Search: View {
                     }
                 }
             }
-            .onReceive(searchNavigation.$pendingRequest.compactMap { $0 }) { request in
-                // Search columns have their own container IDs. Only the primary
-                // Search tab should consume app-wide search navigation.
-                guard containerID == "Search" else { return }
-                navPath.removeLast(navPath.count)
-                searchText = request.query
-                searchNavigation.acknowledge(request)
+            .onAppear {
+                applyPendingSearchNavigationRequest(searchNavigation.pendingRequest)
+            }
+            .onChange(of: searchNavigation.pendingRequest) { request in
+                applyPendingSearchNavigationRequest(request)
             }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
@@ -283,6 +281,15 @@ struct Search: View {
     private var replyButton: some View {
         Image("ReplyIcon")
         Text("Comments")
+    }
+
+    private func applyPendingSearchNavigationRequest(_ request: SearchNavigationRequest?) {
+        // Search columns have their own container IDs. Only the primary Search
+        // tab should consume app-wide search navigation.
+        guard containerID == "Search", let request else { return }
+        navPath.removeLast(navPath.count)
+        searchText = request.query
+        searchNavigation.acknowledge(request)
     }
 
     @ViewBuilder

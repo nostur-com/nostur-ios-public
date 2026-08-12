@@ -26,8 +26,8 @@ final class SearchNavigationModel: ObservableObject {
     init() {}
 
     func openSearch(_ query: String) {
-        pendingRequest = SearchNavigationRequest(query: query)
         setSelectedTab("Search")
+        pendingRequest = SearchNavigationRequest(query: query)
     }
 
     func acknowledge(_ request: SearchNavigationRequest) {

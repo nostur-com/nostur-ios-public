@@ -3,6 +3,7 @@
 //  NosturTests
 //
 
+import Combine
 import XCTest
 @testable import Nostur
 
@@ -32,5 +33,22 @@ final class SearchNavigationModelTests: XCTestCase {
         let secondRequest = try XCTUnwrap(model.pendingRequest)
 
         XCTAssertNotEqual(firstRequest.id, secondRequest.id)
+    }
+
+    func testSelectsSearchTabBeforePublishingRequest() {
+        let model = SearchNavigationModel()
+        var cancellable: AnyCancellable?
+        var selectedTabWhenPublished: String?
+
+        cancellable = model.$pendingRequest
+            .compactMap { $0 }
+            .sink { _ in
+                selectedTabWhenPublished = selectedTab()
+            }
+
+        model.openSearch("#nostr")
+
+        XCTAssertEqual(selectedTabWhenPublished, "Search")
+        withExtendedLifetime(cancellable) {}
     }
 }
