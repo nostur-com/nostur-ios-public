@@ -50,31 +50,26 @@ struct ObservedPFP: View {
     private var pictureUrl: URL? { nrContact.pictureUrl }
     private var size: CGFloat = 50.0
     private var forceFlat = false
-    private var usesMaterialBorder = true
     private var color: Color { nrContact.randomColor }
     
     init(
         nrContact: NRContact,
         size: CGFloat = 50.0,
-        forceFlat: Bool = false,
-        usesMaterialBorder: Bool = true
+        forceFlat: Bool = false
     ) {
         self.nrContact = nrContact
         self.size = size
         self.forceFlat = forceFlat
-        self.usesMaterialBorder = usesMaterialBorder
     }
     
     init(
         pubkey: String,
         size: CGFloat = 50.0,
-        forceFlat: Bool = false,
-        usesMaterialBorder: Bool = true
+        forceFlat: Bool = false
     ) {
         self.nrContact = NRContact.instance(of: pubkey)
         self.size = size
         self.forceFlat = forceFlat
-        self.usesMaterialBorder = usesMaterialBorder
     }
     
     var body: some View {
@@ -83,8 +78,7 @@ struct ObservedPFP: View {
             pictureUrl: pictureUrl,
             size: size,
             color: color,
-            forceFlat: forceFlat,
-            usesMaterialBorder: usesMaterialBorder
+            forceFlat: forceFlat
         )
     }
 }
@@ -137,7 +131,6 @@ struct InnerPFP: View {
     public var size: CGFloat = 50.0
     public var color: Color? = nil
     public var forceFlat = false
-    public var usesMaterialBorder = true
     private var innerColor: Color {
         color ?? randomColor(seed: pubkey)
     }
@@ -165,19 +158,11 @@ struct InnerPFP: View {
     }
     
     var body: some View {
-        Group {
-            if usesMaterialBorder {
-                Circle()
-                    .strokeBorder(.regularMaterial, lineWidth: 2)
-                    .background(innerColor)
-            } else {
-                Circle()
-                    .fill(innerColor)
-                    .overlay {
-                        Circle().strokeBorder(.primary.opacity(0.12), lineWidth: 1)
-                    }
+        Circle()
+            .fill(innerColor)
+            .overlay {
+                Circle().strokeBorder(.primary.opacity(0.12), lineWidth: 1)
             }
-        }
             .frame(width: size, height: size)
             .overlay {
                 switch renderCase {
@@ -344,13 +329,13 @@ struct MiniPFP: View {
             .cornerRadius(size/2)
             .background(
                 Circle()
-                    .strokeBorder(.regularMaterial, lineWidth: 3)
+                    .strokeBorder(.primary.opacity(0.12), lineWidth: 1)
                     .background(Circle().fill(fallBackColor ?? Color.defaultSecondaryBackground))
             )
         }
         else {
             Circle()
-                .strokeBorder(.regularMaterial, lineWidth: 3)
+                .strokeBorder(.primary.opacity(0.12), lineWidth: 1)
                 .background(Circle().fill(fallBackColor ?? Color.defaultSecondaryBackground))
                 .frame(width: size, height: size)
         }
@@ -416,7 +401,11 @@ struct MultiPFPs: View {
     var body: some View {
         ZStack(alignment: .leading) {
             ForEach(nrContacts.prefix(prefix).indices, id:\.self) { index in
-                ObservedPFP(nrContact: nrContacts[index], size: pfpSize, forceFlat: true)
+                ObservedPFP(
+                    nrContact: nrContacts[index],
+                    size: pfpSize,
+                    forceFlat: true
+                )
                     .frame(width: size, height: size, alignment: self.alignment(for: index))
                     .id(nrContacts[index].pubkey)
                     .zIndex(Double(index))
@@ -436,7 +425,6 @@ struct MultiPFPs: View {
             }
         }
         .frame(width: size, height: size, alignment: .topLeading)
-        .drawingGroup()
         .onAppear {
             for nrContact in nrContacts {
                 if nrContact.metadata_created_at == 0 {

@@ -44,7 +44,7 @@ struct MinimalQuotedNoteFragment: View {
         .padding(10)
         .overlay(
             RoundedRectangle(cornerRadius: 15)
-                .stroke(.regularMaterial, lineWidth: 1)
+                .stroke(.primary.opacity(0.12), lineWidth: 1)
         )
         .onAppear {
             if (nrPost.contact.metadata_created_at == 0) {

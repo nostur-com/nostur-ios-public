@@ -236,7 +236,7 @@ struct Kind30023: View {
             )
             .overlay(
                RoundedRectangle(cornerRadius: 15)
-                .stroke(.regularMaterial, lineWidth: 1)
+                .stroke(.primary.opacity(0.12), lineWidth: 1)
             )
 
         

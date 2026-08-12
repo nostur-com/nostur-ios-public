@@ -534,8 +534,7 @@ struct BadgeReceivedRow: View {
                     ObservedPFP(
                         pubkey: badge.pubkey,
                         size: 18,
-                        forceFlat: true,
-                        usesMaterialBorder: false
+                        forceFlat: true
                     )
                     ContactName(pubkey: badge.pubkey)
                         .font(.caption.weight(.semibold))
@@ -726,8 +725,7 @@ private struct BadgeWornBy: View {
                             ObservedPFP(
                                 pubkey: pubkey,
                                 size: 20,
-                                forceFlat: true,
-                                usesMaterialBorder: false
+                                forceFlat: true
                             )
                                 .highPriorityGesture(
                                     TapGesture().onEnded {
