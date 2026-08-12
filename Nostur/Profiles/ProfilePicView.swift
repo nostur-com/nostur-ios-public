@@ -50,22 +50,42 @@ struct ObservedPFP: View {
     private var pictureUrl: URL? { nrContact.pictureUrl }
     private var size: CGFloat = 50.0
     private var forceFlat = false
+    private var usesMaterialBorder = true
     private var color: Color { nrContact.randomColor }
     
-    init(nrContact: NRContact, size: CGFloat = 50.0, forceFlat: Bool = false) {
+    init(
+        nrContact: NRContact,
+        size: CGFloat = 50.0,
+        forceFlat: Bool = false,
+        usesMaterialBorder: Bool = true
+    ) {
         self.nrContact = nrContact
         self.size = size
         self.forceFlat = forceFlat
+        self.usesMaterialBorder = usesMaterialBorder
     }
     
-    init(pubkey: String, size: CGFloat = 50.0, forceFlat: Bool = false) {
+    init(
+        pubkey: String,
+        size: CGFloat = 50.0,
+        forceFlat: Bool = false,
+        usesMaterialBorder: Bool = true
+    ) {
         self.nrContact = NRContact.instance(of: pubkey)
         self.size = size
         self.forceFlat = forceFlat
+        self.usesMaterialBorder = usesMaterialBorder
     }
     
     var body: some View {
-        InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size, color: color, forceFlat: forceFlat)
+        InnerPFP(
+            pubkey: pubkey,
+            pictureUrl: pictureUrl,
+            size: size,
+            color: color,
+            forceFlat: forceFlat,
+            usesMaterialBorder: usesMaterialBorder
+        )
     }
 }
 
@@ -117,6 +137,7 @@ struct InnerPFP: View {
     public var size: CGFloat = 50.0
     public var color: Color? = nil
     public var forceFlat = false
+    public var usesMaterialBorder = true
     private var innerColor: Color {
         color ?? randomColor(seed: pubkey)
     }
@@ -144,9 +165,19 @@ struct InnerPFP: View {
     }
     
     var body: some View {
-        Circle()
-            .strokeBorder(.regularMaterial, lineWidth: 2)
-            .background(innerColor)
+        Group {
+            if usesMaterialBorder {
+                Circle()
+                    .strokeBorder(.regularMaterial, lineWidth: 2)
+                    .background(innerColor)
+            } else {
+                Circle()
+                    .fill(innerColor)
+                    .overlay {
+                        Circle().strokeBorder(.primary.opacity(0.12), lineWidth: 1)
+                    }
+            }
+        }
             .frame(width: size, height: size)
             .overlay {
                 switch renderCase {

@@ -531,7 +531,12 @@ struct BadgeReceivedRow: View {
 
                 HStack(spacing: 4) {
                     Text("Received from")
-                    ObservedPFP(pubkey: badge.pubkey, size: 18, forceFlat: true)
+                    ObservedPFP(
+                        pubkey: badge.pubkey,
+                        size: 18,
+                        forceFlat: true,
+                        usesMaterialBorder: false
+                    )
                     ContactName(pubkey: badge.pubkey)
                         .font(.caption.weight(.semibold))
                         .lineLimit(1)
@@ -718,7 +723,12 @@ private struct BadgeWornBy: View {
                             .foregroundStyle(.secondary)
                             .fixedSize()
                         ForEach(Array(visiblePubkeys), id: \.self) { pubkey in
-                            ObservedPFP(pubkey: pubkey, size: 20, forceFlat: true)
+                            ObservedPFP(
+                                pubkey: pubkey,
+                                size: 20,
+                                forceFlat: true,
+                                usesMaterialBorder: false
+                            )
                                 .highPriorityGesture(
                                     TapGesture().onEnded {
                                         navigateTo(ContactPath(key: pubkey), context: containerID)
