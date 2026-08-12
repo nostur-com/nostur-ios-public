@@ -101,18 +101,11 @@ struct WithAppSheets: ViewModifier {
                 }
                 .environmentObject(la)
             })
-        
+
             .sheet(item: $asm.feedSettingsFeed, content: { feed in
-                NRSheetNavigationStack {
-                    FeedSettings(feed: feed)
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Close", systemImage: "xmark") {
-                                    asm.feedSettingsFeed = nil
-                                }
-                            }
-                        }
-                }
+                FeedSettingsSheet(feed: feed, onClose: {
+                    asm.feedSettingsFeed = nil
+                })
                 .environmentObject(la)
             })
         

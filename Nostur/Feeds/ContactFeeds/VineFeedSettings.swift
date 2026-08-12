@@ -7,15 +7,19 @@ import SwiftUI
 
 struct VineFeedSettings: View {
     @ObservedObject public var feed: CloudFeed
-
-    @AppStorage("vine_autoplay_audio_enabled") private var autoplayAudioEnabled = true
+    var draft: FeedSettingsDraft? = nil
 
     var body: some View {
         NXForm {
-            MediaFeedSourceSettings(feed: feed)
+            if let draft {
+                MediaFeedSourceSettings(feed: feed, draft: draft)
+            }
 
             Section(header: Text("Feed settings", comment: "Header for feed settings")) {
-                Toggle(isOn: $autoplayAudioEnabled) {
+                Toggle(isOn: Binding(
+                    get: { draft?.vineAutoplayAudio ?? true },
+                    set: { draft?.vineAutoplayAudio = $0 }
+                )) {
                     Text("Play sound automatically")
                     Text("Start Divine videos with sound")
                 }
@@ -39,7 +43,7 @@ struct VineFeedSettings: View {
 #Preview {
     PreviewContainer({ pe in pe.loadCloudFeeds() }) {
         if let feed = PreviewFetcher.fetchCloudFeed(type: "vine") {
-            FeedSettings(feed: feed)
+            FeedSettingsSheet(feed: feed)
         }
     }
 }

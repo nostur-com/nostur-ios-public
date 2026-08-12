@@ -160,6 +160,30 @@ public class ConnectionPool: ObservableObject {
         }
     }
 
+    /// Wait until at least one explicitly selected relay has completed its WebSocket
+    /// handshake. A REQ sent before this point is only queued locally, so starting
+    /// an EOSE/deadline tracker earlier measures connection setup rather than the
+    /// relay request itself.
+    public func waitForAnyConnectedRelay(
+        in relays: Set<RelayData>,
+        timeout: TimeInterval = 12.0
+    ) async -> Bool {
+        let relayIds = Set(relays.map(\.id))
+        guard !relayIds.isEmpty else { return false }
+
+        let deadline = Date().addingTimeInterval(timeout)
+        while !Task.isCancelled, Date() < deadline {
+            let isConnected = queue.sync {
+                relayIds.contains(where: { connections[$0]?.isSocketConnected == true })
+            }
+            if isConnected { return true }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+        return queue.sync {
+            relayIds.contains(where: { connections[$0]?.isSocketConnected == true })
+        }
+    }
+
     public func requestTargetSnapshot(relays: Set<RelayData> = []) -> RequestTargetSnapshot {
         queue.sync {
             let limitedIds = Set(relays.map(\.id))
@@ -168,10 +192,76 @@ public class ConnectionPool: ObservableObject {
                 guard !connection.isNWC, !connection.isNC else { return false }
                 return limitedIds.isEmpty ? connection.relayData.read : limitedIds.contains(connection.url)
             }
+            let targetIds = limitedIds.isEmpty ? Set(targets.map(\.url)) : limitedIds
             return RequestTargetSnapshot(
-                relayIds: Set(targets.map(\.url)),
-                allConnected: !targets.isEmpty && targets.allSatisfy(\.isSocketConnected)
+                // Explicitly selected relays remain expected targets while their
+                // RelayConnection is still being installed/connected. Otherwise a
+                // bounded request can incorrectly complete before it is even sent.
+                relayIds: targetIds,
+                allConnected: !targetIds.isEmpty
+                    && targetIds.allSatisfy { connections[$0]?.isSocketConnected == true }
             )
+        }
+    }
+
+    public func requestTargetSnapshot(
+        for message: NostrEssentials.ClientMessage,
+        relays: Set<RelayData> = [],
+        includeOutbox: Bool
+    ) -> RequestTargetSnapshot {
+        queue.sync {
+            let limitedIds = Set(relays.map(\.id))
+            let regularTargets = connections.values.filter { connection in
+                guard !isDisabledRelay(connection.url) else { return false }
+                guard !connection.isNWC, !connection.isNC else { return false }
+                return limitedIds.isEmpty ? connection.relayData.read : limitedIds.contains(connection.url)
+            }
+
+            var relayIds = Set(regularTargets.map(\.url))
+            let allRegularTargetsConnected = !regularTargets.isEmpty && regularTargets.allSatisfy(\.isSocketConnected)
+
+            guard limitedIds.isEmpty,
+                  includeOutbox,
+                  !SettingsStore.shared.lowDataMode,
+                  SettingsStore.shared.enableOutboxRelays,
+                  vpnGuardOK(),
+                  let preferredRelays,
+                  !preferredRelays.findEventsRelays.isEmpty,
+                  let filters = message.filters,
+                  let pubkeys = filters.first?.authors
+            else {
+                return RequestTargetSnapshot(relayIds: relayIds, allConnected: allRegularTargetsConnected)
+            }
+
+            let filtersWithoutHashtags = if let subscriptionId = message.subscriptionId,
+                                            subscriptionId.starts(with: "Following-") {
+                [filters.map { $0.withoutHashtags() }.first!]
+            }
+            else {
+                filters.filter { !$0.hasHashtags }
+            }
+
+            let ourReadRelays = Set(connections.filter { $0.value.relayData.read }.map(\.key))
+            let plan = createRequestPlan(
+                pubkeys: pubkeys,
+                reqFilters: filtersWithoutHashtags,
+                ourReadRelays: ourReadRelays,
+                preferredRelays: preferredRelays,
+                skipTopRelays: 3
+            )
+            let outboxTargetIds = Set(plan.findEventsRequests
+                .filter { !$0.value.pubkeys.isEmpty && !isDisabledRelay($0.key) }
+                .sorted { $0.value.pubkeys.count > $1.value.pubkeys.count }
+                .prefix(maxPreferredRelays)
+                .map { normalizeRelayUrl($0.key) })
+
+            relayIds.formUnion(outboxTargetIds)
+            let allConnected = !relayIds.isEmpty && relayIds.allSatisfy { relayId in
+                    outboxConnections[relayId]?.isConnected == true
+                        || connections[relayId]?.isSocketConnected == true
+            }
+
+            return RequestTargetSnapshot(relayIds: relayIds, allConnected: allConnected)
         }
     }
     

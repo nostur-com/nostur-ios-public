@@ -7,10 +7,11 @@ import SwiftUI
 
 struct MediaFeedSourceSettings: View {
     @ObservedObject var feed: CloudFeed
+    @ObservedObject var draft: FeedSettingsDraft
     @ObservedObject private var settings = SettingsStore.shared
 
     private var selectedRelayCount: Int {
-        feed.mediaDiscoveryRelays.count
+        draft.selectedRelayCount
     }
 
     var body: some View {
@@ -39,13 +40,7 @@ struct MediaFeedSourceSettings: View {
         }
 
         Section {
-            NavigationLink(destination: FeedRelaysPicker(selectedRelays: Binding(
-                get: { feed.relays_ },
-                set: { relays in
-                    feed.relays_ = relays
-                    feed.markUserEdited()
-                }
-            ))) {
+            NavigationLink(destination: FeedRelaysPicker(selectedRelays: $draft.mediaRelays)) {
                 HStack {
                     Text("Select relay(s)")
                     Spacer()
@@ -58,22 +53,21 @@ struct MediaFeedSourceSettings: View {
         } footer: {
             Text("Used when everyone on selected relays is selected. Blocked accounts and muted content are always hidden.")
         }
-        .onChange(of: feed.relays) { _ in
-            if selectedRelayCount == 0 && feed.mediaFeedSource == .selectedRelays {
-                feed.mediaFeedSource = .follows
+        .onChange(of: draft.mediaRelays) { _ in
+            if selectedRelayCount == 0 && draft.mediaSource == .selectedRelays {
+                draft.mediaSource = .follows
             }
-            feed.mediaRelaysDidChange()
         }
     }
 
     @ViewBuilder
     private func sourceRow(_ source: MediaFeedSource, title: String, description: String) -> some View {
         Button {
-            feed.mediaFeedSource = source
+            draft.mediaSource = source
         } label: {
             HStack(alignment: .top, spacing: 12) {
-                Image(systemName: feed.mediaFeedSource == source ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(feed.mediaFeedSource == source ? Color.accentColor : Color.secondary)
+                Image(systemName: draft.mediaSource == source ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(draft.mediaSource == source ? Color.accentColor : Color.secondary)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)

@@ -8,6 +8,128 @@
 import Foundation
 import CoreData
 import Combine
+import NostrEssentials
+
+@MainActor
+final class BoundedRelayRequestCompletionTracker {
+    enum Outcome {
+        case finished
+        case timedOut
+    }
+
+    private let subscriptionId: String
+    private let expectedRelays: Set<CanonicalRelayUrl>
+    private let settleDelayNanoseconds: UInt64
+    private let deadlineNanoseconds: UInt64
+    private let onImport: () -> Void
+    private let onCompletion: (Outcome) -> Void
+
+    private var finishedRelays: Set<CanonicalRelayUrl> = []
+    private var subscriptions = Set<AnyCancellable>()
+    private var completionTask: Task<Void, Never>?
+    private var didComplete = false
+    private var allRelaysFinished = false
+
+    init(
+        subscriptionId: String,
+        targets: ConnectionPool.RequestTargetSnapshot,
+        settleDelay: TimeInterval = 0.3,
+        connectedDeadline: TimeInterval = 3.0,
+        connectingDeadline: TimeInterval = 6.0,
+        onImport: @escaping () -> Void = {},
+        onCompletion: @escaping (Outcome) -> Void
+    ) {
+        self.subscriptionId = subscriptionId
+        self.expectedRelays = targets.relayIds
+        self.settleDelayNanoseconds = UInt64(settleDelay * 1_000_000_000)
+        self.deadlineNanoseconds = UInt64(
+            (targets.allConnected ? connectedDeadline : connectingDeadline) * 1_000_000_000
+        )
+        self.onImport = onImport
+        self.onCompletion = onCompletion
+    }
+
+    func start() {
+        Importer.shared.importedMessagesFromSubscriptionIds
+            .filter { [subscriptionId] in $0.contains(subscriptionId) }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.receivedImport()
+            }
+            .store(in: &subscriptions)
+
+        Importer.shared.importedPrioMessagesFromSubscriptionId
+            .filter { [subscriptionId] in $0.subscriptionId == subscriptionId }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.receivedImport()
+            }
+            .store(in: &subscriptions)
+
+        MessageParser.shared.requestTerminalSub
+            .filter { [subscriptionId] in $0.subscriptionId == subscriptionId }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] response in
+                self?.receivedTerminalResponse(from: response.relay)
+            }
+            .store(in: &subscriptions)
+
+        guard !expectedRelays.isEmpty else {
+            scheduleCompletion(.finished, after: settleDelayNanoseconds)
+            return
+        }
+
+        let deadlineNanoseconds = deadlineNanoseconds
+        completionTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: deadlineNanoseconds)
+            guard !Task.isCancelled else { return }
+            try? await Task.sleep(nanoseconds: self?.settleDelayNanoseconds ?? 0)
+            guard !Task.isCancelled else { return }
+            self?.complete(.timedOut)
+        }
+    }
+
+    func cancel() {
+        completionTask?.cancel()
+        completionTask = nil
+        subscriptions.forEach { $0.cancel() }
+        subscriptions.removeAll()
+    }
+
+    private func receivedTerminalResponse(from relay: String) {
+        guard !didComplete else { return }
+        finishedRelays.insert(normalizeRelayUrl(relay))
+        guard expectedRelays.isSubset(of: finishedRelays) else { return }
+        allRelaysFinished = true
+        scheduleCompletion(.finished, after: settleDelayNanoseconds)
+    }
+
+    private func receivedImport() {
+        guard !didComplete else { return }
+        onImport()
+        // EOSE can arrive while matching events are still being committed. Each
+        // import restarts the quiet period so the final DB read happens last.
+        if allRelaysFinished {
+            scheduleCompletion(.finished, after: settleDelayNanoseconds)
+        }
+    }
+
+    private func scheduleCompletion(_ outcome: Outcome, after delay: UInt64) {
+        completionTask?.cancel()
+        completionTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: delay)
+            guard !Task.isCancelled else { return }
+            self?.complete(outcome)
+        }
+    }
+
+    private func complete(_ outcome: Outcome) {
+        guard !didComplete else { return }
+        didComplete = true
+        cancel()
+        onCompletion(outcome)
+    }
+}
 
 class FastLoader: ObservableObject {
     

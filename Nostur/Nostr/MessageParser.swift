@@ -50,7 +50,7 @@ class MessageParser {
     
     // (id, relay)
     public let okSub = PassthroughSubject<(id: String, relay: String), Never>()
-    public let eoseSub = PassthroughSubject<(subscriptionId: String, relay: String), Never>()
+    public let requestTerminalSub = PassthroughSubject<(subscriptionId: String, relay: String), Never>()
     
     // if "OK" comes back, .updateRelays should update the rumor (.otherId), not the wrap
     public var pendingOkWrapIds: Set<String> = []
@@ -119,6 +119,7 @@ class MessageParser {
                 case .CLOSED:
                     if let subscriptionId = message.subscriptionId {
                         client.completeReqSubscription(subscriptionId)
+                        requestTerminalSub.send((subscriptionId: subscriptionId, relay: normalizeRelayUrl(relayUrl)))
                     }
                     if message.message.prefix(14) == "auth-required:" {
 #if DEBUG
@@ -193,7 +194,7 @@ class MessageParser {
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
                     client.completeReqSubscription(subscriptionId)
-                    eoseSub.send((subscriptionId: subscriptionId, relay: normalizeRelayUrl(relayUrl)))
+                    requestTerminalSub.send((subscriptionId: subscriptionId, relay: normalizeRelayUrl(relayUrl)))
                     // TODO: Make generic -OPEN-, instead of "Following-" and "List-" etc..
                     if !Self.ACTIVE_SUBSCRIPTIONS
                         .contains(subscriptionId) && String(subscriptionId.prefix(6)) != "-OPEN-" && String(subscriptionId.prefix(10)) != "Following-" && String(subscriptionId.prefix(5)) != "List-"

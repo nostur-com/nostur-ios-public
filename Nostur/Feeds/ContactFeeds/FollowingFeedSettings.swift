@@ -9,6 +9,7 @@ import SwiftUI
 
 struct FollowingFeedSettings: View {
     @ObservedObject public var feed: CloudFeed
+    var draft: FeedSettingsDraft? = nil
     
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var la: LoggedInAccount
@@ -41,9 +42,8 @@ struct FollowingFeedSettings: View {
             
             if feed.accountPubkey != nil && feed.accountPubkey != EXPLORER_PUBKEY, !la.account.followingHashtags.isEmpty {
                 Section("Included hashtags") {
-                    FollowingFeedSettings_Hashtags(hashtags: Array(la.account.followingHashtags), onChange: { hashtags in
-                        la.account.followingHashtags = Set(hashtags)
-                        la.account.publishNewContactList()
+                    FollowingFeedSettings_Hashtags(hashtags: Array(draft?.followingHashtags ?? la.account.followingHashtags), onChange: { hashtags in
+                        draft?.followingHashtags = Set(hashtags)
                     })
                 }
             }
@@ -66,7 +66,7 @@ struct FollowingFeedSettings: View {
 #Preview {
     PreviewContainer({ pe in pe.loadCloudFeeds() }) {
         if let feed = PreviewFetcher.fetchCloudFeed(type: "following") {
-            FeedSettings(feed: feed)
+            FeedSettingsSheet(feed: feed)
         }
     }
 }

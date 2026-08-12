@@ -29,7 +29,7 @@ struct LoadingBar: View {
             
             if viewState == .finalLoad && oldValue != .finalLoad {
                 let currentTransitionID = transitionID
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     guard transitionID == currentTransitionID else { return }
                     opacity = 0.0
                     viewState = .finished
@@ -50,9 +50,9 @@ struct LoadingBar: View {
         case .connecting:
             0.1
         case .fetching:
-            0.15
+            0.45
         case .earlyLoad:
-            0.25
+            0.75
         case .secondFetching:
             0.80
         case .finalLoad:
@@ -88,13 +88,13 @@ struct LoadingBar: View {
             case .connecting:
                 8.0
             case .fetching:
-                6.5
+                0.75
             case .secondFetching:
                 9.5
             case .earlyLoad:
-                3.5
+                0.5
             case .finalLoad, .finished:
-                0.05
+                0.25
             case .timeout:
                 0.1
             }

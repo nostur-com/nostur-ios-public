@@ -383,7 +383,7 @@ struct ContactFeedSettings: View {
     PreviewContainer({ pe in pe.loadCloudFeeds() }) {
         NBNavigationStack {
             if let feed = PreviewFetcher.fetchCloudFeed(type: "pubkeys") {
-                FeedSettings(feed: feed)
+                FeedSettingsSheet(feed: feed)
             }
         }
     }

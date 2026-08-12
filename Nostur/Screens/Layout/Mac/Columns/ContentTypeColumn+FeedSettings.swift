@@ -9,10 +9,13 @@ import SwiftUI
 
 struct YakFeedSettings: View {
     @ObservedObject public var feed: CloudFeed
+    var draft: FeedSettingsDraft? = nil
     
     var body: some View {
         NXForm {
-            MediaFeedSourceSettings(feed: feed)
+            if let draft {
+                MediaFeedSourceSettings(feed: feed, draft: draft)
+            }
 
             Section(header: Text("Feed settings", comment: "Header for feed settings")) {
                 

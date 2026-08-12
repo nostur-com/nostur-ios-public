@@ -225,7 +225,7 @@ struct NavigationDestinationsModifier: ViewModifier {
                     .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: CloudFeed.self) { feed in
-                FeedSettings(feed: feed)
+                FeedSettingsSheet(feed: feed)
                     .environment(\.containerID, self.containerID)
                     .environmentObject(VideoPostPlaybackCoordinator())
             }

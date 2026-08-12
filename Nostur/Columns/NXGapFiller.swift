@@ -20,6 +20,8 @@ class NXGapFiller {
     private var currentGap: Int // used to calculate nextGapSince
     private weak var columnVM: NXColumnViewModel?
     private var backlog: Backlog
+    private var completionTracker: BoundedRelayRequestCompletionTracker?
+    private var boundedSubscriptionId: String?
     
     private var windowStart: Int { // Depending on older or not we use start/end as since/until
         return Int(since) + (currentGap * 3600 * windowSize)
@@ -67,7 +69,11 @@ class NXGapFiller {
         }
                 
         // send REQ
-        if let (cmd, subId) = columnVM.getFillGapReqStatement(config, since: windowStart, until: windowEnd) {
+        if let (cmd, subId, targets) = columnVM.getFillGapReqStatement(config, since: windowStart, until: windowEnd) {
+            if let targets {
+                runBoundedRequest(config: config, command: cmd, subscriptionId: subId, targets: targets())
+                return
+            }
             
             let reqTask = ReqTask(
                 timeout: 8.5,
@@ -149,7 +155,11 @@ class NXGapFiller {
         }
                 
         // send REQ
-        if let (cmd, subId) = columnVM.getFillGapReqStatement(config, since: windowStart, until: windowEnd) {
+        if let (cmd, subId, targets) = columnVM.getFillGapReqStatement(config, since: windowStart, until: windowEnd) {
+            if let targets {
+                runBoundedRequest(config: config, command: cmd, subscriptionId: subId, targets: targets())
+                return
+            }
             
             let reqTask = ReqTask(
                 timeout: 8.5,
@@ -200,6 +210,91 @@ class NXGapFiller {
 
             self.backlog.add(reqTask)
             reqTask.fetch()
+        }
+    }
+
+    @MainActor
+    private func runBoundedRequest(
+        config: NXColumnConfig,
+        command: @escaping () -> Void,
+        subscriptionId: String,
+        targets: ConnectionPool.RequestTargetSnapshot
+    ) {
+        if let boundedSubscriptionId {
+            ConnectionPool.shared.closeSubscription(boundedSubscriptionId)
+        }
+        completionTracker?.cancel()
+        boundedSubscriptionId = subscriptionId
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            var requestTargets = targets
+            if config.mediaFeedSourceSnapshot == .selectedRelays {
+                _ = await ConnectionPool.shared.waitForAnyConnectedRelay(
+                    in: config.mediaRelaysSnapshot
+                )
+                guard self.boundedSubscriptionId == subscriptionId else { return }
+                requestTargets = ConnectionPool.shared.requestTargetSnapshot(
+                    relays: config.mediaRelaysSnapshot
+                )
+            }
+
+            guard self.boundedSubscriptionId == subscriptionId else { return }
+            self.completionTracker = BoundedRelayRequestCompletionTracker(
+                subscriptionId: subscriptionId,
+                targets: requestTargets,
+                onCompletion: { [weak self] outcome in
+                    guard let self, let columnVM = self.columnVM else { return }
+                    self.completionTracker = nil
+                    self.boundedSubscriptionId = nil
+                    ConnectionPool.shared.closeSubscription(subscriptionId)
+
+                    switch outcome {
+                    case .finished:
+                        columnVM.feed?.lastLocalFetchAt = Date()
+                        columnVM.speedTest?.relayFinished()
+                        if config.mediaFeedSourceSnapshot != nil,
+                           columnVM.currentNRPostsOnScreen.isEmpty {
+                            // A bounded media response is not necessarily newer than
+                            // the normal eight-hour local window (Divine batches in
+                            // particular often contain older videos). Query all local
+                            // history on the first completion so the events just
+                            // imported by this request are immediately eligible.
+                            columnVM.loadAnyFlag = true
+                        }
+                        columnVM.loadLocal(config, older: false) { [weak self] in
+                            guard let self else { return }
+                            if self.columnVM?.currentNRPostsOnScreen.isEmpty ?? false {
+                                self.columnVM?.loadAnyFlag = true
+                                self.fetchGap(since: 1622888074, currentGap: self.currentGap)
+                                return
+                            }
+
+                            if self.windowStart < Int(Date().timeIntervalSince1970) {
+                                self.fetchGap(since: self.since, currentGap: self.currentGap)
+                            }
+                            else {
+                                self.currentGap = 0
+                            }
+                        }
+
+                        self.currentGap += 1
+
+                    case .timedOut:
+                        columnVM.speedTest?.relayTimedout()
+                        if config.mediaFeedSourceSnapshot != nil,
+                           columnVM.currentNRPostsOnScreen.isEmpty {
+                            // Imports may finish just as the bounded tracker expires.
+                            // Do the same authoritative all-history read before the
+                            // outer UI decides that no matching posts exist.
+                            columnVM.loadAnyFlag = true
+                        }
+                        columnVM.loadLocal(config)
+                    }
+                }
+            )
+            self.completionTracker?.start()
+            command()
         }
     }
 }

@@ -40,7 +40,7 @@ struct ListsAndFeedsScreen: View {
                 Section("Custom Feeds") {
                     ForEach(lists) { list in
                         NavigationLink {
-                            FeedSettings(feed: list)
+                            FeedSettingsSheet(feed: list)
                                 .environment(\.containerID, "Default") // Should be Default right?
                         } label: {
                             ListRow(list: list)

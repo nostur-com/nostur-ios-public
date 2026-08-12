@@ -163,13 +163,26 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
 
             if eventState.status == .SAVED {
                 let bgContext = bg()
+                let savedEvent = Event.fetchEvent(
+                    id: mMessage.id,
+                    isWrapId: mMessage.kind == 1059,
+                    context: bgContext
+                ) ?? Event.fetchEvent(id: messageId, isWrapId: false, context: bgContext)
+
+                // Relay feeds filter against Event.relays. Merge the relay before
+                // notifying priority subscribers so their first DB read cannot
+                // reject an existing event and only find it after Retry.
+                let knownRelays = Set((savedEvent?.relays ?? eventState.relays ?? "")
+                    .split(separator: " ")
+                    .map(String.init))
+                if !knownRelays.contains(relay) {
+                    let updatedRelays = knownRelays.union([relay]).joined(separator: " ")
+                    savedEvent?.relays = updatedRelays
+                    updateEventCache(messageId, status: .SAVED, relays: updatedRelays)
+                }
+
                 if mMessage.subscriptionId.hasPrefix("prio-") {
-                    if let savedEvent = Event.fetchEvent(id: mMessage.id, isWrapId: mMessage.kind == 1059, context: bgContext) {
-                        Importer.shared.importedPrioMessagesFromSubscriptionId.send(
-                            ImportedPrioNotification(subscriptionId: mMessage.subscriptionId, event: savedEvent)
-                        )
-                    }
-                    else if let savedEvent = Event.fetchEvent(id: messageId, isWrapId: false, context: bgContext) {
+                    if let savedEvent {
                         Importer.shared.importedPrioMessagesFromSubscriptionId.send(
                             ImportedPrioNotification(subscriptionId: mMessage.subscriptionId, event: savedEvent)
                         )
@@ -181,11 +194,6 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
                     Importer.shared.sendReceivedNotification.send()
                 }
 
-                // update from which relays an event id was received, or relay feeds won't work.
-                if let relays = eventState.relays, !relays.contains(relay) {
-                    updateEventCache(messageId, status: .SAVED, relays: relay)
-                    Event.updateRelays(messageId, relays: relay, isWrapId: false, context: bgContext)
-                }
             }
 
             if eventState.status == .PARSED {

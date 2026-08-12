@@ -9,10 +9,13 @@ import SwiftUI
 
 struct PictureFeedSettings: View {
     @ObservedObject public var feed: CloudFeed
+    var draft: FeedSettingsDraft? = nil
     
     var body: some View {
         NXForm {
-            MediaFeedSourceSettings(feed: feed)
+            if let draft {
+                MediaFeedSourceSettings(feed: feed, draft: draft)
+            }
 
             Section(header: Text("Feed settings", comment: "Header for feed settings")) {
                 
@@ -37,7 +40,7 @@ struct PictureFeedSettings: View {
 #Preview {
     PreviewContainer({ pe in pe.loadCloudFeeds() }) {
         if let feed = PreviewFetcher.fetchCloudFeed(type: "picture") {
-            FeedSettings(feed: feed)
+            FeedSettingsSheet(feed: feed)
         }
     }
 }

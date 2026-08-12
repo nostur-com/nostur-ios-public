@@ -173,13 +173,11 @@ class NXColumnViewModel: ObservableObject {
     private var initialMediaTimeoutTask: Task<Void, Never>?
     private var autoExploreRelaysAfterWoTTimeout = false
     private var mediaDiscoverySubscriptionId: String?
-    private var mediaDiscoveryExpectedRelays: Set<CanonicalRelayUrl> = []
-    private var mediaDiscoveryFinishedRelays: Set<CanonicalRelayUrl> = []
-    private var mediaDiscoveryAllRelaysFinished = false
-    private var mediaDiscoveryImportSub: AnyCancellable?
-    private var mediaDiscoveryEOSESub: AnyCancellable?
+    private var mediaDiscoveryTracker: BoundedRelayRequestCompletionTracker?
     private var mediaDiscoveryImportTask: Task<Void, Never>?
     private var lateMediaEventSub: AnyCancellable?
+    private var selectedRelayAutoRetryAttempted = false
+    private var selectedRelayRecoveryTask: Task<Void, Never>?
     @Published private(set) var mediaSearchTimedOut = false
     @Published private(set) var mediaUpdatesAvailable = false
 
@@ -456,9 +454,12 @@ class NXColumnViewModel: ObservableObject {
         var config = config
         refreshMediaSnapshots(in: &config)
         stopMediaDiscoverySession()
+        selectedRelayRecoveryTask?.cancel()
+        selectedRelayRecoveryTask = nil
         mediaSearchTimedOut = false
         mediaUpdatesAvailable = false
         autoExploreRelaysAfterWoTTimeout = false
+        selectedRelayAutoRetryAttempted = false
         // get initial feed state from
         self.subscriptions.forEach { $0.cancel() }
         self.subscriptions.removeAll()
@@ -623,6 +624,7 @@ class NXColumnViewModel: ObservableObject {
         isViewPaused = false
         speedTest?.start()
         scheduleInitialMediaTimeout(for: config)
+        scheduleSelectedRelayRecovery(for: config)
 #if DEBUG
         startFirstUnreadMeasurementIfNeeded(config, reason: "firstLoad")
 #endif
@@ -930,11 +932,19 @@ class NXColumnViewModel: ObservableObject {
     
     // Reload (after toggle replies enabled etc)
     @MainActor
-    public func reload(_ config: NXColumnConfig) {
+    public func reload(_ config: NXColumnConfig, refreshRemote: Bool = false) {
         var config = config
         refreshMediaSnapshots(in: &config)
+        if config.mediaFeedSourceSnapshot == .selectedRelays,
+           self.config?.mediaFeedSourceSnapshot != .selectedRelays {
+            selectedRelayAutoRetryAttempted = false
+        }
+        let isExpandingMediaSource = self.config?.mediaFeedSourceSnapshot == .follows
+            && config.mediaFeedSourceSnapshot == .webOfTrust
+            && !currentNRPostsOnScreen.isEmpty
         mediaUpdatesAvailable = false
         self.config = config
+        speedTest?.start()
         if case .timeout = viewState {
             viewState = .loading
             firstLoad(config)
@@ -944,8 +954,13 @@ class NXColumnViewModel: ObservableObject {
             firstLoad(config)
         }
         else {
-            viewState = .loading
+            // WoT is a superset of follows. Keep valid follow posts visible while
+            // the broader local/network search adds results around them.
+            if !isExpandingMediaSource {
+                viewState = .loading
+            }
             scheduleInitialMediaTimeout(for: config)
+            scheduleSelectedRelayRecovery(for: config)
             if SettingsStore.shared.appWideSeenTracker {
                 Deduplicator.shared.onScreenSeen = []
             }
@@ -953,7 +968,23 @@ class NXColumnViewModel: ObservableObject {
             self.allShortIdsSeen = []
             startFetchFeedTimer()
             if config.continue {
-                loadLocal(config)
+                if refreshRemote, config.mediaFeedSourceSnapshot != nil {
+                    // A source change replaces the current screen. Search all locally
+                    // available history so older follow posts do not disappear merely
+                    // because the normal initial query is limited to the last 8 hours.
+                    loadAnyFlag = true
+                }
+                loadLocal(config) { [weak self] in
+                    guard refreshRemote else { return }
+                    Task { @MainActor in
+                        if config.mediaFeedSourceSnapshot != nil {
+                            // loadLocal consumes this flag. Restore it so the
+                            // following relay request also asks for bounded history.
+                            self?.loadAnyFlag = true
+                        }
+                        await self?.loadRemote(config)
+                    }
+                }
             }
             else {
                 Task { [weak self] in
@@ -988,7 +1019,20 @@ class NXColumnViewModel: ObservableObject {
                     config.mediaAllowedPubkeysSnapshot = []
                 }
             case .webOfTrust:
+                // "My WoT" is a broader source than "My follows". Keep that
+                // relationship explicit even when the global WoT cache belongs to a
+                // different main account or has not finished rebuilding yet.
+                let feedAccountPubkeys: Set<String>
+                if let account = feed.account {
+                    feedAccountPubkeys = account.followingPubkeys
+                        .union(account.privateFollowingPubkeys)
+                        .union([account.publicKey])
+                }
+                else {
+                    feedAccountPubkeys = []
+                }
                 config.mediaAllowedPubkeysSnapshot = WebOfTrust.shared.allowedPubkeysSnapshot()
+                    .union(feedAccountPubkeys)
             case .selectedRelays:
                 config.mediaAllowedPubkeysSnapshot = []
             }
@@ -1010,27 +1054,12 @@ class NXColumnViewModel: ObservableObject {
         }
 
         let configId = config.id
-        let discoverySubscriptionId = mediaDiscoverySubscriptionId
-        let timeoutNanoseconds: UInt64
-        if discoverySubscriptionId != nil {
-            let targets = ConnectionPool.shared.requestTargetSnapshot(
-                relays: config.mediaFeedSourceSnapshot == .selectedRelays ? config.mediaRelaysSnapshot : []
-            )
-            timeoutNanoseconds = targets.allConnected ? 3_000_000_000 : 6_000_000_000
-        }
-        else {
-            timeoutNanoseconds = 12_000_000_000
-        }
+        let timeoutNanoseconds: UInt64 = 12_000_000_000
         initialMediaTimeoutTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: timeoutNanoseconds)
             guard !Task.isCancelled else { return }
             guard let self, self.config?.id == configId else { return }
-            guard self.mediaDiscoverySubscriptionId == discoverySubscriptionId else { return }
-            if discoverySubscriptionId != nil, case .posts = self.viewState {
-                self.stopMediaDiscoverySession()
-                self.sendRealtimeReq(config)
-                return
-            }
+            guard self.mediaDiscoverySubscriptionId == nil else { return }
             guard case .loading = self.viewState else { return }
             if self.autoExploreRelaysAfterWoTTimeout,
                config.mediaFeedSourceSnapshot == .webOfTrust,
@@ -1039,13 +1068,51 @@ class NXColumnViewModel: ObservableObject {
                 self.loadTemporaryMediaSource(.selectedRelays, from: config)
                 return
             }
-            self.mediaSearchTimedOut = discoverySubscriptionId != nil
+            if config.mediaFeedSourceSnapshot == .selectedRelays,
+               !self.selectedRelayAutoRetryAttempted,
+               !config.mediaRelaysSnapshot.isEmpty {
+                // The first relay pass can import a bounded batch just after the
+                // UI's outer deadline. Retry the now-connected relay and query all
+                // history automatically; this is the same pass that previously
+                // required the user to press Retry.
+                self.selectedRelayAutoRetryAttempted = true
+                self.mediaSearchTimedOut = false
+                self.viewState = .loading
+                self.loadAnyFlag = true
+                self.firstLoad(config)
+                return
+            }
+            self.mediaSearchTimedOut = false
             self.speedTest?.finishedWithoutResults()
             self.stopMediaDiscoverySession()
-            if discoverySubscriptionId != nil {
-                self.sendRealtimeReq(config)
-            }
             self.viewState = .timeout
+        }
+    }
+
+    @MainActor
+    private func scheduleSelectedRelayRecovery(for config: NXColumnConfig) {
+        selectedRelayRecoveryTask?.cancel()
+        selectedRelayRecoveryTask = nil
+        guard config.mediaFeedSourceSnapshot == .selectedRelays,
+              !config.mediaRelaysSnapshot.isEmpty
+        else { return }
+
+        let configId = config.id
+        selectedRelayRecoveryTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            guard !Task.isCancelled else { return }
+            guard let self,
+                  self.config?.id == configId,
+                  self.config?.mediaFeedSourceSnapshot == .selectedRelays,
+                  self.currentNRPostsOnScreen.isEmpty,
+                  case .loading = self.viewState,
+                  self.mediaDiscoverySubscriptionId == nil
+            else { return }
+
+            // Use the direct bounded discovery path once the selected socket has
+            // had time to connect. This is equivalent to the formerly successful
+            // manual Retry, but happens before an empty state can be shown.
+            self.loadTemporaryMediaSource(.selectedRelays, from: config, attempt: 1)
         }
     }
 
@@ -1074,8 +1141,13 @@ class NXColumnViewModel: ObservableObject {
     }
 
     @MainActor
-    private func loadTemporaryMediaSource(_ source: MediaFeedSource, from currentConfig: NXColumnConfig) {
+    private func loadTemporaryMediaSource(
+        _ source: MediaFeedSource,
+        from currentConfig: NXColumnConfig,
+        attempt: Int = 0
+    ) {
         stopMediaDiscoverySession()
+        speedTest?.start()
         var temporaryConfig = currentConfig
         refreshMediaSnapshots(in: &temporaryConfig, sourceOverride: source)
         config = temporaryConfig
@@ -1091,18 +1163,30 @@ class NXColumnViewModel: ObservableObject {
             }
         }
 
-        let subscriptionId = "MEDIA-DISC-" + String(UUID().uuidString.prefix(16))
+        let subscriptionId = "prio-MEDIA-DISC-" + String(UUID().uuidString.prefix(16))
         mediaDiscoverySubscriptionId = subscriptionId
-        let targets = ConnectionPool.shared.requestTargetSnapshot(
-            relays: source == .selectedRelays ? temporaryConfig.mediaRelaysSnapshot : []
-        )
-        mediaDiscoveryExpectedRelays = targets.relayIds
-        listenForMediaDiscoveryResults(subscriptionId: subscriptionId, config: temporaryConfig)
-        scheduleInitialMediaTimeout(for: temporaryConfig)
         startFetchFeedTimer()
         loadLocal(temporaryConfig) { [weak self] in
             Task { @MainActor in
                 guard let self, self.mediaDiscoverySubscriptionId == subscriptionId else { return }
+                if source == .selectedRelays {
+                    _ = await ConnectionPool.shared.waitForAnyConnectedRelay(
+                        in: temporaryConfig.mediaRelaysSnapshot
+                    )
+                    guard self.mediaDiscoverySubscriptionId == subscriptionId else { return }
+                }
+                let targets = ConnectionPool.shared.requestTargetSnapshot(
+                    relays: source == .selectedRelays ? temporaryConfig.mediaRelaysSnapshot : []
+                )
+                // Start completion timing only now: the preceding local fetch can
+                // be delayed by other Core Data work and is not network wait time.
+                self.startMediaDiscoveryTracker(
+                    subscriptionId: subscriptionId,
+                    targets: targets,
+                    config: temporaryConfig,
+                    attempt: attempt
+                )
+                self.speedTest?.loadRemoteStarted()
                 self.sendBroadMediaReq(
                     temporaryConfig,
                     subscriptionId: subscriptionId,
@@ -1168,38 +1252,73 @@ class NXColumnViewModel: ObservableObject {
     }
 
     @MainActor
-    private func listenForMediaDiscoveryResults(subscriptionId: String, config: NXColumnConfig) {
-        mediaDiscoveryImportSub = Importer.shared.importedMessagesFromSubscriptionIds
-            .filter { $0.contains(subscriptionId) }
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
+    private func startMediaDiscoveryTracker(
+        subscriptionId: String,
+        targets: ConnectionPool.RequestTargetSnapshot,
+        config: NXColumnConfig,
+        attempt: Int
+    ) {
+        mediaDiscoveryTracker = BoundedRelayRequestCompletionTracker(
+            subscriptionId: subscriptionId,
+            targets: targets,
+            onImport: { [weak self] in
                 self?.scheduleMediaDiscoveryImport(subscriptionId: subscriptionId, config: config)
-            }
-
-        mediaDiscoveryEOSESub = MessageParser.shared.eoseSub
-            .filter { $0.subscriptionId == subscriptionId }
-            .receive(on: RunLoop.main)
-            .sink { [weak self] response in
+            },
+            onCompletion: { [weak self] outcome in
                 guard let self, self.mediaDiscoverySubscriptionId == subscriptionId else { return }
-                self.mediaDiscoveryFinishedRelays.insert(normalizeRelayUrl(response.relay))
-                guard !self.mediaDiscoveryExpectedRelays.isEmpty,
-                      self.mediaDiscoveryExpectedRelays.isSubset(of: self.mediaDiscoveryFinishedRelays)
-                else { return }
-                self.mediaDiscoveryAllRelaysFinished = true
-                self.scheduleMediaDiscoveryImport(
-                    subscriptionId: subscriptionId,
-                    config: config,
-                    concludeAfterImport: true
-                )
+                switch outcome {
+                case .finished:
+                    self.scheduleMediaDiscoveryImport(
+                        subscriptionId: subscriptionId,
+                        config: config,
+                        concludeAfterImport: true,
+                        attempt: attempt
+                    )
+                case .timedOut:
+                    if case .posts = self.viewState {
+                        self.stopMediaDiscoverySession()
+                        self.sendRealtimeReq(config)
+                    }
+                    else if self.autoExploreRelaysAfterWoTTimeout,
+                            config.mediaFeedSourceSnapshot == .webOfTrust,
+                            !config.mediaRelaysSnapshot.isEmpty {
+                        self.autoExploreRelaysAfterWoTTimeout = false
+                        self.loadTemporaryMediaSource(.selectedRelays, from: config)
+                    }
+                    else if config.mediaFeedSourceSnapshot == .selectedRelays,
+                            attempt == 0,
+                            !config.mediaRelaysSnapshot.isEmpty {
+                        // A connection can become ready just after the first bounded
+                        // request's deadline. Retry once transparently before making
+                        // the user press Retry for a relay known to contain media.
+                        self.loadTemporaryMediaSource(.selectedRelays, from: config, attempt: 1)
+                    }
+                    else {
+                        self.mediaSearchTimedOut = true
+                        self.speedTest?.finishedWithoutResults()
+                        self.stopMediaDiscoverySession()
+                        self.sendRealtimeReq(config)
+                        self.viewState = .timeout
+                    }
+                }
             }
+        )
+        mediaDiscoveryTracker?.start()
     }
 
     @MainActor
-    private func scheduleMediaDiscoveryImport(subscriptionId: String, config: NXColumnConfig, concludeAfterImport: Bool = false) {
-        let shouldConclude = concludeAfterImport || mediaDiscoveryAllRelaysFinished
+    private func scheduleMediaDiscoveryImport(
+        subscriptionId: String,
+        config: NXColumnConfig,
+        concludeAfterImport: Bool = false,
+        attempt: Int = 0
+    ) {
+        let shouldConclude = concludeAfterImport
         mediaDiscoveryImportTask?.cancel()
         mediaDiscoveryImportTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: shouldConclude ? 300_000_000 : 100_000_000)
+            if !shouldConclude {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
             guard !Task.isCancelled else { return }
             guard let self, self.mediaDiscoverySubscriptionId == subscriptionId else { return }
             self.loadAnyFlag = true
@@ -1207,7 +1326,11 @@ class NXColumnViewModel: ObservableObject {
                 guard let self, self.mediaDiscoverySubscriptionId == subscriptionId else { return }
                 guard shouldConclude else { return }
                 if self.currentNRPostsOnScreen.isEmpty {
-                    self.finishEmptyMediaDiscovery(config: config)
+                    self.confirmEmptyMediaDiscovery(
+                        subscriptionId: subscriptionId,
+                        config: config,
+                        attempt: attempt
+                    )
                 }
                 else {
                     self.stopMediaDiscoverySession()
@@ -1218,12 +1341,47 @@ class NXColumnViewModel: ObservableObject {
     }
 
     @MainActor
-    private func finishEmptyMediaDiscovery(config: NXColumnConfig) {
+    private func confirmEmptyMediaDiscovery(
+        subscriptionId: String,
+        config: NXColumnConfig,
+        attempt: Int
+    ) {
+        // Priority imports are intentionally fast and can finish close to EOSE.
+        // Flush the shared importer context, then bypass loadLocal's UI debouncer
+        // for one authoritative final read before showing an empty result.
+        DataProvider.shared().saveToDiskNow(.bgContext) { [weak self] in
+            Task { @MainActor in
+                guard let self, self.mediaDiscoverySubscriptionId == subscriptionId else { return }
+                self.loadAnyFlag = true
+                self._loadLocal(config) { [weak self] in
+                    Task { @MainActor in
+                        guard let self, self.mediaDiscoverySubscriptionId == subscriptionId else { return }
+                        if self.currentNRPostsOnScreen.isEmpty {
+                            self.finishEmptyMediaDiscovery(config: config, attempt: attempt)
+                        }
+                        else {
+                            self.stopMediaDiscoverySession()
+                            self.sendRealtimeReq(config)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func finishEmptyMediaDiscovery(config: NXColumnConfig, attempt: Int) {
         if autoExploreRelaysAfterWoTTimeout,
            config.mediaFeedSourceSnapshot == .webOfTrust,
            !config.mediaRelaysSnapshot.isEmpty {
             autoExploreRelaysAfterWoTTimeout = false
             loadTemporaryMediaSource(.selectedRelays, from: config)
+            return
+        }
+        if config.mediaFeedSourceSnapshot == .selectedRelays,
+           attempt == 0,
+           !config.mediaRelaysSnapshot.isEmpty {
+            loadTemporaryMediaSource(.selectedRelays, from: config, attempt: 1)
             return
         }
         mediaSearchTimedOut = false
@@ -1238,17 +1396,12 @@ class NXColumnViewModel: ObservableObject {
         initialMediaTimeoutTask?.cancel()
         mediaDiscoveryImportTask?.cancel()
         mediaDiscoveryImportTask = nil
-        mediaDiscoveryImportSub?.cancel()
-        mediaDiscoveryImportSub = nil
-        mediaDiscoveryEOSESub?.cancel()
-        mediaDiscoveryEOSESub = nil
+        mediaDiscoveryTracker?.cancel()
+        mediaDiscoveryTracker = nil
         if let mediaDiscoverySubscriptionId {
             ConnectionPool.shared.closeSubscription(mediaDiscoverySubscriptionId)
         }
         mediaDiscoverySubscriptionId = nil
-        mediaDiscoveryExpectedRelays = []
-        mediaDiscoveryFinishedRelays = []
-        mediaDiscoveryAllRelaysFinished = false
     }
     
     // for pausing fetching / loading
@@ -1438,11 +1591,18 @@ class NXColumnViewModel: ObservableObject {
                     bg().perform { [self] in
                         let fr = Event.fetchRequest()
                         fr.predicate = NSPredicate(format: "id IN %@", idsToPutInScreen)
-                        let events = ((try? bg().fetch(fr)) ?? [])
+                        let fetchedEvents = ((try? bg().fetch(fr)) ?? [])
                             .map {
                                 $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0)
                                 return $0
                             }
+                        let events: [Event]
+                        switch config.columnType {
+                        case .picture, .vine, .yak:
+                            events = self.applyMediaSource(fetchedEvents, config: config)
+                        default:
+                            events = fetchedEvents
+                        }
                         
                         // transform Event to NRPost
                         var eventsMap: [String: NRPost] = [:]
@@ -1454,6 +1614,14 @@ class NXColumnViewModel: ObservableObject {
                         // put on screen
                         let nrPosts = idsToPutInScreen.compactMap { eventsMap[$0] }
                         Task { @MainActor in
+                            guard !nrPosts.isEmpty else {
+                                // Saved IDs can belong to a previously selected
+                                // media source. Fall back to the normal local query
+                                // instead of restoring an empty screen late.
+                                self.loadAnyFlag = true
+                                self.loadLocal(config, completion: completion)
+                                return
+                            }
 
                             if let scrollToId = localFeedState.scrollToId, let restoreToIndex = nrPosts.firstIndex(where: { $0.id == scrollToId }) {
                                 
@@ -1507,12 +1675,15 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) - Loaded \(nrPosts.count) from local state -[LOG]-")
 #endif
+                            completion?()
                         }
                     }
                 }
                 
                 didLoadFirstLocalState = true
-                completion?()
+                if idsToPutInScreen.isEmpty {
+                    completion?()
+                }
                 return
             }
 #if DEBUG
@@ -1609,23 +1780,37 @@ class NXColumnViewModel: ObservableObject {
             
             bg().perform { [weak self] in
                 guard let self else { return }
-                let fr = if source == .selectedRelays {
+                let events: [Event]
+                if source == .selectedRelays {
+                    let fr: NSFetchRequest<Event>
                     if !older {
-                        Event.postsByRelays(mediaRelays, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, fetchLimit: QUERY_FETCH_LIMIT, kinds: kinds)
+                        fr = Event.postsByRelays(mediaRelays, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, fetchLimit: QUERY_FETCH_LIMIT, kinds: kinds)
                     }
                     else {
-                        Event.postsByRelays(mediaRelays, until: untilTimestamp, hideReplies: !repliesEnabled, fetchLimit: QUERY_FETCH_LIMIT, kinds: kinds)
+                        fr = Event.postsByRelays(mediaRelays, until: untilTimestamp, hideReplies: !repliesEnabled, fetchLimit: QUERY_FETCH_LIMIT, kinds: kinds)
                     }
+                    events = (try? bg().fetch(fr)) ?? []
                 }
                 else {
                     if !older {
-                        Event.mediaPosts(lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
+                        events = Event.fetchMediaPosts(
+                            by: config.mediaAllowedPubkeysSnapshot,
+                            lastAppearedCreatedAt: sinceTimestamp,
+                            hideReplies: !repliesEnabled,
+                            kinds: kinds,
+                            context: bg()
+                        )
                     }
                     else {
-                        Event.mediaPosts(until: untilTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
+                        events = Event.fetchMediaPosts(
+                            by: config.mediaAllowedPubkeysSnapshot,
+                            until: untilTimestamp,
+                            hideReplies: !repliesEnabled,
+                            kinds: kinds,
+                            context: bg()
+                        )
                     }
                 }
-                guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed): // The pubkeys are in the CloudFeed
@@ -2022,7 +2207,11 @@ class NXColumnViewModel: ObservableObject {
     }
     
     @MainActor
-    public func getFillGapReqStatement(_ config: NXColumnConfig, since: Int, until: Int? = nil) -> (cmd: () -> Void, subId: String)? {
+    public func getFillGapReqStatement(
+        _ config: NXColumnConfig,
+        since: Int,
+        until: Int? = nil
+    ) -> (cmd: () -> Void, subId: String, targets: (() -> ConnectionPool.RequestTargetSnapshot)?)? {
         let until: Int? = self.loadAnyFlag || !config.continue ? nil : until
         let since: Int? = self.loadAnyFlag || !config.continue ? nil : since
         switch config.columnType {
@@ -2073,28 +2262,31 @@ class NXColumnViewModel: ObservableObject {
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: kinds)
              
+            let subId = "RESUME-" + config.id + "-" + (since?.description ?? "any")
+            let clientMessage = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subId, filters: filters)
             return (cmd: {
                 guard pubkeys.count > 0 || hashtags.count > 0 else {
                     L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags -[LOG]-")
                     return
                 }
                 if feed.accountPubkey == EXPLORER_PUBKEY {
-                    if let cm = NostrEssentials
-                        .ClientMessage(type: .REQ,
-                                       subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"),
-                                       filters: filters
-                        ).json() {
+                    if let cm = clientMessage.json() {
                         req(cm)
                     }
                 }
                 else {
-                    outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters))
+                    outboxReq(clientMessage)
                 }
-            }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
+            }, subId: subId, targets: {
+                ConnectionPool.shared.requestTargetSnapshot(
+                    for: clientMessage,
+                    includeOutbox: feed.accountPubkey != EXPLORER_PUBKEY
+                )
+            })
 
         case .picture(let feed), .vine(let feed), .yak(let feed):
             if config.mediaFeedSourceSnapshot != .follows {
-                let subId = "MEDIA-RESUME-" + config.id + "-" + (since?.description ?? "any")
+                let subId = "prio-MEDIA-RESUME-" + config.id + "-" + (since?.description ?? "any")
                 return (cmd: { [weak self] in
                     self?.sendBroadMediaReq(
                         config,
@@ -2103,7 +2295,11 @@ class NXColumnViewModel: ObservableObject {
                         until: until,
                         limit: !config.continue ? 150 : nil
                     )
-                }, subId: subId)
+                }, subId: subId, targets: {
+                    ConnectionPool.shared.requestTargetSnapshot(
+                        relays: config.mediaFeedSourceSnapshot == .selectedRelays ? config.mediaRelaysSnapshot : []
+                    )
+                })
             }
 
             // Make sure max pubkeys is < 2000 (relay limits)
@@ -2134,33 +2330,37 @@ class NXColumnViewModel: ObservableObject {
             let removeKinds: Set<Int> = [
                 since == nil ? 5 : -1
             ]
+            let historyLimit: Int? = since == nil ? 150 : (!config.continue ? 150 : nil)
             
             let filters = switch config.columnType {
                 case .vine(_):
-                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: Set([34236,5]).subtracting(removeKinds))
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: historyLimit, kinds: Set([34236,5]).subtracting(removeKinds))
                 case .yak(_):
-                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: Set([1222,1244,5]).subtracting(removeKinds))
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: historyLimit, kinds: Set([1222,1244,5]).subtracting(removeKinds))
                 default: // .picture: // kind:20 + hashtags + kind:1-k20-tag
-                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: Set([20,5]).subtracting(removeKinds)) + [Filters(
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: historyLimit, kinds: Set([20,5]).subtracting(removeKinds)) + [Filters(
                     authors: pubkeys,
                     kinds: [1],
                     tagFilter: TagFilter(tag: "k", values: ["20"]),
                     since: since,
                     until: until,
-                    limit: !config.continue ? 75 : 300
+                    limit: since == nil ? 75 : (!config.continue ? 75 : 300)
                 )]
             }
             
-            let subId = "RESUME-" + config.id + "-" + (since?.description ?? "any")
+            let subId = "prio-MEDIA-RESUME-" + config.id + "-" + (since?.description ?? "any")
 
+            let clientMessage = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subId, filters: filters)
             return (cmd: {
                 guard pubkeys.count > 0 || hashtags.count > 0 else {
                     L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags -[LOG]-")
                     return
                 }
-                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subId, filters: filters))
+                outboxReq(clientMessage)
                                 
-            }, subId: subId)
+            }, subId: subId, targets: {
+                ConnectionPool.shared.requestTargetSnapshot(for: clientMessage, includeOutbox: true)
+            })
             
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
@@ -2193,7 +2393,7 @@ class NXColumnViewModel: ObservableObject {
             
             return (cmd: {
                 nxReq(filters, subscriptionId: subscriptionId, useOutbox: feed.useOutbox)
-            }, subId: subscriptionId)
+            }, subId: subscriptionId, targets: nil)
  
         case .someoneElses(_):
             let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
@@ -2213,7 +2413,7 @@ class NXColumnViewModel: ObservableObject {
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
                     req(message)
-                }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
+                }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), targets: nil)
             }
             return nil
             
@@ -2234,7 +2434,7 @@ class NXColumnViewModel: ObservableObject {
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
                     req(message)
-                }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
+                }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), targets: nil)
             }
             return nil
         case .pubkey:
@@ -2259,7 +2459,7 @@ class NXColumnViewModel: ObservableObject {
             if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
                     req(message, activeSubscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), relays: relaysData)
-                }, subId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"))
+                }, subId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), targets: nil)
             }
             return nil
         case .relayPreview(let relayData):
@@ -2275,7 +2475,7 @@ class NXColumnViewModel: ObservableObject {
             if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
                     req(message, activeSubscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), relays: relaysData)
-                }, subId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"))
+                }, subId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), targets: nil)
             }
             return nil
         case .hashtags:
@@ -2810,7 +3010,7 @@ class NXColumnViewModel: ObservableObject {
                       changedFeedId == feed.id
                 else { return }
                 ConnectionPool.shared.closeSubscription(config.id)
-                self?.reload(config)
+                self?.reload(config, refreshRemote: true)
             }
             .store(in: &subscriptions)
     }
@@ -2970,14 +3170,12 @@ class NXColumnViewModel: ObservableObject {
     deinit {
         initialMediaTimeoutTask?.cancel()
         mediaDiscoveryImportTask?.cancel()
-        mediaDiscoveryImportSub?.cancel()
-        mediaDiscoveryEOSESub?.cancel()
         lateMediaEventSub?.cancel()
 #if DEBUG
         if let config {
             let configId = config.id
             Task { @MainActor in
-                ConnectionPool.shared.closeSubscription(config.id)
+                ConnectionPool.shared.closeSubscription(configId)
             }
             L.og.debug("☘️☘️ \(config.name) deinit  -[LOG]-")
         }
@@ -3165,7 +3363,14 @@ extension NXColumnViewModel {
         case .follows, .webOfTrust:
             return events.filter { config.mediaAllowedPubkeysSnapshot.contains($0.pubkey) }
         case .selectedRelays:
-            return events
+            let selectedRelayIds = Set(config.mediaRelaysSnapshot.map(\.id))
+            guard !selectedRelayIds.isEmpty else { return [] }
+            return events.filter { event in
+                let receivedRelayIds = Set((event.relays ?? "")
+                    .split(separator: " ")
+                    .map { normalizeRelayUrl(String($0)) })
+                return !selectedRelayIds.isDisjoint(with: receivedRelayIds)
+            }
         }
     }
     
@@ -3545,8 +3750,16 @@ extension NXColumnViewModel {
                 self.gapFiller?.fetchSimple(limit: 75)
             }
             
-            // If self.profilesFetchedAt is longer than 15 minutes ago, fetch profiles
-            if let feed = config.feed, feed.profilesFetchedAt == nil || (feed.profilesFetchedAt?.timeIntervalSinceNow ?? 0) < -900 {
+            // Media feeds resolve profiles lazily for displayed posts. Proactively
+            // requesting metadata for the whole follow list can enqueue thousands
+            // of unrelated events and delay the actual media imports past EOSE.
+            let isMediaFeed: Bool = switch config.columnType {
+            case .picture, .vine, .yak: true
+            default: false
+            }
+            if !isMediaFeed,
+               let feed = config.feed,
+               feed.profilesFetchedAt == nil || (feed.profilesFetchedAt?.timeIntervalSinceNow ?? 0) < -900 {
                 fetchProfiles(config)
             }
         }
@@ -3991,7 +4204,79 @@ extension Event {
 // Broad local media fetches used by WoT feeds. Fetching by kind first avoids
 // putting a potentially very large WoT pubkey set into a Core Data predicate.
 extension Event {
-    static func mediaPosts(lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, kinds: Set<Int>) -> NSFetchRequest<Event> {
+    /// Core Data/SQLite cannot reliably execute one `IN` predicate containing a
+    /// full WoT (often tens of thousands of authors). Query bounded author sets
+    /// through the pubkey index and merge the newest unique events.
+    static func fetchMediaPosts(
+        by pubkeys: Set<String>,
+        lastAppearedCreatedAt: Int64 = 0,
+        hideReplies: Bool = false,
+        kinds: Set<Int>,
+        context: NSManagedObjectContext
+    ) -> [Event] {
+        fetchMediaPostsInBatches(pubkeys: pubkeys, context: context) { batch in
+            mediaPosts(
+                by: batch,
+                lastAppearedCreatedAt: lastAppearedCreatedAt,
+                hideReplies: hideReplies,
+                kinds: kinds
+            )
+        }
+    }
+
+    static func fetchMediaPosts(
+        by pubkeys: Set<String>,
+        until cutOffPoint: Int64,
+        hideReplies: Bool = false,
+        kinds: Set<Int>,
+        context: NSManagedObjectContext
+    ) -> [Event] {
+        fetchMediaPostsInBatches(pubkeys: pubkeys, context: context) { batch in
+            mediaPosts(
+                by: batch,
+                until: cutOffPoint,
+                hideReplies: hideReplies,
+                kinds: kinds
+            )
+        }
+    }
+
+    private static func fetchMediaPostsInBatches(
+        pubkeys: Set<String>,
+        context: NSManagedObjectContext,
+        request: (Set<String>) -> NSFetchRequest<Event>
+    ) -> [Event] {
+        guard !pubkeys.isEmpty else { return [] }
+
+        let authors = Array(pubkeys)
+        var eventsById: [String: Event] = [:]
+        let batchSize = 500
+
+        for start in stride(from: 0, to: authors.count, by: batchSize) {
+            let end = min(start + batchSize, authors.count)
+            let batch = Set(authors[start..<end])
+            do {
+                for event in try context.fetch(request(batch)) {
+                    eventsById[event.id] = event
+                }
+            }
+            catch {
+                L.og.error("Media feed local batch fetch failed: \(error.localizedDescription)")
+            }
+        }
+
+        return Array(eventsById.values)
+            .sorted { $0.created_at > $1.created_at }
+            .prefix(100)
+            .map { $0 }
+    }
+
+    static func mediaPosts(
+        by pubkeys: Set<String>,
+        lastAppearedCreatedAt: Int64 = 0,
+        hideReplies: Bool = false,
+        kinds: Set<Int>
+    ) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let eightHoursAgo = Int64(Date.now.timeIntervalSince1970) - 28_800
         let lowerBound = lastAppearedCreatedAt == 0 ? eightHoursAgo : min(lastAppearedCreatedAt, eightHoursAgo)
@@ -3999,9 +4284,9 @@ extension Event {
 
         let request = Event.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        request.fetchLimit = 1_000
+        request.fetchLimit = 100
 
-        var predicate = "created_at >= %i AND created_at < %i"
+        var predicate = "created_at >= %i AND created_at < %i AND pubkey IN %@"
         predicate += kinds.contains(20)
             ? " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
             : " AND kind IN %@"
@@ -4009,19 +4294,24 @@ extension Event {
             predicate += " AND replyToRootId == nil AND replyToId == nil"
         }
         predicate += " AND flags != \"is_update\" AND NOT pubkey IN %@"
-        request.predicate = NSPredicate(format: predicate, lowerBound, upperBound, kinds, blockedPubkeys)
+        request.predicate = NSPredicate(format: predicate, lowerBound, upperBound, pubkeys, kinds, blockedPubkeys)
         return request
     }
 
-    static func mediaPosts(until cutOffPoint: Int64, hideReplies: Bool = false, kinds: Set<Int>) -> NSFetchRequest<Event> {
+    static func mediaPosts(
+        by pubkeys: Set<String>,
+        until cutOffPoint: Int64,
+        hideReplies: Bool = false,
+        kinds: Set<Int>
+    ) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let cutOffNotInFuture = min(cutOffPoint, Int64(Date.now.timeIntervalSince1970) + 10_800)
 
         let request = Event.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        request.fetchLimit = 1_000
+        request.fetchLimit = 100
 
-        var predicate = "created_at <= %i"
+        var predicate = "created_at <= %i AND pubkey IN %@"
         predicate += kinds.contains(20)
             ? " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
             : " AND kind IN %@"
@@ -4029,7 +4319,7 @@ extension Event {
             predicate += " AND replyToRootId == nil AND replyToId == nil"
         }
         predicate += " AND flags != \"is_update\" AND NOT pubkey IN %@"
-        request.predicate = NSPredicate(format: predicate, cutOffNotInFuture, kinds, blockedPubkeys)
+        request.predicate = NSPredicate(format: predicate, cutOffNotInFuture, pubkeys, kinds, blockedPubkeys)
         return request
     }
 }

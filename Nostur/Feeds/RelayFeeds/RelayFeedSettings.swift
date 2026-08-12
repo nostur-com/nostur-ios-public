@@ -112,7 +112,7 @@ import NavigationBackport
     PreviewContainer({ pe in pe.loadCloudFeeds() }) {
         NBNavigationStack {
             if let feed = PreviewFetcher.fetchCloudFeed(type: CloudFeedType.relays.rawValue) {
-                FeedSettings(feed: feed)
+                FeedSettingsSheet(feed: feed)
             }
         }
     }

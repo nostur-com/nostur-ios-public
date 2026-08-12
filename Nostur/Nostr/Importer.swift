@@ -375,7 +375,30 @@ class Importer {
 #endif
                             }
                         }
-                        Event.updateRelays(event.id, relays: message.relays, isWrapId: event.kind.id == 1059, context: bgContext)
+                        // This is already executing on bgContext. Relay feeds need
+                        // the attribution before their EOSE-driven final query, so
+                        // do not defer it through CoreDataRelationFixer. Also emit
+                        // the normal priority completion signal for duplicates;
+                        // otherwise the feed can report empty and only find these
+                        // events after a later manual Retry.
+                        if let savedEvent = Event.fetchEvent(
+                            id: event.id,
+                            isWrapId: event.kind.id == 1059,
+                            context: bgContext
+                        ) {
+                            let existingRelays = Set(savedEvent.relays
+                                .split(separator: " ")
+                                .map(String.init))
+                            let mergedRelays = existingRelays
+                                .union(message.relays.split(separator: " ").map(String.init))
+                            savedEvent.relays = mergedRelays.joined(separator: " ")
+                            updateEventCache(event.id, status: .SAVED, relays: savedEvent.relays)
+                            if let subscriptionId = message.subscriptionId {
+                                importedPrioMessagesFromSubscriptionId.send(
+                                    ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent)
+                                )
+                            }
+                        }
                         continue
                     }
                     
