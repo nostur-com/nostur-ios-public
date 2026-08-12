@@ -467,31 +467,13 @@ func handleUrl(_ url: URL) {
         }
     }
 
-    // NADDR ARTICLE
-    let nostrAddr = url.absoluteString.matchingStrings(regex: "^(nostur:|nostr:|nostur:nostr:)(naddr1)([023456789acdefghjklmnpqrstuvwxyz]+\\b)$")
-    if nostrAddr.count == 1 && nostrAddr[0].count == 4 {
+    // LINKS FROM ANYWHERE THAT REQUIRE SEARCH RESOLUTION
+    if let searchQuery = searchQuery(forExternalNostrURL: url) {
 #if DEBUG
-        L.og.info("nostr: naddr: \(nostrAddr[0][2])\(nostrAddr[0][3])")
+        L.og.info("nostr: search link: \(searchQuery)")
 #endif
-        setSelectedTab("Main")
-        navigateTo(Naddr1Path(naddr1: "\(nostrAddr[0][2])\(nostrAddr[0][3])"), context: "Default")
+        SearchNavigationModel.shared.openSearch(searchQuery)
         return
-    }
-
-    // (NEW) LINKS FROM ANYWHERE (NEVENT1/NPROFILE1)
-    let nostrSharable = url.absoluteString.matchingStrings(regex: "^(nostur:|nostr:|nostur:nostr:)(nevent1|nprofile1)([023456789acdefghjklmnpqrstuvwxyz]+\\b)$")
-    if nostrSharable.count == 1 && nostrSharable[0].count == 4 {
-#if DEBUG
-        L.og.info("nostr: nevent1/nprofile1: \(nostrSharable[0][2])\(nostrSharable[0][3])")
-#endif
-        if nostrSharable[0][2] == "nevent1" {
-            SearchNavigationModel.shared.openSearch("\(nostrSharable[0][2])\(nostrSharable[0][3])")
-            return
-        }
-        if nostrSharable[0][2] == "nprofile1" {
-            SearchNavigationModel.shared.openSearch("\(nostrSharable[0][2])\(nostrSharable[0][3])")
-            return
-        }
     }
 
     // LINKS FROM WITHIN NOSTUR
@@ -578,4 +560,12 @@ func handleUrl(_ url: URL) {
         }
 
     }
+}
+
+func searchQuery(forExternalNostrURL url: URL) -> String? {
+    let matches = url.absoluteString.matchingStrings(
+        regex: "^(nostur:|nostr:|nostur:nostr:)(naddr1|nevent1|nprofile1)([023456789acdefghjklmnpqrstuvwxyz]+\\b)$"
+    )
+    guard matches.count == 1, matches[0].count == 4 else { return nil }
+    return "\(matches[0][2])\(matches[0][3])"
 }

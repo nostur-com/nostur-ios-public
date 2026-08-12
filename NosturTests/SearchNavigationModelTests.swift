@@ -51,4 +51,24 @@ final class SearchNavigationModelTests: XCTestCase {
         XCTAssertEqual(selectedTabWhenPublished, "Search")
         withExtendedLifetime(cancellable) {}
     }
+
+    func testExternalNostrIdentifiersThatRequireResolutionRouteThroughSearch() throws {
+        let identifiers = [
+            "naddr1qqexample",
+            "nevent1qqexample",
+            "nprofile1qqexample"
+        ]
+
+        for identifier in identifiers {
+            let url = try XCTUnwrap(URL(string: "nostr:\(identifier)"))
+            XCTAssertEqual(searchQuery(forExternalNostrURL: url), identifier)
+        }
+    }
+
+    func testDirectNavigationNostrIdentifiersDoNotRouteThroughSearch() throws {
+        for identifier in ["note1qqexample", "npub1qqexample"] {
+            let url = try XCTUnwrap(URL(string: "nostr:\(identifier)"))
+            XCTAssertNil(searchQuery(forExternalNostrURL: url))
+        }
+    }
 }
