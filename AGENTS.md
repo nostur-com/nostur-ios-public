@@ -115,5 +115,5 @@ Prefer listing, grepping, and reading under `Nostur/` feature code; skip dummy f
 ## Notes about Core Data
 - Different Core Data managed object contexts are used, leading to crashes when accessing attributes from the wrong context. 
 - Usually there is a main context and a bg context. 
-- Usually CloudAccount is accessed from main and Event from bg
+- Usually CloudAccount and CloudFeed is accessed from main and Event from bg
 - Look for bg().perform { } or Task { @MainActor } or DispatchQueue.main... to make sure we are in the right context.
