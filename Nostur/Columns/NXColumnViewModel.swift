@@ -23,6 +23,32 @@ class NXColumnViewModel: ObservableObject {
     
     public var tableView: UITableView?
     public var tablePrefetcher: NXPostsFeedTablePrefetcher?
+
+    @MainActor
+    private var isFeedActivelyScrolling: Bool {
+        collectionView?.isDragging == true
+            || collectionView?.isDecelerating == true
+            || tableView?.isDragging == true
+            || tableView?.isDecelerating == true
+    }
+
+    /// `withAnimation` is intentional here: when the feed is stationary and not at the top,
+    /// SwiftUI's animated List diff keeps the visible post anchored while rows are inserted or
+    /// removed. Do not replace it globally with an unanimated assignment or the feed can jump.
+    /// During an active drag/deceleration UIKit already owns the scroll position, and animating a
+    /// simultaneous List diff causes frame drops, so only that case uses a nil-animation transaction.
+    @MainActor
+    private func setPosts(_ posts: [NRPost], animated: Bool = true) {
+        if animated && !isFeedActivelyScrolling {
+            withAnimation {
+                viewState = .posts(posts)
+            }
+        } else {
+            withTransaction(Transaction(animation: nil)) {
+                viewState = .posts(posts)
+            }
+        }
+    }
     
     public let vmInner = NXColumnViewModelInner()
     private var newestMarkedAsReadSaveTask: Task<Void, Never>?
@@ -271,8 +297,10 @@ class NXColumnViewModel: ObservableObject {
                             unreadIds[postId] = nil
                         }
                         vmInner.updateIsAtTopSubject.send()
-                        withAnimation { [weak self] in // withAnimation and not at top keeps scroll position
-                            self?.viewState = .posts(existingPosts.filter { $0.id != postId })
+                        // Stationary updates need withAnimation to preserve the visible List anchor.
+                        // setPosts only suppresses it while the user is actively scrolling.
+                        Task { @MainActor [weak self] in
+                            self?.setPosts(existingPosts.filter { $0.id != postId })
                         }
                     }
                 })
@@ -359,9 +387,8 @@ class NXColumnViewModel: ObservableObject {
         vmInner.updateIsAtTopSubject.send()
 
         if case .posts(let existingPosts) = viewState {
-            withAnimation { // withAnimation and not at top keeps scroll position
-                viewState = .posts(existingPosts.filter { !postIdsToRemove.contains($0.id) })
-            }
+            // Stationary updates need withAnimation to preserve the visible List anchor.
+            setPosts(existingPosts.filter { !postIdsToRemove.contains($0.id) })
         }
     }
 
@@ -3093,9 +3120,8 @@ extension NXColumnViewModel {
                     // TODO: Should already start prefetching missing onlyNewAddedPosts pfp/kind 0 here
 
                     if SettingsStore.shared.autoScroll {
-                        withAnimation { // withAnimation won't keep scroll position and scrolls to newest post
-                            viewState = .posts(addedAndExistingPostsTruncated)
-                        }
+                        // withAnimation intentionally lets a stationary feed move to the newest post.
+                        setPosts(addedAndExistingPostsTruncated)
                     }
                     else {
 #if DEBUG
@@ -3147,9 +3173,9 @@ extension NXColumnViewModel {
 #if DEBUG
                     L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) withAnimation { }  + not at top, to keep scroll pos -[LOG]-")
 #endif
-                    withAnimation { // withAnimation and not at top keeps scroll position
-                        viewState = .posts(addedAndExistingPostsTruncated)
-                    }
+                    // withAnimation while stationary is required to keep the current post anchored.
+                    // setPosts avoids that animation only during active dragging/deceleration.
+                    setPosts(addedAndExistingPostsTruncated)
                 }
             }
             else { // add below
@@ -3174,9 +3200,7 @@ extension NXColumnViewModel {
             }
             vmInner.isPreparingForScrollRestore = false
             vmInner.pendingScrollToIndex = nil
-            withAnimation {
-                viewState = .posts(uniqueAddedPosts)
-            }
+            setPosts(uniqueAddedPosts)
         }
         
         completion?()

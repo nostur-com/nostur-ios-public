@@ -21,38 +21,41 @@ struct NXListRow<Content: View>: View {
     
     var body: some View {
         content
-            .modifier { // From iOS 16+ onGeometryChange should be more performant than the old GeometryReader method
-                if #available(iOS 16.0, *) {
-                    $0.onGeometryChange(for: Bool.self) { proxy in
-                        guard !didAppearOnce else { return false }
-                        let frame = proxy.frame(in: .global)
-                        return (frame.minY - containerTopOffset) > -25
-                        
-                    } action: { isVisible in
-                        guard !didAppearOnce && isVisible else { return }
-                        if vm.handleAppearOnce(nrPost: nrPost) {
-                            didAppearOnce = true
-                        }
-                    }
-                }
-                else {
-                    $0.overlay { // Old GeometryReader method
-                        if !didAppearOnce {
-                            GeometryReader { proxy in
-                                Color.clear
-                                    .preference(key: ListRowTopOffsetKey.self, value: proxy.frame(in: .global).minY - containerTopOffset)
-                            }
-                            .onPreferenceChange(ListRowTopOffsetKey.self) { offset in
-                                if offset >= -25 {
-                                    if vm.handleAppearOnce(nrPost: nrPost) {
-                                        didAppearOnce = true
-                                    }
-                                }
-                            }
-                        }
-                    }
+            .overlay {
+                if !didAppearOnce {
+                    appearanceTracker
                 }
             }
+    }
+
+    @ViewBuilder
+    private var appearanceTracker: some View {
+        // Keep tracking in an overlay so removing it does not recreate the post/image subtree.
+        if #available(iOS 16.0, *) {
+            Color.clear
+                .onGeometryChange(for: Bool.self) { proxy in
+                    let frame = proxy.frame(in: .global)
+                    return (frame.minY - containerTopOffset) > -25
+                } action: { isVisible in
+                    guard !didAppearOnce && isVisible else { return }
+                    if vm.handleAppearOnce(nrPost: nrPost) {
+                        didAppearOnce = true
+                    }
+                }
+        } else {
+            GeometryReader { proxy in
+                Color.clear
+                    .preference(
+                        key: ListRowTopOffsetKey.self,
+                        value: proxy.frame(in: .global).minY - containerTopOffset
+                    )
+            }
+            .onPreferenceChange(ListRowTopOffsetKey.self) { offset in
+                if offset >= -25, vm.handleAppearOnce(nrPost: nrPost) {
+                    didAppearOnce = true
+                }
+            }
+        }
     }
 }
 
