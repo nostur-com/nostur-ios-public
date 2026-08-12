@@ -41,8 +41,17 @@ struct MainFeedsScreen: View {
     @State private var didCreate = false
     
     
-    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.order, order: .forward)], predicate: NSPredicate(format: "showAsTab == true"))
-    var lists: FetchedResults<CloudFeed>
+    // Fetch every CloudFeed. Hidden account-backed feeds also change through CloudKit and must
+    // participate in reconciliation even though only pinned feeds are rendered as list tabs.
+    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.order, order: .forward)])
+    private var cloudFeeds: FetchedResults<CloudFeed>
+    private var lists: [CloudFeed] { cloudFeeds.filter(\.showAsTab) }
+    private var cloudFeedChangeTokens: [CloudFeedChangeToken] { cloudFeeds.map(\.changeToken) }
+
+    @FetchRequest(sortDescriptors: []) private var cloudAccounts: FetchedResults<CloudAccount>
+    private var activeAccountFeedChangeToken: CloudAccountFeedChangeToken? {
+        cloudAccounts.first(where: { $0.publicKey == la.account.publicKey })?.feedChangeToken
+    }
     @State private var selectedList: CloudFeed?
 
     @StateObject private var zappedVM = ZappedViewModel()
@@ -461,12 +470,7 @@ struct MainFeedsScreen: View {
             
             guard !didCreate else { return }
             didCreate = true
-            loadColumnConfigs()
-            createFollowingFeed(la.account)
-            createPictureFeed(la.account)
-            createYakFeed(la.account)
-            createVineFeed(la.account)
-            createExploreFeed() // Also create Explore Feed
+            refreshFeedsAfterStoreChange()
   
         }
         
@@ -498,17 +502,17 @@ struct MainFeedsScreen: View {
         }
         .navigationTitle(homeTabNavigationTitle(self.selectedList))
         .navigationBarTitleDisplayMode(.inline)
-        .onReceive(lists.publisher.collect()) { lists in
-            guard didCreate else { return } // Only update here after .onAppear { } has ran.
-            
-            if !lists.isEmpty && self.lists.filter({ $0.showAsTab }) .count != columnConfigs.count {
-                removeDuplicateLists()
-                loadColumnConfigs()
-                
-                if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
-                    selectedList = list
-                }
-            }
+        .onChange(of: cloudFeedChangeTokens) { _ in
+            guard didCreate else { return }
+            refreshFeedsAfterStoreChange()
+        }
+        .onChange(of: activeAccountFeedChangeToken) { _ in
+            guard didCreate else { return }
+            la.applyCloudAccountFeedChange()
+            createFollowingFeed(la.account)
+            createPictureFeed(la.account)
+            createYakFeed(la.account)
+            createVineFeed(la.account)
         }
         .onChange(of: shouldHideTabBar) { newValue in
             // We we disable all feeds, the tab bar disappears but does not auto switch to the Following feed, leaving an empty screen, this fixes that:
@@ -627,27 +631,29 @@ struct MainFeedsScreen: View {
     }
 
     
-    private func removeDuplicateLists() {
-        var uniqueLists = Set<UUID>()
-        let sortedLists = lists.sorted {
-            if ($0.showAsTab && !$1.showAsTab) { return true }
-            else {
-                return ($0.createdAt as Date?) ?? Date.distantPast > ($1.createdAt as Date?) ?? Date.distantPast
-            }
+    private func refreshFeedsAfterStoreChange() {
+        let context = viewContext()
+        let didReconcile = CloudFeed.reconcileDuplicates(in: context)
+        if didReconcile { context.processPendingChanges() }
+        loadColumnConfigs()
+        createFollowingFeed(la.account)
+        createPictureFeed(la.account)
+        createYakFeed(la.account)
+        createVineFeed(la.account)
+        createExploreFeed()
+
+        if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
+            selectedList = list
         }
-        
-        let toDelete = sortedLists
-            .filter { list in
-                guard let id = list.id else { return true }
-                return !uniqueLists.insert(id).inserted
-            }
-        
-        toDelete.forEach {
-            DataProvider.shared().viewContext.delete($0)
+        else if selectedSubTab == "List" {
+            selectedList = lists.first
+            selectedListId = selectedList?.subscriptionId ?? ""
+            if selectedList == nil { selectedSubTab = "Following" }
         }
-        if !toDelete.isEmpty {
+
+        if didReconcile {
 #if DEBUG
-            L.cloud.debug("Deleting: \(toDelete.count) duplicate feeds")
+            L.cloud.debug("Reconciled duplicate CloudFeeds")
 #endif
             DataProvider.shared().saveToDiskNow(.viewContext)
         }
@@ -737,176 +743,32 @@ struct MainFeedsScreen: View {
     }
     
     private func createFollowingFeed(_ account: CloudAccount) {
-        let context = viewContext()
-        let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.following.rawValue, account.publicKey)
-        
-        let followingFeeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
-        let followingFeedsNewest: [CloudFeed] = followingFeeds
-            .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
-                return mostRecentA > mostRecentB
-            })
-        
-        if let followingFeed = followingFeedsNewest.first {
-            followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: account.publicKey, name: "Following")
-            
-            guard followingFeeds.count > 1 else { return }
-            for f in followingFeedsNewest.dropFirst(1) {
-                context.delete(f)
-            }
-            DataProvider.shared().saveToDiskNow(.viewContext)
-        }
-        else {
-            let newFollowingFeed = CloudFeed(context: context)
-            newFollowingFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newFollowingFeed.name = "Following for " + account.anyName
-            newFollowingFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
-            newFollowingFeed.id = UUID()
-            newFollowingFeed.createdAt = .now
-            newFollowingFeed.accountPubkey = account.publicKey
-            newFollowingFeed.type = CloudFeedType.following.rawValue
-            newFollowingFeed.order = 0
-            
-            // Resume Where Left: Default on for contact-based. Default off for relay-based
-            newFollowingFeed.continue = true
-            
-            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
-                followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: account.publicKey, name: "Following")
-            }
-        }
+        let result = CloudFeed.reconciledAccountFeed(
+            type: .following,
+            accountPubkey: account.publicKey,
+            accountName: account.anyName,
+            context: viewContext()
+        )
+        followingConfig = NXColumnConfig(id: result.feed.subscriptionId, columnType: .following(result.feed), accountPubkey: account.publicKey, name: "Following")
+        if result.didChange { DataProvider.shared().saveToDiskNow(.viewContext) }
     }
     
     private func createPictureFeed(_ account: CloudAccount) {
-        let context = viewContext()
-        let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.picture.rawValue, account.publicKey)
-        
-        let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
-        let feedsNewest: [CloudFeed] = feeds
-            .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
-                return mostRecentA > mostRecentB
-            })
-        
-        if let feed = feedsNewest.first {
-            pictureConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .picture(feed), accountPubkey: account.publicKey, name: "Picture")
-            
-            guard feeds.count > 1 else { return }
-            for f in feedsNewest.dropFirst(1) {
-                context.delete(f)
-            }
-            DataProvider.shared().saveToDiskNow(.viewContext)
-        }
-        else {
-            let newFeed = CloudFeed(context: context)
-            newFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
-            newFeed.id = UUID()
-            newFeed.createdAt = .now
-            newFeed.accountPubkey = account.publicKey
-            newFeed.type = CloudFeedType.picture.rawValue
-            newFeed.repliesEnabled = false
-            newFeed.order = 0
-            newFeed.name = "\(newFeed.feedTitle()) for \(account.anyName)"
-                        
-            newFeed.continue = false // kind 20 feed needs more pics so false
-            
-            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
-                pictureConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .picture(newFeed), accountPubkey: account.publicKey, name: newFeed.feedTitle())
-            }
-        }
+        let result = CloudFeed.reconciledAccountFeed(type: .picture, accountPubkey: account.publicKey, accountName: account.anyName, context: viewContext())
+        pictureConfig = NXColumnConfig(id: result.feed.subscriptionId, columnType: .picture(result.feed), accountPubkey: account.publicKey, name: result.feed.feedTitle())
+        if result.didChange { DataProvider.shared().saveToDiskNow(.viewContext) }
     }
     
     private func createYakFeed(_ account: CloudAccount) {
-        let context = viewContext()
-        let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.yak.rawValue, account.publicKey)
-        
-        let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
-        let feedsNewest: [CloudFeed] = feeds
-            .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
-                return mostRecentA > mostRecentB
-            })
-        
-        if let feed = feedsNewest.first {
-            yakConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .yak(feed), accountPubkey: account.publicKey, name: feed.feedTitle())
-            
-            guard feeds.count > 1 else { return }
-            for f in feedsNewest.dropFirst(1) {
-                context.delete(f)
-            }
-            DataProvider.shared().saveToDiskNow(.viewContext)
-        }
-        else {
-            let newFeed = CloudFeed(context: context)
-            newFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
-            newFeed.id = UUID()
-            newFeed.createdAt = .now
-            newFeed.accountPubkey = account.publicKey
-            newFeed.type = CloudFeedType.yak.rawValue
-            newFeed.repliesEnabled = false
-            newFeed.order = 0
-            newFeed.name = "\(newFeed.feedTitle()) for \(account.anyName)"
-                        
-            newFeed.continue = false // feed needs more content false
-            
-            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
-                yakConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .yak(newFeed), accountPubkey: account.publicKey, name: newFeed.feedTitle())
-            }
-        }
+        let result = CloudFeed.reconciledAccountFeed(type: .yak, accountPubkey: account.publicKey, accountName: account.anyName, context: viewContext())
+        yakConfig = NXColumnConfig(id: result.feed.subscriptionId, columnType: .yak(result.feed), accountPubkey: account.publicKey, name: result.feed.feedTitle())
+        if result.didChange { DataProvider.shared().saveToDiskNow(.viewContext) }
     }
     
     private func createVineFeed(_ account: CloudAccount) {
-        let context = viewContext()
-        let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.vine.rawValue, account.publicKey)
-        
-        let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
-        let feedsNewest: [CloudFeed] = feeds
-            .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
-                return mostRecentA > mostRecentB
-            })
-        
-        if let feed = feedsNewest.first {
-            if feed.relays == nil {
-                feed.relays = "wss://relay.divine.video"
-                DataProvider.shared().saveToDiskNow(.viewContext)
-            }
-            vineConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .vine(feed), accountPubkey: account.publicKey, name: feed.feedTitle())
-            
-            guard feeds.count > 1 else { return }
-            for f in feedsNewest.dropFirst(1) {
-                context.delete(f)
-            }
-            DataProvider.shared().saveToDiskNow(.viewContext)
-        }
-        else {
-            let newFeed = CloudFeed(context: context)
-            newFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
-            newFeed.id = UUID()
-            newFeed.createdAt = .now
-            newFeed.accountPubkey = account.publicKey
-            newFeed.type = CloudFeedType.vine.rawValue
-            newFeed.relays = "wss://relay.divine.video"
-            newFeed.repliesEnabled = false
-            newFeed.order = 0
-            newFeed.name = "\(newFeed.feedTitle()) for \(account.anyName)"
-            
-            newFeed.continue = false // feed needs more content false
-            
-            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
-                vineConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .vine(newFeed), accountPubkey: account.publicKey, name: newFeed.feedTitle())
-            }
-        }
+        let result = CloudFeed.reconciledAccountFeed(type: .vine, accountPubkey: account.publicKey, accountName: account.anyName, context: viewContext())
+        vineConfig = NXColumnConfig(id: result.feed.subscriptionId, columnType: .vine(result.feed), accountPubkey: account.publicKey, name: result.feed.feedTitle())
+        if result.didChange { DataProvider.shared().saveToDiskNow(.viewContext) }
     }
     
     private func createSomeoneElsesFeed(_ pubkey: String) {
@@ -920,46 +782,9 @@ struct MainFeedsScreen: View {
     
     // Copy paste of createFollowingFeed
     private func createExploreFeed() {
-        let context = viewContext()
-        let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(format: "type == %@ && accountPubkey == %@", CloudFeedType.following.rawValue, EXPLORER_PUBKEY)
-        
-        let exploreFeeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
-        let exploreFeedsNewest: [CloudFeed] = exploreFeeds
-            .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
-                return mostRecentA > mostRecentB
-            })
-        
-        if let exploreFeed = exploreFeedsNewest.first {
-            exploreConfig = NXColumnConfig(id: exploreFeed.subscriptionId, columnType: .following(exploreFeed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
-            
-            guard exploreFeeds.count > 1 else { return }
-            for e in exploreFeedsNewest.dropFirst(1) {
-                context.delete(e)
-            }
-            DataProvider.shared().saveToDiskNow(.viewContext)
-        }
-        else {
-            let newExploreFeed = CloudFeed(context: context)
-            newExploreFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newExploreFeed.name = "Explore feed"
-            newExploreFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
-            newExploreFeed.id = UUID()
-            newExploreFeed.createdAt = .now
-            newExploreFeed.accountPubkey = EXPLORER_PUBKEY
-            newExploreFeed.type = CloudFeedType.following.rawValue
-            newExploreFeed.repliesEnabled = false
-            newExploreFeed.order = 0
-            
-            // Resume Where Left: Default on for contact-based. Default off for relay-based
-            newExploreFeed.continue = true
-            
-            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
-                exploreConfig = NXColumnConfig(id: newExploreFeed.subscriptionId, columnType: .following(newExploreFeed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
-            }
-        }
+        let result = CloudFeed.reconciledAccountFeed(type: .following, accountPubkey: EXPLORER_PUBKEY, accountName: "Explore", context: viewContext())
+        exploreConfig = NXColumnConfig(id: result.feed.subscriptionId, columnType: .following(result.feed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
+        if result.didChange { DataProvider.shared().saveToDiskNow(.viewContext) }
     }
 }
 

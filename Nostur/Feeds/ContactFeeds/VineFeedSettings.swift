@@ -24,6 +24,7 @@ struct VineFeedSettings: View {
                     feed.continue
                 }, set: { newValue in
                     feed.continue = newValue
+                    feed.markUserEdited()
                 })) {
                     Text("Remember feed")
                     Text("Resume feed from where you left off when you reopen the app")

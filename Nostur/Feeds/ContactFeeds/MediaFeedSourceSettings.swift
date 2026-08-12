@@ -39,7 +39,13 @@ struct MediaFeedSourceSettings: View {
         }
 
         Section {
-            NavigationLink(destination: FeedRelaysPicker(selectedRelays: $feed.relays_)) {
+            NavigationLink(destination: FeedRelaysPicker(selectedRelays: Binding(
+                get: { feed.relays_ },
+                set: { relays in
+                    feed.relays_ = relays
+                    feed.markUserEdited()
+                }
+            ))) {
                 HStack {
                     Text("Select relay(s)")
                     Spacer()

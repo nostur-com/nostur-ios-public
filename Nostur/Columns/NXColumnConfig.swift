@@ -8,9 +8,23 @@
 import Foundation
 
 struct NXColumnConfig: Identifiable, Equatable {
+
+    private var feedChangeToken: CloudFeedChangeToken?
+    private var accountFeedChangeToken: CloudAccountFeedChangeToken?
+
+    init(id: String, columnType: NXColumnType? = nil, accountPubkey: String? = nil, name: String) {
+        self.id = id
+        self.columnType = columnType
+        self.accountPubkey = accountPubkey
+        self.name = name
+        self.feedChangeToken = columnType?.feed?.changeToken
+        self.accountFeedChangeToken = columnType?.feed?.account?.feedChangeToken
+    }
     
     static func == (lhs: NXColumnConfig, rhs: NXColumnConfig) -> Bool {
         lhs.id == rhs.id
+            && lhs.feedChangeToken == rhs.feedChangeToken
+            && lhs.accountFeedChangeToken == rhs.accountFeedChangeToken
     }
     
     // Don't set id too long, because its also used for subscription ids and relays will fail if its too long
@@ -177,4 +191,17 @@ enum NXColumnType {
     case gallery
     case explore
     case articles
+}
+
+private extension NXColumnType {
+    var feed: CloudFeed? {
+        switch self {
+        case .following(let feed), .pubkeys(let feed), .followSet(let feed),
+             .followPack(let feed), .relays(let feed), .hashtags(let feed),
+             .picture(let feed), .vine(let feed), .yak(let feed):
+            return feed
+        default:
+            return nil
+        }
+    }
 }

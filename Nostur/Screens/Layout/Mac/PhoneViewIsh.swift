@@ -22,6 +22,17 @@ struct PhoneViewIsh: View {
     
     
     @State var followingConfig: NXColumnConfig?
+
+    @FetchRequest(
+        sortDescriptors: [],
+        predicate: NSPredicate(format: "type == %@", CloudFeedType.following.rawValue)
+    ) private var followingFeeds: FetchedResults<CloudFeed>
+    private var followingFeedChangeTokens: [CloudFeedChangeToken] { followingFeeds.map(\.changeToken) }
+
+    @FetchRequest(sortDescriptors: []) private var cloudAccounts: FetchedResults<CloudAccount>
+    private var activeAccountFeedChangeToken: CloudAccountFeedChangeToken? {
+        cloudAccounts.first(where: { $0.publicKey == la.account.publicKey })?.feedChangeToken
+    }
     
     @State private var navPath = NBNavigationPath()
     @State private var lastPathPostId: String? = nil // Need to track .id of last added to navigation stack so we can remove on undo send if needed
@@ -105,6 +116,15 @@ struct PhoneViewIsh: View {
             }
             createFollowingFeed(newAccount)
         }
+        .onChange(of: followingFeedChangeTokens) { _ in
+            guard didCreate else { return }
+            createFollowingFeed(la.account)
+        }
+        .onChange(of: activeAccountFeedChangeToken) { _ in
+            guard didCreate else { return }
+            la.applyCloudAccountFeedChange()
+            createFollowingFeed(la.account)
+        }
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
 //            guard selectedTab() == "Main" else { return }
@@ -143,42 +163,8 @@ struct PhoneViewIsh: View {
     }
     
     private func createFollowingFeed(_ account: CloudAccount) {
-        let context = viewContext()
-        let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.following.rawValue, account.publicKey)
-        
-        let followingFeeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
-        let followingFeedsNewest: [CloudFeed] = followingFeeds
-            .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
-                return mostRecentA > mostRecentB
-            })
-        
-        if let followingFeed = followingFeedsNewest.first {
-            followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: account.publicKey, name: "Following")
-            for f in followingFeedsNewest.dropFirst(1) {
-                context.delete(f)
-            }
-            DataProvider.shared().saveToDiskNow(.viewContext)
-        }
-        else {
-            let newFollowingFeed = CloudFeed(context: context)
-            newFollowingFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newFollowingFeed.name = "Following for " + account.anyName
-            newFollowingFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
-            newFollowingFeed.id = UUID()
-            newFollowingFeed.createdAt = .now
-            newFollowingFeed.accountPubkey = account.publicKey
-            newFollowingFeed.type = CloudFeedType.following.rawValue
-            newFollowingFeed.order = 0
-            
-            // Resume Where Left: Default on for contact-based. Default off for relay-based
-            newFollowingFeed.continue = true
-            
-            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
-                followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: account.publicKey, name: "Following")
-            }
-        }
+        let result = CloudFeed.reconciledAccountFeed(type: .following, accountPubkey: account.publicKey, accountName: account.anyName, context: viewContext())
+        followingConfig = NXColumnConfig(id: result.feed.subscriptionId, columnType: .following(result.feed), accountPubkey: account.publicKey, name: "Following")
+        if result.didChange { DataProvider.shared().saveToDiskNow(.viewContext) }
     }
 }

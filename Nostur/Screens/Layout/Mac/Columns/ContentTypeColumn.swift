@@ -111,64 +111,30 @@ struct ContentTypeColumn: View {
             CloudFeedType.picture
         }
 
-        let context = viewContext()
-        let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(format: "type == %@ && accountPubkey == %@", cloudFeedType.rawValue, pubkey)
-        
-        let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
-        let feedsNewest: [CloudFeed] = feeds
-            .sorted(by: { a, b in
-                let mostRecentA = max(a.createdAt ?? .now, a.newestMarkedReadAt ?? .now)
-                let mostRecentB = max(b.createdAt ?? .now, b.newestMarkedReadAt ?? .now)
-                return mostRecentA > mostRecentB
-            })
-        
-        if let feed = feedsNewest.first, let accountPubkey = feed.accountPubkey {
-            
-            let columnType: NXColumnType = switch columnType {
-            case .yaks(_):
-                .yak(feed)
-            case .vines(_):
-                .vine(feed)
-            default: // .photos(_)
-                .picture(feed)
-            }
-            
-            config = NXColumnConfig(id: feed.subscriptionId, columnType: columnType, accountPubkey: pubkey, name: "\(feed.feedTitle()) for \(pubkey)")
-            
-            guard feeds.count > 1 else { return }
-            for e in feedsNewest.dropFirst(1) {
-                context.delete(e)
-            }
-            DataProvider.shared().saveToDiskNow(.viewContext)
+        let result = CloudFeed.reconciledAccountFeed(
+            type: cloudFeedType,
+            accountPubkey: pubkey,
+            accountName: account(by: pubkey)?.anyName ?? pubkey,
+            context: viewContext()
+        )
+        let feed = result.feed
+        let feedColumnType: NXColumnType = switch columnType {
+        case .yaks(_):
+            .yak(feed)
+        case .vines(_):
+            .vine(feed)
+        default: // .photos(_)
+            .picture(feed)
         }
-        else {
-            let newFeed = CloudFeed(context: context)
-            newFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
-            newFeed.id = UUID()
-            newFeed.createdAt = .now
-            newFeed.accountPubkey = pubkey
-            newFeed.type = cloudFeedType.rawValue
-            newFeed.repliesEnabled = false
-            newFeed.order = 0
-            newFeed.name = "\(newFeed.feedTitle()) for \(pubkey)"
-            
-            // Resume Where Left: // off (not enough content available)
-            newFeed.continue = false
-            
-            let columnType: NXColumnType = switch columnType {
-            case .yaks(_):
-                .yak(newFeed)
-            case .vines(_):
-                .vine(newFeed)
-            default: // .photos(_)
-                .picture(newFeed)
-            }
-            
-            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
-                config = NXColumnConfig(id: newFeed.subscriptionId, columnType: columnType, accountPubkey: pubkey, name: newFeed.feedTitle())
-            }
+
+        config = NXColumnConfig(
+            id: feed.subscriptionId,
+            columnType: feedColumnType,
+            accountPubkey: pubkey,
+            name: "\(feed.feedTitle()) for \(account(by: pubkey)?.anyName ?? pubkey)"
+        )
+        if result.didChange {
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
 }

@@ -91,6 +91,33 @@ public class CloudAccount: NSManagedObject {
     // Cache because:  20.00 ms    0.1%    10.00 ms                 CloudAccount.privateFollowingPubkeys.getter
     var followingPubkeysCache: Set<String> = []
     var privateFollowingPubkeysCache: Set<String> = []
+
+    func invalidateFollowingCaches() {
+        followingPubkeysCache = []
+        privateFollowingPubkeysCache = []
+    }
     
     lazy var npub: String = { try! NIP19(prefix: "npub", hexString: publicKey).displayString }()
+}
+
+/// Value snapshot used to detect CloudKit changes to the parts of CloudAccount which drive
+/// account-backed feeds. NSManagedObject identity/equality cannot detect an in-place merge.
+struct CloudAccountFeedChangeToken: Equatable {
+    let objectID: NSManagedObjectID
+    let publicKey: String?
+    let followingPubkeys: String?
+    let privateFollowingPubkeys: String?
+    let followingHashtags: String?
+
+    init(_ account: CloudAccount) {
+        objectID = account.objectID
+        publicKey = account.publicKey_
+        followingPubkeys = account.followingPubkeys_
+        privateFollowingPubkeys = account.privateFollowingPubkeys_
+        followingHashtags = account.followingHashtags_
+    }
+}
+
+extension CloudAccount {
+    var feedChangeToken: CloudAccountFeedChangeToken { CloudAccountFeedChangeToken(self) }
 }

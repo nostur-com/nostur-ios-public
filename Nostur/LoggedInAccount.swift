@@ -331,6 +331,8 @@ extension LoggedInAccount {
     public func reloadFollows() {
         self.bg.perform { [weak self] in
             guard let self, let bgAccount = self.bgAccount else { return }
+            // CloudKit can replace the underlying strings without going through their setters.
+            bgAccount.invalidateFollowingCaches()
             self.followingPublicKeys = bgAccount.getFollowingPublicKeys(includeBlocked: true)
                 .union(bgAccount.privateFollowingPubkeys)
             self.followingCache = bgAccount.loadFollowingCache()
@@ -341,6 +343,21 @@ extension LoggedInAccount {
                 sendNotification(.followsChanged, self.followingPublicKeys)
             }
         }
+    }
+
+    /// Refreshes feed-driving follow state after an in-place Core Data/CloudKit merge. Reading
+    /// from the view-context account also keeps this correct for unsaved local edits.
+    @MainActor
+    public func applyCloudAccountFeedChange() {
+        account.invalidateFollowingCaches()
+        let follows = account.getFollowingPublicKeys(includeBlocked: true)
+            .union(account.privateFollowingPubkeys)
+        viewFollowingPublicKeys = follows
+        followingPublicKeys = follows
+        bg.perform { [weak self] in
+            self?.bgAccount?.invalidateFollowingCaches()
+        }
+        sendNotification(.followsChanged, follows)
     }
 }
 

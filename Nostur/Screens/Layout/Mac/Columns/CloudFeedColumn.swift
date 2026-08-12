@@ -42,16 +42,15 @@ struct CloudFeedColumn: View {
             }
         }
         .background(theme.listBackground)
-        .onValueChange(feed, action: { oldFeed, newFeed in
-            guard oldFeed != newFeed else { return }
-            
-            ConnectionPool.shared.closeSubscription(oldFeed.subscriptionId)
-            
+        .onValueChange(feed.changeToken, action: { _, _ in
+            if let oldSubscriptionId = columnConfig?.id {
+                ConnectionPool.shared.closeSubscription(oldSubscriptionId)
+            }
             self.columnConfig = NXColumnConfig(
-                id: newFeed.subscriptionId,
-                columnType: newFeed.feedType,
-                accountPubkey: newFeed.accountPubkey,
-                name: newFeed.name_
+                id: feed.subscriptionId,
+                columnType: feed.feedType,
+                accountPubkey: feed.accountPubkey,
+                name: feed.name_
             )
         })
     }
