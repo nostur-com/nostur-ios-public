@@ -36,6 +36,15 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                     L.fetching.debug("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(item.id)")
 #endif
                 }
+
+                // Resolve repost contents before their rows enter the viewport. This avoids
+                // replacing the estimated-height placeholder while the user can see it.
+                if item.isRepost,
+                   item.noteRowAttributes.firstQuote == nil,
+                   let firstQuoteId = item.firstQuoteId {
+                    EventRelationsQueue.shared.addAwaitingEvent(item.event, debugInfo: "NXPostsFeedPrefetcher.repost")
+                    QueuedFetcher.shared.enqueue(id: firstQuoteId)
+                }
                 
                 // Everything below here is image or link preview fetching, skip if low data mode
                 guard !SettingsStore.shared.lowDataMode else { continue }
@@ -224,6 +233,15 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
 #if DEBUG
                     L.fetching.debug("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(item.id)")
 #endif
+                }
+
+                // Resolve repost contents before their rows enter the viewport. This avoids
+                // replacing the estimated-height placeholder while the user can see it.
+                if item.isRepost,
+                   item.noteRowAttributes.firstQuote == nil,
+                   let firstQuoteId = item.firstQuoteId {
+                    EventRelationsQueue.shared.addAwaitingEvent(item.event, debugInfo: "NXPostsFeedTablePrefetcher.repost")
+                    QueuedFetcher.shared.enqueue(id: firstQuoteId)
                 }
                 
                 // Everything below here is image or link preview fetching, skip if low data mode

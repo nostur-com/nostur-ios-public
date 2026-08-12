@@ -11,6 +11,7 @@ struct Repost: View {
     @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.containerID) private var containerID
+    @Environment(\.feedLayoutStabilizer) private var feedLayoutStabilizer
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var noteRowAttributes: NoteRowAttributes
     private var hideFooter = true // For rendering in NewReply
@@ -26,6 +27,7 @@ struct Repost: View {
     @State private var relayHint: String?
     @State private var revealMutedFirstQuoteByWords = false
     @State private var mutedWords: [String]
+    @State private var displayedFirstQuote: NRPost?
 //#if DEBUG
 //    @State private var kind6Source: String?
 //#endif
@@ -42,6 +44,7 @@ struct Repost: View {
         self.isEmbedded = isEmbedded
         self.grouped = grouped
         _mutedWords = State(initialValue: AppState.shared.bgAppState.mutedWords)
+        _displayedFirstQuote = State(initialValue: nrPost.noteRowAttributes.firstQuote)
     }
     
     private var shouldForceAutoLoad: Bool { // To override auto download of the reposted post
@@ -157,13 +160,24 @@ struct Repost: View {
             revealMutedFirstQuoteByWords = false
             mutedWords = AppState.shared.bgAppState.mutedWords
         }
+        .onChange(of: noteRowAttributes.firstQuote?.id) { _ in
+            guard let firstQuote = noteRowAttributes.firstQuote,
+                  displayedFirstQuote?.id != firstQuote.id else { return }
+            if let feedLayoutStabilizer {
+                feedLayoutStabilizer.performAnchored {
+                    displayedFirstQuote = firstQuote
+                }
+            } else {
+                displayedFirstQuote = firstQuote
+            }
+        }
         .onAppear { self.enqueue() }
         .onDisappear { self.dequeue() }
     }
 
     @ViewBuilder
     private func repostedPost(embedded: Bool) -> some View {
-        if let firstQuote = noteRowAttributes.firstQuote {
+        if let firstQuote = displayedFirstQuote {
             if firstQuote.blocked || firstQuote.muted || (!notMutedWords(in: firstQuote.plainText, mutedWords: mutedWords) && !revealMutedFirstQuoteByWords) {
                 HStack {
                     if firstQuote.blocked {

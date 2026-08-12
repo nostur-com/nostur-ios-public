@@ -83,6 +83,7 @@ struct MediaPlaceholder: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.feedImageRequestTargetSize) private var feedImageRequestTargetSize
     @Environment(\.cropImageRequestToTarget) private var cropImageRequestToTarget
+    @Environment(\.feedLayoutStabilizer) private var feedLayoutStabilizer
     @StateObject private var vm = MediaViewVM()
     @Environment(\.theme) private var theme
     
@@ -179,6 +180,41 @@ struct MediaPlaceholder: View {
 //                        .background(Color.black)
 //                        .font(.footnote)
 //                }
+        }
+    }
+
+    private func updateRealDimensions(_ dimensions: CGSize) {
+        guard dimensions.width > 0, dimensions.height > 0,
+              realDimensions != dimensions else { return }
+
+        let update = {
+            realDimensions = dimensions
+        }
+
+        // Fill-mode media keeps the placeholder's fixed frame, and fullscreen media is not a
+        // self-sizing feed row. Only fit-mode discoveries can change the feed row's height.
+        guard contentMode == .fit, !fullScreen else {
+            update()
+            return
+        }
+
+        let previousAspect = realDimensions.map { $0.width / $0.height }
+            ?? galleryItem.aspect
+            ?? placeholderAspect
+            ?? 4 / 3
+        let resolvedAspect = dimensions.width / dimensions.height
+        let previousHeight = min(availableWidth / previousAspect, maxHeight)
+        let resolvedHeight = min(availableWidth / resolvedAspect, maxHeight)
+
+        guard abs(previousHeight - resolvedHeight) > 1 else {
+            update()
+            return
+        }
+
+        if let feedLayoutStabilizer {
+            feedLayoutStabilizer.performAnchored(update)
+        } else {
+            update()
         }
     }
     
@@ -345,7 +381,7 @@ struct MediaPlaceholder: View {
                     .scaledToFit()
                     .onAppear {
                         // Communicate back to set container frame
-                        realDimensions = imageInfo.realDimensions
+                        updateRealDimensions(imageInfo.realDimensions)
                     }
 //                    .debugDimensions(".image fullscreen", alignment: .top)
             }
@@ -378,7 +414,7 @@ struct MediaPlaceholder: View {
                 }
                 .onAppear {
                     // Communicate back to set container frame
-                    realDimensions = imageInfo.realDimensions
+                    updateRealDimensions(imageInfo.realDimensions)
                 }
             }
             else {
@@ -411,7 +447,7 @@ struct MediaPlaceholder: View {
                 }
                 .onAppear {
                     // Communicate back to set container frame
-                    realDimensions = imageInfo.realDimensions
+                    updateRealDimensions(imageInfo.realDimensions)
                 }
             }
         case .gif(let gifInfo):
@@ -437,7 +473,7 @@ struct MediaPlaceholder: View {
                 }
                 .onAppear {
                     // Communicate back to set container frame
-                    realDimensions = gifInfo.realDimensions
+                    updateRealDimensions(gifInfo.realDimensions)
                 }
                 .task(id: galleryItem.url.absoluteString) {
                     try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
@@ -505,7 +541,7 @@ struct MediaPlaceholder: View {
                 }
                 .onAppear {
                     // Communicate back to set container frame
-                    realDimensions = gifInfo.realDimensions
+                    updateRealDimensions(gifInfo.realDimensions)
                 }
             }
             else {
@@ -568,7 +604,7 @@ struct MediaPlaceholder: View {
                 }
                 .onAppear {
                     // Communicate back to set container frame
-                    realDimensions = gifInfo.realDimensions
+                    updateRealDimensions(gifInfo.realDimensions)
                 }
             }
         case .imageTooLarge:
