@@ -145,6 +145,7 @@ private struct BadgeSelectionView: View {
     @StateObject private var model: BadgeSelectionModel
     @State private var errorMessage: String?
     @State private var selectedWearers: BadgeWearerSelection?
+    @State private var finishedDefinitionFetches = Set<String>()
 
     init(pubkey: String, awards: [Event], profile: Event?) {
         self.pubkey = pubkey
@@ -262,6 +263,10 @@ private struct BadgeSelectionView: View {
         String(localized: "On your profile") + " · \(model.selected.count)"
     }
 
+    private var selectedDefinitionFetchKey: String {
+        model.selected.map(\.id).sorted().joined(separator: ",")
+    }
+
     private var wearerPubkeysByAddress: [BadgeAddress: [String]] {
         let pubkeysByAddress = badgeWearersByAddress(
             addresses: Set(addresses),
@@ -282,6 +287,10 @@ private struct BadgeSelectionView: View {
         let resolvedCandidates = candidates
         let candidateByReference = Dictionary(
             uniqueKeysWithValues: resolvedCandidates.map { ($0.reference.id, $0) }
+        )
+        let awardById = Dictionary(
+            awards.map { ($0.id, $0) },
+            uniquingKeysWith: { first, _ in first }
         )
         let selectedAddresses = Set(model.selected.map(\.address))
         let availableCandidates = resolvedCandidates.filter {
@@ -310,8 +319,15 @@ private struct BadgeSelectionView: View {
                             .listRowBackground(theme.background)
                             .listRowSeparator(.hidden)
                         } else {
-                            Label(reference.address.identifier, systemImage: "seal")
-                                .foregroundStyle(.secondary)
+                            BadgeUnresolvedRow(
+                                reference: reference,
+                                receivedAt: awardById[reference.awardEventId]?.created_at,
+                                isLoading: !finishedDefinitionFetches.contains(reference.address.value),
+                                onRetry: { retryUnresolved(reference) },
+                                onRemove: { model.remove(reference) }
+                            )
+                            .listRowBackground(theme.background)
+                            .listRowSeparator(.hidden)
                         }
                     }
                     .onDelete(perform: model.remove)
@@ -369,6 +385,18 @@ private struct BadgeSelectionView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: model.hasChanges)
+        .task(id: selectedDefinitionFetchKey) {
+            let resolvedAddresses = Set(resolvedCandidates.map(\.reference.address))
+            let pending = model.selected.filter {
+                !resolvedAddresses.contains($0.address)
+                    && !finishedDefinitionFetches.contains($0.address.value)
+            }
+            guard !pending.isEmpty else { return }
+            await BadgeRelayLoader.fetchDependencies(for: pending, accountPubkey: pubkey)
+            var completed = finishedDefinitionFetches
+            completed.formUnion(pending.map(\.address.value))
+            finishedDefinitionFetches = completed
+        }
         .task(id: dependencyKey, priority: .background) {
             do {
                 try await Task.sleep(nanoseconds: 350_000_000)
@@ -382,6 +410,9 @@ private struct BadgeSelectionView: View {
             async let dependencies: Void = BadgeRelayLoader.fetchDependencies(for: references, accountPubkey: pubkey)
             async let wearers: Void = BadgeRelayLoader.fetchWearers(for: Set(addresses), accountPubkey: pubkey)
             _ = await (dependencies, wearers)
+            var completed = finishedDefinitionFetches
+            completed.formUnion(model.selected.map(\.address.value))
+            finishedDefinitionFetches = completed
         }
         .task(id: wearerDependencyKey, priority: .background) {
             do {
@@ -434,6 +465,117 @@ private struct BadgeSelectionView: View {
             badgeName: nBadge.badgeName?.value ?? nBadge.badgeCode?.value ?? String(localized: "Unnamed badge"),
             pubkeys: pubkeys
         )
+    }
+
+    private func retryUnresolved(_ reference: BadgeReference) {
+        var completed = finishedDefinitionFetches
+        completed.remove(reference.address.value)
+        finishedDefinitionFetches = completed
+        Task { @MainActor in
+            await BadgeRelayLoader.fetchDependencies(for: [reference], accountPubkey: pubkey)
+            var done = finishedDefinitionFetches
+            done.insert(reference.address.value)
+            finishedDefinitionFetches = done
+        }
+    }
+}
+
+private struct BadgeUnresolvedRow: View {
+    @Environment(\.theme) private var theme
+
+    let reference: BadgeReference
+    let receivedAt: Int64?
+    let isLoading: Bool
+    let onRetry: () -> Void
+    let onRemove: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Group {
+                if isLoading {
+                    unresolvedSummary
+                } else {
+                    Button(action: onRetry) {
+                        unresolvedSummary
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(String(localized: "Retry loading badge"))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button(action: onRemove) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(theme.accent)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.borderless)
+            .accessibilityLabel("Remove from profile")
+        }
+        .padding(.vertical, 6)
+        .contentShape(Rectangle())
+        .task(id: reference.address.issuerPubkey) {
+            QueuedFetcher.shared.enqueue(pTag: reference.address.issuerPubkey)
+        }
+    }
+
+    private var unresolvedSummary: some View {
+        HStack(alignment: .top, spacing: 12) {
+            placeholderIcon
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(isLoading ? "Loading badge…" : "Badge unavailable")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(isLoading ? .primary : .secondary)
+                    .lineLimit(2)
+
+                if !isLoading {
+                    Text(reference.address.identifier)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                HStack(spacing: 4) {
+                    Text("Received from")
+                    ObservedPFP(
+                        pubkey: reference.address.issuerPubkey,
+                        size: 18,
+                        forceFlat: true
+                    )
+                    ContactName(pubkey: reference.address.issuerPubkey)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                    if let receivedAt {
+                        Text(verbatim: "·")
+                        BadgeRelativeTime(receivedAt)
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var placeholderIcon: some View {
+        ZStack {
+            if isLoading {
+                ProgressView()
+            } else {
+                Image(systemName: "seal")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: 56, height: 56)
+        .accessibilityHidden(true)
     }
 }
 
