@@ -108,7 +108,7 @@ class NXSpeedTest: ObservableObject {
         }
     }
     
-    let STATES_CAN_TIMEOUT: Set<LoadingBar.ViewState> = Set([.connecting, .starting, .fetching])
+    let STATES_CAN_TIMEOUT: Set<LoadingBar.ViewState> = Set([.connecting, .starting, .fetching, .earlyLoad, .secondFetching])
     
     public func otherTimeout() {
         Task { @MainActor in
@@ -121,6 +121,12 @@ class NXSpeedTest: ObservableObject {
                 }
             }
         }
+    }
+
+    @MainActor
+    public func finishedWithoutResults() {
+        timeoutTask?.cancel()
+        loadingBarViewState = .timeout
     }
     
     private func setTimerForTimeout(runID: UUID) {

@@ -148,6 +148,12 @@ public class ConnectionPool: ObservableObject {
     public var connectedCount: Int {
         connections.count(where: { $0.value.isConnected })
     }
+
+    public func configuredReadRelayCount() -> Int {
+        queue.sync {
+            connections.values.count(where: { $0.relayData.read })
+        }
+    }
     
     public var ephemeralConnectedCount: Int {
         ephemeralConnections.count(where: { $0.value.isConnected })

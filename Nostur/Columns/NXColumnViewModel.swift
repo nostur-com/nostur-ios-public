@@ -980,7 +980,7 @@ class NXColumnViewModel: ObservableObject {
                 self.loadTemporaryMediaSource(.selectedRelays, from: config)
                 return
             }
-            self.speedTest?.otherTimeout()
+            self.speedTest?.finishedWithoutResults()
             self.viewState = .timeout
         }
     }
@@ -1561,9 +1561,12 @@ class NXColumnViewModel: ObservableObject {
         case .yak:
             return [Filters(kinds: [1222, 1244], since: since, until: until, limit: limit)]
         case .picture:
+            // Nostr limits apply per filter. Split the requested maximum across
+            // the two ways a picture post can be represented.
+            let perFilterLimit = limit.map { max(1, ($0 + 1) / 2) }
             return [
-                Filters(kinds: [20], since: since, until: until, limit: limit),
-                Filters(kinds: [1], tagFilter: TagFilter(tag: "k", values: ["20"]), since: since, until: until, limit: limit)
+                Filters(kinds: [20], since: since, until: until, limit: perFilterLimit),
+                Filters(kinds: [1], tagFilter: TagFilter(tag: "k", values: ["20"]), since: since, until: until, limit: perFilterLimit)
             ]
         default:
             return []
@@ -1572,13 +1575,29 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     private func sendBroadMediaReq(_ config: NXColumnConfig, subscriptionId: String, since: Int? = nil, until: Int? = nil, limit: Int? = nil, isActiveSubscription: Bool = false) {
-        let relays = config.mediaFeedSourceSnapshot == .selectedRelays ? config.mediaRelaysSnapshot : []
-        guard config.mediaFeedSourceSnapshot != .selectedRelays || !relays.isEmpty else { return }
-        let filters = broadMediaFilters(config, since: since, until: until, limit: limit)
-        guard !filters.isEmpty,
-              let message = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters).json()
-        else { return }
-        req(message, activeSubscriptionId: isActiveSubscription ? subscriptionId : nil, relays: relays)
+        let source = config.mediaFeedSourceSnapshot ?? .follows
+        let relays = source == .selectedRelays ? config.mediaRelaysSnapshot : []
+        guard source != .selectedRelays || !relays.isEmpty else { return }
+
+        // WoT membership is applied locally after import. Request a bounded sample
+        // from our read relays instead of sending a huge author list to outbox relays.
+        let maximumResponse = source == .webOfTrust ? 200 : 50
+        let requestedResponseLimit = min(limit ?? maximumResponse, maximumResponse)
+        let responseLimit = if source == .webOfTrust {
+            // A Nostr filter limit is per relay. Divide the network budget over
+            // our read relays so one refresh imports roughly 200 events in total.
+            Int(ceil(Double(requestedResponseLimit) / Double(max(1, ConnectionPool.shared.configuredReadRelayCount()))))
+        }
+        else {
+            requestedResponseLimit
+        }
+        let filters = broadMediaFilters(config, since: since, until: until, limit: responseLimit)
+        guard !filters.isEmpty else { return }
+
+        let clientMessage = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters)
+        if let message = clientMessage.json() {
+            req(message, activeSubscriptionId: isActiveSubscription ? subscriptionId : nil, relays: relays)
+        }
     }
 
     @MainActor
