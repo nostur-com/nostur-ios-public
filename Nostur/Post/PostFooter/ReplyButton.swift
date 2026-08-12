@@ -30,9 +30,8 @@ struct ReplyButton: View {
                 .overlay(alignment: .topLeading) {
                     if !isDetail && !footerAttributes.replyPFPs.isEmpty { // TODO: Mabye this shouldn't be here but in PostLayout() or Kind1()
                         ZStack(alignment:.leading) {
-                            ForEach(footerAttributes.replyPFPs.indices, id:\.self) { index in
-                                MiniPFP(pictureUrl: footerAttributes.replyPFPs[index])
-                                    .id(index)
+                            ForEach(Array(footerAttributes.replyPFPs.enumerated()), id: \.element) { index, pictureUrl in
+                                MiniPFP(pictureUrl: pictureUrl)
                                     .zIndex(-Double(index))
                                     .offset(x:Double(0 + (12*index)))
                             }

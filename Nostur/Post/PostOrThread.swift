@@ -46,7 +46,6 @@ struct PostOrThread: View { //, Equatable {
                 Box(nrPost: nrPost) {
                     PostRowDeletable(nrPost: nrPost, missingReplyTo: hasMissingReplyTo(nrPost), connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
                 }
-                .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                 .background {
                     if nrPost.kind == 30023 {
                         theme.secondaryBackground
@@ -70,7 +69,6 @@ struct PostOrThread: View { //, Equatable {
                                          missingReplyTo: nrParent.replyToPostOrZapId != rootId && nrParent.replyToPostOrZapId != nil && nrParent.id == visibleParentPosts.first?.id,
                                          connect: nrParent.isReplyToPostOrZap || visibleParentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, theme: theme)
                     }
-                    .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                     //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
 //                    .withoutAnimation()
                     .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
@@ -79,7 +77,6 @@ struct PostOrThread: View { //, Equatable {
                 Box(nrPost: nrPost) {
                     PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != rootId && nrPost.replyToPostOrZapId != nil && visibleParentPosts.isEmpty, connect: nrPost.replyToPostOrZapId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
                 }
-                .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                 .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
             }
             .background { // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)

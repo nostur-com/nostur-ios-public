@@ -10,7 +10,7 @@ import SwiftUI
 struct Ago: View, Equatable {
     
     static func == (lhs: Ago, rhs: Ago) -> Bool {
-        lhs.agoText == rhs.agoText
+        lhs.date == rhs.date
     }
     
     private let date: Date
@@ -29,15 +29,23 @@ struct Ago: View, Equatable {
     var body: some View {
         Text(verbatim: agoText)
             .onAppear {
-                if date.agoString != agoText {
-                    agoText = date.agoString
-                }
+                updateAgoText()
+            }
+            .onChange(of: date) { _ in
+                // SwiftUI can reuse this view for different row content. Keep the displayed
+                // value tied to its source date instead of retaining the previous row's State.
+                updateAgoText()
             }
             .onReceive(AppState.shared.agoShouldUpdateSubject) { _ in
-                if date.agoString != agoText {
-                    agoText = date.agoString
-                }
+                updateAgoText()
             }
+    }
+
+    private func updateAgoText() {
+        let updatedAgoText = date.agoString
+        if updatedAgoText != agoText {
+            agoText = updatedAgoText
+        }
     }
 }
 
