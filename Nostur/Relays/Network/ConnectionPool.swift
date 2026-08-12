@@ -50,6 +50,11 @@ private extension RelayConnection {
 }
 
 public class ConnectionPool: ObservableObject {
+    public struct RequestTargetSnapshot {
+        public let relayIds: Set<CanonicalRelayUrl>
+        public let allConnected: Bool
+    }
+
     // not in wot stats
     public var notInWoTsince = Date()
     public var notInWoTcount = 0 // only touch in bgQueue / bg
@@ -152,6 +157,21 @@ public class ConnectionPool: ObservableObject {
     public func configuredReadRelayCount() -> Int {
         queue.sync {
             connections.values.count(where: { $0.relayData.read })
+        }
+    }
+
+    public func requestTargetSnapshot(relays: Set<RelayData> = []) -> RequestTargetSnapshot {
+        queue.sync {
+            let limitedIds = Set(relays.map(\.id))
+            let targets = connections.values.filter { connection in
+                guard !isDisabledRelay(connection.url) else { return false }
+                guard !connection.isNWC, !connection.isNC else { return false }
+                return limitedIds.isEmpty ? connection.relayData.read : limitedIds.contains(connection.url)
+            }
+            return RequestTargetSnapshot(
+                relayIds: Set(targets.map(\.url)),
+                allConnected: !targets.isEmpty && targets.allSatisfy(\.isSocketConnected)
+            )
         }
     }
     

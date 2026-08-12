@@ -31,6 +31,7 @@ struct NXColumnView<HeaderContent: View>: View {
     @State private var feedSettingsFeed: CloudFeed?
     @State private var didLoad = false
     @State private var relayInfoHiddenForFeed = false
+    @State private var showDiscoverMoreInfo = false
 
     private var relayInfoDismissKey: String? {
         guard case .relays(let feed) = config.columnType,
@@ -84,6 +85,10 @@ struct NXColumnView<HeaderContent: View>: View {
             return nil
         }
 
+        if viewModel.mediaSearchTimedOut {
+            return String(localized: "Connection timed out")
+        }
+
         switch viewModel.activeMediaFeedSource ?? .follows {
         case .follows:
             return String(localized: "Nothing new from your follows")
@@ -91,6 +96,17 @@ struct NXColumnView<HeaderContent: View>: View {
             return String(localized: "Nothing found in your network")
         case .selectedRelays:
             return String(localized: "Nothing found on the selected relays")
+        }
+    }
+
+    private var discoverMoreInfoMessage: String {
+        switch viewModel.activeMediaFeedSource ?? .follows {
+        case .follows:
+            return String(localized: "Discover more temporarily searches your Web of Trust. If nothing is found there, it also searches the discovery relays configured in Feed Settings. Your saved feed setting does not change.")
+        case .webOfTrust:
+            return String(localized: "Discover more temporarily searches the discovery relays configured in Feed Settings. Your saved feed setting does not change.")
+        case .selectedRelays:
+            return String(localized: "Discover more temporarily searches additional sources without changing your saved feed setting.")
         }
     }
 
@@ -169,10 +185,21 @@ struct NXColumnView<HeaderContent: View>: View {
                         Text(mediaEmptyMessage ?? String(localized: "Nothing here :(") )
                             .multilineTextAlignment(.center)
                         if mediaEmptyMessage != nil && viewModel.canExploreMore {
-                            Button("Explore more", systemImage: "sparkles") {
-                                viewModel.exploreMore(config)
+                            HStack(spacing: 8) {
+                                Button("Discover more", systemImage: "sparkles") {
+                                    viewModel.exploreMore(config)
+                                }
+                                .buttonStyle(.borderedProminent)
+
+                                Button {
+                                    showDiscoverMoreInfo = true
+                                } label: {
+                                    Image(systemName: "info.circle")
+                                }
+                                .buttonStyle(.plain)
+                                .foregroundColor(theme.accent)
+                                .accessibilityLabel("About Discover more")
                             }
-                            .buttonStyle(.borderedProminent)
                         }
                         HStack(spacing: 20) {
                             Button("Retry", systemImage: "arrow.clockwise") {
@@ -187,6 +214,15 @@ struct NXColumnView<HeaderContent: View>: View {
                         .foregroundColor(theme.accent)
                     }
                     .centered()
+                }
+                .overlay(alignment: .bottom) {
+                    if mediaEmptyMessage != nil && viewModel.mediaUpdatesAvailable {
+                        Button("Show new posts", systemImage: "arrow.up") {
+                            viewModel.showAvailableMediaUpdates(config)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .padding(.bottom, 24)
+                    }
                 }
             case .error(let errorMessage):
                 ZStack(alignment: .center) {
@@ -211,6 +247,11 @@ struct NXColumnView<HeaderContent: View>: View {
 //            LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)
 //                .opacity(showLiveEventsBanner ? 1.0 : 0)
 //                .frame(height: showLiveEventsBanner ? 50 : 0)
+        }
+        .alert("Discover more", isPresented: $showDiscoverMoreInfo) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(discoverMoreInfoMessage)
         }
         
 //        .overlay(alignment: .top) {
