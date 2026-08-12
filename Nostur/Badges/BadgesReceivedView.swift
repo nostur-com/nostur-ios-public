@@ -463,16 +463,12 @@ struct BadgeReceivedRow: View {
         HStack(alignment: .top, spacing: 12) {
             Group {
                 if opensDetail {
-                    badgeSummary
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        navigateTo(Badge(badge), context: containerID)
+                    NBNavigationLink(value: Badge(badge)) {
+                        badgeSummary
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityAction {
-                        navigateTo(Badge(badge), context: containerID)
-                    }
-                    .accessibilityHint("View badge details")
+                    .buttonStyle(.plain)
                 } else {
                     badgeSummary
                 }
