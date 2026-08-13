@@ -34,11 +34,15 @@ struct LiveEventsBanner: View {
                     }
                     .onAppear {
                         guard !showLiveEventsBanner else { return }
-                        showLiveEventsBanner = true
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            showLiveEventsBanner = true
+                        }
                     }
                     .onDisappear {
                         guard showLiveEventsBanner else { return }
-                        showLiveEventsBanner = false
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            showLiveEventsBanner = false
+                        }
                     }
                 }
                 else {
@@ -110,7 +114,9 @@ struct LiveEventsBanner: View {
     }
     
     private func remove(_ aTag: String) {
-        liveEventsModel.dismissedLiveEvents.insert(aTag)
+        withAnimation(.easeInOut(duration: 0.25)) {
+            _ = liveEventsModel.dismissedLiveEvents.insert(aTag)
+        }
     }
 }
 
@@ -174,6 +180,4 @@ struct LiveEventsBanner: View {
         }
     }
 }
-
-
 
