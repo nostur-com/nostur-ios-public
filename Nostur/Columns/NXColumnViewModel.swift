@@ -77,6 +77,9 @@ class NXColumnViewModel: ObservableObject {
         // Don't run if onPostAppearOnce is happening because of scrollToIndex (hidden scroll to keep scroll position)
         // Only run if it is actual user based scroll
         guard !vmInner.isPerformingScroll else { return false }
+        // Animated unread navigation can bring several lazy rows through the appearance threshold.
+        // The selected indexed target is marked explicitly when the scroll finishes.
+        guard !vmInner.isPerformingScrollToFirstUnread else { return false }
     #if DEBUG
         L.og.debug("☘️☘️ \(self.config?.name ?? "?") NXPostsFeed.onPostAppearOnce() -> updateIsAtTop() BEFORE: \(self.vmInner.isAtTop) -[LOG]-")
     #endif
@@ -1643,6 +1646,7 @@ class NXColumnViewModel: ObservableObject {
                                 
                                 // Store the target index for later use
                                 vmInner.pendingScrollToIndex = restoreToIndex
+                                vmInner.pendingScrollToPostID = scrollToId
                                 
                                 // Update the view state without animation
                                 withTransaction(Transaction(animation: nil)) {
@@ -1664,6 +1668,8 @@ class NXColumnViewModel: ObservableObject {
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                         self.vmInner.isPreparingForScrollRestore = false
                                         self.vmInner.pendingScrollToIndex = nil
+                                        // Cleared by NXPostsFeed after it resolves the latest index
+                                        // and performs the delayed restoration scroll.
                                     }
                                 }
                             }
@@ -3543,6 +3549,7 @@ extension NXColumnViewModel {
                             
                             // Store the target index for later use
                             vmInner.pendingScrollToIndex = restoreToIndex
+                            vmInner.pendingScrollToPostID = previousFirstPostId
                             
                             // Update the view state without animation
                             withTransaction(Transaction(animation: nil)) {
@@ -3564,12 +3571,14 @@ extension NXColumnViewModel {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                     self.vmInner.isPreparingForScrollRestore = false
                                     self.vmInner.pendingScrollToIndex = nil
+                                    // pendingScrollToPostID is cleared by NXPostsFeed after use.
                                 }
                             }
                         }
                         else {
                             self.vmInner.isPreparingForScrollRestore = false
                             self.vmInner.pendingScrollToIndex = nil
+                            self.vmInner.pendingScrollToPostID = nil
                             // No previous post to restore to, just update the view
                             viewState = .posts(addedAndExistingPostsTruncated)
                         }
@@ -3578,6 +3587,7 @@ extension NXColumnViewModel {
                 else {
                     self.vmInner.isPreparingForScrollRestore = false
                     self.vmInner.pendingScrollToIndex = nil
+                    self.vmInner.pendingScrollToPostID = nil
 #if DEBUG
                     L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) withAnimation { }  + not at top, to keep scroll pos -[LOG]-")
 #endif
@@ -3593,6 +3603,7 @@ extension NXColumnViewModel {
                 
                 self.vmInner.isPreparingForScrollRestore = false
                 self.vmInner.pendingScrollToIndex = nil
+                self.vmInner.pendingScrollToPostID = nil
                 
                 // No withAnimation { } at bottom or it will jump?
                 self.viewState = .posts(existingPosts + onlyNewAddedPosts)
@@ -3608,6 +3619,7 @@ extension NXColumnViewModel {
             }
             vmInner.isPreparingForScrollRestore = false
             vmInner.pendingScrollToIndex = nil
+            vmInner.pendingScrollToPostID = nil
             setPosts(uniqueAddedPosts)
         }
         

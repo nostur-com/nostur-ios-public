@@ -114,9 +114,11 @@ class NXColumnViewModelInner {
     public var isPerformingScroll: Bool = false // if set, won't update unread ids by onAppear (new posts added on top, not read yet)
     public var isPreparingForScrollRestore = false
     public var pendingScrollToIndex: Int?
+    public var pendingScrollToPostID: String?
     
     
     // Triggered by user, different from triggered by new posts coming in (.isPerformingScroll)
-    // so here onAppear is triggered and should update unread ids
+    // Rows crossed by the animation must not update unread state. The selected indexed target is
+    // marked explicitly after scrolling settles because an already-instantiated row may not appear again.
     public var isPerformingScrollToFirstUnread: Bool = false
 }

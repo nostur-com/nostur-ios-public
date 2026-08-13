@@ -35,20 +35,12 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         isProgrammaticScrollInProgress
     }
 
-    init(holdsInitialLayout: Bool = false) {
-        isProgrammaticScrollInProgress = holdsInitialLayout
-    }
-
     func attach(to scrollView: UIScrollView) {
         self.scrollView = scrollView
     }
 
     func updateItemIDs(_ itemIDs: [String]) {
         self.itemIDs = itemIDs
-    }
-
-    func index(for itemID: String) -> Int? {
-        itemIDs.firstIndex(of: itemID)
     }
 
     func beginProgrammaticScroll() {
@@ -73,6 +65,18 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             return
         }
 
+        let updates = pendingUpdates
+        pendingUpdates.removeAll()
+
+        // Most unread jumps do not have a pending row-height change. In that common case a
+        // snapshot only causes a visible one-frame flash, so settle the final position directly.
+        guard !updates.isEmpty else {
+            scrollView.layoutIfNeeded()
+            finalPosition()
+            scrollView.layoutIfNeeded()
+            return
+        }
+
         // SwiftUI reconciles the resolved repost and UIKit corrects the self-sized row on
         // separate layout passes. Cover those passes with the already-rendered viewport so the
         // user never sees the temporary wrong offset between resize and final positioning.
@@ -83,8 +87,6 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             superview.addSubview(snapshot)
         }
 
-        let updates = pendingUpdates
-        pendingUpdates.removeAll()
         updates.forEach { $0() }
 
         await Task.yield()
@@ -98,10 +100,6 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     func performAnchored(_ update: @escaping () -> Void) {
         guard let scrollView else {
-            if isProgrammaticScrollInProgress {
-                pendingUpdates.append(update)
-                return
-            }
             update()
             return
         }
@@ -210,17 +208,12 @@ struct NXPostsFeed: View {
     private let vmInner: NXColumnViewModelInner
 
     @State private var updateIsAtTopSubscription: AnyCancellable?
-    @StateObject private var layoutStabilizer: NXFeedLayoutStabilizer
+    @StateObject private var layoutStabilizer = NXFeedLayoutStabilizer()
     
     init(vm: NXColumnViewModel, posts: [NRPost]) {
         self.vm = vm
         self.posts = posts
         self.vmInner = vm.vmInner
-        _layoutStabilizer = StateObject(
-            wrappedValue: NXFeedLayoutStabilizer(
-                holdsInitialLayout: vm.vmInner.isPreparingForScrollRestore
-            )
-        )
     }
 
     private var relayFeedRelays: Set<RelayData> {
@@ -298,14 +291,17 @@ struct NXPostsFeed: View {
             
             // Special handling for the anti-flicker approach
             if vm.vmInner.isPreparingForScrollRestore, let pendingIndex = vm.vmInner.pendingScrollToIndex {
+                let restoreIndex = vm.vmInner.pendingScrollToPostID
+                    .flatMap { postID in posts.firstIndex(where: { $0.id == postID }) }
+                    ?? pendingIndex
                 // Immediately scroll to the target index without animation
                 if let rows = view.dataSource?.tableView(view, numberOfRowsInSection: 0),
-                   rows > pendingIndex {
+                   rows > restoreIndex {
                     UIView.setAnimationsEnabled(false)
-                    view.scrollToRow(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
+                    view.scrollToRow(at: .init(row: restoreIndex, section: 0), at: .top, animated: false)
                     UIView.setAnimationsEnabled(true)
                     
-                    if pendingIndex > 0 {
+                    if restoreIndex > 0 {
                         vm.vmInner.updateIsAtTopSubject.send()
                     }
                 }
@@ -329,14 +325,17 @@ struct NXPostsFeed: View {
             
             // Special handling for the anti-flicker approach
             if vm.vmInner.isPreparingForScrollRestore, let pendingIndex = vm.vmInner.pendingScrollToIndex {
+                let restoreIndex = vm.vmInner.pendingScrollToPostID
+                    .flatMap { postID in posts.firstIndex(where: { $0.id == postID }) }
+                    ?? pendingIndex
                 // Immediately scroll to the target index without animation
                 if let rows = view.dataSource?.collectionView(view, numberOfItemsInSection: 0),
-                   rows > pendingIndex {
+                   rows > restoreIndex {
                     UIView.setAnimationsEnabled(false)
-                    view.scrollToItem(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
+                    view.scrollToItem(at: .init(row: restoreIndex, section: 0), at: .top, animated: false)
                     UIView.setAnimationsEnabled(true)
                     
-                    if pendingIndex > 0 {
+                    if restoreIndex > 0 {
                         vm.vmInner.updateIsAtTopSubject.send()
                     }
                 }
@@ -419,6 +418,7 @@ struct NXPostsFeed: View {
     }
     
     private func scrollToFirstUnread() {
+        guard !vmInner.isPerformingScrollToFirstUnread else { return }
         if vmInner.unreadCount == 0 {
             scrollToTop()
             return
@@ -462,17 +462,23 @@ struct NXPostsFeed: View {
         // While we scroll to previous index here, we are triggering onPostAppearOnce(), which updates markAsRead
         // But it wasn't a real onPostAppearOnce, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
         vmInner.isPerformingScroll = true
-        let targetPostID = posts[safe: scrollToIndex]?.id
-        layoutStabilizer.beginProgrammaticScroll()
         
         Task { @MainActor in
             let proxy = ScrollOffset.proxy(.top, id: vm.columnVMid)
+            let restorePostID = vmInner.pendingScrollToPostID
+            let resolvedScrollToIndex: Int = if let restorePostID,
+                                                case .posts(let currentPosts) = vm.viewState,
+                                                let currentIndex = currentPosts.firstIndex(where: { $0.id == restorePostID }) {
+                currentIndex
+            } else {
+                scrollToIndex
+            }
             
             // Only proceed if we're in a valid scroll state
             guard proxy.offset >= 0 else {
                 vmInner.isPerformingScroll = false
                 vmInner.clearScrollRequest()
-                layoutStabilizer.cancelProgrammaticScroll()
+                vmInner.pendingScrollToPostID = nil
                 return
             }
             
@@ -481,45 +487,26 @@ struct NXPostsFeed: View {
                 if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
                     if let vmCollectionView = vm.collectionView,
                        let rows = vmCollectionView.dataSource?.collectionView(vmCollectionView, numberOfItemsInSection: 0),
-                       rows > scrollToIndex {
-                        vmCollectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
-                        vmInner.isAtTop = scrollToIndex == 0
+                       rows > resolvedScrollToIndex {
+                        vmCollectionView.scrollToItem(at: .init(row: resolvedScrollToIndex, section: 0), at: .top, animated: false)
+                        vmInner.isAtTop = resolvedScrollToIndex == 0
                     }
                 } else { // iOS 15 UITableView
                     if let vmTableView = vm.tableView,
                        let rows = vmTableView.dataSource?.tableView(vmTableView, numberOfRowsInSection: 0),
-                       rows > scrollToIndex {
-                        vmTableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
-                        vmInner.isAtTop = scrollToIndex == 0
+                       rows > resolvedScrollToIndex {
+                        vmTableView.scrollToRow(at: .init(row: resolvedScrollToIndex, section: 0), at: .top, animated: false)
+                        vmInner.isAtTop = resolvedScrollToIndex == 0
                     }
                 }
             }
             
             vmInner.clearScrollRequest()
+            vmInner.pendingScrollToPostID = nil
 
-            // Keep initial media/repost sizing changes held until the restored row has appeared.
-            // Then apply them behind the snapshot and resolve the target by stable post ID,
-            // because foreground refresh may have inserted unread rows above it meanwhile.
-            try? await Task.sleep(nanoseconds: 150_000_000)
-            await layoutStabilizer.finishProgrammaticScroll {
-                guard let targetPostID,
-                      let currentIndex = layoutStabilizer.index(for: targetPostID) else { return }
-                if let collectionView = vm.collectionView,
-                   collectionView.numberOfItems(inSection: 0) > currentIndex {
-                    collectionView.scrollToItem(
-                        at: IndexPath(row: currentIndex, section: 0),
-                        at: .top,
-                        animated: false
-                    )
-                } else if let tableView = vm.tableView,
-                          tableView.numberOfRows(inSection: 0) > currentIndex {
-                    tableView.scrollToRow(
-                        at: IndexPath(row: currentIndex, section: 0),
-                        at: .top,
-                        animated: false
-                    )
-                }
-            }
+            // This is feed restoration, not unread navigation. Keep the established lightweight
+            // path so subsequent new-post insertion can preserve position with withAnimation.
+            try? await Task.sleep(nanoseconds: 100_000_000)
             vmInner.isPerformingScroll = false
             vmInner.updateIsAtTopSubject.send()
         }
@@ -527,6 +514,7 @@ struct NXPostsFeed: View {
     
     private func scrollToIndex(_ scrollToIndex: Int) {
         vmInner.isPerformingScrollToFirstUnread = true
+        let targetPost = posts[safe: scrollToIndex]
 
         if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
             if let vmCollectionView = vm.collectionView,
@@ -537,7 +525,7 @@ struct NXPostsFeed: View {
                 vmCollectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0), at: .top, animated: true)
                 vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
                 
-                finishUnreadScroll(to: scrollToIndex)
+                finishUnreadScroll(to: scrollToIndex, targetPost: targetPost)
             } else {
                 vmInner.isPerformingScrollToFirstUnread = false
                 layoutStabilizer.cancelProgrammaticScroll()
@@ -551,7 +539,7 @@ struct NXPostsFeed: View {
                 layoutStabilizer.beginProgrammaticScroll()
                 vmTableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: true)
                 vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
-                finishUnreadScroll(to: scrollToIndex)
+                finishUnreadScroll(to: scrollToIndex, targetPost: targetPost)
             } else {
                 vmInner.isPerformingScrollToFirstUnread = false
                 layoutStabilizer.cancelProgrammaticScroll()
@@ -559,7 +547,7 @@ struct NXPostsFeed: View {
         }
     }
 
-    private func finishUnreadScroll(to index: Int) {
+    private func finishUnreadScroll(to index: Int, targetPost: NRPost?) {
         Task { @MainActor in
             // Animated scroll duration varies with distance. Wait for UIKit to actually finish,
             // then correct once after any self-sizing rows encountered along the way have laid out.
@@ -595,6 +583,12 @@ struct NXPostsFeed: View {
             }
             if layoutStabilizer.isProgrammaticScrollPending {
                 await layoutStabilizer.finishProgrammaticScroll { }
+            }
+            if let targetPost {
+                // Do not depend on onAppear here: List may reuse an already-visible row and never
+                // fire it again. Consume exactly the post selected by the unread index at tap time.
+                performIDCollectionUpdates(for: targetPost, vm: vm)
+                performUnreadMarkingUpdates(for: targetPost, vm: vm)
             }
             vmInner.isPerformingScrollToFirstUnread = false
             vmInner.updateIsAtTopSubject.send()
