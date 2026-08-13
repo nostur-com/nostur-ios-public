@@ -26,6 +26,7 @@ extension EnvironmentValues {
 @MainActor
 final class NXFeedLayoutStabilizer: ObservableObject {
     private weak var scrollView: UIScrollView?
+    private var itemIDs: [String] = []
     private var pendingUpdates: [() -> Void] = []
     private var flushTask: Task<Void, Never>?
     private var isProgrammaticScrollInProgress = false
@@ -34,8 +35,20 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         isProgrammaticScrollInProgress
     }
 
+    init(holdsInitialLayout: Bool = false) {
+        isProgrammaticScrollInProgress = holdsInitialLayout
+    }
+
     func attach(to scrollView: UIScrollView) {
         self.scrollView = scrollView
+    }
+
+    func updateItemIDs(_ itemIDs: [String]) {
+        self.itemIDs = itemIDs
+    }
+
+    func index(for itemID: String) -> Int? {
+        itemIDs.firstIndex(of: itemID)
     }
 
     func beginProgrammaticScroll() {
@@ -85,6 +98,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     func performAnchored(_ update: @escaping () -> Void) {
         guard let scrollView else {
+            if isProgrammaticScrollInProgress {
+                pendingUpdates.append(update)
+                return
+            }
             update()
             return
         }
@@ -132,7 +149,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             guard let self, let scrollView, !scrollView.isDragging, !scrollView.isDecelerating else { return }
             scrollView.layoutIfNeeded()
             guard let anchor,
-                  let newMinY = self.itemMinY(at: anchor.indexPath, in: scrollView) else { return }
+                  let newIndex = self.itemIDs.firstIndex(of: anchor.id),
+                  let newMinY = self.itemMinY(
+                    at: IndexPath(row: newIndex, section: 0),
+                    in: scrollView
+                  ) else { return }
             let newViewportY = newMinY - scrollView.contentOffset.y
             let correction = newViewportY - anchor.viewportY
             guard abs(correction) > 0.5 else { return }
@@ -142,7 +163,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         }
     }
 
-    private func visibleAnchor(in scrollView: UIScrollView) -> (indexPath: IndexPath, viewportY: CGFloat)? {
+    private func visibleAnchor(in scrollView: UIScrollView) -> (id: String, viewportY: CGFloat)? {
         let indexPaths: [IndexPath]
         if let collectionView = scrollView as? UICollectionView {
             indexPaths = collectionView.indexPathsForVisibleItems
@@ -161,8 +182,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             .filter { $0.1 >= top - 0.5 }
             .min { $0.1 < $1.1 }
             ?? candidates.min { abs($0.1 - top) < abs($1.1 - top) }
-        guard let anchor else { return nil }
-        return (anchor.0, anchor.1 - scrollView.contentOffset.y)
+        guard let anchor, let id = itemIDs[safe: anchor.0.row] else { return nil }
+        return (id, anchor.1 - scrollView.contentOffset.y)
     }
 
     private func itemMinY(at indexPath: IndexPath, in scrollView: UIScrollView) -> CGFloat? {
@@ -189,12 +210,17 @@ struct NXPostsFeed: View {
     private let vmInner: NXColumnViewModelInner
 
     @State private var updateIsAtTopSubscription: AnyCancellable?
-    @StateObject private var layoutStabilizer = NXFeedLayoutStabilizer()
+    @StateObject private var layoutStabilizer: NXFeedLayoutStabilizer
     
     init(vm: NXColumnViewModel, posts: [NRPost]) {
         self.vm = vm
         self.posts = posts
         self.vmInner = vm.vmInner
+        _layoutStabilizer = StateObject(
+            wrappedValue: NXFeedLayoutStabilizer(
+                holdsInitialLayout: vm.vmInner.isPreparingForScrollRestore
+            )
+        )
     }
 
     private var relayFeedRelays: Set<RelayData> {
@@ -318,6 +344,14 @@ struct NXPostsFeed: View {
         }
         .scrollContentBackgroundHidden()
         .background(theme.listBackground)
+        .onAppear {
+            layoutStabilizer.updateItemIDs(posts.map(\.id))
+        }
+        .onChange(of: posts.map(\.id)) { itemIDs in
+            // The stabilizer must resolve anchors by post identity after insertions/removals.
+            // Index paths are not stable when unread posts are inserted above the viewport.
+            layoutStabilizer.updateItemIDs(itemIDs)
+        }
         .onChange(of: feedImageTargetSize) { newTargetSize in
             updatePrefetchImageTargetSize(newTargetSize)
         }
@@ -428,6 +462,8 @@ struct NXPostsFeed: View {
         // While we scroll to previous index here, we are triggering onPostAppearOnce(), which updates markAsRead
         // But it wasn't a real onPostAppearOnce, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
         vmInner.isPerformingScroll = true
+        let targetPostID = posts[safe: scrollToIndex]?.id
+        layoutStabilizer.beginProgrammaticScroll()
         
         Task { @MainActor in
             let proxy = ScrollOffset.proxy(.top, id: vm.columnVMid)
@@ -436,6 +472,7 @@ struct NXPostsFeed: View {
             guard proxy.offset >= 0 else {
                 vmInner.isPerformingScroll = false
                 vmInner.clearScrollRequest()
+                layoutStabilizer.cancelProgrammaticScroll()
                 return
             }
             
@@ -459,9 +496,30 @@ struct NXPostsFeed: View {
             }
             
             vmInner.clearScrollRequest()
-            
-            // Reset flag and update state after a brief delay
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
+            // Keep initial media/repost sizing changes held until the restored row has appeared.
+            // Then apply them behind the snapshot and resolve the target by stable post ID,
+            // because foreground refresh may have inserted unread rows above it meanwhile.
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            await layoutStabilizer.finishProgrammaticScroll {
+                guard let targetPostID,
+                      let currentIndex = layoutStabilizer.index(for: targetPostID) else { return }
+                if let collectionView = vm.collectionView,
+                   collectionView.numberOfItems(inSection: 0) > currentIndex {
+                    collectionView.scrollToItem(
+                        at: IndexPath(row: currentIndex, section: 0),
+                        at: .top,
+                        animated: false
+                    )
+                } else if let tableView = vm.tableView,
+                          tableView.numberOfRows(inSection: 0) > currentIndex {
+                    tableView.scrollToRow(
+                        at: IndexPath(row: currentIndex, section: 0),
+                        at: .top,
+                        animated: false
+                    )
+                }
+            }
             vmInner.isPerformingScroll = false
             vmInner.updateIsAtTopSubject.send()
         }
