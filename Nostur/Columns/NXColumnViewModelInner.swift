@@ -115,6 +115,10 @@ class NXColumnViewModelInner {
     public var isPreparingForScrollRestore = false
     public var pendingScrollToIndex: Int?
     public var pendingScrollToPostID: String?
+
+    /// Installed by the visible feed so passive list mutations can preserve the exact post and
+    /// viewport offset the user is reading, even when rows are inserted above it.
+    public var performAnchoredFeedUpdate: (([String], @escaping () -> Void) -> Void)?
     
     
     // Triggered by user, different from triggered by new posts coming in (.isPerformingScroll)

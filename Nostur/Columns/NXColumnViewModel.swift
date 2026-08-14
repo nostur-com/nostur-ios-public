@@ -32,13 +32,33 @@ class NXColumnViewModel: ObservableObject {
             || tableView?.isDecelerating == true
     }
 
-    /// `withAnimation` is intentional here: when the feed is stationary and not at the top,
-    /// SwiftUI's animated List diff keeps the visible post anchored while rows are inserted or
-    /// removed. Do not replace it globally with an unanimated assignment or the feed can jump.
-    /// During an active drag/deceleration UIKit already owns the scroll position, and animating a
-    /// simultaneous List diff causes frame drops, so only that case uses a nil-animation transaction.
+    @MainActor
+    private var isFeedActuallyAtTop: Bool {
+        let scrollView: UIScrollView? = collectionView ?? tableView
+        guard let scrollView else { return vmInner.isAtTop }
+        return scrollView.contentOffset.y <= -scrollView.adjustedContentInset.top + 5
+    }
+
+    /// `withAnimation` is intentional for ordinary updates where SwiftUI owns positioning.
+    /// Off-top updates use the feed's explicit stable-ID/viewport-offset anchor and must remain
+    /// unanimated; combining both mechanisms can apply two offset corrections and move the row.
+    /// During an active drag/deceleration UIKit also owns the scroll position, so updates are
+    /// deferred by the anchor coordinator until scrolling finishes.
     @MainActor
     private func setPosts(_ posts: [NRPost], animated: Bool = true) {
+        // withAnimation is useful for SwiftUI's own List diffing, but it is not a complete
+        // position guarantee after a tab switch or a large batch insertion. Preserve the actual
+        // visible post and its fractional viewport offset as an explicit second line of defence.
+        if !isFeedActuallyAtTop, let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
+            performAnchoredFeedUpdate(posts.map(\.id)) { [weak self] in
+                guard let self else { return }
+                withTransaction(Transaction(animation: nil)) {
+                    self.viewState = .posts(posts)
+                }
+            }
+            return
+        }
+
         if animated && !isFeedActivelyScrolling {
             withAnimation {
                 viewState = .posts(posts)
@@ -3493,8 +3513,12 @@ extension NXColumnViewModel {
                 .uniqued(on: { $0.id }) // <--- need last line?
             
             if !insertAtEnd { // add on top
+                let isAtTop = isFeedActuallyAtTop
+                if vmInner.isAtTop != isAtTop {
+                    vmInner.isAtTop = isAtTop
+                }
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) addedPosts (TOP) \(onlyNewAddedPosts.count.description) -> OLD FIRST: \((existingPosts.first?.content ?? "").prefix(150))  -[LOG]-")
+                L.og.debug("☘️☘️ \(config.name) putOnScreen isAtTop: \(isAtTop) addedPosts (TOP) \(onlyNewAddedPosts.count.description) -> OLD FIRST: \((existingPosts.first?.content ?? "").prefix(150))  -[LOG]-")
 #endif
    
                 let addedAndExistingPosts = onlyNewAddedPosts + existingPosts
@@ -3512,7 +3536,7 @@ extension NXColumnViewModel {
                 let notTooLittle = dropCount > 5
                 
                 
-                let addedAndExistingPostsTruncated = if vmInner.isAtTop && notTooLittle && notTooMuch {
+                let addedAndExistingPostsTruncated = if isAtTop && notTooLittle && notTooMuch {
                     Array(addedAndExistingPosts.dropLast(dropCount))
                 }
                 else {
@@ -3528,7 +3552,7 @@ extension NXColumnViewModel {
                     }
                 }
                 
-                if vmInner.isAtTop {
+                if isAtTop {
                     let previousFirstPostId: String? = existingPosts.first?.id
                     
                     // TODO: Should already start prefetching missing onlyNewAddedPosts pfp/kind 0 here

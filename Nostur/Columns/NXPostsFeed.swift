@@ -30,6 +30,9 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private var pendingUpdates: [() -> Void] = []
     private var flushTask: Task<Void, Never>?
     private var isProgrammaticScrollInProgress = false
+    private var isSuspended = false
+    private var suspendedAnchor: (id: String, viewportY: CGFloat)?
+    private var anchorGeneration = 0
 
     var isProgrammaticScrollPending: Bool {
         isProgrammaticScrollInProgress
@@ -41,6 +44,41 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     func updateItemIDs(_ itemIDs: [String]) {
         self.itemIDs = itemIDs
+    }
+
+    /// Preserve reading position across tab/detail navigation. Row content can finish resolving
+    /// while its List is hidden, when UIKit's visible-cell anchoring is not reliable.
+    func suspendPositionTracking() {
+        if let scrollView {
+            suspendedAnchor = visibleAnchor(in: scrollView) ?? suspendedAnchor
+        }
+        isSuspended = true
+        anchorGeneration += 1
+        flushTask?.cancel()
+        flushTask = nil
+
+        let updates = pendingUpdates
+        pendingUpdates.removeAll()
+        updates.forEach { $0() }
+    }
+
+    func resumePositionTracking() {
+        isSuspended = false
+        guard let anchor = suspendedAnchor, let scrollView else { return }
+        suspendedAnchor = nil
+        let generation = anchorGeneration
+
+        Task { @MainActor [weak self, weak scrollView] in
+            // Let SwiftUI reconnect and self-size the retained List before resolving the saved ID.
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 20_000_000)
+            guard let self, let scrollView,
+                  !self.isSuspended,
+                  self.anchorGeneration == generation else { return }
+            scrollView.layoutIfNeeded()
+            self.restore(anchor: anchor, in: scrollView)
+            scrollView.layoutIfNeeded()
+        }
     }
 
     func beginProgrammaticScroll() {
@@ -99,6 +137,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 
     func performAnchored(_ update: @escaping () -> Void) {
+        if isSuspended {
+            update()
+            return
+        }
+
         guard let scrollView else {
             update()
             return
@@ -141,24 +184,33 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         }
 
         let anchor = visibleAnchor(in: scrollView)
+        let generation = anchorGeneration
         updates.forEach { $0() }
 
         DispatchQueue.main.async { [weak self, weak scrollView] in
-            guard let self, let scrollView, !scrollView.isDragging, !scrollView.isDecelerating else { return }
+            guard let self, let scrollView,
+                  !self.isSuspended,
+                  self.anchorGeneration == generation,
+                  !scrollView.isDragging,
+                  !scrollView.isDecelerating else { return }
             scrollView.layoutIfNeeded()
-            guard let anchor,
-                  let newIndex = self.itemIDs.firstIndex(of: anchor.id),
-                  let newMinY = self.itemMinY(
-                    at: IndexPath(row: newIndex, section: 0),
-                    in: scrollView
-                  ) else { return }
-            let newViewportY = newMinY - scrollView.contentOffset.y
-            let correction = newViewportY - anchor.viewportY
-            guard abs(correction) > 0.5 else { return }
-            var offset = scrollView.contentOffset
-            offset.y += correction
-            scrollView.setContentOffset(offset, animated: false)
+            guard let anchor else { return }
+            self.restore(anchor: anchor, in: scrollView)
         }
+    }
+
+    private func restore(anchor: (id: String, viewportY: CGFloat), in scrollView: UIScrollView) {
+        guard let newIndex = itemIDs.firstIndex(of: anchor.id),
+              let newMinY = itemMinY(
+                at: IndexPath(row: newIndex, section: 0),
+                in: scrollView
+              ) else { return }
+        let newViewportY = newMinY - scrollView.contentOffset.y
+        let correction = newViewportY - anchor.viewportY
+        guard abs(correction) > 0.5 else { return }
+        var offset = scrollView.contentOffset
+        offset.y += correction
+        scrollView.setContentOffset(offset, animated: false)
     }
 
     private func visibleAnchor(in scrollView: UIScrollView) -> (id: String, viewportY: CGFloat)? {
@@ -344,7 +396,20 @@ struct NXPostsFeed: View {
         .scrollContentBackgroundHidden()
         .background(theme.listBackground)
         .onAppear {
+            vmInner.performAnchoredFeedUpdate = { [weak layoutStabilizer] itemIDs, update in
+                guard let layoutStabilizer else {
+                    update()
+                    return
+                }
+                layoutStabilizer.performAnchored {
+                    update()
+                    // Make the post-ID lookup deterministic for the correction pass rather than
+                    // depending on SwiftUI's onChange delivery order after the List mutation.
+                    layoutStabilizer.updateItemIDs(itemIDs)
+                }
+            }
             layoutStabilizer.updateItemIDs(posts.map(\.id))
+            layoutStabilizer.resumePositionTracking()
         }
         .onChange(of: posts.map(\.id)) { itemIDs in
             // The stabilizer must resolve anchors by post identity after insertions/removals.
@@ -397,7 +462,9 @@ struct NXPostsFeed: View {
             // When opening detail, the feed would still update in background using withAnimation { },
             // but because its not visible the hack to keep scroll position doesn't work
             // so we pause() updates (and resume() in onAppear {})
+            layoutStabilizer.suspendPositionTracking()
             vm.pauseViewUpdates()
+            vmInner.performAnchoredFeedUpdate = nil
         }
     }
 
