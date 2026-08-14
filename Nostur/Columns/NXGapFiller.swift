@@ -45,16 +45,12 @@ class NXGapFiller {
         self.since = since
         self.currentGap = currentGap
         
-//        // Check connection? This actually makes the first fetch never work, need to fix the timing or enable somewhere else, disabled for now
         guard ConnectionPool.shared.anyConnected else {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap, setting watchForFirstConnection = true -[LOG]-")
 #endif
             if let speedTest = columnVM.speedTest, speedTest.timestampStart != nil {
-#if DEBUG
-                L.og.debug("🏁🏁 NXGapFiller.fetchGap speedTest.loadRemoteStarted() -[LOG]-")
-#endif
-                speedTest.loadRemoteStarted()
+                speedTest.waitingForConnection()
             }
             columnVM.watchForFirstConnection = true
             return
@@ -80,6 +76,7 @@ class NXGapFiller {
                 subscriptionId: subId,
                 reqCommand: { [weak self] subId in
                     guard let self else { return }
+                    self.columnVM?.speedTest?.requestStarted()
 #if DEBUG
                     L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted()) -[LOG]-")
 #endif
@@ -131,16 +128,12 @@ class NXGapFiller {
     public func fetchSimple(limit: Int) {
         guard let columnVM, let config = columnVM.config else { return }
         
-//        // Check connection? This actually makes the first fetch never work, need to fix the timing or enable somewhere else, disabled for now
         guard ConnectionPool.shared.anyConnected else {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap, setting watchForFirstConnection = true -[LOG]-")
 #endif
             if let speedTest = columnVM.speedTest, speedTest.timestampStart != nil {
-#if DEBUG
-                L.og.debug("🏁🏁 NXGapFiller.fetchGap speedTest.loadRemoteStarted() -[LOG]-")
-#endif
-                speedTest.loadRemoteStarted()
+                speedTest.waitingForConnection()
             }
             columnVM.watchForFirstConnection = true
             return
@@ -166,6 +159,7 @@ class NXGapFiller {
                 subscriptionId: subId,
                 reqCommand: { [weak self] subId in
                     guard let self else { return }
+                    self.columnVM?.speedTest?.requestStarted()
 #if DEBUG
                     L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted()) -[LOG]-")
 #endif
@@ -230,6 +224,7 @@ class NXGapFiller {
             guard let self else { return }
             var requestTargets = targets
             if config.mediaFeedSourceSnapshot == .selectedRelays {
+                self.columnVM?.speedTest?.waitingForConnection()
                 _ = await ConnectionPool.shared.waitForAnyConnectedRelay(
                     in: config.mediaRelaysSnapshot
                 )
@@ -294,6 +289,7 @@ class NXGapFiller {
                 }
             )
             self.completionTracker?.start()
+            self.columnVM?.speedTest?.requestStarted()
             command()
         }
     }

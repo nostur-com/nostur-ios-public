@@ -1209,7 +1209,7 @@ class NXColumnViewModel: ObservableObject {
                     config: temporaryConfig,
                     attempt: attempt
                 )
-                self.speedTest?.loadRemoteStarted()
+                self.speedTest?.requestStarted()
                 self.sendBroadMediaReq(
                     temporaryConfig,
                     subscriptionId: subscriptionId,
@@ -3687,8 +3687,6 @@ extension NXColumnViewModel {
     
     @MainActor
     private func loadRemote(_ config: NXColumnConfig) async {
-        speedTest?.loadRemoteStarted()
-        
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) loadRemote(config) -[LOG]-")
 #endif
@@ -3714,6 +3712,7 @@ extension NXColumnViewModel {
             }
             
             // Fetch from relays
+            speedTest?.requestStarted()
             _ = try? await relayReq(Filters(kinds: fetchKinds, limit: 250), timeout: 5.5, relays: relays)
             
             let queryKinds = if !feed.kinds.isEmpty {
@@ -3889,6 +3888,7 @@ extension NXColumnViewModel {
 #if DEBUG
                 L.og.debug("☘️☘️ \(config.name) 🟪 Fetching clEvent from relays")
 #endif
+                self.speedTest?.requestStarted()
                 req(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
             },
             processResponseCommand: { taskId, _, clEvent in
