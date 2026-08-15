@@ -17,7 +17,7 @@
 
 // PLAN: What do we white list:
 // Follows + Follows of follows
-// We can create a Web of Trust setting, strict, normal or off.
+// Web of Trust setting: on (follows + follows of follows) or off.
 
 // In the future we could have more data points (badges, nip05, post counts, interactions with followers, etc
 // Could also add quality check, don't use follows from people who follow too many people
@@ -59,14 +59,14 @@ class WebOfTrust: ObservableObject {
     // Only accessed from bg thread
     // Keep separate lists for faster filtering
     
-    // follows of follows (NORMAL)
+    // follows of follows
     private var followingFollowingPubkeys: Set<String> = [] {
         didSet {
             self.updateViewData()
         }
     }
     
-    // Only follows (STRICT)
+    // Only follows
     private var followingPubkeys: Set<String> = [] {
         didSet {
             self.updateViewData()
@@ -74,15 +74,12 @@ class WebOfTrust: ObservableObject {
     }
 
     public func updateViewData() {
-        let allowedKeysCount = switch SettingsStore.shared.webOfTrustLevel {
-            case SettingsStore.WebOfTrustLevel.strict.rawValue:
-                self.followingPubkeys.count
-            case SettingsStore.WebOfTrustLevel.normal.rawValue:
-                self.followingFollowingPubkeys.union(self.followingPubkeys).count
-            case SettingsStore.WebOfTrustLevel.off.rawValue:
-                0
-            default:
-                0
+        let allowedKeysCount: Int
+        if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
+            allowedKeysCount = 0
+        }
+        else {
+            allowedKeysCount = self.followingFollowingPubkeys.union(self.followingPubkeys).count
         }
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -183,33 +180,20 @@ class WebOfTrust: ObservableObject {
                 return
             }
             
-            switch SettingsStore.shared.webOfTrustLevel {
-                case SettingsStore.WebOfTrustLevel.off.rawValue:
+            if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
 #if DEBUG
-                    L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+                L.og.info("🕸️🕸️ WebOfTrust: Disabled")
 #endif
-                    self.woTisReady()
-                    self.updatingWoT = false
-                case SettingsStore.WebOfTrustLevel.normal.rawValue:
+                self.woTisReady()
+                self.updatingWoT = false
+            }
+            else {
 #if DEBUG
-                    L.og.info("🕸️🕸️ WebOfTrust: Normal")
+                L.og.info("🕸️🕸️ WebOfTrust: On")
 #endif
-                    bg().perform { [weak self] in
-                        self?.loadNormal(wotFollowingPubkeys: wotFollowingPubkeys, force: force)
-                    }
-                case SettingsStore.WebOfTrustLevel.strict.rawValue:
-#if DEBUG
-                    L.og.info("🕸️🕸️ WebOfTrust: Strict")
-#endif
-                    self.addOwnFollowsIfNeeded()
-                    self.woTisReady()
-                    self.updatingWoT = false
-                default:
-#if DEBUG
-                    L.og.info("🕸️🕸️ WebOfTrust: Disabled")
-#endif
-                    self.woTisReady()
-                    self.updatingWoT = false
+                bg().perform { [weak self] in
+                    self?.loadNormal(wotFollowingPubkeys: wotFollowingPubkeys, force: force)
+                }
             }
         }
     }
@@ -286,20 +270,16 @@ class WebOfTrust: ObservableObject {
         }
     }
     
-    public var webOfTrustLevel: String = UserDefaults.standard.string(forKey: SettingsStore.Keys.webOfTrustLevel) ?? SettingsStore.WebOfTrustLevel.normal.rawValue // Faster then querying UserDefaults so cache here
+    public var webOfTrustLevel: String = SettingsStore.WebOfTrustLevel.normalized(UserDefaults.standard.string(forKey: SettingsStore.Keys.webOfTrustLevel)) // Faster then querying UserDefaults so cache here
     
     public func isAllowed(_ pubkey: String) -> Bool {
         guard mainAccountWoTpubkey != "" else { return true }
         guard webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return true }
-        if webOfTrustLevel != SettingsStore.WebOfTrustLevel.strict.rawValue && allowedKeysCount < ENABLE_THRESHOLD { return true }
+        if allowedKeysCount < ENABLE_THRESHOLD { return true }
         
         // Maybe check small set first, faster?
         if followingPubkeys.contains(pubkey) { return true }
         
-        // if strict, we don't have to check the follows-follows list
-        if webOfTrustLevel == SettingsStore.WebOfTrustLevel.strict.rawValue {
-            return false
-        }
         if followingFollowingPubkeys.contains(pubkey) {
             return true
         }
@@ -313,17 +293,11 @@ class WebOfTrust: ObservableObject {
     }
 
     public func allowedPubkeysSnapshot() -> Set<String> {
-        switch webOfTrustLevel {
-        case SettingsStore.WebOfTrustLevel.strict.rawValue:
-            return followingPubkeys
-        case SettingsStore.WebOfTrustLevel.normal.rawValue:
-            return followingPubkeys.union(followingFollowingPubkeys)
-        default:
-            return []
-        }
+        guard webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return [] }
+        return followingPubkeys.union(followingFollowingPubkeys)
     }
     
-    // This is for "normal" mode (follows + follows of follows)
+    // Load follows + follows of follows
     public func loadNormal(wotFollowingPubkeys: Set<String>, force: Bool = false) { // force = true to force fetching (update)
         guard mainAccountWoTpubkey != "" else {
             self.woTisReady()

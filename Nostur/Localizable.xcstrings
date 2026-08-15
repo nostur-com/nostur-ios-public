@@ -12061,24 +12061,24 @@
         }
       }
     },
-    "Filter by your follows only (strict), or also your follows follows (normal)" : {
+    "Filter content to people you follow and people they follow" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filtra solo por tus seguidores (estricto), o también por tus seguidores (normal)"
+            "value" : "Filtra el contenido a las personas que sigues y a las que ellas siguen"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filter berdasarkan pengikut Anda saja (ketat), atau juga pengikut Anda (normal)"
+            "value" : "Saring konten ke orang yang Anda ikuti dan orang yang mereka ikuti"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filter volgend (strict), of ook volgend van volgend (normaal)"
+            "value" : "Filter inhoud tot mensen die je volgt en mensen die zij volgen"
           }
         }
       }
@@ -30575,93 +30575,7 @@
     "Worn by" : {
 
     },
-    "WOT_NORMAL" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Normal"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Normal"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Normal"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Normaal"
-          }
-        }
-      }
-    },
-    "WOT_OFF" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Off"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apagado"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mati"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uit"
-          }
-        }
-      }
-    },
-    "WOT_STRICT" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strict"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Estricto"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ketat"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strict"
-          }
-        }
-      }
-    },
+
     "write" : {
       "localizations" : {
         "es" : {

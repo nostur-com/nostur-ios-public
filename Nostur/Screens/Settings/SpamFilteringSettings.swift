@@ -23,7 +23,7 @@ struct SpamFilteringSettings: View {
                 VStack(alignment: .leading) {
                     WebOfTrustLevelPicker()
                     
-                    Text("Filter by your follows only (strict), or also your follows follows (normal)")
+                    Text("Filter content to people you follow and people they follow")
                         .font(.footnote)
                         .foregroundColor(.secondary)
                 }
@@ -47,7 +47,7 @@ struct SpamFilteringSettings: View {
                     }
                 }
                 
-                if (settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.normal.rawValue) {
+                if (settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.on.rawValue) {
                     VStack(alignment: .leading) {
                         Text("Nostr Dunbar Number")
                         Picker("Dunbar number", selection: $wotDunbarNumber) {

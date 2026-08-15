@@ -116,13 +116,13 @@ final class SettingsStore: ObservableObject {
 
     let objectWillChange = PassthroughSubject<Void, Never>()
     
-    enum WebOfTrustLevel:String, CaseIterable, Localizable, Identifiable {
+    enum WebOfTrustLevel: String {
         case off = "WOT_OFF"
-        case normal = "WOT_NORMAL"
-        case strict = "WOT_STRICT"
+        case on = "WOT_NORMAL" // Keep the stored value so existing "Normal" users stay on
         
-        var id:String {
-            String(self.rawValue)
+        /// Maps the removed "strict" setting (and any unknown value) to on.
+        static func normalized(_ raw: String?) -> String {
+            raw == off.rawValue ? off.rawValue : on.rawValue
         }
     }
     
@@ -219,7 +219,7 @@ final class SettingsStore: ObservableObject {
             Keys.statusBubble: false,
             Keys.activeNWCconnectionId: "",
             Keys.fetchCounts: true,
-            Keys.webOfTrustLevel: WebOfTrustLevel.normal.rawValue,
+            Keys.webOfTrustLevel: WebOfTrustLevel.on.rawValue,
             Keys.includeSharedFrom: true,
             Keys.autoHideBars: false,
             Keys.isSignatureVerificationEnabled: true,
@@ -280,6 +280,11 @@ final class SettingsStore: ObservableObject {
             enabled: defaults.bool(forKey: Keys.postUserAgentEnabled),
             excludedPubkeys: Set((defaults.string(forKey: Keys.excludedUserAgentPubkeys) ?? "").components(separatedBy: " "))
         )
+        
+        // Removed "strict" (follows-only). Anyone still on that setting gets the remaining on mode.
+        if defaults.string(forKey: Keys.webOfTrustLevel) == "WOT_STRICT" {
+            defaults.set(WebOfTrustLevel.on.rawValue, forKey: Keys.webOfTrustLevel)
+        }
         
         // optimize
         self.updateNWCreadyCache()
@@ -509,10 +514,11 @@ final class SettingsStore: ObservableObject {
     
     var webOfTrustLevel: String {
         set {
-            objectWillChange.send(); defaults.set(newValue, forKey: Keys.webOfTrustLevel)
-            WebOfTrust.shared.webOfTrustLevel = newValue
+            let value = WebOfTrustLevel.normalized(newValue)
+            objectWillChange.send(); defaults.set(value, forKey: Keys.webOfTrustLevel)
+            WebOfTrust.shared.webOfTrustLevel = value
         }
-        get { defaults.string(forKey: Keys.webOfTrustLevel) ?? WebOfTrustLevel.normal.rawValue }
+        get { WebOfTrustLevel.normalized(defaults.string(forKey: Keys.webOfTrustLevel)) }
     }
     
     // Instruments:
