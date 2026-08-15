@@ -324,7 +324,11 @@ class NXGapFiller {
             columnVM?.speedTest,
             subscriptionId: subscriptionId,
             summary: summary,
-            seeds: ConnectionPool.shared.feedFetchDebugSeeds(for: relayIds)
+            seeds: ConnectionPool.shared.feedFetchDebugSeeds(
+                for: relayIds,
+                outboxIds: targets?.extraIds ?? []
+            ),
+            targetSnapshot: targets
         )
     }
 #endif

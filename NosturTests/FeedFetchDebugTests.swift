@@ -27,7 +27,8 @@ struct FeedFetchDebugTests {
                     isFirstConnection: true,
                     isOutbox: false
                 )
-            ]
+            ],
+            targetSnapshot: nil
         )
 
         session.markRequestStarted()

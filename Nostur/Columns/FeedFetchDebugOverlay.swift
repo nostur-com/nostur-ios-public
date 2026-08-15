@@ -69,6 +69,11 @@ private struct FeedFetchDebugSessionView: View {
             Text(headerLine)
                 .foregroundStyle(.white.opacity(0.85))
 
+            if let outboxLine {
+                Text(outboxLine)
+                    .foregroundStyle(.cyan.opacity(0.85))
+            }
+
             if let reqSummary = session.reqSummary {
                 Text(reqSummary)
                     .foregroundStyle(.white.opacity(0.7))
@@ -243,7 +248,7 @@ private struct FeedFetchDebugSessionView: View {
     }
 
     private var relayListMaxHeight: CGFloat {
-        let headerReserve: CGFloat = 110
+        let headerReserve: CGFloat = session.targetSnapshot == nil ? 110 : 180
         let rowHeight: CGFloat = 18
         let contentHeight = CGFloat(max(sortedRelays.count, 1)) * rowHeight + 8
         let available = max(maxHeight - headerReserve, 80)
@@ -253,6 +258,31 @@ private struct FeedFetchDebugSessionView: View {
     private var headerLine: String {
         let sub = session.subscriptionId ?? "(no REQ yet)"
         return "\(sub) · \(session.eoseCount)/\(session.relays.count) eose · \(session.eventCount) ev · \(session.acceptedOnScreen) new · \(session.waitingCount) wait"
+    }
+
+    private var outboxLine: String? {
+        guard let snapshot = session.targetSnapshot else { return nil }
+        let selected = snapshot.extraIds.count
+        let state = outboxStateLabel(snapshot.outboxPlanState)
+        if snapshot.outboxPlanState == .planned {
+            return "outbox \(state) · \(selected) destinations / \(snapshot.outboxRawRelayCount) raw · cap \(snapshot.outboxRelayLimit)\nauthors \(snapshot.outboxSelectedAuthorCount) selected / \(snapshot.outboxKnownAuthorCount) known / \(snapshot.outboxRequestedAuthorCount) requested\nquarantine \(snapshot.quarantinedCandidateCount) planned · \(snapshot.activeQuarantineCount) total"
+        }
+        return "outbox \(state) · 0 selected · q \(snapshot.activeQuarantineCount) total"
+    }
+
+    private func outboxStateLabel(_ state: ConnectionPool.RequestTargetSnapshot.OutboxPlanState) -> String {
+        switch state {
+        case .notRequested: "not requested"
+        case .limitedToSelectedRelays: "selected relays only"
+        case .lowDataMode: "blocked: low data"
+        case .disabled: "disabled"
+        case .vpnBlocked: "blocked: VPN"
+        case .preferredRelaysUnavailable: "waiting for relay lists"
+        case .noFindEventRelays: "no find-event relays"
+        case .missingFilters: "missing filters"
+        case .missingAuthors: "missing authors"
+        case .planned: "planned"
+        }
     }
 
     private var sortedRelays: [FeedFetchDebugRelayRow] {

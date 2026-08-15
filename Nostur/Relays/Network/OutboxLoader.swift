@@ -10,6 +10,30 @@ import CoreData
 import NostrEssentials
 import Combine
 
+struct OutboxRefreshPolicy {
+    static let batchSize = 150
+    static let deferredDelay: TimeInterval = 20
+    static let auditInterval: TimeInterval = 24 * 60 * 60
+    static let incrementalOverlap: TimeInterval = 60 * 60
+
+    static func missingAuthors(allAuthors: Set<String>, storedAuthors: Set<String>) -> Set<String> {
+        allAuthors.subtracting(storedAuthors)
+    }
+
+    static func batches(from authors: Set<String>, size: Int = batchSize) -> [Set<String>] {
+        guard size > 0, !authors.isEmpty else { return [] }
+        let sorted = authors.sorted()
+        return stride(from: 0, to: sorted.count, by: size).map { start in
+            Set(sorted[start..<min(start + size, sorted.count)])
+        }
+    }
+
+    static func shouldAudit(lastAttempt: Date?, now: Date = .now) -> Bool {
+        guard let lastAttempt else { return true }
+        return now.timeIntervalSince(lastAttempt) >= auditInterval
+    }
+}
+
 public class OutboxLoader {
     
     private let pubkey: String // Account
@@ -17,11 +41,14 @@ public class OutboxLoader {
     private var contactFeedPubkeys: Set<String> = [] // pubkeys from custom contact feeds with .useOutbox enabled
     private let context: NSManagedObjectContext
 
-    private var mostRecentKind10002At: Int?
-    
     private var cp: ConnectionPool
     private var backlog: Backlog
     private var subscriptions: Set<AnyCancellable> = []
+    private var deferredMaintenanceWorkItem: DispatchWorkItem?
+    private var isAppInBackground = false
+
+    private var auditDefaultsKey: String { "outbox_kind10002_audit_\(pubkey)" }
+    private var refreshDefaultsKey: String { "outbox_kind10002_refresh_\(pubkey)" }
     
     init(pubkey: String, follows: Set<String> = [], cp: ConnectionPool) {
         self.pubkey = pubkey
@@ -30,17 +57,44 @@ public class OutboxLoader {
         self.backlog = Backlog(timeout: 9, auto: true, backlogDebugName: "OutboxLoader")
         self.context = bg()
         
-        fetchKind1002AfterNewFollowListener()
+        listenForFollowChanges()
+        listenForForegrounding()
         self.load()
     }
-    
-    private func fetchKind1002AfterNewFollowListener() {
-        receiveNotification(.followingAdded)
+
+    deinit {
+        deferredMaintenanceWorkItem?.cancel()
+    }
+
+    private func listenForFollowChanges() {
+        receiveNotification(.followsChanged)
             .sink { [weak self] notification in
-                guard let self = self else { return }
-                if let pubkey = notification.object as? String {
-                    self.fetchKind10002(forPubkey: pubkey)
-                }
+                guard let self, let updatedFollows = notification.object as? Set<String> else { return }
+                let added = updatedFollows.subtracting(self.follows)
+                self.follows = updatedFollows
+                self.reloadPreferredRelaysFromDb()
+                guard !added.isEmpty else { return }
+                self.fetchBatches(
+                    OutboxRefreshPolicy.batches(from: added),
+                    since: nil,
+                    prefix: "OUTBOX-NEW-"
+                )
+            }
+            .store(in: &subscriptions)
+    }
+
+    private func listenForForegrounding() {
+        receiveNotification(.scenePhaseActive)
+            .sink { [weak self] _ in
+                self?.isAppInBackground = false
+                self?.scheduleDeferredMaintenance()
+            }
+            .store(in: &subscriptions)
+
+        receiveNotification(.scenePhaseBackground)
+            .sink { [weak self] _ in
+                self?.isAppInBackground = true
+                self?.deferredMaintenanceWorkItem?.cancel()
             }
             .store(in: &subscriptions)
     }
@@ -62,7 +116,6 @@ public class OutboxLoader {
         
         self.loadKind10002sFromDb { kind10002s in
             
-            self.mostRecentKind10002At = kind10002s.sorted(by: { $0.created_at > $1.created_at }).first?.created_at
             self.cp.queue.async(flags: .barrier) { [weak self] in
                 self?.cp.setPreferredRelays(using: kind10002s)
             }
@@ -70,7 +123,7 @@ public class OutboxLoader {
 #if DEBUG
             L.sockets.debug("📤📤 Outbox: loaded \(kind10002s.count) from db")
 #endif
-            self.fetchMoreKind10002sFromRelays()
+            self.scheduleDeferredMaintenance()
         }
     }
     
@@ -84,9 +137,15 @@ public class OutboxLoader {
                 .flatMap { $0.contactPubkeys }
             )
         
+        let added = contactFeedsPubkeys.subtracting(self.contactFeedPubkeys)
         self.contactFeedPubkeys = contactFeedsPubkeys
-        self.loadKind10002sFromDb { kind10002s in
-            ConnectionPool.shared.reloadPreferredRelays(kind10002s: kind10002s)
+        self.reloadPreferredRelaysFromDb()
+        if !added.isEmpty {
+            fetchBatches(
+                OutboxRefreshPolicy.batches(from: added),
+                since: nil,
+                prefix: "OUTBOX-FEED-"
+            )
         }
     }
     
@@ -104,102 +163,168 @@ public class OutboxLoader {
         }
     }
     
-    private func fetchMoreKind10002sFromRelays() {
-        let task = ReqTask(
-            debounceTime: 3.0,
-            prefix: "OUTBOX1-",
-            reqCommand: { [weak self] taskId in
-                guard let self else { return }
-                      
-                let follows = self.follows.count <= 2000 ? self.follows : Set(self.follows.shuffled().prefix(2000))
-                        
-                guard let cm = NostrEssentials
-                    .ClientMessage(type: .REQ,
-                                   subscriptionId: taskId,
-                                   filters: [Filters(authors: follows, kinds: [10002], since: self.mostRecentKind10002At)]
-                    ).json()
-                else { return }
-                
-#if DEBUG
-                L.sockets.debug("📤📤 Outbox: Fetching contact relay info for \(self.follows) follows -[LOG]-")
-#endif
-                req(cm)
-                
-                let contactFeedPubkeys = self.contactFeedPubkeys.count <= 2000 ? self.contactFeedPubkeys : Set(self.contactFeedPubkeys.shuffled().prefix(2000))
-                        
-                if let cm2 = NostrEssentials
-                    .ClientMessage(type: .REQ,
-                                   subscriptionId: "OUTBOX1B-" + UUID().uuidString,
-                                   filters: [Filters(authors: contactFeedPubkeys, kinds: [10002], since: self.mostRecentKind10002At)]
-                    ).json() {
-                    req(cm2)
-                }
-            },
-            processResponseCommand: { [weak self] taskId, _, _ in
-                guard let self else { return }
-                
-                self.loadKind10002sFromDb { kind10002s in
-                    
-                    self.mostRecentKind10002At = kind10002s.sorted(by: { $0.created_at > $1.created_at }).first?.created_at
-                    self.cp.queue.async(flags: .barrier) { [weak self] in
-                        self?.cp.setPreferredRelays(using: kind10002s)
-                    }
-                    
-#if DEBUG
-                    L.sockets.debug("📤📤 Outbox: loaded \(kind10002s.count) from db")
-#endif
-                }
-            },
-            timeoutCommand: { taskId in
-#if DEBUG
-                L.sockets.debug("📤📤 Outbox: timeout or no new kind 10002s")
-#endif
-            })
-
-        backlog.add(task)
-        task.fetch()
+    private func reloadPreferredRelaysFromDb(_ completion: (() -> Void)? = nil) {
+        loadKind10002sFromDb { kind10002s in
+            self.cp.queue.async(flags: .barrier) { [weak self] in
+                self?.cp.reloadPreferredRelays(kind10002s: kind10002s)
+            }
+            completion?()
+        }
     }
-    
-    private func fetchKind10002(forPubkey pubkey: String) {
+
+    private func scheduleDeferredMaintenance(after delay: TimeInterval = OutboxRefreshPolicy.deferredDelay) {
+        deferredMaintenanceWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            guard IS_CATALYST || !self.isAppInBackground else { return }
+            self.runDeferredMaintenance()
+        }
+        deferredMaintenanceWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
+    private struct RefreshPhase {
+        let batches: [Set<String>]
+        let since: Int?
+        let prefix: String
+    }
+
+    private func runDeferredMaintenance() {
+        context.perform { [weak self] in
+            guard let self else { return }
+            let allAuthors = self.follows.union(self.contactFeedPubkeys)
+            guard !allAuthors.isEmpty else { return }
+
+            let storedEvents = Event.fetchReplacableEvents(10002, pubkeys: allAuthors, context: self.context)
+            let storedAuthors = Set(storedEvents.map(\.pubkey))
+            let missing = OutboxRefreshPolicy.missingAuthors(
+                allAuthors: allAuthors,
+                storedAuthors: storedAuthors
+            )
+            let known = allAuthors.subtracting(missing)
+            let defaults = UserDefaults.standard
+            let lastAudit = defaults.object(forKey: self.auditDefaultsKey) as? Date
+            let lastRefresh = defaults.object(forKey: self.refreshDefaultsKey) as? Date
+            let auditDue = OutboxRefreshPolicy.shouldAudit(lastAttempt: lastAudit)
+
+            var phases: [RefreshPhase] = []
+            if !missing.isEmpty {
+                phases.append(RefreshPhase(
+                    batches: OutboxRefreshPolicy.batches(from: missing),
+                    since: nil,
+                    prefix: "OUTBOX-MISSING-"
+                ))
+            }
+            if auditDue {
+                phases.append(RefreshPhase(
+                    batches: OutboxRefreshPolicy.batches(from: known),
+                    since: nil,
+                    prefix: "OUTBOX-AUDIT-"
+                ))
+            }
+            else if let lastRefresh, !known.isEmpty {
+                phases.append(RefreshPhase(
+                    batches: OutboxRefreshPolicy.batches(from: known),
+                    since: Int(lastRefresh.addingTimeInterval(-OutboxRefreshPolicy.incrementalOverlap).timeIntervalSince1970),
+                    prefix: "OUTBOX-INCREMENTAL-"
+                ))
+            }
+
+#if DEBUG
+            L.sockets.debug("📤📤 Outbox maintenance: \(allAuthors.count) authors, \(storedAuthors.count) stored, \(missing.count) missing, audit=\(auditDue)")
+#endif
+            self.fetchPhases(phases) { [weak self] completedAllBatches in
+                guard let self else { return }
+                if completedAllBatches {
+                    let now = Date()
+                    defaults.set(now, forKey: self.refreshDefaultsKey)
+                    if auditDue {
+                        defaults.set(now, forKey: self.auditDefaultsKey)
+                    }
+                }
+                self.reloadPreferredRelaysFromDb()
+            }
+        }
+    }
+
+    private func fetchPhases(
+        _ phases: [RefreshPhase],
+        completedAllBatches: Bool = true,
+        completion: @escaping (Bool) -> Void
+    ) {
+        guard let phase = phases.first else {
+            completion(completedAllBatches)
+            return
+        }
+        fetchBatches(phase.batches, since: phase.since, prefix: phase.prefix) { [weak self] phaseCompleted in
+            self?.fetchPhases(
+                Array(phases.dropFirst()),
+                completedAllBatches: completedAllBatches && phaseCompleted,
+                completion: completion
+            )
+        }
+    }
+
+    private func fetchBatches(
+        _ batches: [Set<String>],
+        since: Int?,
+        prefix: String,
+        completedAllBatches: Bool = true,
+        completion: @escaping (Bool) -> Void = { _ in }
+    ) {
+        guard let authors = batches.first else {
+            completion(completedAllBatches)
+            return
+        }
+        guard IS_CATALYST || !isAppInBackground else {
+            scheduleDeferredMaintenance()
+            return
+        }
+
         let task = ReqTask(
             debounceTime: 3.0,
-            prefix: "OUTBOX2-",
+            prefix: prefix,
             reqCommand: { taskId in
                 guard let cm = NostrEssentials
                     .ClientMessage(type: .REQ,
                                    subscriptionId: taskId,
-                                   filters: [Filters(authors: [pubkey], kinds: [10002])]
+                                   filters: [Filters(authors: authors, kinds: [10002], since: since)]
                     ).json()
                 else { return }
-
 #if DEBUG
-                L.sockets.debug("📤📤 Outbox: Fetching contact relay info for \(pubkey)")
+                L.sockets.debug("📤📤 Outbox maintenance: fetching \(authors.count) relay lists (since=\(since?.description ?? "none"))")
 #endif
                 req(cm)
             },
             processResponseCommand: { [weak self] taskId, _, _ in
                 guard let self else { return }
-                
-                self.loadKind10002sFromDb { kind10002s in
-
-                    self.cp.queue.async(flags: .barrier) { [weak self] in
-                        self?.cp.reloadPreferredRelays(kind10002s: kind10002s)
-                    }
-                    
-#if DEBUG
-                    L.sockets.debug("📤📤 Outbox: reloading for \(pubkey)")
-#endif
+                self.reloadPreferredRelaysFromDb {
+                    self.fetchBatches(
+                        Array(batches.dropFirst()),
+                        since: since,
+                        prefix: prefix,
+                        completedAllBatches: completedAllBatches,
+                        completion: completion
+                    )
                 }
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak self] taskId in
 #if DEBUG
-                L.sockets.debug("📤📤 Outbox: timeout or no kind 10002 for \(pubkey)")
+                L.sockets.debug("📤📤 Outbox maintenance: batch timed out or returned no new relay lists")
 #endif
+                self?.fetchBatches(
+                    Array(batches.dropFirst()),
+                    since: since,
+                    prefix: prefix,
+                    completedAllBatches: false,
+                    completion: completion
+                )
             })
 
         backlog.add(task)
         task.fetch()
     }
+
 }
 
 // Takes a pubkey and tries to return a usable relay hint

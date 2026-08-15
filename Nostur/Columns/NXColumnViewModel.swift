@@ -1297,7 +1297,11 @@ class NXColumnViewModel: ObservableObject {
                     self.speedTest,
                     subscriptionId: subscriptionId,
                     summary: "\(temporaryConfig.name) media \(source.rawValue)",
-                    seeds: ConnectionPool.shared.feedFetchDebugSeeds(for: targets.relayIds)
+                    seeds: ConnectionPool.shared.feedFetchDebugSeeds(
+                        for: targets.relayIds,
+                        outboxIds: targets.extraIds
+                    ),
+                    targetSnapshot: targets
                 )
 #endif
                 self.sendBroadMediaReq(

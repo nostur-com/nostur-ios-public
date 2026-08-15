@@ -72,6 +72,7 @@ final class FeedFetchDebugSession: ObservableObject {
     private(set) var acceptedOnScreen: Int = 0
     private(set) var requestStartedAt: Date?
     private(set) var endedAt: Date?
+    private(set) var targetSnapshot: ConnectionPool.RequestTargetSnapshot?
 
     @Published private(set) var relays: [FeedFetchDebugRelayRow] = []
 
@@ -90,8 +91,14 @@ final class FeedFetchDebugSession: ObservableObject {
         relays.count { $0.eoseAt == nil && !$0.timedOut && !$0.closed && !$0.abandoned }
     }
 
-    func attachRequest(subscriptionId: String, summary: String?, seeds: [FeedFetchDebugRelaySeed]) {
+    func attachRequest(
+        subscriptionId: String,
+        summary: String?,
+        seeds: [FeedFetchDebugRelaySeed],
+        targetSnapshot: ConnectionPool.RequestTargetSnapshot?
+    ) {
         self.subscriptionId = subscriptionId
+        self.targetSnapshot = targetSnapshot
         if let summary {
             reqSummary = summary
         }
@@ -272,13 +279,19 @@ final class FeedFetchDebug: ObservableObject {
         _ speedTest: NXSpeedTest?,
         subscriptionId: String,
         summary: String?,
-        seeds: [FeedFetchDebugRelaySeed]
+        seeds: [FeedFetchDebugRelaySeed],
+        targetSnapshot: ConnectionPool.RequestTargetSnapshot? = nil
     ) {
         guard isEnabled, let speedTest, let session = speedTest.debugSession else { return }
         if let previous = session.subscriptionId {
             sessionBySubscription[previous] = nil
         }
-        session.attachRequest(subscriptionId: subscriptionId, summary: summary, seeds: seeds)
+        session.attachRequest(
+            subscriptionId: subscriptionId,
+            summary: summary,
+            seeds: seeds,
+            targetSnapshot: targetSnapshot
+        )
         sessionBySubscription[subscriptionId] = session
     }
 

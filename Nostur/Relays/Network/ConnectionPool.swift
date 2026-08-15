@@ -51,24 +51,64 @@ private extension RelayConnection {
 
 public class ConnectionPool: ObservableObject {
     public struct RequestTargetSnapshot {
+        public enum OutboxPlanState: Equatable {
+            case notRequested
+            case limitedToSelectedRelays
+            case lowDataMode
+            case disabled
+            case vpnBlocked
+            case preferredRelaysUnavailable
+            case noFindEventRelays
+            case missingFilters
+            case missingAuthors
+            case planned
+        }
+
         public let relayIds: Set<CanonicalRelayUrl>
         public let allConnected: Bool
         public let connectedIds: Set<CanonicalRelayUrl>
         public let coreIds: Set<CanonicalRelayUrl>
         public let extraIds: Set<CanonicalRelayUrl>
+        public let outboxPlanState: OutboxPlanState
+        public let outboxCandidateCount: Int
+        public let quarantinedCandidateCount: Int
+        public let activeQuarantineCount: Int
+        public let outboxRelayLimit: Int
+        public let outboxRequestedAuthorCount: Int
+        public let outboxKnownAuthorCount: Int
+        public let outboxRawRelayCount: Int
+        public let outboxSelectedAuthorCount: Int
 
         public init(
             relayIds: Set<CanonicalRelayUrl>,
             allConnected: Bool,
             connectedIds: Set<CanonicalRelayUrl>? = nil,
             coreIds: Set<CanonicalRelayUrl>? = nil,
-            extraIds: Set<CanonicalRelayUrl> = []
+            extraIds: Set<CanonicalRelayUrl> = [],
+            outboxPlanState: OutboxPlanState = .notRequested,
+            outboxCandidateCount: Int = 0,
+            quarantinedCandidateCount: Int = 0,
+            activeQuarantineCount: Int = 0,
+            outboxRelayLimit: Int = 0,
+            outboxRequestedAuthorCount: Int = 0,
+            outboxKnownAuthorCount: Int = 0,
+            outboxRawRelayCount: Int = 0,
+            outboxSelectedAuthorCount: Int = 0
         ) {
             self.relayIds = relayIds
             self.allConnected = allConnected
             self.connectedIds = connectedIds ?? (allConnected ? relayIds : [])
             self.coreIds = coreIds ?? relayIds.subtracting(extraIds)
             self.extraIds = extraIds
+            self.outboxPlanState = outboxPlanState
+            self.outboxCandidateCount = outboxCandidateCount
+            self.quarantinedCandidateCount = quarantinedCandidateCount
+            self.activeQuarantineCount = activeQuarantineCount
+            self.outboxRelayLimit = outboxRelayLimit
+            self.outboxRequestedAuthorCount = outboxRequestedAuthorCount
+            self.outboxKnownAuthorCount = outboxKnownAuthorCount
+            self.outboxRawRelayCount = outboxRawRelayCount
+            self.outboxSelectedAuthorCount = outboxSelectedAuthorCount
         }
     }
 
@@ -157,6 +197,11 @@ public class ConnectionPool: ObservableObject {
         return Date() < until
     }
 
+    private func activeUnreachableExtraCount() -> Int {
+        let now = Date()
+        return unreachableExtrasUntil.values.count { $0 > now }
+    }
+
     // for relays that always have zero (re)connected + 3 or more errors (TODO: need to finetune and better guess/retry)
     public var penaltybox: Set<CanonicalRelayUrl> = [] {
         didSet {
@@ -229,7 +274,10 @@ public class ConnectionPool: ObservableObject {
     }
 
 #if DEBUG
-    func feedFetchDebugSeeds(for relayIds: Set<CanonicalRelayUrl>) -> [FeedFetchDebugRelaySeed] {
+    func feedFetchDebugSeeds(
+        for relayIds: Set<CanonicalRelayUrl>,
+        outboxIds: Set<CanonicalRelayUrl> = []
+    ) -> [FeedFetchDebugRelaySeed] {
         queue.sync {
             relayIds.map { relayId in
                 let connection = connections[relayId] ?? outboxConnections[relayId]
@@ -238,7 +286,8 @@ public class ConnectionPool: ObservableObject {
                     isConnected: connection?.isSocketConnected ?? false,
                     isConnecting: connection?.isSocketConnecting ?? false,
                     isFirstConnection: connection?.firstConnection ?? true,
-                    isOutbox: connection?.isOutbox ?? (connections[relayId] == nil)
+                    isOutbox: outboxIds.contains(relayId)
+                        || (outboxIds.isEmpty && (connection?.isOutbox ?? (connections[relayId] == nil)))
                 )
             }
         }
@@ -284,22 +333,52 @@ public class ConnectionPool: ObservableObject {
             let connectedRegular = Set(regularTargets.filter(\.isSocketConnected).map(\.url))
             let allRegularTargetsConnected = !regularTargets.isEmpty && connectedRegular.count == regularTargets.count
 
-            guard limitedIds.isEmpty,
-                  includeOutbox,
-                  !SettingsStore.shared.lowDataMode,
-                  SettingsStore.shared.enableOutboxRelays,
-                  vpnGuardOK(),
-                  let preferredRelays,
-                  !preferredRelays.findEventsRelays.isEmpty,
-                  let filters = message.filters,
-                  let pubkeys = filters.first?.authors
+            let unavailableState: RequestTargetSnapshot.OutboxPlanState? = if !includeOutbox {
+                .notRequested
+            }
+            else if !limitedIds.isEmpty {
+                .limitedToSelectedRelays
+            }
+            else if SettingsStore.shared.lowDataMode {
+                .lowDataMode
+            }
+            else if !SettingsStore.shared.enableOutboxRelays {
+                .disabled
+            }
+            else if !vpnGuardOK() {
+                .vpnBlocked
+            }
+            else if preferredRelays == nil {
+                .preferredRelaysUnavailable
+            }
+            else if preferredRelays?.findEventsRelays.isEmpty != false {
+                .noFindEventRelays
+            }
+            else if message.filters == nil {
+                .missingFilters
+            }
+            else if message.filters?.first?.authors == nil {
+                .missingAuthors
+            }
             else {
+                nil
+            }
+
+            if let unavailableState {
                 return RequestTargetSnapshot(
                     relayIds: relayIds,
                     allConnected: allRegularTargetsConnected,
                     connectedIds: connectedRegular,
-                    coreIds: coreIds
+                    coreIds: coreIds,
+                    outboxPlanState: unavailableState,
+                    activeQuarantineCount: activeUnreachableExtraCount(),
+                    outboxRelayLimit: maxPreferredRelays,
+                    outboxRequestedAuthorCount: message.filters?.first?.authors?.count ?? 0
                 )
+            }
+
+            guard let preferredRelays, let filters = message.filters, let pubkeys = filters.first?.authors else {
+                preconditionFailure("Outbox availability checks and required values disagreed")
             }
 
             let filtersWithoutHashtags = if let subscriptionId = message.subscriptionId,
@@ -311,6 +390,14 @@ public class ConnectionPool: ObservableObject {
             }
 
             let ourReadRelays = Set(connections.filter { $0.value.relayData.read }.map(\.key))
+            let knownAuthors = preferredRelays.findEventsRelays.values.reduce(into: Set<String>()) { result, relayAuthors in
+                result.formUnion(relayAuthors.intersection(pubkeys))
+            }
+            let rawOutboxRelayCount = preferredRelays.findEventsRelays.count { item in
+                !ourReadRelays.contains(item.key)
+                    && !isDisabledRelay(item.key)
+                    && !item.value.isDisjoint(with: pubkeys)
+            }
             let plan = createRequestPlan(
                 pubkeys: pubkeys,
                 reqFilters: filtersWithoutHashtags,
@@ -318,11 +405,21 @@ public class ConnectionPool: ObservableObject {
                 preferredRelays: preferredRelays,
                 skipTopRelays: 3
             )
-            let outboxTargetIds = Set(plan.findEventsRequests
-                .filter { !$0.value.pubkeys.isEmpty && !isDisabledRelay($0.key) && !isUnreachableExtra($0.key) }
+            let candidates = plan.findEventsRequests
+                .filter { !$0.value.pubkeys.isEmpty && !isDisabledRelay($0.key) }
                 .sorted { $0.value.pubkeys.count > $1.value.pubkeys.count }
+            let quarantinedCandidateIds = Set(candidates
+                .filter { isUnreachableExtra($0.key) }
+                .map { normalizeRelayUrl($0.key) })
+            let outboxTargetIds = Set(candidates
+                .filter { !isUnreachableExtra($0.key) }
                 .prefix(maxPreferredRelays)
                 .map { normalizeRelayUrl($0.key) })
+            let selectedOutboxAuthors = candidates
+                .filter { outboxTargetIds.contains(normalizeRelayUrl($0.key)) }
+                .reduce(into: Set<String>()) { result, candidate in
+                    result.formUnion(candidate.value.pubkeys)
+                }
 
             relayIds.formUnion(outboxTargetIds)
             let connectedIds = Set(relayIds.filter { relayId in
@@ -336,7 +433,16 @@ public class ConnectionPool: ObservableObject {
                 allConnected: allConnected,
                 connectedIds: connectedIds,
                 coreIds: coreIds,
-                extraIds: outboxTargetIds.subtracting(coreIds)
+                extraIds: outboxTargetIds.subtracting(coreIds),
+                outboxPlanState: .planned,
+                outboxCandidateCount: candidates.count,
+                quarantinedCandidateCount: quarantinedCandidateIds.count,
+                activeQuarantineCount: activeUnreachableExtraCount(),
+                outboxRelayLimit: maxPreferredRelays,
+                outboxRequestedAuthorCount: pubkeys.count,
+                outboxKnownAuthorCount: knownAuthors.count,
+                outboxRawRelayCount: rawOutboxRelayCount,
+                outboxSelectedAuthorCount: selectedOutboxAuthors.count
             )
         }
     }
