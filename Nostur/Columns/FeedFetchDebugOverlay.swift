@@ -213,7 +213,7 @@ private struct FeedFetchDebugSessionView: View {
             Spacer(minLength: 8)
             Button("Fetch", action: onFetchNow)
             Button("Hide") {
-                FeedFetchDebug.shared.isEnabled = false
+                FeedFetchDebug.shared.setEnabled(false)
             }
             .font(.caption2.weight(.semibold))
         }

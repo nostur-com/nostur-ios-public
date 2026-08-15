@@ -235,12 +235,7 @@ final class FeedFetchDebug: ObservableObject {
 
     nonisolated(unsafe) static var isEnabledFlag = false
 
-    @Published var isEnabled: Bool {
-        didSet {
-            Self.isEnabledFlag = isEnabled
-            UserDefaults.standard.set(isEnabled, forKey: Self.defaultsKey)
-        }
-    }
+    @Published private(set) var isEnabled: Bool
 
     private var sessionsBySpeedTest: [ObjectIdentifier: FeedFetchDebugSession] = [:]
     private var sessionBySubscription: [String: FeedFetchDebugSession] = [:]
@@ -258,7 +253,14 @@ final class FeedFetchDebug: ObservableObject {
     }
 
     func toggle() {
-        isEnabled.toggle()
+        setEnabled(!isEnabled)
+    }
+
+    func setEnabled(_ enabled: Bool) {
+        guard isEnabled != enabled else { return }
+        isEnabled = enabled
+        Self.isEnabledFlag = enabled
+        UserDefaults.standard.set(enabled, forKey: Self.defaultsKey)
     }
 
     func begin(_ speedTest: NXSpeedTest, trigger: String, feedName: String) {
