@@ -94,6 +94,56 @@ final class NXFeedIndexMappingTests: XCTestCase {
         )
     }
 
+    func testWalksSectionsWithALeadingEmptySectionAndPagination() {
+        let sectionCounts = [0, 16]
+        let itemCount = 15
+
+        XCTAssertEqual(
+            NXFeedIndexMapping.indexPath(
+                forItemIndex: 14,
+                sectionCounts: sectionCounts,
+                itemCount: itemCount
+            ),
+            IndexPath(item: 14, section: 1)
+        )
+        XCTAssertNil(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 15, section: 1),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount
+            )
+        )
+    }
+
+    func testLeadingSingletonSectionIsAHeaderNotAPost() {
+        let sectionCounts = [1, 20]
+        let itemCount = 20
+
+        XCTAssertEqual(
+            NXFeedIndexMapping.indexPath(
+                forItemIndex: 0,
+                sectionCounts: sectionCounts,
+                itemCount: itemCount
+            ),
+            IndexPath(item: 0, section: 1)
+        )
+        XCTAssertEqual(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 0, section: 1),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount
+            ),
+            0
+        )
+        XCTAssertNil(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 0, section: 0),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount
+            )
+        )
+    }
+
     func testItemsInsertedAboveDetectsPrepend() {
         let oldIDs = ["a", "b", "c"]
         let newIDs = ["n1", "n2", "a", "b", "c"]

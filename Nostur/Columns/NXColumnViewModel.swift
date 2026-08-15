@@ -56,10 +56,12 @@ class NXColumnViewModel: ObservableObject {
     /// deferred by the anchor coordinator until scrolling finishes.
     @MainActor
     private func setPosts(_ posts: [NRPost], animated: Bool = true) {
-        // withAnimation is useful for SwiftUI's own List diffing, but it is not a complete
-        // position guarantee after a tab switch or a large batch insertion. Preserve the actual
-        // visible post and its fractional viewport offset as an explicit second line of defence.
-        if !isFeedActuallyAtTop, let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
+        // Only the prepend path needs the explicit pin. Removing an off-screen unread
+        // post in a sibling column must stay on SwiftUI's animated List diff — the
+        // unanimated pin/settle flash is what made other Mac columns flicker.
+        if !isFeedActuallyAtTop,
+           let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate,
+           shouldPinFeedUpdate(to: posts) {
             performAnchoredFeedUpdate(posts.map(\.id)) { [weak self] in
                 guard let self else { return }
                 withTransaction(Transaction(animation: nil)) {
@@ -78,6 +80,18 @@ class NXColumnViewModel: ObservableObject {
                 viewState = .posts(posts)
             }
         }
+    }
+
+    @MainActor
+    private func shouldPinFeedUpdate(to posts: [NRPost]) -> Bool {
+        guard case .posts(let existing) = viewState else { return false }
+        let oldIDs = existing.map(\.id)
+        let newIDs = posts.map(\.id)
+        let anchorID = vmInner.readingPostID
+            ?? vmInner.pendingScrollToPostID
+            ?? oldIDs.first(where: { newIDs.contains($0) })
+        guard let anchorID else { return false }
+        return NXFeedIndexMapping.itemsInsertedAbove(oldIDs: oldIDs, newIDs: newIDs, anchorID: anchorID)
     }
     
     public let vmInner = NXColumnViewModelInner()
@@ -338,10 +352,14 @@ class NXColumnViewModel: ObservableObject {
                             unreadIds[postId] = nil
                         }
                         vmInner.updateIsAtTopSubject.send()
-                        // Stationary updates need withAnimation to preserve the visible List anchor.
-                        // setPosts only suppresses it while the user is actively scrolling.
+
                         Task { @MainActor [weak self] in
-                            self?.setPosts(existingPosts.filter { $0.id != postId })
+                            guard let self else { return }
+                            // Never pull a currently visible row out of another column. That
+                            // mutation was scrolling/fading sibling Mac columns after unread tap.
+                            let visibleIds = self.currentVisiblePostIds()
+                            guard !visibleIds.contains(postId) else { return }
+                            self.setPosts(existingPosts.filter { $0.id != postId })
                         }
                     }
                 })
@@ -428,7 +446,6 @@ class NXColumnViewModel: ObservableObject {
         vmInner.updateIsAtTopSubject.send()
 
         if case .posts(let existingPosts) = viewState {
-            // Stationary updates need withAnimation to preserve the visible List anchor.
             setPosts(existingPosts.filter { !postIdsToRemove.contains($0.id) })
         }
     }
@@ -437,19 +454,26 @@ class NXColumnViewModel: ObservableObject {
     private func currentVisiblePostIds() -> Set<String> {
         guard case .posts(let posts) = viewState else { return [] }
 
+        let indexPaths: [IndexPath]
+        let sectionCounts: [Int]
         if let collectionView {
-            return Set(collectionView.indexPathsForVisibleItems.compactMap { indexPath in
-                posts.indices.contains(indexPath.row) ? posts[indexPath.row].id : nil
-            })
+            indexPaths = collectionView.indexPathsForVisibleItems
+            sectionCounts = (0..<collectionView.numberOfSections).map { collectionView.numberOfItems(inSection: $0) }
+        } else if let tableView {
+            indexPaths = tableView.indexPathsForVisibleRows ?? []
+            sectionCounts = (0..<tableView.numberOfSections).map { tableView.numberOfRows(inSection: $0) }
+        } else {
+            return []
         }
 
-        if let tableView {
-            return Set(tableView.indexPathsForVisibleRows?.compactMap { indexPath in
-                posts.indices.contains(indexPath.row) ? posts[indexPath.row].id : nil
-            } ?? [])
-        }
-
-        return []
+        return Set(indexPaths.compactMap { indexPath in
+            guard let itemIndex = NXFeedIndexMapping.itemIndex(
+                for: indexPath,
+                sectionCounts: sectionCounts,
+                itemCount: posts.count
+            ), posts.indices.contains(itemIndex) else { return nil }
+            return posts[itemIndex].id
+        })
     }
 
     private func postContainsAnyShortId(_ post: NRPost, in shortIds: Set<String>) -> Bool {
@@ -1677,9 +1701,7 @@ class NXColumnViewModel: ObservableObject {
                                 // Store the target index for later use
                                 vmInner.pendingScrollToIndex = restoreToIndex
                                 vmInner.pendingScrollToPostID = scrollToId
-                                if restoreToIndex > 0 {
-                                    vmInner.readingPostID = scrollToId
-                                }
+                                vmInner.readingPostID = scrollToId
                                 
                                 // Update the view state without animation
                                 withTransaction(Transaction(animation: nil)) {
@@ -3595,9 +3617,7 @@ extension NXColumnViewModel {
                             // Store the target index for later use
                             vmInner.pendingScrollToIndex = restoreToIndex
                             vmInner.pendingScrollToPostID = previousFirstPostId
-                            if restoreToIndex > 0 {
-                                vmInner.readingPostID = previousFirstPostId
-                            }
+                            vmInner.readingPostID = previousFirstPostId
                             
                             // Update the view state without animation
                             withTransaction(Transaction(animation: nil)) {
