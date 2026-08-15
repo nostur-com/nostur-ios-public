@@ -326,7 +326,7 @@ struct Maintenance {
         let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
         let fiveDaysAgo = Date.now.addingTimeInterval(-432_000)
         let monthsAgo = Date.now.addingTimeInterval(-5_356_800) // 2 months
-        pfr.predicate = NSPredicate(format: "createdAt < %@ AND NOT readAt = nil", fiveDaysAgo as NSDate)
+        pfr.predicate = NSPredicate(format: "createdAt < %@ AND NOT readAt = nil AND type_ != %@", fiveDaysAgo as NSDate, PNType.relayConfigNotOptimal.rawValue)
         
         let pfrBatchDelete = NSBatchDeleteRequest(fetchRequest: pfr)
         pfrBatchDelete.resultType = .resultTypeCount

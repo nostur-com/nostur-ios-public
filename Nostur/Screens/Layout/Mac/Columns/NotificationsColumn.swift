@@ -117,6 +117,7 @@ struct NotificationsColumnInner: View {
             
             if nvm.isMain {
                 NotificationPermissionBanner()
+                RelayConfigNotOptimalBanner()
             }
             
             AvailableWidthContainer {
@@ -157,6 +158,9 @@ struct NotificationsColumnInner: View {
         }
         
         .onAppear {
+            if nvm.isMain {
+                nvm.markRelayConfigAsRead()
+            }
             guard !nvm.didLoad else { return }
             nvm.load(pubkey)
         }

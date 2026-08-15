@@ -194,6 +194,7 @@ struct RelayConnectButton: View {
                                 relay.read = true
                                 relay.write = true
                                 relay.auth = false
+                                RelayConfigHealth.checkInBackground()
                             }
                         }
                         

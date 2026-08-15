@@ -341,6 +341,7 @@ class NewOnboardingTracker {
                         newRelay.createdAt = Date()
                     }
                 }
+                RelayConfigHealth.check(context: self.bg)
             } catch {
                 L.og.error("Error decoding JSON: \(error)")
             }
@@ -379,6 +380,6 @@ class NewOnboardingTracker {
             }
             DataProvider.shared().saveToDiskNow(.bgContext)
         }
-        
+        RelayConfigHealth.check(context: self.bg)
     }
 }

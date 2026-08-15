@@ -22,6 +22,7 @@ public class PersistentNotification: NSManagedObject {
         case failedZapsTimeout = "FAILED_ZAPS_TIMEOUT" // Timeout
         case failedLightningInvoice = "FAILED_LIGHTNING_INVOICE"
         case newPosts = "NEW_POSTS"
+        case relayConfigNotOptimal = "RELAY_CONFIG_NOT_OPTIMAL"
     }
     
     static func create(pubkey:String, followers:[String], context:NSManagedObjectContext) -> PersistentNotification {
@@ -87,6 +88,16 @@ public class PersistentNotification: NSManagedObject {
             newPostNotification.content = contactsJson
         }
         return newPostNotification
+    }
+    
+    static func createRelayConfigNotOptimal(context: NSManagedObjectContext) -> PersistentNotification {
+        let notification = PersistentNotification(context: context)
+        notification.id = UUID()
+        notification.createdAt = .now
+        notification.pubkey = RelayConfigHealth.notificationPubkey
+        notification.type = .relayConfigNotOptimal
+        notification.content = String(localized: "Relay configuration looks not optimal.")
+        return notification
     }
     
     static func fetchUnreadNewPostNotifications() -> [PersistentNotification] {

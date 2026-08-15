@@ -48,6 +48,7 @@ struct NewRelayView: View {
             if (relay.read || relay.write) {
                 ConnectionPool.shared.addConnection(relay.toStruct())
             }
+            RelayConfigHealth.checkInBackground()
         } catch {
             L.og.error("Unresolved error \(error)")
         }

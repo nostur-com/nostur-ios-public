@@ -24,6 +24,7 @@ class AppSheetsModel: ObservableObject {
     @Published var feedSettingsFeed: CloudFeed? = nil
     @Published var showReplyToSheet: ReplyTo? = nil
     @Published var newPostInfo: NewPostInfo? = nil
+    @Published var showRelaysFromNotification: Bool = false
     
     // Workaround because .sheet / .fullScreenCover has some issues with NavigationBackPort where dismiss() doesn't work
     @MainActor func dismiss() {
@@ -37,6 +38,7 @@ class AppSheetsModel: ObservableObject {
         feedSettingsFeed = nil
         showReplyToSheet = nil
         newPostInfo = nil
+        showRelaysFromNotification = false
     }
 }
 
@@ -108,6 +110,22 @@ struct WithAppSheets: ViewModifier {
                 })
                 .environmentObject(la)
             })
+        
+            .sheet(isPresented: $asm.showRelaysFromNotification) {
+                NBNavigationStack {
+                    RelaysView(openedFromNotification: true)
+                        .environment(\.theme, theme)
+                        .presentationBackgroundCompat(theme.listBackground)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Close", systemImage: "xmark") {
+                                    asm.showRelaysFromNotification = false
+                                }
+                            }
+                        }
+                }
+                .nbUseNavigationStack(.never)
+            }
         
             .sheet(item: $asm.showReplyToSheet, content: { replyToInfo in
                 NRSheetNavigationStack {

@@ -297,6 +297,7 @@ struct RelayEditView: View {
                             L.og.error("could not save after removing relay")
 #endif
                         }
+                        RelayConfigHealth.checkInBackground()
                     }
                 }
             }
@@ -372,6 +373,7 @@ struct RelayEditView: View {
                         L.og.error("problem ")
 #endif
                     }
+                    RelayConfigHealth.checkInBackground()
                     dismiss()
                 }
             }
@@ -380,6 +382,7 @@ struct RelayEditView: View {
             if let connection = connection, connection.relayData.read != newValue {
                 connection.relayData.setRead(newValue)
             }
+            RelayConfigHealth.checkInBackground()
         }
         .onChange(of: relay.write) { newValue in
             if let connection = connection, connection.relayData.write != newValue {

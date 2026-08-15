@@ -330,6 +330,7 @@ func setupConnections() async {
     }
     
     ConnectionPool.shared.connectAll()
+    RelayConfigHealth.checkInBackground()
 }
 
 func initializeExplore() async {

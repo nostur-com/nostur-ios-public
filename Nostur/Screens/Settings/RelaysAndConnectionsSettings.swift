@@ -13,8 +13,11 @@ struct RelaysAndConnectionsSettings: View {
     @ObservedObject private var network: NetworkMonitor = .shared
     
     var body: some View {
-        NXForm {
-            Section(header: Text("Relays", comment: "Relay settings heading")) {
+        VStack(spacing: 0) {
+            RelayConfigNotOptimalBanner()
+            
+            NXForm {
+                Section(header: Text("Relays", comment: "Relay settings heading")) {
                 RelaysLink()
                     .listRowBackground(theme.background)
                 
@@ -80,6 +83,7 @@ struct RelaysAndConnectionsSettings: View {
                 RelaysStatsLink()
                     .listRowBackground(theme.background)
                 
+                }
             }
         }
     }

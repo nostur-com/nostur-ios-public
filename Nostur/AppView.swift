@@ -125,6 +125,7 @@ extension AppView {
                 ConversionVM.restoreSubscriptions()
                 NotificationsViewModel.restoreSubscriptions()
                 NotificationsViewModel.shared.checkImmediately(reason: "scenePhaseActive", force: true)
+                RelayConfigHealth.checkInBackground()
                 AppState.shared.startTaskTimers()
                 if !IS_CATALYST {
                     try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])

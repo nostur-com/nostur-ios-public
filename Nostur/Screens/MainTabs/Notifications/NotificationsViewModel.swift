@@ -133,6 +133,7 @@ class NotificationsViewModel: ObservableObject {
         self.unreadReactions_ = 0
         self.unreadZaps_ = 0
         self.unreadFailedZaps_ = 0
+        self.unreadRelayConfig_ = 0
         startTimer()
         setupCheckNeedsUpdateListeners()
         setupRestoreRelaySubSubscriptions()
@@ -188,6 +189,9 @@ class NotificationsViewModel: ObservableObject {
             case .failedZap, .failedZaps, .failedZapsTimeout, .failedLightningInvoice:
                 guard notification.pubkey == self.pubkey else { return }
                 self.checkForUnreadFailedZaps()
+            case .relayConfigNotOptimal:
+                guard self.isMain else { return }
+                self.checkForUnreadRelayConfig()
             case .none:
                 return
             }
@@ -225,7 +229,7 @@ class NotificationsViewModel: ObservableObject {
     
     // Total for the notifications tab on the main tab bar
     public var unread: Int {
-        unreadMentions + (muteNewPosts ? 0 : unreadNewPosts) + (muteReactions ? 0 : unreadReactions) + (muteZaps ? 0 : (unreadZaps + unreadFailedZaps)) + (muteFollows ? 0 : unreadNewFollowers) + (muteReposts ? 0 : unreadReposts)
+        unreadMentions + (muteNewPosts ? 0 : unreadNewPosts) + (muteReactions ? 0 : unreadReactions) + (muteZaps ? 0 : (unreadZaps + unreadFailedZaps)) + (muteFollows ? 0 : unreadNewFollowers) + (muteReposts ? 0 : unreadReposts) + unreadRelayConfig
     }
     
     public var unreadPublisher = PassthroughSubject<Int, Never>()
@@ -261,6 +265,8 @@ class NotificationsViewModel: ObservableObject {
     }
     
     public var unreadFailedZaps: Int { unreadFailedZaps_ }
+    
+    public var unreadRelayConfig: Int { unreadRelayConfig_ }
     
     
     // Don't read these @Published vars, only set them. Use the computed above instead because they correctly return 0 when muted
@@ -322,6 +328,13 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     @Published var unreadFailedZaps_: Int = 0 {  // custom
+        didSet {
+            if self.id == NotificationsViewModel.shared.id {
+                unreadPublisher.send(unread)
+            }
+        }
+    }
+    @Published var unreadRelayConfig_: Int = 0 {  // too many read relays
         didSet {
             if self.id == NotificationsViewModel.shared.id {
                 unreadPublisher.send(unread)
@@ -585,6 +598,17 @@ class NotificationsViewModel: ObservableObject {
         bg().perform { [weak self] in
             self?.checkForUnreadFailedZaps()
         }
+        bg().perform { [weak self] in
+            guard let self else { return }
+            guard self.isMain else { return }
+            self.checkForUnreadRelayConfig()
+        }
+    }
+    
+    public func refreshRelayConfigUnread() {
+        bg().perform { [weak self] in
+            self?.checkForUnreadRelayConfig()
+        }
     }
     
     public func checkForUnreadMentions(accountData: AccountData) {
@@ -833,6 +857,20 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
+    private func checkForUnreadRelayConfig() {
+        shouldBeBg()
+        
+        let fetchRequest = q.unreadRelayConfigQuery()
+        let unreadRelayConfig = (try? bg().count(for: fetchRequest)) ?? 0
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if unreadRelayConfig != self.unreadRelayConfig_ {
+                self.unreadRelayConfig_ = min(unreadRelayConfig, 1)
+            }
+        }
+    }
+    
     // -- MARK: Mark as read
     
     @MainActor public func markMentionsAsRead() {
@@ -1043,6 +1081,22 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
+    @MainActor public func markRelayConfigAsRead() {
+        guard self.isMain else { return }
+        self.unreadRelayConfig_ = 0
+        
+        bg().perform {
+            let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
+            r3.propertiesToUpdate = ["readAt": NSDate()]
+            r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil",
+                                       PNType.relayConfigNotOptimal.rawValue)
+            r3.resultType = .updatedObjectIDsResultType
+
+            let _ = try? bg().execute(r3) as? NSBatchUpdateResult
+            DataProvider.shared().saveToDiskNow(.bgContext)
+        }
+    }
+    
 }
 
 class NotificationFetchRequests {
@@ -1175,6 +1229,15 @@ class NotificationFetchRequests {
         r.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
         r.resultType = resultType
                 
+        return r
+    }
+    
+    func unreadRelayConfigQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification> {
+        let r = PersistentNotification.fetchRequest()
+        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil", PNType.relayConfigNotOptimal.rawValue)
+        r.fetchLimit = 1
+        r.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
+        r.resultType = resultType
         return r
     }
 }

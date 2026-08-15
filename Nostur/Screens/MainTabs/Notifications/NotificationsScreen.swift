@@ -119,6 +119,7 @@ struct NotificationsScreen: View {
             .frame(width: availableWidth)
             
             NotificationPermissionBanner()
+            RelayConfigNotOptimalBanner()
             
             // List/ScrollView must be the expanding primary scroller (no Spacer competing for height),
             // or tabBarMinimizeBehavior(.onScrollDown) will not attach on iOS 26.
@@ -149,6 +150,7 @@ struct NotificationsScreen: View {
         .onReceive(receiveNotification(.notificationsTabAppeared)) { _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                 markActiveTabAsRead(tab)
+                nvm.markRelayConfigAsRead()
             }
         }
         .onChange(of: tab) { [oldValue = self.tab] newValue in

@@ -64,6 +64,7 @@ struct RelayRowView: View {
                     }
                     DataProvider.shared().saveToDiskNow(.viewContext)
                     AccountsState.shared.refreshShareExtensionAccountState()
+                    RelayConfigHealth.checkInBackground()
                 }
             
             Image(systemName:"arrow.up.circle.fill").foregroundColor(relay.write ? .green : .gray)
@@ -118,6 +119,8 @@ struct RelayRowView: View {
 }
 
 struct RelaysView: View {
+    var openedFromNotification: Bool = false
+    
     @Environment(\.theme) private var theme
     @State var createRelayPresented = false
     @State var editRelay: CloudRelay?
@@ -128,27 +131,39 @@ struct RelaysView: View {
         sortDescriptors: [SortDescriptor(\CloudRelay.createdAt_, order: .forward)],
         animation: .default)
     var relays: FetchedResults<CloudRelay>
+    
+    private var receiveRelayCount: Int {
+        relays.filter(\.read).count
+    }
+    
+    private var hideSharedRelaysExplanation: Bool {
+        openedFromNotification || !RelayConfigHealth.looksGood(receiveCount: receiveRelayCount)
+    }
 
     var body: some View {
-        NXForm {
-            Text("These relays are used for all your accounts, and are not announced unless configured on the account specific tabs.")
-                .foregroundColor(Color.primary)
+        VStack(spacing: 0) {
+            RelayConfigNotOptimalBanner(style: .detail, showsWhenGood: openedFromNotification)
             
-            VStack(alignment: .leading) {
-                ForEach(relays, id:\.objectID) { relay in
-                    RelayRowView(relay: relay)
-                        .onTapGesture {
-                            editRelay = relay
-                        }
-                        .padding(.vertical, 5)
-//                    Divider()
+            NXForm {
+                if !hideSharedRelaysExplanation {
+                    Text("These relays are used for all your accounts, and are not announced unless configured on the account specific tabs.")
+                        .foregroundColor(Color.primary)
+                }
+                
+                VStack(alignment: .leading) {
+                    ForEach(relays, id:\.objectID) { relay in
+                        RelayRowView(relay: relay)
+                            .onTapGesture {
+                                editRelay = relay
+                            }
+                            .padding(.vertical, 5)
+                    }
+                }
+                
+                Button("Add new relay...") {
+                    createRelayPresented = true
                 }
             }
-            
-            Button("Add new relay...") {
-                createRelayPresented = true
-            }
-            
         }
         .sheet(isPresented: $createRelayPresented) {
             NBNavigationStack {
@@ -167,6 +182,8 @@ struct RelaysView: View {
             .nbUseNavigationStack(.never)
             
         })
+        .navigationTitle(String(localized: "Relays", comment: "Navigation title for relays screen"))
+        .navigationBarTitleDisplayMode(.inline)
         .nosturNavBgCompat(theme: theme)
     }
 }
