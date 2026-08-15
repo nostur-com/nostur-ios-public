@@ -18,7 +18,7 @@ final class BoundedRelayRequestCompletionTracker {
     }
 
     private let subscriptionId: String
-    private let expectedRelays: Set<CanonicalRelayUrl>
+    private let policy: BoundedRelayCompletionPolicy
     private let settleDelayNanoseconds: UInt64
     private let deadlineNanoseconds: UInt64
     private let onImport: () -> Void
@@ -28,7 +28,7 @@ final class BoundedRelayRequestCompletionTracker {
     private var subscriptions = Set<AnyCancellable>()
     private var completionTask: Task<Void, Never>?
     private var didComplete = false
-    private var allRelaysFinished = false
+    private var quorumReached = false
 
     init(
         subscriptionId: String,
@@ -40,10 +40,15 @@ final class BoundedRelayRequestCompletionTracker {
         onCompletion: @escaping (Outcome) -> Void
     ) {
         self.subscriptionId = subscriptionId
-        self.expectedRelays = targets.relayIds
+        let policy = BoundedRelayCompletionPolicy(
+            coreIds: targets.coreIds,
+            extraIds: targets.extraIds,
+            connectedIds: targets.connectedIds
+        )
+        self.policy = policy
         self.settleDelayNanoseconds = UInt64(settleDelay * 1_000_000_000)
         self.deadlineNanoseconds = UInt64(
-            (targets.allConnected ? connectedDeadline : connectingDeadline) * 1_000_000_000
+            (policy.usesShortDeadline ? connectedDeadline : connectingDeadline) * 1_000_000_000
         )
         self.onImport = onImport
         self.onCompletion = onCompletion
@@ -74,7 +79,7 @@ final class BoundedRelayRequestCompletionTracker {
             }
             .store(in: &subscriptions)
 
-        guard !expectedRelays.isEmpty else {
+        guard !policy.knownIds.isEmpty else {
             scheduleCompletion(.finished, after: settleDelayNanoseconds)
             return
         }
@@ -99,8 +104,8 @@ final class BoundedRelayRequestCompletionTracker {
     private func receivedTerminalResponse(from relay: String) {
         guard !didComplete else { return }
         finishedRelays.insert(normalizeRelayUrl(relay))
-        guard expectedRelays.isSubset(of: finishedRelays) else { return }
-        allRelaysFinished = true
+        guard policy.shouldFinish(finished: finishedRelays) else { return }
+        quorumReached = true
         scheduleCompletion(.finished, after: settleDelayNanoseconds)
     }
 
@@ -109,7 +114,7 @@ final class BoundedRelayRequestCompletionTracker {
         onImport()
         // EOSE can arrive while matching events are still being committed. Each
         // import restarts the quiet period so the final DB read happens last.
-        if allRelaysFinished {
+        if quorumReached {
             scheduleCompletion(.finished, after: settleDelayNanoseconds)
         }
     }
@@ -127,6 +132,18 @@ final class BoundedRelayRequestCompletionTracker {
         guard !didComplete else { return }
         didComplete = true
         cancel()
+        let deadExtras = policy.unreachableExtras(finished: finishedRelays)
+        if !deadExtras.isEmpty {
+            ConnectionPool.shared.noteUnreachableExtras(deadExtras)
+        }
+#if DEBUG
+        if outcome == .timedOut {
+            FeedFetchDebug.shared.markTimeout(subscriptionId: subscriptionId)
+        }
+        else {
+            FeedFetchDebug.shared.markAbandoned(subscriptionId: subscriptionId)
+        }
+#endif
         onCompletion(outcome)
     }
 }
@@ -654,6 +671,11 @@ class ReqTask: Identifiable, Hashable {
 #endif
             return
         }
+#if DEBUG
+        Task { @MainActor in
+            FeedFetchDebug.shared.markTimeout(subscriptionId: subscriptionId)
+        }
+#endif
         self.timeoutCommand?(subscriptionId)
     }
     
