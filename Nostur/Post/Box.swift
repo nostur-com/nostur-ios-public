@@ -74,11 +74,10 @@ struct Box<Content: View>: View {
         guard navMode != .noNavigation && !nxViewingContext.contains(.preview), let nrPost else { return }
 
         if nrPost.isRepost {
-            if let quote = nrPost.firstQuote {
-                navigateTo(quote, context: containerID)
-            } else if let id = nrPost.firstQuoteId {
-                navigateTo(NotePath(id: id), context: containerID)
-            }
+            // Only open detail when the reposted post is already loaded.
+            // A missing quote tap is handled by the retry placeholder.
+            guard let quote = nrPost.firstQuote else { return }
+            navigateTo(quote, context: containerID)
         } else if let liveEvent = nrPost.nrLiveEvent {
             navigateTo(liveEvent, context: containerID)
         } else {

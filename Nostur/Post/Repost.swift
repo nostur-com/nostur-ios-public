@@ -79,82 +79,9 @@ struct Repost: View {
                 }
             }
         }
-        .overlay {
-            if let firstQuoteId = nrPost.firstQuoteId, noteRowAttributes.firstQuote == nil {
-                CenteredProgressView()
-                    .task {
-                        let fetchParams: FetchVM.FetchParams = (
-                            prio: true,
-                            req: { taskId in
-                                bg().perform { // 1. CHECK LOCAL DB
-                                    if let event = Event.fetchEvent(id: firstQuoteId, context: bg()) {
-                                        let nrFirstQuote = NRPost(event: event, withFooter: false)
-                                        Task { @MainActor in
-                                            noteRowAttributes.firstQuote = nrFirstQuote // Maybe not need this? handled in nrPost?
-                                        }
-                                    }
-                                    else { // 2. ELSE CHECK RELAY
-                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
-                                        req(RM.getEvent(id: firstQuoteId, subscriptionId: taskId))
-                                    }
-                                }
-                            },
-                            onComplete: { relayMessage, event in
-                                if let event = event, event.id == firstQuoteId {
-                                    let nrFirstQuote = NRPost(event: event, withFooter: false)
-                                    Task { @MainActor in
-                                        guard noteRowAttributes.firstQuote == nil else { return }
-                                        noteRowAttributes.firstQuote = nrFirstQuote
-                                    }
-                                }
-                                else if let event = Event.fetchEvent(id: firstQuoteId, context: bg()) { // 3. WE FOUND IT ON RELAY
-#if DEBUG
-                                    if vm.state == .altLoading, let relay = self.relayHint {
-                                        L.og.debug("Event found on using relay hint: \(firstQuoteId) - \(relay)")
-                                    }
-#endif
-                                    let nrFirstQuote = NRPost(event: event, withFooter: false)
-                                    Task { @MainActor in
-                                        guard noteRowAttributes.firstQuote == nil else { return }
-                                        noteRowAttributes.firstQuote = nrFirstQuote
-                                    }
-                                }
-                                // Still don't have the event? try to fetch from relay hint
-                                // TODO: Should try a relay we don't already have in our relay set
-                                // This is skipped if we are .altLoading, goes to .timeout()
-                                else if (SettingsStore.shared.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
-                                    // try search relays and relay hint
-                                    vm.altFetch()
-                                }
-                                else { // 5. TIMEOUT
-                                    vm.timeout()
-                                }
-                            },
-                            altReq: { taskId in
-                                // Try search relays
-                                req(RM.getEvent(id: firstQuoteId, subscriptionId: taskId), relayType: .SEARCH)
-                                
-                                // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
-                                guard let relayHint = nrPost.fastTags.first(where: {
-                                    $0.0 == "e" && $0.1 == firstQuoteId && $0.2 != ""
-                                })?.2 else { return }
-                                
-                                self.relayHint = relayHint
-                                
-#if DEBUG
-                                L.og.debug("FetchVM.3 HINT \(firstQuoteId) \(relayHint)")
-#endif
-                                ConnectionPool.shared.sendEphemeralMessage(
-                                    RM.getEvent(id: firstQuoteId, subscriptionId: taskId),
-                                    relay: relayHint
-                                )
-                            }
-                            
-                        )
-                        vm.setFetchParams(fetchParams)
-                        vm.fetch()
-                    }
-            }
+        .task(id: nrPost.firstQuoteId) {
+            guard noteRowAttributes.firstQuote == nil, nrPost.firstQuoteId != nil else { return }
+            startFetchingFirstQuote()
         }
         .onReceive(receiveNotification(.mutedWordsChanged)) { _ in
             revealMutedFirstQuoteByWords = false
@@ -171,13 +98,29 @@ struct Repost: View {
                 displayedFirstQuote = firstQuote
             }
         }
-        .onAppear { self.enqueue() }
+        .onAppear {
+            if displayedFirstQuote == nil, let firstQuote = noteRowAttributes.firstQuote {
+                displayedFirstQuote = firstQuote
+            }
+            self.enqueue()
+        }
         .onDisappear { self.dequeue() }
+    }
+
+    private var resolvedFirstQuote: NRPost? {
+        displayedFirstQuote ?? noteRowAttributes.firstQuote
+    }
+
+    private var didFailToFetchFirstQuote: Bool {
+        switch vm.state {
+        case .timeout, .error: return true
+        default: return false
+        }
     }
 
     @ViewBuilder
     private func repostedPost(embedded: Bool) -> some View {
-        if let firstQuote = displayedFirstQuote {
+        if let firstQuote = resolvedFirstQuote {
             if firstQuote.blocked || firstQuote.muted || (!notMutedWords(in: firstQuote.plainText, mutedWords: mutedWords) && !revealMutedFirstQuoteByWords) {
                 HStack {
                     if firstQuote.blocked {
@@ -209,10 +152,104 @@ struct Repost: View {
                     .padding(.horizontal, !embedded && firstQuote.kind == 30023 ? 10 : 0)
             }
         }
+        else if nrPost.firstQuoteId == nil {
+            Text("Reposted post unavailable")
+                .foregroundStyle(.secondary)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.lineColor, lineWidth: 1)
+                )
+        }
+        else if didFailToFetchFirstQuote {
+            VStack(spacing: 8) {
+                Text("Unable to fetch reposted post")
+                    .foregroundStyle(.secondary)
+                Text("Retry")
+                    .foregroundStyle(theme.accent)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: retryFetchingFirstQuote)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(theme.lineColor, lineWidth: 1)
+            )
+        }
         else {
             theme.background
-                .frame(height: embedded ? 120 : 475)
+                .frame(height: embedded ? 120 : 250)
+                .overlay { CenteredProgressView() }
         }
+    }
+
+    private func startFetchingFirstQuote() {
+        guard let firstQuoteId = nrPost.firstQuoteId else { return }
+        let fetchParams: FetchVM.FetchParams = (
+            prio: true,
+            req: { taskId in
+                bg().perform { // 1. CHECK LOCAL DB
+                    if let event = Event.fetchEvent(id: firstQuoteId, context: bg()) {
+                        let nrFirstQuote = NRPost(event: event, withFooter: false)
+                        Task { @MainActor in
+                            noteRowAttributes.firstQuote = nrFirstQuote
+                        }
+                    }
+                    else { // 2. ELSE CHECK RELAY
+                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
+                        req(RM.getEvent(id: firstQuoteId, subscriptionId: taskId))
+                    }
+                }
+            },
+            onComplete: { relayMessage, event in
+                if let event = event, event.id == firstQuoteId {
+                    let nrFirstQuote = NRPost(event: event, withFooter: false)
+                    Task { @MainActor in
+                        guard noteRowAttributes.firstQuote == nil else { return }
+                        noteRowAttributes.firstQuote = nrFirstQuote
+                    }
+                }
+                else if let event = Event.fetchEvent(id: firstQuoteId, context: bg()) {
+#if DEBUG
+                    if vm.state == .altLoading, let relay = self.relayHint {
+                        L.og.debug("Event found on using relay hint: \(firstQuoteId) - \(relay)")
+                    }
+#endif
+                    let nrFirstQuote = NRPost(event: event, withFooter: false)
+                    Task { @MainActor in
+                        guard noteRowAttributes.firstQuote == nil else { return }
+                        noteRowAttributes.firstQuote = nrFirstQuote
+                    }
+                }
+                else if (SettingsStore.shared.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
+                    vm.altFetch()
+                }
+                else {
+                    vm.timeout()
+                }
+            },
+            altReq: { taskId in
+                req(RM.getEvent(id: firstQuoteId, subscriptionId: taskId), relayType: .SEARCH)
+
+                guard let relayHint = nrPost.fastTags.first(where: {
+                    $0.0 == "e" && $0.1 == firstQuoteId && $0.2 != ""
+                })?.2 else { return }
+
+                self.relayHint = relayHint
+
+#if DEBUG
+                L.og.debug("FetchVM.3 HINT \(firstQuoteId) \(relayHint)")
+#endif
+                ConnectionPool.shared.sendEphemeralMessage(
+                    RM.getEvent(id: firstQuoteId, subscriptionId: taskId),
+                    relay: relayHint
+                )
+            }
+        )
+        vm.setFetchParams(fetchParams)
+        vm.fetch()
     }
     
     private func enqueue() {
@@ -230,14 +267,15 @@ struct Repost: View {
         }
     }
 
+    private func retryFetchingFirstQuote() {
+        vm.state = .initializing
+        startFetchingFirstQuote()
+    }
+
     private func navigateToRepostedPost() {
         guard !nxViewingContext.contains(.preview) else { return }
-        if let firstQuote = noteRowAttributes.firstQuote {
-            navigateTo(firstQuote, context: containerID)
-        }
-        else if let firstQuoteId = nrPost.firstQuoteId {
-            navigateTo(NotePath(id: firstQuoteId), context: containerID)
-        }
+        guard let firstQuote = noteRowAttributes.firstQuote else { return }
+        navigateTo(firstQuote, context: containerID)
     }
 }
 
