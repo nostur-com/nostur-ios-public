@@ -124,6 +124,25 @@ class NXColumnViewModel: ObservableObject {
         // Animated unread navigation can bring several lazy rows through the appearance threshold.
         // The selected indexed target is marked explicitly when the scroll finishes.
         guard !vmInner.isPerformingScrollToFirstUnread else { return false }
+        // The restored list paints from offset 0 before it jumps to the saved post.
+        // Those newest rows must not mark the unread stack as read.
+        guard !vmInner.isPreparingForScrollRestore else { return false }
+        let scrollView: UIScrollView? = collectionView ?? tableView
+        if scrollView?.isDragging == true || scrollView?.isTracking == true {
+            vmInner.holdUnreadAboveReadingPost = false
+        }
+        if vmInner.holdUnreadAboveReadingPost,
+           let readingID = vmInner.readingPostID,
+           case .posts(let posts) = viewState,
+           let readingIndex = posts.firstIndex(where: { $0.id == readingID }),
+           let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }),
+           appearedIndex < readingIndex {
+            return false
+        }
+        let visibleIds = currentVisiblePostIds()
+        if !visibleIds.isEmpty && !visibleIds.contains(nrPost.id) {
+            return false
+        }
     #if DEBUG
         L.og.debug("☘️☘️ \(self.config?.name ?? "?") NXPostsFeed.onPostAppearOnce() -> updateIsAtTop() BEFORE: \(self.vmInner.isAtTop) -[LOG]-")
     #endif
@@ -1702,6 +1721,7 @@ class NXColumnViewModel: ObservableObject {
                                 vmInner.pendingScrollToIndex = restoreToIndex
                                 vmInner.pendingScrollToPostID = scrollToId
                                 vmInner.readingPostID = scrollToId
+                                vmInner.holdUnreadAboveReadingPost = true
                                 
                                 // Update the view state without animation
                                 withTransaction(Transaction(animation: nil)) {
@@ -3618,6 +3638,7 @@ extension NXColumnViewModel {
                             vmInner.pendingScrollToIndex = restoreToIndex
                             vmInner.pendingScrollToPostID = previousFirstPostId
                             vmInner.readingPostID = previousFirstPostId
+                            vmInner.holdUnreadAboveReadingPost = true
                             
                             // Update the view state without animation
                             withTransaction(Transaction(animation: nil)) {

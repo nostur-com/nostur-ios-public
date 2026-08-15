@@ -70,6 +70,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         }
     }
 
+    func visiblePostID() -> String? {
+        guard let scrollView, scrollView.window != nil else { return lastKnownAnchor?.id }
+        return visibleAnchor(in: scrollView)?.id ?? lastKnownAnchor?.id
+    }
+
     /// Preserve reading position across tab/detail navigation. Row content can finish resolving
     /// while its List is hidden, when UIKit's visible-cell anchoring is not reliable.
     func suspendPositionTracking() {
@@ -753,6 +758,33 @@ struct NXPostsFeed: View {
             scrollToTop()
             return
         }
+
+        // Walk upward from the post on screen, not from the bottom of the list.
+        // After restore, a false appear on a newer row can mark a block as read;
+        // the nearest unread above the reading position is still the next tap.
+        let startIndex: Int = {
+            if let readingID = vmInner.readingPostID ?? vmInner.pendingScrollToPostID,
+               let index = posts.firstIndex(where: { $0.id == readingID }) {
+                return index
+            }
+            if let visibleID = layoutStabilizer.visiblePostID(),
+               let index = posts.firstIndex(where: { $0.id == visibleID }) {
+                return index
+            }
+            return posts.count
+        }()
+
+        if startIndex > 0 {
+            var index = startIndex - 1
+            while index >= 0 {
+                if let unreadCount = vmInner.unreadIds[posts[index].id], unreadCount > 0 {
+                    scrollToIndex(index)
+                    return
+                }
+                index -= 1
+            }
+        }
+
         for post in posts.reversed() {
             if let unreadCount = vmInner.unreadIds[post.id], unreadCount > 0 {
                 if let firstUnreadPostIndex = posts.firstIndex(where: { $0.id == post.id }) {
@@ -777,6 +809,7 @@ struct NXPostsFeed: View {
         scrollToIndex(0)
         vmInner.isAtTop = true
         vmInner.readingPostID = nil
+        vmInner.holdUnreadAboveReadingPost = false
 //        
 //        // Regular updateIsAtTop() in onPostAppearOnce { } doesn't catch the first row appearing to set isAtTop to 0, probably because
 //        // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
@@ -832,6 +865,7 @@ struct NXPostsFeed: View {
                 vmInner.readingPostID = rememberedID
                 layoutStabilizer.rememberAnchor(id: rememberedID)
                 layoutStabilizer.pinItemToVisibleTop(id: rememberedID)
+                restoreUnreadIdsAbove(postID: rememberedID)
             }
             
             vmInner.clearScrollRequest()
@@ -869,6 +903,19 @@ struct NXPostsFeed: View {
         } else {
             vmInner.isPerformingScrollToFirstUnread = false
             layoutStabilizer.cancelProgrammaticScroll()
+        }
+    }
+
+    private func restoreUnreadIdsAbove(postID: String) {
+        guard case .posts(let currentPosts) = vm.viewState,
+              let restoreIndex = currentPosts.firstIndex(where: { $0.id == postID }) else { return }
+        vmInner.updateUnreadIds { unreadIds in
+            for index in currentPosts.indices where index < restoreIndex {
+                let post = currentPosts[index]
+                if unreadIds[post.id] == nil || unreadIds[post.id] == 0 {
+                    unreadIds[post.id] = 1 + post.parentPosts.count
+                }
+            }
         }
     }
 
@@ -990,6 +1037,7 @@ struct NXPostsFeed: View {
         vmInner.isAtTop = isAtTopNow
         if isAtTopNow {
             vmInner.readingPostID = nil
+            vmInner.holdUnreadAboveReadingPost = false
         }
         
 #if DEBUG

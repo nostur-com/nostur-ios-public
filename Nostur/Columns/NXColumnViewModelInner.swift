@@ -118,6 +118,10 @@ class NXColumnViewModelInner {
     /// Last post the user was parked on after restore or while reading mid-feed.
     /// Used so a later top-insert cannot be mistaken for "user is at the top".
     public var readingPostID: String?
+    /// After restore, rows just above the parked post can sit a few points into
+    /// the viewport and would be marked read. Keep them unread until the user
+    /// actually drags the feed.
+    public var holdUnreadAboveReadingPost = false
 
     /// Installed by the visible feed so passive list mutations can preserve the exact post and
     /// viewport offset the user is reading, even when rows are inserted above it.
