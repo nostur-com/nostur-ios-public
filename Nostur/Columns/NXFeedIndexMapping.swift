@@ -105,4 +105,27 @@ enum NXFeedViewport {
     ) -> CGFloat {
         oldOffset + oldInsetTop - newInsetTop
     }
+
+    static func isOffsetAtTop(contentOffsetY: CGFloat, insetTop: CGFloat, threshold: CGFloat = 5) -> Bool {
+        contentOffsetY <= -insetTop + threshold
+    }
+
+    /// Live scroll offset wins. A leftover reading-post id from an unfinished
+    /// restore must not pretend the user is mid-feed while they are looking at the top.
+    static func isActuallyAtTop(
+        hasLiveScrollView: Bool,
+        contentOffsetY: CGFloat,
+        insetTop: CGFloat,
+        isPreparingRestore: Bool,
+        restoreExpired: Bool,
+        fallbackIsAtTop: Bool
+    ) -> Bool {
+        if isPreparingRestore && !restoreExpired {
+            return false
+        }
+        if hasLiveScrollView {
+            return isOffsetAtTop(contentOffsetY: contentOffsetY, insetTop: insetTop)
+        }
+        return fallbackIsAtTop
+    }
 }

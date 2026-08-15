@@ -825,10 +825,14 @@ struct NXPostsFeed: View {
     private func performScrollToIndex(_ scrollToIndex: Int) {
         // While we scroll to previous index here, we are triggering onPostAppearOnce(), which updates markAsRead
         // But it wasn't a real onPostAppearOnce, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
+        if shouldAbortLatePreparedRestore() {
+            vmInner.abortPreparedScrollRestore()
+            return
+        }
+
         vmInner.isPerformingScroll = true
         
         Task { @MainActor in
-            let proxy = ScrollOffset.proxy(.top, id: vm.columnVMid)
             let restorePostID = vmInner.pendingScrollToPostID
             let resolvedScrollToIndex: Int = if let restorePostID,
                                                 case .posts(let currentPosts) = vm.viewState,
@@ -837,26 +841,28 @@ struct NXPostsFeed: View {
             } else {
                 scrollToIndex
             }
-            
-            // Only proceed if we're in a valid scroll state
-            guard proxy.offset >= 0 else {
+
+            let scrollView: UIScrollView? = vm.collectionView ?? vm.tableView
+            guard let scrollView, let indexPath = feedIndexPath(for: resolvedScrollToIndex, in: scrollView) else {
                 vmInner.isPerformingScroll = false
                 vmInner.clearScrollRequest()
-                vmInner.pendingScrollToPostID = nil
+                return
+            }
+
+            if shouldAbortLatePreparedRestore(in: scrollView) {
+                vmInner.isPerformingScroll = false
+                vmInner.abortPreparedScrollRestore()
                 return
             }
             
             // Disable animations for smoother performance
             UIView.performWithoutAnimation {
-                let scrollView: UIScrollView? = vm.collectionView ?? vm.tableView
-                if let scrollView, let indexPath = feedIndexPath(for: resolvedScrollToIndex, in: scrollView) {
-                    if let collectionView = vm.collectionView {
-                        collectionView.scrollToItem(at: indexPath, at: .top, animated: false)
-                    } else if let tableView = vm.tableView {
-                        tableView.scrollToRow(at: indexPath, at: .top, animated: false)
-                    }
-                    vmInner.isAtTop = resolvedScrollToIndex == 0
+                if let collectionView = vm.collectionView {
+                    collectionView.scrollToItem(at: indexPath, at: .top, animated: false)
+                } else if let tableView = vm.tableView {
+                    tableView.scrollToRow(at: indexPath, at: .top, animated: false)
                 }
+                vmInner.isAtTop = resolvedScrollToIndex == 0
             }
 
             let rememberedID = restorePostID
@@ -870,6 +876,9 @@ struct NXPostsFeed: View {
             
             vmInner.clearScrollRequest()
             vmInner.pendingScrollToPostID = nil
+            vmInner.isPreparingForScrollRestore = false
+            vmInner.pendingScrollToIndex = nil
+            vmInner.scrollRestoreStartedAt = nil
 
             // This is feed restoration, not unread navigation. Keep the established lightweight
             // path so subsequent new-post insertion can preserve position with withAnimation.
@@ -877,6 +886,17 @@ struct NXPostsFeed: View {
             vmInner.isPerformingScroll = false
             vmInner.updateIsAtTopSubject.send()
         }
+    }
+
+    private func shouldAbortLatePreparedRestore(in scrollView: UIScrollView? = nil) -> Bool {
+        guard vmInner.isPreparingForScrollRestore,
+              vmInner.isPreparedScrollRestoreExpired else { return false }
+        let scrollView = scrollView ?? vm.collectionView ?? vm.tableView
+        guard let scrollView, scrollView.window != nil else { return false }
+        return NXFeedViewport.isOffsetAtTop(
+            contentOffsetY: scrollView.contentOffset.y,
+            insetTop: scrollView.adjustedContentInset.top
+        )
     }
     
     private func scrollToIndex(_ scrollToIndex: Int) {
@@ -985,6 +1005,10 @@ struct NXPostsFeed: View {
 
     private func restorePreparedScrollPositionIfNeeded(in scrollView: UIScrollView) {
         guard vmInner.isPreparingForScrollRestore else { return }
+        if shouldAbortLatePreparedRestore(in: scrollView) {
+            vmInner.abortPreparedScrollRestore()
+            return
+        }
         let restorePostID = vmInner.pendingScrollToPostID ?? vmInner.readingPostID
         let restoreIndex = restorePostID.flatMap { postID in posts.firstIndex(where: { $0.id == postID }) }
             ?? vmInner.pendingScrollToIndex
@@ -1029,7 +1053,10 @@ struct NXPostsFeed: View {
         let scrollView: UIScrollView? = vm.collectionView ?? vm.tableView
         guard let scrollView else { return }
 
-        let isAtTopNow = scrollView.contentOffset.y <= -scrollView.adjustedContentInset.top + 5
+        let isAtTopNow = NXFeedViewport.isOffsetAtTop(
+            contentOffsetY: scrollView.contentOffset.y,
+            insetTop: scrollView.adjustedContentInset.top
+        )
         
         // Only update if the state actually changed
         guard vmInner.isAtTop != isAtTopNow else { return }

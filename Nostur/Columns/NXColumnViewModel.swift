@@ -34,19 +34,41 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     private var isFeedActuallyAtTop: Bool {
-        if vmInner.isPreparingForScrollRestore, (vmInner.pendingScrollToIndex ?? 0) > 0 {
-            return false
-        }
-        if let readingID = vmInner.pendingScrollToPostID ?? vmInner.readingPostID,
-           case .posts(let posts) = viewState,
-           let index = posts.firstIndex(where: { $0.id == readingID }),
-           index > 0 {
-            return false
-        }
-
         let scrollView: UIScrollView? = collectionView ?? tableView
-        guard let scrollView, scrollView.window != nil else { return vmInner.isAtTop }
-        return scrollView.contentOffset.y <= -scrollView.adjustedContentInset.top + 5
+        let hasLiveScrollView = scrollView?.window != nil
+        return NXFeedViewport.isActuallyAtTop(
+            hasLiveScrollView: hasLiveScrollView,
+            contentOffsetY: scrollView?.contentOffset.y ?? 0,
+            insetTop: scrollView?.adjustedContentInset.top ?? 0,
+            isPreparingRestore: vmInner.isPreparingForScrollRestore && (vmInner.pendingScrollToIndex ?? 0) > 0,
+            restoreExpired: vmInner.isPreparedScrollRestoreExpired,
+            fallbackIsAtTop: vmInner.isAtTop
+        )
+    }
+
+    @MainActor
+    private func shouldAbortLatePreparedRestoreFromViewModel() -> Bool {
+        guard vmInner.isPreparingForScrollRestore,
+              vmInner.isPreparedScrollRestoreExpired else { return false }
+        return isFeedActuallyAtTop
+    }
+
+    /// Incoming prepends must not complete a pending jump to a saved mid-feed
+    /// post if the user is already looking at the painted top.
+    @MainActor
+    private func isVisuallyAtTopForIncomingPosts() -> Bool {
+        if isFeedActuallyAtTop { return true }
+        let scrollView: UIScrollView? = collectionView ?? tableView
+        guard vmInner.isPreparingForScrollRestore,
+              let scrollView, scrollView.window != nil,
+              NXFeedViewport.isOffsetAtTop(
+                contentOffsetY: scrollView.contentOffset.y,
+                insetTop: scrollView.adjustedContentInset.top
+              ) else {
+            return false
+        }
+        vmInner.abortPreparedScrollRestore()
+        return true
     }
 
     /// `withAnimation` is intentional for ordinary updates where SwiftUI owns positioning.
@@ -126,7 +148,13 @@ class NXColumnViewModel: ObservableObject {
         guard !vmInner.isPerformingScrollToFirstUnread else { return false }
         // The restored list paints from offset 0 before it jumps to the saved post.
         // Those newest rows must not mark the unread stack as read.
-        guard !vmInner.isPreparingForScrollRestore else { return false }
+        if vmInner.isPreparingForScrollRestore {
+            if shouldAbortLatePreparedRestoreFromViewModel() {
+                vmInner.abortPreparedScrollRestore()
+            } else {
+                return false
+            }
+        }
         let scrollView: UIScrollView? = collectionView ?? tableView
         if scrollView?.isDragging == true || scrollView?.isTracking == true {
             vmInner.holdUnreadAboveReadingPost = false
@@ -210,19 +238,21 @@ class NXColumnViewModel: ObservableObject {
                 }
                 else if case .posts(_) = viewState {
                     Task { @MainActor in
+                        FeedsCoordinator.shared.registerColumn(self)
                         self.resume()
                     }
                 }
             }
             else if !isPaused {
                 Task { @MainActor in
+                    FeedsCoordinator.shared.unregisterColumn(self)
                     self.pause()
                 }
             }
         }
     }
     
-    private var fetchFeedTimer: Timer? = nil
+    private var paused = true
     private var lastResumeStartedAt: Date?
     private var newEventsInDatabaseSub: AnyCancellable?
     private var newPostSavedSub: AnyCancellable?
@@ -561,7 +591,8 @@ class NXColumnViewModel: ObservableObject {
         isViewPaused = false
         guard isVisible else { return }
         self.resetCancellables()
-        startFetchFeedTimer()
+        paused = false
+        FeedsCoordinator.shared.registerColumn(self)
         
 //        // Change to loading if we were displaying posts before
 //        if case .posts(_) = viewState {
@@ -604,7 +635,6 @@ class NXColumnViewModel: ObservableObject {
 
         resumeFeedSub?.cancel()
         resumeFeedSub = nil
-        listenForResumeFeed(config)
         
         pauseFeedSub?.cancel()
         pauseFeedSub = nil
@@ -711,9 +741,7 @@ class NXColumnViewModel: ObservableObject {
             allShortIdsSeen = []
             fetchKind3ForSomeoneElsesFeed(pubkey, config: config) { [weak self] updatedConfig in
                 self?.config = updatedConfig
-                Task {
-                    await self?.loadRemote(updatedConfig) // <--- fetch new posts (with gap filler)
-                }
+                self?.scheduleInitialRemoteFetch(updatedConfig)
             }
         }
         else { // Else we can start as normal with loadLocal
@@ -740,16 +768,11 @@ class NXColumnViewModel: ObservableObject {
                 ConnectionPool.shared.queue.async(flags: .barrier) { [weak self] in
                     if resumeWhereLeftOff {
                         self?.loadLocal(config) { [weak self] in // <-- instant, and works offline
-                            // callback to load remote
-                            Task {
-                                await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
-                            }
+                            self?.scheduleInitialRemoteFetch(config)
                         }
                     }
                     else {
-                        Task {
-                            await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
-                        }
+                        self?.scheduleInitialRemoteFetch(config)
                     }
                 }
             }
@@ -758,25 +781,17 @@ class NXColumnViewModel: ObservableObject {
                     conn.connect()
                     
                     // Relay Preview without Resume-Where-Left
-                    Task {
-                        await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
-                    }
+                    self?.scheduleInitialRemoteFetch(config)
                 }
             }
             else {
                 if resumeWhereLeftOff {
                     loadLocal(config) { [weak self] in // <-- instant, and works offline
-                        // callback to load remote
-                        Task {
-                            await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
-                        }
+                        self?.scheduleInitialRemoteFetch(config)
                     }
                 }
                 else {
-                    // callback to load remote
-                    Task {
-                        await self.loadRemote(config) // <--- fetch new posts (with gap filler)
-                    }
+                    scheduleInitialRemoteFetch(config)
                 }
             }
             
@@ -1042,7 +1057,8 @@ class NXColumnViewModel: ObservableObject {
             }
             config.feed?.lastRead = []
             self.allShortIdsSeen = []
-            startFetchFeedTimer()
+            paused = false
+            FeedsCoordinator.shared.registerColumn(self)
             if config.continue {
                 if refreshRemote, config.mediaFeedSourceSnapshot != nil {
                     // A source change replaces the current screen. Search all locally
@@ -1241,7 +1257,8 @@ class NXColumnViewModel: ObservableObject {
 
         let subscriptionId = "prio-MEDIA-DISC-" + String(UUID().uuidString.prefix(16))
         mediaDiscoverySubscriptionId = subscriptionId
-        startFetchFeedTimer()
+        paused = false
+        FeedsCoordinator.shared.registerColumn(self)
         loadLocal(temporaryConfig) { [weak self] in
             Task { @MainActor in
                 guard let self, self.mediaDiscoverySubscriptionId == subscriptionId else { return }
@@ -1481,7 +1498,7 @@ class NXColumnViewModel: ObservableObject {
     }
     
     // for pausing fetching / loading
-    public var isPaused: Bool { self.fetchFeedTimer == nil }
+    public var isPaused: Bool { paused }
     
     // only for pausing view updates (to fix to detail and back withAnimation { } issue_
     public var isViewPaused: Bool = false
@@ -1512,8 +1529,7 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) pause() -[LOG]-")
 #endif
-        self.fetchFeedTimer?.invalidate()
-        self.fetchFeedTimer = nil
+        paused = true
         self.lastResumeStartedAt = nil
         self.realTimeReqTask?.cancel()
         
@@ -1570,13 +1586,19 @@ class NXColumnViewModel: ObservableObject {
 #endif
     }
     
-    private func startFetchFeedTimer() {
-        guard fetchFeedTimer == nil else { return }
-        self.fetchFeedTimer?.invalidate()
-        self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
-            self?.fetchFeedTimerNextTick()
+    private func scheduleInitialRemoteFetch(_ config: NXColumnConfig) {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            FeedsCoordinator.shared.scheduleNetworkStart(id: self.columnVMid) { [weak self] in
+                guard let self else { return }
+                if FeedsCoordinator.shared.hasMultipleVisibleColumns {
+                    self.fetchFeedTimerNextTick()
+                }
+                Task {
+                    await self.loadRemote(config)
+                }
+            }
         }
-        self.fetchFeedTimer?.tolerance = 2.0
     }
     
     @MainActor
@@ -1593,13 +1615,14 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop) -[LOG]-")
 #endif
+        paused = false
         isViewPaused = false
+        FeedsCoordinator.shared.registerColumn(self)
         speedTest?.start()
 #if DEBUG
         startFirstUnreadMeasurementIfNeeded(config, reason: "resume")
 #endif
         
-        self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
         self.listenForNewPosts(config)
         if config.continue {
@@ -1712,24 +1735,16 @@ class NXColumnViewModel: ObservableObject {
                                     }
                                 }
                                 
-                                // Copy pasta from putOnScreen():
-                                
-                                // Signal that we're about to update with new posts that will need scroll restoration
-                                vmInner.isPreparingForScrollRestore = true
-                                
-                                // Store the target index for later use
-                                vmInner.pendingScrollToIndex = restoreToIndex
-                                vmInner.pendingScrollToPostID = scrollToId
-                                vmInner.readingPostID = scrollToId
+                                // Pending only. Do not set readingPostID / isAtTop until
+                                // the scroll actually lands — a leftover mid-feed id made
+                                // later prepends jump away from the visible top post.
+                                vmInner.beginPreparedScrollRestore(postID: scrollToId, index: restoreToIndex)
                                 vmInner.holdUnreadAboveReadingPost = true
                                 
                                 // Update the view state without animation
                                 withTransaction(Transaction(animation: nil)) {
                                     viewState = .posts(nrPosts)
                                 }
-                                
-                                // Set isAtTop to false since we'll be scrolling to a non-top position
-                                vmInner.isAtTop = false
                                 
 #if DEBUG
                                 L.og.debug("☘️☘️ \(config.name) - First load from local state - restoreToIndex: \(restoreToIndex) - id: \(scrollToId) -[LOG]-")
@@ -1738,14 +1753,6 @@ class NXColumnViewModel: ObservableObject {
                                 // After a very short delay, trigger the scroll
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                                     self.vmInner.requestScroll(to: restoreToIndex)
-                                    
-                                    // Reset the preparation flag after a delay
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                        self.vmInner.isPreparingForScrollRestore = false
-                                        self.vmInner.pendingScrollToIndex = nil
-                                        // Cleared by NXPostsFeed after it resolves the latest index
-                                        // and performs the delayed restoration scroll.
-                                    }
                                 }
                             }
                             else {
@@ -2929,18 +2936,6 @@ class NXColumnViewModel: ObservableObject {
     private let queuedSubscriptionIds = NXQueuedSubscriptionIds()
     
     private var resumeFeedSub: AnyCancellable?
-
-    @MainActor
-    private func listenForResumeFeed(_ config: NXColumnConfig) {
-        guard resumeFeedSub == nil else { return }
-        resumeFeedSub = FeedsCoordinator.shared.resumeFeedsSubject
-            .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
-//            .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
-            .sink { [weak self] _ in
-                guard let self, (!AppState.shared.appIsInBackground || IS_CATALYST) && isVisible else { return }
-                self.resume()
-            }
-    }
     
     private var pauseFeedSub: AnyCancellable?
 
@@ -3025,9 +3020,13 @@ class NXColumnViewModel: ObservableObject {
                 }
         }
  
-        realTimeReqTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            self?.sendRealtimeReq(config)
+        // Multi-column refresh is rotated by FeedFetchScheduler. The delayed
+        // REQ is only needed when this is the single live column (iPhone/iPad).
+        if !FeedsCoordinator.shared.hasMultipleVisibleColumns {
+            realTimeReqTask = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                self?.sendRealtimeReq(config)
+            }
         }
     }
     
@@ -3278,9 +3277,10 @@ class NXColumnViewModel: ObservableObject {
         blockListUpdatedSub?.cancel()
         muteListUpdatedSub?.cancel()
         
-        // Invalidate timer
-        fetchFeedTimer?.invalidate()
-        fetchFeedTimer = nil
+        let scheduleId = columnVMid
+        Task { @MainActor in
+            FeedsCoordinator.shared.unregisterColumn(id: scheduleId)
+        }
         
         // Cancel task
         realTimeReqTask?.cancel()
@@ -3568,7 +3568,7 @@ extension NXColumnViewModel {
                 .uniqued(on: { $0.id }) // <--- need last line?
             
             if !insertAtEnd { // add on top
-                let isAtTop = isFeedActuallyAtTop
+                let isAtTop = isVisuallyAtTopForIncomingPosts()
                 if vmInner.isAtTop != isAtTop {
                     vmInner.isAtTop = isAtTop
                 }
@@ -3608,15 +3608,10 @@ extension NXColumnViewModel {
                 }
                 
                 if isAtTop {
-                    // Prefer the post the user was actually reading. Falling back to the previous
-                    // first post is only correct when they really were at the top.
-                    let previousFirstPostId: String? = {
-                        if let readingID = vmInner.readingPostID ?? vmInner.pendingScrollToPostID,
-                           existingPosts.contains(where: { $0.id == readingID }) {
-                            return readingID
-                        }
-                        return existingPosts.first?.id
-                    }()
+                    // Visually at top: pin to the on-screen first post. A leftover
+                    // readingPostID from an unfinished restore is further down the list
+                    // and would yank the user away from the post they just started reading.
+                    let previousFirstPostId = existingPosts.first?.id
                     
                     // TODO: Should already start prefetching missing onlyNewAddedPosts pfp/kind 0 here
 
@@ -3631,22 +3626,13 @@ extension NXColumnViewModel {
                         
                         // ANTI-FLICKER:
                         if let previousFirstPostId, let restoreToIndex = addedAndExistingPostsTruncated.firstIndex(where: { $0.id == previousFirstPostId })  {
-                            // Signal that we're about to update with new posts that will need scroll restoration
-                            vmInner.isPreparingForScrollRestore = true
-                            
-                            // Store the target index for later use
-                            vmInner.pendingScrollToIndex = restoreToIndex
-                            vmInner.pendingScrollToPostID = previousFirstPostId
-                            vmInner.readingPostID = previousFirstPostId
+                            vmInner.beginPreparedScrollRestore(postID: previousFirstPostId, index: restoreToIndex)
                             vmInner.holdUnreadAboveReadingPost = true
                             
                             // Update the view state without animation
                             withTransaction(Transaction(animation: nil)) {
                                 viewState = .posts(addedAndExistingPostsTruncated)
                             }
-                            
-                            // Set isAtTop to false since we'll be scrolling to a non-top position
-                            vmInner.isAtTop = false
                             
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) putOnScreen restoreToIndex: \((addedAndExistingPostsTruncated[restoreToIndex].content ?? "").prefix(150)) -[LOG]-")
@@ -3655,19 +3641,10 @@ extension NXColumnViewModel {
                             // After a very short delay, trigger the scroll
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
                                 self.vmInner.requestScroll(to: restoreToIndex)
-                                
-                                // Reset the preparation flag after a delay
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    self.vmInner.isPreparingForScrollRestore = false
-                                    self.vmInner.pendingScrollToIndex = nil
-                                    // pendingScrollToPostID is cleared by NXPostsFeed after use.
-                                }
                             }
                         }
                         else {
-                            self.vmInner.isPreparingForScrollRestore = false
-                            self.vmInner.pendingScrollToIndex = nil
-                            self.vmInner.pendingScrollToPostID = nil
+                            self.vmInner.abortPreparedScrollRestore()
                             // No previous post to restore to, just update the view
                             viewState = .posts(addedAndExistingPostsTruncated)
                         }
@@ -3690,9 +3667,7 @@ extension NXColumnViewModel {
                 L.og.debug("☘️☘️ \(config.name) putOnScreen addedPosts (AT END) \(onlyNewAddedPosts.count.description) -[LOG]-")
 #endif
                 
-                self.vmInner.isPreparingForScrollRestore = false
-                self.vmInner.pendingScrollToIndex = nil
-                self.vmInner.pendingScrollToPostID = nil
+                self.vmInner.abortPreparedScrollRestore()
                 
                 // No withAnimation { } at bottom or it will jump?
                 self.viewState = .posts(existingPosts + onlyNewAddedPosts)
@@ -3706,9 +3681,7 @@ extension NXColumnViewModel {
             if !vmInner.isAtTop {
                 vmInner.isAtTop = true
             }
-            vmInner.isPreparingForScrollRestore = false
-            vmInner.pendingScrollToIndex = nil
-            vmInner.pendingScrollToPostID = nil
+            vmInner.abortPreparedScrollRestore()
             setPosts(uniqueAddedPosts)
         }
         
@@ -4070,6 +4043,26 @@ enum ColumnViewState {
     case posts([NRPost]) // Posts
     case timeout
     case error(String)
+}
+
+@MainActor
+extension NXColumnViewModel: FeedColumnScheduling {
+    var columnScheduleId: UUID { columnVMid }
+    
+    var prefersFirstInRotation: Bool {
+        guard let config else { return false }
+        return config.id.hasPrefix("Following-") && config.name != "Explore"
+    }
+    
+    var isPausedForScheduling: Bool { isPaused }
+    
+    func scheduledResume() {
+        resume()
+    }
+    
+    func scheduledFetchTick() {
+        fetchFeedTimerNextTick()
+    }
 }
 
 let FETCH_FEED_INTERVAL = 9.0

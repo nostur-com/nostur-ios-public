@@ -13,9 +13,41 @@ class FeedsCoordinator {
     static let shared = FeedsCoordinator()
     private init() {}
     
+    @MainActor
+    lazy var fetchScheduler = FeedFetchScheduler()
+    
     public var resumeFeedsSubject = PassthroughSubject<Void, Never>()
     public func resumeFeeds() {
         resumeFeedsSubject.send()
+        Task { @MainActor in
+            self.fetchScheduler.resumeAll()
+        }
+    }
+    
+    @MainActor
+    var hasMultipleVisibleColumns: Bool {
+        fetchScheduler.hasMultipleVisibleColumns
+    }
+    
+    @MainActor
+    func registerColumn(_ column: FeedColumnScheduling) {
+        fetchScheduler.usesDesktopCollectWindow = IS_DESKTOP_COLUMNS()
+        fetchScheduler.register(column)
+    }
+    
+    @MainActor
+    func unregisterColumn(_ column: FeedColumnScheduling) {
+        fetchScheduler.unregister(column)
+    }
+    
+    @MainActor
+    func unregisterColumn(id: UUID) {
+        fetchScheduler.unregister(id: id)
+    }
+    
+    @MainActor
+    func scheduleNetworkStart(id: UUID, work: @escaping () -> Void) {
+        fetchScheduler.scheduleNetworkStart(id: id, work: work)
     }
     
     public var pauseFeedsSubject = PassthroughSubject<Void, Never>()

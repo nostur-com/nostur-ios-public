@@ -111,25 +111,13 @@ extension AppView {
             if !IS_CATALYST {
                 // Keep share extension write-relay list in sync after relay edits (iOS only).
                 AccountsState.shared.refreshShareExtensionAccountState()
-                if (AppState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)
-                    AppState.shared.appIsInBackground = false // needs to set before we call other actions
-                    ConnectionPool.shared.connectAll()
-                    sendNotification(.scenePhaseActive)
-                    FeedsCoordinator.shared.resumeFeeds()
-                    DMsVM.restoreSubscriptions()
-                    ConversionVM.restoreSubscriptions()
-                    NotificationsViewModel.restoreSubscriptions()
-                    NotificationsViewModel.shared.checkImmediately(reason: "scenePhaseActive", force: true)
-                    AppState.shared.startTaskTimers()
-                    try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-                    try? AVAudioSession.sharedInstance().setActive(true)
-
-                    // NIP-40: promptly drop expired DM copies when returning from background
-                    Task { await Maintenance.purgeExpiredDMsNow() }
-                }
             }
-            else {
-                AppState.shared.appIsInBackground = false
+            
+            // Catalyst used to resume on every .active (menu click, focus).
+            // Only catch up after a real background, same as iOS. Socket
+            // reconnects still nudge FeedsCoordinator.resumeFeeds().
+            if AppState.shared.appIsInBackground { // if we were actually in background (from .background, not just a few seconds .inactive)
+                AppState.shared.appIsInBackground = false // needs to set before we call other actions
                 ConnectionPool.shared.connectAll()
                 sendNotification(.scenePhaseActive)
                 FeedsCoordinator.shared.resumeFeeds()
@@ -138,6 +126,10 @@ extension AppView {
                 NotificationsViewModel.restoreSubscriptions()
                 NotificationsViewModel.shared.checkImmediately(reason: "scenePhaseActive", force: true)
                 AppState.shared.startTaskTimers()
+                if !IS_CATALYST {
+                    try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                    try? AVAudioSession.sharedInstance().setActive(true)
+                }
 
                 // NIP-40: promptly drop expired DM copies when returning from background
                 Task { await Maintenance.purgeExpiredDMsNow() }
