@@ -173,17 +173,8 @@ struct SideBar: View {
                                     Image(systemName: "envelope")
                                         .frame(width: Self.ICON_WIDTH)
                                         .overlay(alignment: .topTrailing) {
-                                            if (dm.unread + dm.unreadNewRequestsCount) > 0 {
-                                                Text("\((dm.unread + dm.unreadNewRequestsCount))")
-                                                    .font(.caption2)
-                                                    .fontWeight(.semibold)
-                                                    .foregroundColor(.white)
-                                                    .padding(.horizontal, 7 > 99 ? 4 : 6)
-                                                    .padding(.vertical, 2)
-                                                    .background(.red)
-                                                    .clipShape(Capsule())
-                                                    .offset(x: 5, y: -6)
-                                            }
+                                            UnreadCountBadge(count: dm.unread + dm.unreadNewRequestsCount)
+                                                .offset(x: 10, y: -6)
                                         }
                                     
                                 }
@@ -218,17 +209,8 @@ struct SideBar: View {
                                         }
                                         .frame(width: Self.ICON_WIDTH)
                                         .overlay(alignment: .topTrailing) {
-                                            if unread > 0 {
-                                                Text(unread > 99 ? "99+" : "\(unread)")
-                                                    .font(.caption2)
-                                                    .fontWeight(.semibold)
-                                                    .foregroundColor(.white)
-                                                    .padding(.horizontal, unread > 99 ? 4 : 6)
-                                                    .padding(.vertical, 2)
-                                                    .background(theme.badge)
-                                                    .clipShape(Capsule())
-                                                    .offset(x: 5, y: -6)
-                                            }
+                                            UnreadCountBadge(count: unread, background: theme.badge)
+                                                .offset(x: 10, y: -6)
                                         }
                                     }
                                     .id(account.publicKey)

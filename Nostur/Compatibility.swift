@@ -513,17 +513,8 @@ struct BadgeCompatModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .topTrailing) {
-                if count > 0 {
-                    Text("\(count)")
-                        .font(.caption2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(textColor)
-                        .padding(.horizontal, count > 99 ? 4 : 6)
-                        .padding(.vertical, 2)
-                        .background(backgroundColor)
-                        .clipShape(Capsule())
-                        .offset(x: -4, y: 0)
-                }
+                UnreadCountBadge(count: count, background: backgroundColor, foreground: textColor)
+                    .offset(x: -4, y: 0)
             }
     }
 }

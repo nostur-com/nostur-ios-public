@@ -63,18 +63,13 @@ struct HomeTab: View {
                                         }
                                         .accessibilityLabel("Account menu")
                                         .overlay(alignment: .topTrailing) {
-                                            if !IS_CATALYST && (dm.unread + dm.unreadNewRequestsCount) > 0 {
-                                                Text("\((dm.unread + dm.unreadNewRequestsCount))")
-                                                    .font(.caption2)
-                                                    .fontWeight(.semibold)
-                                                    .foregroundColor(.white)
-                                                    .padding(.horizontal, 7 > 99 ? 4 : 6)
-                                                    .padding(.vertical, 2)
-                                                    .background(.red)
-                                                    .clipShape(Capsule())
-                                                    .offset(x: 3, y: -3)
+                                            if !IS_CATALYST {
+                                                UnreadCountBadge(count: dm.unread + dm.unreadNewRequestsCount)
+                                                    .offset(x: 8, y: -4)
                                             }
                                         }
+                                        .padding(.top, 4)
+                                        .padding(.trailing, 8)
                                     
                                     if let showingOtherContact = showingOtherContact {
                                         HStack(spacing: 6) {
