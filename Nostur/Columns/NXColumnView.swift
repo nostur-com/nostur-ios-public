@@ -17,6 +17,9 @@ struct NXColumnView<HeaderContent: View>: View {
     
     @StateObject private var viewModel = NXColumnViewModel()
     @StateObject private var speedTest = NXSpeedTest()
+#if DEBUG
+    @ObservedObject private var feedFetchDebug = FeedFetchDebug.shared
+#endif
     
     private var config: NXColumnConfig
     private var isVisible: Bool
@@ -248,6 +251,34 @@ struct NXColumnView<HeaderContent: View>: View {
 //                .opacity(showLiveEventsBanner ? 1.0 : 0)
 //                .frame(height: showLiveEventsBanner ? 50 : 0)
         }
+#if DEBUG
+        .overlay(alignment: .bottomLeading) {
+            if !feedFetchDebug.isEnabled {
+                Button {
+                    feedFetchDebug.toggle()
+                } label: {
+                    Text("DBG")
+                        .font(.caption2.weight(.bold).monospaced())
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Color.black.opacity(0.55))
+                        .foregroundStyle(.white)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 8)
+                .padding(.bottom, 10)
+                .accessibilityLabel("Show feed fetch debug")
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if feedFetchDebug.isEnabled {
+                FeedFetchDebugOverlay(speedTest: speedTest) {
+                    viewModel.debugFetchNow()
+                }
+            }
+        }
+#endif
         .alert("Discover more", isPresented: $showDiscoverMoreInfo) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -257,11 +288,6 @@ struct NXColumnView<HeaderContent: View>: View {
 //        .overlay(alignment: .top) {
 //            LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
 //        }
-//#if DEBUG
-//        .overlay(alignment: .bottom) {
-//            speedTestView
-//        }
-//#endif
         .onAppear {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) .onAppear -[LOG]-")
@@ -381,25 +407,6 @@ struct NXColumnView<HeaderContent: View>: View {
         }
     }
     
-#if DEBUG
-    @ViewBuilder
-    private var speedTestView: some View {
-        VStack {
-            Text("First: \(speedTest.resultFirstFetch) Final: \(speedTest.resultLastFetch)")
-            if let timestampStart = speedTest.timestampStart {
-                ForEach(Array(speedTest.relaysFinishedAt.enumerated()), id: \.offset) { index, timestamp in
-                    Text("\(timestamp.timeIntervalSince(timestampStart))")
-                }
-                Divider()
-                ForEach(Array(speedTest.relaysTimeouts.enumerated()), id: \.offset) { index, timestamp in
-                    Text("\(timestamp.timeIntervalSince(timestampStart))")
-                }
-            }
-        }
-        .background(Color.black.opacity(0.7))
-        .foregroundColor(.white)
-    }
-#endif
 }
 
 #Preview("Single column") {

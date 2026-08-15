@@ -22,6 +22,7 @@ class NXGapFiller {
     private var backlog: Backlog
     private var completionTracker: BoundedRelayRequestCompletionTracker?
     private var boundedSubscriptionId: String?
+    private var lingerCloseTask: Task<Void, Never>?
     
     private var windowStart: Int { // Depending on older or not we use start/end as since/until
         return Int(since) + (currentGap * 3600 * windowSize)
@@ -79,6 +80,7 @@ class NXGapFiller {
                     self.columnVM?.speedTest?.requestStarted()
 #if DEBUG
                     L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted()) -[LOG]-")
+                    self.attachFetchDebug(subscriptionId: subId, config: config, targets: nil)
 #endif
                     cmd()
                 },
@@ -162,6 +164,7 @@ class NXGapFiller {
                     self.columnVM?.speedTest?.requestStarted()
 #if DEBUG
                     L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted()) -[LOG]-")
+                    self.attachFetchDebug(subscriptionId: subId, config: config, targets: nil)
 #endif
                     cmd()
                 },
@@ -215,6 +218,7 @@ class NXGapFiller {
         targets: ConnectionPool.RequestTargetSnapshot
     ) {
         if let boundedSubscriptionId {
+            lingerCloseTask?.cancel()
             ConnectionPool.shared.closeSubscription(boundedSubscriptionId)
         }
         completionTracker?.cancel()
@@ -242,12 +246,12 @@ class NXGapFiller {
                     guard let self, let columnVM = self.columnVM else { return }
                     self.completionTracker = nil
                     self.boundedSubscriptionId = nil
-                    ConnectionPool.shared.closeSubscription(subscriptionId)
+                    self.scheduleLingerClose(subscriptionId)
 
                     switch outcome {
                     case .finished:
                         columnVM.feed?.lastLocalFetchAt = Date()
-                        columnVM.speedTest?.relayFinished()
+                        columnVM.speedTest?.fetchCompleted()
                         if config.mediaFeedSourceSnapshot != nil,
                            columnVM.currentNRPostsOnScreen.isEmpty {
                             // A bounded media response is not necessarily newer than
@@ -290,7 +294,38 @@ class NXGapFiller {
             )
             self.completionTracker?.start()
             self.columnVM?.speedTest?.requestStarted()
+#if DEBUG
+            self.attachFetchDebug(subscriptionId: subscriptionId, config: config, targets: requestTargets)
+#endif
             command()
         }
     }
+
+    @MainActor
+    private func scheduleLingerClose(_ subscriptionId: String) {
+        lingerCloseTask?.cancel()
+        lingerCloseTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard !Task.isCancelled else { return }
+            ConnectionPool.shared.closeSubscription(subscriptionId)
+        }
+    }
+
+#if DEBUG
+    @MainActor
+    private func attachFetchDebug(
+        subscriptionId: String,
+        config: NXColumnConfig,
+        targets: ConnectionPool.RequestTargetSnapshot?
+    ) {
+        let relayIds = targets?.relayIds ?? ConnectionPool.shared.requestTargetSnapshot().relayIds
+        let summary = "\(config.name) gap \(Date(timeIntervalSince1970: TimeInterval(windowStart)).formatted()) – \(Date(timeIntervalSince1970: TimeInterval(windowEnd)).formatted())"
+        FeedFetchDebug.shared.attach(
+            columnVM?.speedTest,
+            subscriptionId: subscriptionId,
+            summary: summary,
+            seeds: ConnectionPool.shared.feedFetchDebugSeeds(for: relayIds)
+        )
+    }
+#endif
 }

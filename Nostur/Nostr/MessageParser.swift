@@ -121,6 +121,11 @@ class MessageParser {
                         client.completeReqSubscription(subscriptionId)
                         requestTerminalSub.send((subscriptionId: subscriptionId, relay: normalizeRelayUrl(relayUrl)))
                     }
+#if DEBUG
+                    if let subscriptionId = message.subscriptionId ?? message.id {
+                        FeedFetchDebug.recordTerminal(subscriptionId: subscriptionId, relay: relayUrl, closed: true)
+                    }
+#endif
                     if message.message.prefix(14) == "auth-required:" {
 #if DEBUG
                         L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED) (auth-required)")

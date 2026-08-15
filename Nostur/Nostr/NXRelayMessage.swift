@@ -152,6 +152,9 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
         }
 
         updateConnectionStats(receivedPubkey: mMessage.pubkey, fromRelay: relay)
+#if DEBUG
+        FeedFetchDebug.recordEvent(subscriptionId: mMessage.subscriptionId, relay: relay)
+#endif
         
         let messageId = if MessageParser.shared.pendingOkWrapToRumorIdMap.keys.contains(mMessage.id) {
             MessageParser.shared.pendingOkWrapToRumorIdMap[mMessage.id]!

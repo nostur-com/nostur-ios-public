@@ -728,7 +728,11 @@ class NXColumnViewModel: ObservableObject {
     private func firstLoad(_ config: NXColumnConfig) {
         let resumeWhereLeftOff = config.continue
         isViewPaused = false
+#if DEBUG
+        speedTest?.start(trigger: "firstLoad", feedName: config.name)
+#else
         speedTest?.start()
+#endif
         scheduleInitialMediaTimeout(for: config)
         scheduleSelectedRelayRecovery(for: config)
 #if DEBUG
@@ -1035,7 +1039,11 @@ class NXColumnViewModel: ObservableObject {
             && !currentNRPostsOnScreen.isEmpty
         mediaUpdatesAvailable = false
         self.config = config
+#if DEBUG
+        speedTest?.start(trigger: "reload", feedName: config.name)
+#else
         speedTest?.start()
+#endif
         if case .timeout = viewState {
             viewState = .loading
             firstLoad(config)
@@ -1239,7 +1247,11 @@ class NXColumnViewModel: ObservableObject {
         attempt: Int = 0
     ) {
         stopMediaDiscoverySession()
+#if DEBUG
+        speedTest?.start(trigger: "mediaDiscover", feedName: currentConfig.name)
+#else
         speedTest?.start()
+#endif
         var temporaryConfig = currentConfig
         refreshMediaSnapshots(in: &temporaryConfig, sourceOverride: source)
         config = temporaryConfig
@@ -1280,6 +1292,14 @@ class NXColumnViewModel: ObservableObject {
                     attempt: attempt
                 )
                 self.speedTest?.requestStarted()
+#if DEBUG
+                FeedFetchDebug.shared.attach(
+                    self.speedTest,
+                    subscriptionId: subscriptionId,
+                    summary: "\(temporaryConfig.name) media \(source.rawValue)",
+                    seeds: ConnectionPool.shared.feedFetchDebugSeeds(for: targets.relayIds)
+                )
+#endif
                 self.sendBroadMediaReq(
                     temporaryConfig,
                     subscriptionId: subscriptionId,
@@ -1601,6 +1621,14 @@ class NXColumnViewModel: ObservableObject {
         }
     }
     
+#if DEBUG
+    @MainActor
+    func debugFetchNow() {
+        lastResumeStartedAt = nil
+        resume()
+    }
+#endif
+
     @MainActor
     public func resume() {
         guard let config else { return }
@@ -1618,7 +1646,11 @@ class NXColumnViewModel: ObservableObject {
         paused = false
         isViewPaused = false
         FeedsCoordinator.shared.registerColumn(self)
+#if DEBUG
+        speedTest?.start(trigger: "resume", feedName: config.name)
+#else
         speedTest?.start()
+#endif
 #if DEBUG
         startFirstUnreadMeasurementIfNeeded(config, reason: "resume")
 #endif
@@ -3566,6 +3598,9 @@ extension NXColumnViewModel {
                     return !currentIdsOnScreen.contains($0.id)
                 }
                 .uniqued(on: { $0.id }) // <--- need last line?
+#if DEBUG
+            FeedFetchDebug.shared.noteAccepted(speedTest, count: onlyNewAddedPosts.count)
+#endif
             
             if !insertAtEnd { // add on top
                 let isAtTop = isVisuallyAtTopForIncomingPosts()
@@ -3677,6 +3712,7 @@ extension NXColumnViewModel {
             let uniqueAddedPosts = addedPosts.uniqued(on: { $0.id })
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) putOnScreen addedPosts (💦FIRST💦) \(uniqueAddedPosts.count.description) - \((uniqueAddedPosts.first?.content ?? "").prefix(150)) -[LOG]-")
+            FeedFetchDebug.shared.noteAccepted(speedTest, count: uniqueAddedPosts.count)
 #endif
             if !vmInner.isAtTop {
                 vmInner.isAtTop = true
@@ -3751,7 +3787,16 @@ extension NXColumnViewModel {
             
             // Fetch from relays
             speedTest?.requestStarted()
-            _ = try? await relayReq(Filters(kinds: fetchKinds, limit: 250), timeout: 5.5, relays: relays)
+            let resumeSubId = "RESUME-" + config.id
+#if DEBUG
+            FeedFetchDebug.shared.attach(
+                speedTest,
+                subscriptionId: resumeSubId,
+                summary: "\(config.name) relay feed kinds=\(fetchKinds.count)",
+                seeds: ConnectionPool.shared.feedFetchDebugSeeds(for: Set(relays.map(\.id)))
+            )
+#endif
+            _ = try? await relayReq(Filters(kinds: fetchKinds, limit: 250), timeout: 5.5, relays: relays, subscriptionId: resumeSubId)
             
             let queryKinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])

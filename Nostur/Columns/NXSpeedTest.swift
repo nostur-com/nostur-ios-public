@@ -21,6 +21,11 @@ class NXSpeedTest: ObservableObject {
     
     // Never set .finished. Last state to set manually is .finalLoad which triggers final animation to .finished
     @Published var loadingBarViewState: LoadingBar.ViewState = .off
+#if DEBUG
+    @Published var debugSession: FeedFetchDebugSession?
+    var debugTrigger: String = "start"
+    var debugFeedName: String = ""
+#endif
     
     init() { }
     
@@ -28,6 +33,14 @@ class NXSpeedTest: ObservableObject {
         timeoutTask?.cancel()
     }
     
+#if DEBUG
+    public func start(trigger: String, feedName: String) {
+        debugTrigger = trigger
+        debugFeedName = feedName
+        start()
+    }
+#endif
+
     public func start() {
         let newRunID = UUID()
         runID = newRunID
@@ -53,6 +66,9 @@ class NXSpeedTest: ObservableObject {
             else {
                 waitingForConnection()
             }
+#if DEBUG
+            FeedFetchDebug.shared.begin(self, trigger: debugTrigger, feedName: debugFeedName)
+#endif
         }
     }
 
@@ -78,6 +94,11 @@ class NXSpeedTest: ObservableObject {
 #endif
             loadingBarViewState = .fetching
             ensureTimerForTimeout(runID: currentRunID)
+#if DEBUG
+            Task { @MainActor in
+                FeedFetchDebug.shared.markRequestStarted(self)
+            }
+#endif
         }
     }
 
@@ -100,6 +121,7 @@ class NXSpeedTest: ObservableObject {
                 if loadingBarViewState == .earlyLoad {
 #if DEBUG
                     L.og.debug("🏁🏁 NXSpeedTest.relayFinished Setting loadingBarViewState to: .finalLoad")
+                    debugSession?.markEnded()
 #endif
                     loadingBarViewState = .finalLoad
                 }
@@ -107,6 +129,22 @@ class NXSpeedTest: ObservableObject {
         }
     }
     
+    /// Bounded catch-up is done. Advance through earlyLoad so the bar does not
+    /// sit at 75% waiting for a second per-relay finish that will never come.
+    public func fetchCompleted() {
+        Task { @MainActor in
+            if loadingBarViewState == .fetching {
+                loadingBarViewState = .earlyLoad
+            }
+            if loadingBarViewState == .earlyLoad {
+                loadingBarViewState = .finalLoad
+            }
+#if DEBUG
+            debugSession?.markEnded()
+#endif
+        }
+    }
+
     public func relayTimedout() {
         Task { @MainActor in
             if loadingBarViewState == .fetching || loadingBarViewState == .earlyLoad  {
@@ -116,6 +154,9 @@ class NXSpeedTest: ObservableObject {
                 loadingBarViewState = .finalLoad
             }
             relaysTimeouts.append(Date())
+#if DEBUG
+            debugSession?.markEnded()
+#endif
         }
     }
     
@@ -130,6 +171,9 @@ class NXSpeedTest: ObservableObject {
                 if loadingBarViewState != .timeout {
                     loadingBarViewState = .timeout
                 }
+#if DEBUG
+                debugSession?.markEnded()
+#endif
             }
         }
     }
@@ -138,6 +182,9 @@ class NXSpeedTest: ObservableObject {
     public func finishedWithoutResults() {
         timeoutTask?.cancel()
         loadingBarViewState = .timeout
+#if DEBUG
+        debugSession?.markEnded()
+#endif
     }
     
     private func ensureTimerForTimeout(runID: UUID) {

@@ -16,11 +16,13 @@ func relayReq(_ filter: NostrEssentials.Filters,
               relays: Set<RelayData> = [],
               accountPubkey: String? = nil,
               relayType: NosturClientMessage.RelayType = .READ,
-              useOutbox: Bool = false) async throws -> ReqReturn {
+              useOutbox: Bool = false,
+              subscriptionId: String? = nil) async throws -> ReqReturn {
     return try await withCheckedThrowingContinuation({ continuation in
         let reqTask = ReqTask(
             debounceTime: debounceTime ?? 0.05,
             timeout: timeout,
+            subscriptionId: subscriptionId,
             reqCommand: { taskId in
 #if DEBUG
                 L.og.debug("⏳⏳ Backlog.shared: Sending request with taskId: \(taskId), timeout: \(timeout?.description ?? "") -[LOG]-")

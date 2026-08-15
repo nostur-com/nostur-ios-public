@@ -352,6 +352,17 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             let socketMessage = SocketMessage(text: text, subscriptionId: subscriptionId)
             self.outQueue.append(socketMessage)
+#if DEBUG
+            if Self.isReqMessage(text), let subscriptionId, !self.isSocketConnected {
+                FeedFetchDebug.recordSend(
+                    subscriptionId: subscriptionId,
+                    relay: self.url,
+                    queued: true,
+                    isFirstConnection: self.firstConnection,
+                    isOutbox: self.isOutbox
+                )
+            }
+#endif
             
             if self.webSocketTask == nil || !self.isSocketConnected {
 #if DEBUG
@@ -379,6 +390,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public func completeReqSubscription(_ subscriptionId: String) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
+            self.nreqSubscriptions.remove(subscriptionId)
             guard let webSocketTask = self.webSocketTask, self.isSocketConnected else { return }
             self.flushOutQueue(using: webSocketTask)
         }
@@ -425,6 +437,15 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 reqSentAt.append(now)
                 if let subscriptionId = out.subscriptionId {
                     self.stats.recordTrackedReqSent(subscriptionId: subscriptionId, nowUptimeNs: DispatchTime.now().uptimeNanoseconds)
+#if DEBUG
+                    FeedFetchDebug.recordSend(
+                        subscriptionId: subscriptionId,
+                        relay: self.url,
+                        queued: false,
+                        isFirstConnection: self.firstConnection,
+                        isOutbox: self.isOutbox
+                    )
+#endif
                 }
             }
 
@@ -864,6 +885,15 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 for out in outQueue {
 #if DEBUG
                     L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE (B) \(self.url): \(out.text.prefix(155))")
+                    if Self.isReqMessage(out.text), let subscriptionId = out.subscriptionId {
+                        FeedFetchDebug.recordSend(
+                            subscriptionId: subscriptionId,
+                            relay: self.url,
+                            queued: false,
+                            isFirstConnection: false,
+                            isOutbox: self.isOutbox
+                        )
+                    }
 #endif
                     webSocketTask.send(.string(out.text)) { error in
                         if let error {

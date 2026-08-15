@@ -53,6 +53,23 @@ public class ConnectionPool: ObservableObject {
     public struct RequestTargetSnapshot {
         public let relayIds: Set<CanonicalRelayUrl>
         public let allConnected: Bool
+        public let connectedIds: Set<CanonicalRelayUrl>
+        public let coreIds: Set<CanonicalRelayUrl>
+        public let extraIds: Set<CanonicalRelayUrl>
+
+        public init(
+            relayIds: Set<CanonicalRelayUrl>,
+            allConnected: Bool,
+            connectedIds: Set<CanonicalRelayUrl>? = nil,
+            coreIds: Set<CanonicalRelayUrl>? = nil,
+            extraIds: Set<CanonicalRelayUrl> = []
+        ) {
+            self.relayIds = relayIds
+            self.allConnected = allConnected
+            self.connectedIds = connectedIds ?? (allConnected ? relayIds : [])
+            self.coreIds = coreIds ?? relayIds.subtracting(extraIds)
+            self.extraIds = extraIds
+        }
     }
 
     // not in wot stats
@@ -113,6 +130,33 @@ public class ConnectionPool: ObservableObject {
     // .outboxConnections should be read/mutated from connection context
     private var outboxConnections: [CanonicalRelayUrl: RelayConnection] = [:]
     
+    /// Autopilot extras that never connected during a catch-up. Skip them for a
+    /// while so the next fetch does not wait on the same dead sockets.
+    private var unreachableExtrasUntil: [CanonicalRelayUrl: Date] = [:]
+    private let unreachableExtraDuration: TimeInterval = 30 * 60
+
+    public func noteUnreachableExtras(_ ids: Set<CanonicalRelayUrl>) {
+        guard !ids.isEmpty else { return }
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            let now = Date()
+            self.unreachableExtrasUntil = self.unreachableExtrasUntil.filter { $0.value > now }
+            let until = now.addingTimeInterval(self.unreachableExtraDuration)
+            for id in ids {
+                self.unreachableExtrasUntil[id] = until
+            }
+#if DEBUG
+            L.sockets.debug("📤📤 Skipping \(ids.count) unreachable extras for 30m -[LOG]-")
+#endif
+        }
+    }
+
+    private func isUnreachableExtra(_ relay: String) -> Bool {
+        let relayId = normalizeRelayUrl(relay)
+        guard let until = unreachableExtrasUntil[relayId] else { return false }
+        return Date() < until
+    }
+
     // for relays that always have zero (re)connected + 3 or more errors (TODO: need to finetune and better guess/retry)
     public var penaltybox: Set<CanonicalRelayUrl> = [] {
         didSet {
@@ -184,6 +228,23 @@ public class ConnectionPool: ObservableObject {
         }
     }
 
+#if DEBUG
+    func feedFetchDebugSeeds(for relayIds: Set<CanonicalRelayUrl>) -> [FeedFetchDebugRelaySeed] {
+        queue.sync {
+            relayIds.map { relayId in
+                let connection = connections[relayId] ?? outboxConnections[relayId]
+                return FeedFetchDebugRelaySeed(
+                    relayId: relayId,
+                    isConnected: connection?.isSocketConnected ?? false,
+                    isConnecting: connection?.isSocketConnecting ?? false,
+                    isFirstConnection: connection?.firstConnection ?? true,
+                    isOutbox: connection?.isOutbox ?? (connections[relayId] == nil)
+                )
+            }
+        }
+    }
+#endif
+
     public func requestTargetSnapshot(relays: Set<RelayData> = []) -> RequestTargetSnapshot {
         queue.sync {
             let limitedIds = Set(relays.map(\.id))
@@ -193,13 +254,14 @@ public class ConnectionPool: ObservableObject {
                 return limitedIds.isEmpty ? connection.relayData.read : limitedIds.contains(connection.url)
             }
             let targetIds = limitedIds.isEmpty ? Set(targets.map(\.url)) : limitedIds
+            let connectedIds = Set(targetIds.filter { connections[$0]?.isSocketConnected == true })
             return RequestTargetSnapshot(
-                // Explicitly selected relays remain expected targets while their
-                // RelayConnection is still being installed/connected. Otherwise a
-                // bounded request can incorrectly complete before it is even sent.
+                // Explicitly selected relays remain expected core targets while
+                // their RelayConnection is still being installed/connected.
                 relayIds: targetIds,
-                allConnected: !targetIds.isEmpty
-                    && targetIds.allSatisfy { connections[$0]?.isSocketConnected == true }
+                allConnected: !targetIds.isEmpty && targetIds.count == connectedIds.count,
+                connectedIds: connectedIds,
+                coreIds: targetIds
             )
         }
     }
@@ -218,7 +280,9 @@ public class ConnectionPool: ObservableObject {
             }
 
             var relayIds = Set(regularTargets.map(\.url))
-            let allRegularTargetsConnected = !regularTargets.isEmpty && regularTargets.allSatisfy(\.isSocketConnected)
+            let coreIds = relayIds
+            let connectedRegular = Set(regularTargets.filter(\.isSocketConnected).map(\.url))
+            let allRegularTargetsConnected = !regularTargets.isEmpty && connectedRegular.count == regularTargets.count
 
             guard limitedIds.isEmpty,
                   includeOutbox,
@@ -230,7 +294,12 @@ public class ConnectionPool: ObservableObject {
                   let filters = message.filters,
                   let pubkeys = filters.first?.authors
             else {
-                return RequestTargetSnapshot(relayIds: relayIds, allConnected: allRegularTargetsConnected)
+                return RequestTargetSnapshot(
+                    relayIds: relayIds,
+                    allConnected: allRegularTargetsConnected,
+                    connectedIds: connectedRegular,
+                    coreIds: coreIds
+                )
             }
 
             let filtersWithoutHashtags = if let subscriptionId = message.subscriptionId,
@@ -250,18 +319,25 @@ public class ConnectionPool: ObservableObject {
                 skipTopRelays: 3
             )
             let outboxTargetIds = Set(plan.findEventsRequests
-                .filter { !$0.value.pubkeys.isEmpty && !isDisabledRelay($0.key) }
+                .filter { !$0.value.pubkeys.isEmpty && !isDisabledRelay($0.key) && !isUnreachableExtra($0.key) }
                 .sorted { $0.value.pubkeys.count > $1.value.pubkeys.count }
                 .prefix(maxPreferredRelays)
                 .map { normalizeRelayUrl($0.key) })
 
             relayIds.formUnion(outboxTargetIds)
-            let allConnected = !relayIds.isEmpty && relayIds.allSatisfy { relayId in
-                    outboxConnections[relayId]?.isConnected == true
-                        || connections[relayId]?.isSocketConnected == true
-            }
+            let connectedIds = Set(relayIds.filter { relayId in
+                outboxConnections[relayId]?.isConnected == true
+                    || connections[relayId]?.isSocketConnected == true
+            })
+            let allConnected = !relayIds.isEmpty && relayIds.count == connectedIds.count
 
-            return RequestTargetSnapshot(relayIds: relayIds, allConnected: allConnected)
+            return RequestTargetSnapshot(
+                relayIds: relayIds,
+                allConnected: allConnected,
+                connectedIds: connectedIds,
+                coreIds: coreIds,
+                extraIds: outboxTargetIds.subtracting(coreIds)
+            )
         }
     }
     
@@ -774,8 +850,8 @@ public class ConnectionPool: ObservableObject {
                             connection.connect()
                         }
                     }
-                    // skip if we already have an active subscription
-                    if subscriptionId != nil && connection.nreqSubscriptions.contains(subscriptionId!) { continue }
+                    // skip if we already have an active realtime subscription
+                    if shouldSkipDuplicateReq(subscriptionId), connection.nreqSubscriptions.contains(subscriptionId!) { continue }
                     if (subscriptionId != nil) {
                         connection.nreqSubscriptions.insert(subscriptionId!)
                     }
@@ -952,7 +1028,7 @@ public class ConnectionPool: ObservableObject {
             })
             .prefix(self.maxPreferredRelays) // SANITY
         {
-            guard !isDisabledRelay(req.key) else { continue }
+            guard !isDisabledRelay(req.key), !isUnreachableExtra(req.key) else { continue }
             if let conn = self.outboxConnections[req.key] {
                 if !conn.relayData.read {
                     conn.relayData.setRead(true)
@@ -960,7 +1036,7 @@ public class ConnectionPool: ObservableObject {
                 if !conn.isConnected {
                     conn.connect()
                 }
-                if subscriptionId != nil && conn.nreqSubscriptions.contains(subscriptionId!) { continue } // Skip if sub is already active
+                if shouldSkipDuplicateReq(subscriptionId), conn.nreqSubscriptions.contains(subscriptionId!) { continue }
                 if (subscriptionId != nil) {
                     conn.nreqSubscriptions.insert(subscriptionId!)
                 }
@@ -1068,6 +1144,15 @@ public class ConnectionPool: ObservableObject {
 
     private func isDisabledRelay(_ relay: String) -> Bool {
         DisabledRelaysStore.isDisabled(relay)
+    }
+
+    /// Realtime Following-/List- subs stay open. Catch-up RESUME- and prio- media
+    /// REQs must be sent again even if the local set still lists the same id.
+    private func shouldSkipDuplicateReq(_ subscriptionId: String?) -> Bool {
+        guard let subscriptionId else { return false }
+        if subscriptionId.hasPrefix("RESUME-") { return false }
+        if subscriptionId.hasPrefix("prio-") { return false }
+        return true
     }
     
     // Clean up stale connections periodically to prevent memory leaks
