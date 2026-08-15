@@ -115,6 +115,9 @@ class NXColumnViewModelInner {
     public var isPreparingForScrollRestore = false
     public var pendingScrollToIndex: Int?
     public var pendingScrollToPostID: String?
+    /// Last post the user was parked on after restore or while reading mid-feed.
+    /// Used so a later top-insert cannot be mistaken for "user is at the top".
+    public var readingPostID: String?
 
     /// Installed by the visible feed so passive list mutations can preserve the exact post and
     /// viewport offset the user is reading, even when rows are inserted above it.

@@ -34,8 +34,18 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     private var isFeedActuallyAtTop: Bool {
+        if vmInner.isPreparingForScrollRestore, (vmInner.pendingScrollToIndex ?? 0) > 0 {
+            return false
+        }
+        if let readingID = vmInner.pendingScrollToPostID ?? vmInner.readingPostID,
+           case .posts(let posts) = viewState,
+           let index = posts.firstIndex(where: { $0.id == readingID }),
+           index > 0 {
+            return false
+        }
+
         let scrollView: UIScrollView? = collectionView ?? tableView
-        guard let scrollView else { return vmInner.isAtTop }
+        guard let scrollView, scrollView.window != nil else { return vmInner.isAtTop }
         return scrollView.contentOffset.y <= -scrollView.adjustedContentInset.top + 5
     }
 
@@ -1667,6 +1677,9 @@ class NXColumnViewModel: ObservableObject {
                                 // Store the target index for later use
                                 vmInner.pendingScrollToIndex = restoreToIndex
                                 vmInner.pendingScrollToPostID = scrollToId
+                                if restoreToIndex > 0 {
+                                    vmInner.readingPostID = scrollToId
+                                }
                                 
                                 // Update the view state without animation
                                 withTransaction(Transaction(animation: nil)) {
@@ -3553,7 +3566,15 @@ extension NXColumnViewModel {
                 }
                 
                 if isAtTop {
-                    let previousFirstPostId: String? = existingPosts.first?.id
+                    // Prefer the post the user was actually reading. Falling back to the previous
+                    // first post is only correct when they really were at the top.
+                    let previousFirstPostId: String? = {
+                        if let readingID = vmInner.readingPostID ?? vmInner.pendingScrollToPostID,
+                           existingPosts.contains(where: { $0.id == readingID }) {
+                            return readingID
+                        }
+                        return existingPosts.first?.id
+                    }()
                     
                     // TODO: Should already start prefetching missing onlyNewAddedPosts pfp/kind 0 here
 
@@ -3574,6 +3595,9 @@ extension NXColumnViewModel {
                             // Store the target index for later use
                             vmInner.pendingScrollToIndex = restoreToIndex
                             vmInner.pendingScrollToPostID = previousFirstPostId
+                            if restoreToIndex > 0 {
+                                vmInner.readingPostID = previousFirstPostId
+                            }
                             
                             // Update the view state without animation
                             withTransaction(Transaction(animation: nil)) {
@@ -3609,14 +3633,14 @@ extension NXColumnViewModel {
                     }
                 }
                 else {
-                    self.vmInner.isPreparingForScrollRestore = false
-                    self.vmInner.pendingScrollToIndex = nil
-                    self.vmInner.pendingScrollToPostID = nil
 #if DEBUG
-                    L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) withAnimation { }  + not at top, to keep scroll pos -[LOG]-")
+                    L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) pin visible post + not at top, to keep scroll pos -[LOG]-")
 #endif
-                    // withAnimation while stationary is required to keep the current post anchored.
-                    // setPosts avoids that animation only during active dragging/deceleration.
+                    // Keep the reading identity so a remounted List or a delayed restore
+                    // scroll can still find the same post after rows are inserted above it.
+                    if vmInner.readingPostID == nil {
+                        vmInner.readingPostID = vmInner.pendingScrollToPostID
+                    }
                     setPosts(addedAndExistingPostsTruncated)
                 }
             }
