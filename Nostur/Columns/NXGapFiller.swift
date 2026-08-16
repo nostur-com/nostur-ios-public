@@ -132,7 +132,8 @@ class NXGapFiller {
     @MainActor
     public func fetchSimple(limit: Int) {
         guard let columnVM, let config = columnVM.config else { return }
-        
+        let latestSince = Int(Date().addingTimeInterval(-86_400).timeIntervalSince1970)
+
         guard ConnectionPool.shared.anyConnected else {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap, setting watchForFirstConnection = true -[LOG]-")
@@ -153,9 +154,9 @@ class NXGapFiller {
         }
                 
         // send REQ
-        if let (cmd, subId, targets) = columnVM.getFillGapReqStatement(config, since: windowStart, until: windowEnd) {
+        if let (cmd, subId, targets) = columnVM.getFillGapReqStatement(config, since: latestSince, latestLimit: limit) {
             if let targets {
-                runBoundedRequest(config: config, command: cmd, subscriptionId: subId, targets: targets())
+                runBoundedRequest(config: config, command: cmd, subscriptionId: subId, targets: targets(), advanceWindows: false)
                 return
             }
             
@@ -166,44 +167,23 @@ class NXGapFiller {
                     guard let self else { return }
                     self.columnVM?.speedTest?.requestStarted()
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted()) -[LOG]-")
+                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) fetchSimple since=\(Date(timeIntervalSince1970: TimeInterval(latestSince)).formatted()) limit=\(limit) -[LOG]-")
                     self.attachFetchDebug(subscriptionId: subId, config: config, targets: nil)
 #endif
                     cmd()
                 },
-                processResponseCommand: { [weak self] subId, _, _ in
+                processResponseCommand: { [weak self] _, _, _ in
                     guard let self else { return }
                     self.columnVM?.feed?.lastLocalFetchAt = Date()
-
                     self.columnVM?.speedTest?.relayFinished()
-                    
-                    self.columnVM?.loadLocal(config, older: false) {
-                        if self.columnVM?.currentNRPostsOnScreen.isEmpty ?? false {
-                            self.columnVM?.loadAnyFlag = true
-                            self.fetchGap(since: 1622888074, currentGap: self.currentGap)
-                        }
-                    }
-                    
-                    self.currentGap += 1
-                    
-                    if self.windowStart < Int(Date().timeIntervalSince1970) {
-#if DEBUG
-                        L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") subId: \(subId) processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1) -[LOG]-")
-#endif
-                        self.fetchGap(since: self.since, currentGap: self.currentGap) // next gap (no since param)
-                    }
-                    else {
-                        self.currentGap = 0
-                    }
+                    self.columnVM?.loadLocal(config, older: false)
                 },
                 timeoutCommand: { [weak self] subId in
 #if DEBUG
-                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") subId: \(subId) timeout in fetchGap -[LOG]-")
+                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") subId: \(subId) timeout in fetchSimple -[LOG]-")
 #endif
                     Task { @MainActor in
-
                         self?.columnVM?.speedTest?.relayTimedout()
-
                         self?.columnVM?.loadLocal(config)
                     }
                 })
@@ -218,7 +198,8 @@ class NXGapFiller {
         config: NXColumnConfig,
         command: @escaping () -> Void,
         subscriptionId: String,
-        targets: ConnectionPool.RequestTargetSnapshot
+        targets: ConnectionPool.RequestTargetSnapshot,
+        advanceWindows: Bool = true
     ) {
         if let boundedSubscriptionId {
             lingerCloseTasks[boundedSubscriptionId]?.cancel()
@@ -275,6 +256,7 @@ class NXGapFiller {
                         }
                         columnVM.loadLocal(config, older: false) { [weak self] in
                             guard let self else { return }
+                            guard advanceWindows else { return }
                             if self.columnVM?.currentNRPostsOnScreen.isEmpty ?? false {
                                 self.columnVM?.loadAnyFlag = true
                                 self.fetchGap(since: 1622888074, currentGap: self.currentGap)
@@ -289,7 +271,9 @@ class NXGapFiller {
                             }
                         }
 
-                        self.currentGap += 1
+                        if advanceWindows {
+                            self.currentGap += 1
+                        }
 
                     case .timedOut:
                         columnVM.speedTest?.relayTimedout()

@@ -2334,10 +2334,22 @@ class NXColumnViewModel: ObservableObject {
     public func getFillGapReqStatement(
         _ config: NXColumnConfig,
         since: Int,
-        until: Int? = nil
+        until: Int? = nil,
+        latestLimit: Int? = nil
     ) -> (cmd: () -> Void, subId: String, targets: (() -> ConnectionPool.RequestTargetSnapshot)?)? {
-        let until: Int? = self.loadAnyFlag || !config.continue ? nil : until
-        let since: Int? = self.loadAnyFlag || !config.continue ? nil : since
+        // loadAnyFlag: media "search all local history" may omit the window.
+        // Remember-off (latest feed) must still send a recent since. Stripping
+        // since/until sent 150 events per extra with no time bound.
+        var until: Int? = self.loadAnyFlag ? nil : until
+        var since: Int? = self.loadAnyFlag ? nil : since
+        if !config.continue {
+            let maxAgo = Int(Date().addingTimeInterval(-86_400).timeIntervalSince1970)
+            if since == nil || since! < maxAgo {
+                since = maxAgo
+            }
+            until = nil
+        }
+        let filterLimit = latestLimit ?? (!config.continue ? 150 : DEFAULT_REQ_LIMIT)
         switch config.columnType {
         case .following(let feed):
             
@@ -2384,7 +2396,7 @@ class NXColumnViewModel: ObservableObject {
                     .subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: kinds)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: filterLimit, kinds: kinds)
              
             let subId = "RESUME-" + config.id + "-" + (since?.description ?? "any")
             let clientMessage = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subId, filters: filters)
@@ -2454,7 +2466,7 @@ class NXColumnViewModel: ObservableObject {
             let removeKinds: Set<Int> = [
                 since == nil ? 5 : -1
             ]
-            let historyLimit: Int? = since == nil ? 150 : (!config.continue ? 150 : nil)
+            let historyLimit: Int? = latestLimit ?? (since == nil ? 150 : filterLimit)
             
             let filters = switch config.columnType {
                 case .vine(_):
@@ -2510,7 +2522,7 @@ class NXColumnViewModel: ObservableObject {
                 kinds: kinds.subtracting(removeKinds),
                 since: since,
                 until: until,
-                limit: !config.continue ? 150 : nil
+                limit: filterLimit
             )
             
             let subscriptionId = "RESUME-" + config.id + "-" + (since?.description ?? "any")
@@ -4116,6 +4128,7 @@ extension NXColumnViewModel: FeedColumnScheduling {
 
 let FETCH_FEED_INTERVAL = 9.0
 let FEED_MAX_VISIBLE: Int = 20
+let DEFAULT_REQ_LIMIT: Int? = 500
 
 func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int? = nil, kinds: Set<Int>) -> [Filters] {
     guard !pubkeys.isEmpty || !hashtags.isEmpty else { return [] }
