@@ -387,6 +387,27 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
     
+    /// Drop a queued REQ, send CLOSE if it was active, and forget the sub id
+    /// so a late connect cannot flush a stale catch-up request.
+    public func closeAndDropSubscription(_ subscriptionId: String) {
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            let hadActive = self.nreqSubscriptions.contains(subscriptionId)
+            self.outQueue.removeAll { message in
+                if message.subscriptionId == subscriptionId { return true }
+                return message.text.contains("\"\(subscriptionId)\"")
+            }
+            self.nreqSubscriptions.remove(subscriptionId)
+            guard hadActive, self.isSocketConnected, let webSocketTask = self.webSocketTask else { return }
+            let closeMessage = ClientMessage.close(subscriptionId: subscriptionId)
+            webSocketTask.send(.string(closeMessage)) { error in
+                if let error {
+                    self.didReceiveError(error)
+                }
+            }
+        }
+    }
+
     public func completeReqSubscription(_ subscriptionId: String) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }

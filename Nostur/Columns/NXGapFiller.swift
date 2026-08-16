@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 // Catch up - resume feed
 // Fetch posts since last time in X hour windows
@@ -22,7 +23,9 @@ class NXGapFiller {
     private var backlog: Backlog
     private var completionTracker: BoundedRelayRequestCompletionTracker?
     private var boundedSubscriptionId: String?
-    private var lingerCloseTask: Task<Void, Never>?
+    private var lingerCloseTasks: [String: Task<Void, Never>] = [:]
+    private var lateImportSubs: [String: AnyCancellable] = [:]
+    private var lateLoadTask: Task<Void, Never>?
     
     private var windowStart: Int { // Depending on older or not we use start/end as since/until
         return Int(since) + (currentGap * 3600 * windowSize)
@@ -218,8 +221,14 @@ class NXGapFiller {
         targets: ConnectionPool.RequestTargetSnapshot
     ) {
         if let boundedSubscriptionId {
-            lingerCloseTask?.cancel()
+            lingerCloseTasks[boundedSubscriptionId]?.cancel()
+            lingerCloseTasks[boundedSubscriptionId] = nil
+            lateImportSubs[boundedSubscriptionId]?.cancel()
+            lateImportSubs[boundedSubscriptionId] = nil
             ConnectionPool.shared.closeSubscription(boundedSubscriptionId)
+#if DEBUG
+            FeedFetchDebug.shared.markLingerClosed(subscriptionId: boundedSubscriptionId)
+#endif
         }
         completionTracker?.cancel()
         boundedSubscriptionId = subscriptionId
@@ -247,6 +256,9 @@ class NXGapFiller {
                     self.completionTracker = nil
                     self.boundedSubscriptionId = nil
                     self.scheduleLingerClose(subscriptionId)
+                    if outcome == .finished {
+                        self.watchLateImports(subscriptionId: subscriptionId, config: config)
+                    }
 
                     switch outcome {
                     case .finished:
@@ -302,12 +314,39 @@ class NXGapFiller {
     }
 
     @MainActor
+    /// Keep the REQ open after the bar finishes so slower relays can still deliver.
+    private static let lingerAfterBarNanoseconds: UInt64 = 8_000_000_000
+
     private func scheduleLingerClose(_ subscriptionId: String) {
-        lingerCloseTask?.cancel()
-        lingerCloseTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+        lingerCloseTasks[subscriptionId]?.cancel()
+        lingerCloseTasks[subscriptionId] = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: Self.lingerAfterBarNanoseconds)
             guard !Task.isCancelled else { return }
+            self?.lateImportSubs[subscriptionId]?.cancel()
+            self?.lateImportSubs[subscriptionId] = nil
+            self?.lingerCloseTasks[subscriptionId] = nil
             ConnectionPool.shared.closeSubscription(subscriptionId)
+#if DEBUG
+            FeedFetchDebug.shared.markLingerClosed(subscriptionId: subscriptionId)
+#endif
+        }
+    }
+
+    private func watchLateImports(subscriptionId: String, config: NXColumnConfig) {
+        lateImportSubs[subscriptionId] = Importer.shared.importedMessagesFromSubscriptionIds
+            .filter { $0.contains(subscriptionId) }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.scheduleLateLoad(config)
+            }
+    }
+
+    private func scheduleLateLoad(_ config: NXColumnConfig) {
+        lateLoadTask?.cancel()
+        lateLoadTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            self?.columnVM?.loadLocal(config)
         }
     }
 

@@ -38,8 +38,8 @@ struct FeedFetchDebugOverlay: View {
         }
         else {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Fetch debug on. No fetch recorded yet.")
-                Text("This feed does not use pull-to-refresh. Tap Fetch now, or leave this tab and come back.")
+                Text("Fetch debug on. No fetch recorded yet for this column.")
+                Text("A fetch will appear here after this feed loads. Tap Fetch now, or leave this tab and come back.")
                     .foregroundStyle(.white.opacity(0.7))
                 Button("Fetch now", action: onFetchNow)
                     .font(.caption2.weight(.semibold))
@@ -66,13 +66,10 @@ private struct FeedFetchDebugSessionView: View {
         VStack(alignment: .leading, spacing: 4) {
             headerRow()
 
-            Text(headerLine)
-                .foregroundStyle(.white.opacity(0.85))
+            eventsLine
 
-            if let outboxLine {
-                Text(outboxLine)
-                    .foregroundStyle(.cyan.opacity(0.85))
-            }
+            Text(statusLine)
+                .foregroundStyle(.white.opacity(0.85))
 
             if let reqSummary = session.reqSummary {
                 Text(reqSummary)
@@ -87,20 +84,21 @@ private struct FeedFetchDebugSessionView: View {
                     .foregroundStyle(.white.opacity(0.65))
             }
             else {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 4) {
-                        ForEach(sortedRelays) { row in
-                            FeedFetchDebugRelayRowView(row: row, startedAt: session.startedAt)
+                VStack(alignment: .leading, spacing: 2) {
+                    FeedFetchDebugRelayColumns.header(
+                        relayCount: session.relays.count,
+                        outboxCount: session.relays.count { $0.isOutbox }
+                    )
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 1) {
+                            ForEach(sortedRelays) { row in
+                                FeedFetchDebugRelayRowView(row: row, startedAt: session.startedAt)
+                            }
                         }
                     }
+                    .frame(maxHeight: relayListMaxHeight)
                 }
-                .frame(maxHeight: relayListMaxHeight)
             }
-
-            Text("Tap DBG to hide")
-                .font(.caption2)
-                .foregroundStyle(.white.opacity(0.45))
-                .padding(.top, 2)
         }
         .font(.caption2.monospaced())
         .padding(8)
@@ -209,7 +207,7 @@ private struct FeedFetchDebugSessionView: View {
 
     private func headerContent(elapsed: TimeInterval) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            Text("\(session.trigger) · \(barLabel) · \(elapsed, format: .number.precision(.fractionLength(2)))s")
+            Text("\(session.trigger) · \(barLabel) · \(elapsed, format: .number.precision(.fractionLength(2)))s · \(session.eoseCount)/\(session.relays.count) eose")
             Spacer(minLength: 8)
             Button("Fetch", action: onFetchNow)
             Button("Hide") {
@@ -248,41 +246,33 @@ private struct FeedFetchDebugSessionView: View {
     }
 
     private var relayListMaxHeight: CGFloat {
-        let headerReserve: CGFloat = session.targetSnapshot == nil ? 110 : 180
-        let rowHeight: CGFloat = 18
+        let headerReserve: CGFloat = 96
+        let rowHeight: CGFloat = 15
         let contentHeight = CGFloat(max(sortedRelays.count, 1)) * rowHeight + 8
         let available = max(maxHeight - headerReserve, 80)
         return min(contentHeight, available)
     }
 
-    private var headerLine: String {
-        let sub = session.subscriptionId ?? "(no REQ yet)"
-        return "\(sub) · \(session.eoseCount)/\(session.relays.count) eose · \(session.eventCount) ev · \(session.acceptedOnScreen) new · \(session.waitingCount) wait"
+    private var eventsLine: some View {
+        HStack(spacing: 0) {
+            Text("\(session.eventCount) events - \(session.acceptedOnScreen) new")
+                .foregroundStyle(.white.opacity(0.85))
+            if let lateSuffix {
+                Text(lateSuffix)
+                    .foregroundStyle(.cyan)
+            }
+        }
     }
 
-    private var outboxLine: String? {
-        guard let snapshot = session.targetSnapshot else { return nil }
-        let selected = snapshot.extraIds.count
-        let state = outboxStateLabel(snapshot.outboxPlanState)
-        if snapshot.outboxPlanState == .planned {
-            return "outbox \(state) · \(selected) destinations / \(snapshot.outboxRawRelayCount) raw · cap \(snapshot.outboxRelayLimit)\nauthors \(snapshot.outboxSelectedAuthorCount) selected / \(snapshot.outboxKnownAuthorCount) known / \(snapshot.outboxRequestedAuthorCount) requested\nquarantine \(snapshot.quarantinedCandidateCount) planned · \(snapshot.activeQuarantineCount) total"
-        }
-        return "outbox \(state) · 0 selected · q \(snapshot.activeQuarantineCount) total"
+    private var lateSuffix: String? {
+        guard session.lateEventCount > 0, let lastLate = session.lastLateEventAt else { return nil }
+        return String(format: " - +%d late @ %.2fs", session.lateEventCount, lastLate.timeIntervalSince(session.startedAt))
     }
 
-    private func outboxStateLabel(_ state: ConnectionPool.RequestTargetSnapshot.OutboxPlanState) -> String {
-        switch state {
-        case .notRequested: "not requested"
-        case .limitedToSelectedRelays: "selected relays only"
-        case .lowDataMode: "blocked: low data"
-        case .disabled: "disabled"
-        case .vpnBlocked: "blocked: VPN"
-        case .preferredRelaysUnavailable: "waiting for relay lists"
-        case .noFindEventRelays: "no find-event relays"
-        case .missingFilters: "missing filters"
-        case .missingAuthors: "missing authors"
-        case .planned: "planned"
-        }
+    private var statusLine: String {
+        let planned = session.targetSnapshot?.quarantinedCandidateCount ?? 0
+        let total = session.targetSnapshot?.activeQuarantineCount ?? 0
+        return "\(session.waitingCount) wait · quarantine \(planned) planned · \(total) total"
     }
 
     private var sortedRelays: [FeedFetchDebugRelayRow] {
@@ -295,83 +285,216 @@ private struct FeedFetchDebugSessionView: View {
     }
 }
 
+private enum RelayMetricTone {
+    case normal
+    case slow
+    case bad
+}
+
+private enum RelayMetricThresholds {
+    static let sentSlow: TimeInterval = 2.0
+    static let sentBad: TimeInterval = 4.0
+    static let firstSlow: TimeInterval = 2.0
+    static let firstBad: TimeInterval = 4.0
+    static let eoseSlow: TimeInterval = 2.0
+    static let eoseBad: TimeInterval = 4.0
+}
+
+private enum FeedFetchDebugRelayColumns {
+    static let kindWidth: CGFloat = 24
+    static let sentWidth: CGFloat = 40
+    static let evWidth: CGFloat = 32
+    static let firstWidth: CGFloat = 40
+    static let eoseWidth: CGFloat = 40
+    static let noteWidth: CGFloat = 52
+    static let spacing: CGFloat = 4
+
+    static func header(relayCount: Int, outboxCount: Int) -> some View {
+        HStack(spacing: spacing) {
+            Text("\(relayCount) relays (\(outboxCount) outbox)")
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text("")
+                .frame(width: kindWidth, alignment: .leading)
+            Text("sent")
+                .frame(width: sentWidth, alignment: .trailing)
+            Text("ev")
+                .frame(width: evWidth, alignment: .trailing)
+            Text("1st")
+                .frame(width: firstWidth, alignment: .trailing)
+            Text("eose")
+                .frame(width: eoseWidth, alignment: .trailing)
+            Text("note")
+                .frame(width: noteWidth, alignment: .leading)
+        }
+        .foregroundStyle(.white.opacity(0.45))
+        .lineLimit(1)
+    }
+}
+
 private struct FeedFetchDebugRelayRowView: View {
     let row: FeedFetchDebugRelayRow
     let startedAt: Date
 
     var body: some View {
-        HStack(alignment: .center, spacing: 4) {
-            Circle()
-                .fill(statusColor)
-                .frame(width: 7, height: 7)
+        HStack(spacing: FeedFetchDebugRelayColumns.spacing) {
             Text(row.shortHost)
+                .foregroundStyle(hostColor)
                 .lineLimit(1)
                 .truncationMode(.middle)
-                .frame(minWidth: 32, maxWidth: .infinity, alignment: .leading)
-            if row.isOutbox {
-                Text("out")
-                    .foregroundStyle(.cyan)
-                    .fixedSize()
-            }
-            if row.isFirstConnection {
-                Text("new")
-                    .foregroundStyle(.orange)
-                    .fixedSize()
-            }
-            Text(detail)
-                .foregroundStyle(.white.opacity(0.85))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(kindLabel)
+                .foregroundStyle(kindColor)
+                .frame(width: FeedFetchDebugRelayColumns.kindWidth, alignment: .leading)
+            metric(sentLabel, tone: sentTone, width: FeedFetchDebugRelayColumns.sentWidth)
+            metric(evLabel, tone: evTone, width: FeedFetchDebugRelayColumns.evWidth)
+            metric(firstLabel, tone: firstTone, width: FeedFetchDebugRelayColumns.firstWidth)
+            metric(eoseLabel, tone: eoseTone, width: FeedFetchDebugRelayColumns.eoseWidth)
+            Text(noteLabel)
+                .foregroundStyle(noteColor)
                 .lineLimit(1)
-                .truncationMode(.tail)
-                .layoutPriority(1)
+                .frame(width: FeedFetchDebugRelayColumns.noteWidth, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var statusColor: Color {
-        if row.timedOut { return .red }
-        if row.abandoned { return .gray }
-        if row.eoseAt != nil { return row.eventCount == 0 ? .yellow : .green }
-        if row.firstEventAt != nil { return .green }
-        if row.sentAt != nil { return .white }
-        if row.queued || row.isConnecting { return .blue }
-        return .gray
+    private func metric(_ text: String, tone: RelayMetricTone, width: CGFloat) -> some View {
+        Text(text)
+            .foregroundStyle(dataColor(tone))
+            .lineLimit(1)
+            .frame(width: width, alignment: .trailing)
     }
 
-    private var detail: String {
-        var parts: [String] = []
-        if let sent = row.elapsed(from: startedAt, row.sentAt) {
-            parts.append("sent \(sent)")
+    private func dataColor(_ tone: RelayMetricTone) -> Color {
+        switch tone {
+        case .normal:
+            .white.opacity(0.85)
+        case .slow:
+            .orange
+        case .bad:
+            .red
         }
-        else if row.queued {
-            parts.append("queued, never sent")
+    }
+
+    private var sentSeconds: TimeInterval? { seconds(row.sentAt) }
+    private var firstSeconds: TimeInterval? { seconds(row.firstEventAt) }
+    private var eoseSeconds: TimeInterval? { seconds(row.eoseAt) }
+
+    private func seconds(_ date: Date?) -> TimeInterval? {
+        guard let date else { return nil }
+        return date.timeIntervalSince(startedAt)
+    }
+
+    private func format(_ value: TimeInterval?) -> String {
+        guard let value else { return "" }
+        return String(format: "%.2f", value)
+    }
+
+    private func tone(for value: TimeInterval?, slow: TimeInterval, bad: TimeInterval) -> RelayMetricTone {
+        guard let value else { return .normal }
+        if value >= bad { return .bad }
+        if value >= slow { return .slow }
+        return .normal
+    }
+
+    private var kindLabel: String {
+        switch (row.isOutbox, row.isFirstConnection) {
+        case (true, true): "o/n"
+        case (true, false): "out"
+        case (false, true): "new"
+        case (false, false): ""
         }
-        else {
-            parts.append(row.statusLabel)
+    }
+
+    private var kindColor: Color {
+        if row.isOutbox { return .cyan }
+        if row.isFirstConnection { return .orange }
+        return .white.opacity(0.45)
+    }
+
+    private var sentLabel: String { format(sentSeconds) }
+    private var evLabel: String { row.eventCount > 0 ? "\(row.eventCount)" : (row.eoseAt != nil || row.timedOut ? "0" : "") }
+    private var firstLabel: String { format(firstSeconds) }
+    private var eoseLabel: String { format(eoseSeconds) }
+
+    private var sentTone: RelayMetricTone {
+        if row.timedOut && row.sentAt == nil { return .bad }
+        if row.queued && row.sentAt == nil && (row.abandoned || row.timedOut) { return .bad }
+        return tone(for: sentSeconds, slow: RelayMetricThresholds.sentSlow, bad: RelayMetricThresholds.sentBad)
+    }
+
+    private var evTone: RelayMetricTone {
+        if row.lateEventCount > 0 { return .slow }
+        if row.eventCount > 0 { return .normal }
+        if row.timedOut { return .bad }
+        if row.eoseAt != nil { return .slow }
+        return .normal
+    }
+
+    private var firstTone: RelayMetricTone {
+        if row.timedOut && row.firstEventAt == nil && row.sentAt != nil { return .bad }
+        return tone(for: firstSeconds, slow: RelayMetricThresholds.firstSlow, bad: RelayMetricThresholds.firstBad)
+    }
+
+    private var eoseTone: RelayMetricTone {
+        if row.timedOut && row.eoseAt == nil { return .bad }
+        if row.eoseAt != nil && row.eventCount == 0 {
+            return worse(.slow, tone(for: eoseSeconds, slow: RelayMetricThresholds.eoseSlow, bad: RelayMetricThresholds.eoseBad))
         }
-        if row.eventCount > 0 {
-            parts.append("\(row.eventCount)ev")
+        return tone(for: eoseSeconds, slow: RelayMetricThresholds.eoseSlow, bad: RelayMetricThresholds.eoseBad)
+    }
+
+    private func worse(_ lhs: RelayMetricTone, _ rhs: RelayMetricTone) -> RelayMetricTone {
+        switch (lhs, rhs) {
+        case (.bad, _), (_, .bad): .bad
+        case (.slow, _), (_, .slow): .slow
+        default: .normal
         }
-        if let first = row.elapsed(from: startedAt, row.firstEventAt) {
-            parts.append("1st \(first)")
-        }
-        if let eose = row.elapsed(from: startedAt, row.eoseAt) {
-            parts.append(row.eventCount == 0 ? "eose \(eose) empty" : "eose \(eose)")
-        }
+    }
+
+    private var noteLabel: String {
+        if row.lateEventCount > 0 { return "late" }
         if row.timedOut {
-            if row.sentAt != nil {
-                parts.append("no EOSE before deadline")
+            if row.sentAt == nil {
+                return row.isConnected ? "nosend" : "nocon"
             }
-            else if row.isConnected {
-                parts.append("connected, no REQ sent")
-            }
-            else {
-                parts.append("deadline before connect")
-            }
+            return "timeout"
         }
-        else if row.abandoned {
-            parts.append("skipped after quorum")
+        if row.abandoned { return "skip" }
+        if row.lingerEnded {
+            if row.sentAt != nil { return "closed" }
+            if row.queued { return "nosend" }
+            return "nocon"
         }
-        return parts.joined(separator: " · ")
+        if row.closed && row.eoseAt == nil { return "closed" }
+        if row.eoseAt != nil && row.eventCount == 0 { return "empty" }
+        if row.eoseAt != nil { return "" }
+        if row.sentAt != nil { return "wait" }
+        if row.queued { return "queue" }
+        if row.isConnecting { return "conn" }
+        if row.isConnected { return "idle" }
+        return "idle"
+    }
+
+    private var noteColor: Color {
+        switch noteLabel {
+        case "timeout", "nosend", "nocon", "closed":
+            .red
+        case "empty", "queue", "conn":
+            .orange
+        case "late", "wait":
+            .cyan
+        case "skip", "idle":
+            .white.opacity(0.45)
+        default:
+            .white.opacity(0.85)
+        }
+    }
+
+    private var hostColor: Color {
+        if row.timedOut { return .red.opacity(0.95) }
+        if row.lingerEnded && row.sentAt == nil { return .red.opacity(0.85) }
+        if row.abandoned || row.lingerEnded { return .white.opacity(0.45) }
+        return .white
     }
 }
 #endif

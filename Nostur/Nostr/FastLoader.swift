@@ -141,7 +141,8 @@ final class BoundedRelayRequestCompletionTracker {
             FeedFetchDebug.shared.markTimeout(subscriptionId: subscriptionId)
         }
         else {
-            FeedFetchDebug.shared.markAbandoned(subscriptionId: subscriptionId)
+            // Bar is done; keep unfinished relays open so late events can still arrive.
+            FeedFetchDebug.shared.markEnded(subscriptionId: subscriptionId)
         }
 #endif
         onCompletion(outcome)

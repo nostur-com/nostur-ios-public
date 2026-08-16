@@ -806,25 +806,10 @@ public class ConnectionPool: ObservableObject {
     func closeSubscription(_ subscriptionId: String) {
         queue.async(flags: .barrier) { [unowned self] in
             for (_, connection) in self.connections {
-                if connection.nreqSubscriptions.contains(subscriptionId) {
-#if DEBUG
-                    L.lvm.debug("Closing subscriptionId: \(subscriptionId) on \(connection.url) -[LOG]-");
-#endif
-                    let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
-                    connection.sendMessage(closeSubscription.message)
-                    connection.nreqSubscriptions.remove(subscriptionId)
-                }
+                connection.closeAndDropSubscription(subscriptionId)
             }
-            
             for (_, connection) in self.outboxConnections {
-                if connection.nreqSubscriptions.contains(subscriptionId) {
-#if DEBUG
-                    L.lvm.debug("Closing subscriptionId: \(subscriptionId) on outbox relay \(connection.url)");
-#endif
-                    let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
-                    connection.sendMessage(closeSubscription.message)
-                    connection.nreqSubscriptions.remove(subscriptionId)
-                }
+                connection.closeAndDropSubscription(subscriptionId)
             }
         }
     }

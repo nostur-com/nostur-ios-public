@@ -33,6 +33,9 @@ struct FeedFetchDebugRelayRow: Identifiable {
     var closed: Bool = false
     var timedOut: Bool = false
     var abandoned: Bool = false
+    var lingerEnded: Bool = false
+    var lingerEndedAt: Date?
+    var lateEventCount: Int = 0
 
     var shortHost: String {
         relayId
@@ -49,7 +52,8 @@ struct FeedFetchDebugRelayRow: Identifiable {
     var statusLabel: String {
         if timedOut { return "timeout" }
         if abandoned { return "skipped" }
-        if closed && eoseAt == nil { return "closed" }
+        if lingerEnded && sentAt == nil { return isConnected ? "nosend" : "nocon" }
+        if lingerEnded || (closed && eoseAt == nil) { return "closed" }
         if eoseAt != nil { return eventCount == 0 ? "eose empty" : "eose" }
         if firstEventAt != nil { return "events" }
         if sentAt != nil { return "waiting" }
@@ -72,6 +76,8 @@ final class FeedFetchDebugSession: ObservableObject {
     private(set) var acceptedOnScreen: Int = 0
     private(set) var requestStartedAt: Date?
     private(set) var endedAt: Date?
+    private(set) var lateEventCount: Int = 0
+    private(set) var lastLateEventAt: Date?
     private(set) var targetSnapshot: ConnectionPool.RequestTargetSnapshot?
 
     @Published private(set) var relays: [FeedFetchDebugRelayRow] = []
@@ -88,7 +94,7 @@ final class FeedFetchDebugSession: ObservableObject {
     var timeoutCount: Int { relays.count { $0.timedOut } }
     var eventCount: Int { relays.reduce(0) { $0 + $1.eventCount } }
     var waitingCount: Int {
-        relays.count { $0.eoseAt == nil && !$0.timedOut && !$0.closed && !$0.abandoned }
+        relays.count { $0.eoseAt == nil && !$0.timedOut && !$0.closed && !$0.abandoned && !$0.lingerEnded }
     }
 
     func attachRequest(
@@ -122,6 +128,7 @@ final class FeedFetchDebugSession: ObservableObject {
 
     func markQueued(relayId: String, isFirstConnection: Bool, isOutbox: Bool) {
         upsert(relayId) { row in
+            guard !row.lingerEnded else { return }
             if row.sentAt == nil {
                 row.queued = true
             }
@@ -133,6 +140,7 @@ final class FeedFetchDebugSession: ObservableObject {
 
     func markSent(relayId: String, isFirstConnection: Bool, isOutbox: Bool) {
         upsert(relayId) { row in
+            guard !row.lingerEnded else { return }
             if row.sentAt == nil {
                 row.sentAt = Date()
             }
@@ -145,26 +153,35 @@ final class FeedFetchDebugSession: ObservableObject {
     }
 
     func markEvent(relayId: String) {
+        let isLate = endedAt != nil
+        var accepted = false
         upsert(relayId) { row in
+            guard !row.lingerEnded else { return }
+            accepted = true
             if row.firstEventAt == nil {
                 row.firstEventAt = Date()
             }
             row.eventCount += 1
+            if isLate {
+                row.lateEventCount += 1
+            }
             row.isConnected = true
             row.isConnecting = false
+        }
+        if accepted && isLate {
+            lateEventCount += 1
+            lastLateEventAt = Date()
         }
     }
 
     func markTerminal(relayId: String, closed: Bool) {
         upsert(relayId) { row in
-            if row.eoseAt == nil && !closed {
-                row.eoseAt = Date()
-            }
+            guard !row.lingerEnded else { return }
             if closed {
                 row.closed = true
-                if row.eoseAt == nil {
-                    row.eoseAt = Date()
-                }
+            }
+            else if row.eoseAt == nil {
+                row.eoseAt = Date()
             }
             row.isConnected = true
             row.isConnecting = false
@@ -188,6 +205,22 @@ final class FeedFetchDebugSession: ObservableObject {
     func markEnded() {
         if endedAt == nil {
             endedAt = Date()
+        }
+        publishNow()
+    }
+
+    /// Linger window is over. Unfinished relays get a final status so they
+    /// do not sit blank after we close or stop waiting.
+    func markLingerClosed() {
+        let now = Date()
+        for index in relays.indices {
+            let row = relays[index]
+            guard row.eoseAt == nil, !row.timedOut, !row.abandoned, !row.lingerEnded else { continue }
+            relays[index].lingerEnded = true
+            relays[index].lingerEndedAt = now
+            if row.sentAt != nil {
+                relays[index].closed = true
+            }
         }
         publishNow()
     }
@@ -233,8 +266,7 @@ final class FeedFetchDebug: ObservableObject {
     static let shared = FeedFetchDebug()
     static let defaultsKey = "feed_fetch_debug_overlay"
 
-    nonisolated(unsafe) static var isEnabledFlag = false
-
+    /// Overlay visibility only. Recording always runs in DEBUG.
     @Published private(set) var isEnabled: Bool
 
     private var sessionsBySpeedTest: [ObjectIdentifier: FeedFetchDebugSession] = [:]
@@ -242,9 +274,7 @@ final class FeedFetchDebug: ObservableObject {
     private var terminalSub: AnyCancellable?
 
     private init() {
-        let enabled = UserDefaults.standard.bool(forKey: Self.defaultsKey)
-        self.isEnabled = enabled
-        Self.isEnabledFlag = enabled
+        self.isEnabled = UserDefaults.standard.bool(forKey: Self.defaultsKey)
         terminalSub = MessageParser.shared.requestTerminalSub
             .receive(on: RunLoop.main)
             .sink { [weak self] response in
@@ -259,15 +289,10 @@ final class FeedFetchDebug: ObservableObject {
     func setEnabled(_ enabled: Bool) {
         guard isEnabled != enabled else { return }
         isEnabled = enabled
-        Self.isEnabledFlag = enabled
         UserDefaults.standard.set(enabled, forKey: Self.defaultsKey)
     }
 
     func begin(_ speedTest: NXSpeedTest, trigger: String, feedName: String) {
-        guard isEnabled else {
-            speedTest.debugSession = nil
-            return
-        }
         let key = ObjectIdentifier(speedTest)
         if let previous = sessionsBySpeedTest[key], let subId = previous.subscriptionId {
             sessionBySubscription[subId] = nil
@@ -284,7 +309,7 @@ final class FeedFetchDebug: ObservableObject {
         seeds: [FeedFetchDebugRelaySeed],
         targetSnapshot: ConnectionPool.RequestTargetSnapshot? = nil
     ) {
-        guard isEnabled, let speedTest, let session = speedTest.debugSession else { return }
+        guard let speedTest, let session = speedTest.debugSession else { return }
         if let previous = session.subscriptionId {
             sessionBySubscription[previous] = nil
         }
@@ -298,23 +323,28 @@ final class FeedFetchDebug: ObservableObject {
     }
 
     func markRequestStarted(_ speedTest: NXSpeedTest?) {
-        guard isEnabled else { return }
         speedTest?.debugSession?.markRequestStarted()
     }
 
     func noteAccepted(_ speedTest: NXSpeedTest?, count: Int) {
-        guard isEnabled, count > 0, speedTest?.debugSession?.requestStartedAt != nil else { return }
+        guard count > 0, speedTest?.debugSession?.requestStartedAt != nil else { return }
         speedTest?.debugSession?.noteAccepted(count)
     }
 
     func markTimeout(subscriptionId: String) {
-        guard isEnabled, let session = sessionBySubscription[subscriptionId] else { return }
-        session.markTimeout()
+        sessionBySubscription[subscriptionId]?.markTimeout()
+    }
+
+    func markEnded(subscriptionId: String) {
+        sessionBySubscription[subscriptionId]?.markEnded()
+    }
+
+    func markLingerClosed(subscriptionId: String) {
+        sessionBySubscription[subscriptionId]?.markLingerClosed()
     }
 
     func markAbandoned(subscriptionId: String) {
-        guard isEnabled, let session = sessionBySubscription[subscriptionId] else { return }
-        session.markAbandoned()
+        sessionBySubscription[subscriptionId]?.markAbandoned()
     }
 
     nonisolated static func recordSend(
@@ -324,7 +354,6 @@ final class FeedFetchDebug: ObservableObject {
         isFirstConnection: Bool,
         isOutbox: Bool
     ) {
-        guard isEnabledFlag else { return }
         Task { @MainActor in
             shared.applySend(
                 subscriptionId: subscriptionId,
@@ -337,14 +366,12 @@ final class FeedFetchDebug: ObservableObject {
     }
 
     nonisolated static func recordEvent(subscriptionId: String, relay: String) {
-        guard isEnabledFlag else { return }
         Task { @MainActor in
             shared.sessionBySubscription[subscriptionId]?.markEvent(relayId: relay)
         }
     }
 
     nonisolated static func recordTerminal(subscriptionId: String, relay: String, closed: Bool) {
-        guard isEnabledFlag else { return }
         Task { @MainActor in
             shared.markTerminal(subscriptionId: subscriptionId, relay: relay, closed: closed)
         }
