@@ -21,13 +21,14 @@ struct ContentRenderer: View { // VIEW things
     private let isDetail: Bool
     private let fullWidth: Bool
     private let forceAutoload: Bool
+    private let hideImages: Bool
     private var zoomableId: String
     @Binding var showMore: Bool
     @State private var contentElements: [ContentElement]
     @State private var revealedMutedEmbeddedPostIds: Set<String> = []
     @State private var mutedWords: [String]
     
-    init(nrPost: NRPost, showMore: Binding<Bool>, isDetail: Bool = false, fullWidth: Bool = false, forceAutoload: Bool = false, zoomableId: String = "Default") {
+    init(nrPost: NRPost, showMore: Binding<Bool>, isDetail: Bool = false, fullWidth: Bool = false, forceAutoload: Bool = false, hideImages: Bool = false, zoomableId: String = "Default") {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
@@ -37,6 +38,7 @@ struct ContentRenderer: View { // VIEW things
         _mutedWords = State(initialValue: AppState.shared.bgAppState.mutedWords)
         _showMore = showMore
         self.forceAutoload = forceAutoload
+        self.hideImages = hideImages
         self.zoomableId = zoomableId
     }
     
@@ -202,23 +204,25 @@ struct ContentRenderer: View { // VIEW things
                         .padding(.vertical, 10)
                         
                     case .image(let galleryItem):
-    //                    Color.red
-    //                        .frame(height: 30)
-    //                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
-                        MediaContentView(
-                            galleryItem: galleryItem,
-                            availableWidth: availableWidth + (fullWidth ? +20 : 0),
-                            placeholderAspect: 4/3,
-                            maxHeight: isDetail ? 4000 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
-                            contentMode: .fit,
-                            galleryItems: nrPost.galleryItems,
-                            autoload: shouldAutoload,
-                            isNSFW: nrPost.isNSFW,
-                            generateIMeta: nxViewingContext.contains(.preview),
-                            zoomableId: zoomableId
-                        )
-                        .padding(.horizontal, fullWidth ? -10 : 0)
-                        .padding(.vertical, 10)
+                        if !hideImages {
+        //                    Color.red
+        //                        .frame(height: 30)
+        //                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
+                            MediaContentView(
+                                galleryItem: galleryItem,
+                                availableWidth: availableWidth + (fullWidth ? +20 : 0),
+                                placeholderAspect: 4/3,
+                                maxHeight: isDetail ? 4000 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                                contentMode: .fit,
+                                galleryItems: nrPost.galleryItems,
+                                autoload: shouldAutoload,
+                                isNSFW: nrPost.isNSFW,
+                                generateIMeta: nxViewingContext.contains(.preview),
+                                zoomableId: zoomableId
+                            )
+                            .padding(.horizontal, fullWidth ? -10 : 0)
+                            .padding(.vertical, 10)
+                        }
                         // Todo: scale: UIScreen.main.scale ?
                         // fullWidth || isDetail --->
                         // .padding(.horizontal, fullWidth ? -10 : 0)
@@ -228,16 +232,18 @@ struct ContentRenderer: View { // VIEW things
                         // no full width no detial -> .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
                         
                     case .imageGrid(let items):
-                        // Only used in rows (ContentRenderer collapses only when !isDetail)
-                        MediaImageGridView(
-                            items: items,
-                            availableWidth: availableWidth + (fullWidth ? 20 : 0),
-                            autoload: shouldAutoload,
-                            isNSFW: nrPost.isNSFW,
-                            zoomableId: zoomableId
-                        )
-                        .padding(.horizontal, fullWidth ? -10 : 0)
-                        .padding(.vertical, 10)
+                        if !hideImages {
+                            // Only used in rows (ContentRenderer collapses only when !isDetail)
+                            MediaImageGridView(
+                                items: items,
+                                availableWidth: availableWidth + (fullWidth ? 20 : 0),
+                                autoload: shouldAutoload,
+                                isNSFW: nrPost.isNSFW,
+                                zoomableId: zoomableId
+                            )
+                            .padding(.horizontal, fullWidth ? -10 : 0)
+                            .padding(.vertical, 10)
+                        }
                         
                     case .linkPreview(let url, _):
                         LinkPreviewView(url: url, autoload: shouldAutoload)

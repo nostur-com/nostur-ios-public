@@ -96,8 +96,18 @@ struct Kind20: View {
     
     @ViewBuilder
     private var rowContent: some View {
-        if let galleryItem = nrPost.galleryItems.first {
-            VStack {
+        if !nrPost.galleryItems.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                if nrPost.galleryItems.count > 1 {
+                    MediaImageGridView(
+                        items: nrPost.galleryItems,
+                        availableWidth: availableWidth,
+                        autoload: shouldAutoload,
+                        isNSFW: nrPost.isNSFW
+                    )
+                    .padding(.horizontal, -10)
+                }
+                else if let galleryItem = nrPost.galleryItems.first {
                     MediaContentView(
                         galleryItem: galleryItem,
                         availableWidth: availableWidth,
@@ -109,20 +119,10 @@ struct Kind20: View {
                         isNSFW: nrPost.isNSFW
                     )
                     .padding(.horizontal, -10)
-                    .overlay(alignment: .bottomTrailing) {
-                        if nrPost.galleryItems.count > 1 {
-                            Text("\(nrPost.galleryItems.count - 1) more")
-                                .fontWeightBold()
-                                .foregroundColor(.white)
-                                .padding(5)
-                                .background(.black)
-                                .allowsHitTesting(false)
-                        }
-                    }
+                }
                 
-                
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: false, fullWidth: true, forceAutoload: shouldAutoload)
-                    .environment(\.availableWidth, DIMENSIONS.availableNoteRowImageWidth(availableWidth))
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: false, fullWidth: true, forceAutoload: shouldAutoload, hideImages: true)
+                    .environment(\.availableWidth, availableWidth - 20)
                     .padding(.vertical, 10)
             }
         }
@@ -136,7 +136,7 @@ struct Kind20: View {
     private var detailContent: some View {
         VStack {
             if nrPost.galleryItems.count > 1 {
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages, hideImages: true)
                     .environment(\.availableWidth, availableWidth - 20)
                     .padding(.top, 10)
             }
@@ -154,7 +154,7 @@ struct Kind20: View {
             }
             
             if nrPost.galleryItems.count < 2 {
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages, hideImages: true)
                     .environment(\.availableWidth, availableWidth - 20)
                     .padding(.vertical, 10)
             }
