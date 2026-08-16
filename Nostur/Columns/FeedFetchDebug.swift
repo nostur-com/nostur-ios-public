@@ -18,7 +18,7 @@ struct FeedFetchDebugRelaySeed {
     let isOutbox: Bool
 }
 
-struct FeedFetchDebugRelayRow: Identifiable {
+struct FeedFetchDebugRelayRow: Identifiable, Equatable {
     var id: String { relayId }
     let relayId: CanonicalRelayUrl
     var isOutbox: Bool = false
@@ -84,7 +84,10 @@ final class FeedFetchDebugSession: ObservableObject {
     private(set) var lastLateEventAt: Date?
     private(set) var targetSnapshot: ConnectionPool.RequestTargetSnapshot?
 
-    @Published private(set) var relays: [FeedFetchDebugRelayRow] = []
+    // Deliberately not @Published. Every in-place Array mutation would otherwise
+    // emit immediately and defeat schedulePublish(), rebuilding the overlay once
+    // per incoming event.
+    private(set) var relays: [FeedFetchDebugRelayRow] = []
 
     private var relayIndex: [CanonicalRelayUrl: Int] = [:]
     private var publishTask: Task<Void, Never>?
@@ -179,30 +182,45 @@ final class FeedFetchDebugSession: ObservableObject {
     }
 
     func markEvent(relayId: String) {
-        let isLate = if fillFinishedAt != nil {
-            true
-        } else if fillStartedAt != nil {
-            false
-        } else {
-            endedAt != nil
-        }
-        var accepted = false
-        upsert(relayId) { row in
-            guard !row.lingerEnded else { return }
-            accepted = true
-            if row.firstEventAt == nil {
-                row.firstEventAt = Date()
+        let now = Date()
+        markEvents([
+            FeedFetchDebugEventBatch(
+                relayId: relayId,
+                count: 1,
+                firstEventAt: now,
+                lastEventAt: now
+            )
+        ])
+    }
+
+    func markEvents(_ batches: [FeedFetchDebugEventBatch]) {
+        let lateBoundary = fillFinishedAt ?? (fillStartedAt == nil ? endedAt : nil)
+        var latestLateEventAt: Date?
+
+        for batch in batches where batch.count > 0 {
+            let isLate = lateBoundary.map { batch.lastEventAt >= $0 } ?? false
+            var accepted = false
+            upsert(batch.relayId) { row in
+                guard !row.lingerEnded else { return }
+                accepted = true
+                if row.firstEventAt == nil || batch.firstEventAt < row.firstEventAt! {
+                    row.firstEventAt = batch.firstEventAt
+                }
+                row.eventCount += batch.count
+                if isLate {
+                    row.lateEventCount += batch.count
+                }
+                row.isConnected = true
+                row.isConnecting = false
             }
-            row.eventCount += 1
-            if isLate {
-                row.lateEventCount += 1
+            if accepted && isLate {
+                lateEventCount += batch.count
+                latestLateEventAt = max(latestLateEventAt ?? batch.lastEventAt, batch.lastEventAt)
             }
-            row.isConnected = true
-            row.isConnecting = false
         }
-        if accepted && isLate {
-            lateEventCount += 1
-            lastLateEventAt = Date()
+
+        if let latestLateEventAt {
+            lastLateEventAt = max(lastLateEventAt ?? latestLateEventAt, latestLateEventAt)
         }
     }
 
@@ -399,20 +417,44 @@ final class FeedFetchDebugSession: ObservableObject {
     }
 }
 
+struct FeedFetchDebugEventBatch {
+    let relayId: String
+    let count: Int
+    let firstEventAt: Date
+    let lastEventAt: Date
+}
+
 @MainActor
 final class FeedFetchDebug: ObservableObject {
     static let shared = FeedFetchDebug()
     static let defaultsKey = "feed_fetch_debug_overlay"
 
-    /// Overlay visibility only. Recording always runs in DEBUG.
+    /// Recording and overlay visibility. Keeping this off must make the debug
+    /// instrumentation effectively free on normal DEBUG runs.
     @Published private(set) var isEnabled: Bool
 
-    private var sessionsBySpeedTest: [ObjectIdentifier: FeedFetchDebugSession] = [:]
+    private final class WeakSpeedTest {
+        weak var value: NXSpeedTest?
+
+        init(_ value: NXSpeedTest) {
+            self.value = value
+        }
+    }
+
+    private var trackedSpeedTests: [ObjectIdentifier: WeakSpeedTest] = [:]
     private var sessionBySubscription: [String: FeedFetchDebugSession] = [:]
     private var terminalSub: AnyCancellable?
 
     private init() {
         self.isEnabled = UserDefaults.standard.bool(forKey: Self.defaultsKey)
+        Self.setRecordingEnabled(isEnabled)
+        if isEnabled {
+            startTerminalObservation()
+        }
+    }
+
+    private func startTerminalObservation() {
+        guard terminalSub == nil else { return }
         terminalSub = MessageParser.shared.requestTerminalSub
             .receive(on: RunLoop.main)
             .sink { [weak self] response in
@@ -427,16 +469,32 @@ final class FeedFetchDebug: ObservableObject {
     func setEnabled(_ enabled: Bool) {
         guard isEnabled != enabled else { return }
         isEnabled = enabled
+        Self.setRecordingEnabled(enabled)
+        if enabled {
+            startTerminalObservation()
+        }
+        else {
+            terminalSub = nil
+            for speedTest in trackedSpeedTests.values {
+                speedTest.value?.debugSession = nil
+            }
+            trackedSpeedTests.removeAll(keepingCapacity: false)
+            sessionBySubscription.removeAll(keepingCapacity: false)
+        }
         UserDefaults.standard.set(enabled, forKey: Self.defaultsKey)
     }
 
     func begin(_ speedTest: NXSpeedTest, trigger: String, feedName: String) {
+        guard isEnabled else {
+            speedTest.debugSession = nil
+            return
+        }
         let key = ObjectIdentifier(speedTest)
-        if let previous = sessionsBySpeedTest[key], let subId = previous.subscriptionId {
+        if let previous = speedTest.debugSession, let subId = previous.subscriptionId {
             sessionBySubscription[subId] = nil
         }
         let session = FeedFetchDebugSession(trigger: trigger, feedName: feedName)
-        sessionsBySpeedTest[key] = session
+        trackedSpeedTests[key] = WeakSpeedTest(speedTest)
         speedTest.debugSession = session
     }
 
@@ -461,23 +519,27 @@ final class FeedFetchDebug: ObservableObject {
     }
 
     func markRequestStarted(_ speedTest: NXSpeedTest?) {
+        guard isEnabled else { return }
         speedTest?.debugSession?.markRequestStarted()
     }
 
     func noteAccepted(_ speedTest: NXSpeedTest?, count: Int) {
-        guard count > 0, speedTest?.debugSession?.requestStartedAt != nil else { return }
+        guard isEnabled, count > 0, speedTest?.debugSession?.requestStartedAt != nil else { return }
         speedTest?.debugSession?.noteAccepted(count)
     }
 
     func markPhase1Finished(_ speedTest: NXSpeedTest?) {
+        guard isEnabled else { return }
         speedTest?.debugSession?.markPhase1Finished()
     }
 
     func markFillStarted(_ speedTest: NXSpeedTest?) {
+        guard isEnabled else { return }
         speedTest?.debugSession?.markFillStarted()
     }
 
     func markFillFinished(_ speedTest: NXSpeedTest?) {
+        guard isEnabled else { return }
         speedTest?.debugSession?.markFillFinished()
     }
 
@@ -504,6 +566,7 @@ final class FeedFetchDebug: ObservableObject {
         isFirstConnection: Bool,
         isOutbox: Bool
     ) {
+        guard isRecordingEnabled() else { return }
         Task { @MainActor in
             shared.applySend(
                 subscriptionId: subscriptionId,
@@ -516,35 +579,90 @@ final class FeedFetchDebug: ObservableObject {
     }
 
     nonisolated static func recordEvent(subscriptionId: String, relay: String) {
+        let now = Date()
         pendingEventLock.lock()
-        pendingEvents.append((subscriptionId, relay))
+        guard recordingEnabled else {
+            pendingEventLock.unlock()
+            return
+        }
+        let key = PendingEventKey(subscriptionId: subscriptionId, relay: relay)
+        if var batch = pendingEvents[key] {
+            batch.count += 1
+            batch.lastEventAt = now
+            pendingEvents[key] = batch
+        }
+        else {
+            pendingEvents[key] = PendingEventBatch(count: 1, firstEventAt: now, lastEventAt: now)
+        }
         let shouldFlush = !pendingEventFlushScheduled
         pendingEventFlushScheduled = true
         pendingEventLock.unlock()
         guard shouldFlush else { return }
         Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 80_000_000)
+            try? await Task.sleep(nanoseconds: 160_000_000)
             flushPendingEvents()
         }
     }
 
     private nonisolated static let pendingEventLock = NSLock()
-    private nonisolated(unsafe) static var pendingEvents: [(String, String)] = []
+    private nonisolated(unsafe) static var recordingEnabled = false
+    private nonisolated(unsafe) static var pendingEvents: [PendingEventKey: PendingEventBatch] = [:]
     private nonisolated(unsafe) static var pendingEventFlushScheduled = false
+
+    private struct PendingEventKey: Hashable {
+        let subscriptionId: String
+        let relay: String
+    }
+
+    private struct PendingEventBatch {
+        var count: Int
+        let firstEventAt: Date
+        var lastEventAt: Date
+    }
+
+    private nonisolated static func isRecordingEnabled() -> Bool {
+        pendingEventLock.lock()
+        let enabled = recordingEnabled
+        pendingEventLock.unlock()
+        return enabled
+    }
+
+    private nonisolated static func setRecordingEnabled(_ enabled: Bool) {
+        pendingEventLock.lock()
+        recordingEnabled = enabled
+        if !enabled {
+            pendingEvents.removeAll(keepingCapacity: false)
+        }
+        pendingEventLock.unlock()
+    }
 
     @MainActor
     private static func flushPendingEvents() {
         pendingEventLock.lock()
-        let batch = pendingEvents
-        pendingEvents = []
+        let pending = pendingEvents
+        pendingEvents.removeAll(keepingCapacity: true)
         pendingEventFlushScheduled = false
         pendingEventLock.unlock()
-        for (subscriptionId, relay) in batch {
-            shared.sessionBySubscription[subscriptionId]?.markEvent(relayId: relay)
+
+        var batchesBySubscription: [String: [FeedFetchDebugEventBatch]] = [:]
+        batchesBySubscription.reserveCapacity(pending.count)
+        for (key, batch) in pending {
+            batchesBySubscription[key.subscriptionId, default: []].append(
+                FeedFetchDebugEventBatch(
+                    relayId: key.relay,
+                    count: batch.count,
+                    firstEventAt: batch.firstEventAt,
+                    lastEventAt: batch.lastEventAt
+                )
+            )
+        }
+        for (subscriptionId, batches) in batchesBySubscription {
+            shared.sessionBySubscription[subscriptionId]?.markEvents(batches)
         }
     }
 
     nonisolated static func recordTerminal(subscriptionId: String, relay: String, closed: Bool) {
+        guard isRecordingEnabled() else { return }
         Task { @MainActor in
             shared.markTerminal(subscriptionId: subscriptionId, relay: relay, closed: closed)
         }

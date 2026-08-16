@@ -1,5 +1,6 @@
 #if DEBUG
 import Foundation
+import Combine
 import Testing
 @testable import Nostur
 
@@ -88,6 +89,45 @@ struct FeedFetchDebugTests {
         #expect(slow?.eventCount == 3)
         #expect(slow?.lateEventCount == 3)
         #expect(slow?.abandoned == false)
+    }
+
+    @Test("Batched events update counts without losing relay detail")
+    func recordsBatchedEvents() async throws {
+        let session = FeedFetchDebugSession(trigger: "firstLoad", feedName: "Following")
+        session.attachRequest(
+            subscriptionId: "RESUME-Following-batch",
+            summary: "test",
+            seeds: [],
+            targetSnapshot: nil
+        )
+        let first = Date()
+        let last = first.addingTimeInterval(0.05)
+        var changeCount = 0
+        let changeSub = session.objectWillChange.sink { changeCount += 1 }
+        session.markEvents([
+            FeedFetchDebugEventBatch(
+                relayId: "wss://busy.example",
+                count: 500,
+                firstEventAt: first,
+                lastEventAt: last
+            ),
+            FeedFetchDebugEventBatch(
+                relayId: "wss://quiet.example",
+                count: 2,
+                firstEventAt: first,
+                lastEventAt: last
+            )
+        ])
+
+        #expect(session.eventCount == 502)
+        #expect(session.relays.count == 2)
+        #expect(session.relays.first { $0.relayId.contains("busy.example") }?.eventCount == 500)
+        #expect(session.relays.first { $0.relayId.contains("busy.example") }?.firstEventAt == first)
+        #expect(changeCount == 0)
+
+        try await Task.sleep(nanoseconds: 200_000_000)
+        #expect(changeCount == 1)
+        _ = changeSub
     }
 
     @Test("Fill-phase events are not counted as late until fill finishes")

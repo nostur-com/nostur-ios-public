@@ -535,7 +535,38 @@ class NXColumnViewModel: ObservableObject {
     }
 
     private var syncFeedSubject = PassthroughSubject<Void, Never>()
-    private var loadLocalSubject = PassthroughSubject<(NXColumnConfig, Bool, (() -> Void)?), Never>()
+
+    private struct LocalLoadRequest {
+        let config: NXColumnConfig
+        let older: Bool
+        let sessionGeneration: UInt64
+
+        var key: String {
+            "\(sessionGeneration):\(config.id):\(older ? "older" : "newer")"
+        }
+    }
+
+    /// Local reads are serialized and equivalent pending reads are coalesced.
+    /// Unlike Combine's `debounce`, every caller's completion is retained.
+    @MainActor
+    private lazy var localLoadCoordinator = NXLocalLoadCoordinator<LocalLoadRequest>(
+        key: { $0.key },
+        perform: { [weak self] request, finished in
+            guard let self else {
+                finished()
+                return
+            }
+            self._loadLocal(
+                request.config,
+                older: request.older,
+                sessionGeneration: request.sessionGeneration,
+                completion: finished
+            )
+        }
+    )
+
+    /// Invalidates every asynchronous result produced for an older feed run.
+    @MainActor private var feedSessionGeneration: UInt64 = 0
     
     private func resetCancellables() {
         newEventsInDatabaseSub?.cancel()
@@ -579,17 +610,6 @@ class NXColumnViewModel: ObservableObject {
         listenForLateMediaUpdates(config)
         
         self.feed = config.feed
-        
-        // Set up loadLocal debouncer (somewhere there is a loadLocal -> loadRemote -> LoadLocal infinite loop, don't know where, this fixes that)
-        // Could also setup for loadRemote but we never call loadRemote by itself so should not be necessary
-        loadLocalSubject
-            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
-//            .throttle(for: .seconds(2.0), scheduler: RunLoop.main, latest: false) // <-- a 2 sec throttle here means our localLocal->loadRemote->loadLocal dance will always take longer than 2.0 seconds OR never finish... so remove it and find other solution
-            .sink { [weak self] (config, older, completion) in
-                self?._loadLocal(config, older: older, completion: completion)
-            }
-            .store(in: &subscriptions)
-                
         
         // Set up gap filler, don't trigger yet here
         gapFiller = NXGapFiller(since: self.nextFetchSince, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
@@ -1473,13 +1493,13 @@ class NXColumnViewModel: ObservableObject {
         attempt: Int
     ) {
         // Priority imports are intentionally fast and can finish close to EOSE.
-        // Flush the shared importer context, then bypass loadLocal's UI debouncer
-        // for one authoritative final read before showing an empty result.
+        // Flush the shared importer context, then enqueue one authoritative final
+        // read before showing an empty result.
         DataProvider.shared().saveToDiskNow(.bgContext) { [weak self] in
             Task { @MainActor in
                 guard let self, self.mediaDiscoverySubscriptionId == subscriptionId else { return }
                 self.loadAnyFlag = true
-                self._loadLocal(config) { [weak self] in
+                self.loadLocal(config) { [weak self] in
                     Task { @MainActor in
                         guard let self, self.mediaDiscoverySubscriptionId == subscriptionId else { return }
                         if self.currentNRPostsOnScreen.isEmpty {
@@ -1739,6 +1759,7 @@ class NXColumnViewModel: ObservableObject {
         }
     }
     
+    @MainActor
     public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
         let latestReloadInFlight = latestFirstPaintMinimum != nil || latestBackfill
         if !isVisible || isPaused || (isViewPaused && !latestReloadInFlight) || (AppState.shared.appIsInBackground && !IS_CATALYST) {
@@ -1749,9 +1770,23 @@ class NXColumnViewModel: ObservableObject {
             return
         }
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and throttled first) -[LOG]-")
+        L.og.debug("☘️☘️ \(config.name) loadLocal (serialized request) -[LOG]-")
 #endif
-        loadLocalSubject.send((config, older, completion))
+        let sessionGeneration = feedSessionGeneration
+        let scopedCompletion = completion.map { completion in
+            { [weak self] in
+                guard self?.feedSessionGeneration == sessionGeneration else { return }
+                completion()
+            }
+        }
+        localLoadCoordinator.enqueue(
+            LocalLoadRequest(
+                config: config,
+                older: older,
+                sessionGeneration: sessionGeneration
+            ),
+            completion: scopedCompletion
+        )
     }
     
     public var loadAnyFlag: Bool = false
@@ -1775,10 +1810,17 @@ class NXColumnViewModel: ObservableObject {
     /// Remember-off: we already kicked the first extra page after the initial screen.
     private var didPrefetchOlderPage = false
     private var prefetchOlderPageTask: Task<Void, Never>?
-    private var lastPageReqAt: Date?
-    private var lastPageUntil: Int64?
+    private enum PaginationState {
+        case idle
+        case loadingLocal(cursor: Int64, sessionGeneration: UInt64)
+        case loadingNetwork(cursor: Int64, subscriptionId: String, sessionGeneration: UInt64)
+    }
+    private var paginationState: PaginationState = .idle
+    private var paginationTimeoutTask: Task<Void, Never>?
 
+    @MainActor
     func beginLatestFirstPaint() {
+        advanceFeedSession()
         isViewPaused = false
         latestFirstPaintMinimum = LATEST_FEED_FIRST_PAINT_COUNT
         latestLocalSinceOverride = Int64(Date().addingTimeInterval(-LATEST_FEED_FILL_WINDOW).timeIntervalSince1970)
@@ -1791,8 +1833,7 @@ class NXColumnViewModel: ObservableObject {
         didPrefetchOlderPage = false
         prefetchOlderPageTask?.cancel()
         prefetchOlderPageTask = nil
-        lastPageReqAt = nil
-        lastPageUntil = nil
+        resetPaginationState()
     }
 
     func allowLatestFirstPaint() {
@@ -1809,7 +1850,10 @@ class NXColumnViewModel: ObservableObject {
         latestSuppressPrepend = false
     }
 
+    @MainActor
     func clearLatestFeedSession() {
+        advanceFeedSession()
+        gapFiller?.cancelLatestSession()
         endLatestFirstPaintHold()
         latestBackfill = false
         latestSuppressPrepend = false
@@ -1819,8 +1863,34 @@ class NXColumnViewModel: ObservableObject {
         didPrefetchOlderPage = false
         prefetchOlderPageTask?.cancel()
         prefetchOlderPageTask = nil
-        lastPageReqAt = nil
-        lastPageUntil = nil
+        resetPaginationState()
+    }
+
+    @MainActor
+    func beginLatestIncrementalFetch() {
+        advanceFeedSession()
+        latestQuietOlderAppend = false
+        olderPageLoadInFlight = false
+        latestUserLoadMore = false
+    }
+
+    @MainActor
+    private func advanceFeedSession() {
+        feedSessionGeneration &+= 1
+        localLoadCoordinator.cancelPending()
+        resetPaginationState()
+    }
+
+    @MainActor
+    private func resetPaginationState() {
+        paginationTimeoutTask?.cancel()
+        paginationTimeoutTask = nil
+        if case .loadingNetwork(_, let subscriptionId, _) = paginationState {
+            ConnectionPool.shared.closeSubscription(subscriptionId)
+        }
+        paginationState = .idle
+        olderPageLoadInFlight = false
+        latestUserLoadMore = false
     }
 
     /// After the first 12 are on screen, start the next page so a fast scroll
@@ -1847,27 +1917,44 @@ class NXColumnViewModel: ObservableObject {
             return
         }
         didPrefetchOlderPage = true
-        // Local only. Sending PAGE- here is too early (relays still catching
-        // up) and then the same until is skipped for 5–10s at the real tail.
+        // Local only. Relay pagination starts later, and only when this cursor
+        // has no older local rows.
         loadOlderPage(config, requestNetwork: false)
     }
 
     @MainActor
     private func loadOlderPage(_ config: NXColumnConfig, requestNetwork: Bool = true) {
+        guard case .idle = paginationState else { return }
+        let cursor = Int64(oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
+        let sessionGeneration = feedSessionGeneration
+        let countBeforeLoad = currentNRPostsOnScreen.count
+        paginationState = .loadingLocal(cursor: cursor, sessionGeneration: sessionGeneration)
         olderPageLoadInFlight = true
         latestUserLoadMore = true
         loadLocal(config, older: true) { [weak self] in
             guard let self else { return }
+            guard self.feedSessionGeneration == sessionGeneration,
+                  case .loadingLocal(let activeCursor, let activeGeneration) = self.paginationState,
+                  activeCursor == cursor,
+                  activeGeneration == sessionGeneration
+            else { return }
             self.olderPageLoadInFlight = false
             self.latestUserLoadMore = false
-            if requestNetwork {
-                self.sendNextPageReq(config, until: Int64(self.oldestCreatedAt ?? Int(Date().timeIntervalSince1970)))
+            if !requestNetwork || self.currentNRPostsOnScreen.count > countBeforeLoad {
+                self.paginationState = .idle
+                return
             }
+            self.startNextPageNetworkRequest(config, cursor: cursor, sessionGeneration: sessionGeneration)
         }
     }
 
     @MainActor
-    public func _loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
+    private func _loadLocal(
+        _ config: NXColumnConfig,
+        older: Bool = false,
+        sessionGeneration: UInt64,
+        completion: (() -> Void)? = nil
+    ) {
         let currentNRPostsOnScreen = self.currentNRPostsOnScreen
         
         if !currentNRPostsOnScreen.isEmpty { // if we don't check if screen is empty we can have permanent spinner at first run
@@ -1917,7 +2004,11 @@ class NXColumnViewModel: ObservableObject {
                                 // media source. Fall back to the normal local query
                                 // instead of restoring an empty screen late.
                                 self.loadAnyFlag = true
-                                self.loadLocal(config, completion: completion)
+                                self._loadLocal(
+                                    config,
+                                    sessionGeneration: sessionGeneration,
+                                    completion: completion
+                                )
                                 return
                             }
 
@@ -2057,8 +2148,8 @@ class NXColumnViewModel: ObservableObject {
                 else {
                     Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
                 }
-                guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                let events: [Event] = (try? bg().fetch(fr)) ?? []
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
             }
         case .picture, .vine, .yak:
             let source = config.mediaFeedSourceSnapshot ?? .follows
@@ -2110,7 +2201,7 @@ class NXColumnViewModel: ObservableObject {
                         )
                     }
                 }
-                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
             }
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed): // The pubkeys are in the CloudFeed
             let pubkeys = feed.contactPubkeys
@@ -2133,9 +2224,9 @@ class NXColumnViewModel: ObservableObject {
                 else {
                     Event.postsByPubkeys(pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
-                guard let events: [Event] = try? bg().fetch(fr) else { return }
+                let events: [Event] = (try? bg().fetch(fr)) ?? []
 
-                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
             }
         case .someoneElses(_):
 #if DEBUG
@@ -2151,8 +2242,8 @@ class NXColumnViewModel: ObservableObject {
                 else {
                     Event.postsByPubkeys(config.pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: QUERY_FOLLOWING_KINDS)
                 }
-                guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                let events: [Event] = (try? bg().fetch(fr)) ?? []
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
             }
         case .pubkeysPreview(_): // The pubkeys are in the NXConfig
 #if DEBUG
@@ -2166,8 +2257,8 @@ class NXColumnViewModel: ObservableObject {
                 else {
                     Event.postsByPubkeys(config.pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
-                guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allShortIdsSeen: [], currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                let events: [Event] = (try? bg().fetch(fr)) ?? []
+                self.processToScreen(events, config: config, allShortIdsSeen: [], currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
             }
         case .relays(let feed):
 #if DEBUG
@@ -2190,8 +2281,8 @@ class NXColumnViewModel: ObservableObject {
                 else {
                     Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
-                guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                let events: [Event] = (try? bg().fetch(fr)) ?? []
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
             }
         case .relayPreview(let relayData):
 #if DEBUG
@@ -2206,17 +2297,8 @@ class NXColumnViewModel: ObservableObject {
                 else {
                     Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
-                guard let events: [Event] = try? bg().fetch(fr) else {
-                    completion?()
-#if DEBUG
-                    L.og.debug("🏁🏁 NXColumnViewModel.Event.postsByRelays() empty -> loadingBarViewState = .finalLoad")
-#endif
-                    if self.speedTest?.loadingBarViewState != .finished && self.speedTest?.loadingBarViewState != .finalLoad {
-                        self.speedTest?.loadingBarViewState = .finalLoad
-                    }
-                    return
-                }
-                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                let events: [Event] = (try? bg().fetch(fr)) ?? []
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
             }
         case .pubkey:
             viewState = .error("Not supported yet")
@@ -2254,6 +2336,13 @@ class NXColumnViewModel: ObservableObject {
             viewState = .error("Not supported yet")
         case .none:
             viewState = .error("Missing column type")
+        }
+        switch config.columnType {
+        case .following, .picture, .vine, .yak, .pubkeys, .followSet, .followPack,
+             .someoneElses, .pubkeysPreview, .relays, .relayPreview:
+            break
+        default:
+            completion?()
         }
     }
         
@@ -2829,23 +2918,53 @@ class NXColumnViewModel: ObservableObject {
     }
     
     @MainActor
-    private func sendNextPageReq(_ config: NXColumnConfig, until: Int64) {
-        let now = Date()
-        // Same until may be retried: the first PAGE- often goes out before
-        // cores are ready. Do not block it forever.
-        if let lastPageReqAt, now.timeIntervalSince(lastPageReqAt) < 2.5 { return }
-        lastPageReqAt = now
-        lastPageUntil = until
+    private func startNextPageNetworkRequest(
+        _ config: NXColumnConfig,
+        cursor: Int64,
+        sessionGeneration: UInt64
+    ) {
+        guard feedSessionGeneration == sessionGeneration else { return }
+        let prefix: String = switch config.columnType {
+        case .picture, .vine, .yak:
+            config.mediaFeedSourceSnapshot == .follows ? "PAGE" : "MEDIA-PAGE"
+        case .relays, .relayPreview:
+            "G-PAGE"
+        default:
+            "PAGE"
+        }
+        let nonce = UUID().uuidString.prefix(8)
+        let subscriptionId = "\(prefix)-\(config.id)-\(sessionGeneration)-\(cursor)-\(nonce)"
+        paginationState = .loadingNetwork(
+            cursor: cursor,
+            subscriptionId: subscriptionId,
+            sessionGeneration: sessionGeneration
+        )
 
-        let pageSubId = "PAGE-" + config.id
-        // Replace the previous page sub. Same-id REQ is not enough on some
-        // relays; they keep both and NOTICE "too many concurrent REQ".
-        ConnectionPool.shared.closeSubscription(pageSubId)
-        ConnectionPool.shared.closeSubscription("MEDIA-PAGE-" + config.id)
-        ConnectionPool.shared.closeSubscription("G-PAGE-" + config.id)
+        guard sendNextPageReq(config, until: cursor, subscriptionId: subscriptionId) else {
+            paginationState = .idle
+            return
+        }
+
+        paginationTimeoutTask?.cancel()
+        paginationTimeoutTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 6_000_000_000)
+            guard !Task.isCancelled, let self,
+                  case .loadingNetwork(_, let activeSubscriptionId, let activeGeneration) = self.paginationState,
+                  activeSubscriptionId == subscriptionId,
+                  activeGeneration == sessionGeneration
+            else { return }
+            ConnectionPool.shared.closeSubscription(subscriptionId)
+            self.paginationState = .idle
+        }
+    }
+
+    @MainActor
+    @discardableResult
+    private func sendNextPageReq(_ config: NXColumnConfig, until: Int64, subscriptionId: String) -> Bool {
+        var didSend = false
 
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) sendNextPageReq() -[LOG]-")
+        L.og.debug("☘️☘️ \(config.name) sendNextPageReq() \(subscriptionId) until=\(until) -[LOG]-")
 #endif
         switch config.columnType {
         case .following(let feed):
@@ -2874,7 +2993,7 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] } // Skip hashtags if filter is too large
             
-            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
+            guard pubkeys.count > 0 || hashtags.count > 0 else { return false }
              
             // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
             let removeSeperateFeedKinds: Set<Int> = [
@@ -2893,17 +3012,18 @@ class NXColumnViewModel: ObservableObject {
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: kinds)
             
-            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters))
+            didSend = true
             
         case .picture(let feed), .vine(let feed), .yak(let feed):
             if config.mediaFeedSourceSnapshot != .follows {
                 sendBroadMediaReq(
                     config,
-                    subscriptionId: "MEDIA-PAGE-" + config.id,
+                    subscriptionId: subscriptionId,
                     until: Int(until),
                     limit: 150
                 )
-                return
+                return true
             }
 
             // Make sure max pubkeys is < 2000 (relay limits)
@@ -2931,7 +3051,7 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] } // Skip hashtags if filter is too large
             
-            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
+            guard pubkeys.count > 0 || hashtags.count > 0 else { return false }
             
             let filters = switch config.columnType {
                 case .vine(_):
@@ -2948,12 +3068,13 @@ class NXColumnViewModel: ObservableObject {
                 )]
             }
             
-            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters))
+            didSend = true
             
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
             
-            guard pubkeys.count > 0 else { return }
+            guard pubkeys.count > 0 else { return false }
             
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
@@ -2969,33 +3090,36 @@ class NXColumnViewModel: ObservableObject {
                 limit: 100
             )
             
-            nxReq(filters, subscriptionId: "PAGE-" + config.id, useOutbox: feed.useOutbox)
+            nxReq(filters, subscriptionId: subscriptionId, useOutbox: feed.useOutbox)
+            didSend = true
             
         case .someoneElses(_):
             let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
             let hashtags = pubkeys.count + config.hashtags.count <= 2000 ? config.hashtags : [] // no hashtags if filter too large
             
-            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
+            guard pubkeys.count > 0 || hashtags.count > 0 else { return false }
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
-            if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
+            if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
                 req(message)
+                didSend = true
             }
             
         case .pubkeysPreview(_):
             let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
-            guard pubkeys.count > 0 else { return }
+            guard pubkeys.count > 0 else { return false }
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
-            if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
+            if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
                 req(message)
+                didSend = true
             }
             
         case .pubkey:
             let _: String? = nil
         case .relays(let feed):
             let relaysData = feed.relaysData
-            guard !relaysData.isEmpty else { return }
+            guard !relaysData.isEmpty else { return false }
             
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
@@ -3004,12 +3128,14 @@ class NXColumnViewModel: ObservableObject {
                 FETCH_GLOBAL_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
-            nxReq(Filters(kinds: kinds, until: Int(until), limit: 100), subscriptionId: "G-PAGE-" + config.id, relays: relaysData)
+            nxReq(Filters(kinds: kinds, until: Int(until), limit: 100), subscriptionId: subscriptionId, relays: relaysData)
+            didSend = true
         
         case .relayPreview(let relayData):
             let relaysData: Set<RelayData> = [relayData]
-            guard !relaysData.isEmpty else { return }
-            nxReq(Filters(kinds: FETCH_GLOBAL_KINDS, until: Int(until), limit: 100), subscriptionId: "G-PAGE-" + config.id, relays: relaysData)
+            guard !relaysData.isEmpty else { return false }
+            nxReq(Filters(kinds: FETCH_GLOBAL_KINDS, until: Int(until), limit: 100), subscriptionId: subscriptionId, relays: relaysData)
+            didSend = true
             
         case .hashtags:
             let _: String? = nil
@@ -3046,6 +3172,7 @@ class NXColumnViewModel: ObservableObject {
         case .none:
             let _: String? = nil
         }
+        return didSend
     }
     
     private var backlog = Backlog(auto: true)
@@ -3281,24 +3408,39 @@ class NXColumnViewModel: ObservableObject {
                 ids.contains { Self.isPaginationSubscription($0, configId: configId) }
             }
             .debounce(for: .seconds(0.15), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
+            .sink { [weak self] importedIds in
                 guard let self else { return }
                 let activeConfig = self.config ?? config
                 guard self.isVisible && !self.isPaused else { return }
-                if self.olderPageLoadInFlight { return }
-                // Local only. Another sendNextPageReq here re-opens PAGE- on
-                // every import batch and relays NOTICE "too many concurrent REQ".
+                guard case .loadingNetwork(let cursor, let subscriptionId, let sessionGeneration) = self.paginationState,
+                      self.feedSessionGeneration == sessionGeneration
+                else { return }
+                guard importedIds.contains(subscriptionId) else { return }
+
+                let countBeforeLoad = self.currentNRPostsOnScreen.count
                 self.latestUserLoadMore = true
                 self.loadLocal(activeConfig, older: true) { [weak self] in
-                    self?.latestUserLoadMore = false
+                    guard let self else { return }
+                    self.latestUserLoadMore = false
+                    guard self.feedSessionGeneration == sessionGeneration,
+                          case .loadingNetwork(let activeCursor, let activeSubscriptionId, let activeGeneration) = self.paginationState,
+                          activeCursor == cursor,
+                          activeSubscriptionId == subscriptionId,
+                          activeGeneration == sessionGeneration,
+                          self.currentNRPostsOnScreen.count > countBeforeLoad
+                    else { return }
+                    self.paginationTimeoutTask?.cancel()
+                    self.paginationTimeoutTask = nil
+                    ConnectionPool.shared.closeSubscription(subscriptionId)
+                    self.paginationState = .idle
                 }
             }
     }
 
     private static func isPaginationSubscription(_ subscriptionId: String, configId: String) -> Bool {
-        subscriptionId == "PAGE-" + configId
-            || subscriptionId == "MEDIA-PAGE-" + configId
-            || subscriptionId == "G-PAGE-" + configId
+        subscriptionId.hasPrefix("PAGE-" + configId + "-")
+            || subscriptionId.hasPrefix("MEDIA-PAGE-" + configId + "-")
+            || subscriptionId.hasPrefix("G-PAGE-" + configId + "-")
     }
     
     private var realTimeReqTask: Task<Void, Never>?
@@ -3383,7 +3525,7 @@ class NXColumnViewModel: ObservableObject {
         
     }
     
-    private func fetchParents(_ danglers: [NRPost], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool = false) {
+    private func fetchParents(_ danglers: [NRPost], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool = false, sessionGeneration: UInt64? = nil) {
         for nrPost in danglers {
             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "CVM.001")
         }
@@ -3447,7 +3589,7 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen -[LOG]-")
 #endif
-                            self.processToScreen(danglingEvents, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                            self.processToScreen(danglingEvents, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration)
                         }
                     }
                 }
@@ -3477,7 +3619,7 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen (timeoutCommand) -[LOG]-")
 #endif
-                            self.processToScreen(danglingEvents, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                            self.processToScreen(danglingEvents, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration)
                         }
                     }
 
@@ -3564,7 +3706,7 @@ extension NXColumnViewModel {
     
     // Primary function to put Events on screen
     // allIdsSeen must be prefix / .shortId format
-    private func processToScreen(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool, completion: (() -> Void)? = nil) {
+    private func processToScreen(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool, sessionGeneration: UInt64? = nil, completion: (() -> Void)? = nil) {
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) processToScreen() -[LOG]-")
 #endif
@@ -3587,12 +3729,15 @@ extension NXColumnViewModel {
         let newDanglers = danglers.filter { !self.danglingIds.contains($0.id) }
         if !newDanglers.isEmpty && repliesEnabled {
             danglingIds = danglingIds.union(newDanglers.map { $0.id })
-            fetchParents(newDanglers, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older)
+            fetchParents(newDanglers, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, sessionGeneration: sessionGeneration)
         }
         
         guard !partialThreadsWithParent.isEmpty else {
             Task { @MainActor in
-                guard self.shouldAcceptResults(for: config) else { return }
+                guard self.shouldAcceptResults(for: config, sessionGeneration: sessionGeneration) else {
+                    completion?()
+                    return
+                }
                 if latestFirstPaintMinimum == nil,
                    let speedTest, !speedTest.relaysFinishedAt.isEmpty {
 #if DEBUG
@@ -3608,13 +3753,19 @@ extension NXColumnViewModel {
         }
         
         Task { @MainActor in
-            guard self.shouldAcceptResults(for: config) else { return }
+            guard self.shouldAcceptResults(for: config, sessionGeneration: sessionGeneration) else {
+                completion?()
+                return
+            }
             self.putOnScreen(partialThreadsWithParent, config: config, insertAtEnd: older, completion: completion)
         }
     }
 
     @MainActor
-    private func shouldAcceptResults(for incomingConfig: NXColumnConfig) -> Bool {
+    private func shouldAcceptResults(for incomingConfig: NXColumnConfig, sessionGeneration: UInt64? = nil) -> Bool {
+        if let sessionGeneration, sessionGeneration != feedSessionGeneration {
+            return false
+        }
         guard incomingConfig.mediaFeedSourceSnapshot != nil else { return true }
         guard config?.id == incomingConfig.id,
               config?.mediaFeedSourceSnapshot == incomingConfig.mediaFeedSourceSnapshot
@@ -4410,6 +4561,68 @@ enum ColumnViewState {
     case error(String)
 }
 
+/// Serializes asynchronous local feed reads without losing completion handlers.
+/// If equivalent work is already pending, callers share that read; a notification
+/// received while the same read is running queues one follow-up snapshot.
+@MainActor
+final class NXLocalLoadCoordinator<Request> {
+    typealias Work = (Request, @escaping () -> Void) -> Void
+
+    private struct Pending {
+        let id = UUID()
+        let key: String
+        let request: Request
+        var completions: [() -> Void]
+    }
+
+    private let makeKey: (Request) -> String
+    private let perform: Work
+    private var pending: [Pending] = []
+    private var activeID: UUID?
+
+    init(key: @escaping (Request) -> String, perform: @escaping Work) {
+        self.makeKey = key
+        self.perform = perform
+    }
+
+    func enqueue(_ request: Request, completion: (() -> Void)? = nil) {
+        let key = makeKey(request)
+        if let index = pending.firstIndex(where: { $0.key == key }) {
+            if let completion {
+                pending[index].completions.append(completion)
+            }
+            return
+        }
+
+        pending.append(Pending(
+            key: key,
+            request: request,
+            completions: completion.map { [$0] } ?? []
+        ))
+        drain()
+    }
+
+    /// Pending work belongs to an invalidated generation. Its callers still
+    /// receive completion so feature-level loading flags cannot remain stuck.
+    func cancelPending() {
+        let completions = pending.flatMap(\.completions)
+        pending.removeAll()
+        completions.forEach { $0() }
+    }
+
+    private func drain() {
+        guard activeID == nil, !pending.isEmpty else { return }
+        let next = pending.removeFirst()
+        activeID = next.id
+        perform(next.request) { [weak self] in
+            guard let self, self.activeID == next.id else { return }
+            self.activeID = nil
+            next.completions.forEach { $0() }
+            self.drain()
+        }
+    }
+}
+
 @MainActor
 extension NXColumnViewModel: FeedColumnScheduling {
     var columnScheduleId: UUID { columnVMid }
@@ -4455,8 +4668,8 @@ let DEFAULT_REQ_LIMIT: Int? = 500
 //   the overlay is off (`feed_fetch_debug_overlay` lives in the *app* container
 //   plist, not `defaults write` on the Mac host).
 // - Fill still starts late after background (~6s connecting deadline).
-// - Hitting the tail can still wait on slow PAGE- cores if local has nothing
-//   older; connectAll leftover extras can NOTICE "no REQ in 10s".
+// - A locally exhausted tail can still wait up to the bounded PAGE timeout.
+//   PAGE requests have per-session IDs so late imports cannot satisfy a newer page.
 // - Bottom append is a raw `existing + older` assign. Do not run the prepend
 //   pin/settle on that path — it scrollToItem's a stale reading post.
 // Remember-on fetchGap is intentionally unchanged.

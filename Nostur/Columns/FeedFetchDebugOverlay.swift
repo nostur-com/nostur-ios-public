@@ -14,8 +14,6 @@ struct FeedFetchDebugOverlay: View {
     var onFetchNow: () -> Void
     var onScreenCount: Int = 0
     var continueEnabled: Bool? = nil
-    @ObservedObject private var hub = FeedFetchDebug.shared
-
     var body: some View {
         GeometryReader { geo in
             VStack(spacing: 0) {
@@ -101,6 +99,7 @@ private struct FeedFetchDebugSessionView: View {
                         LazyVStack(alignment: .leading, spacing: 1) {
                             ForEach(sortedRelays) { row in
                                 FeedFetchDebugRelayRowView(row: row, startedAt: session.startedAt)
+                                    .equatable()
                             }
                         }
                     }
@@ -299,7 +298,7 @@ private struct FeedFetchDebugSessionView: View {
     private var relayListMaxHeight: CGFloat {
         let headerReserve: CGFloat = 128
         let rowHeight: CGFloat = 15
-        let contentHeight = CGFloat(max(sortedRelays.count, 1)) * rowHeight + 8
+        let contentHeight = CGFloat(max(session.relays.count, 1)) * rowHeight + 8
         let available = max(maxHeight - headerReserve, 80)
         return min(contentHeight, available)
     }
@@ -382,7 +381,7 @@ private enum FeedFetchDebugRelayColumns {
     }
 }
 
-private struct FeedFetchDebugRelayRowView: View {
+private struct FeedFetchDebugRelayRowView: View, Equatable {
     let row: FeedFetchDebugRelayRow
     let startedAt: Date
 

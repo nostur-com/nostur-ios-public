@@ -129,7 +129,7 @@ class NXGapFiller {
         }
     }
     
-    private enum LatestPhase {
+    private enum LatestPhase: Equatable {
         case firstPaint
         case fill
         case newer
@@ -141,14 +141,14 @@ class NXGapFiller {
     private var latestFillLimit = 75
     private var latestFirstPaintTask: Task<Void, Never>?
     private var latestQuietOlderTask: Task<Void, Never>?
+    private var latestSessionGeneration: UInt64 = 0
 #if DEBUG
     private var latestDebugSummary: String?
 #endif
 
     @MainActor
     public func fetchSimple(limit: Int) {
-        latestFirstPaintTask?.cancel()
-        latestQuietOlderTask?.cancel()
+        cancelLatestSession()
         didLatestFirstPaint = false
         didStartLatestFill = false
         latestAppendOlder = false
@@ -157,7 +157,7 @@ class NXGapFiller {
         if let config = columnVM?.config {
             // Paint from local immediately. Debounced tryLatestFirstPaint left
             // the screen empty longer than the p1 timestamp.
-            columnVM?._loadLocal(config) { [weak self] in
+            columnVM?.loadLocal(config) { [weak self] in
                 self?.considerLatestReveal(config: config)
             }
         }
@@ -167,19 +167,47 @@ class NXGapFiller {
     /// Keep the current screen and prepend posts newer than `since`.
     @MainActor
     public func fetchNewer(since: Int, limit: Int) {
-        latestFirstPaintTask?.cancel()
-        latestQuietOlderTask?.cancel()
+        cancelLatestSession()
         didLatestFirstPaint = true
         didStartLatestFill = true
         latestAppendOlder = false
         latestFillLimit = limit
+        columnVM?.beginLatestIncrementalFetch()
         columnVM?.allowLatestLivePrepend()
         startLatestFetch(phase: .newer, sinceOverride: since)
     }
 
     @MainActor
+    func cancelLatestSession() {
+        latestSessionGeneration &+= 1
+        latestFirstPaintTask?.cancel()
+        latestFirstPaintTask = nil
+        latestQuietOlderTask?.cancel()
+        latestQuietOlderTask = nil
+        lateLoadTask?.cancel()
+        lateLoadTask = nil
+        completionTracker?.cancel()
+        completionTracker = nil
+
+        if let boundedSubscriptionId {
+            ConnectionPool.shared.closeSubscription(boundedSubscriptionId)
+        }
+        boundedSubscriptionId = nil
+
+        let lingeringSubscriptionIds = Set(lingerCloseTasks.keys).union(lateImportSubs.keys)
+        lingerCloseTasks.values.forEach { $0.cancel() }
+        lingerCloseTasks.removeAll()
+        lateImportSubs.values.forEach { $0.cancel() }
+        lateImportSubs.removeAll()
+        for subscriptionId in lingeringSubscriptionIds {
+            ConnectionPool.shared.closeSubscription(subscriptionId)
+        }
+    }
+
+    @MainActor
     private func startLatestFetch(phase: LatestPhase, sinceOverride: Int? = nil) {
         guard let columnVM, let config = columnVM.config else { return }
+        let sessionGeneration = latestSessionGeneration
         let window = phase == .fill ? LATEST_FEED_FILL_WINDOW : LATEST_FEED_FIRST_PAINT_WINDOW
         let latestSince = sinceOverride ?? Int(Date().addingTimeInterval(-window).timeIntervalSince1970)
         let limit = phase == .firstPaint ? LATEST_FEED_FIRST_PAINT_LIMIT : latestFillLimit
@@ -244,7 +272,7 @@ class NXGapFiller {
                     cmd()
                 },
                 processResponseCommand: { [weak self] _, _, _ in
-                    guard let self else { return }
+                    guard let self, self.latestSessionGeneration == sessionGeneration else { return }
                     self.columnVM?.feed?.lastLocalFetchAt = Date()
                     self.handleLatestPhaseResponse(config: config, phase: phase, timedOut: false)
                 },
@@ -253,7 +281,8 @@ class NXGapFiller {
                     L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") subId: \(subId) timeout in latest fetch -[LOG]-")
 #endif
                     Task { @MainActor in
-                        self?.handleLatestPhaseResponse(config: config, phase: phase, timedOut: true)
+                        guard let self, self.latestSessionGeneration == sessionGeneration else { return }
+                        self.handleLatestPhaseResponse(config: config, phase: phase, timedOut: true)
                     }
                 })
 
@@ -433,9 +462,19 @@ class NXGapFiller {
                     guard let self, let columnVM = self.columnVM else { return }
                     self.completionTracker = nil
                     self.boundedSubscriptionId = nil
-                    self.scheduleLingerClose(subscriptionId)
-                    if outcome == .finished {
-                        self.watchLateImports(subscriptionId: subscriptionId, config: config)
+                    if latestPhase == .firstPaint {
+                        // First paint and fill are separate phases. Close p1 before
+                        // fill starts so both subscriptions cannot import concurrently.
+                        ConnectionPool.shared.closeSubscription(subscriptionId)
+#if DEBUG
+                        FeedFetchDebug.shared.markLingerClosed(subscriptionId: subscriptionId)
+#endif
+                    }
+                    else {
+                        self.scheduleLingerClose(subscriptionId)
+                        if outcome == .finished {
+                            self.watchLateImports(subscriptionId: subscriptionId, config: config)
+                        }
                     }
 
                     switch outcome {
