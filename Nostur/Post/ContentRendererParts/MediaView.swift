@@ -399,17 +399,23 @@ struct MediaPlaceholder: View {
                                 url: $0.url,
                                 pubkey: $0.pubkey,
                                 eventId: $0.eventId,
-                                dimensions: $0.url.absoluteString == galleryItem.url.absoluteString ? imageInfo.realDimensions : nil,
+                                dimensions: $0.url.absoluteString == galleryItem.url.absoluteString
+                                    ? (cropImageRequestToTarget ? $0.dimensions : imageInfo.realDimensions)
+                                    : nil,
                                 blurhash: $0.url.absoluteString == galleryItem.url.absoluteString ? blurHash : nil,
-                                imageInfo: $0.url.absoluteString == galleryItem.url.absoluteString ? imageInfo : nil
+                                // A grid image is an aspect-fill crop. Do not seed fullscreen with
+                                // it; load the aspect-fit request just like pages reached by swiping.
+                                imageInfo: $0.url.absoluteString == galleryItem.url.absoluteString && !cropImageRequestToTarget
+                                    ? imageInfo
+                                    : nil
                             )
                         } ?? [GalleryItem(
                             url: galleryItem.url,
                             pubkey: galleryItem.pubkey,
                             eventId: galleryItem.eventId,
-                            dimensions: imageInfo.realDimensions,
+                            dimensions: cropImageRequestToTarget ? galleryItem.dimensions : imageInfo.realDimensions,
                             blurhash:  galleryItem.blurhash ?? blurHash,
-                            imageInfo: imageInfo)]
+                            imageInfo: cropImageRequestToTarget ? nil : imageInfo)]
                     )
                 }
                 .onAppear {
@@ -432,17 +438,23 @@ struct MediaPlaceholder: View {
                                 url: $0.url,
                                 pubkey: $0.pubkey,
                                 eventId: $0.eventId,
-                                dimensions: $0.url.absoluteString == galleryItem.url.absoluteString ? imageInfo.realDimensions : nil,
+                                dimensions: $0.url.absoluteString == galleryItem.url.absoluteString
+                                    ? (cropImageRequestToTarget ? $0.dimensions : imageInfo.realDimensions)
+                                    : nil,
                                 blurhash: $0.url.absoluteString == galleryItem.url.absoluteString ? blurHash : nil,
-                                imageInfo: $0.url.absoluteString == galleryItem.url.absoluteString ? imageInfo : nil
+                                // A grid image is an aspect-fill crop. Do not seed fullscreen with
+                                // it; load the aspect-fit request just like pages reached by swiping.
+                                imageInfo: $0.url.absoluteString == galleryItem.url.absoluteString && !cropImageRequestToTarget
+                                    ? imageInfo
+                                    : nil
                             )
                         } ?? [GalleryItem(
                             url: galleryItem.url,
                             pubkey: galleryItem.pubkey,
                             eventId: galleryItem.eventId,
-                            dimensions: imageInfo.realDimensions,
+                            dimensions: cropImageRequestToTarget ? galleryItem.dimensions : imageInfo.realDimensions,
                             blurhash:  galleryItem.blurhash ?? blurHash,
-                            imageInfo: imageInfo)]
+                            imageInfo: cropImageRequestToTarget ? nil : imageInfo)]
                     )
                 }
                 .onAppear {
