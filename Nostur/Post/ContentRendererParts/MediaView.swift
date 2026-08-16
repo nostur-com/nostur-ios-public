@@ -217,6 +217,34 @@ struct MediaPlaceholder: View {
             update()
         }
     }
+
+    /// A fit-mode image must not be revealed inside a placeholder with a different aspect.
+    /// During scrolling, the feed stabilizer can defer the row-height update; showing the image
+    /// before that update makes portrait media appear narrow and then snap to full width.
+    private func needsResolvedLayout(for dimensions: CGSize) -> Bool {
+        guard contentMode == .fit, !fullScreen, realDimensions == nil,
+              dimensions.width > 0, dimensions.height > 0 else { return false }
+
+        let placeholderAspect = galleryItem.aspect ?? self.placeholderAspect ?? 4 / 3
+        let resolvedAspect = dimensions.width / dimensions.height
+        let placeholderHeight = min(availableWidth / placeholderAspect, maxHeight)
+        let resolvedHeight = min(availableWidth / resolvedAspect, maxHeight)
+        return abs(placeholderHeight - resolvedHeight) > 1
+    }
+
+    private var unresolvedLayoutPlaceholder: some View {
+        theme.background.opacity(0.7)
+            .overlay {
+                if let blurImage {
+                    Image(uiImage: blurImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: availableWidth, height: height)
+                        .clipped()
+                }
+            }
+            .frame(width: availableWidth, height: height)
+    }
     
     
     @ViewBuilder
@@ -375,7 +403,13 @@ struct MediaPlaceholder: View {
                     }
                 }
         case .image(let imageInfo):
-            if fullScreen {
+            if needsResolvedLayout(for: imageInfo.realDimensions) {
+                unresolvedLayoutPlaceholder
+                    .onAppear {
+                        updateRealDimensions(imageInfo.realDimensions)
+                    }
+            }
+            else if fullScreen {
                 Image(uiImage: imageInfo.uiImage)
                     .resizable()
                     .scaledToFit()
@@ -465,7 +499,13 @@ struct MediaPlaceholder: View {
         case .gif(let gifInfo):
             // gifInfo.gifData may contain either a GIF or an animated WebP
             let isWebP = isAnimatedWebPData(gifInfo.gifData)
-            if fullScreen {
+            if needsResolvedLayout(for: gifInfo.realDimensions) {
+                unresolvedLayoutPlaceholder
+                    .onAppear {
+                        updateRealDimensions(gifInfo.realDimensions)
+                    }
+            }
+            else if fullScreen {
                 // Create a touch-responsive wrapper around the animated image
                 ZStack {
                     // Black background to maintain visual consistency during gestures
