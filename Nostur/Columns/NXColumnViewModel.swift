@@ -215,6 +215,7 @@ class NXColumnViewModel: ObservableObject {
                 }
             }
             else if case .loading = viewState {
+                isViewPaused = false
                 if !vmInner.unreadIds.isEmpty {
                     vmInner.unreadIds = [:]
                     vmInner.updateIsAtTopSubject.send()
@@ -254,7 +255,9 @@ class NXColumnViewModel: ObservableObject {
     
     private var paused = true
     private var lastResumeStartedAt: Date?
+    private var lastBecameInactiveAt: Date?
     private var newEventsInDatabaseSub: AnyCancellable?
+    private var pageEventsInDatabaseSub: AnyCancellable?
     private var newPostSavedSub: AnyCancellable?
     private var newSingleRelayPostSavedSub: AnyCancellable?
     private var newPostUndoSub: AnyCancellable?
@@ -536,6 +539,7 @@ class NXColumnViewModel: ObservableObject {
     
     private func resetCancellables() {
         newEventsInDatabaseSub?.cancel()
+        pageEventsInDatabaseSub?.cancel()
         newPostSavedSub?.cancel()
         newSingleRelayPostSavedSub?.cancel()
         newPostUndoSub?.cancel()
@@ -566,6 +570,7 @@ class NXColumnViewModel: ObservableObject {
         mediaUpdatesAvailable = false
         autoExploreRelaysAfterWoTTimeout = false
         selectedRelayAutoRetryAttempted = false
+        clearLatestFeedSession()
         // get initial feed state from
         self.subscriptions.forEach { $0.cancel() }
         self.subscriptions.removeAll()
@@ -615,7 +620,10 @@ class NXColumnViewModel: ObservableObject {
         
         newEventsInDatabaseSub?.cancel()
         newEventsInDatabaseSub = nil
+        pageEventsInDatabaseSub?.cancel()
+        pageEventsInDatabaseSub = nil
         listenForNewPosts(config)
+        listenForPaginationImports(config)
         
         firstConnectionSub?.cancel()
         firstConnectionSub = nil
@@ -1039,6 +1047,7 @@ class NXColumnViewModel: ObservableObject {
             && !currentNRPostsOnScreen.isEmpty
         mediaUpdatesAvailable = false
         self.config = config
+        clearLatestFeedSession()
 #if DEBUG
         speedTest?.start(trigger: "reload", feedName: config.name)
 #else
@@ -1529,6 +1538,7 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     public func pauseViewUpdates() {
+        if case .loading = viewState { return }
         isViewPaused = true
     }
     
@@ -1555,6 +1565,9 @@ class NXColumnViewModel: ObservableObject {
 #endif
         paused = true
         self.lastResumeStartedAt = nil
+        if lastBecameInactiveAt == nil {
+            lastBecameInactiveAt = Date()
+        }
         self.realTimeReqTask?.cancel()
         
         switch config.columnType {
@@ -1629,6 +1642,7 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     func debugFetchNow() {
         lastResumeStartedAt = nil
+        lastBecameInactiveAt = Date().addingTimeInterval(-(LATEST_FEED_RESUME_REFRESH_AFTER + 1))
         resume()
     }
 #endif
@@ -1644,23 +1658,46 @@ class NXColumnViewModel: ObservableObject {
             return
         }
         lastResumeStartedAt = now
+        // Scene phase often flickers .inactive and resets lastBecameInactiveAt.
+        // lastBackgroundDuration is the real background interval (only valid
+        // for a few seconds after foreground).
+        let awayFor = max(
+            lastBecameInactiveAt.map { now.timeIntervalSince($0) } ?? 0,
+            AppState.shared.lastBackgroundDuration(now: now)
+        )
+        lastBecameInactiveAt = nil
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop) -[LOG]-")
+        L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop) away: \(awayFor)s -[LOG]-")
 #endif
         paused = false
         isViewPaused = false
         FeedsCoordinator.shared.registerColumn(self)
+        self.fetchFeedTimerNextTick()
+        self.listenForNewPosts(config)
+        self.listenForPaginationImports(config)
+
+        if !config.continue,
+           case .posts(let nrPosts) = viewState,
+           awayFor < LATEST_FEED_RESUME_REFRESH_AFTER {
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.name) resume() Remember-off short away, fetch newer -[LOG]-")
+            speedTest?.start(trigger: "resumeNewer", feedName: config.name)
+#else
+            speedTest?.start()
+#endif
+            let maxAgo = Int(Date().addingTimeInterval(-86_400).timeIntervalSince1970)
+            let since = Int((nrPosts.first?.created_at ?? nextFetchSince) - 300)
+            gapFiller?.fetchNewer(since: max(since, maxAgo), limit: 75)
+            return
+        }
+
 #if DEBUG
         speedTest?.start(trigger: "resume", feedName: config.name)
+        startFirstUnreadMeasurementIfNeeded(config, reason: "resume")
 #else
         speedTest?.start()
 #endif
-#if DEBUG
-        startFirstUnreadMeasurementIfNeeded(config, reason: "resume")
-#endif
-        
-        self.fetchFeedTimerNextTick()
-        self.listenForNewPosts(config)
+
         if config.continue {
             self.loadLocal(config) { [weak self] in
                 Task {
@@ -1669,6 +1706,20 @@ class NXColumnViewModel: ObservableObject {
             }
         }
         else {
+            if case .posts = viewState {
+#if DEBUG
+                L.og.debug("☘️☘️ \(config.name) resume() Remember-off stale, start empty -[LOG]-")
+#endif
+                viewState = .loading
+                isViewPaused = false
+                vmInner.abortPreparedScrollRestore()
+                clearLatestFeedSession()
+                if SettingsStore.shared.appWideSeenTracker {
+                    Deduplicator.shared.onScreenSeen = []
+                }
+                config.feed?.lastRead = []
+                allShortIdsSeen = []
+            }
             Task { [weak self] in
                 await self?.loadRemote(config)
             }
@@ -1689,10 +1740,12 @@ class NXColumnViewModel: ObservableObject {
     }
     
     public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
-        if !isVisible || isPaused || isViewPaused || (AppState.shared.appIsInBackground && !IS_CATALYST) {
+        let latestReloadInFlight = latestFirstPaintMinimum != nil || latestBackfill
+        if !isVisible || isPaused || (isViewPaused && !latestReloadInFlight) || (AppState.shared.appIsInBackground && !IS_CATALYST) {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) loadLocal - 👹👹 halted. isVisible: \(self.isVisible) isPaused: \(self.isPaused) isViewPaused: \(self.isViewPaused) -[LOG]-")
 #endif
+            completion?()
             return
         }
 #if DEBUG
@@ -1702,6 +1755,116 @@ class NXColumnViewModel: ObservableObject {
     }
     
     public var loadAnyFlag: Bool = false
+
+    /// Remember-off: stay on `.loading` until this many posts are ready (3 iPhone / 6 Mac).
+    var latestFirstPaintMinimum: Int? = nil
+    /// Empty-screen `loadLocal` uses this `since` instead of the default 8h window.
+    var latestLocalSinceOverride: Int64? = nil
+    /// Ready posts while first-paint is held (viewState is still `.loading`).
+    private(set) var latestHeldPostCount: Int = 0
+    /// Remember-off latest session: do not filter already-seen posts.
+    var latestBackfill = false
+    /// Until fill finishes, keep the first screen still — no prepends or mid-list inserts.
+    var latestSuppressPrepend = false
+    /// First older append after first paint: keep the batch small so the list does not hitch.
+    var latestQuietOlderAppend = false
+    /// User scrolled to the bottom sentinel — older loads may exceed the initial screen cap.
+    var latestUserLoadMore = false
+    /// True while an older page (prefetch or scroll) is being transformed.
+    var olderPageLoadInFlight = false
+    /// Remember-off: we already kicked the first extra page after the initial screen.
+    private var didPrefetchOlderPage = false
+    private var prefetchOlderPageTask: Task<Void, Never>?
+    private var lastPageReqAt: Date?
+    private var lastPageUntil: Int64?
+
+    func beginLatestFirstPaint() {
+        isViewPaused = false
+        latestFirstPaintMinimum = LATEST_FEED_FIRST_PAINT_COUNT
+        latestLocalSinceOverride = Int64(Date().addingTimeInterval(-LATEST_FEED_FILL_WINDOW).timeIntervalSince1970)
+        latestHeldPostCount = 0
+        latestBackfill = true
+        latestSuppressPrepend = true
+        latestQuietOlderAppend = false
+        latestUserLoadMore = false
+        olderPageLoadInFlight = false
+        didPrefetchOlderPage = false
+        prefetchOlderPageTask?.cancel()
+        prefetchOlderPageTask = nil
+        lastPageReqAt = nil
+        lastPageUntil = nil
+    }
+
+    func allowLatestFirstPaint() {
+        latestFirstPaintMinimum = nil
+    }
+
+    func endLatestFirstPaintHold() {
+        latestFirstPaintMinimum = nil
+        latestLocalSinceOverride = nil
+        latestHeldPostCount = 0
+    }
+
+    func allowLatestLivePrepend() {
+        latestSuppressPrepend = false
+    }
+
+    func clearLatestFeedSession() {
+        endLatestFirstPaintHold()
+        latestBackfill = false
+        latestSuppressPrepend = false
+        latestQuietOlderAppend = false
+        latestUserLoadMore = false
+        olderPageLoadInFlight = false
+        didPrefetchOlderPage = false
+        prefetchOlderPageTask?.cancel()
+        prefetchOlderPageTask = nil
+        lastPageReqAt = nil
+        lastPageUntil = nil
+    }
+
+    /// After the first 12 are on screen, start the next page so a fast scroll
+    /// does not hit an empty tail. Does not run during first paint.
+    func schedulePrefetchOlderPage() {
+        guard latestBackfill, !didPrefetchOlderPage else { return }
+        prefetchOlderPageTask?.cancel()
+        prefetchOlderPageTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            guard !Task.isCancelled else { return }
+            self?.prefetchOlderPageIfNeeded()
+        }
+    }
+
+    @MainActor
+    private func prefetchOlderPageIfNeeded() {
+        guard latestBackfill, !didPrefetchOlderPage, !olderPageLoadInFlight else { return }
+        guard !latestQuietOlderAppend else { return }
+        guard let config else { return }
+        let onScreen = currentNRPostsOnScreen.count
+        guard onScreen >= LATEST_FEED_FIRST_PAINT_COUNT else { return }
+        if onScreen > LATEST_FEED_INITIAL_VISIBLE + 1 {
+            didPrefetchOlderPage = true
+            return
+        }
+        didPrefetchOlderPage = true
+        // Local only. Sending PAGE- here is too early (relays still catching
+        // up) and then the same until is skipped for 5–10s at the real tail.
+        loadOlderPage(config, requestNetwork: false)
+    }
+
+    @MainActor
+    private func loadOlderPage(_ config: NXColumnConfig, requestNetwork: Bool = true) {
+        olderPageLoadInFlight = true
+        latestUserLoadMore = true
+        loadLocal(config, older: true) { [weak self] in
+            guard let self else { return }
+            self.olderPageLoadInFlight = false
+            self.latestUserLoadMore = false
+            if requestNetwork {
+                self.sendNextPageReq(config, until: Int64(self.oldestCreatedAt ?? Int(Date().timeIntervalSince1970)))
+            }
+        }
+    }
 
     @MainActor
     public func _loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
@@ -1815,20 +1978,32 @@ class NXColumnViewModel: ObservableObject {
 #endif
         }
         
-        let allShortIdsSeen = self.allShortIdsSeenMergingFeedLastRead(config.feed)
+        let allShortIdsSeen = latestBackfill
+            ? []
+            : self.allShortIdsSeenMergingFeedLastRead(config.feed)
         let currentIdsOnScreen = self.currentIdsOnScreen
         let wotEnabled = config.wotEnabled
   
         // Fetch since 5 minutes before most recent item on screen (since)
         // Or until oldest (bottom) item on screen (until)
-        let (sinceTimestamp, untilTimestamp) = if case .posts(let nrPosts) = viewState {
-            ((nrPosts.first?.created_at ?? 300) - 300, (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)))
+        let nowTs = Int64(Date().timeIntervalSince1970)
+        let (sinceTimestamp, untilTimestamp): (Int64, Int64)
+        if case .posts(let nrPosts) = viewState {
+            sinceTimestamp = (nrPosts.first?.created_at ?? 300) - 300
+            untilTimestamp = nrPosts.last?.created_at ?? nowTs
         }
         else if loadAnyFlag {
-            (1622888074, Int64(Date().timeIntervalSince1970)) // Very early date but not zero because zero defaults back 8 hours
+            // Very early date but not zero because zero defaults back 8 hours
+            sinceTimestamp = 1622888074
+            untilTimestamp = nowTs
         }
-        else { // or if empty screen: 0 (since) or now (until)
-            (0, Int64(Date().timeIntervalSince1970))
+        else if let latestLocalSinceOverride {
+            sinceTimestamp = latestLocalSinceOverride
+            untilTimestamp = nowTs
+        }
+        else { // empty screen: 0 (since) or now (until)
+            sinceTimestamp = 0
+            untilTimestamp = nowTs
         }
         
         if loadAnyFlag {
@@ -2335,7 +2510,8 @@ class NXColumnViewModel: ObservableObject {
         _ config: NXColumnConfig,
         since: Int,
         until: Int? = nil,
-        latestLimit: Int? = nil
+        latestLimit: Int? = nil,
+        includeOutbox: Bool? = nil
     ) -> (cmd: () -> Void, subId: String, targets: (() -> ConnectionPool.RequestTargetSnapshot)?)? {
         // loadAnyFlag: media "search all local history" may omit the window.
         // Remember-off (latest feed) must still send a recent since. Stripping
@@ -2400,12 +2576,13 @@ class NXColumnViewModel: ObservableObject {
              
             let subId = "RESUME-" + config.id + "-" + (since?.description ?? "any")
             let clientMessage = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subId, filters: filters)
+            let sendOutbox = includeOutbox ?? (feed.accountPubkey != EXPLORER_PUBKEY)
             return (cmd: {
                 guard pubkeys.count > 0 || hashtags.count > 0 else {
                     L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags -[LOG]-")
                     return
                 }
-                if feed.accountPubkey == EXPLORER_PUBKEY {
+                if !sendOutbox {
                     if let cm = clientMessage.json() {
                         req(cm)
                     }
@@ -2416,7 +2593,7 @@ class NXColumnViewModel: ObservableObject {
             }, subId: subId, targets: {
                 ConnectionPool.shared.requestTargetSnapshot(
                     for: clientMessage,
-                    includeOutbox: feed.accountPubkey != EXPLORER_PUBKEY
+                    includeOutbox: sendOutbox
                 )
             })
 
@@ -2653,6 +2830,20 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     private func sendNextPageReq(_ config: NXColumnConfig, until: Int64) {
+        let now = Date()
+        // Same until may be retried: the first PAGE- often goes out before
+        // cores are ready. Do not block it forever.
+        if let lastPageReqAt, now.timeIntervalSince(lastPageReqAt) < 2.5 { return }
+        lastPageReqAt = now
+        lastPageUntil = until
+
+        let pageSubId = "PAGE-" + config.id
+        // Replace the previous page sub. Same-id REQ is not enough on some
+        // relays; they keep both and NOTICE "too many concurrent REQ".
+        ConnectionPool.shared.closeSubscription(pageSubId)
+        ConnectionPool.shared.closeSubscription("MEDIA-PAGE-" + config.id)
+        ConnectionPool.shared.closeSubscription("G-PAGE-" + config.id)
+
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) sendNextPageReq() -[LOG]-")
 #endif
@@ -3067,7 +3258,7 @@ class NXColumnViewModel: ObservableObject {
                     self.loadLocal(activeConfig)
                 }
         }
- 
+
         // Multi-column refresh is rotated by FeedFetchScheduler. The delayed
         // REQ is only needed when this is the single live column (iPhone/iPad).
         if !FeedsCoordinator.shared.hasMultipleVisibleColumns {
@@ -3076,6 +3267,38 @@ class NXColumnViewModel: ObservableObject {
                 self?.sendRealtimeReq(config)
             }
         }
+    }
+
+    /// PAGE- / MEDIA-PAGE- / G-PAGE- imports are older than the last row. The
+    /// realtime listener ignores those ids and throttles 5s, so the user hit
+    /// the tail and waited ~10s for a sudden dump that jumped the list.
+    @MainActor
+    private func listenForPaginationImports(_ config: NXColumnConfig) {
+        guard pageEventsInDatabaseSub == nil else { return }
+        let configId = config.id
+        pageEventsInDatabaseSub = Importer.shared.importedMessagesFromSubscriptionIds
+            .filter { ids in
+                ids.contains { Self.isPaginationSubscription($0, configId: configId) }
+            }
+            .debounce(for: .seconds(0.15), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                let activeConfig = self.config ?? config
+                guard self.isVisible && !self.isPaused else { return }
+                if self.olderPageLoadInFlight { return }
+                // Local only. Another sendNextPageReq here re-opens PAGE- on
+                // every import batch and relays NOTICE "too many concurrent REQ".
+                self.latestUserLoadMore = true
+                self.loadLocal(activeConfig, older: true) { [weak self] in
+                    self?.latestUserLoadMore = false
+                }
+            }
+    }
+
+    private static func isPaginationSubscription(_ subscriptionId: String, configId: String) -> Bool {
+        subscriptionId == "PAGE-" + configId
+            || subscriptionId == "MEDIA-PAGE-" + configId
+            || subscriptionId == "G-PAGE-" + configId
     }
     
     private var realTimeReqTask: Task<Void, Never>?
@@ -3311,6 +3534,7 @@ class NXColumnViewModel: ObservableObject {
         
         // Cancel all subscriptions
         newEventsInDatabaseSub?.cancel()
+        pageEventsInDatabaseSub?.cancel()
         newPostSavedSub?.cancel()
         newSingleRelayPostSavedSub?.cancel()
         newPostUndoSub?.cancel()
@@ -3345,7 +3569,7 @@ extension NXColumnViewModel {
         L.og.debug("☘️☘️ \(config.name) processToScreen() -[LOG]-")
 #endif
         // Apply WoT filter, remove already on screen
-        let preparedEvents = prepareEvents(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+        let preparedEvents = prepareEvents(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
         
         // Transform from Event to NRPost (only not already on screen by prev statement)
         let nrPosts: [NRPost] = self.transformToNRPosts(preparedEvents, config: config, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, repliesEnabled: repliesEnabled)
@@ -3369,7 +3593,8 @@ extension NXColumnViewModel {
         guard !partialThreadsWithParent.isEmpty else {
             Task { @MainActor in
                 guard self.shouldAcceptResults(for: config) else { return }
-                if let speedTest, !speedTest.relaysFinishedAt.isEmpty {
+                if latestFirstPaintMinimum == nil,
+                   let speedTest, !speedTest.relaysFinishedAt.isEmpty {
 #if DEBUG
                     L.og.debug("🏁🏁 \(config.name) processToScreen loadingBarViewState = .finalLoad -[LOG]-")
 #endif
@@ -3401,7 +3626,7 @@ extension NXColumnViewModel {
     // -- MARK: Subfunctions used by processToScreen():
     
     // Prepare events: apply WoT filter, remove already on screen, load .parentEvents
-    private func prepareEvents(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool) -> [Event] {
+    private func prepareEvents(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool) -> [Event] {
         shouldBeBg()
         let isMediaFeed: Bool = switch config.columnType {
         case .picture, .vine, .yak: true
@@ -3418,7 +3643,7 @@ extension NXColumnViewModel {
                 return true
             }
         
-        let newUnrenderedEvents: [Event] = seenFilteredEvents
+        let timeFilteredEvents: [Event] = seenFilteredEvents
             .filter {
                 if !older {
                     return $0.created_at > Int64(sinceOrUntil) // skip all older than first on screen (check LEAFS only)
@@ -3427,6 +3652,14 @@ extension NXColumnViewModel {
                     return Int64(sinceOrUntil) > $0.created_at // skip all newer than last on screen (check LEAFS only)
                 }
             }
+        // First paint only needs a screenful. Building parent threads for
+        // the whole firehose is what pushed p1 past 3s with 50+ extras.
+        let eventsToRender = firstPaintEventCap(
+            from: timeFilteredEvents,
+            older: older,
+            onScreenCount: currentNRPostsOnScreen.count
+        )
+        let newUnrenderedEvents: [Event] = eventsToRender
             .map {
                 $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0)
                 return $0
@@ -3436,17 +3669,18 @@ extension NXColumnViewModel {
         let newCount = newEventIds.subtracting(currentIdsOnScreen).count
 
         guard newCount > 0 else {
-            // If there is nothing new, but its the first load, then don't filter already seen
+            // First paint / empty latest feed: show newest local posts even if
+            // they were already seen. Remember-off after 2 minutes is "latest now".
             if case .loading = viewState {
-                let newUnrenderedEvents: [Event] = wotFilteredEvents
+                let fallbackEvents = firstPaintEventCap(from: wotFilteredEvents, older: false)
                     .map {
                         $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0)
                         return $0
                     }
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.name) prepareEvents newCount \(newUnrenderedEvents.count) (first load) -[LOG]-")
+                L.og.debug("☘️☘️ \(config.name) prepareEvents newCount \(fallbackEvents.count) (first load, ignore seen) -[LOG]-")
 #endif
-                return newUnrenderedEvents
+                return fallbackEvents
             }
 
             return []
@@ -3457,6 +3691,27 @@ extension NXColumnViewModel {
 #endif
         
         return newUnrenderedEvents
+    }
+
+    private func firstPaintEventCap(from events: [Event], older: Bool, onScreenCount: Int = 0) -> [Event] {
+        let remainingInitial = max(0, LATEST_FEED_INITIAL_VISIBLE - onScreenCount)
+        let cap = if older && latestBackfill && !latestUserLoadMore {
+            min(
+                latestQuietOlderAppend ? LATEST_FEED_QUIET_OLDER_CAP : remainingInitial,
+                remainingInitial
+            )
+        }
+        else if older && latestBackfill {
+            LATEST_FEED_INITIAL_VISIBLE
+        }
+        else if !older, latestFirstPaintMinimum != nil, case .loading = viewState {
+            LATEST_FEED_FIRST_PAINT_EVENT_CAP
+        }
+        else {
+            events.count
+        }
+        guard events.count > cap else { return events }
+        return Array(events.sorted { $0.created_at > $1.created_at }.prefix(cap))
     }
     
     private func applyWoT(_ events: [Event], config: NXColumnConfig) -> [Event] {
@@ -3618,6 +3873,14 @@ extension NXColumnViewModel {
             FeedFetchDebug.shared.noteAccepted(speedTest, count: onlyNewAddedPosts.count)
 #endif
             
+            if !insertAtEnd && latestSuppressPrepend {
+#if DEBUG
+                L.og.debug("☘️☘️ \(config.name) putOnScreen skip prepend until latest fill finishes -[LOG]-")
+#endif
+                completion?()
+                return
+            }
+
             if !insertAtEnd { // add on top
                 let isAtTop = isVisuallyAtTopForIncomingPosts()
                 if vmInner.isAtTop != isAtTop {
@@ -3714,18 +3977,55 @@ extension NXColumnViewModel {
                 }
             }
             else { // add below
+                let postsToAppend = if latestBackfill && !latestUserLoadMore {
+                    Array(onlyNewAddedPosts.prefix(max(0, LATEST_FEED_INITIAL_VISIBLE - existingPosts.count)))
+                }
+                else {
+                    onlyNewAddedPosts
+                }
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.name) putOnScreen addedPosts (AT END) \(onlyNewAddedPosts.count.description) -[LOG]-")
+                L.og.debug("☘️☘️ \(config.name) putOnScreen addedPosts (AT END) \(postsToAppend.count.description) -[LOG]-")
 #endif
-                
-                self.vmInner.abortPreparedScrollRestore()
-                
-                // No withAnimation { } at bottom or it will jump?
-                self.viewState = .posts(existingPosts + onlyNewAddedPosts)
+                guard !postsToAppend.isEmpty else {
+                    completion?()
+                    return
+                }
+                // Append only. SwiftUI List keeps offset when rows are added
+                // below. Do not pin/restore/animate — that is for prepends and
+                // is what made the feed jump.
+                vmInner.abortPreparedScrollRestore()
+                vmInner.cancelPendingFeedSettle?()
+                self.viewState = .posts(existingPosts + postsToAppend)
+                vmInner.preserveViewportAfterAppend?()
             }
         }
         else { // Nothing on screen yet, put first posts on screen
             let uniqueAddedPosts = addedPosts.uniqued(on: { $0.id })
+                .sorted(by: { $0.created_at > $1.created_at })
+            if let min = latestFirstPaintMinimum {
+                if uniqueAddedPosts.count < min {
+                    latestHeldPostCount = uniqueAddedPosts.count
+#if DEBUG
+                    L.og.debug("☘️☘️ \(config.name) putOnScreen holding first paint \(uniqueAddedPosts.count)/\(min) -[LOG]-")
+#endif
+                    completion?()
+                    return
+                }
+                latestHeldPostCount = 0
+                let firstScreen = Array(uniqueAddedPosts.prefix(min))
+#if DEBUG
+                L.og.debug("☘️☘️ \(config.name) putOnScreen first paint \(firstScreen.count)/\(uniqueAddedPosts.count) -[LOG]-")
+                FeedFetchDebug.shared.noteAccepted(speedTest, count: firstScreen.count)
+#endif
+                if !vmInner.isAtTop {
+                    vmInner.isAtTop = true
+                }
+                vmInner.abortPreparedScrollRestore()
+                setPosts(firstScreen, animated: false)
+                completion?()
+                didFinish()
+                return
+            }
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) putOnScreen addedPosts (💦FIRST💦) \(uniqueAddedPosts.count.description) - \((uniqueAddedPosts.first?.content ?? "").prefix(150)) -[LOG]-")
             FeedFetchDebug.shared.noteAccepted(speedTest, count: uniqueAddedPosts.count)
@@ -3734,6 +4034,7 @@ extension NXColumnViewModel {
                 vmInner.isAtTop = true
             }
             vmInner.abortPreparedScrollRestore()
+            latestHeldPostCount = 0
             setPosts(uniqueAddedPosts)
         }
         
@@ -4048,14 +4349,19 @@ extension NXColumnViewModel {
             return
         }
 
+        // Quiet first-paint append owns the first older batch. Don't start a
+        // second 20-post transform while those 3 posts just appeared.
+        if latestQuietOlderAppend || olderPageLoadInFlight { return }
+
         let now = Date()
         if let previousRequest = lastPaginationRequest,
            previousRequest.until == until,
-           now.timeIntervalSince(previousRequest.requestedAt) < 5 {
+           now.timeIntervalSince(previousRequest.requestedAt) < 0.4 {
             return
         }
 
         lastPaginationRequest = (until, now)
+        didPrefetchOlderPage = true
         onAppearSubject.send(until)
     }
     
@@ -4092,9 +4398,7 @@ extension NXColumnViewModel {
 #if DEBUG
                 L.og.debug("☘️☘️ \(config.name) loadMoreWhenNearBottom.onAppearSubject lastCreatedAt \(lastCreatedAt) -[LOG]-")
 #endif
-                self?.loadLocal(config, older: true) {
-                    self?.sendNextPageReq(config, until: Int64(self?.oldestCreatedAt ?? Int(Date().timeIntervalSince1970)))
-                }
+                self?.loadOlderPage(config)
             }
     }
 }
@@ -4129,6 +4433,44 @@ extension NXColumnViewModel: FeedColumnScheduling {
 let FETCH_FEED_INTERVAL = 9.0
 let FEED_MAX_VISIBLE: Int = 20
 let DEFAULT_REQ_LIMIT: Int? = 500
+
+// MARK: Remember-off "latest now" (CloudFeed.continue == false)
+//
+// Goal: first screen feels like "latest now" (3 iPhone / 6 Mac), bar finishes
+// at first paint, fill imports into the DB without dumping 20–40 NRPosts on
+// the list, older rows load as the user scrolls.
+//
+// Phases (NXGapFiller):
+//   1. firstPaint — outbox REQ, 8h, limit 20. Hold `.loading` until COUNT posts.
+//   2. fill       — 24h, limit 75. Import only; do not putOnScreen a big older batch.
+//   3. newer      — under 2 min away: keep the list, prepend like Remember-on.
+//
+// Resume: away >= RESUME_REFRESH_AFTER (120s) wipes to empty and runs firstPaint.
+// Under 2 min calls fetchNewer. lastBackgroundDuration() is needed because
+// lastBecameInactiveAt is often reset by a brief .inactive flicker.
+//
+// Known remaining issues:
+// - DEBUG overlay + 50-relay outbox still hitch after first paint (Release on
+//   device is much better). Do not assume a hang is "too many NRPosts" until
+//   the overlay is off (`feed_fetch_debug_overlay` lives in the *app* container
+//   plist, not `defaults write` on the Mac host).
+// - Fill still starts late after background (~6s connecting deadline).
+// - Hitting the tail can still wait on slow PAGE- cores if local has nothing
+//   older; connectAll leftover extras can NOTICE "no REQ in 10s".
+// - Bottom append is a raw `existing + older` assign. Do not run the prepend
+//   pin/settle on that path — it scrollToItem's a stale reading post.
+// Remember-on fetchGap is intentionally unchanged.
+let LATEST_FEED_FIRST_PAINT_COUNT = IS_CATALYST ? 6 : 3
+let LATEST_FEED_FIRST_PAINT_EVENT_CAP = LATEST_FEED_FIRST_PAINT_COUNT + 2
+let LATEST_FEED_FIRST_PAINT_LIMIT = 20
+/// First older batch after first paint. 20 parent-heavy NRPosts hitch the list for seconds.
+let LATEST_FEED_QUIET_OLDER_CAP = 8
+/// Remember-off: keep this many posts on screen, then load more as the user scrolls.
+let LATEST_FEED_INITIAL_VISIBLE = 12
+let LATEST_FEED_FIRST_PAINT_WINDOW: TimeInterval = 8 * 3600
+let LATEST_FEED_FILL_WINDOW: TimeInterval = 24 * 3600
+/// Remember-off: skip a full latest refetch after a short app switch / tab hide.
+let LATEST_FEED_RESUME_REFRESH_AFTER: TimeInterval = 120
 
 func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int? = nil, kinds: Set<Int>) -> [Filters] {
     guard !pubkeys.isEmpty || !hashtags.isEmpty else { return [] }

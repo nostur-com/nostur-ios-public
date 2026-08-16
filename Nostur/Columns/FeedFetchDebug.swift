@@ -72,10 +72,14 @@ final class FeedFetchDebugSession: ObservableObject {
     let feedName: String
 
     private(set) var subscriptionId: String?
+    private(set) var subscriptionIds: [String] = []
     private(set) var reqSummary: String?
     private(set) var acceptedOnScreen: Int = 0
     private(set) var requestStartedAt: Date?
     private(set) var endedAt: Date?
+    private(set) var phase1FinishedAt: Date?
+    private(set) var fillStartedAt: Date?
+    private(set) var fillFinishedAt: Date?
     private(set) var lateEventCount: Int = 0
     private(set) var lastLateEventAt: Date?
     private(set) var targetSnapshot: ConnectionPool.RequestTargetSnapshot?
@@ -103,6 +107,12 @@ final class FeedFetchDebugSession: ObservableObject {
         seeds: [FeedFetchDebugRelaySeed],
         targetSnapshot: ConnectionPool.RequestTargetSnapshot?
     ) {
+        if !subscriptionIds.contains(subscriptionId) {
+            if !subscriptionIds.isEmpty {
+                resetRowsForNextPhase()
+            }
+            subscriptionIds.append(subscriptionId)
+        }
         self.subscriptionId = subscriptionId
         self.targetSnapshot = targetSnapshot
         if let summary {
@@ -117,6 +127,22 @@ final class FeedFetchDebugSession: ObservableObject {
             }
         }
         publishNow()
+    }
+
+    private func resetRowsForNextPhase() {
+        for index in relays.indices {
+            relays[index].lingerEnded = false
+            relays[index].lingerEndedAt = nil
+            relays[index].closed = false
+            relays[index].timedOut = false
+            relays[index].abandoned = false
+            relays[index].queued = false
+            relays[index].sentAt = nil
+            relays[index].firstEventAt = nil
+            relays[index].eoseAt = nil
+            relays[index].eventCount = 0
+            relays[index].lateEventCount = 0
+        }
     }
 
     func markRequestStarted() {
@@ -153,7 +179,13 @@ final class FeedFetchDebugSession: ObservableObject {
     }
 
     func markEvent(relayId: String) {
-        let isLate = endedAt != nil
+        let isLate = if fillFinishedAt != nil {
+            true
+        } else if fillStartedAt != nil {
+            false
+        } else {
+            endedAt != nil
+        }
         var accepted = false
         upsert(relayId) { row in
             guard !row.lingerEnded else { return }
@@ -207,6 +239,112 @@ final class FeedFetchDebugSession: ObservableObject {
             endedAt = Date()
         }
         publishNow()
+    }
+
+    func markPhase1Finished() {
+        if phase1FinishedAt == nil {
+            phase1FinishedAt = Date()
+        }
+        markEnded()
+    }
+
+    func markFillStarted() {
+        if fillStartedAt == nil {
+            fillStartedAt = Date()
+        }
+        publishNow()
+    }
+
+    func markFillFinished() {
+        if fillFinishedAt == nil {
+            fillFinishedAt = Date()
+        }
+        publishNow()
+    }
+
+    func debugReport(
+        barState: String,
+        now: Date = Date(),
+        onScreenCount: Int? = nil,
+        continueEnabled: Bool? = nil
+    ) -> String {
+        func secs(_ date: Date?) -> String {
+            guard let date else { return "-" }
+            return String(format: "%.2f", date.timeIntervalSince(startedAt))
+        }
+        let p1 = phase1FinishedAt.map { $0.timeIntervalSince(startedAt) }
+        let rest: TimeInterval? = {
+            guard let fillStartedAt else { return nil }
+            return (fillFinishedAt ?? now).timeIntervalSince(fillStartedAt)
+        }()
+        let total = (fillFinishedAt ?? endedAt ?? now).timeIntervalSince(startedAt)
+        var lines: [String] = [
+            "NOSTUR_FEED_FETCH_DEBUG",
+            "time \(ISO8601DateFormatter().string(from: now))",
+            "trigger \(trigger)",
+            "feed \(feedName)",
+            "bar \(barState)",
+            "catalyst \(IS_CATALYST)",
+            "firstPaintMin \(LATEST_FEED_FIRST_PAINT_COUNT)",
+            "firstPaintLimit \(LATEST_FEED_FIRST_PAINT_LIMIT)",
+            "initialVisible \(LATEST_FEED_INITIAL_VISIBLE)",
+            String(format: "p1 %@", p1.map { String(format: "%.2fs", $0) } ?? "unfinished"),
+            String(format: "rest %@", rest.map { String(format: "%.2fs%@", $0, fillFinishedAt == nil ? "…" : "") } ?? "-"),
+            String(format: "total %.2fs", total),
+            "started \(secs(startedAt))",
+            "reqStarted \(secs(requestStartedAt))",
+            "phase1 \(secs(phase1FinishedAt))",
+            "fillStart \(secs(fillStartedAt))",
+            "fillEnd \(secs(fillFinishedAt))",
+            "ended \(secs(endedAt))",
+            "events \(eventCount)",
+            "accepted \(acceptedOnScreen)",
+            "late \(lateEventCount) @ \(secs(lastLateEventAt))",
+            "eose \(eoseCount)/\(relays.count)",
+            "timeouts \(timeoutCount)",
+            "waiting \(waitingCount)",
+            "subs \(subscriptionIds.joined(separator: ", "))",
+            "req \(reqSummary ?? "-")"
+        ]
+        if let continueEnabled {
+            lines.append("remember \(continueEnabled ? "on" : "off")")
+        }
+        if let onScreenCount {
+            lines.append("onScreen \(onScreenCount)")
+        }
+        if let snap = targetSnapshot {
+            lines.append("outboxPlan \(snap.outboxPlanState)")
+            lines.append("relays core \(snap.coreIds.count) extra \(snap.extraIds.count) connected \(snap.connectedIds.count)")
+            lines.append("authors selected \(snap.outboxSelectedAuthorCount) / known \(snap.outboxKnownAuthorCount) / requested \(snap.outboxRequestedAuthorCount)")
+            lines.append("quarantine planned \(snap.quarantinedCandidateCount) total \(snap.activeQuarantineCount) candidates \(snap.outboxCandidateCount) raw \(snap.outboxRawRelayCount) limit \(snap.outboxRelayLimit)")
+        }
+        lines.append("relays:")
+        let sorted = relays.sorted { lhs, rhs in
+            let left = lhs.sentAt ?? lhs.firstEventAt ?? lhs.eoseAt ?? .distantFuture
+            let right = rhs.sentAt ?? rhs.firstEventAt ?? rhs.eoseAt ?? .distantFuture
+            if left != right { return left < right }
+            return lhs.shortHost < rhs.shortHost
+        }
+        for row in sorted {
+            let kind = row.isOutbox ? "x" : "c"
+            let firstConn = row.isFirstConnection ? "1st" : ""
+            lines.append(
+                String(
+                    format: "  %@ %@ sent %@ ev %d 1st %@ eose %@ late %d %@ %@ %@",
+                    kind,
+                    row.shortHost,
+                    secs(row.sentAt),
+                    row.eventCount,
+                    secs(row.firstEventAt),
+                    secs(row.eoseAt),
+                    row.lateEventCount,
+                    row.statusLabel,
+                    firstConn,
+                    row.isConnected ? "up" : (row.isConnecting ? "dial" : "down")
+                ).trimmingCharacters(in: .whitespaces)
+            )
+        }
+        return lines.joined(separator: "\n")
     }
 
     /// Linger window is over. Unfinished relays get a final status so they
@@ -331,6 +469,18 @@ final class FeedFetchDebug: ObservableObject {
         speedTest?.debugSession?.noteAccepted(count)
     }
 
+    func markPhase1Finished(_ speedTest: NXSpeedTest?) {
+        speedTest?.debugSession?.markPhase1Finished()
+    }
+
+    func markFillStarted(_ speedTest: NXSpeedTest?) {
+        speedTest?.debugSession?.markFillStarted()
+    }
+
+    func markFillFinished(_ speedTest: NXSpeedTest?) {
+        speedTest?.debugSession?.markFillFinished()
+    }
+
     func markTimeout(subscriptionId: String) {
         sessionBySubscription[subscriptionId]?.markTimeout()
     }
@@ -366,7 +516,30 @@ final class FeedFetchDebug: ObservableObject {
     }
 
     nonisolated static func recordEvent(subscriptionId: String, relay: String) {
+        pendingEventLock.lock()
+        pendingEvents.append((subscriptionId, relay))
+        let shouldFlush = !pendingEventFlushScheduled
+        pendingEventFlushScheduled = true
+        pendingEventLock.unlock()
+        guard shouldFlush else { return }
         Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 80_000_000)
+            flushPendingEvents()
+        }
+    }
+
+    private nonisolated static let pendingEventLock = NSLock()
+    private nonisolated(unsafe) static var pendingEvents: [(String, String)] = []
+    private nonisolated(unsafe) static var pendingEventFlushScheduled = false
+
+    @MainActor
+    private static func flushPendingEvents() {
+        pendingEventLock.lock()
+        let batch = pendingEvents
+        pendingEvents = []
+        pendingEventFlushScheduled = false
+        pendingEventLock.unlock()
+        for (subscriptionId, relay) in batch {
             shared.sessionBySubscription[subscriptionId]?.markEvent(relayId: relay)
         }
     }

@@ -7,10 +7,13 @@
 
 #if DEBUG
 import SwiftUI
+import UIKit
 
 struct FeedFetchDebugOverlay: View {
     @ObservedObject var speedTest: NXSpeedTest
     var onFetchNow: () -> Void
+    var onScreenCount: Int = 0
+    var continueEnabled: Bool? = nil
     @ObservedObject private var hub = FeedFetchDebug.shared
 
     var body: some View {
@@ -33,6 +36,8 @@ struct FeedFetchDebugOverlay: View {
                 session: session,
                 barState: speedTest.loadingBarViewState,
                 onFetchNow: onFetchNow,
+                onScreenCount: onScreenCount,
+                continueEnabled: continueEnabled,
                 maxHeight: maxHeight
             )
         }
@@ -60,7 +65,10 @@ private struct FeedFetchDebugSessionView: View {
     @ObservedObject var session: FeedFetchDebugSession
     let barState: LoadingBar.ViewState
     var onFetchNow: () -> Void
+    var onScreenCount: Int
+    var continueEnabled: Bool?
     var maxHeight: CGFloat
+    @State private var copied = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -104,8 +112,13 @@ private struct FeedFetchDebugSessionView: View {
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .background {
-            TimelineView(.periodic(from: .now, by: 0.25)) { context in
-                panelBackground(at: context.date)
+            if shouldFreezeHeader {
+                panelBackground(at: session.fillFinishedAt ?? session.endedAt ?? Date())
+            }
+            else {
+                TimelineView(.periodic(from: .now, by: 0.25)) { context in
+                    panelBackground(at: context.date)
+                }
             }
         }
         .foregroundStyle(.white)
@@ -195,26 +208,57 @@ private struct FeedFetchDebugSessionView: View {
 
     @ViewBuilder
     private func headerRow() -> some View {
-        if session.endedAt != nil || isComplete {
-            headerContent(elapsed: frozenElapsed)
+        if shouldFreezeHeader {
+            headerContent(now: session.fillFinishedAt ?? session.endedAt ?? Date())
         }
         else {
             TimelineView(.periodic(from: .now, by: 0.25)) { context in
-                headerContent(elapsed: context.date.timeIntervalSince(session.startedAt))
+                headerContent(now: context.date)
             }
         }
     }
 
-    private func headerContent(elapsed: TimeInterval) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text("\(session.trigger) · \(barLabel) · \(elapsed, format: .number.precision(.fractionLength(2)))s · \(session.eoseCount)/\(session.relays.count) eose")
-            Spacer(minLength: 8)
-            Button("Fetch", action: onFetchNow)
-            Button("Hide") {
-                FeedFetchDebug.shared.setEnabled(false)
+    private func headerContent(now: Date) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("\(session.trigger) · \(barLabel) · \(session.eoseCount)/\(session.relays.count) eose")
+                Spacer(minLength: 8)
+                Button(copied ? "Copied" : "Copy") {
+                    copyDebugDump()
+                }
+                Button("Fetch", action: onFetchNow)
+                Button("Hide") {
+                    FeedFetchDebug.shared.setEnabled(false)
+                }
+                .font(.caption2.weight(.semibold))
             }
-            .font(.caption2.weight(.semibold))
+            Text(phaseLine(at: now))
+                .font(.caption2.monospaced().weight(.semibold))
+                .foregroundStyle(.cyan)
         }
+    }
+
+    private func phaseLine(at now: Date) -> String {
+        let p1End = session.phase1FinishedAt
+        let p1 = (p1End ?? now).timeIntervalSince(session.startedAt)
+        if p1End == nil {
+            return String(format: "p1 %.2fs", p1)
+        }
+        if session.fillStartedAt == nil && session.fillFinishedAt == nil {
+            return String(format: "p1 %.2fs", p1)
+        }
+        let restStart = session.fillStartedAt ?? p1End!
+        let restEnd = session.fillFinishedAt ?? now
+        let rest = max(0, restEnd.timeIntervalSince(restStart))
+        let restSuffix = session.fillFinishedAt == nil ? "…" : ""
+        return String(format: "p1 %.2fs  |  rest %.2fs%@", p1, rest, restSuffix)
+    }
+
+    private var shouldFreezeHeader: Bool {
+        if session.fillStartedAt != nil {
+            return session.fillFinishedAt != nil
+        }
+        return session.endedAt != nil || isComplete
     }
 
     private var isComplete: Bool {
@@ -224,11 +268,6 @@ private struct FeedFetchDebugSessionView: View {
         default:
             false
         }
-    }
-
-    private var frozenElapsed: TimeInterval {
-        let end = session.endedAt ?? Date()
-        return end.timeIntervalSince(session.startedAt)
     }
 
     private var barLabel: String {
@@ -245,8 +284,20 @@ private struct FeedFetchDebugSessionView: View {
         }
     }
 
+    private func copyDebugDump() {
+        UIPasteboard.general.string = session.debugReport(
+            barState: barLabel,
+            onScreenCount: onScreenCount,
+            continueEnabled: continueEnabled
+        )
+        copied = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+            copied = false
+        }
+    }
+
     private var relayListMaxHeight: CGFloat {
-        let headerReserve: CGFloat = 96
+        let headerReserve: CGFloat = 128
         let rowHeight: CGFloat = 15
         let contentHeight = CGFloat(max(sortedRelays.count, 1)) * rowHeight + 8
         let available = max(maxHeight - headerReserve, 80)

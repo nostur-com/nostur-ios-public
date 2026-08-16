@@ -148,6 +148,10 @@ class NXColumnViewModelInner {
     /// Installed by the visible feed so passive list mutations can preserve the exact post and
     /// viewport offset the user is reading, even when rows are inserted above it.
     public var performAnchoredFeedUpdate: (([String], @escaping () -> Void) -> Void)?
+    /// Cancels a leftover prepend settle so a bottom append cannot be pinned.
+    public var cancelPendingFeedSettle: (() -> Void)?
+    /// Small content-offset nudge after a bottom append (estimated row heights).
+    public var preserveViewportAfterAppend: (() -> Void)?
     
     
     // Triggered by user, different from triggered by new posts coming in (.isPerformingScroll)

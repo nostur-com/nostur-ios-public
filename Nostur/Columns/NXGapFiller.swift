@@ -129,10 +129,69 @@ class NXGapFiller {
         }
     }
     
+    private enum LatestPhase {
+        case firstPaint
+        case fill
+        case newer
+    }
+
+    private var didLatestFirstPaint = false
+    private var didStartLatestFill = false
+    private var latestAppendOlder = false
+    private var latestFillLimit = 75
+    private var latestFirstPaintTask: Task<Void, Never>?
+    private var latestQuietOlderTask: Task<Void, Never>?
+#if DEBUG
+    private var latestDebugSummary: String?
+#endif
+
     @MainActor
     public func fetchSimple(limit: Int) {
+        latestFirstPaintTask?.cancel()
+        latestQuietOlderTask?.cancel()
+        didLatestFirstPaint = false
+        didStartLatestFill = false
+        latestAppendOlder = false
+        latestFillLimit = limit
+        columnVM?.beginLatestFirstPaint()
+        if let config = columnVM?.config {
+            // Paint from local immediately. Debounced tryLatestFirstPaint left
+            // the screen empty longer than the p1 timestamp.
+            columnVM?._loadLocal(config) { [weak self] in
+                self?.considerLatestReveal(config: config)
+            }
+        }
+        startLatestFetch(phase: .firstPaint)
+    }
+
+    /// Keep the current screen and prepend posts newer than `since`.
+    @MainActor
+    public func fetchNewer(since: Int, limit: Int) {
+        latestFirstPaintTask?.cancel()
+        latestQuietOlderTask?.cancel()
+        didLatestFirstPaint = true
+        didStartLatestFill = true
+        latestAppendOlder = false
+        latestFillLimit = limit
+        columnVM?.allowLatestLivePrepend()
+        startLatestFetch(phase: .newer, sinceOverride: since)
+    }
+
+    @MainActor
+    private func startLatestFetch(phase: LatestPhase, sinceOverride: Int? = nil) {
         guard let columnVM, let config = columnVM.config else { return }
-        let latestSince = Int(Date().addingTimeInterval(-86_400).timeIntervalSince1970)
+        let window = phase == .fill ? LATEST_FEED_FILL_WINDOW : LATEST_FEED_FIRST_PAINT_WINDOW
+        let latestSince = sinceOverride ?? Int(Date().addingTimeInterval(-window).timeIntervalSince1970)
+        let limit = phase == .firstPaint ? LATEST_FEED_FIRST_PAINT_LIMIT : latestFillLimit
+        let includeOutbox = true
+#if DEBUG
+        let phaseLabel = switch phase {
+        case .firstPaint: "p1"
+        case .fill: "fill"
+        case .newer: "newer"
+        }
+        latestDebugSummary = "latest \(phaseLabel) \(Date(timeIntervalSince1970: TimeInterval(latestSince)).formatted()) limit=\(limit) outbox"
+#endif
 
         guard ConnectionPool.shared.anyConnected else {
 #if DEBUG
@@ -154,9 +213,21 @@ class NXGapFiller {
         }
                 
         // send REQ
-        if let (cmd, subId, targets) = columnVM.getFillGapReqStatement(config, since: latestSince, latestLimit: limit) {
+        if let (cmd, subId, targets) = columnVM.getFillGapReqStatement(
+            config,
+            since: latestSince,
+            latestLimit: limit,
+            includeOutbox: includeOutbox
+        ) {
             if let targets {
-                runBoundedRequest(config: config, command: cmd, subscriptionId: subId, targets: targets(), advanceWindows: false)
+                runBoundedRequest(
+                    config: config,
+                    command: cmd,
+                    subscriptionId: subId,
+                    targets: targets(),
+                    advanceWindows: false,
+                    latestPhase: phase
+                )
                 return
             }
             
@@ -167,7 +238,7 @@ class NXGapFiller {
                     guard let self else { return }
                     self.columnVM?.speedTest?.requestStarted()
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) fetchSimple since=\(Date(timeIntervalSince1970: TimeInterval(latestSince)).formatted()) limit=\(limit) -[LOG]-")
+                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) latest \(phase == .firstPaint ? "firstPaint" : "fill") since=\(Date(timeIntervalSince1970: TimeInterval(latestSince)).formatted()) limit=\(limit) outbox=\(includeOutbox) -[LOG]-")
                     self.attachFetchDebug(subscriptionId: subId, config: config, targets: nil)
 #endif
                     cmd()
@@ -175,16 +246,14 @@ class NXGapFiller {
                 processResponseCommand: { [weak self] _, _, _ in
                     guard let self else { return }
                     self.columnVM?.feed?.lastLocalFetchAt = Date()
-                    self.columnVM?.speedTest?.relayFinished()
-                    self.columnVM?.loadLocal(config, older: false)
+                    self.handleLatestPhaseResponse(config: config, phase: phase, timedOut: false)
                 },
                 timeoutCommand: { [weak self] subId in
 #if DEBUG
-                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") subId: \(subId) timeout in fetchSimple -[LOG]-")
+                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") subId: \(subId) timeout in latest fetch -[LOG]-")
 #endif
                     Task { @MainActor in
-                        self?.columnVM?.speedTest?.relayTimedout()
-                        self?.columnVM?.loadLocal(config)
+                        self?.handleLatestPhaseResponse(config: config, phase: phase, timedOut: true)
                     }
                 })
 
@@ -194,12 +263,136 @@ class NXGapFiller {
     }
 
     @MainActor
+    private func tryLatestFirstPaint(config: NXColumnConfig) {
+        // After the first screen is up, don't rebuild older rows on every import.
+        // A deferred quiet append (and later fill) picks those up.
+        guard !didLatestFirstPaint else { return }
+        latestFirstPaintTask?.cancel()
+        latestFirstPaintTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 80_000_000)
+            guard !Task.isCancelled else { return }
+            self?.loadAfterLatestImport(config: config) {
+                self?.considerLatestReveal(config: config)
+            }
+        }
+    }
+
+    @MainActor
+    private func latestReadyCount() -> Int {
+        max(columnVM?.currentNRPostsOnScreen.count ?? 0, columnVM?.latestHeldPostCount ?? 0)
+    }
+
+    @MainActor
+    private func loadAfterLatestImport(config: NXColumnConfig, completion: (() -> Void)? = nil) {
+        let older = latestAppendOlder && !(columnVM?.currentNRPostsOnScreen.isEmpty ?? true)
+        // After first paint, fill/late imports stay in the DB. Putting 20–40
+        // NRPosts on screen here is the hang. Scroll pagination loads more.
+        if older,
+           !(columnVM?.latestUserLoadMore ?? false),
+           didLatestFirstPaint || (columnVM?.currentNRPostsOnScreen.count ?? 0) >= LATEST_FEED_INITIAL_VISIBLE {
+            completion?()
+            return
+        }
+        columnVM?.loadLocal(config, older: older, completion: completion)
+    }
+
+    @MainActor
+    private func considerLatestReveal(config: NXColumnConfig, force: Bool = false) {
+        let ready = latestReadyCount()
+        guard force || ready >= LATEST_FEED_FIRST_PAINT_COUNT else { return }
+        guard !didLatestFirstPaint else { return }
+        didLatestFirstPaint = true
+        latestFirstPaintTask?.cancel()
+        latestAppendOlder = true
+#if DEBUG
+        FeedFetchDebug.shared.markPhase1Finished(columnVM?.speedTest)
+#endif
+        columnVM?.endLatestFirstPaintHold()
+        columnVM?.speedTest?.fetchCompleted()
+        // Let the first 3/6 settle before appending older rows. An immediate
+        // loadLocal(older:) of ~20 parent-heavy posts is the 3–4s hang after paint.
+        scheduleQuietOlderAppend(config: config)
+    }
+
+    @MainActor
+    private func scheduleQuietOlderAppend(config: NXColumnConfig) {
+        columnVM?.latestQuietOlderAppend = true
+        latestQuietOlderTask?.cancel()
+        latestQuietOlderTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard !Task.isCancelled else { return }
+            guard let self else { return }
+            self.columnVM?.loadLocal(config, older: true) { [weak self] in
+                self?.columnVM?.latestQuietOlderAppend = false
+                self?.columnVM?.schedulePrefetchOlderPage()
+            }
+        }
+    }
+
+    @MainActor
+    private func startLatestFillIfNeeded() {
+        guard !didStartLatestFill else { return }
+        didStartLatestFill = true
+#if DEBUG
+        FeedFetchDebug.shared.markFillStarted(columnVM?.speedTest)
+#endif
+        startLatestFetch(phase: .fill)
+    }
+
+    @MainActor
+    private func handleLatestPhaseResponse(config: NXColumnConfig, phase: LatestPhase, timedOut: Bool) {
+        switch phase {
+        case .firstPaint:
+            considerLatestReveal(config: config)
+            startLatestFillIfNeeded()
+            if didLatestFirstPaint {
+                columnVM?.speedTest?.fetchCompleted()
+            }
+            else {
+                // First screen is not up yet — keep trying from local.
+                // After paint, skip this: the quiet older append owns the next load.
+                loadAfterLatestImport(config: config)
+            }
+        case .fill:
+            let alreadyPainted = didLatestFirstPaint
+            considerLatestReveal(config: config, force: !didLatestFirstPaint)
+#if DEBUG
+            FeedFetchDebug.shared.markFillFinished(columnVM?.speedTest)
+#endif
+            columnVM?.allowLatestLivePrepend()
+            if didLatestFirstPaint {
+                if timedOut {
+                    columnVM?.speedTest?.relayTimedout()
+                }
+                else {
+                    columnVM?.speedTest?.fetchCompleted()
+                }
+            }
+            if alreadyPainted || !didLatestFirstPaint {
+                loadAfterLatestImport(config: config)
+            }
+        case .newer:
+#if DEBUG
+            FeedFetchDebug.shared.markFillFinished(columnVM?.speedTest)
+#endif
+            if timedOut {
+                columnVM?.speedTest?.relayTimedout()
+            }
+            else {
+                columnVM?.speedTest?.fetchCompleted()
+            }
+            columnVM?.loadLocal(config, older: false)
+        }
+    }
+
+    @MainActor
     private func runBoundedRequest(
         config: NXColumnConfig,
         command: @escaping () -> Void,
         subscriptionId: String,
         targets: ConnectionPool.RequestTargetSnapshot,
-        advanceWindows: Bool = true
+        advanceWindows: Bool = true,
+        latestPhase: LatestPhase? = nil
     ) {
         if let boundedSubscriptionId {
             lingerCloseTasks[boundedSubscriptionId]?.cancel()
@@ -232,6 +425,10 @@ class NXGapFiller {
             self.completionTracker = BoundedRelayRequestCompletionTracker(
                 subscriptionId: subscriptionId,
                 targets: requestTargets,
+                extendQuietPeriodOnImport: advanceWindows,
+                onImport: { [weak self] in
+                    self?.tryLatestFirstPaint(config: config)
+                },
                 onCompletion: { [weak self] outcome in
                     guard let self, let columnVM = self.columnVM else { return }
                     self.completionTracker = nil
@@ -244,7 +441,6 @@ class NXGapFiller {
                     switch outcome {
                     case .finished:
                         columnVM.feed?.lastLocalFetchAt = Date()
-                        columnVM.speedTest?.fetchCompleted()
                         if config.mediaFeedSourceSnapshot != nil,
                            columnVM.currentNRPostsOnScreen.isEmpty {
                             // A bounded media response is not necessarily newer than
@@ -254,9 +450,17 @@ class NXGapFiller {
                             // imported by this request are immediately eligible.
                             columnVM.loadAnyFlag = true
                         }
+                        if let latestPhase {
+                            self.handleLatestPhaseResponse(
+                                config: config,
+                                phase: latestPhase,
+                                timedOut: false
+                            )
+                            return
+                        }
+                        columnVM.speedTest?.fetchCompleted()
                         columnVM.loadLocal(config, older: false) { [weak self] in
                             guard let self else { return }
-                            guard advanceWindows else { return }
                             if self.columnVM?.currentNRPostsOnScreen.isEmpty ?? false {
                                 self.columnVM?.loadAnyFlag = true
                                 self.fetchGap(since: 1622888074, currentGap: self.currentGap)
@@ -276,7 +480,6 @@ class NXGapFiller {
                         }
 
                     case .timedOut:
-                        columnVM.speedTest?.relayTimedout()
                         if config.mediaFeedSourceSnapshot != nil,
                            columnVM.currentNRPostsOnScreen.isEmpty {
                             // Imports may finish just as the bounded tracker expires.
@@ -284,6 +487,15 @@ class NXGapFiller {
                             // outer UI decides that no matching posts exist.
                             columnVM.loadAnyFlag = true
                         }
+                        if let latestPhase {
+                            self.handleLatestPhaseResponse(
+                                config: config,
+                                phase: latestPhase,
+                                timedOut: true
+                            )
+                            return
+                        }
+                        columnVM.speedTest?.relayTimedout()
                         columnVM.loadLocal(config)
                     }
                 }
@@ -294,6 +506,9 @@ class NXGapFiller {
             self.attachFetchDebug(subscriptionId: subscriptionId, config: config, targets: requestTargets)
 #endif
             command()
+            ConnectionPool.shared.disconnectIdleOutbox(
+                keeping: requestTargets.extraIds.union(requestTargets.coreIds)
+            )
         }
     }
 
@@ -330,7 +545,10 @@ class NXGapFiller {
         lateLoadTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 300_000_000)
             guard !Task.isCancelled else { return }
-            self?.columnVM?.loadLocal(config)
+            guard let self else { return }
+            self.loadAfterLatestImport(config: config) {
+                self.considerLatestReveal(config: config)
+            }
         }
     }
 
@@ -342,7 +560,8 @@ class NXGapFiller {
         targets: ConnectionPool.RequestTargetSnapshot?
     ) {
         let relayIds = targets?.relayIds ?? ConnectionPool.shared.requestTargetSnapshot().relayIds
-        let summary = "\(config.name) gap \(Date(timeIntervalSince1970: TimeInterval(windowStart)).formatted()) – \(Date(timeIntervalSince1970: TimeInterval(windowEnd)).formatted())"
+        let summary = latestDebugSummary
+            ?? "\(config.name) gap \(Date(timeIntervalSince1970: TimeInterval(windowStart)).formatted()) – \(Date(timeIntervalSince1970: TimeInterval(windowEnd)).formatted())"
         FeedFetchDebug.shared.attach(
             columnVM?.speedTest,
             subscriptionId: subscriptionId,

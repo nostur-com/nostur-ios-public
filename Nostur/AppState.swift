@@ -40,7 +40,17 @@ class AppState: ObservableObject {
     
     // main stuff
     public var appIsInBackground = false
+    public var lastBackgroundedAt: Date?
+    public var lastForegroundedAt: Date?
     public var rawExplorePubkeys: Set<String> = []
+
+    /// Seconds spent in the last real background, if we just returned to foreground.
+    public func lastBackgroundDuration(now: Date = Date()) -> TimeInterval {
+        guard let lastBackgroundedAt, let lastForegroundedAt,
+              now.timeIntervalSince(lastForegroundedAt) < 3
+        else { return 0 }
+        return max(0, lastForegroundedAt.timeIntervalSince(lastBackgroundedAt))
+    }
     
     // bg stuff
     public var bgAppState = BgAppState()

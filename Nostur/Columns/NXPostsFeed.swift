@@ -42,6 +42,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private var lastInsetTop: CGFloat = 0
     private var lastUserScrollAt: CFTimeInterval = 0
     private var scrollObservations: [NSKeyValueObservation] = []
+    /// Fired on content-offset changes (status-bar tap-to-top, fling, etc.).
+    var onViewportChange: (() -> Void)?
 
     var isProgrammaticScrollPending: Bool {
         isProgrammaticScrollInProgress
@@ -110,6 +112,39 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     func cancelProgrammaticScroll() {
         isProgrammaticScrollInProgress = false
         scheduleFlush()
+    }
+
+    /// Bottom inserts must not run a leftover prepend settle / restore pin.
+    func cancelPendingSettle() {
+        cancelPendingWork()
+        pendingRestoreAnchor = nil
+    }
+
+    /// Correct 20–40pt drift from estimated List row heights after rows are
+    /// added below. Never scrollToItem — that is the prepend jump.
+    func preserveViewportAfterAppend() {
+        guard let scrollView, scrollView.window != nil else { return }
+        if isSuspended
+            || isProgrammaticScrollInProgress
+            || scrollView.isDragging
+            || scrollView.isDecelerating
+            || scrollView.isTracking {
+            return
+        }
+        guard let anchor = visibleAnchor(in: scrollView) ?? lastKnownAnchor else { return }
+        let captured = anchor
+        Task { @MainActor [weak self] in
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 16_000_000)
+            guard let self, let scrollView = self.scrollView, scrollView.window != nil else { return }
+            if self.isSuspended
+                || scrollView.isDragging
+                || scrollView.isDecelerating
+                || scrollView.isTracking {
+                return
+            }
+            self.restore(anchor: captured, in: scrollView, bringOnScreen: false)
+        }
     }
 
     func finishProgrammaticScroll(finalPosition: () -> Void) async {
@@ -484,6 +519,20 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 self?.handleAdjustedContentInsetChange(in: scrollView)
             }
         })
+        scrollObservations.append(scrollView.observe(\.contentOffset, options: [.new]) { [weak self] scrollView, _ in
+            MainActor.assumeIsolated {
+                self?.handleContentOffsetChange(in: scrollView)
+            }
+        })
+    }
+
+    private func handleContentOffsetChange(in scrollView: UIScrollView) {
+        lastContentOffsetY = scrollView.contentOffset.y
+        lastInsetTop = scrollView.adjustedContentInset.top
+        if scrollView.isDragging || scrollView.isDecelerating || scrollView.isTracking {
+            lastUserScrollAt = CACurrentMediaTime()
+        }
+        onViewportChange?()
     }
 
     private func handleAdjustedContentInsetChange(in scrollView: UIScrollView) {
@@ -585,6 +634,13 @@ struct NXPostsFeed: View {
             availableHeight: availableHeight
         )
     }
+
+    /// Start the next page a few rows before the tail so transform finishes
+    /// before the user reaches the last post.
+    private var paginationLeadPostId: String? {
+        guard posts.count > 4 else { return posts.last?.id }
+        return posts[posts.count - 4].id
+    }
     
     var body: some View {
         // Keep List as the top-level scroll container (no GeometryReader parent) so iOS 26
@@ -601,6 +657,11 @@ struct NXPostsFeed: View {
                         )
                         .environment(\.relayFeedRelays, relayFeedRelays)
                         .environment(\.feedLayoutStabilizer, layoutStabilizer)
+                }
+                .onAppear {
+                    if nrPost.id == paginationLeadPostId, let oldest = posts.last {
+                        vm.requestNextPageIfNeeded(until: oldest.created_at)
+                    }
                 }
                 .onDisappear {
                     onPostDisappear(nrPost)
@@ -674,6 +735,15 @@ struct NXPostsFeed: View {
                 }
             }
             layoutStabilizer.updateItemIDs(posts.map(\.id))
+            layoutStabilizer.onViewportChange = { [weak vmInner] in
+                vmInner?.updateIsAtTopSubject.send()
+            }
+            vmInner.cancelPendingFeedSettle = { [weak layoutStabilizer] in
+                layoutStabilizer?.cancelPendingSettle()
+            }
+            vmInner.preserveViewportAfterAppend = { [weak layoutStabilizer] in
+                layoutStabilizer?.preserveViewportAfterAppend()
+            }
             if let readingID = vmInner.readingPostID ?? vmInner.pendingScrollToPostID {
                 layoutStabilizer.rememberAnchor(id: readingID)
             }
@@ -731,8 +801,11 @@ struct NXPostsFeed: View {
             // but because its not visible the hack to keep scroll position doesn't work
             // so we pause() updates (and resume() in onAppear {})
             layoutStabilizer.suspendPositionTracking()
+            layoutStabilizer.onViewportChange = nil
             vm.pauseViewUpdates()
             vmInner.performAnchoredFeedUpdate = nil
+            vmInner.cancelPendingFeedSettle = nil
+            vmInner.preserveViewportAfterAppend = nil
         }
     }
 
@@ -810,6 +883,7 @@ struct NXPostsFeed: View {
         vmInner.isAtTop = true
         vmInner.readingPostID = nil
         vmInner.holdUnreadAboveReadingPost = false
+        markAllAsRead()
 //        
 //        // Regular updateIsAtTop() in onPostAppearOnce { } doesn't catch the first row appearing to set isAtTop to 0, probably because
 //        // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
@@ -1045,8 +1119,7 @@ struct NXPostsFeed: View {
     }
 
     private func _updateIsAtTop() {
-        guard !vmInner.isPreparingForScrollRestore,
-              !vmInner.isPerformingScroll else { return }
+        guard !vmInner.isPerformingScroll else { return }
 
         // The ScrollOffset proxy reports 0 when it has no subscription, which looks like
         // "at top" and used to send a restored feed into the prepend-at-top path.
@@ -1057,28 +1130,25 @@ struct NXPostsFeed: View {
             contentOffsetY: scrollView.contentOffset.y,
             insetTop: scrollView.adjustedContentInset.top
         )
+
+        // Status-bar tap-to-top never goes through scrollToTop(). Detect it from
+        // the live offset and clear unread even if isAtTop was already true.
+        if isAtTopNow && !vmInner.isPreparingForScrollRestore {
+            vmInner.readingPostID = nil
+            vmInner.holdUnreadAboveReadingPost = false
+            markAllAsRead()
+        }
+
+        guard !vmInner.isPreparingForScrollRestore else { return }
         
         // Only update if the state actually changed
         guard vmInner.isAtTop != isAtTopNow else { return }
         
         vmInner.isAtTop = isAtTopNow
-        if isAtTopNow {
-            vmInner.readingPostID = nil
-            vmInner.holdUnreadAboveReadingPost = false
-        }
         
 #if DEBUG
         L.og.debug("☘️☘️ \(vm.config?.name ?? "?") contentOffset.y: \(scrollView.contentOffset.y) isAtTop: \(isAtTopNow) -[LOG]-")
 #endif
-        
-        // Only mark all as read when transitioning to top, not when leaving top
-        if isAtTopNow {
-            Task.detached(priority: .userInitiated) {
-                await MainActor.run {
-                    self.markAllAsRead()
-                }
-            }
-        }
     }
 
     private func onPostDisappear(_ nrPost: NRPost) {

@@ -23,6 +23,7 @@ final class BoundedRelayRequestCompletionTracker {
     private let deadlineNanoseconds: UInt64
     private let onImport: () -> Void
     private let onCompletion: (Outcome) -> Void
+    private let extendQuietPeriodOnImport: Bool
 
     private var finishedRelays: Set<CanonicalRelayUrl> = []
     private var subscriptions = Set<AnyCancellable>()
@@ -36,6 +37,7 @@ final class BoundedRelayRequestCompletionTracker {
         settleDelay: TimeInterval = 0.3,
         connectedDeadline: TimeInterval = 3.0,
         connectingDeadline: TimeInterval = 6.0,
+        extendQuietPeriodOnImport: Bool = true,
         onImport: @escaping () -> Void = {},
         onCompletion: @escaping (Outcome) -> Void
     ) {
@@ -50,6 +52,7 @@ final class BoundedRelayRequestCompletionTracker {
         self.deadlineNanoseconds = UInt64(
             (policy.usesShortDeadline ? connectedDeadline : connectingDeadline) * 1_000_000_000
         )
+        self.extendQuietPeriodOnImport = extendQuietPeriodOnImport
         self.onImport = onImport
         self.onCompletion = onCompletion
     }
@@ -112,9 +115,11 @@ final class BoundedRelayRequestCompletionTracker {
     private func receivedImport() {
         guard !didComplete else { return }
         onImport()
-        // EOSE can arrive while matching events are still being committed. Each
-        // import restarts the quiet period so the final DB read happens last.
-        if quorumReached {
+        // Catch-up/media: EOSE can arrive while matching events are still
+        // being committed, so keep nudging the quiet period. Latest two-phase
+        // fetch must not do this — extras drip for a long time and would hold
+        // completion for 10s+.
+        if quorumReached && extendQuietPeriodOnImport {
             scheduleCompletion(.finished, after: settleDelayNanoseconds)
         }
     }

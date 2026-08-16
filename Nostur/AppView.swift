@@ -118,6 +118,7 @@ extension AppView {
             // reconnects still nudge FeedsCoordinator.resumeFeeds().
             if AppState.shared.appIsInBackground { // if we were actually in background (from .background, not just a few seconds .inactive)
                 AppState.shared.appIsInBackground = false // needs to set before we call other actions
+                AppState.shared.lastForegroundedAt = Date()
                 ConnectionPool.shared.connectAll()
                 sendNotification(.scenePhaseActive)
                 FeedsCoordinator.shared.resumeFeeds()
@@ -139,6 +140,7 @@ extension AppView {
             
         case .background:
             AppState.shared.appIsInBackground = true
+            AppState.shared.lastBackgroundedAt = Date()
             FeedsCoordinator.shared.saveFeedStates()
             if !IS_CATALYST {
                 FeedsCoordinator.shared.pauseFeeds()

@@ -90,6 +90,36 @@ struct FeedFetchDebugTests {
         #expect(slow?.abandoned == false)
     }
 
+    @Test("Fill-phase events are not counted as late until fill finishes")
+    func fillEventsAreNotLateUntilFillEnds() {
+        let session = FeedFetchDebugSession(trigger: "firstLoad", feedName: "Following")
+        session.attachRequest(
+            subscriptionId: "RESUME-Following-fill-late",
+            summary: "test",
+            seeds: [
+                FeedFetchDebugRelaySeed(
+                    relayId: "wss://core.example",
+                    isConnected: true,
+                    isConnecting: false,
+                    isFirstConnection: false,
+                    isOutbox: false
+                )
+            ],
+            targetSnapshot: nil
+        )
+        session.markRequestStarted()
+        session.markSent(relayId: "wss://core.example", isFirstConnection: false, isOutbox: false)
+        session.markEvent(relayId: "wss://core.example")
+        session.markPhase1Finished()
+        session.markFillStarted()
+        session.markEvent(relayId: "wss://core.example")
+        session.markEvent(relayId: "wss://core.example")
+        #expect(session.lateEventCount == 0)
+        session.markFillFinished()
+        session.markEvent(relayId: "wss://core.example")
+        #expect(session.lateEventCount == 1)
+    }
+
     @Test("Linger close gives unfinished relays a final note")
     func lingerCloseMarksUnfinishedRelays() {
         let session = FeedFetchDebugSession(trigger: "firstLoad", feedName: "Following")
@@ -126,6 +156,64 @@ struct FeedFetchDebugTests {
         #expect(silent?.lingerEnded == true)
         #expect(silent?.statusLabel == "nocon")
         #expect(session.waitingCount == 0)
+    }
+
+    @Test("Phase 1 and fill timestamps are recorded separately")
+    func recordsPhaseTimings() {
+        let session = FeedFetchDebugSession(trigger: "firstLoad", feedName: "Following")
+        session.markRequestStarted()
+        session.markPhase1Finished()
+        session.markFillStarted()
+        session.markFillFinished()
+
+        #expect(session.phase1FinishedAt != nil)
+        #expect(session.fillStartedAt != nil)
+        #expect(session.fillFinishedAt != nil)
+        #expect(session.endedAt != nil)
+        #expect(session.phase1FinishedAt! <= session.fillStartedAt!)
+        #expect(session.fillStartedAt! <= session.fillFinishedAt!)
+    }
+
+    @Test("Debug report includes phase timings and relay rows")
+    func debugReportContainsUsefulFields() {
+        let session = FeedFetchDebugSession(trigger: "reload", feedName: "Following")
+        session.attachRequest(
+            subscriptionId: "RESUME-Following-dump",
+            summary: "latest firstPaint",
+            seeds: [
+                FeedFetchDebugRelaySeed(
+                    relayId: "wss://nos.lol",
+                    isConnected: true,
+                    isConnecting: false,
+                    isFirstConnection: false,
+                    isOutbox: false
+                )
+            ],
+            targetSnapshot: nil
+        )
+        session.markRequestStarted()
+        session.markSent(relayId: "wss://nos.lol", isFirstConnection: false, isOutbox: false)
+        session.markEvent(relayId: "wss://nos.lol")
+        session.markTerminal(relayId: "wss://nos.lol", closed: false)
+        session.markPhase1Finished()
+        session.markFillStarted()
+        session.markFillFinished()
+        session.noteAccepted(6)
+
+        let report = session.debugReport(
+            barState: "finished",
+            onScreenCount: 6,
+            continueEnabled: false
+        )
+        #expect(report.contains("NOSTUR_FEED_FETCH_DEBUG"))
+        #expect(report.contains("trigger reload"))
+        #expect(report.contains("p1 "))
+        #expect(report.contains("rest "))
+        #expect(report.contains("remember off"))
+        #expect(report.contains("onScreen 6"))
+        #expect(report.contains("accepted 6"))
+        #expect(report.contains("nos.lol"))
+        #expect(report.contains("RESUME-Following-dump"))
     }
 
     @Test("CLOSE is not recorded as EOSE, and linger ignores later sends")

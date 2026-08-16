@@ -273,9 +273,12 @@ struct NXColumnView<HeaderContent: View>: View {
         }
         .overlay(alignment: .bottom) {
             if feedFetchDebug.isEnabled {
-                FeedFetchDebugOverlay(speedTest: speedTest) {
-                    viewModel.debugFetchNow()
-                }
+                FeedFetchDebugOverlay(
+                    speedTest: speedTest,
+                    onFetchNow: { viewModel.debugFetchNow() },
+                    onScreenCount: viewModel.currentNRPostsOnScreen.count,
+                    continueEnabled: config.continue
+                )
             }
         }
 #endif

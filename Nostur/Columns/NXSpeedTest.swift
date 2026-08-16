@@ -56,15 +56,22 @@ class NXSpeedTest: ObservableObject {
 
             resultFirstFetch = 0
             resultLastFetch = 0
-            
-            if ConnectionPool.shared.anyConnected {
+
+            // A deferred start must not revive the bar after first paint
+            // already called fetchCompleted().
+            switch loadingBarViewState {
+            case .finalLoad, .finished, .earlyLoad, .fetching:
+                break
+            default:
+                if ConnectionPool.shared.anyConnected {
 #if DEBUG
-                L.og.debug("🏁🏁 NXSpeedTest.start Setting loadingBarViewState to: .starting")
+                    L.og.debug("🏁🏁 NXSpeedTest.start Setting loadingBarViewState to: .starting")
 #endif
-                loadingBarViewState = .starting
-            }
-            else {
-                waitingForConnection()
+                    loadingBarViewState = .starting
+                }
+                else {
+                    waitingForConnection()
+                }
             }
 #if DEBUG
             FeedFetchDebug.shared.begin(self, trigger: debugTrigger, feedName: debugFeedName)
@@ -133,10 +140,13 @@ class NXSpeedTest: ObservableObject {
     /// sit at 75% waiting for a second per-relay finish that will never come.
     public func fetchCompleted() {
         Task { @MainActor in
-            if loadingBarViewState == .fetching {
-                loadingBarViewState = .earlyLoad
-            }
-            if loadingBarViewState == .earlyLoad {
+            switch loadingBarViewState {
+            case .finished, .off, .timeout, .finalLoad:
+                break
+            default:
+#if DEBUG
+                L.og.debug("🏁🏁 NXSpeedTest.fetchCompleted Setting loadingBarViewState to: .finalLoad from \(self.loadingBarViewState.rawValue) -[LOG]-")
+#endif
                 loadingBarViewState = .finalLoad
             }
 #if DEBUG

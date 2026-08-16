@@ -25,6 +25,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public var firstConnection: Bool = true // flag to know if it is connect or reconnect - reconnect will restore some things not needed at first connect in background fetch
     public var url: String { relayData.id }
     public var nreqSubscriptions: Set<String> = []
+    /// Call from the connection queue only.
+    public var hasActiveOrQueuedWork: Bool {
+        !nreqSubscriptions.isEmpty || !outQueue.isEmpty
+    }
     public var isNWC: Bool
     public var isNC: Bool
     public var isOutbox: Bool

@@ -813,6 +813,20 @@ public class ConnectionPool: ObservableObject {
             }
         }
     }
+
+    /// Drop outbox sockets that have no remaining REQ. Relays that stay
+    /// connected after we CLOSE a catch-up sub will kick us with
+    /// "no REQ sent within 10 sec, disconnecting".
+    func disconnectIdleOutbox(keeping keepIds: Set<CanonicalRelayUrl> = []) {
+        queue.async(flags: .barrier) { [unowned self] in
+            for (id, connection) in self.outboxConnections {
+                if keepIds.contains(id) { continue }
+                if !connection.hasActiveOrQueuedWork {
+                    connection.disconnect()
+                }
+            }
+        }
+    }
     
     @MainActor
     private func removeAfterDelay(_ url: String) {
@@ -1237,11 +1251,15 @@ public class ConnectionPool: ObservableObject {
         DisabledRelaysStore.isDisabled(relay)
     }
 
-    /// Realtime Following-/List- subs stay open. Catch-up RESUME- and prio- media
-    /// REQs must be sent again even if the local set still lists the same id.
+    /// Realtime Following-/List- subs stay open. Catch-up RESUME-, pagination
+    /// PAGE-, and prio- media REQs must be sent again even if the local set
+    /// still lists the same id (new since/until).
     private func shouldSkipDuplicateReq(_ subscriptionId: String?) -> Bool {
         guard let subscriptionId else { return false }
         if subscriptionId.hasPrefix("RESUME-") { return false }
+        if subscriptionId.hasPrefix("PAGE-") { return false }
+        if subscriptionId.hasPrefix("MEDIA-PAGE-") { return false }
+        if subscriptionId.hasPrefix("G-PAGE-") { return false }
         if subscriptionId.hasPrefix("prio-") { return false }
         return true
     }
