@@ -525,7 +525,11 @@ class Backlog {
     }
     
     public func add(_ task: ReqTask) {
-        bg().perform { [weak self] in
+        // Callers conventionally do `backlog.add(task); task.fetch()`. Registration
+        // must therefore finish before add() returns; an asynchronous perform lets a
+        // fast relay/import notification beat the task into the set, after which the
+        // UI waits for a timeout despite having received the requested event.
+        bg().performAndWait { [weak self] in
             guard let self else { return }
 #if DEBUG
             L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.add(\(task.subscriptionId)) -[LOG]-")
@@ -571,6 +575,17 @@ class Backlog {
 #endif
         return tasks.filter { subscriptionIds.contains($0.subscriptionId) }
     }
+
+#if DEBUG
+    /// Test/debug inspection that preserves the backlog's context serialization.
+    func containsTask(with subscriptionId: String) -> Bool {
+        var contains = false
+        bg().performAndWait { [weak self] in
+            contains = self?.tasks.contains(where: { $0.subscriptionId == subscriptionId }) ?? false
+        }
+        return contains
+    }
+#endif
     
     deinit {
         timer?.invalidate()

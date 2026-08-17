@@ -330,6 +330,7 @@ public class ConnectionPool: ObservableObject {
 
             var relayIds = Set(regularTargets.map(\.url))
             let coreIds = relayIds
+            let plannedOutboxRelayLimit = preferredRelayLimit(for: message.subscriptionId)
             let connectedRegular = Set(regularTargets.filter(\.isSocketConnected).map(\.url))
             let allRegularTargetsConnected = !regularTargets.isEmpty && connectedRegular.count == regularTargets.count
 
@@ -372,7 +373,7 @@ public class ConnectionPool: ObservableObject {
                     coreIds: coreIds,
                     outboxPlanState: unavailableState,
                     activeQuarantineCount: activeUnreachableExtraCount(),
-                    outboxRelayLimit: maxPreferredRelays,
+                    outboxRelayLimit: plannedOutboxRelayLimit,
                     outboxRequestedAuthorCount: message.filters?.first?.authors?.count ?? 0
                 )
             }
@@ -413,7 +414,7 @@ public class ConnectionPool: ObservableObject {
                 .map { normalizeRelayUrl($0.key) })
             let outboxTargetIds = Set(candidates
                 .filter { !isUnreachableExtra($0.key) }
-                .prefix(maxPreferredRelays)
+                .prefix(plannedOutboxRelayLimit)
                 .map { normalizeRelayUrl($0.key) })
             let selectedOutboxAuthors = candidates
                 .filter { outboxTargetIds.contains(normalizeRelayUrl($0.key)) }
@@ -438,7 +439,7 @@ public class ConnectionPool: ObservableObject {
                 outboxCandidateCount: candidates.count,
                 quarantinedCandidateCount: quarantinedCandidateIds.count,
                 activeQuarantineCount: activeUnreachableExtraCount(),
-                outboxRelayLimit: maxPreferredRelays,
+                outboxRelayLimit: plannedOutboxRelayLimit,
                 outboxRequestedAuthorCount: pubkeys.count,
                 outboxKnownAuthorCount: knownAuthors.count,
                 outboxRawRelayCount: rawOutboxRelayCount,
@@ -1048,6 +1049,20 @@ public class ConnectionPool: ObservableObject {
     public var preferredRelays: PreferredRelays?
     
     private var maxPreferredRelays: Int = 50
+    /// A catch-up filter has a per-relay event limit. Fan-out to 50 outbox
+    /// relays can therefore enqueue thousands of unique events ahead of an
+    /// interactive detail request even when the feed only needs one screen.
+    private let maxCatchUpPreferredRelays: Int = 8
+
+    private func preferredRelayLimit(for subscriptionId: String?) -> Int {
+        guard let subscriptionId else { return maxPreferredRelays }
+        let isCatchUp = subscriptionId.hasPrefix("RESUME-")
+            || subscriptionId.hasPrefix("PAGE-")
+            || subscriptionId.hasPrefix("MEDIA-PAGE-")
+            || subscriptionId.hasPrefix("G-PAGE-")
+            || subscriptionId.hasPrefix("prio-MEDIA-RESUME-")
+        return isCatchUp ? min(maxPreferredRelays, maxCatchUpPreferredRelays) : maxPreferredRelays
+    }
     
     // Relays to find posts on relays not in our relay set
     public var findEventsConnections: [CanonicalRelayUrl: RelayConnection] = [:]
@@ -1088,6 +1103,7 @@ public class ConnectionPool: ObservableObject {
     // SEND REQ TO WHERE OTHERS WRITE (TO FIND THEIR POSTS, SO WE CAN READ)
     private func sendToOthersPreferredWriteRelays(_ message: NostrEssentials.ClientMessage, subscriptionId: String? = nil) {
         guard let preferredRelays = self.preferredRelays else { return }
+        let relayLimit = preferredRelayLimit(for: subscriptionId)
         
         let ourReadRelays: Set<String> = Set(connections.filter { $0.value.relayData.read }.map { $0.key })
         
@@ -1117,7 +1133,7 @@ public class ConnectionPool: ObservableObject {
             .sorted(by: {
                 $0.value.pubkeys.count > $1.value.pubkeys.count
             })
-            .prefix(self.maxPreferredRelays) // SANITY
+            .prefix(relayLimit) // Keep catch-up fan-out from monopolizing the importer.
         {
             guard !isDisabledRelay(req.key), !isUnreachableExtra(req.key) else { continue }
             if let conn = self.outboxConnections[req.key] {

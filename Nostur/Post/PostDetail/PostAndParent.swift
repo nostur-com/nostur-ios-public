@@ -239,10 +239,10 @@ struct PostAndParent: View {
             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
         }
 
-        enqueueReference(replyToPostOrZapId)
+        requestReference(replyToPostOrZapId)
         if let replyToRootId = nrPost.replyToRootId, replyToRootId != replyToPostOrZapId {
             resolveReplyToRootFromLocalStorage(replyToRootId)
-            enqueueReference(replyToRootId)
+            requestReference(replyToRootId)
         }
 
         timerTask?.cancel()
@@ -252,9 +252,9 @@ struct PostAndParent: View {
                 nrPost.loadReplyTo()
 
                 guard nrPost.replyTo == nil else { return }
-                searchForReference(replyToPostOrZapId)
+                requestReference(replyToPostOrZapId)
                 if let replyToRootId = nrPost.replyToRootId, replyToRootId != replyToPostOrZapId, nrPost.replyToRoot == nil {
-                    searchForReference(replyToRootId)
+                    requestReference(replyToRootId)
                 }
 
                 try await Task.sleep(nanoseconds: UInt64(4) * NSEC_PER_SEC)
@@ -279,15 +279,6 @@ struct PostAndParent: View {
         }
     }
 
-    private func enqueueReference(_ reference: String) {
-        if reference.count > 64 && reference.contains(":") {
-            QueuedFetcher.shared.enqueue(aTag: reference)
-        }
-        else {
-            QueuedFetcher.shared.enqueue(id: reference)
-        }
-    }
-
     private func resolveReplyToRootFromLocalStorage(_ replyToRootId: String) {
         let bgContext = bg()
         bgContext.perform {
@@ -307,13 +298,51 @@ struct PostAndParent: View {
         }
     }
 
-    private func searchForReference(_ reference: String) {
-        if reference.count > 64 && reference.contains(":"), let aTag = try? ATag(reference) {
-            req(RM.getArticle(pubkey: aTag.pubkey, kind: Int(aTag.kind), definition: aTag.definition))
-        }
-        else {
-            req(RM.getEvent(id: reference), relayType: .SEARCH)
-        }
+    /// Missing thread parents should not wait behind a large normal feed import.
+    /// A tracked priority request also makes retry independent of QueuedFetcher's
+    /// batching/recent-item suppression and gives Backlog an exact completion id.
+    private func requestReference(_ reference: String) {
+        let task = ReqTask(
+            prio: true,
+            timeout: 6.0,
+            reqCommand: { taskId in
+                if reference.count > 64,
+                   reference.contains(":"),
+                   let aTag = try? ATag(reference) {
+                    req(
+                        RM.getArticle(
+                            pubkey: aTag.pubkey,
+                            kind: Int(aTag.kind),
+                            definition: aTag.definition,
+                            subscriptionId: taskId
+                        ),
+                        relayType: .SEARCH
+                    )
+                }
+                else {
+                    req(
+                        RM.getEvent(id: reference, subscriptionId: taskId),
+                        relayType: .SEARCH
+                    )
+                }
+            },
+            processResponseCommand: { _, _, event in
+                guard let event else { return }
+                let fetchedPost = NRPost(event: event, withReplyTo: true)
+                DispatchQueue.main.async {
+                    if nrPost.replyToPostOrZapId == reference {
+                        nrPost.objectWillChange.send()
+                        nrPost.replyTo = fetchedPost
+                        parentLookupTimedOut = false
+                    }
+                    if nrPost.replyToRootId == reference {
+                        locallyResolvedReplyToRoot = fetchedPost
+                    }
+                }
+            }
+        )
+        Backlog.shared.add(task)
+        task.fetch()
 
         if vpnGuardOK() {
             fetchEventFromRelayHint(reference, fastTags: nrPost.fastTags)
