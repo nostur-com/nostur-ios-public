@@ -11,6 +11,28 @@ import UIKit
 
 @MainActor
 final class FeedActionDebugLog: ObservableObject {
+    enum FirstRenderRating: Equatable {
+        case fast
+        case slow
+        case failed
+    }
+
+    struct FirstRenderMetric {
+        let duration: TimeInterval
+        let postCount: Int
+
+        var rating: FirstRenderRating {
+            if duration < 2 { return .fast }
+            if duration < 4 { return .slow }
+            return .failed
+        }
+
+        var formattedDuration: String {
+            FeedActionDebugLog.durationFormatter.string(from: NSNumber(value: duration))
+                ?? String(format: "%.2f", duration)
+        }
+    }
+
     struct Entry: Identifiable {
         let id = UUID()
         let date: Date
@@ -33,6 +55,9 @@ final class FeedActionDebugLog: ObservableObject {
 
     @Published private(set) var entries: [Entry] = []
     @Published private(set) var isVisible: Bool
+    @Published private(set) var firstRenderMetric: FirstRenderMetric?
+    @Published private(set) var isMeasuringFirstRender = false
+    private var firstRenderStartedAt: Date?
 
     init() {
         if UserDefaults.standard.object(forKey: Self.visibilityKey) == nil {
@@ -42,11 +67,24 @@ final class FeedActionDebugLog: ObservableObject {
         }
     }
 
-    func record(_ message: String) {
-        entries.append(Entry(date: Date(), message: message))
+    func beginFirstRenderMeasurement(currentPostCount: Int, at date: Date = Date()) {
+        if currentPostCount > 0 {
+            firstRenderStartedAt = nil
+            isMeasuringFirstRender = false
+            firstRenderMetric = FirstRenderMetric(duration: 0, postCount: currentPostCount)
+        } else {
+            firstRenderStartedAt = date
+            isMeasuringFirstRender = true
+            firstRenderMetric = nil
+        }
+    }
+
+    func record(_ message: String, at date: Date = Date()) {
+        entries.append(Entry(date: date, message: message))
         if entries.count > Self.maximumEntries {
             entries.removeFirst(entries.count - Self.maximumEntries)
         }
+        completeFirstRenderMeasurementIfNeeded(message: message, at: date)
     }
 
     func show() {
@@ -67,11 +105,44 @@ final class FeedActionDebugLog: ObservableObject {
             : entries.map(\.line).joined(separator: "\n")
         return """
         Feed action log: \(feedName)
+        First posts: \(firstRenderReport)
         Current: \(currentState)
         Last \(entries.count) actions:
         \(actionLines)
         """
     }
+
+    private var firstRenderReport: String {
+        if let metric = firstRenderMetric {
+            return "\(metric.formattedDuration)s · 0→\(metric.postCount)"
+        }
+        return isMeasuringFirstRender ? "measuring…" : "not measured"
+    }
+
+    private func completeFirstRenderMeasurementIfNeeded(message: String, at date: Date) {
+        guard let startedAt = firstRenderStartedAt,
+              let markerRange = message.range(of: "0→"),
+              let postsRange = message.range(of: " posts", range: markerRange.upperBound..<message.endIndex),
+              let postCount = Int(message[markerRange.upperBound..<postsRange.lowerBound]),
+              postCount > 0
+        else { return }
+
+        firstRenderStartedAt = nil
+        isMeasuringFirstRender = false
+        firstRenderMetric = FirstRenderMetric(
+            duration: max(0, date.timeIntervalSince(startedAt)),
+            postCount: postCount
+        )
+    }
+
+    private static let durationFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.locale = .current
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        formatter.minimumIntegerDigits = 1
+        return formatter
+    }()
 
     private func setVisible(_ visible: Bool) {
         guard isVisible != visible else { return }
@@ -97,6 +168,8 @@ struct FeedActionDebugOverlay: View {
                 Button("Clear", action: log.clear)
                 Button("Hide", action: log.hide)
             }
+
+            firstRenderView
 
             Text("NOW  \(currentState())")
                 .foregroundStyle(.cyan)
@@ -124,6 +197,31 @@ struct FeedActionDebugOverlay: View {
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .padding(.horizontal, 8)
         .padding(.bottom, 8)
+    }
+
+    @ViewBuilder
+    private var firstRenderView: some View {
+        if let metric = log.firstRenderMetric {
+            Text("FIRST POSTS  \(metric.formattedDuration)s  ·  0→\(metric.postCount)")
+                .font(.headline.weight(.bold).monospaced())
+                .foregroundStyle(color(for: metric.rating))
+        } else if log.isMeasuringFirstRender {
+            Text("FIRST POSTS  MEASURING…")
+                .font(.headline.weight(.bold).monospaced())
+                .foregroundStyle(.white)
+        } else {
+            Text("FIRST POSTS  NOT MEASURED")
+                .font(.headline.weight(.bold).monospaced())
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func color(for rating: FeedActionDebugLog.FirstRenderRating) -> Color {
+        switch rating {
+        case .fast: .green
+        case .slow: .yellow
+        case .failed: .red
+        }
     }
 
     private func copyReport() {

@@ -29,6 +29,11 @@ class NXColumnViewModel: ObservableObject {
 
 #if DEBUG
     @MainActor
+    var feedActionDebugPostCount: Int {
+        currentNRPostsOnScreen.count
+    }
+
+    @MainActor
     func feedActionDebugState() -> String {
         let posts = currentNRPostsOnScreen
         let scrollView: UIScrollView? = collectionView ?? tableView

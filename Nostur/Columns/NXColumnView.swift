@@ -300,6 +300,11 @@ struct NXColumnView<HeaderContent: View>: View {
             viewModel.feedActionDebugRecord = { message in
                 feedActionDebugLog.record(message)
             }
+            if isVisible {
+                feedActionDebugLog.beginFirstRenderMeasurement(
+                    currentPostCount: viewModel.feedActionDebugPostCount
+                )
+            }
             if feedActionDebugLog.entries.isEmpty {
                 feedActionDebugLog.record("action logger attached · \(viewModel.feedActionDebugState())")
             }
@@ -352,6 +357,11 @@ struct NXColumnView<HeaderContent: View>: View {
 #endif
             
             if newValue {
+#if DEBUG
+                feedActionDebugLog.beginFirstRenderMeasurement(
+                    currentPostCount: viewModel.feedActionDebugPostCount
+                )
+#endif
                 if isVisible {
                     let relaysData = connectionRelaysData
                     for relay in relaysData {
@@ -397,6 +407,11 @@ struct NXColumnView<HeaderContent: View>: View {
             }
 
             viewModel.viewState = .loading
+#if DEBUG
+            if isVisible {
+                feedActionDebugLog.beginFirstRenderMeasurement(currentPostCount: 0)
+            }
+#endif
             viewModel.initialize(newConfig, speedTest: speedTest)
             
             // Fix feed paused by NXPostsFeed.onDisappear
