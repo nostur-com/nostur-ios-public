@@ -374,6 +374,13 @@ class NXColumnViewModel: ObservableObject {
     }
     public var onAppearSubject = PassthroughSubject<Int64,Never>()
     private var lastPaginationRequest: (until: Int64, requestedAt: Date)?
+    /// Oldest event inspected by older-page reads, including events filtered
+    /// before rendering. The visible tail cannot be the sole cursor: a page of
+    /// seen/muted/reply events adds no rows and would otherwise be requested
+    /// forever.
+    private var olderPaginationScanCursor: Int64?
+    private var paginationRetryNotBefore: Date?
+    private var paginationRetryTask: Task<Void, Never>?
     
     @MainActor
     public var currentNRPostsOnScreen: [NRPost] {
@@ -1984,6 +1991,11 @@ class NXColumnViewModel: ObservableObject {
     private func resetPaginationState() {
         paginationTimeoutTask?.cancel()
         paginationTimeoutTask = nil
+        paginationRetryTask?.cancel()
+        paginationRetryTask = nil
+        olderPaginationScanCursor = nil
+        paginationRetryNotBefore = nil
+        lastPaginationRequest = nil
         if case .loadingNetwork(_, let subscriptionId, _) = paginationState {
             ConnectionPool.shared.closeSubscription(subscriptionId)
         }
@@ -2041,7 +2053,8 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private func loadOlderPage(_ config: NXColumnConfig, requestNetwork: Bool = true) {
         guard case .idle = paginationState else { return }
-        let cursor = Int64(oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
+        let visibleCursor = Int64(oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
+        let cursor = min(visibleCursor, olderPaginationScanCursor ?? visibleCursor)
         let sessionGeneration = feedSessionGeneration
         let countBeforeLoad = currentNRPostsOnScreen.count
         setPaginationState(.loadingLocal(cursor: cursor, sessionGeneration: sessionGeneration))
@@ -2057,10 +2070,74 @@ class NXColumnViewModel: ObservableObject {
             self.olderPageLoadInFlight = false
             self.latestUserLoadMore = false
             if !requestNetwork || self.currentNRPostsOnScreen.count > countBeforeLoad {
+                self.clearPaginationRetryPause()
                 self.setPaginationState(.idle)
                 return
             }
+            // Ask relays for the complete visible-tail window. The local scan
+            // may have moved farther back, but relays can still have events the
+            // local database did not. The imported follow-up read uses this
+            // active network cursor before advancing the next page.
             self.startNextPageNetworkRequest(config, cursor: cursor, sessionGeneration: sessionGeneration)
+        }
+    }
+
+    @MainActor
+    private func noteOlderPaginationScan(_ oldestScannedCreatedAt: Int64?) {
+        guard let oldestScannedCreatedAt else { return }
+        olderPaginationScanCursor = min(
+            olderPaginationScanCursor ?? oldestScannedCreatedAt,
+            oldestScannedCreatedAt
+        )
+    }
+
+    @MainActor
+    private func clearPaginationRetryPause() {
+        paginationRetryTask?.cancel()
+        paginationRetryTask = nil
+        paginationRetryNotBefore = nil
+    }
+
+    @MainActor
+    private func pauseEmptyPaginationRetry(
+        config: NXColumnConfig,
+        requestedCursor: Int64,
+        sessionGeneration: UInt64
+    ) {
+        // Empty initial feeds already transition to the explicit retry state.
+        // Automatic pagination retry is only for an existing feed tail.
+        guard !currentNRPostsOnScreen.isEmpty else { return }
+        let resumeCursor = min(requestedCursor, olderPaginationScanCursor ?? requestedCursor)
+        guard resumeCursor < requestedCursor else {
+            paginationRetryTask?.cancel()
+            paginationRetryTask = nil
+            paginationRetryNotBefore = .distantFuture
+#if DEBUG
+            recordFeedAction(
+                "older pagination stopped · no visible posts · cursor unchanged \(requestedCursor)"
+            )
+#endif
+            return
+        }
+        let delay: TimeInterval = 5
+        paginationRetryNotBefore = Date().addingTimeInterval(delay)
+#if DEBUG
+        recordFeedAction(
+            "older page yielded no visible posts · advanced cursor \(requestedCursor)→\(resumeCursor) · retry in \(Int(delay))s"
+        )
+#endif
+        paginationRetryTask?.cancel()
+        paginationRetryTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            guard !Task.isCancelled, let self,
+                  self.feedSessionGeneration == sessionGeneration,
+                  self.isVisible,
+                  !self.isPaused,
+                  !self.isViewPaused
+            else { return }
+            self.paginationRetryTask = nil
+            self.paginationRetryNotBefore = nil
+            self.loadOlderPage(config)
         }
     }
 
@@ -2204,7 +2281,16 @@ class NXColumnViewModel: ObservableObject {
         let (sinceTimestamp, untilTimestamp): (Int64, Int64)
         if case .posts(let nrPosts) = viewState {
             sinceTimestamp = (nrPosts.first?.created_at ?? 300) - 300
-            untilTimestamp = nrPosts.last?.created_at ?? nowTs
+            let visibleUntil = nrPosts.last?.created_at ?? nowTs
+            let activeNetworkCursor: Int64? = if older,
+                case .loadingNetwork(let cursor, _, _) = paginationState {
+                cursor
+            } else {
+                nil
+            }
+            untilTimestamp = older
+                ? min(visibleUntil, activeNetworkCursor ?? olderPaginationScanCursor ?? visibleUntil)
+                : visibleUntil
         }
         else if loadAnyFlag {
             // Very early date but not zero because zero defaults back 8 hours
@@ -3112,6 +3198,11 @@ class NXColumnViewModel: ObservableObject {
             else { return }
             ConnectionPool.shared.closeSubscription(subscriptionId)
             self.setPaginationState(.idle)
+            self.pauseEmptyPaginationRetry(
+                config: config,
+                requestedCursor: cursor,
+                sessionGeneration: sessionGeneration
+            )
             self.finishEmptyInitialPageIfNeeded()
         }
     }
@@ -3586,6 +3677,7 @@ class NXColumnViewModel: ObservableObject {
                 else { return }
                 guard importedIds.contains(subscriptionId) else { return }
 
+                let countBeforeLoad = self.currentNRPostsOnScreen.count
                 self.latestUserLoadMore = true
                 self.loadLocal(activeConfig, older: true) { [weak self] in
                     guard let self else { return }
@@ -3604,6 +3696,15 @@ class NXColumnViewModel: ObservableObject {
                     self.paginationTimeoutTask = nil
                     ConnectionPool.shared.closeSubscription(subscriptionId)
                     self.setPaginationState(.idle)
+                    if self.currentNRPostsOnScreen.count > countBeforeLoad {
+                        self.clearPaginationRetryPause()
+                    } else {
+                        self.pauseEmptyPaginationRetry(
+                            config: activeConfig,
+                            requestedCursor: cursor,
+                            sessionGeneration: sessionGeneration
+                        )
+                    }
                     self.finishEmptyInitialPageIfNeeded()
                 }
             }
@@ -3905,6 +4006,9 @@ extension NXColumnViewModel {
         let transformStartedAt = Date()
         L.og.debug("☘️☘️ \(config.name) processToScreen() -[LOG]-")
 #endif
+        // Capture this while on the Event context. It must be retained even if
+        // every fetched event is filtered and produces no NRPost.
+        let oldestScannedCreatedAt = older ? events.map(\.created_at).min() : nil
         // Apply WoT filter, remove already on screen
         let preparedEvents = prepareEvents(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
 #if DEBUG
@@ -3941,6 +4045,7 @@ extension NXColumnViewModel {
                     completion?()
                     return
                 }
+                self.noteOlderPaginationScan(oldestScannedCreatedAt)
                 if !older {
                     self.suppressPaginationUntilRememberNewerLoad = false
                 }
@@ -3963,6 +4068,7 @@ extension NXColumnViewModel {
                 completion?()
                 return
             }
+            self.noteOlderPaginationScan(oldestScannedCreatedAt)
             if !older {
                 self.suppressPaginationUntilRememberNewerLoad = false
             }
@@ -4804,19 +4910,25 @@ extension NXColumnViewModel {
             return
         }
 
+        if let paginationRetryNotBefore, Date() < paginationRetryNotBefore {
+            return
+        }
+
+        let effectiveUntil = min(until, olderPaginationScanCursor ?? until)
+
         let now = Date()
         if let previousRequest = lastPaginationRequest,
-           previousRequest.until == until,
+           previousRequest.until == effectiveUntil,
            now.timeIntervalSince(previousRequest.requestedAt) < 0.4 {
             return
         }
 
-        lastPaginationRequest = (until, now)
+        lastPaginationRequest = (effectiveUntil, now)
         didPrefetchOlderPage = true
 #if DEBUG
-        recordFeedAction("requested older page · \(trigger) · cursor \(until)")
+        recordFeedAction("requested older page · \(trigger) · cursor \(effectiveUntil)")
 #endif
-        onAppearSubject.send(until)
+        onAppearSubject.send(effectiveUntil)
     }
     
     @MainActor
