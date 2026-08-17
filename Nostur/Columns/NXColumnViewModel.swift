@@ -1985,9 +1985,11 @@ class NXColumnViewModel: ObservableObject {
             return
         }
         didPrefetchOlderPage = true
-        // Local only. Relay pagination starts later, and only when this cursor
-        // has no older local rows.
-        loadOlderPage(config, requestNetwork: false)
+        // Try local rows first, then continue to relays when local storage has
+        // nothing older. With only a few visible posts the tail sentinel is
+        // already on screen while the quiet append is active; it will not
+        // re-appear later to trigger the network page by itself.
+        loadOlderPage(config)
     }
 
     @MainActor

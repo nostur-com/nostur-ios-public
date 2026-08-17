@@ -359,6 +359,11 @@ class Backlog {
     public var timeout: Double
     
     private var tasks = Set<ReqTask>()
+    /// `tasks` is unrelated to Core Data. Keeping it on `bg()` made request
+    /// registration compete with feed imports and could block the main thread
+    /// for seconds. A dedicated lock keeps add-before-fetch ordering without
+    /// waiting for database work.
+    private let tasksLock = NSLock()
     private var timer: Timer?
     private var subscriptions = Set<AnyCancellable>()
     public var backlogDebugName: String
@@ -376,8 +381,9 @@ class Backlog {
                     guard let self = self else { return }
                     let reqTasks = self.tasks(with: subscriptionIds)
 #if DEBUG
-                    if self.tasks.count > 0 {
-                        L.og.debug("\(backlogDebugName) - subscriptionIds: \(subscriptionIds) tasks: \(self.tasks.count): \(self.tasks.map { $0.subscriptionId }) -[LOG]-")
+                    let taskSnapshot = self.allTasks()
+                    if !taskSnapshot.isEmpty {
+                        L.og.debug("\(backlogDebugName) - subscriptionIds: \(subscriptionIds) tasks: \(taskSnapshot.count): \(taskSnapshot.map { $0.subscriptionId }) -[LOG]-")
                     }
 #endif
                     for task in reqTasks {
@@ -433,20 +439,16 @@ class Backlog {
     }
     
     private func removeOldTasks() {
+        let taskSnapshot = allTasks()
+        guard !taskSnapshot.isEmpty else { return }
 #if DEBUG
-        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-            fatalError("Should only be called from bg()")
-        }
-#endif
-        guard !tasks.isEmpty else { return }
-#if DEBUG
-        let tasksCount = self.tasks.count
+        let tasksCount = taskSnapshot.count
         var removed = 0
 #endif
         // Collect tasks to remove to avoid modifying the set during iteration
         var tasksToRemove = [ReqTask]()
         
-        for task in self.tasks {
+        for task in taskSnapshot {
             // Don't timeout if task is still running (or about to run, because of debounce/delays)
             if task.isRunning {
 #if DEBUG
@@ -474,14 +476,16 @@ class Backlog {
         }
         
         // Now safely remove the collected tasks
-        for task in tasksToRemove {
-            self.tasks.remove(task)
+        withTasksLock {
+            for task in tasksToRemove {
+                self.tasks.remove(task)
 #if DEBUG
-            L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId) -[LOG]-")
+                L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId) -[LOG]-")
 #endif
+            }
         }
         
-        if self.tasks.isEmpty {
+        if allTasks().isEmpty {
             DispatchQueue.main.async { [weak self] in // needs to be from main
                 self?.timer?.invalidate()
                 self?.timer = nil
@@ -498,53 +502,42 @@ class Backlog {
     }
     
     public func clear() {
-        bg().perform { [weak self] in
-            guard let self = self else { return }
-#if DEBUG
-            L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.clear() - \((self.tasks.map { $0.subscriptionId }).description) -[LOG]-")
-#endif
-            
-            // Capture tasks before clearing
-            let tasksToRemove = Array(self.tasks)
-            
-            // Clear the set first while still on bg() context
-            self.tasks.removeAll(keepingCapacity: false)
-            
-            // Invalidate timer asynchronously on main to avoid bg <-> main deadlock cycles.
-            DispatchQueue.main.async { [weak self] in
-                self?.timer?.invalidate()
-                self?.timer = nil
-            }
-            
-            // Clean up subscriptions for each task on the same bg() context
-            // This ensures cleanup happens in order and completes before clear() returns
-            tasksToRemove.forEach { task in
-                task.cleanup()
-            }
+        let tasksToRemove = withTasksLock {
+            let snapshot = Array(tasks)
+            tasks.removeAll(keepingCapacity: false)
+            return snapshot
         }
+#if DEBUG
+        L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.clear() - \((tasksToRemove.map { $0.subscriptionId }).description) -[LOG]-")
+#endif
+
+        DispatchQueue.main.async { [weak self] in
+            self?.timer?.invalidate()
+            self?.timer = nil
+        }
+
+        tasksToRemove.forEach { $0.cleanup() }
     }
     
     public func add(_ task: ReqTask) {
         // Callers conventionally do `backlog.add(task); task.fetch()`. Registration
-        // must therefore finish before add() returns; an asynchronous perform lets a
-        // fast relay/import notification beat the task into the set, after which the
-        // UI waits for a timeout despite having received the requested event.
-        bg().performAndWait { [weak self] in
-            guard let self else { return }
+        // must finish before add() returns, but must not wait for the importer/Core
+        // Data queue. The task-set lock makes this operation synchronous and tiny.
+        withTasksLock {
 #if DEBUG
             L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.add(\(task.subscriptionId)) -[LOG]-")
 #endif
             self.tasks.insert(task)
-            self.startCleanUpTimer()
         }
+        startCleanUpTimer()
     }
     
     public func remove(_ task: ReqTask) {
 #if DEBUG
         L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.remove(\(task.subscriptionId)) -[LOG]-")
 #endif
-        bg().perform { [weak self] in
-            self?.tasks.remove(task)
+        withTasksLock {
+            tasks.remove(task)
         }
     }
     
@@ -552,40 +545,43 @@ class Backlog {
 #if DEBUG
         L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.removeTask(with: \(subscriptionId)) -[LOG]-")
 #endif
-        bg().perform { [weak self] in
-            guard let taskToRemove = self?.task(with: subscriptionId) else { return }
-            self?.tasks.remove(taskToRemove)
+        withTasksLock {
+            guard let taskToRemove = tasks.first(where: { $0.subscriptionId == subscriptionId }) else { return }
+            tasks.remove(taskToRemove)
         }
     }
     
     public func task(with subscriptionId: String) -> ReqTask? {
-#if DEBUG
-        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-            fatalError("Should only be called from bg()")
+        withTasksLock {
+            tasks.first(where: { $0.subscriptionId == subscriptionId })
         }
-#endif
-        return tasks.first(where: { $0.subscriptionId == subscriptionId })
     }
     
     public func tasks(with subscriptionIds: Set<String>) -> [ReqTask] {
-#if DEBUG
-        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-            fatalError("Should only be called from bg()")
+        withTasksLock {
+            tasks.filter { subscriptionIds.contains($0.subscriptionId) }
         }
-#endif
-        return tasks.filter { subscriptionIds.contains($0.subscriptionId) }
     }
 
 #if DEBUG
-    /// Test/debug inspection that preserves the backlog's context serialization.
+    /// Test/debug inspection that preserves task-set serialization.
     func containsTask(with subscriptionId: String) -> Bool {
-        var contains = false
-        bg().performAndWait { [weak self] in
-            contains = self?.tasks.contains(where: { $0.subscriptionId == subscriptionId }) ?? false
+        withTasksLock {
+            tasks.contains(where: { $0.subscriptionId == subscriptionId })
         }
-        return contains
     }
 #endif
+
+    private func allTasks() -> [ReqTask] {
+        withTasksLock { Array(tasks) }
+    }
+
+    @discardableResult
+    private func withTasksLock<T>(_ body: () -> T) -> T {
+        tasksLock.lock()
+        defer { tasksLock.unlock() }
+        return body()
+    }
     
     deinit {
         timer?.invalidate()
