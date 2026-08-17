@@ -2329,11 +2329,6 @@ class NXColumnViewModel: ObservableObject {
             L.og.debug("☘️☘️ \(config.name) loadLocal(.following) \(older ? "older" : "") \(followingPubkeys.count) pubkeys -[LOG]-")
 #endif
             
-            let hashtagRegex: String? = if let account = feed.account {
-                makeHashtagRegex(account.followingHashtags)
-            }
-            else { nil }
-            
             // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
             let removeSeperateFeedKinds: Set<Int> = [
                 (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_picture_feed")) ? 20 : -1,
@@ -2358,10 +2353,10 @@ class NXColumnViewModel: ObservableObject {
                 )
 #endif
                 let fr = if !older {
-                    Event.postsByPubkeys(followingPubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
+                    Event.postsByPubkeys(followingPubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
                 else {
-                    Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
+                    Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
                 let events: [Event] = (try? bg().fetch(fr)) ?? []
 #if DEBUG
@@ -2660,13 +2655,7 @@ class NXColumnViewModel: ObservableObject {
                 followingPubkeys.union(ownPubkey)
             }
             
-            let followingHashtags: Set<String> = (feed.account?.followingHashtags ?? [])
-            let hashtags: Set<String> = if (followingHashtags.count + pubkeys.count) <= 2000, let account = feed.account {
-                account.followingHashtags
-            }
-            else { [] } // Skip hashtags if filter is too large
-            
-            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
+            guard !pubkeys.isEmpty else { return }
             
             
             // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
@@ -2684,7 +2673,7 @@ class NXColumnViewModel: ObservableObject {
                 QUERY_FOLLOWING_KINDS_WITH_REPLIES.subtracting(removeSeperateFeedKinds).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: kinds)
+            let filters = followingReqFilters(pubkeys, since: NTimestamp(date: Date.now).timestamp, kinds: kinds)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
         case .picture(let feed), .vine(let feed), .yak(let feed):
@@ -2879,12 +2868,6 @@ class NXColumnViewModel: ObservableObject {
                 followingPubkeys.union(ownPubkey)
             }
             
-            let followingHashtags: Set<String> = (feed.account?.followingHashtags ?? [])
-            let hashtags: Set<String> = if (followingHashtags.count + pubkeys.count) <= 2000, let account = feed.account {
-                account.followingHashtags
-            }
-            else { [] } // Skip hashtags if filter is too large
-            
             // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
             let removeSeperateFeedKinds: Set<Int> = [
                 (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_picture_feed")) ? 20 : -1,
@@ -2903,14 +2886,14 @@ class NXColumnViewModel: ObservableObject {
                     .subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: filterLimit, kinds: kinds)
+            let filters = followingReqFilters(pubkeys, since: since, until: until, limit: filterLimit, kinds: kinds)
              
             let subId = "RESUME-" + config.id + "-" + (since?.description ?? "any")
             let clientMessage = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subId, filters: filters)
             let sendOutbox = includeOutbox ?? (feed.accountPubkey != EXPLORER_PUBKEY)
             return (cmd: {
-                guard pubkeys.count > 0 || hashtags.count > 0 else {
-                    L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags -[LOG]-")
+                guard !pubkeys.isEmpty else {
+                    L.og.debug("☘️☘️ cmd with empty pubkeys -[LOG]-")
                     return
                 }
                 if !sendOutbox {
@@ -3247,13 +3230,7 @@ class NXColumnViewModel: ObservableObject {
                 followingPubkeys.union(ownPubkey)
             }
             
-            let followingHashtags: Set<String> = (feed.account?.followingHashtags ?? [])
-            let hashtags: Set<String> = if (followingHashtags.count + pubkeys.count) <= 2000, let account = feed.account {
-                account.followingHashtags
-            }
-            else { [] } // Skip hashtags if filter is too large
-            
-            guard pubkeys.count > 0 || hashtags.count > 0 else { return false }
+            guard !pubkeys.isEmpty else { return false }
              
             // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
             let removeSeperateFeedKinds: Set<Int> = [
@@ -3270,7 +3247,7 @@ class NXColumnViewModel: ObservableObject {
                 QUERY_FOLLOWING_KINDS_WITH_REPLIES.subtracting(removeSeperateFeedKinds).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: kinds)
+            let filters = followingReqFilters(pubkeys, until: Int(until), limit: 150, kinds: kinds)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters))
             didSend = true
@@ -4208,15 +4185,7 @@ extension NXColumnViewModel {
         
         // if following feed, always show all the pubkeys
         if case .following = config.columnType {
-            // Explore is already restricted to its curated pubkey snapshot.
-            // Applying the active account's personal WoT here discarded nearly
-            // every recent Explore post and eventually revealed one stale match.
-            // Use the value snapshot: CloudFeed belongs to the main context, while
-            // this transform runs on the background context queue.
-            if config.accountPubkey == EXPLORER_PUBKEY {
-                return events
-            }
-            return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
+            return events
         }
         
         switch config.columnType {
@@ -5102,6 +5071,11 @@ let LATEST_FEED_FIRST_PAINT_WINDOW: TimeInterval = 8 * 3600
 let LATEST_FEED_FILL_WINDOW: TimeInterval = 24 * 3600
 /// Remember-off: skip a full latest refetch after a short app switch / tab hide.
 let LATEST_FEED_RESUME_REFRESH_AFTER: TimeInterval = 120
+
+func followingReqFilters(_ pubkeys: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int? = nil, kinds: Set<Int>) -> [Filters] {
+    guard !pubkeys.isEmpty else { return [] }
+    return [Filters(authors: pubkeys, kinds: kinds, since: since, until: until, limit: limit)]
+}
 
 func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int? = nil, kinds: Set<Int>) -> [Filters] {
     guard !pubkeys.isEmpty || !hashtags.isEmpty else { return [] }

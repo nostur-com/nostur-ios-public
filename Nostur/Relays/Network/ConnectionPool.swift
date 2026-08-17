@@ -1111,11 +1111,12 @@ public class ConnectionPool: ObservableObject {
         guard let filters = message.filters else { return }
         guard let pubkeys = filters.first?.authors else { return }
         
-        // Outbox REQs should always be author based, so remove hashtags
+        // Outbox REQs should always be author based. Following now supplies
+        // an author-only filter; retain this guard for other legacy callers.
         let filtersWithoutHashtags = if let subscriptionId, subscriptionId.starts(with: "Following-") {
             [filters
-                .map { $0.withoutHashtags() } // Remove hashtags from existing query
-                .first!] // Because its "Following" subscription, we know we only need the first Filter, the second filter will be hashtags. See LVM.fetchRealtimeSinceNow()
+                .map { $0.withoutHashtags() }
+                .first!]
         } else {
             filters
                 .filter { !$0.hasHashtags } // If other filter has hashtags we just remove it (remove entire filter, not just hashtags

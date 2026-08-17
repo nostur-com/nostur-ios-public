@@ -12,7 +12,6 @@ struct FollowingFeedSettings: View {
     var draft: FeedSettingsDraft? = nil
     
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var la: LoggedInAccount
     
     var body: some View {
         NXForm {
@@ -37,14 +36,6 @@ struct FollowingFeedSettings: View {
                 })) {
                     Text("Remember feed")
                     Text("Resume feed from where you left off when you reopen the app")
-                }
-            }
-            
-            if feed.accountPubkey != nil && feed.accountPubkey != EXPLORER_PUBKEY, !la.account.followingHashtags.isEmpty {
-                Section("Included hashtags") {
-                    FollowingFeedSettings_Hashtags(hashtags: Array(draft?.followingHashtags ?? la.account.followingHashtags), onChange: { hashtags in
-                        draft?.followingHashtags = Set(hashtags)
-                    })
                 }
             }
             

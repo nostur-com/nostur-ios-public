@@ -267,11 +267,12 @@ struct MinimalEvent: Decodable {
     let pubkey: String
 }
 
-// These subscriptions: "Following", "CATCHUP-", "RESUME-", "PAGE-"
-// also can include hashtags, if WoT spam filter is enabled we filter these messages out
+// Hashtag subscriptions are filtered by WoT at ingress. Following is author-only;
+// keep its prefix out of this path so followed events are not treated as hashtag traffic.
 func subCanHaveHashtags(_ subscriptionId: String) -> Bool {
-    if subscriptionId.hasPrefix("Following") { return true }
     if subscriptionId.hasPrefix("CATCHUP-") { return true }
+    if subscriptionId.hasPrefix("RESUME-Following-") { return false }
+    if subscriptionId.hasPrefix("PAGE-Following-") { return false }
     if subscriptionId.hasPrefix("RESUME-") { return true }
     if subscriptionId.hasPrefix("PAGE-") { return true }
     return false
