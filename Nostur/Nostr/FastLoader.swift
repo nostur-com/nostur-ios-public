@@ -355,6 +355,13 @@ struct ImportedPrioNotification {
 
 class Backlog {
     static let shared = Backlog(auto: true, backlogDebugName: "Shared")
+    /// Timeout bookkeeping must remain independent of the importer/Core Data
+    /// queue; otherwise a busy feed can prevent unrelated requests from ever
+    /// reaching their timeout/recovery path.
+    private static let timeoutQueue = DispatchQueue(
+        label: "com.nostur.backlog.timeout",
+        qos: .utility
+    )
     
     public var timeout: Double
     
@@ -428,13 +435,19 @@ class Backlog {
     
     private func startCleanUpTimer() {
         let interval = max(timeout/22, 0.50)
-        DispatchQueue.main.async { [weak self] in // timer needs to run on main
+        let installTimer = { [weak self] in
             guard self?.timer == nil else { return }
             self?.timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] timer in
-                bg().perform { [weak self] in
+                Backlog.timeoutQueue.async { [weak self] in
                     self?.removeOldTasks()
                 }
             }
+        }
+        if Thread.isMainThread {
+            installTimer()
+        }
+        else {
+            DispatchQueue.main.async(execute: installTimer)
         }
     }
     

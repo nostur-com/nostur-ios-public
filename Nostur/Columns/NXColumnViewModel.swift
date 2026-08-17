@@ -1979,12 +1979,16 @@ class NXColumnViewModel: ObservableObject {
         guard !latestQuietOlderAppend else { return }
         guard let config else { return }
         let onScreen = currentNRPostsOnScreen.count
-        guard onScreen >= LATEST_FEED_PAGINATION_MINIMUM else { return }
         if onScreen > LATEST_FEED_INITIAL_VISIBLE + 1 {
             didPrefetchOlderPage = true
             return
         }
         didPrefetchOlderPage = true
+#if DEBUG
+        if onScreen == 0 {
+            recordFeedAction("initial fetch empty · requesting older history")
+        }
+#endif
         // Try local rows first, then continue to relays when local storage has
         // nothing older. With only a few visible posts the tail sentinel is
         // already on screen while the quiet append is active; it will not
@@ -3010,6 +3014,7 @@ class NXColumnViewModel: ObservableObject {
 
         guard sendNextPageReq(config, until: cursor, subscriptionId: subscriptionId) else {
             setPaginationState(.idle)
+            finishEmptyInitialPageIfNeeded()
             return
         }
 
@@ -3023,7 +3028,19 @@ class NXColumnViewModel: ObservableObject {
             else { return }
             ConnectionPool.shared.closeSubscription(subscriptionId)
             self.setPaginationState(.idle)
+            self.finishEmptyInitialPageIfNeeded()
         }
+    }
+
+    @MainActor
+    private func finishEmptyInitialPageIfNeeded() {
+        guard currentNRPostsOnScreen.isEmpty, case .loading = viewState else { return }
+#if DEBUG
+        recordFeedAction("older history finished empty · showing retry")
+#endif
+        endLatestFirstPaintHold()
+        didFinish()
+        viewState = .timeout
     }
 
     @MainActor
@@ -3503,6 +3520,7 @@ class NXColumnViewModel: ObservableObject {
                     self.paginationTimeoutTask = nil
                     ConnectionPool.shared.closeSubscription(subscriptionId)
                     self.setPaginationState(.idle)
+                    self.finishEmptyInitialPageIfNeeded()
                 }
             }
     }
@@ -4818,7 +4836,6 @@ let LATEST_FEED_FIRST_PAINT_COUNT = IS_CATALYST ? 6 : 10
 let LATEST_FEED_FIRST_PAINT_EVENT_CAP = LATEST_FEED_FIRST_PAINT_COUNT + 2
 let LATEST_FEED_FIRST_PAINT_LIMIT = 20
 /// Sparse feeds can be force-revealed below the first-paint target and must still load older pages.
-let LATEST_FEED_PAGINATION_MINIMUM = 1
 /// First older batch after first paint. 20 parent-heavy NRPosts hitch the list for seconds.
 let LATEST_FEED_QUIET_OLDER_CAP = 8
 /// Remember-off: keep this many posts on screen, then load more as the user scrolls.
