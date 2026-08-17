@@ -84,11 +84,20 @@ class NXColumnViewModel: ObservableObject {
         if !isFeedActuallyAtTop,
            let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate,
            shouldPinFeedUpdate(to: posts) {
-            performAnchoredFeedUpdate(posts.map(\.id)) { [weak self] in
-                guard let self else { return }
+            let oldPosts = currentNRPostsOnScreen
+            performAnchoredFeedUpdate { [weak self] in
+                guard let self else { return [] }
+                let currentPosts = self.currentNRPostsOnScreen
+                let rebasedPosts = NXFeedUpdateRebaser.rebase(
+                    old: oldPosts,
+                    desired: posts,
+                    current: currentPosts,
+                    id: \.id
+                )
                 withTransaction(Transaction(animation: nil)) {
-                    self.viewState = .posts(posts)
+                    self.viewState = .posts(rebasedPosts)
                 }
+                return rebasedPosts.map(\.id)
             }
             return
         }
@@ -3701,6 +3710,28 @@ class NXColumnViewModel: ObservableObject {
     }
 }
 
+enum NXFeedUpdateRebaser {
+    /// Applies a snapshot-style update to the latest feed contents. Rows inserted
+    /// or appended after `old` was captured are retained, while intentional
+    /// removals from `desired` still take effect.
+    static func rebase<Item, ID: Hashable>(
+        old: [Item],
+        desired: [Item],
+        current: [Item],
+        id: (Item) -> ID
+    ) -> [Item] {
+        let oldIDs = Set(old.map(id))
+        let desiredIDs = Set(desired.map(id))
+        let inserted = desired.filter { !oldIDs.contains(id($0)) }
+        let insertedIDs = Set(inserted.map(id))
+        let removedIDs = oldIDs.subtracting(desiredIDs)
+        return inserted + current.filter {
+            let itemID = id($0)
+            return !insertedIDs.contains(itemID) && !removedIDs.contains(itemID)
+        }
+    }
+}
+
 // -- MARK: POST RENDERING
 extension NXColumnViewModel {
     
@@ -4147,7 +4178,6 @@ extension NXColumnViewModel {
                 vmInner.abortPreparedScrollRestore()
                 vmInner.cancelPendingFeedSettle?()
                 self.viewState = .posts(existingPosts + postsToAppend)
-                vmInner.preserveViewportAfterAppend?()
             }
         }
         else { // Nothing on screen yet, put first posts on screen

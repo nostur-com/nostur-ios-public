@@ -57,7 +57,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         }
         guard replaced, !isSuspended, let anchor = pendingRestoreAnchor else { return }
         pendingRestoreAnchor = nil
-        startSettling(anchor: anchor, pinByIdentity: true)
+        startSettling(anchor: anchor, extended: true, bringOnScreen: true)
     }
 
     func updateItemIDs(_ itemIDs: [String]) {
@@ -99,7 +99,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard let anchor = suspendedAnchor else { return }
         suspendedAnchor = nil
         lastKnownAnchor = anchor
-        startSettling(anchor: anchor, pinByIdentity: true)
+        startSettling(anchor: anchor, extended: true, bringOnScreen: true)
     }
 
     func beginProgrammaticScroll() {
@@ -116,35 +116,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     /// Bottom inserts must not run a leftover prepend settle / restore pin.
     func cancelPendingSettle() {
-        cancelPendingWork()
+        anchorGeneration += 1
+        settleTask?.cancel()
+        settleTask = nil
         pendingRestoreAnchor = nil
-    }
-
-    /// Correct 20–40pt drift from estimated List row heights after rows are
-    /// added below. Never scrollToItem — that is the prepend jump.
-    func preserveViewportAfterAppend() {
-        guard let scrollView, scrollView.window != nil else { return }
-        if isSuspended
-            || isProgrammaticScrollInProgress
-            || scrollView.isDragging
-            || scrollView.isDecelerating
-            || scrollView.isTracking {
-            return
-        }
-        guard let anchor = visibleAnchor(in: scrollView) ?? lastKnownAnchor else { return }
-        let captured = anchor
-        Task { @MainActor [weak self] in
-            await Task.yield()
-            try? await Task.sleep(nanoseconds: 16_000_000)
-            guard let self, let scrollView = self.scrollView, scrollView.window != nil else { return }
-            if self.isSuspended
-                || scrollView.isDragging
-                || scrollView.isDecelerating
-                || scrollView.isTracking {
-                return
-            }
-            self.restore(anchor: captured, in: scrollView, bringOnScreen: false)
-        }
     }
 
     func finishProgrammaticScroll(finalPosition: () -> Void) async {
@@ -249,10 +224,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             return
         }
 
-        if isProgrammaticScrollInProgress
-            || scrollView.isDragging
-            || scrollView.isDecelerating
-            || scrollView.isTracking {
+        if isProgrammaticScrollInProgress || isUserScrollingOrRecently(in: scrollView) {
             pendingUpdates.append(update)
             pendingPinByIdentity = pendingPinByIdentity || pinByIdentity
             scheduleFlush()
@@ -266,9 +238,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         flushTask = Task { @MainActor [weak self] in
             guard let self else { return }
             while self.isProgrammaticScrollInProgress
-                    || self.scrollView?.isDragging == true
-                    || self.scrollView?.isDecelerating == true
-                    || self.scrollView?.isTracking == true {
+                    || self.scrollView.map({ self.isUserScrollingOrRecently(in: $0) }) == true {
                 try? await Task.sleep(nanoseconds: 50_000_000)
                 guard !Task.isCancelled else { return }
             }
@@ -279,6 +249,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             self.flushTask = nil
             self.applyAnchored(updates, pinByIdentity: pinByIdentity)
         }
+    }
+
+    private func isUserScrollingOrRecently(in scrollView: UIScrollView) -> Bool {
+        scrollView.isDragging
+            || scrollView.isDecelerating
+            || scrollView.isTracking
+            || (lastUserScrollAt > 0 && CACurrentMediaTime() - lastUserScrollAt < 0.5)
     }
 
     private func applyAnchored(_ updates: [() -> Void], pinByIdentity: Bool) {
@@ -294,7 +271,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         let insertedAbove = capturedAnchor.map {
             NXFeedIndexMapping.itemsInsertedAbove(oldIDs: oldIDs, newIDs: itemIDs, anchorID: $0.id)
         } ?? false
-        let shouldPinByIdentity = pinByIdentity || insertedAbove
+        let needsExtendedSettling = pinByIdentity || insertedAbove
 
         guard let anchor = capturedAnchor else { return }
         lastKnownAnchor = anchor
@@ -304,10 +281,21 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             return
         }
 
-        startSettling(anchor: anchor, pinByIdentity: shouldPinByIdentity)
+        // A normal prepend starts with the anchor already visible. Calling
+        // scrollToItem before SwiftUI's List has reconciled its new indices can
+        // target the old row at that index and jump backward several posts.
+        startSettling(
+            anchor: anchor,
+            extended: needsExtendedSettling,
+            bringOnScreen: pinByIdentity
+        )
     }
 
-    private func startSettling(anchor: (id: String, visibleTopOffset: CGFloat), pinByIdentity: Bool) {
+    private func startSettling(
+        anchor: (id: String, visibleTopOffset: CGFloat),
+        extended: Bool,
+        bringOnScreen: Bool
+    ) {
         anchorGeneration += 1
         let generation = anchorGeneration
         settleTask?.cancel()
@@ -317,7 +305,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         // Prepends need a few frames for estimated rows to self-size. Ordinary
         // image/repost height changes only need one or two offset corrections.
         // Never run this loop during a user drag: it would fight the scroller.
-        let maxSteps = pinByIdentity ? 8 : 2
+        let maxSteps = extended ? 8 : 2
 
         settleTask = Task { @MainActor [weak self] in
             guard let self else { return }
@@ -359,13 +347,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     return
                 }
 
-                let bringOnScreen = pinByIdentity && !didBringOnScreen
+                let shouldBringOnScreen = bringOnScreen && !didBringOnScreen
                 let didCorrect = self.restore(
                     anchor: anchor,
                     in: scrollView,
-                    bringOnScreen: bringOnScreen
+                    bringOnScreen: shouldBringOnScreen
                 )
-                if bringOnScreen {
+                if shouldBringOnScreen {
                     didBringOnScreen = true
                 }
 
@@ -720,15 +708,15 @@ struct NXPostsFeed: View {
         .scrollContentBackgroundHidden()
         .background(theme.listBackground)
         .onAppear {
-            vmInner.performAnchoredFeedUpdate = { [weak layoutStabilizer] itemIDs, update in
+            vmInner.performAnchoredFeedUpdate = { [weak layoutStabilizer] update in
                 guard let layoutStabilizer else {
-                    update()
+                    _ = update()
                     return
                 }
                 // Do not force pinByIdentity here. Cross-column unread removals would
                 // scrollToItem every other Mac column. Prepends still pin via itemsInsertedAbove.
                 layoutStabilizer.performAnchored {
-                    update()
+                    let itemIDs = update()
                     // Make the post-ID lookup deterministic for the correction pass rather than
                     // depending on SwiftUI's onChange delivery order after the List mutation.
                     layoutStabilizer.updateItemIDs(itemIDs)
@@ -740,9 +728,6 @@ struct NXPostsFeed: View {
             }
             vmInner.cancelPendingFeedSettle = { [weak layoutStabilizer] in
                 layoutStabilizer?.cancelPendingSettle()
-            }
-            vmInner.preserveViewportAfterAppend = { [weak layoutStabilizer] in
-                layoutStabilizer?.preserveViewportAfterAppend()
             }
             if let readingID = vmInner.readingPostID ?? vmInner.pendingScrollToPostID {
                 layoutStabilizer.rememberAnchor(id: readingID)
@@ -805,7 +790,6 @@ struct NXPostsFeed: View {
             vm.pauseViewUpdates()
             vmInner.performAnchoredFeedUpdate = nil
             vmInner.cancelPendingFeedSettle = nil
-            vmInner.preserveViewportAfterAppend = nil
         }
     }
 
