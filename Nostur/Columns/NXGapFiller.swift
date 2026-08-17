@@ -23,9 +23,6 @@ class NXGapFiller {
     private var backlog: Backlog
     private var completionTracker: BoundedRelayRequestCompletionTracker?
     private var boundedSubscriptionId: String?
-    private var lingerCloseTasks: [String: Task<Void, Never>] = [:]
-    private var lateImportSubs: [String: AnyCancellable] = [:]
-    private var lateLoadTask: Task<Void, Never>?
     
     private var windowStart: Int { // Depending on older or not we use start/end as since/until
         return Int(since) + (currentGap * 3600 * windowSize)
@@ -184,8 +181,6 @@ class NXGapFiller {
         latestFirstPaintTask = nil
         latestQuietOlderTask?.cancel()
         latestQuietOlderTask = nil
-        lateLoadTask?.cancel()
-        lateLoadTask = nil
         completionTracker?.cancel()
         completionTracker = nil
 
@@ -193,15 +188,6 @@ class NXGapFiller {
             ConnectionPool.shared.closeSubscription(boundedSubscriptionId)
         }
         boundedSubscriptionId = nil
-
-        let lingeringSubscriptionIds = Set(lingerCloseTasks.keys).union(lateImportSubs.keys)
-        lingerCloseTasks.values.forEach { $0.cancel() }
-        lingerCloseTasks.removeAll()
-        lateImportSubs.values.forEach { $0.cancel() }
-        lateImportSubs.removeAll()
-        for subscriptionId in lingeringSubscriptionIds {
-            ConnectionPool.shared.closeSubscription(subscriptionId)
-        }
     }
 
     @MainActor
@@ -338,7 +324,7 @@ class NXGapFiller {
 #endif
         columnVM?.endLatestFirstPaintHold()
         columnVM?.speedTest?.fetchCompleted()
-        // Let the first 3/6 settle before appending older rows. An immediate
+        // Let the first 10/6 settle before appending older rows. An immediate
         // loadLocal(older:) of ~20 parent-heavy posts is the 3–4s hang after paint.
         scheduleQuietOlderAppend(config: config)
     }
@@ -424,10 +410,6 @@ class NXGapFiller {
         latestPhase: LatestPhase? = nil
     ) {
         if let boundedSubscriptionId {
-            lingerCloseTasks[boundedSubscriptionId]?.cancel()
-            lingerCloseTasks[boundedSubscriptionId] = nil
-            lateImportSubs[boundedSubscriptionId]?.cancel()
-            lateImportSubs[boundedSubscriptionId] = nil
             ConnectionPool.shared.closeSubscription(boundedSubscriptionId)
 #if DEBUG
             FeedFetchDebug.shared.markLingerClosed(subscriptionId: boundedSubscriptionId)
@@ -462,20 +444,14 @@ class NXGapFiller {
                     guard let self, let columnVM = self.columnVM else { return }
                     self.completionTracker = nil
                     self.boundedSubscriptionId = nil
-                    if latestPhase == .firstPaint {
-                        // First paint and fill are separate phases. Close p1 before
-                        // fill starts so both subscriptions cannot import concurrently.
-                        ConnectionPool.shared.closeSubscription(subscriptionId)
+                    // The tracker has already waited for relay quorum and for the
+                    // importer to settle. Keeping unfinished relays subscribed after
+                    // this point consumes scarce relay subscription slots and can
+                    // starve unrelated lookups (thread parents, profiles, embeds).
+                    ConnectionPool.shared.closeSubscription(subscriptionId)
 #if DEBUG
-                        FeedFetchDebug.shared.markLingerClosed(subscriptionId: subscriptionId)
+                    FeedFetchDebug.shared.markLingerClosed(subscriptionId: subscriptionId)
 #endif
-                    }
-                    else {
-                        self.scheduleLingerClose(subscriptionId)
-                        if outcome == .finished {
-                            self.watchLateImports(subscriptionId: subscriptionId, config: config)
-                        }
-                    }
 
                     switch outcome {
                     case .finished:
@@ -545,49 +521,6 @@ class NXGapFiller {
             self.attachFetchDebug(subscriptionId: subscriptionId, config: config, targets: requestTargets)
 #endif
             command()
-            ConnectionPool.shared.disconnectIdleOutbox(
-                keeping: requestTargets.extraIds.union(requestTargets.coreIds)
-            )
-        }
-    }
-
-    @MainActor
-    /// Keep the REQ open after the bar finishes so slower relays can still deliver.
-    private static let lingerAfterBarNanoseconds: UInt64 = 8_000_000_000
-
-    private func scheduleLingerClose(_ subscriptionId: String) {
-        lingerCloseTasks[subscriptionId]?.cancel()
-        lingerCloseTasks[subscriptionId] = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: Self.lingerAfterBarNanoseconds)
-            guard !Task.isCancelled else { return }
-            self?.lateImportSubs[subscriptionId]?.cancel()
-            self?.lateImportSubs[subscriptionId] = nil
-            self?.lingerCloseTasks[subscriptionId] = nil
-            ConnectionPool.shared.closeSubscription(subscriptionId)
-#if DEBUG
-            FeedFetchDebug.shared.markLingerClosed(subscriptionId: subscriptionId)
-#endif
-        }
-    }
-
-    private func watchLateImports(subscriptionId: String, config: NXColumnConfig) {
-        lateImportSubs[subscriptionId] = Importer.shared.importedMessagesFromSubscriptionIds
-            .filter { $0.contains(subscriptionId) }
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.scheduleLateLoad(config)
-            }
-    }
-
-    private func scheduleLateLoad(_ config: NXColumnConfig) {
-        lateLoadTask?.cancel()
-        lateLoadTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            guard !Task.isCancelled else { return }
-            guard let self else { return }
-            self.loadAfterLatestImport(config: config) {
-                self.considerLatestReveal(config: config)
-            }
         }
     }
 

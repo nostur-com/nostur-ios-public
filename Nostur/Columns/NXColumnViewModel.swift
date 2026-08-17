@@ -11,6 +11,9 @@ import NostrEssentials
 
 class NXColumnViewModel: ObservableObject {
     public let columnVMid = UUID()
+#if DEBUG
+    var feedActionDebugRecord: ((String) -> Void)?
+#endif
     
     public var speedTest: NXSpeedTest?
 
@@ -23,6 +26,36 @@ class NXColumnViewModel: ObservableObject {
     
     public var tableView: UITableView?
     public var tablePrefetcher: NXPostsFeedTablePrefetcher?
+
+#if DEBUG
+    @MainActor
+    func feedActionDebugState() -> String {
+        let posts = currentNRPostsOnScreen
+        let scrollView: UIScrollView? = collectionView ?? tableView
+        let motion: String
+        if scrollView?.isDragging == true || scrollView?.isTracking == true {
+            motion = "dragging"
+        } else if scrollView?.isDecelerating == true {
+            motion = "decelerating"
+        } else {
+            motion = "idle"
+        }
+        let offset = scrollView.map { String(format: "%.1f", $0.contentOffset.y) } ?? "?"
+        let reading = (vmInner.readingPostID ?? vmInner.pendingScrollToPostID).map(shortDebugID) ?? "none"
+        let first = posts.first.map { shortDebugID($0.id) } ?? "none"
+        let last = posts.last.map { shortDebugID($0.id) } ?? "none"
+        return "\(posts.count) posts · y \(offset) · \(motion) · top \(vmInner.isAtTop) · anchor \(reading) · ids \(first)…\(last)"
+    }
+
+    @MainActor
+    private func recordFeedAction(_ message: String) {
+        feedActionDebugRecord?(message)
+    }
+
+    private func shortDebugID(_ id: String) -> String {
+        String(id.prefix(8))
+    }
+#endif
 
     @MainActor
     private var isFeedActivelyScrolling: Bool {
@@ -85,9 +118,15 @@ class NXColumnViewModel: ObservableObject {
            let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate,
            shouldPinFeedUpdate(to: posts) {
             let oldPosts = currentNRPostsOnScreen
-            performAnchoredFeedUpdate { [weak self] in
+            let oldIDs = Set(oldPosts.map(\.id))
+            let requestedNewCount = posts.count { !oldIDs.contains($0.id) }
+            performAnchoredFeedUpdate("newer posts") { [weak self] in
                 guard let self else { return [] }
                 let currentPosts = self.currentNRPostsOnScreen
+                let desiredIDs = Set(posts.map(\.id))
+                let preservedWhileWaiting = currentPosts.count {
+                    !oldIDs.contains($0.id) && !desiredIDs.contains($0.id)
+                }
                 let rebasedPosts = NXFeedUpdateRebaser.rebase(
                     old: oldPosts,
                     desired: posts,
@@ -97,6 +136,14 @@ class NXColumnViewModel: ObservableObject {
                 withTransaction(Transaction(animation: nil)) {
                     self.viewState = .posts(rebasedPosts)
                 }
+#if DEBUG
+                let preservedSuffix = preservedWhileWaiting > 0
+                    ? " · preserved \(preservedWhileWaiting) older appended while queued"
+                    : ""
+                self.recordFeedAction(
+                    "inserted \(requestedNewCount) newer at top · \(currentPosts.count)→\(rebasedPosts.count)\(preservedSuffix)"
+                )
+#endif
                 return rebasedPosts.map(\.id)
             }
             return
@@ -1800,13 +1847,13 @@ class NXColumnViewModel: ObservableObject {
     
     public var loadAnyFlag: Bool = false
 
-    /// Remember-off: stay on `.loading` until this many posts are ready (3 iPhone / 6 Mac).
+    /// Remember-off: stay on `.loading` until this many posts are ready (10 iPhone / 6 Mac).
     var latestFirstPaintMinimum: Int? = nil
     /// Empty-screen `loadLocal` uses this `since` instead of the default 8h window.
     var latestLocalSinceOverride: Int64? = nil
     /// Ready posts while first-paint is held (viewState is still `.loading`).
     private(set) var latestHeldPostCount: Int = 0
-    /// Remember-off latest session: do not filter already-seen posts.
+    /// Remember-off latest session: use latest-first loading and pagination behavior.
     var latestBackfill = false
     /// Until fill finishes, keep the first screen still — no prepends or mid-list inserts.
     var latestSuppressPrepend = false
@@ -1825,6 +1872,7 @@ class NXColumnViewModel: ObservableObject {
         case loadingNetwork(cursor: Int64, subscriptionId: String, sessionGeneration: UInt64)
     }
     private var paginationState: PaginationState = .idle
+    @Published private(set) var isLoadingOlderPage = false
     private var paginationTimeoutTask: Task<Void, Never>?
 
     @MainActor
@@ -1897,13 +1945,24 @@ class NXColumnViewModel: ObservableObject {
         if case .loadingNetwork(_, let subscriptionId, _) = paginationState {
             ConnectionPool.shared.closeSubscription(subscriptionId)
         }
-        paginationState = .idle
+        setPaginationState(.idle)
         olderPageLoadInFlight = false
         latestUserLoadMore = false
     }
 
-    /// After the first 12 are on screen, start the next page so a fast scroll
-    /// does not hit an empty tail. Does not run during first paint.
+    @MainActor
+    private func setPaginationState(_ state: PaginationState) {
+        paginationState = state
+        if case .idle = state {
+            isLoadingOlderPage = false
+        } else {
+            isLoadingOlderPage = true
+        }
+    }
+
+    /// After the initial quiet append, start the next page so a fast scroll
+    /// does not hit an empty tail. Sparse feeds may contain fewer than the
+    /// first-paint target, so any visible root post is enough to paginate.
     func schedulePrefetchOlderPage() {
         guard latestBackfill, !didPrefetchOlderPage else { return }
         prefetchOlderPageTask?.cancel()
@@ -1920,7 +1979,7 @@ class NXColumnViewModel: ObservableObject {
         guard !latestQuietOlderAppend else { return }
         guard let config else { return }
         let onScreen = currentNRPostsOnScreen.count
-        guard onScreen >= LATEST_FEED_FIRST_PAINT_COUNT else { return }
+        guard onScreen >= LATEST_FEED_PAGINATION_MINIMUM else { return }
         if onScreen > LATEST_FEED_INITIAL_VISIBLE + 1 {
             didPrefetchOlderPage = true
             return
@@ -1937,7 +1996,7 @@ class NXColumnViewModel: ObservableObject {
         let cursor = Int64(oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
         let sessionGeneration = feedSessionGeneration
         let countBeforeLoad = currentNRPostsOnScreen.count
-        paginationState = .loadingLocal(cursor: cursor, sessionGeneration: sessionGeneration)
+        setPaginationState(.loadingLocal(cursor: cursor, sessionGeneration: sessionGeneration))
         olderPageLoadInFlight = true
         latestUserLoadMore = true
         loadLocal(config, older: true) { [weak self] in
@@ -1950,7 +2009,7 @@ class NXColumnViewModel: ObservableObject {
             self.olderPageLoadInFlight = false
             self.latestUserLoadMore = false
             if !requestNetwork || self.currentNRPostsOnScreen.count > countBeforeLoad {
-                self.paginationState = .idle
+                self.setPaginationState(.idle)
                 return
             }
             self.startNextPageNetworkRequest(config, cursor: cursor, sessionGeneration: sessionGeneration)
@@ -2078,9 +2137,7 @@ class NXColumnViewModel: ObservableObject {
 #endif
         }
         
-        let allShortIdsSeen = latestBackfill
-            ? []
-            : self.allShortIdsSeenMergingFeedLastRead(config.feed)
+        let allShortIdsSeen = self.allShortIdsSeenMergingFeedLastRead(config.feed)
         let currentIdsOnScreen = self.currentIdsOnScreen
         let wotEnabled = config.wotEnabled
   
@@ -2943,14 +3000,14 @@ class NXColumnViewModel: ObservableObject {
         }
         let nonce = UUID().uuidString.prefix(8)
         let subscriptionId = "\(prefix)-\(config.id)-\(sessionGeneration)-\(cursor)-\(nonce)"
-        paginationState = .loadingNetwork(
+        setPaginationState(.loadingNetwork(
             cursor: cursor,
             subscriptionId: subscriptionId,
             sessionGeneration: sessionGeneration
-        )
+        ))
 
         guard sendNextPageReq(config, until: cursor, subscriptionId: subscriptionId) else {
-            paginationState = .idle
+            setPaginationState(.idle)
             return
         }
 
@@ -2963,7 +3020,7 @@ class NXColumnViewModel: ObservableObject {
                   activeGeneration == sessionGeneration
             else { return }
             ConnectionPool.shared.closeSubscription(subscriptionId)
-            self.paginationState = .idle
+            self.setPaginationState(.idle)
         }
     }
 
@@ -3426,7 +3483,6 @@ class NXColumnViewModel: ObservableObject {
                 else { return }
                 guard importedIds.contains(subscriptionId) else { return }
 
-                let countBeforeLoad = self.currentNRPostsOnScreen.count
                 self.latestUserLoadMore = true
                 self.loadLocal(activeConfig, older: true) { [weak self] in
                     guard let self else { return }
@@ -3435,13 +3491,16 @@ class NXColumnViewModel: ObservableObject {
                           case .loadingNetwork(let activeCursor, let activeSubscriptionId, let activeGeneration) = self.paginationState,
                           activeCursor == cursor,
                           activeSubscriptionId == subscriptionId,
-                          activeGeneration == sessionGeneration,
-                          self.currentNRPostsOnScreen.count > countBeforeLoad
+                          activeGeneration == sessionGeneration
                     else { return }
+                    // Imported rows can all be filtered (already seen, muted, or
+                    // replies). They still prove that the page request responded;
+                    // leaving it alive until the six-second timeout only occupies
+                    // relay slots and makes the footer look stuck.
                     self.paginationTimeoutTask?.cancel()
                     self.paginationTimeoutTask = nil
                     ConnectionPool.shared.closeSubscription(subscriptionId)
-                    self.paginationState = .idle
+                    self.setPaginationState(.idle)
                 }
             }
     }
@@ -4145,6 +4204,12 @@ extension NXColumnViewModel {
                             viewState = .posts(addedAndExistingPostsTruncated)
                         }
                     }
+#if DEBUG
+                    let positioning = SettingsStore.shared.autoScroll ? "auto-scroll" : "restore first post"
+                    recordFeedAction(
+                        "inserted \(onlyNewAddedPosts.count) newer at top · \(existingPosts.count)→\(addedAndExistingPostsTruncated.count) · \(positioning)"
+                    )
+#endif
                 }
                 else {
 #if DEBUG
@@ -4172,12 +4237,47 @@ extension NXColumnViewModel {
                     completion?()
                     return
                 }
-                // Append only. SwiftUI List keeps offset when rows are added
-                // below. Do not pin/restore/animate — that is for prepends and
-                // is what made the feed jump.
+                // SwiftUI List can reconcile self-sizing rows against estimated heights
+                // when its identity changes during drag/deceleration, moving the viewport
+                // backward. Queue the append until idle, but do not manually correct it.
                 vmInner.abortPreparedScrollRestore()
                 vmInner.cancelPendingFeedSettle?()
-                self.viewState = .posts(existingPosts + postsToAppend)
+                let applyAppend = { [weak self] () -> [String] in
+                    guard let self else {
+                        completion?()
+                        return []
+                    }
+                    let currentPosts = self.currentNRPostsOnScreen
+                    let currentIDs = Set(currentPosts.map(\.id))
+                    let actualPostsToAppend = postsToAppend.filter { !currentIDs.contains($0.id) }
+                    guard !actualPostsToAppend.isEmpty else {
+                        completion?()
+                        self.didFinish()
+                        return currentPosts.map(\.id)
+                    }
+                    let appendedPosts = currentPosts + actualPostsToAppend
+                    withTransaction(Transaction(animation: nil)) {
+                        self.viewState = .posts(appendedPosts)
+                    }
+#if DEBUG
+                    self.recordFeedAction(
+                        "appended \(actualPostsToAppend.count) older at end after idle · \(currentPosts.count)→\(appendedPosts.count)"
+                    )
+#endif
+                    // Pagination uses the visible count change to decide whether local data
+                    // satisfied this page or a relay PAGE request is needed. Complete only
+                    // after the deferred append is real, and keep the request single-flight
+                    // while we wait for scroll idle.
+                    completion?()
+                    self.didFinish()
+                    return appendedPosts.map(\.id)
+                }
+                if let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
+                    performAnchoredFeedUpdate("older posts append", applyAppend)
+                } else {
+                    _ = applyAppend()
+                }
+                return
             }
         }
         else { // Nothing on screen yet, put first posts on screen
@@ -4203,6 +4303,9 @@ extension NXColumnViewModel {
                 }
                 vmInner.abortPreparedScrollRestore()
                 setPosts(firstScreen, animated: false)
+#if DEBUG
+                recordFeedAction("first paint · 0→\(firstScreen.count) posts")
+#endif
                 completion?()
                 didFinish()
                 return
@@ -4217,6 +4320,9 @@ extension NXColumnViewModel {
             vmInner.abortPreparedScrollRestore()
             latestHeldPostCount = 0
             setPosts(uniqueAddedPosts)
+#if DEBUG
+            recordFeedAction("initial feed · 0→\(uniqueAddedPosts.count) posts")
+#endif
         }
         
         completion?()
@@ -4521,7 +4627,7 @@ extension NXColumnViewModel {
 // -- MARK: SCROLLING
 extension NXColumnViewModel {
     @MainActor
-    public func requestNextPageIfNeeded(until: Int64) {
+    public func requestNextPageIfNeeded(until: Int64, trigger: String = "near tail") {
         guard isVisible,
               !isPaused,
               !isViewPaused,
@@ -4531,7 +4637,7 @@ extension NXColumnViewModel {
         }
 
         // Quiet first-paint append owns the first older batch. Don't start a
-        // second 20-post transform while those 3 posts just appeared.
+        // second transform while the initial posts just appeared.
         if latestQuietOlderAppend || olderPageLoadInFlight { return }
 
         let now = Date()
@@ -4543,6 +4649,9 @@ extension NXColumnViewModel {
 
         lastPaginationRequest = (until, now)
         didPrefetchOlderPage = true
+#if DEBUG
+        recordFeedAction("requested older page · \(trigger) · cursor \(until)")
+#endif
         onAppearSubject.send(until)
     }
     
@@ -4679,7 +4788,7 @@ let DEFAULT_REQ_LIMIT: Int? = 500
 
 // MARK: Remember-off "latest now" (CloudFeed.continue == false)
 //
-// Goal: first screen feels like "latest now" (3 iPhone / 6 Mac), bar finishes
+// Goal: first screen feels like "latest now" (10 iPhone / 6 Mac), bar finishes
 // at first paint, fill imports into the DB without dumping 20–40 NRPosts on
 // the list, older rows load as the user scrolls.
 //
@@ -4703,9 +4812,11 @@ let DEFAULT_REQ_LIMIT: Int? = 500
 // - Bottom append is a raw `existing + older` assign. Do not run the prepend
 //   pin/settle on that path — it scrollToItem's a stale reading post.
 // Remember-on fetchGap is intentionally unchanged.
-let LATEST_FEED_FIRST_PAINT_COUNT = IS_CATALYST ? 6 : 3
+let LATEST_FEED_FIRST_PAINT_COUNT = IS_CATALYST ? 6 : 10
 let LATEST_FEED_FIRST_PAINT_EVENT_CAP = LATEST_FEED_FIRST_PAINT_COUNT + 2
 let LATEST_FEED_FIRST_PAINT_LIMIT = 20
+/// Sparse feeds can be force-revealed below the first-paint target and must still load older pages.
+let LATEST_FEED_PAGINATION_MINIMUM = 1
 /// First older batch after first paint. 20 parent-heavy NRPosts hitch the list for seconds.
 let LATEST_FEED_QUIET_OLDER_CAP = 8
 /// Remember-off: keep this many posts on screen, then load more as the user scrolls.

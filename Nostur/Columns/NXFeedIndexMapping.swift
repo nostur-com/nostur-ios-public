@@ -91,6 +91,29 @@ enum NXFeedIndexMapping {
 /// Visible-top relative feed coordinates. Safe-area / live-banner inset changes
 /// must not be baked into the stored reading position.
 enum NXFeedViewport {
+    /// Select the visible row that actually crosses the viewport's top edge. Falling back to
+    /// the first row below the edge avoids anchoring a later row hundreds of points down when
+    /// the partially visible top post is tall.
+    static func topEdgeAnchorIndex(
+        itemFrames: [CGRect],
+        visibleTopY: CGFloat,
+        tolerance: CGFloat = 0.5
+    ) -> Int? {
+        guard !itemFrames.isEmpty else { return nil }
+
+        let crossing = itemFrames.indices.filter { index in
+            let frame = itemFrames[index]
+            return frame.minY <= visibleTopY + tolerance && frame.maxY > visibleTopY + tolerance
+        }
+        if let index = crossing.max(by: { itemFrames[$0].minY < itemFrames[$1].minY }) {
+            return index
+        }
+
+        return itemFrames.indices
+            .filter { itemFrames[$0].minY > visibleTopY - tolerance }
+            .min(by: { itemFrames[$0].minY < itemFrames[$1].minY })
+    }
+
     /// Distance from the visible content top (below the current top inset) to the row.
     /// Zero means the row is flush with whatever is currently inset at the top.
     static func offsetFromVisibleTop(itemMinY: CGFloat, contentOffsetY: CGFloat, insetTop: CGFloat) -> CGFloat {

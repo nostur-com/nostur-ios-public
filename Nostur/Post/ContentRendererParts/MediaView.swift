@@ -212,7 +212,7 @@ struct MediaPlaceholder: View {
         }
 
         if let feedLayoutStabilizer {
-            feedLayoutStabilizer.performAnchored(update)
+            feedLayoutStabilizer.performAnchored(reason: "media row resized", update)
         } else {
             update()
         }

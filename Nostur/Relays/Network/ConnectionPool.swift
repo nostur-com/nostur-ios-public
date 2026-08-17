@@ -814,20 +814,6 @@ public class ConnectionPool: ObservableObject {
         }
     }
 
-    /// Drop outbox sockets that have no remaining REQ. Relays that stay
-    /// connected after we CLOSE a catch-up sub will kick us with
-    /// "no REQ sent within 10 sec, disconnecting".
-    func disconnectIdleOutbox(keeping keepIds: Set<CanonicalRelayUrl> = []) {
-        queue.async(flags: .barrier) { [unowned self] in
-            for (id, connection) in self.outboxConnections {
-                if keepIds.contains(id) { continue }
-                if !connection.hasActiveOrQueuedWork {
-                    connection.disconnect()
-                }
-            }
-        }
-    }
-    
     @MainActor
     private func removeAfterDelay(_ url: String) {
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(35)) { [weak self] in

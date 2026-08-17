@@ -18,7 +18,7 @@ struct NXColumnView<HeaderContent: View>: View {
     @StateObject private var viewModel = NXColumnViewModel()
     @StateObject private var speedTest = NXSpeedTest()
 #if DEBUG
-    @ObservedObject private var feedFetchDebug = FeedFetchDebug.shared
+    @StateObject private var feedActionDebugLog = FeedActionDebugLog()
 #endif
     
     private var config: NXColumnConfig
@@ -252,12 +252,12 @@ struct NXColumnView<HeaderContent: View>: View {
 //                .frame(height: showLiveEventsBanner ? 50 : 0)
         }
 #if DEBUG
-        .overlay(alignment: .bottomLeading) {
-            if !feedFetchDebug.isEnabled {
+        .overlay(alignment: .bottomTrailing) {
+            if !feedActionDebugLog.isVisible {
                 Button {
-                    feedFetchDebug.toggle()
+                    feedActionDebugLog.show()
                 } label: {
-                    Text("DBG")
+                    Text("FEED LOG")
                         .font(.caption2.weight(.bold).monospaced())
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
@@ -266,18 +266,17 @@ struct NXColumnView<HeaderContent: View>: View {
                         .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
-                .padding(.leading, 8)
+                .padding(.trailing, 8)
                 .padding(.bottom, 10)
-                .accessibilityLabel("Show feed fetch debug")
+                .accessibilityLabel("Show feed action log")
             }
         }
         .overlay(alignment: .bottom) {
-            if feedFetchDebug.isEnabled {
-                FeedFetchDebugOverlay(
-                    speedTest: speedTest,
-                    onFetchNow: { viewModel.debugFetchNow() },
-                    onScreenCount: viewModel.currentNRPostsOnScreen.count,
-                    continueEnabled: config.continue
+            if feedActionDebugLog.isVisible {
+                FeedActionDebugOverlay(
+                    log: feedActionDebugLog,
+                    feedName: config.name,
+                    currentState: { viewModel.feedActionDebugState() }
                 )
             }
         }
@@ -294,6 +293,16 @@ struct NXColumnView<HeaderContent: View>: View {
         .onAppear {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) .onAppear -[LOG]-")
+            // The relay-by-relay fetch overlay was useful for fetch timing but is too
+            // expensive for scroll-jump capture. Keep it off while the lightweight
+            // action log records only meaningful feed mutations.
+            FeedFetchDebug.shared.setEnabled(false)
+            viewModel.feedActionDebugRecord = { message in
+                feedActionDebugLog.record(message)
+            }
+            if feedActionDebugLog.entries.isEmpty {
+                feedActionDebugLog.record("action logger attached · \(viewModel.feedActionDebugState())")
+            }
 #endif
             viewModel.isVisible = isVisible
             loadRelayInfoHiddenState()

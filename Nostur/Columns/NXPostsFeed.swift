@@ -26,9 +26,14 @@ extension EnvironmentValues {
 /// the same viewport position after self-sizing layout completes.
 @MainActor
 final class NXFeedLayoutStabilizer: ObservableObject {
+    private struct PendingUpdate {
+        let reason: String
+        let apply: () -> Void
+    }
+
     private weak var scrollView: UIScrollView?
     private var itemIDs: [String] = []
-    private var pendingUpdates: [() -> Void] = []
+    private var pendingUpdates: [PendingUpdate] = []
     private var pendingPinByIdentity = false
     private var flushTask: Task<Void, Never>?
     private var settleTask: Task<Void, Never>?
@@ -42,8 +47,14 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private var lastInsetTop: CGFloat = 0
     private var lastUserScrollAt: CFTimeInterval = 0
     private var scrollObservations: [NSKeyValueObservation] = []
+    private var lastApproachingBottomSignalAt: CFTimeInterval = 0
     /// Fired on content-offset changes (status-bar tap-to-top, fling, etc.).
     var onViewportChange: (() -> Void)?
+    /// Fired at a low frequency when less than a few screens of content remain.
+    var onApproachingBottom: (() -> Void)?
+#if DEBUG
+    var onDebugAction: ((String) -> Void)?
+#endif
 
     var isProgrammaticScrollPending: Bool {
         isProgrammaticScrollInProgress
@@ -91,7 +102,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         let updates = pendingUpdates
         pendingUpdates.removeAll()
         pendingPinByIdentity = false
-        updates.forEach { $0() }
+        updates.forEach { $0.apply() }
     }
 
     func resumePositionTracking() {
@@ -130,7 +141,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             let updates = pendingUpdates
             pendingUpdates.removeAll()
             pendingPinByIdentity = false
-            updates.forEach { $0() }
+            updates.forEach { $0.apply() }
             finalPosition()
             isProgrammaticScrollInProgress = false
             return
@@ -163,7 +174,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             superview.addSubview(snapshot)
         }
 
-        updates.forEach { $0() }
+        updates.forEach { $0.apply() }
 
         await Task.yield()
         try? await Task.sleep(nanoseconds: 50_000_000)
@@ -212,7 +223,12 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         restore(anchor: (id, 0), in: scrollView, bringOnScreen: !isOnScreen)
     }
 
-    func performAnchored(pinByIdentity: Bool = false, _ update: @escaping () -> Void) {
+    func performAnchored(
+        reason: String = "row layout change",
+        pinByIdentity: Bool = false,
+        _ update: @escaping () -> Void
+    ) {
+        let pendingUpdate = PendingUpdate(reason: reason, apply: update)
         if isSuspended {
             update()
             return
@@ -225,11 +241,16 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         }
 
         if isProgrammaticScrollInProgress || isUserScrollingOrRecently(in: scrollView) {
-            pendingUpdates.append(update)
+            pendingUpdates.append(pendingUpdate)
             pendingPinByIdentity = pendingPinByIdentity || pinByIdentity
+#if DEBUG
+            onDebugAction?(
+                "queued \(reason) while \(scrollMotion(in: scrollView)) · \(itemIDs.count) posts · pending \(pendingUpdates.count) · \(anchorSummary(in: scrollView))"
+            )
+#endif
             scheduleFlush()
         } else {
-            applyAnchored([update], pinByIdentity: pinByIdentity)
+            applyAnchored([pendingUpdate], pinByIdentity: pinByIdentity)
         }
     }
 
@@ -247,6 +268,14 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             self.pendingUpdates.removeAll()
             self.pendingPinByIdentity = false
             self.flushTask = nil
+#if DEBUG
+            if !updates.isEmpty {
+                let reasons = updates.map(\.reason).uniqued()
+                self.onDebugAction?(
+                    "scroll idle · applying \(updates.count) queued update\(updates.count == 1 ? "" : "s") [\(reasons.joined(separator: ", "))] · \(self.anchorSummary(in: self.scrollView))"
+                )
+            }
+#endif
             self.applyAnchored(updates, pinByIdentity: pinByIdentity)
         }
     }
@@ -258,7 +287,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             || (lastUserScrollAt > 0 && CACurrentMediaTime() - lastUserScrollAt < 0.5)
     }
 
-    private func applyAnchored(_ updates: [() -> Void], pinByIdentity: Bool) {
+    private func applyAnchored(_ updates: [PendingUpdate], pinByIdentity: Bool) {
         guard !updates.isEmpty else { return }
 
         let oldIDs = itemIDs
@@ -266,12 +295,40 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             ?? lastKnownAnchor
             ?? pendingRestoreAnchor
 
-        updates.forEach { $0() }
+        updates.forEach { $0.apply() }
+
+#if DEBUG
+        let addedCount = itemIDs.count { !oldIDs.contains($0) }
+        let removedCount = oldIDs.count { !itemIDs.contains($0) }
+        if addedCount > 0 || removedCount > 0 {
+            onDebugAction?(
+                "feed IDs changed · \(oldIDs.count)→\(itemIDs.count) · +\(addedCount)/−\(removedCount) · \(anchorSummary(in: scrollView))"
+            )
+        }
+#endif
 
         let insertedAbove = capturedAnchor.map {
             NXFeedIndexMapping.itemsInsertedAbove(oldIDs: oldIDs, newIDs: itemIDs, anchorID: $0.id)
         } ?? false
         let needsExtendedSettling = pinByIdentity || insertedAbove
+
+        // Self-sizing row changes do not alter feed identity. UICollectionView/TableView
+        // already account for those layout changes; applying our own correction afterward
+        // can visibly move the feed a second time. Manual settling is reserved for an actual
+        // prepend (or an explicit identity pin), where UIKit cannot infer our intended anchor.
+        guard needsExtendedSettling else {
+            pendingRestoreAnchor = nil
+            if let currentAnchor = scrollView.flatMap({ visibleAnchor(in: $0) }) {
+                lastKnownAnchor = currentAnchor
+            }
+#if DEBUG
+            let reasons = updates.map(\.reason).uniqued().joined(separator: ", ")
+            onDebugAction?(
+                "applied \(reasons) · no manual correction · UIKit owns viewport · \(anchorSummary(in: scrollView))"
+            )
+#endif
+            return
+        }
 
         guard let anchor = capturedAnchor else { return }
         lastKnownAnchor = anchor
@@ -311,6 +368,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             guard let self else { return }
             var didBringOnScreen = false
             var stableSamples = 0
+#if DEBUG
+            let startingOffset = self.scrollView?.contentOffset.y
+            var correctionCount = 0
+#endif
 
             for step in 0..<maxSteps {
                 guard !Task.isCancelled,
@@ -359,10 +420,20 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
                 if didCorrect {
                     stableSamples = 0
+#if DEBUG
+                    correctionCount += 1
+#endif
                 } else {
                     stableSamples += 1
                     if stableSamples >= 2 {
                         self.pendingRestoreAnchor = nil
+#if DEBUG
+                        self.recordSettlingResult(
+                            anchor: anchor,
+                            correctionCount: correctionCount,
+                            startingOffset: startingOffset
+                        )
+#endif
                         return
                     }
                 }
@@ -370,9 +441,51 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
             if self.anchorGeneration == generation {
                 self.pendingRestoreAnchor = nil
+#if DEBUG
+                self.recordSettlingResult(
+                    anchor: anchor,
+                    correctionCount: correctionCount,
+                    startingOffset: startingOffset
+                )
+#endif
             }
         }
     }
+
+#if DEBUG
+    private func recordSettlingResult(
+        anchor: (id: String, visibleTopOffset: CGFloat),
+        correctionCount: Int,
+        startingOffset: CGFloat?
+    ) {
+        guard correctionCount > 0 else { return }
+        let start = startingOffset.map { String(format: "%.1f", $0) } ?? "?"
+        let end = scrollView.map { String(format: "%.1f", $0.contentOffset.y) } ?? "?"
+        onDebugAction?(
+            "viewport corrected \(correctionCount)× · y \(start)→\(end) · anchor \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset))"
+        )
+    }
+
+    private func scrollMotion(in scrollView: UIScrollView) -> String {
+        if scrollView.isDragging || scrollView.isTracking { return "dragging" }
+        if scrollView.isDecelerating { return "decelerating" }
+        if isProgrammaticScrollInProgress { return "programmatic scroll" }
+        return "recent scrolling"
+    }
+
+    private func anchorSummary(in scrollView: UIScrollView?) -> String {
+        let anchor = scrollView.flatMap { visibleAnchor(in: $0) } ?? lastKnownAnchor
+        let anchorText = anchor.map {
+            "anchor \(shortID($0.id)) @ \(String(format: "%.1f", $0.visibleTopOffset))"
+        } ?? "anchor none"
+        let offset = scrollView.map { String(format: "%.1f", $0.contentOffset.y) } ?? "?"
+        return "\(anchorText) · y \(offset)"
+    }
+
+    private func shortID(_ id: String) -> String {
+        String(id.prefix(8))
+    }
+#endif
 
     @discardableResult
     private func restore(
@@ -426,15 +539,15 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         }
 
         let top = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
-        let candidates = indexPaths.compactMap { indexPath -> (IndexPath, CGFloat)? in
-            guard let minY = itemMinY(at: indexPath, in: scrollView) else { return nil }
-            return (indexPath, minY)
+        let candidates = indexPaths.compactMap { indexPath -> (IndexPath, CGRect)? in
+            guard let frame = itemFrame(at: indexPath, in: scrollView) else { return nil }
+            return (indexPath, frame)
         }
-        let anchor = candidates
-            .filter { $0.1 >= top - 0.5 }
-            .min { $0.1 < $1.1 }
-            ?? candidates.min { abs($0.1 - top) < abs($1.1 - top) }
-        guard let anchor else { return nil }
+        guard let anchorIndex = NXFeedViewport.topEdgeAnchorIndex(
+            itemFrames: candidates.map(\.1),
+            visibleTopY: top
+        ),
+              let anchor = candidates[safe: anchorIndex] else { return nil }
 
         let sectionCounts = sectionCounts(in: scrollView)
         guard let itemIndex = NXFeedIndexMapping.itemIndex(
@@ -444,7 +557,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         ),
               let id = itemIDs[safe: itemIndex] else { return nil }
         let visibleTopOffset = NXFeedViewport.offsetFromVisibleTop(
-            itemMinY: anchor.1,
+            itemMinY: anchor.1.minY,
             contentOffsetY: scrollView.contentOffset.y,
             insetTop: scrollView.adjustedContentInset.top
         )
@@ -456,13 +569,17 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 
     private func itemMinY(at indexPath: IndexPath, in scrollView: UIScrollView) -> CGFloat? {
+        itemFrame(at: indexPath, in: scrollView)?.minY
+    }
+
+    private func itemFrame(at indexPath: IndexPath, in scrollView: UIScrollView) -> CGRect? {
         if let collectionView = scrollView as? UICollectionView {
-            return collectionView.layoutAttributesForItem(at: indexPath)?.frame.minY
+            return collectionView.layoutAttributesForItem(at: indexPath)?.frame
         }
         if let tableView = scrollView as? UITableView,
            tableView.numberOfSections > indexPath.section,
            tableView.numberOfRows(inSection: indexPath.section) > indexPath.row {
-            return tableView.rectForRow(at: indexPath).minY
+            return tableView.rectForRow(at: indexPath)
         }
         return nil
     }
@@ -512,6 +629,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 self?.handleContentOffsetChange(in: scrollView)
             }
         })
+        scrollObservations.append(scrollView.observe(\.contentSize, options: [.new]) { [weak self] scrollView, _ in
+            MainActor.assumeIsolated {
+                self?.evaluateApproachingBottom(in: scrollView)
+            }
+        })
     }
 
     private func handleContentOffsetChange(in scrollView: UIScrollView) {
@@ -521,6 +643,22 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             lastUserScrollAt = CACurrentMediaTime()
         }
         onViewportChange?()
+        evaluateApproachingBottom(in: scrollView)
+    }
+
+    private func evaluateApproachingBottom(in scrollView: UIScrollView) {
+        guard scrollView.window != nil, scrollView.bounds.height > 0 else { return }
+        let visibleBottom = scrollView.contentOffset.y
+            + scrollView.bounds.height
+            - scrollView.adjustedContentInset.bottom
+        let remaining = max(0, scrollView.contentSize.height - visibleBottom)
+        let prefetchDistance = max(1_200, scrollView.bounds.height * 2.5)
+        guard remaining <= prefetchDistance else { return }
+
+        let now = CACurrentMediaTime()
+        guard now - lastApproachingBottomSignalAt >= 0.35 else { return }
+        lastApproachingBottomSignalAt = now
+        onApproachingBottom?()
     }
 
     private func handleAdjustedContentInsetChange(in scrollView: UIScrollView) {
@@ -590,7 +728,7 @@ struct NXPostsFeed: View {
     @Environment(\.availableWidth) private var availableWidth
     @Environment(\.availableHeight) private var availableHeight
     
-    private var vm: NXColumnViewModel
+    @ObservedObject private var vm: NXColumnViewModel
     private let posts: [NRPost]
     private let vmInner: NXColumnViewModelInner
 
@@ -623,11 +761,11 @@ struct NXPostsFeed: View {
         )
     }
 
-    /// Start the next page a few rows before the tail so transform finishes
-    /// before the user reaches the last post.
+    /// Row-based fallback for cases where UIKit has not reported useful content geometry yet.
     private var paginationLeadPostId: String? {
-        guard posts.count > 4 else { return posts.last?.id }
-        return posts[posts.count - 4].id
+        let leadCount = min(8, max(4, posts.count / 3))
+        guard posts.count > leadCount else { return posts.last?.id }
+        return posts[posts.count - leadCount].id
     }
     
     var body: some View {
@@ -648,7 +786,7 @@ struct NXPostsFeed: View {
                 }
                 .onAppear {
                     if nrPost.id == paginationLeadPostId, let oldest = posts.last {
-                        vm.requestNextPageIfNeeded(until: oldest.created_at)
+                        vm.requestNextPageIfNeeded(until: oldest.created_at, trigger: "lead row")
                     }
                 }
                 .onDisappear {
@@ -663,10 +801,23 @@ struct NXPostsFeed: View {
                     .frame(height: 1)
                     .id("pagination-\(oldestPost.id)")
                     .onAppear {
-                        vm.requestNextPageIfNeeded(until: oldestPost.created_at)
+                        vm.requestNextPageIfNeeded(until: oldestPost.created_at, trigger: "tail sentinel")
                     }
                     .listRowSeparator(.hidden)
                     .listRowInsets(.init())
+
+                if vm.isLoadingOlderPage {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
+                    .frame(minHeight: 44)
+                    .id("pagination-progress-\(oldestPost.id)")
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(.init())
+                    .accessibilityLabel("Loading older posts")
+                }
             }
         }
         .withContainerTopOffsetEnvironmentKey()
@@ -708,14 +859,14 @@ struct NXPostsFeed: View {
         .scrollContentBackgroundHidden()
         .background(theme.listBackground)
         .onAppear {
-            vmInner.performAnchoredFeedUpdate = { [weak layoutStabilizer] update in
+            vmInner.performAnchoredFeedUpdate = { [weak layoutStabilizer] reason, update in
                 guard let layoutStabilizer else {
                     _ = update()
                     return
                 }
                 // Do not force pinByIdentity here. Cross-column unread removals would
                 // scrollToItem every other Mac column. Prepends still pin via itemsInsertedAbove.
-                layoutStabilizer.performAnchored {
+                layoutStabilizer.performAnchored(reason: reason) {
                     let itemIDs = update()
                     // Make the post-ID lookup deterministic for the correction pass rather than
                     // depending on SwiftUI's onChange delivery order after the List mutation.
@@ -726,6 +877,18 @@ struct NXPostsFeed: View {
             layoutStabilizer.onViewportChange = { [weak vmInner] in
                 vmInner?.updateIsAtTopSubject.send()
             }
+            layoutStabilizer.onApproachingBottom = { [weak vm] in
+                guard let vm, let oldest = vm.currentNRPostsOnScreen.last else { return }
+                vm.requestNextPageIfNeeded(
+                    until: oldest.created_at,
+                    trigger: "2.5-screen threshold"
+                )
+            }
+#if DEBUG
+            layoutStabilizer.onDebugAction = { [weak vm] message in
+                vm?.feedActionDebugRecord?(message)
+            }
+#endif
             vmInner.cancelPendingFeedSettle = { [weak layoutStabilizer] in
                 layoutStabilizer?.cancelPendingSettle()
             }
@@ -787,6 +950,10 @@ struct NXPostsFeed: View {
             // so we pause() updates (and resume() in onAppear {})
             layoutStabilizer.suspendPositionTracking()
             layoutStabilizer.onViewportChange = nil
+            layoutStabilizer.onApproachingBottom = nil
+#if DEBUG
+            layoutStabilizer.onDebugAction = nil
+#endif
             vm.pauseViewUpdates()
             vmInner.performAnchoredFeedUpdate = nil
             vmInner.cancelPendingFeedSettle = nil

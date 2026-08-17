@@ -146,7 +146,7 @@ final class BoundedRelayRequestCompletionTracker {
             FeedFetchDebug.shared.markTimeout(subscriptionId: subscriptionId)
         }
         else {
-            // Bar is done; keep unfinished relays open so late events can still arrive.
+            // The owner closes unfinished relays after the import settle period.
             FeedFetchDebug.shared.markEnded(subscriptionId: subscriptionId)
         }
 #endif

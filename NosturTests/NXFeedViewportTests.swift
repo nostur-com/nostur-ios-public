@@ -11,6 +11,30 @@ final class NXFeedViewportTests: XCTestCase {
         let id: String
     }
 
+    func testTopEdgeAnchorUsesPartiallyVisibleTallRow() {
+        let frames = [
+            CGRect(x: 0, y: 100, width: 390, height: 700),
+            CGRect(x: 0, y: 800, width: 390, height: 120)
+        ]
+
+        XCTAssertEqual(
+            NXFeedViewport.topEdgeAnchorIndex(itemFrames: frames, visibleTopY: 650),
+            0
+        )
+    }
+
+    func testTopEdgeAnchorFallsBackToFirstRowBelowViewportTop() {
+        let frames = [
+            CGRect(x: 0, y: 710, width: 390, height: 100),
+            CGRect(x: 0, y: 900, width: 390, height: 100)
+        ]
+
+        XCTAssertEqual(
+            NXFeedViewport.topEdgeAnchorIndex(itemFrames: frames, visibleTopY: 650),
+            0
+        )
+    }
+
     func testQueuedPrependKeepsPageAppendedWhileScrolling() {
         let old = [Item(id: "3"), Item(id: "2")]
         let desired = [Item(id: "4"), Item(id: "3"), Item(id: "2")]

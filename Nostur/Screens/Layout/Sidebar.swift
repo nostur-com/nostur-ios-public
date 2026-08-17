@@ -299,6 +299,12 @@ struct SideBar: View {
                     .foregroundColor(Color.red) // So we can quickly check if we are in debug or release build
 #endif
                     .opacity(0.5)
+                Text("Test build \(TEST_BUILD_ID)")
+                    .font(.system(.footnote, design: .monospaced).weight(.semibold))
+#if DEBUG
+                    .foregroundColor(.red)
+#endif
+                    .opacity(0.7)
                 Text("[__Source code__](https://github.com/nostur-com/nostur-ios-public)")
                     .foregroundColor(theme.accent)
                     .font(.footnote)

@@ -91,7 +91,7 @@ struct Repost: View {
             guard let firstQuote = noteRowAttributes.firstQuote,
                   displayedFirstQuote?.id != firstQuote.id else { return }
             if let feedLayoutStabilizer {
-                feedLayoutStabilizer.performAnchored {
+                feedLayoutStabilizer.performAnchored(reason: "repost row resolved") {
                     displayedFirstQuote = firstQuote
                 }
             } else {
