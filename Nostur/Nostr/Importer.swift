@@ -23,15 +23,42 @@ enum ProcessStatus {
     case SAVED
 }
 
+/// Prevents relay callbacks from flooding the shared Core Data context with
+/// duplicate importer blocks before the first queued block has begun running.
+final class ImportPassGate {
+    private let lock = NSLock()
+    private var scheduled = false
+
+    var isScheduled: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return scheduled
+    }
+
+    func begin() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !scheduled else { return false }
+        scheduled = true
+        return true
+    }
+
+    func finish() {
+        lock.lock()
+        scheduled = false
+        lock.unlock()
+    }
+}
+
 class Importer {
     // Importing, socket parsing, and feed-local reads intentionally share the
     // same managed object context. Never drain an unbounded relay backlog in a
     // single perform block: doing so prevents every queued UI read from running.
     private static let maxEventsPerImportPass = 24
     
-    var isImporting = false
-    var isImportingPrio = false
-    var needsImport = false
+    private let normalImportGate = ImportPassGate()
+    private let priorityImportGate = ImportPassGate()
+    var isImporting: Bool { normalImportGate.isScheduled }
     var subscriptions = Set<AnyCancellable>()
     var addedRelayMessage = PassthroughSubject<Void, Never>()
     var addedPrioRelayMessage = PassthroughSubject<Void, Never>()
@@ -166,28 +193,14 @@ class Importer {
 #endif
             return
         }
+        guard normalImportGate.begin() else { return }
         bgContext.perform { [unowned self] in
-            if (self.isImporting) {
-                let itemsCount = MessageParser.shared.messageBucketCount
-                self.needsImport = true
-                if itemsCount > 0 {
-                    self.listStatus.send("Processing \(itemsCount) items...")
-                }
-                return
-            }
-            
-            if (self.isImportingPrio) {
-                self.needsImport = true
-                return
-            }
-            
-            self.isImporting = true
             let forImportsCount = MessageParser.shared.messageBucketCount
             guard forImportsCount != 0 else {
 #if DEBUG
                 L.importing.debug("🏎️🏎️ importEvents() nothing to import.")
 #endif
-                self.isImporting = false
+                self.normalImportGate.finish()
                 return
             }
             
@@ -323,19 +336,18 @@ class Importer {
             catch {
                 L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
             }
-            self.isImporting = false
             let hasMoreNormalMessages = MessageParser.shared.messageBucketCount > 0
             let hasPriorityMessages = MessageParser.shared.priorityBucketCount > 0
+            self.normalImportGate.finish()
             if hasPriorityMessages {
                 // Enqueue priority work before the next normal pass. Both calls
                 // yield because they schedule fresh blocks on bgContext.
                 self.importPrioEvents()
             }
-            if self.needsImport || hasMoreNormalMessages {
+            if hasMoreNormalMessages {
 #if DEBUG
                 L.importing.debug("🏎️🏎️ Yielding before next normal import pass")
 #endif
-                self.needsImport = false
                 self.importEvents()
             }
             else {
@@ -345,17 +357,14 @@ class Importer {
     }
     
     public func importPrioEvents() {
+        guard priorityImportGate.begin() else { return }
         bgContext.perform { [unowned self] in
-            if self.isImportingPrio {
-                return
-            }
-            self.isImportingPrio = true
             let forImportsCount = MessageParser.shared.priorityBucketCount
             guard forImportsCount != 0 else {
 #if DEBUG
                 L.importing.debug("🏎️🏎️ importPrioEvents() nothing to import.")
 #endif
-                self.isImportingPrio = false
+                self.priorityImportGate.finish()
                 return
             }
             self.listStatus.send("Processing \(forImportsCount) items...")
@@ -478,8 +487,9 @@ class Importer {
                 L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
             }
 
-            self.isImportingPrio = false
-            if MessageParser.shared.priorityBucketCount > 0 {
+            let hasMorePriorityMessages = MessageParser.shared.priorityBucketCount > 0
+            self.priorityImportGate.finish()
+            if hasMorePriorityMessages {
 #if DEBUG
                 L.importing.debug("🏎️🏎️ Yielding before next priority import pass")
 #endif
