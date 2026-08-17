@@ -79,6 +79,28 @@ struct FeedFetchSchedulerTests {
         
         #expect(column.resumeCount == 1)
     }
+
+    @Test func desktopColumnsUseShortStartupStagger() async {
+        let scheduler = makeScheduler()
+        defer { scheduler.shutdown() }
+        scheduler.usesDesktopCollectWindow = true
+        scheduler.desktopStartupSlotInterval = 0.005
+        var slept: [TimeInterval] = []
+        scheduler.sleepHandler = { duration in
+            slept.append(duration)
+        }
+
+        let first = MockFeedColumn()
+        let second = MockFeedColumn()
+        scheduler.register(first)
+        scheduler.register(second)
+
+        scheduler.scheduleNetworkStart(id: first.columnScheduleId) {}
+        scheduler.scheduleNetworkStart(id: second.columnScheduleId) {}
+        await scheduler.waitForScheduledWork()
+
+        #expect(slept == [scheduler.collectInterval, scheduler.desktopStartupSlotInterval])
+    }
     
     @Test func fetchLoopRotatesOneColumnPerTick() {
         let scheduler = makeScheduler()

@@ -11,25 +11,47 @@ import UIKit
 
 @MainActor
 final class FeedActionDebugLog: ObservableObject {
+    enum MeasurementKind: Equatable {
+        case firstPosts
+        case firstUnread
+    }
+
     enum FirstRenderRating: Equatable {
         case fast
         case slow
         case failed
     }
 
+    enum FirstRenderOutcome: Equatable {
+        case posts
+        case noNewPosts
+        case timedOut
+    }
+
     struct FirstRenderMetric {
         let duration: TimeInterval
         let postCount: Int
+        let outcome: FirstRenderOutcome
+
+        init(
+            duration: TimeInterval,
+            postCount: Int,
+            outcome: FirstRenderOutcome = .posts
+        ) {
+            self.duration = duration
+            self.postCount = postCount
+            self.outcome = outcome
+        }
 
         var rating: FirstRenderRating {
+            if outcome == .timedOut { return .failed }
             if duration < 2 { return .fast }
             if duration < 4 { return .slow }
             return .failed
         }
 
         var formattedDuration: String {
-            FeedActionDebugLog.durationFormatter.string(from: NSNumber(value: duration))
-                ?? String(format: "%.2f", duration)
+            String(format: "%.2f", duration)
         }
     }
 
@@ -60,6 +82,8 @@ final class FeedActionDebugLog: ObservableObject {
     @Published private(set) var firstRenderMetric: FirstRenderMetric?
     @Published private(set) var isMeasuringFirstRender = false
     private var firstRenderStartedAt: Date?
+    private var measurementKind: MeasurementKind = .firstPosts
+    private var restoredPostsDuringMeasurement = false
 
     init() {
         if UserDefaults.standard.object(forKey: Self.visibilityKey) == nil {
@@ -69,9 +93,15 @@ final class FeedActionDebugLog: ObservableObject {
         }
     }
 
-    func beginFirstRenderMeasurement(currentPostCount: Int, at date: Date = Date()) {
+    func beginFirstRenderMeasurement(
+        currentPostCount: Int,
+        kind: MeasurementKind,
+        at date: Date = Date()
+    ) {
         firstRenderEntries.removeAll(keepingCapacity: true)
-        if currentPostCount > 0 {
+        measurementKind = kind
+        restoredPostsDuringMeasurement = false
+        if kind == .firstPosts, currentPostCount > 0 {
             firstRenderStartedAt = nil
             isMeasuringFirstRender = false
             firstRenderMetric = FirstRenderMetric(duration: 0, postCount: currentPostCount)
@@ -83,6 +113,13 @@ final class FeedActionDebugLog: ObservableObject {
     }
 
     func record(_ message: String, at date: Date = Date()) {
+        Task { @MainActor [weak self] in
+            await Task.yield()
+            self?.recordNow(message, at: date)
+        }
+    }
+
+    private func recordNow(_ message: String, at date: Date) {
         let entry = Entry(date: date, message: message)
         entries.append(entry)
         if entries.count > Self.maximumEntries {
@@ -95,6 +132,12 @@ final class FeedActionDebugLog: ObservableObject {
             }
         }
         completeFirstRenderMeasurementIfNeeded(message: message, at: date)
+    }
+
+    /// Deterministic hook for parser/timing tests. Production recording stays
+    /// deferred by one actor turn to avoid publishing during a SwiftUI update.
+    func recordSynchronouslyForTesting(_ message: String, at date: Date) {
+        recordNow(message, at: date)
     }
 
     func show() {
@@ -119,7 +162,7 @@ final class FeedActionDebugLog: ObservableObject {
             : firstRenderEntries.map(\.line).joined(separator: "\n")
         return """
         Feed action log: \(feedName)
-        First posts: \(firstRenderReport)
+        \(measurementTitle.capitalized): \(firstRenderReport)
         First-render trace:
         \(firstRenderLines)
         Current: \(currentState)
@@ -130,35 +173,90 @@ final class FeedActionDebugLog: ObservableObject {
 
     private var firstRenderReport: String {
         if let metric = firstRenderMetric {
-            return "\(metric.formattedDuration)s · 0→\(metric.postCount)"
+            return "\(metric.formattedDuration)s · \(metricResult(metric))"
         }
         return isMeasuringFirstRender ? "measuring…" : "not measured"
     }
 
     private func completeFirstRenderMeasurementIfNeeded(message: String, at date: Date) {
-        guard let startedAt = firstRenderStartedAt,
-              let markerRange = message.range(of: "0→"),
-              let postsRange = message.range(of: " posts", range: markerRange.upperBound..<message.endIndex),
-              let postCount = Int(message[markerRange.upperBound..<postsRange.lowerBound]),
-              postCount > 0
+        guard let startedAt = firstRenderStartedAt else { return }
+
+        if measurementKind == .firstUnread,
+           message.hasPrefix("restored feed ") {
+            restoredPostsDuringMeasurement = true
+            return
+        }
+
+        let result: (postCount: Int, outcome: FirstRenderOutcome)?
+        switch measurementKind {
+        case .firstPosts:
+            result = zeroToPostCount(in: message).map { ($0, .posts) }
+        case .firstUnread:
+            if let postCount = insertedNewerPostCount(in: message) {
+                result = (postCount, .posts)
+            }
+            else if message == "initial newer pass finished · no new posts" {
+                result = (0, .noNewPosts)
+            }
+            else if message == "initial newer pass timed out" {
+                result = (0, .timedOut)
+            }
+            else if !restoredPostsDuringMeasurement,
+                    let postCount = zeroToPostCount(in: message) {
+                result = (postCount, .posts)
+            }
+            else {
+                result = nil
+            }
+        }
+        guard let result,
+              result.outcome != .posts || result.postCount > 0
         else { return }
 
         firstRenderStartedAt = nil
         isMeasuringFirstRender = false
         firstRenderMetric = FirstRenderMetric(
             duration: max(0, date.timeIntervalSince(startedAt)),
-            postCount: postCount
+            postCount: result.postCount,
+            outcome: result.outcome
         )
     }
 
-    private static let durationFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.locale = .current
-        formatter.minimumFractionDigits = 2
-        formatter.maximumFractionDigits = 2
-        formatter.minimumIntegerDigits = 1
-        return formatter
-    }()
+    private func zeroToPostCount(in message: String) -> Int? {
+        guard let markerRange = message.range(of: "0→"),
+              let postsRange = message.range(of: " posts", range: markerRange.upperBound..<message.endIndex)
+        else { return nil }
+        return Int(message[markerRange.upperBound..<postsRange.lowerBound])
+    }
+
+    private func insertedNewerPostCount(in message: String) -> Int? {
+        let prefix = "inserted "
+        let suffix = " newer at top"
+        guard message.hasPrefix(prefix),
+              let suffixRange = message.range(of: suffix)
+        else { return nil }
+        let countStart = message.index(message.startIndex, offsetBy: prefix.count)
+        return Int(message[countStart..<suffixRange.lowerBound])
+    }
+
+    func metricCount(_ count: Int) -> String {
+        measurementKind == .firstUnread ? "+\(count) posts" : "0→\(count)"
+    }
+
+    func metricResult(_ metric: FirstRenderMetric) -> String {
+        switch metric.outcome {
+        case .posts:
+            metricCount(metric.postCount)
+        case .noNewPosts:
+            "NO NEW POSTS"
+        case .timedOut:
+            "CHECK TIMED OUT"
+        }
+    }
+
+    var measurementTitle: String {
+        measurementKind == .firstUnread ? "FIRST UNREAD" : "FIRST POSTS"
+    }
 
     private func setVisible(_ visible: Bool) {
         guard isVisible != visible else { return }
@@ -218,15 +316,15 @@ struct FeedActionDebugOverlay: View {
     @ViewBuilder
     private var firstRenderView: some View {
         if let metric = log.firstRenderMetric {
-            Text("FIRST POSTS  \(metric.formattedDuration)s  ·  0→\(metric.postCount)")
+            Text("\(log.measurementTitle)  \(metric.formattedDuration)s  ·  \(log.metricResult(metric))")
                 .font(.headline.weight(.bold).monospaced())
                 .foregroundStyle(color(for: metric.rating))
         } else if log.isMeasuringFirstRender {
-            Text("FIRST POSTS  MEASURING…")
+            Text("\(log.measurementTitle)  MEASURING…")
                 .font(.headline.weight(.bold).monospaced())
                 .foregroundStyle(.white)
         } else {
-            Text("FIRST POSTS  NOT MEASURED")
+            Text("\(log.measurementTitle)  NOT MEASURED")
                 .font(.headline.weight(.bold).monospaced())
                 .foregroundStyle(.secondary)
         }

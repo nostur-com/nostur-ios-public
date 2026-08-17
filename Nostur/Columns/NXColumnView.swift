@@ -302,7 +302,8 @@ struct NXColumnView<HeaderContent: View>: View {
             }
             if isVisible {
                 feedActionDebugLog.beginFirstRenderMeasurement(
-                    currentPostCount: viewModel.feedActionDebugPostCount
+                    currentPostCount: viewModel.feedActionDebugPostCount,
+                    kind: config.continue ? .firstUnread : .firstPosts
                 )
             }
             if feedActionDebugLog.entries.isEmpty {
@@ -359,7 +360,8 @@ struct NXColumnView<HeaderContent: View>: View {
             if newValue {
 #if DEBUG
                 feedActionDebugLog.beginFirstRenderMeasurement(
-                    currentPostCount: viewModel.feedActionDebugPostCount
+                    currentPostCount: viewModel.feedActionDebugPostCount,
+                    kind: config.continue ? .firstUnread : .firstPosts
                 )
 #endif
                 if isVisible {
@@ -409,7 +411,10 @@ struct NXColumnView<HeaderContent: View>: View {
             viewModel.viewState = .loading
 #if DEBUG
             if isVisible {
-                feedActionDebugLog.beginFirstRenderMeasurement(currentPostCount: 0)
+                feedActionDebugLog.beginFirstRenderMeasurement(
+                    currentPostCount: 0,
+                    kind: newConfig.continue ? .firstUnread : .firstPosts
+                )
             }
 #endif
             viewModel.initialize(newConfig, speedTest: speedTest)

@@ -604,6 +604,15 @@ class Backlog {
 }
 
 class ReqTask: Identifiable, Hashable {
+    enum TimeoutDelivery {
+        /// Legacy/default contract: timeout callbacks may read or transform
+        /// objects owned by the app's shared private context.
+        case backgroundContext
+        /// For bookkeeping-only callbacks that are explicitly Core Data free.
+        case immediate
+        /// For callbacks that exclusively update UI/main-context state.
+        case main
+    }
     
     static func == (lhs: ReqTask, rhs: ReqTask) -> Bool {
         lhs.id == rhs.id
@@ -626,9 +635,15 @@ class ReqTask: Identifiable, Hashable {
     private let reqCommand:(_ taskId: String) -> Void
     public let processResponseCommand:(_: String, _: NXRelayMessage?, _:Event?) -> Void
     private let timeoutCommand:((_ taskId: String) -> Void)?
+    private let timeoutDelivery: TimeoutDelivery
+    private let stateLock = NSLock()
     private var didProcess = false
-    public var isRunning = false // to make sure timeout doesn't remove tasks that are still running
+    private var _isRunning = false
     private var skipTimeout = false
+
+    public var isRunning: Bool {
+        withStateLock { _isRunning }
+    }
     
     // Only use for fetching specific ids. different relays can return different events
     // prio will return the first received, this is wrong if we need for example the most recent event .
@@ -645,13 +660,15 @@ class ReqTask: Identifiable, Hashable {
          subscriptionId: String? = nil,
          reqCommand: @escaping (_: String) -> Void,
          processResponseCommand: @escaping (_: String, _: NXRelayMessage?, _:Event?) -> Void,
-         timeoutCommand: ( (_: String) -> Void)? = nil) {
+         timeoutCommand: ( (_: String) -> Void)? = nil,
+         timeoutDelivery: TimeoutDelivery = .backgroundContext) {
         self.prio = prio
         self.prefix = prefix
         self.id = subscriptionId ?? String(UUID().uuidString.prefix(48))
         self.reqCommand = reqCommand
         self.processResponseCommand = processResponseCommand
         self.timeoutCommand = timeoutCommand
+        self.timeoutDelivery = timeoutDelivery
         self.timeout = timeout
         
         guard !prio else { return }
@@ -660,16 +677,18 @@ class ReqTask: Identifiable, Hashable {
             .debounce(for: .seconds(debounceTime), scheduler: DispatchQueue.main)
             .sink { [weak self] message in
                 guard let self = self else { return }
-                guard !didProcess else {
-                    bg().perform { [weak self] in
-                        self?.isRunning = false;
+                let shouldProcess = self.withStateLock {
+                    guard !self.didProcess else {
+                        self._isRunning = false
+                        return false
                     }
-                    return
+                    self.didProcess = true
+                    return true
                 }
-                didProcess = true
-                processResponseCommand(self.subscriptionId, message, nil)
-                bg().perform { [weak self] in
-                    self?.isRunning = false;
+                guard shouldProcess else { return }
+                self.processResponseCommand(self.subscriptionId, message, nil)
+                self.withStateLock {
+                    self._isRunning = false
                 }
             }
             .store(in: &subscriptions)
@@ -683,36 +702,68 @@ class ReqTask: Identifiable, Hashable {
     private var processSubject = PassthroughSubject<NXRelayMessage?, Never>()
     
     public func process(_ message: NXRelayMessage? = nil) {
-        self.skipTimeout = true
-        if !didProcess {
-            self.isRunning = true
+        withStateLock {
+            skipTimeout = true
+            if !didProcess {
+                _isRunning = true
+            }
         }
-        self.processSubject.send(message)
+        processSubject.send(message)
     }
     
     public func onTimeout() {
 #if DEBUG
         L.og.debug("⏳⏳ ReqTask.onTimout: \(self.subscriptionId) -[LOG]-")
 #endif
-        self.isRunning = false
-        if didProcess || skipTimeout { // need 2 flags to cover the debounce time where onTimeout could get called before didProcess is set
+        let shouldTimeout = withStateLock {
+            _isRunning = false
+            return !didProcess && !skipTimeout
+        }
+        if !shouldTimeout { // cover the debounce window before didProcess is set
 #if DEBUG
             L.og.debug("⏳⏳ ReqTask: didProcess or skipTimeout, timeout not needed \(self.subscriptionId) -[LOG]-")
 #endif
             return
         }
+        let timedOutSubscriptionId = subscriptionId
 #if DEBUG
         Task { @MainActor in
-            FeedFetchDebug.shared.markTimeout(subscriptionId: subscriptionId)
+            FeedFetchDebug.shared.markTimeout(subscriptionId: timedOutSubscriptionId)
         }
 #endif
-        self.timeoutCommand?(subscriptionId)
+        guard let timeoutCommand else { return }
+        switch timeoutDelivery {
+        case .backgroundContext:
+            // Backlog expiry detection stays on its independent queue, but the
+            // callback retains the historical bg-context contract. Running the
+            // callback directly on timeoutQueue caused managed-object crashes.
+            bg().perform {
+                timeoutCommand(timedOutSubscriptionId)
+            }
+        case .immediate:
+            timeoutCommand(timedOutSubscriptionId)
+        case .main:
+            DispatchQueue.main.async {
+                timeoutCommand(timedOutSubscriptionId)
+            }
+        }
     }
     
     public func cleanup() {
-        isRunning = false
-        subscriptions.forEach { $0.cancel() }
-        subscriptions.removeAll()
+        let subscriptionsToCancel = withStateLock {
+            _isRunning = false
+            let snapshot = subscriptions
+            subscriptions.removeAll()
+            return snapshot
+        }
+        subscriptionsToCancel.forEach { $0.cancel() }
+    }
+
+    @discardableResult
+    private func withStateLock<T>(_ body: () -> T) -> T {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return body()
     }
     
     deinit {

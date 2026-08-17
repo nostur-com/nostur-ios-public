@@ -180,25 +180,12 @@ class DataProvider: ObservableObject {
     
     private func _bgContextSave(_ completion: (() -> Void)? = nil) {
         let bg = self.bgStored ?? self.bg
-        
-        if Thread.isMainThread {
-            bg.perform {
-#if DEBUG
-                L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count) -[LOG]-")
-#endif
-                if bg.hasChanges {
-                    do {
-                        try bg.save()
-                    }
-                    catch {
-                        L.og.error("🔴🔴 Could not save bgContext \(error)")
-                    }
-                }
-                
-                completion?()
-            }
-        }
-        else {
+
+        // The caller's thread says nothing about whether it owns this private
+        // queue context. Backlog timeouts, for example, arrive on their own
+        // serial queue. Every read and save must therefore be scheduled through
+        // the context, including debug-only access to registeredObjects.
+        bg.perform {
 #if DEBUG
             L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count) -[LOG]-")
 #endif
@@ -207,11 +194,10 @@ class DataProvider: ObservableObject {
                     try bg.save()
                 }
                 catch {
-#if DEBUG
                     L.og.error("🔴🔴 Could not save bgContext \(error)")
-#endif
                 }
             }
+
             completion?()
         }
     }

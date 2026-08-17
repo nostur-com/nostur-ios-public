@@ -21,6 +21,10 @@ protocol FeedColumnScheduling: AnyObject {
 @MainActor
 final class FeedFetchScheduler {
     var slotInterval: TimeInterval = 1.0
+    /// Relay starts are cheap; importer work is separately time-sliced. A full
+    /// second per Mac column made the last Remember-on column miss its first
+    /// unread target before its request had even started.
+    var desktopStartupSlotInterval: TimeInterval = 0.25
     var collectInterval: TimeInterval = 0.15
     var fullCycleInterval: TimeInterval = FETCH_FEED_INTERVAL
     var resumeAllCooldown: TimeInterval = 8.0
@@ -188,7 +192,7 @@ final class FeedFetchScheduler {
             let item = workQueue.removeFirst()
             item.work()
             if columns.count > 1 && !workQueue.isEmpty {
-                await sleepHandler(slotInterval)
+                await sleepHandler(usesDesktopCollectWindow ? desktopStartupSlotInterval : slotInterval)
             }
         }
     }

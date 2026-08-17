@@ -48,16 +48,26 @@ class FetchVM<T: Equatable>: ObservableObject {
 #if DEBUG
                 L.og.info("FetchVM: ready to process relay response - \(taskId) \(self?.backlog.backlogDebugName)")
 #endif
-                _fetchParams.onComplete(relayMessage, event)
-                self?.backlog.clear()
+                self?.completeOnBackgroundContext(
+                    _fetchParams,
+                    relayMessage: relayMessage,
+                    event: event,
+                    clearBacklog: true
+                )
             },
             timeoutCommand: { [weak self] taskId in
 #if DEBUG
                 L.og.info("FetchVM: timeout (altFetch)- \(taskId) \(self?.backlog.backlogDebugName)")
 #endif
-                _fetchParams.onComplete(nil, nil)
-                self?.backlog.clear()
-            })
+                self?.completeOnBackgroundContext(
+                    _fetchParams,
+                    relayMessage: nil,
+                    event: nil,
+                    clearBacklog: true
+                )
+            },
+            // FetchVM normalizes both relay and timeout completion below.
+            timeoutDelivery: .immediate)
         
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -95,23 +105,50 @@ class FetchVM<T: Equatable>: ObservableObject {
 #if DEBUG
                 L.og.info("FetchVM: ready to process relay response - \(taskId) \(self?.backlog.backlogDebugName)")
 #endif
-                _fetchParams.onComplete(relayMessage, event)
-                self?.backlog.clear()
+                self?.completeOnBackgroundContext(
+                    _fetchParams,
+                    relayMessage: relayMessage,
+                    event: event,
+                    clearBacklog: true
+                )
             },
             timeoutCommand: { [weak self] taskId in
 #if DEBUG
                 L.og.info("FetchVM: timeout (fetch) - \(taskId) \(self?.backlog.backlogDebugName)")
 #endif
-                _fetchParams.onComplete(nil, nil)
-                if _fetchParams.altReq == nil {
-                    self?.backlog.clear()
-                }
-            })
+                self?.completeOnBackgroundContext(
+                    _fetchParams,
+                    relayMessage: nil,
+                    event: nil,
+                    clearBacklog: _fetchParams.altReq == nil
+                )
+            },
+            // FetchVM normalizes both relay and timeout completion below.
+            timeoutDelivery: .immediate)
 
         self.backlog.add(reqTask)
         if case .ready(_) = self.state { return }
         self.state = .loading
         reqTask.fetch()
+    }
+
+    /// `onComplete` implementations commonly refetch and transform `Event`
+    /// objects from the shared private context. Relay imports, Combine debounce,
+    /// and Backlog timeouts arrive on different queues, so normalize every
+    /// completion onto the context queue before exposing a managed object.
+    private func completeOnBackgroundContext(
+        _ fetchParams: FetchParams,
+        relayMessage: NXRelayMessage?,
+        event: Event?,
+        clearBacklog: Bool
+    ) {
+        let backgroundContext = bg()
+        backgroundContext.perform { [weak self] in
+            fetchParams.onComplete(relayMessage, event)
+            if clearBacklog {
+                self?.backlog.clear()
+            }
+        }
     }
     
     enum State: Equatable {

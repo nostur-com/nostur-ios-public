@@ -880,13 +880,21 @@ class NXColumnViewModel: ObservableObject {
                     }
                 }
                 ConnectionPool.shared.queue.async(flags: .barrier) { [weak self] in
-                    if resumeWhereLeftOff {
-                        self?.loadLocal(config) { [weak self] in // <-- instant, and works offline
-                            self?.scheduleInitialRemoteFetch(config)
+                    // ConnectionPool owns this queue; the config contains a
+                    // main-context CloudFeed. Cross back before touching the
+                    // view model or starting local feed restoration.
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        if resumeWhereLeftOff {
+                            // Start the relay request while the saved screen restores.
+                            // The serialized local loader keeps imported results behind
+                            // restoration, so they cannot overwrite each other.
+                            self.loadLocal(config)
+                            self.scheduleInitialRemoteFetch(config)
                         }
-                    }
-                    else {
-                        self?.scheduleInitialRemoteFetch(config)
+                        else {
+                            self.scheduleInitialRemoteFetch(config)
+                        }
                     }
                 }
             }
@@ -900,9 +908,11 @@ class NXColumnViewModel: ObservableObject {
             }
             else {
                 if resumeWhereLeftOff {
-                    loadLocal(config) { [weak self] in // <-- instant, and works offline
-                        self?.scheduleInitialRemoteFetch(config)
-                    }
+                    // Network and local restore can overlap. Waiting for all saved
+                    // rows to render added about a second to every Mac column before
+                    // its first-unread request even entered the scheduler.
+                    loadLocal(config)
+                    scheduleInitialRemoteFetch(config)
                 }
                 else {
                     scheduleInitialRemoteFetch(config)
@@ -1901,6 +1911,9 @@ class NXColumnViewModel: ObservableObject {
     private var paginationState: PaginationState = .idle
     @Published private(set) var isLoadingOlderPage = false
     private var paginationTimeoutTask: Task<Void, Never>?
+    /// A restored List briefly reports its temporary layout as near-bottom.
+    /// Older work must not get ahead of the first newer query for Remember-on.
+    private var suppressPaginationUntilRememberNewerLoad = false
 
     @MainActor
     func beginLatestFirstPaint() {
@@ -1918,6 +1931,7 @@ class NXColumnViewModel: ObservableObject {
         prefetchOlderPageTask?.cancel()
         prefetchOlderPageTask = nil
         resetPaginationState()
+        suppressPaginationUntilRememberNewerLoad = false
     }
 
     func allowLatestFirstPaint() {
@@ -1948,6 +1962,7 @@ class NXColumnViewModel: ObservableObject {
         prefetchOlderPageTask?.cancel()
         prefetchOlderPageTask = nil
         resetPaginationState()
+        suppressPaginationUntilRememberNewerLoad = false
     }
 
     @MainActor
@@ -2073,6 +2088,7 @@ class NXColumnViewModel: ObservableObject {
                 let idsToPutInScreen: [String] = localFeedState.onScreenIds
                 
                 if !idsToPutInScreen.isEmpty {
+                    suppressPaginationUntilRememberNewerLoad = true
                     
                     // Fetch events
                     bg().perform { [self] in
@@ -2151,7 +2167,13 @@ class NXColumnViewModel: ObservableObject {
                             else {
                                 self.viewState = .posts(nrPosts)
                             }
-                            
+
+#if DEBUG
+                            // Remember-on restores bypass putOnScreen(), so emit
+                            // the same 0→N marker used by fresh feeds. Without it
+                            // every Mac column's first-render timer stays measuring.
+                            self.recordFeedAction("restored feed · 0→\(nrPosts.count) posts")
+#endif
 //                            self.allIdsSeen = self.allIdsSeen.union(Set(idsToPutInScreen)) // TODO: remove top unread part if scroll restore
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) - Loaded \(nrPosts.count) from local state -[LOG]-")
@@ -3919,6 +3941,9 @@ extension NXColumnViewModel {
                     completion?()
                     return
                 }
+                if !older {
+                    self.suppressPaginationUntilRememberNewerLoad = false
+                }
                 if latestFirstPaintMinimum == nil,
                    let speedTest, !speedTest.relaysFinishedAt.isEmpty {
 #if DEBUG
@@ -3937,6 +3962,9 @@ extension NXColumnViewModel {
             guard self.shouldAcceptResults(for: config, sessionGeneration: sessionGeneration) else {
                 completion?()
                 return
+            }
+            if !older {
+                self.suppressPaginationUntilRememberNewerLoad = false
             }
             self.putOnScreen(partialThreadsWithParent, config: config, insertAtEnd: older, completion: completion)
         }
@@ -4073,11 +4101,13 @@ extension NXColumnViewModel {
         }
         
         // if following feed, always show all the pubkeys
-        if case .following(let feed) = config.columnType {
+        if case .following = config.columnType {
             // Explore is already restricted to its curated pubkey snapshot.
             // Applying the active account's personal WoT here discarded nearly
             // every recent Explore post and eventually revealed one stale match.
-            if feed.accountPubkey == EXPLORER_PUBKEY {
+            // Use the value snapshot: CloudFeed belongs to the main context, while
+            // this transform runs on the background context queue.
+            if config.accountPubkey == EXPLORER_PUBKEY {
                 return events
             }
             return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
@@ -4767,7 +4797,12 @@ extension NXColumnViewModel {
 
         // Quiet first-paint append owns the first older batch. Don't start a
         // second transform while the initial posts just appeared.
-        if latestQuietOlderAppend || olderPageLoadInFlight { return }
+        if suppressPaginationUntilRememberNewerLoad
+            || vmInner.isPreparingForScrollRestore
+            || latestQuietOlderAppend
+            || olderPageLoadInFlight {
+            return
+        }
 
         let now = Date()
         if let previousRequest = lastPaginationRequest,

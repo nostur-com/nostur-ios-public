@@ -92,6 +92,9 @@ class NXGapFiller {
                 processResponseCommand: { [weak self] subId, _, _ in
                     guard let self else { return }
                     self.columnVM?.feed?.lastLocalFetchAt = Date()
+#if DEBUG
+                    let isFinalWindow = self.windowEnd >= Int(Date().timeIntervalSince1970)
+#endif
 
                     self.columnVM?.speedTest?.relayFinished()
                     
@@ -99,7 +102,13 @@ class NXGapFiller {
                         if self.columnVM?.currentNRPostsOnScreen.isEmpty ?? false {
                             self.columnVM?.loadAnyFlag = true
                             self.fetchGap(since: 1622888074, currentGap: self.currentGap)
+                            return
                         }
+#if DEBUG
+                        if isFinalWindow {
+                            self.columnVM?.recordFeedAction("initial newer pass finished · no new posts")
+                        }
+#endif
                     }
                     
                     self.currentGap += 1
@@ -122,7 +131,11 @@ class NXGapFiller {
 
                         self?.columnVM?.speedTest?.relayTimedout()
 
-                        self?.columnVM?.loadLocal(config)
+                        self?.columnVM?.loadLocal(config) { [weak self] in
+#if DEBUG
+                            self?.columnVM?.recordFeedAction("initial newer pass timed out")
+#endif
+                        }
                     }
                 })
 
@@ -461,6 +474,9 @@ class NXGapFiller {
                     switch outcome {
                     case .finished:
                         columnVM.feed?.lastLocalFetchAt = Date()
+#if DEBUG
+                        let isFinalWindow = self.windowEnd >= Int(Date().timeIntervalSince1970)
+#endif
                         if config.mediaFeedSourceSnapshot != nil,
                            columnVM.currentNRPostsOnScreen.isEmpty {
                             // A bounded media response is not necessarily newer than
@@ -486,6 +502,12 @@ class NXGapFiller {
                                 self.fetchGap(since: 1622888074, currentGap: self.currentGap)
                                 return
                             }
+
+#if DEBUG
+                            if isFinalWindow {
+                                self.columnVM?.recordFeedAction("initial newer pass finished · no new posts")
+                            }
+#endif
 
                             if self.windowStart < Int(Date().timeIntervalSince1970) {
                                 self.fetchGap(since: self.since, currentGap: self.currentGap)
@@ -516,7 +538,11 @@ class NXGapFiller {
                             return
                         }
                         columnVM.speedTest?.relayTimedout()
-                        columnVM.loadLocal(config)
+                        columnVM.loadLocal(config) { [weak self] in
+#if DEBUG
+                            self?.columnVM?.recordFeedAction("initial newer pass timed out")
+#endif
+                        }
                     }
                 }
             )

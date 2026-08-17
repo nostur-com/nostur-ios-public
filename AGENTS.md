@@ -149,3 +149,6 @@ Prefer listing, grepping, and reading under `Nostur/` feature code; skip dummy f
 - Usually there is a main context and a bg context. 
 - Usually CloudAccount and CloudFeed is accessed from main and Event from bg
 - Look for bg().perform { } or Task { @MainActor } or DispatchQueue.main... to make sure we are in the right context.
+- Never infer Core Data ownership from `Thread.isMainThread` or from running on an arbitrary serial queue. Access a managed object only inside its context's `perform`/`performAndWait` (or on `@MainActor` for main-context objects).
+- Network, timer, Backlog, and Combine callbacks have no implicit Core Data context. Give callback delivery an explicit executor, then enter the required managed-object context before reading attributes.
+- Do not capture or pass `NSManagedObject` instances across queues. Pass `NSManagedObjectID` or immutable value snapshots; refetch on the destination context. In particular, background feed transforms must not dereference the `CloudFeed`/`CloudAccount` stored in `NXColumnConfig`.
