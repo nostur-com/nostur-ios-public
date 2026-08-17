@@ -24,6 +24,10 @@ enum ProcessStatus {
 }
 
 class Importer {
+    // Importing, socket parsing, and feed-local reads intentionally share the
+    // same managed object context. Never drain an unbounded relay backlog in a
+    // single perform block: doing so prevents every queued UI read from running.
+    private static let maxEventsPerImportPass = 24
     
     var isImporting = false
     var isImportingPrio = false
@@ -197,7 +201,8 @@ class Importer {
                 // We send a notification every .save with the saved subscriptionIds
                 // so other parts of the system can start fetching from local db
                 var subscriptionIds = Set<String>()
-                while let message = MessageParser.shared.popFirstNormalMessage() {
+                while count < Self.maxEventsPerImportPass,
+                      let message = MessageParser.shared.popFirstNormalMessage() {
                     count = count + 1
                     guard let event = message.event else {
                         L.importing.error("🔴🔴 message.event is nil \(message.message)")
@@ -319,9 +324,16 @@ class Importer {
                 L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
             }
             self.isImporting = false
-            if (self.needsImport) {
+            let hasMoreNormalMessages = MessageParser.shared.messageBucketCount > 0
+            let hasPriorityMessages = MessageParser.shared.priorityBucketCount > 0
+            if hasPriorityMessages {
+                // Enqueue priority work before the next normal pass. Both calls
+                // yield because they schedule fresh blocks on bgContext.
+                self.importPrioEvents()
+            }
+            if self.needsImport || hasMoreNormalMessages {
 #if DEBUG
-                L.importing.debug("🏎️🏎️ Chaining next import ")
+                L.importing.debug("🏎️🏎️ Yielding before next normal import pass")
 #endif
                 self.needsImport = false
                 self.importEvents()
@@ -334,11 +346,16 @@ class Importer {
     
     public func importPrioEvents() {
         bgContext.perform { [unowned self] in
+            if self.isImportingPrio {
+                return
+            }
+            self.isImportingPrio = true
             let forImportsCount = MessageParser.shared.priorityBucketCount
             guard forImportsCount != 0 else {
 #if DEBUG
                 L.importing.debug("🏎️🏎️ importPrioEvents() nothing to import.")
 #endif
+                self.isImportingPrio = false
                 return
             }
             self.listStatus.send("Processing \(forImportsCount) items...")
@@ -347,7 +364,8 @@ class Importer {
                 var alreadyInDBskipped = 0
                 var saved = 0
                 
-                while let message = MessageParser.shared.popFirstPrioMessage() {
+                while count < Self.maxEventsPerImportPass,
+                      let message = MessageParser.shared.popFirstPrioMessage() {
                     count = count + 1
                     guard let event = message.event else {
 #if DEBUG
@@ -460,7 +478,16 @@ class Importer {
                 L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
             }
 
-            DataProvider.shared().saveToDisk()
+            self.isImportingPrio = false
+            if MessageParser.shared.priorityBucketCount > 0 {
+#if DEBUG
+                L.importing.debug("🏎️🏎️ Yielding before next priority import pass")
+#endif
+                self.importPrioEvents()
+            }
+            else {
+                DataProvider.shared().saveToDisk()
+            }
         }
     }
     

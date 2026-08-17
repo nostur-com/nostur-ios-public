@@ -47,10 +47,11 @@ struct NXLocalLoadCoordinatorTests {
         #expect(completed == ["first", "second"])
     }
 
-    @Test("Cancelling pending reads releases their callers")
-    func cancellingPendingWorkCompletesCallers() {
+    @Test("Invalidating a feed releases active and pending callers")
+    func invalidatingFeedCompletesCallersAndStartsNewWork() {
         var started: [Int] = []
         var finishes: [() -> Void] = []
+        var activeCompleted = false
         var pendingCompleted = false
         let coordinator = NXLocalLoadCoordinator<Int>(
             key: String.init,
@@ -60,13 +61,20 @@ struct NXLocalLoadCoordinatorTests {
             }
         )
 
-        coordinator.enqueue(0)
+        coordinator.enqueue(0) { activeCompleted = true }
         coordinator.enqueue(1) { pendingCompleted = true }
-        coordinator.cancelPending()
+        coordinator.cancelAll()
 
         #expect(started == [0])
+        #expect(activeCompleted)
         #expect(pendingCompleted)
+
+        coordinator.enqueue(2)
+        #expect(started == [0, 2])
+
+        // A late callback from invalidated work must not finish the new read.
         finishes[0]()
-        #expect(started == [0])
+        #expect(started == [0, 2])
+        finishes[1]()
     }
 }

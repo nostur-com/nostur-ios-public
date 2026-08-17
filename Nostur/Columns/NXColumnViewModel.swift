@@ -1934,7 +1934,7 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private func advanceFeedSession() {
         feedSessionGeneration &+= 1
-        localLoadCoordinator.cancelPending()
+        localLoadCoordinator.cancelAll()
         resetPaginationState()
     }
 
@@ -4737,7 +4737,7 @@ final class NXLocalLoadCoordinator<Request> {
     private let makeKey: (Request) -> String
     private let perform: Work
     private var pending: [Pending] = []
-    private var activeID: UUID?
+    private var active: Pending?
 
     init(key: @escaping (Request) -> String, perform: @escaping Work) {
         self.makeKey = key
@@ -4761,21 +4761,23 @@ final class NXLocalLoadCoordinator<Request> {
         drain()
     }
 
-    /// Pending work belongs to an invalidated generation. Its callers still
-    /// receive completion so feature-level loading flags cannot remain stuck.
-    func cancelPending() {
-        let completions = pending.flatMap(\.completions)
+    /// All work belongs to an invalidated feed generation. The underlying
+    /// active read cannot be cancelled once Core Data has accepted it, but it
+    /// must not keep the new feed waiting for its coordinator slot.
+    func cancelAll() {
+        let completions = (active?.completions ?? []) + pending.flatMap(\.completions)
+        active = nil
         pending.removeAll()
         completions.forEach { $0() }
     }
 
     private func drain() {
-        guard activeID == nil, !pending.isEmpty else { return }
+        guard active == nil, !pending.isEmpty else { return }
         let next = pending.removeFirst()
-        activeID = next.id
+        active = next
         perform(next.request) { [weak self] in
-            guard let self, self.activeID == next.id else { return }
-            self.activeID = nil
+            guard let self, self.active?.id == next.id else { return }
+            self.active = nil
             next.completions.forEach { $0() }
             self.drain()
         }
