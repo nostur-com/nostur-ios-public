@@ -84,6 +84,38 @@ After changes are mode:
 - Keep heavy processing off the main thread
 - Avoid retention cycles
 
+### Main-thread responsiveness guardrails
+
+- Never synchronously wait from the main thread for Core Data, the importer,
+  relay/network work, feed processing, or another dispatch queue. In particular,
+  do not use `performAndWait`, `DispatchQueue.sync`, `DispatchGroup.wait`, or
+  `DispatchSemaphore.wait` in a user-initiated/UI path.
+- Do not use a managed object context as a general-purpose synchronization queue.
+  Plain in-memory state must use its own narrowly scoped lock, serial queue, or
+  actor. Keep lock critical sections to collection/state access only; never hold
+  a lock while doing I/O, logging large values, invoking callbacks, or touching
+  Core Data.
+- Navigation, tab selection, button handlers, and view appearance must return
+  immediately. They may schedule asynchronous work, but feed imports and relay
+  responses must never be prerequisites for updating navigation UI.
+- Preserve priority separation: opening a post, resolving its parent, and loading
+  notification detail must not queue behind feed backfill or pagination. Bound
+  relay fan-out and imported event volume for background/feed requests.
+- Before changing `Backlog`, `ReqTask`, `Importer`, `ConnectionPool`, feed loading,
+  or Core Data scheduling, trace every caller and explicitly check whether it can
+  run on `@MainActor`. Treat replacing an async operation with a synchronous one
+  as a high-risk performance change requiring a regression test.
+- Any synchronization fix must include a test that holds or saturates the
+  background/import queue and proves the UI-facing operation still completes
+  promptly. A test that only proves ordering is not sufficient.
+- For feed/network performance changes, smoke-test on a physical iPhone while
+  imports are active: switch Following → another feed, reach a sparse feed's end,
+  switch tabs, open a notification post, and return. Verify pagination appears,
+  taps remain responsive, and the device does not sustain abnormal CPU/heat.
+- Do not call a responsiveness issue fixed based only on a successful build or
+  happy-path unit test. Report what stress/navigation scenario was actually run;
+  if it was not run, say that manual responsiveness remains unverified.
+
 ## Configuration And Flags
 
 - Main config: `Config.xcconfig`
