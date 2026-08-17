@@ -53,8 +53,22 @@ class NXColumnViewModel: ObservableObject {
     }
 
     @MainActor
-    private func recordFeedAction(_ message: String) {
+    func recordFeedAction(_ message: String) {
         feedActionDebugRecord?(message)
+    }
+
+    nonisolated private func recordFeedActionFromBackground(_ message: String) {
+        Task { @MainActor [weak self] in
+            self?.recordFeedAction(message)
+        }
+    }
+
+    nonisolated private func debugSeconds(since date: Date) -> String {
+        String(format: "%.3fs", max(0, Date().timeIntervalSince(date)))
+    }
+
+    nonisolated private func debugSeconds(from start: Date, to end: Date) -> String {
+        String(format: "%.3fs", max(0, end.timeIntervalSince(start)))
     }
 
     private func shortDebugID(_ id: String) -> String {
@@ -601,6 +615,7 @@ class NXColumnViewModel: ObservableObject {
         let config: NXColumnConfig
         let older: Bool
         let sessionGeneration: UInt64
+        let requestedAt: Date
 
         var key: String {
             "\(sessionGeneration):\(config.id):\(older ? "older" : "newer")"
@@ -617,10 +632,16 @@ class NXColumnViewModel: ObservableObject {
                 finished()
                 return
             }
+#if DEBUG
+            self.recordFeedAction(
+                "local read admitted · coordinator \(self.debugSeconds(since: request.requestedAt)) · \(request.older ? "older" : "newer")"
+            )
+#endif
             self._loadLocal(
                 request.config,
                 older: request.older,
                 sessionGeneration: request.sessionGeneration,
+                requestedAt: request.requestedAt,
                 completion: finished
             )
         }
@@ -1844,7 +1865,8 @@ class NXColumnViewModel: ObservableObject {
             LocalLoadRequest(
                 config: config,
                 older: older,
-                sessionGeneration: sessionGeneration
+                sessionGeneration: sessionGeneration,
+                requestedAt: Date()
             ),
             completion: scopedCompletion
         )
@@ -2032,6 +2054,7 @@ class NXColumnViewModel: ObservableObject {
         _ config: NXColumnConfig,
         older: Bool = false,
         sessionGeneration: UInt64,
+        requestedAt: Date,
         completion: (() -> Void)? = nil
     ) {
         let currentNRPostsOnScreen = self.currentNRPostsOnScreen
@@ -2086,6 +2109,7 @@ class NXColumnViewModel: ObservableObject {
                                 self._loadLocal(
                                     config,
                                     sessionGeneration: sessionGeneration,
+                                    requestedAt: requestedAt,
                                     completion: completion
                                 )
                                 return
@@ -2219,6 +2243,12 @@ class NXColumnViewModel: ObservableObject {
             
             bg().perform { [weak self] in
                 guard let self else { return }
+                let queryStartedAt = Date()
+#if DEBUG
+                self.recordFeedActionFromBackground(
+                    "local DB turn · waited \(self.debugSeconds(since: requestedAt)) · following"
+                )
+#endif
                 let fr = if !older {
                     Event.postsByPubkeys(followingPubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
                 }
@@ -2226,6 +2256,11 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
                 }
                 let events: [Event] = (try? bg().fetch(fr)) ?? []
+#if DEBUG
+                self.recordFeedActionFromBackground(
+                    "local DB fetched \(events.count) · \(self.debugSeconds(since: queryStartedAt)) · following"
+                )
+#endif
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
             }
         case .picture, .vine, .yak:
@@ -2294,6 +2329,12 @@ class NXColumnViewModel: ObservableObject {
 
             bg().perform { [weak self] in
                 guard let self else { return }
+                let queryStartedAt = Date()
+#if DEBUG
+                self.recordFeedActionFromBackground(
+                    "local DB turn · waited \(self.debugSeconds(since: requestedAt)) · pubkeys"
+                )
+#endif
                 
                 let fr = if !older {
                     Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
@@ -2302,6 +2343,11 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByPubkeys(pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
                 let events: [Event] = (try? bg().fetch(fr)) ?? []
+#if DEBUG
+                self.recordFeedActionFromBackground(
+                    "local DB fetched \(events.count) · \(self.debugSeconds(since: queryStartedAt)) · pubkeys"
+                )
+#endif
 
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
             }
@@ -2351,6 +2397,12 @@ class NXColumnViewModel: ObservableObject {
             
             bg().perform { [weak self] in
                 guard let self else { return }
+                let queryStartedAt = Date()
+#if DEBUG
+                self.recordFeedActionFromBackground(
+                    "local DB turn · waited \(self.debugSeconds(since: requestedAt)) · relays"
+                )
+#endif
                 
                 let fr = if !older {
                     Event.postsByRelays(relaysData, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
@@ -2359,6 +2411,11 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
                 let events: [Event] = (try? bg().fetch(fr)) ?? []
+#if DEBUG
+                self.recordFeedActionFromBackground(
+                    "local DB fetched \(events.count) · \(self.debugSeconds(since: queryStartedAt)) · relays"
+                )
+#endif
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
             }
         case .relayPreview(let relayData):
@@ -3823,20 +3880,29 @@ extension NXColumnViewModel {
     // allIdsSeen must be prefix / .shortId format
     private func processToScreen(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool, sessionGeneration: UInt64? = nil, completion: (() -> Void)? = nil) {
 #if DEBUG
+        let transformStartedAt = Date()
         L.og.debug("☘️☘️ \(config.name) processToScreen() -[LOG]-")
 #endif
         // Apply WoT filter, remove already on screen
         let preparedEvents = prepareEvents(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
-        
+#if DEBUG
+        let preparedAt = Date()
+#endif
         // Transform from Event to NRPost (only not already on screen by prev statement)
         let nrPosts: [NRPost] = self.transformToNRPosts(preparedEvents, config: config, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, repliesEnabled: repliesEnabled)
-        
+#if DEBUG
+        let nrPostsAt = Date()
+#endif
         // Turn loose NRPost replies into partial threads / leafs
         let partialThreads: [NRPost] = self.transformToPartialThreads(nrPosts, currentIdsOnScreen: currentIdsOnScreen)
         
         let (danglers, partialThreadsWithParent) = extractDanglingReplies(partialThreads)
         
 #if DEBUG
+        let threadsAt = Date()
+        recordFeedActionFromBackground(
+            "transform \(events.count)→\(preparedEvents.count)→\(partialThreadsWithParent.count) · prepare \(debugSeconds(from: transformStartedAt, to: preparedAt)) · NR \(debugSeconds(from: preparedAt, to: nrPostsAt)) · threads \(debugSeconds(from: nrPostsAt, to: threadsAt))"
+        )
         let proxy = ScrollOffset.proxy(.top, id: self.columnVMid)
         L.og.debug("☘️☘️ \(config.name) processToScreen() danglers: \(danglers.count) partialThreadsWithParent: \(partialThreadsWithParent.count) offset: \(proxy.offset) -[LOG]-")
 #endif
@@ -3898,19 +3964,22 @@ extension NXColumnViewModel {
         case .picture, .vine, .yak: true
         default: false
         }
-        let wotFilteredEvents: [Event] = ((wotEnabled || isMediaFeed) ? applyWoT(events, config: config) : events)
-            
-        let seenFilteredEvents: [Event] = wotFilteredEvents
-            .filter { // Apply (app wide) already-seen filter
-                if allShortIdsSeen.contains($0.shortId) { return false } // remove already seen normal posts
-                if $0.kind == 6, let firstQuoteId = $0.firstQuoteId, allShortIdsSeen.contains(String(firstQuoteId.prefix(8))) { // remove already seen reposted posts
-                    return false
-                }
+        let isSeen: (Event) -> Bool = {
+            if allShortIdsSeen.contains($0.shortId) { return true }
+            if $0.kind == 6,
+               let firstQuoteId = $0.firstQuoteId,
+               allShortIdsSeen.contains(String(firstQuoteId.prefix(8))) {
                 return true
             }
-        
-        let timeFilteredEvents: [Event] = seenFilteredEvents
-            .filter {
+            return false
+        }
+
+        // Apply the time window before WoT and parent/thread work. The initial
+        // latest screen normally prefers unseen events. If fewer than a full
+        // screen are unseen, however, use the newest eligible events instead of
+        // repeatedly querying the same 50 rows and eventually revealing one
+        // stale unseen post (common in Explore).
+        let timeFilteredEvents: [Event] = events.filter {
                 if !older {
                     return $0.created_at > Int64(sinceOrUntil) // skip all older than first on screen (check LEAFS only)
                 }
@@ -3918,10 +3987,24 @@ extension NXColumnViewModel {
                     return Int64(sinceOrUntil) > $0.created_at // skip all newer than last on screen (check LEAFS only)
                 }
             }
+        let wotFilteredEvents: [Event] = ((wotEnabled || isMediaFeed)
+            ? applyWoT(timeFilteredEvents, config: config)
+            : timeFilteredEvents)
+        let unseenEvents = wotFilteredEvents.filter { !isSeen($0) }
+        let isHeldFirstPaint = !older
+            && latestFirstPaintMinimum != nil
+            && currentNRPostsOnScreen.isEmpty
+        let candidateEvents = if isHeldFirstPaint,
+                                 unseenEvents.count < LATEST_FEED_FIRST_PAINT_COUNT {
+            wotFilteredEvents
+        }
+        else {
+            unseenEvents
+        }
         // First paint only needs a screenful. Building parent threads for
         // the whole firehose is what pushed p1 past 3s with 50+ extras.
         let eventsToRender = firstPaintEventCap(
-            from: timeFilteredEvents,
+            from: candidateEvents,
             older: older,
             onScreenCount: currentNRPostsOnScreen.count
         )
@@ -3938,7 +4021,10 @@ extension NXColumnViewModel {
             // First paint / empty latest feed: show newest local posts even if
             // they were already seen. Remember-off after 2 minutes is "latest now".
             if case .loading = viewState {
-                let fallbackEvents = firstPaintEventCap(from: wotFilteredEvents, older: false)
+                let fallbackCandidates = ((wotEnabled || isMediaFeed)
+                    ? applyWoT(events, config: config)
+                    : events)
+                let fallbackEvents = firstPaintEventCap(from: fallbackCandidates, older: false)
                     .map {
                         $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0)
                         return $0
@@ -3987,7 +4073,13 @@ extension NXColumnViewModel {
         }
         
         // if following feed, always show all the pubkeys
-        if case .following(_) = config.columnType {
+        if case .following(let feed) = config.columnType {
+            // Explore is already restricted to its curated pubkey snapshot.
+            // Applying the active account's personal WoT here discarded nearly
+            // every recent Explore post and eventually revealed one stale match.
+            if feed.accountPubkey == EXPLORER_PUBKEY {
+                return events
+            }
             return events.filter { $0.inWoT } // still need to filter because hashtags (somehow appears when scrolling older posts
         }
         
@@ -4390,8 +4482,20 @@ extension NXColumnViewModel {
     
     @MainActor
     private func loadRemote(_ config: NXColumnConfig) async {
+        // Cold launch can schedule the same Remember-off feed through both the
+        // initial appearance and the app-wide resume pass. Starting the second
+        // request cancels phase one and queues an identical Core Data read, so
+        // the otherwise-ready first result is discarded. Keep the active latest
+        // session; explicit reload/resume paths cancel it before coming here.
+        if !config.continue, gapFiller?.hasActiveLatestRequest == true {
+#if DEBUG
+            recordFeedAction("remote fetch coalesced · latest request already active")
+#endif
+            return
+        }
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) loadRemote(config) -[LOG]-")
+        recordFeedAction("remote fetch started · first-paint target \(LATEST_FEED_FIRST_PAINT_COUNT)")
 #endif
         
         switch config.columnType {
@@ -4839,7 +4943,7 @@ let DEFAULT_REQ_LIMIT: Int? = 500
 // - Bottom append is a raw `existing + older` assign. Do not run the prepend
 //   pin/settle on that path — it scrollToItem's a stale reading post.
 // Remember-on fetchGap is intentionally unchanged.
-let LATEST_FEED_FIRST_PAINT_COUNT = IS_CATALYST ? 6 : 10
+let LATEST_FEED_FIRST_PAINT_COUNT = 6
 let LATEST_FEED_FIRST_PAINT_EVENT_CAP = LATEST_FEED_FIRST_PAINT_COUNT + 2
 let LATEST_FEED_FIRST_PAINT_LIMIT = 20
 /// Sparse feeds can be force-revealed below the first-paint target and must still load older pages.

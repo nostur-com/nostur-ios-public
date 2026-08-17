@@ -23,6 +23,11 @@ class NXGapFiller {
     private var backlog: Backlog
     private var completionTracker: BoundedRelayRequestCompletionTracker?
     private var boundedSubscriptionId: String?
+
+    @MainActor
+    var hasActiveLatestRequest: Bool {
+        boundedSubscriptionId != nil || completionTracker != nil
+    }
     
     private var windowStart: Int { // Depending on older or not we use start/end as since/until
         return Int(since) + (currentGap * 3600 * windowSize)

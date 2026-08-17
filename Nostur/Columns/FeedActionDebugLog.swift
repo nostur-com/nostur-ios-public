@@ -52,8 +52,10 @@ final class FeedActionDebugLog: ObservableObject {
 
     private static let visibilityKey = "feed_action_debug_overlay"
     private static let maximumEntries = 10
+    private static let maximumFirstRenderEntries = 24
 
     @Published private(set) var entries: [Entry] = []
+    @Published private(set) var firstRenderEntries: [Entry] = []
     @Published private(set) var isVisible: Bool
     @Published private(set) var firstRenderMetric: FirstRenderMetric?
     @Published private(set) var isMeasuringFirstRender = false
@@ -68,6 +70,7 @@ final class FeedActionDebugLog: ObservableObject {
     }
 
     func beginFirstRenderMeasurement(currentPostCount: Int, at date: Date = Date()) {
+        firstRenderEntries.removeAll(keepingCapacity: true)
         if currentPostCount > 0 {
             firstRenderStartedAt = nil
             isMeasuringFirstRender = false
@@ -80,9 +83,16 @@ final class FeedActionDebugLog: ObservableObject {
     }
 
     func record(_ message: String, at date: Date = Date()) {
-        entries.append(Entry(date: date, message: message))
+        let entry = Entry(date: date, message: message)
+        entries.append(entry)
         if entries.count > Self.maximumEntries {
             entries.removeFirst(entries.count - Self.maximumEntries)
+        }
+        if isMeasuringFirstRender {
+            firstRenderEntries.append(entry)
+            if firstRenderEntries.count > Self.maximumFirstRenderEntries {
+                firstRenderEntries.removeFirst(firstRenderEntries.count - Self.maximumFirstRenderEntries)
+            }
         }
         completeFirstRenderMeasurementIfNeeded(message: message, at: date)
     }
@@ -97,15 +107,21 @@ final class FeedActionDebugLog: ObservableObject {
 
     func clear() {
         entries.removeAll(keepingCapacity: true)
+        firstRenderEntries.removeAll(keepingCapacity: true)
     }
 
     func report(feedName: String, currentState: String) -> String {
         let actionLines = entries.isEmpty
             ? "(no feed actions recorded yet)"
             : entries.map(\.line).joined(separator: "\n")
+        let firstRenderLines = firstRenderEntries.isEmpty
+            ? "(no first-render actions recorded)"
+            : firstRenderEntries.map(\.line).joined(separator: "\n")
         return """
         Feed action log: \(feedName)
         First posts: \(firstRenderReport)
+        First-render trace:
+        \(firstRenderLines)
         Current: \(currentState)
         Last \(entries.count) actions:
         \(actionLines)

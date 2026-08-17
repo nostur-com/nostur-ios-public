@@ -54,7 +54,8 @@ class Importer {
     // Importing, socket parsing, and feed-local reads intentionally share the
     // same managed object context. Never drain an unbounded relay backlog in a
     // single perform block: doing so prevents every queued UI read from running.
-    private static let maxEventsPerImportPass = 24
+    private static let maxEventsPerImportPass = 6
+    private static let maxImportPassDuration: TimeInterval = 0.04
     
     private let normalImportGate = ImportPassGate()
     private let priorityImportGate = ImportPassGate()
@@ -214,7 +215,9 @@ class Importer {
                 // We send a notification every .save with the saved subscriptionIds
                 // so other parts of the system can start fetching from local db
                 var subscriptionIds = Set<String>()
+                let passStartedAt = Date()
                 while count < Self.maxEventsPerImportPass,
+                      (count == 0 || Date().timeIntervalSince(passStartedAt) < Self.maxImportPassDuration),
                       let message = MessageParser.shared.popFirstNormalMessage() {
                     count = count + 1
                     guard let event = message.event else {
@@ -372,8 +375,10 @@ class Importer {
                 var count = 0
                 var alreadyInDBskipped = 0
                 var saved = 0
-                
+
+                let passStartedAt = Date()
                 while count < Self.maxEventsPerImportPass,
+                      (count == 0 || Date().timeIntervalSince(passStartedAt) < Self.maxImportPassDuration),
                       let message = MessageParser.shared.popFirstPrioMessage() {
                     count = count + 1
                     guard let event = message.event else {
