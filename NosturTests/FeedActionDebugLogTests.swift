@@ -65,6 +65,18 @@ struct FeedActionDebugLogTests {
         #expect(log.firstRenderMetric.map(log.metricResult) == "CHECK TIMED OUT")
     }
 
+    @Test("Keeps a resume-sized burst instead of dropping prepend lines")
+    func keepsResumeBurst() {
+        let log = FeedActionDebugLog()
+        let start = Date(timeIntervalSince1970: 100)
+        for index in 0..<45 {
+            log.recordSynchronouslyForTesting("event \(index)", at: start.addingTimeInterval(Double(index) * 0.01))
+        }
+        #expect(log.entries.count == 45)
+        #expect(log.entries.first?.message == "event 0")
+        #expect(log.entries.last?.message == "event 44")
+    }
+
     @Test("Uses strict two- and four-second performance thresholds")
     func ratesPerformance() {
         #expect(FeedActionDebugLog.FirstRenderMetric(duration: 1.99, postCount: 1).rating == .fast)

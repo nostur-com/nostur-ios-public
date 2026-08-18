@@ -49,7 +49,33 @@ class NXColumnViewModel: ObservableObject {
         let reading = (vmInner.readingPostID ?? vmInner.pendingScrollToPostID).map(shortDebugID) ?? "none"
         let first = posts.first.map { shortDebugID($0.id) } ?? "none"
         let last = posts.last.map { shortDebugID($0.id) } ?? "none"
-        return "\(posts.count) posts · y \(offset) · \(motion) · top \(vmInner.isAtTop) · anchor \(reading) · ids \(first)…\(last)"
+        return "\(posts.count) posts · y \(offset) · \(motion) · top \(vmInner.isAtTop) · anchor \(reading) · ids \(first)…\(last) · \(feedActionDebugViewport())"
+    }
+
+    @MainActor
+    func feedActionDebugViewport() -> String {
+        let postCount = currentNRPostsOnScreen.count
+        guard let scrollView = collectionView ?? tableView else {
+            return "size ? · remain ? · estRow ? · win 0"
+        }
+        let y = scrollView.contentOffset.y
+        let insetTop = scrollView.adjustedContentInset.top
+        let boundsHeight = scrollView.bounds.height
+        let contentHeight = scrollView.contentSize.height
+        let visibleBottom = y + boundsHeight - scrollView.adjustedContentInset.bottom
+        let remaining = max(0, contentHeight - visibleBottom)
+        let prefetch = max(1_200, boundsHeight * 2.5)
+        let estimatedRow = postCount > 0 ? contentHeight / CGFloat(postCount) : 0
+        let atTop = NXFeedViewport.isOffsetAtTop(contentOffsetY: y, insetTop: insetTop)
+        return String(
+            format: "size %.0f · remain %.0f/%.0f · estRow %.0f · visualTop %d · win %d",
+            contentHeight,
+            remaining,
+            prefetch,
+            estimatedRow,
+            atTop ? 1 : 0,
+            scrollView.window != nil ? 1 : 0
+        )
     }
 
     @MainActor
@@ -139,7 +165,7 @@ class NXColumnViewModel: ObservableObject {
             let oldPosts = currentNRPostsOnScreen
             let oldIDs = Set(oldPosts.map(\.id))
             let requestedNewCount = posts.count { !oldIDs.contains($0.id) }
-            performAnchoredFeedUpdate("newer posts") { [weak self] in
+            performAnchoredFeedUpdate(NXFeedViewport.prependCoverReason) { [weak self] in
                 guard let self else { return [] }
                 let currentPosts = self.currentNRPostsOnScreen
                 let desiredIDs = Set(posts.map(\.id))
@@ -160,7 +186,7 @@ class NXColumnViewModel: ObservableObject {
                     ? " · preserved \(preservedWhileWaiting) older appended while queued"
                     : ""
                 self.recordFeedAction(
-                    "inserted \(requestedNewCount) newer at top · \(currentPosts.count)→\(rebasedPosts.count)\(preservedSuffix)"
+                    "inserted \(requestedNewCount) newer at top · \(currentPosts.count)→\(rebasedPosts.count)\(preservedSuffix) · \(self.feedActionDebugViewport())"
                 )
 #endif
                 return rebasedPosts.map(\.id)
@@ -640,9 +666,12 @@ class NXColumnViewModel: ObservableObject {
                 return
             }
 #if DEBUG
-            self.recordFeedAction(
-                "local read admitted · coordinator \(self.debugSeconds(since: request.requestedAt)) · \(request.older ? "older" : "newer")"
-            )
+            let coordinatorWait = Date().timeIntervalSince(request.requestedAt)
+            if coordinatorWait >= 0.05 {
+                self.recordFeedAction(
+                    "FETCH \(request.older ? "older" : "newer") · coordinator delayed \(self.debugSeconds(since: request.requestedAt))"
+                )
+            }
 #endif
             self._loadLocal(
                 request.config,
@@ -1665,7 +1694,9 @@ class NXColumnViewModel: ObservableObject {
     public func resumeViewUpdates() {
         guard let config, isViewPaused else { return }
         isViewPaused = false
-        
+#if DEBUG
+        recordFeedAction("RESUME view updates · \(feedActionDebugViewport())")
+#endif
         self.loadLocal(config)
     }
     
@@ -1681,6 +1712,7 @@ class NXColumnViewModel: ObservableObject {
         
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) pause() -[LOG]-")
+        recordFeedAction("PAUSE · \(feedActionDebugViewport())")
 #endif
         paused = true
         self.lastResumeStartedAt = nil
@@ -1773,6 +1805,7 @@ class NXColumnViewModel: ObservableObject {
         if let lastResumeStartedAt, now.timeIntervalSince(lastResumeStartedAt) < 2.0 {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) resume() skipped, already resumed recently -[LOG]-")
+            recordFeedAction("RESUME skip · already resumed <2s · \(feedActionDebugViewport())")
 #endif
             return
         }
@@ -1787,6 +1820,9 @@ class NXColumnViewModel: ObservableObject {
         lastBecameInactiveAt = nil
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop) away: \(awayFor)s -[LOG]-")
+        recordFeedAction(
+            "RESUME · away \(String(format: "%.1f", awayFor))s · continue \(config.continue) · \(feedActionDebugViewport())"
+        )
 #endif
         paused = false
         isViewPaused = false
@@ -2347,11 +2383,6 @@ class NXColumnViewModel: ObservableObject {
             bg().perform { [weak self] in
                 guard let self else { return }
                 let queryStartedAt = Date()
-#if DEBUG
-                self.recordFeedActionFromBackground(
-                    "local DB turn · waited \(self.debugSeconds(since: requestedAt)) · following"
-                )
-#endif
                 let fr = if !older {
                     Event.postsByPubkeys(followingPubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
@@ -2360,8 +2391,9 @@ class NXColumnViewModel: ObservableObject {
                 }
                 let events: [Event] = (try? bg().fetch(fr)) ?? []
 #if DEBUG
+                let dbSeconds = self.debugSeconds(since: queryStartedAt)
                 self.recordFeedActionFromBackground(
-                    "local DB fetched \(events.count) · \(self.debugSeconds(since: queryStartedAt)) · following"
+                    "FETCH \(older ? "older" : "newer") · db \(events.count) in \(dbSeconds) · following"
                 )
 #endif
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
@@ -2433,12 +2465,6 @@ class NXColumnViewModel: ObservableObject {
             bg().perform { [weak self] in
                 guard let self else { return }
                 let queryStartedAt = Date()
-#if DEBUG
-                self.recordFeedActionFromBackground(
-                    "local DB turn · waited \(self.debugSeconds(since: requestedAt)) · pubkeys"
-                )
-#endif
-                
                 let fr = if !older {
                     Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
@@ -2447,8 +2473,9 @@ class NXColumnViewModel: ObservableObject {
                 }
                 let events: [Event] = (try? bg().fetch(fr)) ?? []
 #if DEBUG
+                let dbSeconds = self.debugSeconds(since: queryStartedAt)
                 self.recordFeedActionFromBackground(
-                    "local DB fetched \(events.count) · \(self.debugSeconds(since: queryStartedAt)) · pubkeys"
+                    "FETCH \(older ? "older" : "newer") · db \(events.count) in \(dbSeconds) · pubkeys"
                 )
 #endif
 
@@ -2501,12 +2528,6 @@ class NXColumnViewModel: ObservableObject {
             bg().perform { [weak self] in
                 guard let self else { return }
                 let queryStartedAt = Date()
-#if DEBUG
-                self.recordFeedActionFromBackground(
-                    "local DB turn · waited \(self.debugSeconds(since: requestedAt)) · relays"
-                )
-#endif
-                
                 let fr = if !older {
                     Event.postsByRelays(relaysData, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
@@ -2515,8 +2536,9 @@ class NXColumnViewModel: ObservableObject {
                 }
                 let events: [Event] = (try? bg().fetch(fr)) ?? []
 #if DEBUG
+                let dbSeconds = self.debugSeconds(since: queryStartedAt)
                 self.recordFeedActionFromBackground(
-                    "local DB fetched \(events.count) · \(self.debugSeconds(since: queryStartedAt)) · relays"
+                    "FETCH \(older ? "older" : "newer") · db \(events.count) in \(dbSeconds) · relays"
                 )
 #endif
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration, completion: completion)
@@ -3617,6 +3639,7 @@ class NXColumnViewModel: ObservableObject {
                     
 #if DEBUG
                     L.og.debug("☘️☘️ \(config.name) listenForNewPosts.subscriptionIds \(subscriptionIds) -[LOG]-")
+                    self.recordFeedAction("FETCH newer · listenForNewPosts / import · \(self.feedActionDebugViewport())")
 #endif
                     
                     self.loadLocal(activeConfig)
@@ -4004,7 +4027,7 @@ extension NXColumnViewModel {
 #if DEBUG
         let threadsAt = Date()
         recordFeedActionFromBackground(
-            "transform \(events.count)→\(preparedEvents.count)→\(partialThreadsWithParent.count) · prepare \(debugSeconds(from: transformStartedAt, to: preparedAt)) · NR \(debugSeconds(from: preparedAt, to: nrPostsAt)) · threads \(debugSeconds(from: nrPostsAt, to: threadsAt))"
+            "FETCH \(older ? "older" : "newer") · \(events.count)→\(preparedEvents.count)→\(partialThreadsWithParent.count) · prepare \(debugSeconds(from: transformStartedAt, to: preparedAt)) · NR \(debugSeconds(from: preparedAt, to: nrPostsAt)) · threads \(debugSeconds(from: nrPostsAt, to: threadsAt))"
         )
         let proxy = ScrollOffset.proxy(.top, id: self.columnVMid)
         L.og.debug("☘️☘️ \(config.name) processToScreen() danglers: \(danglers.count) partialThreadsWithParent: \(partialThreadsWithParent.count) offset: \(proxy.offset) -[LOG]-")
@@ -4351,6 +4374,9 @@ extension NXColumnViewModel {
                 }
 #if DEBUG
                 L.og.debug("☘️☘️ \(config.name) putOnScreen isAtTop: \(isAtTop) addedPosts (TOP) \(onlyNewAddedPosts.count.description) -> OLD FIRST: \((existingPosts.first?.content ?? "").prefix(150))  -[LOG]-")
+                recordFeedAction(
+                    "PREPEND decide · visualTop \(isAtTop) · added \(onlyNewAddedPosts.count) · existing \(existingPosts.count) · reading \((vmInner.readingPostID ?? vmInner.pendingScrollToPostID).map(shortDebugID) ?? "none") · \(feedActionDebugViewport())"
+                )
 #endif
    
                 let addedAndExistingPosts = onlyNewAddedPosts + existingPosts
@@ -4429,7 +4455,7 @@ extension NXColumnViewModel {
 #if DEBUG
                     let positioning = SettingsStore.shared.autoScroll ? "auto-scroll" : "restore first post"
                     recordFeedAction(
-                        "inserted \(onlyNewAddedPosts.count) newer at top · \(existingPosts.count)→\(addedAndExistingPostsTruncated.count) · \(positioning)"
+                        "inserted \(onlyNewAddedPosts.count) newer at top · \(existingPosts.count)→\(addedAndExistingPostsTruncated.count) · \(positioning) · \(feedActionDebugViewport())"
                     )
 #endif
                 }
@@ -4462,6 +4488,11 @@ extension NXColumnViewModel {
                 // SwiftUI List can reconcile self-sizing rows against estimated heights
                 // when its identity changes during drag/deceleration, moving the viewport
                 // backward. Queue the append until idle, but do not manually correct it.
+#if DEBUG
+                recordFeedAction(
+                    "APPEND decide · +\(postsToAppend.count) · will cancel settle · \(feedActionDebugViewport())"
+                )
+#endif
                 vmInner.abortPreparedScrollRestore()
                 vmInner.cancelPendingFeedSettle?()
                 let applyAppend = { [weak self] () -> [String] in
@@ -4483,7 +4514,7 @@ extension NXColumnViewModel {
                     }
 #if DEBUG
                     self.recordFeedAction(
-                        "appended \(actualPostsToAppend.count) older at end after idle · \(currentPosts.count)→\(appendedPosts.count)"
+                        "appended \(actualPostsToAppend.count) older at end after idle · \(currentPosts.count)→\(appendedPosts.count) · \(self.feedActionDebugViewport())"
                     )
 #endif
                     // Pagination uses the visible count change to decide whether local data
@@ -4867,6 +4898,9 @@ extension NXColumnViewModel {
               !isViewPaused,
               !AppState.shared.appIsInBackground || IS_CATALYST
         else {
+#if DEBUG
+            recordPageSkipIfNeeded(trigger: trigger, reason: "paused/hidden/background")
+#endif
             return
         }
 
@@ -4876,10 +4910,22 @@ extension NXColumnViewModel {
             || vmInner.isPreparingForScrollRestore
             || latestQuietOlderAppend
             || olderPageLoadInFlight {
+#if DEBUG
+            let reason = [
+                suppressPaginationUntilRememberNewerLoad ? "remember-newer" : nil,
+                vmInner.isPreparingForScrollRestore ? "restore" : nil,
+                latestQuietOlderAppend ? "quiet-append" : nil,
+                olderPageLoadInFlight ? "in-flight" : nil
+            ].compactMap { $0 }.joined(separator: "+")
+            recordPageSkipIfNeeded(trigger: trigger, reason: reason)
+#endif
             return
         }
 
         if let paginationRetryNotBefore, Date() < paginationRetryNotBefore {
+#if DEBUG
+            recordPageSkipIfNeeded(trigger: trigger, reason: "retry-wait")
+#endif
             return
         }
 
@@ -4889,16 +4935,31 @@ extension NXColumnViewModel {
         if let previousRequest = lastPaginationRequest,
            previousRequest.until == effectiveUntil,
            now.timeIntervalSince(previousRequest.requestedAt) < 0.4 {
+#if DEBUG
+            recordPageSkipIfNeeded(trigger: trigger, reason: "debounce")
+#endif
             return
         }
 
         lastPaginationRequest = (effectiveUntil, now)
         didPrefetchOlderPage = true
 #if DEBUG
-        recordFeedAction("requested older page · \(trigger) · cursor \(effectiveUntil)")
+        recordFeedAction(
+            "PAGE request · \(trigger) · cursor \(effectiveUntil) · \(feedActionDebugViewport())"
+        )
 #endif
         onAppearSubject.send(effectiveUntil)
     }
+
+#if DEBUG
+    @MainActor
+    private func recordPageSkipIfNeeded(trigger: String, reason: String) {
+        // Lead/tail appear-skips are constant while scrolling. The false
+        // near-tail hypothesis is the 2.5-screen path, so only log that.
+        guard trigger == "2.5-screen threshold" else { return }
+        recordFeedAction("PAGE skip · \(trigger) · \(reason) · \(feedActionDebugViewport())")
+    }
+#endif
     
     @MainActor
     public func scrollToFirstUnread() {

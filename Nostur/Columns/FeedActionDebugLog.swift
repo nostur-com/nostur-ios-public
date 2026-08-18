@@ -73,7 +73,7 @@ final class FeedActionDebugLog: ObservableObject {
     }
 
     private static let visibilityKey = "feed_action_debug_overlay"
-    private static let maximumEntries = 10
+    private static let maximumEntries = 60
     private static let maximumFirstRenderEntries = 24
 
     @Published private(set) var entries: [Entry] = []
@@ -151,6 +151,10 @@ final class FeedActionDebugLog: ObservableObject {
     func clear() {
         entries.removeAll(keepingCapacity: true)
         firstRenderEntries.removeAll(keepingCapacity: true)
+        firstRenderStartedAt = nil
+        isMeasuringFirstRender = false
+        firstRenderMetric = nil
+        restoredPostsDuringMeasurement = false
     }
 
     func report(feedName: String, currentState: String) -> String {
@@ -295,12 +299,17 @@ struct FeedActionDebugOverlay: View {
                 Text("Waiting for feed activity…")
                     .foregroundStyle(.white.opacity(0.65))
             } else {
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(log.entries) { entry in
-                        Text(entry.line)
-                            .lineLimit(1)
+                Text("newest first · \(log.entries.count)/60 kept")
+                    .foregroundStyle(.white.opacity(0.45))
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 2) {
+                        ForEach(log.entries.reversed()) { entry in
+                            Text(entry.line)
+                                .lineLimit(2)
+                        }
                     }
                 }
+                .frame(maxHeight: 260)
             }
         }
         .font(.caption2.monospaced())

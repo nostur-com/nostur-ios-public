@@ -48,6 +48,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private var lastUserScrollAt: CFTimeInterval = 0
     private var scrollObservations: [NSKeyValueObservation] = []
     private var lastApproachingBottomSignalAt: CFTimeInterval = 0
+    private var prependSnapshot: UIView?
+    private var prependSnapshotGeneration = 0
     /// Fired on content-offset changes (status-bar tap-to-top, fling, etc.).
     var onViewportChange: (() -> Void)?
     /// Fired at a low frequency when less than a few screens of content remain.
@@ -67,6 +69,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             observeScrollGeometry(of: scrollView)
         }
         guard replaced, !isSuspended, let anchor = pendingRestoreAnchor else { return }
+#if DEBUG
+        onDebugAction?(
+            "VIEW attach restore · \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset)) · \(viewportDebugSummary())"
+        )
+#endif
         pendingRestoreAnchor = nil
         startSettling(anchor: anchor, extended: true, bringOnScreen: true)
     }
@@ -97,6 +104,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             suspendedAnchor = lastKnownAnchor ?? suspendedAnchor
         }
         isSuspended = true
+#if DEBUG
+        onDebugAction?("VIEW suspend pin · \(anchorSummary(in: scrollView))")
+#endif
+        removePrependSnapshot()
         cancelPendingWork()
 
         let updates = pendingUpdates
@@ -107,6 +118,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     func resumePositionTracking() {
         isSuspended = false
+#if DEBUG
+        onDebugAction?(
+            "VIEW resume pin · \(suspendedAnchor.map { "\(shortID($0.id)) @ \(String(format: "%.1f", $0.visibleTopOffset))" } ?? "none") · \(viewportDebugSummary())"
+        )
+#endif
         guard let anchor = suspendedAnchor else { return }
         suspendedAnchor = nil
         lastKnownAnchor = anchor
@@ -118,6 +134,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         settleTask?.cancel()
         settleTask = nil
         anchorGeneration += 1
+        removePrependSnapshot()
     }
 
     func cancelProgrammaticScroll() {
@@ -127,10 +144,18 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     /// Bottom inserts must not run a leftover prepend settle / restore pin.
     func cancelPendingSettle() {
+#if DEBUG
+        if settleTask != nil || pendingRestoreAnchor != nil {
+            onDebugAction?(
+                "SETTLE cancelled · pin \(pendingRestoreAnchor.map { shortID($0.id) } ?? "none") · \(anchorSummary(in: scrollView))"
+            )
+        }
+#endif
         anchorGeneration += 1
         settleTask?.cancel()
         settleTask = nil
         pendingRestoreAnchor = nil
+        removePrependSnapshot()
     }
 
     func finishProgrammaticScroll(finalPosition: () -> Void) async {
@@ -235,6 +260,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         }
 
         guard let scrollView, scrollView.window != nil else {
+#if DEBUG
+            onDebugAction?(
+                "PIN skipped · no window · \(reason) · pending \(lastKnownAnchor.map { shortID($0.id) } ?? "none")"
+            )
+#endif
             pendingRestoreAnchor = lastKnownAnchor ?? pendingRestoreAnchor
             update()
             return
@@ -295,6 +325,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             ?? lastKnownAnchor
             ?? pendingRestoreAnchor
 
+        // Photograph the current (correct) viewport before an unanimated
+        // mid-feed prepend paints the wrong post at the top.
+        if NXFeedViewport.shouldCoverPrepend(updateReasons: updates.map(\.reason)),
+           let scrollView {
+            coverViewportForPrepend(in: scrollView)
+        }
+
         updates.forEach { $0.apply() }
 
 #if DEBUG
@@ -318,6 +355,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         // prepend (or an explicit identity pin), where UIKit cannot infer our intended anchor.
         guard needsExtendedSettling else {
             pendingRestoreAnchor = nil
+            removePrependSnapshot()
             if let currentAnchor = scrollView.flatMap({ visibleAnchor(in: $0) }) {
                 lastKnownAnchor = currentAnchor
             }
@@ -330,11 +368,15 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             return
         }
 
-        guard let anchor = capturedAnchor else { return }
+        guard let anchor = capturedAnchor else {
+            removePrependSnapshot()
+            return
+        }
         lastKnownAnchor = anchor
 
         guard let scrollView, scrollView.window != nil else {
             pendingRestoreAnchor = anchor
+            removePrependSnapshot()
             return
         }
 
@@ -363,6 +405,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         // image/repost height changes only need one or two offset corrections.
         // Never run this loop during a user drag: it would fight the scroller.
         let maxSteps = extended ? 8 : 2
+#if DEBUG
+        onDebugAction?(
+            "SETTLE start · extended \(extended) · bringOnScreen \(bringOnScreen) · \(viewportDebugSummary()) · anchor \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset))"
+        )
+#endif
 
         settleTask = Task { @MainActor [weak self] in
             guard let self else { return }
@@ -370,6 +417,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             var stableSamples = 0
 #if DEBUG
             let startingOffset = self.scrollView?.contentOffset.y
+            var offsetAfterYield: CGFloat?
             var correctionCount = 0
 #endif
 
@@ -382,17 +430,21 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     || self.scrollView?.isDecelerating == true
                     || self.scrollView?.isTracking == true {
                     self.lastUserScrollAt = CACurrentMediaTime()
-                    self.pendingRestoreAnchor = nil
+                    self.endPrependSettle(generation: generation)
                     return
                 }
 
                 if self.scrollView == nil || self.scrollView?.window == nil {
                     self.pendingRestoreAnchor = anchor
+                    self.endPrependSettle(generation: generation)
                     return
                 }
 
                 if step == 0 {
                     await Task.yield()
+#if DEBUG
+                    offsetAfterYield = self.scrollView?.contentOffset.y
+#endif
                 } else {
                     try? await Task.sleep(nanoseconds: 16_000_000)
                 }
@@ -404,7 +456,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                       !scrollView.isDragging,
                       !scrollView.isDecelerating,
                       !scrollView.isTracking else {
-                    self.pendingRestoreAnchor = nil
+                    if Task.isCancelled || self.anchorGeneration != generation {
+                        return
+                    }
+                    self.endPrependSettle(generation: generation)
                     return
                 }
 
@@ -426,28 +481,30 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 } else {
                     stableSamples += 1
                     if stableSamples >= 2 {
-                        self.pendingRestoreAnchor = nil
 #if DEBUG
                         self.recordSettlingResult(
                             anchor: anchor,
                             correctionCount: correctionCount,
-                            startingOffset: startingOffset
+                            startingOffset: startingOffset,
+                            offsetAfterYield: offsetAfterYield
                         )
 #endif
+                        self.endPrependSettle(generation: generation)
                         return
                     }
                 }
             }
 
             if self.anchorGeneration == generation {
-                self.pendingRestoreAnchor = nil
 #if DEBUG
                 self.recordSettlingResult(
                     anchor: anchor,
                     correctionCount: correctionCount,
-                    startingOffset: startingOffset
+                    startingOffset: startingOffset,
+                    offsetAfterYield: offsetAfterYield
                 )
 #endif
+                self.endPrependSettle(generation: generation)
             }
         }
     }
@@ -456,13 +513,28 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private func recordSettlingResult(
         anchor: (id: String, visibleTopOffset: CGFloat),
         correctionCount: Int,
-        startingOffset: CGFloat?
+        startingOffset: CGFloat?,
+        offsetAfterYield: CGFloat?
     ) {
-        guard correctionCount > 0 else { return }
         let start = startingOffset.map { String(format: "%.1f", $0) } ?? "?"
+        let afterYield = offsetAfterYield.map { String(format: "%.1f", $0) } ?? "?"
         let end = scrollView.map { String(format: "%.1f", $0.contentOffset.y) } ?? "?"
         onDebugAction?(
-            "viewport corrected \(correctionCount)× · y \(start)→\(end) · anchor \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset))"
+            "SETTLE done · \(correctionCount)× · y \(start)→\(end) · afterYield \(afterYield) · anchor \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset)) · \(viewportDebugSummary())"
+        )
+    }
+
+    private func viewportDebugSummary() -> String {
+        guard let scrollView else { return "size ? · remain ? · estRow ?" }
+        let y = scrollView.contentOffset.y
+        let height = scrollView.bounds.height
+        let size = scrollView.contentSize.height
+        let remaining = max(0, size - (y + height - scrollView.adjustedContentInset.bottom))
+        let prefetch = max(1_200, height * 2.5)
+        let estimatedRow = itemIDs.isEmpty ? 0 : size / CGFloat(itemIDs.count)
+        return String(
+            format: "y %.1f · size %.0f · remain %.0f/%.0f · estRow %.0f · posts %d",
+            y, size, remaining, prefetch, estimatedRow, itemIDs.count
         )
     }
 
@@ -522,7 +594,21 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             scrollView.contentSize.height - scrollView.bounds.height + scrollView.adjustedContentInset.bottom
         )
         offset.y = min(max(offset.y, minOffsetY), maxOffsetY)
+#if DEBUG
+        let beforeY = scrollView.contentOffset.y
+#endif
         scrollView.setContentOffset(offset, animated: false)
+#if DEBUG
+        onDebugAction?(
+            String(
+                format: "SETTLE %+.1f · y %.1f→%.1f · %@",
+                correction,
+                beforeY,
+                scrollView.contentOffset.y,
+                shortID(anchor.id)
+            )
+        )
+#endif
         lastContentOffsetY = scrollView.contentOffset.y
         lastInsetTop = scrollView.adjustedContentInset.top
         return true
@@ -612,6 +698,48 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         flushTask = nil
         settleTask?.cancel()
         settleTask = nil
+        removePrependSnapshot()
+    }
+
+    private func coverViewportForPrepend(in scrollView: UIScrollView) {
+        guard prependSnapshot == nil else { return }
+        guard let snapshot = scrollView.snapshotView(afterScreenUpdates: false),
+              let superview = scrollView.superview else { return }
+
+        snapshot.frame = scrollView.frame
+        snapshot.isUserInteractionEnabled = false
+        superview.addSubview(snapshot)
+        prependSnapshot = snapshot
+        prependSnapshotGeneration += 1
+        let generation = prependSnapshotGeneration
+#if DEBUG
+        onDebugAction?("SNAPSHOT cover")
+#endif
+
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            guard let self, self.prependSnapshotGeneration == generation else { return }
+#if DEBUG
+            self.onDebugAction?("SNAPSHOT timeout · removed leftover cover")
+#endif
+            self.removePrependSnapshot()
+        }
+    }
+
+    private func endPrependSettle(generation: Int) {
+        pendingRestoreAnchor = nil
+        guard anchorGeneration == generation else { return }
+        removePrependSnapshot()
+    }
+
+    private func removePrependSnapshot() {
+        guard prependSnapshot != nil else { return }
+        prependSnapshot?.removeFromSuperview()
+        prependSnapshot = nil
+        prependSnapshotGeneration += 1
+#if DEBUG
+        onDebugAction?("SNAPSHOT remove")
+#endif
     }
 
     private func observeScrollGeometry(of scrollView: UIScrollView) {
@@ -658,6 +786,19 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         let now = CACurrentMediaTime()
         guard now - lastApproachingBottomSignalAt >= 0.35 else { return }
         lastApproachingBottomSignalAt = now
+#if DEBUG
+        onDebugAction?(
+            String(
+                format: "NEAR TAIL · remain %.0f / prefetch %.0f · size %.0f · y %.1f · posts %d · estRow %.0f",
+                remaining,
+                prefetchDistance,
+                scrollView.contentSize.height,
+                scrollView.contentOffset.y,
+                itemIDs.count,
+                itemIDs.isEmpty ? 0 : scrollView.contentSize.height / CGFloat(itemIDs.count)
+            )
+        )
+#endif
         onApproachingBottom?()
     }
 

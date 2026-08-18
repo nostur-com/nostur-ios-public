@@ -91,6 +91,14 @@ enum NXFeedIndexMapping {
 /// Visible-top relative feed coordinates. Safe-area / live-banner inset changes
 /// must not be baked into the stored reading position.
 enum NXFeedViewport {
+    /// `performAnchored` reason for a mid-feed newer-post insert. Used to cover
+    /// the viewport before the unanimated prepend paints.
+    static let prependCoverReason = "newer posts"
+
+    static func shouldCoverPrepend(updateReasons: [String]) -> Bool {
+        updateReasons.contains(prependCoverReason)
+    }
+
     /// Select the visible row that actually crosses the viewport's top edge. Falling back to
     /// the first row below the edge avoids anchoring a later row hundreds of points down when
     /// the partially visible top post is tall.

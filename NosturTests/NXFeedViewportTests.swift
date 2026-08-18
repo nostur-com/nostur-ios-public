@@ -11,6 +11,24 @@ final class NXFeedViewportTests: XCTestCase {
         let id: String
     }
 
+    func testPrependCoverIsOnlyForNewerPostInserts() {
+        XCTAssertTrue(
+            NXFeedViewport.shouldCoverPrepend(updateReasons: [NXFeedViewport.prependCoverReason])
+        )
+        XCTAssertTrue(
+            NXFeedViewport.shouldCoverPrepend(
+                updateReasons: ["media row resized", NXFeedViewport.prependCoverReason]
+            )
+        )
+        XCTAssertFalse(
+            NXFeedViewport.shouldCoverPrepend(updateReasons: ["older posts append"])
+        )
+        XCTAssertFalse(
+            NXFeedViewport.shouldCoverPrepend(updateReasons: ["media row resized", "repost row resolved"])
+        )
+        XCTAssertFalse(NXFeedViewport.shouldCoverPrepend(updateReasons: []))
+    }
+
     func testTopEdgeAnchorUsesPartiallyVisibleTallRow() {
         let frames = [
             CGRect(x: 0, y: 100, width: 390, height: 700),
