@@ -311,6 +311,9 @@ func startNosturing() async {
     else {
         await Maintenance.ensureBootstrapRelaysExist(context: bg())
     }
+
+    // Filtering must have its persisted snapshot before feeds and relay traffic start.
+    await WebOfTrust.shared.loadLocalSnapshotAtStartup()
     
     await Importer.shared.preloadExistingIdsCache() // 43 MB -> 103-132 MB (but if bg is child of store instead of viewContext: 74 MB)
 

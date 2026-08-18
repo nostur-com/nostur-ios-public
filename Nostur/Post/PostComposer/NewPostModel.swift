@@ -1220,6 +1220,7 @@ public final class NewPostModel: ObservableObject {
             clearActiveDraftKeepingUndoSnapshot()
             
             if let replyTo {
+                InteractionRecorder.shared.recordDirectInteraction(with: replyTo.nrPost.pubkey, kind: .reply)
                 bg().perform { // update ui
                     guard let bgEvent = replyTo.nrPost.event else { return }
                     let replyToId = bgEvent.id
@@ -1317,6 +1318,7 @@ public final class NewPostModel: ObservableObject {
         clearActiveDraftKeepingUndoSnapshot()
 
         if let replyTo {
+            InteractionRecorder.shared.recordDirectInteraction(with: replyTo.nrPost.pubkey, kind: .reply)
             let shouldRepublish = !replyTo.nrPost.isRestricted && !replyTo.nrPost.isPrivate
             
             bg().perform {

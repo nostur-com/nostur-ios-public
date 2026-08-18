@@ -112,6 +112,9 @@
         }
       }
     },
+    " to toggle)" : {
+
+    },
     "__Source code__" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -407,6 +410,9 @@
           }
         }
       }
+    },
+    "(%lld receive relays)" : {
+
     },
     "(%lld relays disabled)" : {
       "localizations" : {
@@ -1502,6 +1508,16 @@
         }
       }
     },
+    "%@ badge awarded by %@ to %lld recipients." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ badge awarded by %2$@ to %3$lld recipients."
+          }
+        }
+      }
+    },
     "%@ badge awarded to %@ by %@." : {
       "localizations" : {
         "en" : {
@@ -2196,6 +2212,9 @@
         }
       }
     },
+    "%lld existing private blocks are included." : {
+
+    },
     "%lld Following" : {
       "comment" : "Label for Following count",
       "localizations" : {
@@ -2264,6 +2283,7 @@
       }
     },
     "%lld more" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -3394,6 +3414,9 @@
     "About badge publishing" : {
 
     },
+    "About Discover more" : {
+
+    },
     "Accept" : {
       "comment" : "Button to accept terms and conditions",
       "localizations" : {
@@ -3802,6 +3825,9 @@
           }
         }
       }
+    },
+    "Add %lld blocks to Nostur" : {
+
     },
     "Add %lld contacts to custom feed" : {
       "comment" : "Post context menu button",
@@ -4394,6 +4420,9 @@
         }
       }
     },
+    "Add to profile" : {
+
+    },
     "Add to stage" : {
       "localizations" : {
         "es" : {
@@ -4557,6 +4586,9 @@
         }
       }
     },
+    "Added %lld blocks" : {
+
+    },
     "Advanced" : {
 
     },
@@ -4652,6 +4684,15 @@
           }
         }
       }
+    },
+    "All received badges are on your profile" : {
+
+    },
+    "Already in Nostur" : {
+
+    },
+    "Already saved" : {
+
     },
     "Amount (satoshis)" : {
       "localizations" : {
@@ -4807,6 +4848,9 @@
           }
         }
       }
+    },
+    "Anyone can see which accounts are blocked." : {
+
     },
     "App theme" : {
       "localizations" : {
@@ -5257,17 +5301,18 @@
         }
       }
     },
-    "Available badges" : {
+    "Award badge" : {
+
+    },
+    "Award details" : {
 
     },
     "Award history" : {
 
     },
-    "Award recipients" : {
-
-    },
     "Award to" : {
       "comment" : "Navigation title of screen where you choose who to award badge to",
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -5317,6 +5362,7 @@
     },
     "Awarded to %lld people" : {
       "comment" : "Text showing how many badges have been awarded",
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -5362,6 +5408,9 @@
         }
       }
     },
+    "Awarded to you and %lld others" : {
+
+    },
     "Awarding…" : {
 
     },
@@ -5403,7 +5452,10 @@
     "Badge identifier" : {
 
     },
-    "Badge name and description" : {
+    "Badge received" : {
+
+    },
+    "Badge unavailable" : {
 
     },
     "Badges" : {
@@ -6248,6 +6300,9 @@
     "chat" : {
       "comment" : "Label next to time indicating a live chat mention notification"
     },
+    "Check and prepare" : {
+
+    },
     "Check out the “%@” badge." : {
 
     },
@@ -6267,6 +6322,9 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "Checking existing blocks…" : {
+
     },
     "Checking relays for your blossom server list..." : {
       "localizations" : {
@@ -6701,6 +6759,9 @@
         }
       }
     },
+    "Clear All" : {
+
+    },
     "Clear all non-kept DM files?" : {
       "localizations" : {
         "es" : {
@@ -6833,6 +6894,12 @@
           }
         }
       }
+    },
+    "Clear Learned Web of Trust" : {
+
+    },
+    "Clear Learned Web of Trust?" : {
+
     },
     "Clear now" : {
       "localizations" : {
@@ -7095,6 +7162,9 @@
       },
       "shouldTranslate" : false
     },
+    "Combine safely" : {
+
+    },
     "Commenting on %@" : {
       "comment" : "Shown when adding a comment to a website",
       "localizations" : {
@@ -7211,6 +7281,12 @@
 
     },
     "community_builder" : {
+
+    },
+    "Configuration looks good" : {
+
+    },
+    "Configuration looks not optimal" : {
 
     },
     "Configure" : {
@@ -9748,6 +9824,9 @@
         }
       }
     },
+    "Details" : {
+
+    },
     "Direct Message Settings" : {
       "localizations" : {
         "es" : {
@@ -10095,6 +10174,18 @@
           }
         }
       }
+    },
+    "Discover more" : {
+
+    },
+    "Discover more temporarily searches additional sources without changing your saved feed setting." : {
+
+    },
+    "Discover more temporarily searches the discovery relays configured in Feed Settings. Your saved feed setting does not change." : {
+
+    },
+    "Discover more temporarily searches your Web of Trust. If nothing is found there, it also searches the discovery relays configured in Feed Settings. Your saved feed setting does not change." : {
+
     },
     "Discover Nostr" : {
       "localizations" : {
@@ -11388,9 +11479,6 @@
         }
       }
     },
-    "Event details" : {
-
-    },
     "Event ID" : {
 
     },
@@ -11416,6 +11504,12 @@
         }
       }
     },
+    "Everyone" : {
+
+    },
+    "Everyone on selected relays" : {
+
+    },
     "Example" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -11438,6 +11532,9 @@
           }
         }
       }
+    },
+    "Existing private items will be kept exactly as they are." : {
+
     },
     "Expand" : {
       "localizations" : {
@@ -11506,6 +11603,12 @@
           }
         }
       }
+    },
+    "Export to relays" : {
+
+    },
+    "Export to relays…" : {
+
     },
     "Extra information" : {
       "comment" : "Label for report field to give extra information",
@@ -12061,28 +12164,6 @@
         }
       }
     },
-    "Filter content to people you follow and people they follow" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filtra el contenido a las personas que sigues y a las que ellas siguen"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saring konten ke orang yang Anda ikuti dan orang yang mereka ikuti"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filter inhoud tot mensen die je volgt en mensen die zij volgen"
-          }
-        }
-      }
-    },
     "Filter contacts" : {
       "comment" : "Label to filter contacts",
       "localizations" : {
@@ -12102,6 +12183,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contacten filteren"
+          }
+        }
+      }
+    },
+    "Filter content to people you follow and people they follow" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtra el contenido a las personas que sigues y a las que ellas siguen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saring konten ke orang yang Anda ikuti dan orang yang mereka ikuti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter inhoud tot mensen die je volgt en mensen die zij volgen"
           }
         }
       }
@@ -12566,6 +12669,9 @@
           }
         }
       }
+    },
+    "Found" : {
+
     },
     "From" : {
 
@@ -13287,6 +13393,19 @@
         }
       }
     },
+    "I awarded the “%@” badge to %lld people." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "I awarded the “%1$@” badge to %2$lld people."
+          }
+        }
+      }
+    },
+    "I awarded the “%@” badge." : {
+
+    },
     "I created the “%@” badge." : {
 
     },
@@ -13503,6 +13622,15 @@
         }
       }
     },
+    "Import from relays" : {
+
+    },
+    "Import from relays…" : {
+
+    },
+    "Import or export blocks" : {
+
+    },
     "Import private key" : {
       "comment" : "Label for importing your private key on Edit Profile screen",
       "localizations" : {
@@ -13619,6 +13747,7 @@
       }
     },
     "Included hashtags" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -14259,6 +14388,9 @@
         }
       }
     },
+    "Last awarded" : {
+
+    },
     "Last optimize: %@" : {
       "comment" : "Last run: (date) of maintanace",
       "localizations" : {
@@ -14372,6 +14504,12 @@
           }
         }
       }
+    },
+    "Learned through interactions" : {
+
+    },
+    "Learned Web of Trust" : {
+
     },
     "Leave" : {
       "localizations" : {
@@ -15040,6 +15178,9 @@
         }
       }
     },
+    "Loading badge…" : {
+
+    },
     "Loading emoji sets…" : {
       "localizations" : {
         "es" : {
@@ -15084,6 +15225,9 @@
           }
         }
       }
+    },
+    "Loading older posts" : {
+
     },
     "Loading paused (Low data mode)" : {
       "comment" : "Displayed when a short video is blocked\nDisplayed when media in a post is blocked",
@@ -15249,6 +15393,18 @@
           }
         }
       }
+    },
+    "Looking for posts from people you follow…" : {
+
+    },
+    "Looking for posts from your web of trust…" : {
+
+    },
+    "Looking for posts on the selected relays…" : {
+
+    },
+    "Looking for saved blocks…" : {
+
     },
     "Looking up recipient DM relays…" : {
 
@@ -16695,6 +16851,9 @@
     "New badge" : {
 
     },
+    "New blocks" : {
+
+    },
     "New contacts list feed" : {
       "localizations" : {
         "es" : {
@@ -17357,9 +17516,6 @@
         }
       }
     },
-    "No additional valid badge awards found" : {
-
-    },
     "No articles found from your follow list in selected time frame." : {
       "localizations" : {
         "es" : {
@@ -17382,7 +17538,7 @@
         }
       }
     },
-    "No badges issued" : {
+    "No badges created" : {
 
     },
     "No Blossom server configured. Please configure a Blossom server in Nostur settings to upload images." : {
@@ -17483,6 +17639,9 @@
         }
       }
     },
+    "No existing block list found." : {
+
+    },
     "No internet connection" : {
       "comment" : "Relay no internet status",
       "localizations" : {
@@ -17505,6 +17664,9 @@
           }
         }
       }
+    },
+    "No learned contacts yet" : {
+
     },
     "No message requests" : {
       "comment" : "Shown on the DM requests view when there aren't any message requests to show",
@@ -17529,6 +17691,9 @@
         }
       }
     },
+    "No saved blocks found" : {
+
+    },
     "No stats collected yet." : {
       "localizations" : {
         "es" : {
@@ -17550,6 +17715,9 @@
           }
         }
       }
+    },
+    "No valid badge awards found" : {
+
     },
     "No verified wearers found" : {
 
@@ -17832,6 +18000,12 @@
         }
       }
     },
+    "Nostur could not check whether this account already has a block list. Publishing may replace an existing list that could not be found." : {
+
+    },
+    "Nostur could not find an existing block list." : {
+
+    },
     "Nostur crops the image to a square and creates the required sizes automatically." : {
 
     },
@@ -17904,6 +18078,15 @@
           }
         }
       }
+    },
+    "Nostur will first check what this account already saved, then combine it with your Nostur blocks." : {
+
+    },
+    "Nostur will look for blocks this account saved using other apps. Nothing changes until you confirm." : {
+
+    },
+    "Not on your profile" : {
+
     },
     "Not yet" : {
       "extractionState" : "stale",
@@ -18048,6 +18231,12 @@
           }
         }
       }
+    },
+    "Nothing new from your follows" : {
+
+    },
+    "Nothing new to import" : {
+
     },
     "Notices" : {
       "localizations" : {
@@ -18361,6 +18550,9 @@
         }
       }
     },
+    "On your profile" : {
+
+    },
     "Only connect to additional relays when a VPN is active" : {
       "localizations" : {
         "es" : {
@@ -18426,6 +18618,12 @@
           }
         }
       }
+    },
+    "Only me" : {
+
+    },
+    "Only posts from people you follow" : {
+
     },
     "Only show content from your follows or follows-follows" : {
       "localizations" : {
@@ -18648,6 +18846,9 @@
         }
       }
     },
+    "Other people may still be able to tell that a list was saved and roughly how large it is." : {
+
+    },
     "Outrage feed may or may not be available in a future release" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -18760,6 +18961,18 @@
           }
         }
       }
+    },
+    "People already included through follows remain in your Web of Trust." : {
+
+    },
+    "People I follow" : {
+
+    },
+    "People you reply or react to will appear here automatically." : {
+
+    },
+    "Permanent blocks in Nostur" : {
+
     },
     "PFP's here (max 10)" : {
       "extractionState" : "stale",
@@ -20618,6 +20831,21 @@
         }
       }
     },
+    "Publish a new list" : {
+
+    },
+    "Publish a new list anyway" : {
+
+    },
+    "Publish a new list with %lld blocks" : {
+
+    },
+    "Publish a new list with 1 block" : {
+
+    },
+    "Publish combined list" : {
+
+    },
     "Publish list now" : {
       "localizations" : {
         "es" : {
@@ -20729,6 +20957,12 @@
           }
         }
       }
+    },
+    "Publish without checking?" : {
+
+    },
+    "Published" : {
+
     },
     "Published relays" : {
       "extractionState" : "manual",
@@ -21103,6 +21337,9 @@
         }
       }
     },
+    "Read %lld private blocks." : {
+
+    },
     "read + write" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -21475,6 +21712,16 @@
     "Recipients" : {
 
     },
+    "Recommendation: reduce receive relays to %lld–%lld max (tap on the " : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recommendation: reduce receive relays to %1$lld–%2$lld max (tap on the "
+          }
+        }
+      }
+    },
     "Recommended by" : {
       "localizations" : {
         "es" : {
@@ -21766,6 +22013,15 @@
         }
       }
     },
+    "Relay configuration looks good" : {
+
+    },
+    "Relay configuration looks not optimal" : {
+
+    },
+    "Relay configuration looks not optimal." : {
+
+    },
     "Relay connection stats" : {
       "localizations" : {
         "es" : {
@@ -21970,7 +22226,7 @@
       }
     },
     "Relays" : {
-      "comment" : "Relay settings heading",
+      "comment" : "Navigation title for relays screen\nRelay settings heading",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -22373,6 +22629,9 @@
         }
       }
     },
+    "Remove from profile" : {
+
+    },
     "Remove from stage" : {
       "localizations" : {
         "es" : {
@@ -22394,9 +22653,6 @@
           }
         }
       }
-    },
-    "Remove from your profile" : {
-
     },
     "Remove imposter label" : {
       "comment" : "Button to remove 'possible imposter' label from a contact",
@@ -22553,6 +22809,9 @@
           }
         }
       }
+    },
+    "Replies and reactions" : {
+
     },
     "Reply" : {
 
@@ -23015,6 +23274,9 @@
           }
         }
       }
+    },
+    "Reposted post unavailable" : {
+
     },
     "reposts" : {
       "comment" : "Label for reposts count, example: (7) reposts",
@@ -23517,6 +23779,9 @@
           }
         }
       }
+    },
+    "Retry loading badge" : {
+
     },
     "Retry with authentication" : {
       "localizations" : {
@@ -24031,6 +24296,12 @@
           }
         }
       }
+    },
+    "Search learned contacts" : {
+
+    },
+    "Search on relays" : {
+
     },
     "Search..." : {
       "comment" : "Placeholder text in a search input box",
@@ -24797,6 +25068,15 @@
     "Share as image" : {
 
     },
+    "Share award" : {
+
+    },
+    "Share award as image" : {
+
+    },
+    "Share award in a post" : {
+
+    },
     "Share badge" : {
 
     },
@@ -24899,9 +25179,6 @@
           }
         }
       }
-    },
-    "Share this badge" : {
-
     },
     "Share this list with a different title" : {
       "localizations" : {
@@ -25515,7 +25792,7 @@
       },
       "shouldTranslate" : false
     },
-    "Show on your profile" : {
+    "Show new posts" : {
 
     },
     "Show post stats on timeline" : {
@@ -25812,9 +26089,6 @@
         }
       }
     },
-    "Shown on your profile" : {
-
-    },
     "Shows 'Shared from Nostur' caption when sharing post screenshots" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -25996,6 +26270,15 @@
           }
         }
       }
+    },
+    "Some existing private items could not be read. Saving is disabled so they are not lost." : {
+
+    },
+    "Some private blocks could not be read by this device." : {
+
+    },
+    "Some private blocks could not be read." : {
+
     },
     "Some relays may require authentication" : {
       "localizations" : {
@@ -26994,6 +27277,15 @@
         }
       }
     },
+    "Technical details" : {
+
+    },
+    "Temporary blocks skipped" : {
+
+    },
+    "Temporary blocks stay in Nostur because other apps would not know when to remove them." : {
+
+    },
     "Terms and Conditions" : {
       "localizations" : {
         "es" : {
@@ -27086,6 +27378,9 @@
       },
       "shouldTranslate" : false
     },
+    "Test build %@" : {
+
+    },
     "Test Toggle" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -27153,6 +27448,22 @@
           }
         }
       }
+    },
+    "The “%@” badge was awarded to %lld people." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The “%1$@” badge was awarded to %2$lld people."
+          }
+        }
+      }
+    },
+    "The “%@” badge was awarded." : {
+
+    },
+    "The account names are protected so only you can read them." : {
+
     },
     "The account to post from. Defaults to the currently active account if not specified." : {
       "localizations" : {
@@ -27276,6 +27587,9 @@
           }
         }
       }
+    },
+    "The existing block list could not be checked. Publishing may replace one that could not be found." : {
+
     },
     "The Gallery feed shows pictures most liked or reposted by people you follow in the last %lld hours" : {
       "localizations" : {
@@ -27552,6 +27866,9 @@
         }
       }
     },
+    "These blocks are visible to everyone." : {
+
+    },
     "These relays are used for all accounts, and are not announced unless configured on the account specific settings." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -27641,6 +27958,12 @@
           }
         }
       }
+    },
+    "This account cannot create a private list on this device." : {
+
+    },
+    "This account does not appear to have a saved block list yet." : {
+
     },
     "This article has been updated" : {
       "comment" : "Message shown when there is a newer version available of an article",
@@ -28549,6 +28872,9 @@
         }
       }
     },
+    "Total after combining" : {
+
+    },
     "Total: %lld" : {
       "localizations" : {
         "es" : {
@@ -28988,6 +29314,9 @@
           }
         }
       }
+    },
+    "Unable to fetch reposted post" : {
+
     },
     "Unable to load conversation" : {
       "localizations" : {
@@ -29962,6 +30291,9 @@
       },
       "shouldTranslate" : false
     },
+    "Visibility" : {
+
+    },
     "Voice" : {
       "localizations" : {
         "es" : {
@@ -30503,6 +30835,9 @@
         }
       }
     },
+    "Who can see the blocks?" : {
+
+    },
     "Will not download media and previews" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -30575,7 +30910,6 @@
     "Worn by" : {
 
     },
-
     "write" : {
       "localizations" : {
         "es" : {
@@ -30960,6 +31294,9 @@
           }
         }
       }
+    },
+    "Your existing Nostur blocks will not be removed." : {
+
     },
     "Your name" : {
       "comment" : "Label for entering your name on Edit Profile screen",

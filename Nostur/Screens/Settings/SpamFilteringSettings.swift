@@ -11,6 +11,7 @@ import NavigationBackport
 struct SpamFilteringSettings: View {
     @ObservedObject private var settings: SettingsStore = .shared
     @ObservedObject private var wot = WebOfTrust.shared
+    @ObservedObject private var learnedWoT = LearnedWoTStore.shared
     @AppStorage("wotDunbarNumber") private var wotDunbarNumber: Int = 1000
     @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
     
@@ -127,6 +128,17 @@ struct SpamFilteringSettings: View {
                         }
                     }
                 }.font(.caption).foregroundColor(.secondary)
+
+                NavigationLink {
+                    LearnedWoTView()
+                } label: {
+                    HStack {
+                        Label("Learned through interactions", systemImage: "person.badge.clock")
+                        Spacer()
+                        Text("\(learnedWoT.entries.count)")
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
             
             VStack(alignment: .leading) {

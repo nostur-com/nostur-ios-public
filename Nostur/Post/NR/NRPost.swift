@@ -1304,6 +1304,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     @MainActor public func like(_ reactionContent: String = "+", uuid: UUID) -> NEvent? {
         self.footerAttributes.objectWillChange.send()
         self.footerAttributes.ourReactions.insert(reactionContent)
+        InteractionRecorder.shared.recordDirectInteraction(with: pubkey, kind: .reaction)
         sendNotification(.postAction, PostActionNotification(type: .reacted(uuid, reactionContent), eventId: self.id))
         if let accountCache = accountCache() {
             accountCache.addReaction(self.id, reactionType: reactionContent)

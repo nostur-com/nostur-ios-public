@@ -32,6 +32,20 @@ class WebOfTrust: ObservableObject {
     static let shared = WebOfTrust()
  
     private let ENABLE_THRESHOLD = 2000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
+
+    private struct FilteringSnapshot {
+        var mainPubkey = ""
+        var followingPubkeys: Set<String> = []
+        var followingFollowingPubkeys: Set<String> = []
+        var learnedPubkeys: Set<String> = []
+        var isLoaded = false
+        // Computing three large Set unions in isAllowed() made every feed row
+        // pay O(total WoT size) before its O(1) membership checks.
+        var allowedKeysCount = 0
+    }
+
+    private let filteringSnapshotLock = NSLock()
+    private var filteringSnapshot = FilteringSnapshot()
     
     public var tresholdReached: Bool {
         allowedKeysCount >= ENABLE_THRESHOLD
@@ -73,17 +87,26 @@ class WebOfTrust: ObservableObject {
         }
     }
 
-    public func updateViewData() {
-        let allowedKeysCount: Int
-        if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
-            allowedKeysCount = 0
+    public func updateViewData(localSnapshotLoaded: Bool = false) {
+        let learnedPubkeys = LearnedWoTStore.shared.currentPubkeys()
+        filteringSnapshotLock.lock()
+        if filteringSnapshot.mainPubkey != mainAccountWoTpubkey {
+            filteringSnapshot = FilteringSnapshot(mainPubkey: mainAccountWoTpubkey)
         }
-        else {
-            allowedKeysCount = self.followingFollowingPubkeys.union(self.followingPubkeys).count
-        }
+        filteringSnapshot.followingPubkeys = followingPubkeys
+        filteringSnapshot.followingFollowingPubkeys = followingFollowingPubkeys
+        filteringSnapshot.learnedPubkeys = learnedPubkeys
+        filteringSnapshot.isLoaded = filteringSnapshot.isLoaded || localSnapshotLoaded
+        filteringSnapshot.allowedKeysCount = followingPubkeys
+            .union(followingFollowingPubkeys)
+            .union(learnedPubkeys)
+            .count
+        let allowedKeysCount = filteringSnapshot.allowedKeysCount
+        filteringSnapshotLock.unlock()
+
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            self.allowedKeysCount = self.mainAccountWoTpubkey == "" ? 0 : allowedKeysCount
+            self.allowedKeysCount = self.mainAccountWoTpubkey == "" || SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue ? 0 : allowedKeysCount
         }
     }
     
@@ -105,6 +128,63 @@ class WebOfTrust: ObservableObject {
             }
         }
         updateWoTonNewFollowing()
+        LearnedWoTStore.shared.$entries
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.updateViewData()
+            }
+            .store(in: &subscriptions)
+    }
+
+    /// Installs the persisted WoT before feed views and relay subscriptions start.
+    /// A network refresh can happen later; filtering uses this local snapshot immediately.
+    public func loadLocalSnapshotAtStartup() async {
+        guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else {
+            updateViewData(localSnapshotLoaded: true)
+            return
+        }
+
+        let startupData: (mainPubkey: String, followingPubkeys: Set<String>, ownFollowingPubkeys: Set<String>)? = await MainActor.run {
+            if self.mainAccountWoTpubkey.isEmpty {
+                self.guessMainAccount()
+            }
+
+            let mainPubkey = self.mainAccountWoTpubkey
+            guard !mainPubkey.isEmpty else { return nil }
+
+            let accounts = AccountsState.shared.accounts.isEmpty
+                ? CloudAccount.fetchAccounts(context: context())
+                : AccountsState.shared.accounts
+            guard let mainAccount = accounts.first(where: { $0.publicKey == mainPubkey }) else { return nil }
+
+            let followingPubkeys = mainAccount.getFollowingPublicKeys(includeBlocked: true)
+            let activeAccountPubkey = AccountsState.shared.activeAccountPublicKey.isEmpty
+                ? UserDefaults.standard.string(forKey: "activeAccountPublicKey") ?? ""
+                : AccountsState.shared.activeAccountPublicKey
+            let ownFollowingPubkeys = accounts
+                .first(where: { $0.publicKey == activeAccountPubkey && $0.publicKey != mainPubkey })?
+                .followingPubkeys ?? []
+            return (mainPubkey, followingPubkeys, ownFollowingPubkeys)
+        }
+
+        guard let startupData else { return }
+
+        let loadedAllowedKeysCount = await bg().perform {
+            self.followingPubkeys = startupData.followingPubkeys.union(startupData.ownFollowingPubkeys)
+            self.followingFollowingPubkeys = self.loadData(startupData.mainPubkey)
+            self.updateViewData(localSnapshotLoaded: true)
+            self.filteringSnapshotLock.lock()
+            let count = self.filteringSnapshot.allowedKeysCount
+            self.filteringSnapshotLock.unlock()
+            return count
+        }
+
+        await MainActor.run {
+            // Set this synchronously before startNosturing continues. The @Published
+            // value remains view state, while filtering reads the locked snapshot.
+            self.allowedKeysCount = loadedAllowedKeysCount
+            self.woTisReady()
+        }
     }
     
     // For first time guessing the main account, user can change actual main account in Settings
@@ -275,14 +355,18 @@ class WebOfTrust: ObservableObject {
     public func isAllowed(_ pubkey: String) -> Bool {
         guard mainAccountWoTpubkey != "" else { return true }
         guard webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return true }
-        if allowedKeysCount < ENABLE_THRESHOLD { return true }
-        
-        // Maybe check small set first, faster?
-        if followingPubkeys.contains(pubkey) { return true }
-        
-        if followingFollowingPubkeys.contains(pubkey) {
-            return true
-        }
+
+        filteringSnapshotLock.lock()
+        let snapshot = filteringSnapshot
+        filteringSnapshotLock.unlock()
+
+        // WoT-enabled feeds must not fail open while the persisted snapshot is loading.
+        guard snapshot.isLoaded else { return false }
+        if snapshot.allowedKeysCount < ENABLE_THRESHOLD { return true }
+
+        if snapshot.followingPubkeys.contains(pubkey) { return true }
+        if snapshot.learnedPubkeys.contains(pubkey) { return true }
+        if snapshot.followingFollowingPubkeys.contains(pubkey) { return true }
         
         // Also allow outgoing DM conv pubkeys we initiated
         if DMsVM.shared.allowedWoT.contains(pubkey) {
@@ -294,7 +378,10 @@ class WebOfTrust: ObservableObject {
 
     public func allowedPubkeysSnapshot() -> Set<String> {
         guard webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return [] }
-        return followingPubkeys.union(followingFollowingPubkeys)
+        filteringSnapshotLock.lock()
+        let snapshot = filteringSnapshot
+        filteringSnapshotLock.unlock()
+        return snapshot.followingPubkeys.union(snapshot.followingFollowingPubkeys)
     }
     
     // Load follows + follows of follows
@@ -322,12 +409,13 @@ class WebOfTrust: ObservableObject {
         }
         // Load from disk
         self.followingFollowingPubkeys = self.loadData(mainAccountWoTpubkey)
+        self.addOwnFollowsIfNeeded()
+        self.updateViewData(localSnapshotLoaded: true)
 
         var pubkeys = wotFollowingPubkeys
         pubkeys.remove(mainAccountWoTpubkey)
         
         guard self.followingFollowingPubkeys.count < ENABLE_THRESHOLD || force == true else {
-            self.addOwnFollowsIfNeeded()
             self.woTisReady()
 #if DEBUG
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already have loaded enough from file")
@@ -336,7 +424,6 @@ class WebOfTrust: ObservableObject {
         }
         
         guard !theWoTisReady || force == true else {
-            self.addOwnFollowsIfNeeded()
             self.woTisReady()
 #if DEBUG
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already didWot")
