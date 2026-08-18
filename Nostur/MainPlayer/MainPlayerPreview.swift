@@ -50,7 +50,7 @@ import NavigationBackport
                         }
                         else if enableLiveEvents {
                             LiveEventsBanner(showLiveEventsBanner: .constant(true))
-                                .animation(.easeIn, value: enableLiveEvents)
+                                //.animation(.easeIn, value: enableLiveEvents)
                                 .opacity(apm.viewMode == .audioOnlyBar ? 0 : 1.0)
                         }
                         
