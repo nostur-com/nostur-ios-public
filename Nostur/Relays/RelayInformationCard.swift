@@ -18,6 +18,7 @@ struct RelayInformationCard: View {
     @State private var info: RelayInformationDocument?
     @State private var showFullDescription = false
     @State private var loadFailed = false
+    @State private var didLoad = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -79,6 +80,7 @@ struct RelayInformationCard: View {
             }
         }
         .task(id: relayUrl) {
+            guard !didLoad else { return }
             await loadRelayInfo()
         }
     }
@@ -97,6 +99,7 @@ struct RelayInformationCard: View {
         withAnimation {
             info = document
         }
+        didLoad = true
         onInfoLoaded?(document)
     }
 
