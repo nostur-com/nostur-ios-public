@@ -2379,7 +2379,14 @@ class NXColumnViewModel: ObservableObject {
 //                            self.allIdsSeen = self.allIdsSeen.union(Set(idsToPutInScreen)) // TODO: remove top unread part if scroll restore
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) - Loaded \(nrPosts.count) from local state -[LOG]-")
+                            self.recordFeedAction("restored feed · queued newer reconciliation")
 #endif
+                            // Restoring the remembered snapshot is only the first paint.
+                            // Queue a normal local read behind this one so posts newer than
+                            // the snapshot are either inserted (unseen) or offered by the
+                            // already-seen banner. didLoadFirstLocalState is already true,
+                            // so this request cannot restore the same snapshot again.
+                            self.loadLocal(config)
                             completion?()
                         }
                     }

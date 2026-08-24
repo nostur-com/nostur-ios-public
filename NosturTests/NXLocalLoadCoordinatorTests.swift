@@ -47,6 +47,27 @@ struct NXLocalLoadCoordinatorTests {
         #expect(completed == ["first", "second"])
     }
 
+    @Test("A matching request queued behind active work runs again")
+    func rerunsMatchingActiveRequest() {
+        var started: [Int] = []
+        var finishes: [() -> Void] = []
+        let coordinator = NXLocalLoadCoordinator<Int>(
+            key: String.init,
+            perform: { value, finish in
+                started.append(value)
+                finishes.append(finish)
+            }
+        )
+
+        coordinator.enqueue(1)
+        coordinator.enqueue(1)
+
+        #expect(started == [1])
+        finishes[0]()
+        #expect(started == [1, 1])
+        finishes[1]()
+    }
+
     @Test("Invalidating a feed releases active and pending callers")
     func invalidatingFeedCompletesCallersAndStartsNewWork() {
         var started: [Int] = []
