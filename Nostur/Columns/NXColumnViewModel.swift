@@ -52,6 +52,8 @@ class NXColumnViewModel: ObservableObject {
 #endif
     /// Hides the List while a remember-on restore jumps from offset 0 to the saved post.
     @Published var isHidingFeedForRestore = false
+    /// Prepend landed while the restore cover was up; lift the cover after settle.
+    var delayRestoreRevealUntilPrependSettles = false
     @Published private(set) var alreadySeenNewerCount = 0
     @Published private(set) var isShowingAlreadySeenNewerPosts = false
     private var alreadySeenNewerCandidates: [String: NXAlreadySeenNewerPostCandidate] = [:]
@@ -59,13 +61,13 @@ class NXColumnViewModel: ObservableObject {
     private func attachRestoreCoverIfNeeded() {
         guard vmInner.onRestoreCoverChange == nil else { return }
         vmInner.onRestoreCoverChange = { [weak self] hiding in
-            Task { @MainActor [weak self] in
-                guard let self, self.isHidingFeedForRestore != hiding else { return }
-                self.isHidingFeedForRestore = hiding
+            guard let self, self.isHidingFeedForRestore != hiding else { return }
+            self.isHidingFeedForRestore = hiding
 #if DEBUG
-                self.recordFeedAction(hiding ? "RESTORE hide list" : "RESTORE reveal list")
-#endif
+            Task { @MainActor [weak self] in
+                self?.recordFeedAction(hiding ? "RESTORE hide list" : "RESTORE reveal list")
             }
+#endif
         }
     }
     
@@ -220,12 +222,14 @@ class NXColumnViewModel: ObservableObject {
     /// deferred by the anchor coordinator until scrolling finishes.
     @MainActor
     private func setPosts(_ posts: [NRPost], animated: Bool = true) {
-        // Only the prepend path needs the explicit pin. Removing an off-screen unread
-        // post in a sibling column must stay on SwiftUI's animated List diff — the
-        // unanimated pin/settle flash is what made other Mac columns flicker.
-        if !isFeedActuallyAtTop,
-           let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate,
-           shouldPinFeedUpdate(to: posts) {
+        // Pin whenever newer rows land above the reading post. That includes
+        // autoScroll-off at the visual top: keep the current first post instead
+        // of a hide-and-scrollTo restore. Auto-scroll at top still lets SwiftUI
+        // move to the newest post.
+        let pinInsertAbove = shouldPinFeedUpdate(to: posts)
+            && (!isFeedActuallyAtTop || !SettingsStore.shared.autoScroll)
+        if pinInsertAbove,
+           let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
             let oldPosts = currentNRPostsOnScreen
             let oldIDs = Set(oldPosts.map(\.id))
             let requestedNewCount = posts.count { !oldIDs.contains($0.id) }
@@ -2059,6 +2063,8 @@ class NXColumnViewModel: ObservableObject {
     /// A restored List briefly reports its temporary layout as near-bottom.
     /// Older work must not get ahead of the first newer query for Remember-on.
     private var suppressPaginationUntilRememberNewerLoad = false
+    /// Remember-on: older pages wait until the user scrolls toward already-seen posts.
+    private var userHasScrolledTowardOlder = false
 
     @MainActor
     func beginLatestFirstPaint() {
@@ -2077,6 +2083,7 @@ class NXColumnViewModel: ObservableObject {
         prefetchOlderPageTask = nil
         resetPaginationState()
         suppressPaginationUntilRememberNewerLoad = false
+        userHasScrolledTowardOlder = false
     }
 
     func allowLatestFirstPaint() {
@@ -2109,6 +2116,7 @@ class NXColumnViewModel: ObservableObject {
         prefetchOlderPageTask = nil
         resetPaginationState()
         suppressPaginationUntilRememberNewerLoad = false
+        userHasScrolledTowardOlder = false
     }
 
     @MainActor
@@ -2190,7 +2198,25 @@ class NXColumnViewModel: ObservableObject {
     }
 
     @MainActor
+    func noteUserScrolledTowardOlder() {
+        guard !userHasScrolledTowardOlder else { return }
+        userHasScrolledTowardOlder = true
+#if DEBUG
+        recordFeedAction("PAGE arm · user scrolled toward older · \(feedActionDebugViewport())")
+#endif
+    }
+
+    @MainActor
     private func loadOlderPage(_ config: NXColumnConfig, requestNetwork: Bool = true) {
+        guard NXFeedViewport.shouldAllowRememberOnOlderFetch(
+            continueEnabled: config.continue,
+            userHasScrolledTowardOlder: userHasScrolledTowardOlder
+        ) else {
+#if DEBUG
+            recordFeedAction("PAGE skip · loadOlderPage · remember-on until scroll down")
+#endif
+            return
+        }
         guard case .idle = paginationState else { return }
         let visibleCursor = Int64(oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
         let cursor = min(visibleCursor, olderPaginationScanCursor ?? visibleCursor)
@@ -4655,44 +4681,22 @@ extension NXColumnViewModel {
                     if SettingsStore.shared.autoScroll {
                         // withAnimation intentionally lets a stationary feed move to the newest post.
                         setPosts(addedAndExistingPostsTruncated)
+#if DEBUG
+                        recordFeedAction(
+                            "inserted \(onlyNewAddedPosts.count) newer at top · \(existingPosts.count)→\(addedAndExistingPostsTruncated.count) · auto-scroll · \(feedActionDebugViewport())"
+                        )
+#endif
                     }
                     else {
-#if DEBUG
-                        L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) - should restore using scrollToIndex, if we were not at top  -[LOG]-")
-#endif
-                        
-                        // ANTI-FLICKER:
-                        if let previousFirstPostId, let restoreToIndex = addedAndExistingPostsTruncated.firstIndex(where: { $0.id == previousFirstPostId })  {
-                            vmInner.beginPreparedScrollRestore(postID: previousFirstPostId, index: restoreToIndex)
-                            isHidingFeedForRestore = true
-                            vmInner.holdUnreadAboveReadingPost = true
-                            
-                            // Update the view state without animation
-                            withTransaction(Transaction(animation: nil)) {
-                                viewState = .posts(addedAndExistingPostsTruncated)
-                            }
-                            
-#if DEBUG
-                            L.og.debug("☘️☘️ \(config.name) putOnScreen restoreToIndex: \((addedAndExistingPostsTruncated[restoreToIndex].content ?? "").prefix(150)) -[LOG]-")
-#endif
-                            
-                            // After a very short delay, trigger the scroll
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                                self.vmInner.requestScroll(to: restoreToIndex)
-                            }
+                        // Same snapshot pin as a mid-feed prepend. hide+scrollTo
+                        // "restore first post" flashed a second restore cover.
+                        if vmInner.readingPostID == nil {
+                            vmInner.readingPostID = previousFirstPostId
+                                ?? vmInner.pendingScrollToPostID
                         }
-                        else {
-                            self.vmInner.abortPreparedScrollRestore()
-                            // No previous post to restore to, just update the view
-                            viewState = .posts(addedAndExistingPostsTruncated)
-                        }
+                        vmInner.holdUnreadAboveReadingPost = true
+                        setPosts(addedAndExistingPostsTruncated)
                     }
-#if DEBUG
-                    let positioning = SettingsStore.shared.autoScroll ? "auto-scroll" : "restore first post"
-                    recordFeedAction(
-                        "inserted \(onlyNewAddedPosts.count) newer at top · \(existingPosts.count)→\(addedAndExistingPostsTruncated.count) · \(positioning) · \(feedActionDebugViewport())"
-                    )
-#endif
                 }
                 else {
 #if DEBUG
@@ -5135,6 +5139,13 @@ extension NXColumnViewModel {
         else {
 #if DEBUG
             recordPageSkipIfNeeded(trigger: trigger, reason: "paused/hidden/background")
+#endif
+            return
+        }
+
+        if config?.continue == true, !userHasScrolledTowardOlder {
+#if DEBUG
+            recordPageSkipIfNeeded(trigger: trigger, reason: "remember-on until scroll down")
 #endif
             return
         }

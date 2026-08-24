@@ -136,6 +136,27 @@ final class NXFeedViewportTests: XCTestCase {
         XCTAssertFalse(NXFeedViewport.shouldCoverPrepend(updateReasons: []))
     }
 
+    func testRememberOnOlderFetchWaitsForDownwardUserScroll() {
+        XCTAssertFalse(
+            NXFeedViewport.shouldAllowRememberOnOlderFetch(
+                continueEnabled: true,
+                userHasScrolledTowardOlder: false
+            )
+        )
+        XCTAssertTrue(
+            NXFeedViewport.shouldAllowRememberOnOlderFetch(
+                continueEnabled: true,
+                userHasScrolledTowardOlder: true
+            )
+        )
+        XCTAssertTrue(
+            NXFeedViewport.shouldAllowRememberOnOlderFetch(
+                continueEnabled: false,
+                userHasScrolledTowardOlder: false
+            )
+        )
+    }
+
     func testTopEdgeAnchorUsesPartiallyVisibleTallRow() {
         let frames = [
             CGRect(x: 0, y: 100, width: 390, height: 700),

@@ -99,6 +99,15 @@ enum NXFeedViewport {
         updateReasons.contains(prependCoverReason)
     }
 
+    /// Remember-on restores already-seen posts. Older pages are for scrolling
+    /// down that snapshot, not for restore, prepend, or estimated near-tail.
+    static func shouldAllowRememberOnOlderFetch(
+        continueEnabled: Bool,
+        userHasScrolledTowardOlder: Bool
+    ) -> Bool {
+        !continueEnabled || userHasScrolledTowardOlder
+    }
+
     /// Select the visible row that actually crosses the viewport's top edge. Falling back to
     /// the first row below the edge avoids anchoring a later row hundreds of points down when
     /// the partially visible top post is tall.

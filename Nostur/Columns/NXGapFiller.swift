@@ -349,6 +349,7 @@ class NXGapFiller {
 
     @MainActor
     private func scheduleQuietOlderAppend(config: NXColumnConfig) {
+        if config.continue { return }
         columnVM?.latestQuietOlderAppend = true
         latestQuietOlderTask?.cancel()
         latestQuietOlderTask = Task { @MainActor [weak self] in

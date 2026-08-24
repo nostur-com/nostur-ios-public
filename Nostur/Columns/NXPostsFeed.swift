@@ -54,6 +54,16 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     var onViewportChange: (() -> Void)?
     /// Fired at a low frequency when less than a few screens of content remain.
     var onApproachingBottom: (() -> Void)?
+    /// Finger is moving the feed toward older posts (contentOffset.y increasing).
+    var onUserScrolledTowardOlder: (() -> Void)?
+    /// When true, a restore overlay already covers the list; skip a window snapshot.
+    var shouldSkipPrependSnapshot: (() -> Bool)?
+    /// Restore cover is waiting for this settle to finish before revealing.
+    var onPrependCoverEnded: (() -> Void)?
+
+    var hasActivePrependCover: Bool {
+        prependSnapshot != nil || settleTask != nil
+    }
 #if DEBUG
     var onDebugAction: ((String) -> Void)?
 #endif
@@ -156,6 +166,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         settleTask = nil
         pendingRestoreAnchor = nil
         removePrependSnapshot()
+        onPrependCoverEnded?()
     }
 
     func finishProgrammaticScroll(finalPosition: () -> Void) async {
@@ -326,8 +337,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             ?? pendingRestoreAnchor
 
         // Photograph the current (correct) viewport before an unanimated
-        // mid-feed prepend paints the wrong post at the top.
+        // mid-feed prepend paints the wrong post at the top. Skip when a
+        // restore overlay is already hiding the list — a second cover on the
+        // window would show the unrestored top, then lift before the overlay.
         if NXFeedViewport.shouldCoverPrepend(updateReasons: updates.map(\.reason)),
+           shouldSkipPrependSnapshot?() != true,
            let scrollView {
             coverViewportForPrepend(in: scrollView)
         }
@@ -738,6 +752,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             await Task.yield()
             guard let self, self.anchorGeneration == generation else { return }
             self.removePrependSnapshot()
+            self.onPrependCoverEnded?()
         }
     }
 
@@ -774,11 +789,16 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 
     private func handleContentOffsetChange(in scrollView: UIScrollView) {
-        lastContentOffsetY = scrollView.contentOffset.y
-        lastInsetTop = scrollView.adjustedContentInset.top
-        if scrollView.isDragging || scrollView.isDecelerating || scrollView.isTracking {
+        let newOffsetY = scrollView.contentOffset.y
+        let isFinger = scrollView.isDragging || scrollView.isTracking
+        if isFinger || scrollView.isDecelerating {
             lastUserScrollAt = CACurrentMediaTime()
         }
+        if isFinger, newOffsetY > lastContentOffsetY + 8 {
+            onUserScrolledTowardOlder?()
+        }
+        lastContentOffsetY = newOffsetY
+        lastInsetTop = scrollView.adjustedContentInset.top
         onViewportChange?()
         evaluateApproachingBottom(in: scrollView)
     }
@@ -1082,6 +1102,23 @@ struct NXPostsFeed: View {
                     trigger: "2.5-screen threshold"
                 )
             }
+            layoutStabilizer.onUserScrolledTowardOlder = { [weak vm] in
+                vm?.noteUserScrolledTowardOlder()
+            }
+            layoutStabilizer.shouldSkipPrependSnapshot = { [weak vm] in
+                guard let vm, vm.isHidingFeedForRestore else { return false }
+                vm.delayRestoreRevealUntilPrependSettles = true
+                return true
+            }
+            layoutStabilizer.onPrependCoverEnded = { [weak vm] in
+                guard let vm, vm.delayRestoreRevealUntilPrependSettles else { return }
+                vm.delayRestoreRevealUntilPrependSettles = false
+                guard vm.isHidingFeedForRestore else { return }
+                vm.isHidingFeedForRestore = false
+#if DEBUG
+                vm.recordFeedAction("RESTORE reveal list")
+#endif
+            }
 #if DEBUG
             layoutStabilizer.onDebugAction = { [weak vm] message in
                 vm?.feedActionDebugRecord?(message)
@@ -1158,6 +1195,9 @@ struct NXPostsFeed: View {
             layoutStabilizer.suspendPositionTracking()
             layoutStabilizer.onViewportChange = nil
             layoutStabilizer.onApproachingBottom = nil
+            layoutStabilizer.onUserScrolledTowardOlder = nil
+            layoutStabilizer.shouldSkipPrependSnapshot = nil
+            layoutStabilizer.onPrependCoverEnded = nil
 #if DEBUG
             layoutStabilizer.onDebugAction = nil
 #endif
@@ -1311,7 +1351,12 @@ struct NXPostsFeed: View {
             // This is feed restoration, not unread navigation. Keep the established lightweight
             // path so subsequent new-post insertion can preserve position with withAnimation.
             try? await Task.sleep(nanoseconds: 100_000_000)
-            vmInner.finishPreparedScrollRestore()
+            if layoutStabilizer.hasActivePrependCover {
+                vm.delayRestoreRevealUntilPrependSettles = true
+                vmInner.finishPreparedScrollRestore(reveal: false)
+            } else {
+                vmInner.finishPreparedScrollRestore(reveal: true)
+            }
             vmInner.isPerformingScroll = false
             vmInner.updateIsAtTopSubject.send()
         }

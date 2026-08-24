@@ -146,12 +146,14 @@ class NXColumnViewModelInner {
         }
     }
 
-    public func finishPreparedScrollRestore() {
+    public func finishPreparedScrollRestore(reveal: Bool = true) {
         isPreparingForScrollRestore = false
         pendingScrollToIndex = nil
         pendingScrollToPostID = nil
         scrollRestoreStartedAt = nil
-        onRestoreCoverChange?(false)
+        if reveal {
+            onRestoreCoverChange?(false)
+        }
     }
     /// Last post the user was parked on after restore or while reading mid-feed.
     /// Used so a later top-insert cannot be mistaken for "user is at the top".
