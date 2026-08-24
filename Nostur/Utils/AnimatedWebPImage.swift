@@ -221,6 +221,7 @@ final class WebPAnimatedImageView: UIImageView {
     }
 
     func prepareForAnimation(withWebPData data: Data) {
+        let maxPixelSize = decodeMaxPixelSize
         decodeQueue.async { [weak self] in
             guard let self else { return }
             let generation = self.nextGeneration()
@@ -264,7 +265,11 @@ final class WebPAnimatedImageView: UIImageView {
                 }
             }
 
-            guard let firstFrame = self.decodeFrameImage(source: source, frameIndex: 0) else { return }
+            guard let firstFrame = self.decodeFrameImage(
+                source: source,
+                frameIndex: 0,
+                maxPixelSize: maxPixelSize
+            ) else { return }
 
             guard generation == self.playbackGeneration else { return }
             self.source = source
@@ -416,10 +421,15 @@ final class WebPAnimatedImageView: UIImageView {
 
         pendingDecodes.insert(playbackIndex)
         let frameIndex = playbackFrameIndices[playbackIndex]
+        let maxPixelSize = decodeMaxPixelSize
 
         decodeQueue.async { [weak self] in
             guard let self else { return }
-            guard let cgImage = self.decodeFrameImage(source: source, frameIndex: frameIndex) else {
+            guard let cgImage = self.decodeFrameImage(
+                source: source,
+                frameIndex: frameIndex,
+                maxPixelSize: maxPixelSize
+            ) else {
                 DispatchQueue.main.async { [weak self] in
                     self?.pendingDecodes.remove(playbackIndex)
                 }
@@ -438,8 +448,12 @@ final class WebPAnimatedImageView: UIImageView {
         }
     }
 
-    private func decodeFrameImage(source: CGImageSource, frameIndex: Int) -> CGImage? {
-        let maxPixelSize = Int(max(decodeMaxPixelSize, 1.0))
+    private func decodeFrameImage(
+        source: CGImageSource,
+        frameIndex: Int,
+        maxPixelSize: CGFloat
+    ) -> CGImage? {
+        let maxPixelSize = Int(max(maxPixelSize, 1.0))
         let options: [CFString: Any] = [
             kCGImageSourceShouldCacheImmediately: false,
             kCGImageSourceCreateThumbnailFromImageAlways: true,
