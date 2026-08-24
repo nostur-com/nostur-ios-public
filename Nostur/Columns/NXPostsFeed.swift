@@ -922,6 +922,26 @@ struct NXPostsFeed: View {
         // Keep List as the top-level scroll container (no GeometryReader parent) so iOS 26
         // tabBarMinimizeBehavior(.onScrollDown) can observe it as the primary scroller.
         List {
+            if vm.alreadySeenNewerCount > 0 {
+                HStack(spacing: 8) {
+                    Text("\(vm.alreadySeenNewerCount) newer posts already seen")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+
+                    Spacer(minLength: 8)
+
+                    Button("Show again") {
+                        vm.showAlreadySeenNewerPosts()
+                    }
+                    .font(.footnote.weight(.semibold))
+                    .disabled(vm.isShowingAlreadySeenNewerPosts)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .listRowSeparator(.hidden)
+                .listRowInsets(.init())
+            }
+
             ForEach(posts) { nrPost in
                 NXListRow(nrPost: nrPost, vm: vm) {
                     PostOrThread(nrPost: nrPost, theme: theme)

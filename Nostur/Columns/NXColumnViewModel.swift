@@ -52,6 +52,9 @@ class NXColumnViewModel: ObservableObject {
 #endif
     /// Hides the List while a remember-on restore jumps from offset 0 to the saved post.
     @Published var isHidingFeedForRestore = false
+    @Published private(set) var alreadySeenNewerCount = 0
+    @Published private(set) var isShowingAlreadySeenNewerPosts = false
+    private var alreadySeenNewerCandidates: [String: NXAlreadySeenNewerPostCandidate] = [:]
 
     private func attachRestoreCoverIfNeeded() {
         guard vmInner.onRestoreCoverChange == nil else { return }
@@ -370,8 +373,9 @@ class NXColumnViewModel: ObservableObject {
     
     @Published var viewState: ColumnViewState = .loading {
         didSet {
-            if case .posts(let nrPosts) = viewState, nrPosts.isEmpty {
-                if !vmInner.unreadIds.isEmpty {
+            if case .posts(let nrPosts) = viewState {
+                refreshAlreadySeenNewerPosts(for: nrPosts)
+                if nrPosts.isEmpty, !vmInner.unreadIds.isEmpty {
                     vmInner.unreadIds = [:]
                     vmInner.updateIsAtTopSubject.send()
                 }
@@ -2072,6 +2076,7 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     func clearLatestFeedSession() {
         advanceFeedSession()
+        clearAlreadySeenNewerPosts()
         gapFiller?.cancelLatestSession()
         endLatestFirstPaintHold()
         latestBackfill = false
@@ -3611,6 +3616,83 @@ class NXColumnViewModel: ObservableObject {
     
     // Only shortIds: String(id.prefix(8))
     private var _allShortIdsSeen: Set<String> = []
+
+    @MainActor
+    private func recordAlreadySeenNewerCandidates(_ candidates: [NXAlreadySeenNewerPostCandidate]) {
+        guard !candidates.isEmpty else { return }
+        for candidate in candidates {
+            alreadySeenNewerCandidates[candidate.id] = candidate
+        }
+        refreshAlreadySeenNewerPosts(for: currentNRPostsOnScreen)
+    }
+
+    private func refreshAlreadySeenNewerPosts(for posts: [NRPost]) {
+        let visibleCreatedAt = posts.map(\.created_at)
+        let candidateIDs = NXAlreadySeenNewerPosts.candidateIDs(
+            from: Array(alreadySeenNewerCandidates.values),
+            visibleCreatedAt: visibleCreatedAt
+        )
+        if alreadySeenNewerCount != candidateIDs.count {
+            alreadySeenNewerCount = candidateIDs.count
+        }
+    }
+
+    @MainActor
+    private func clearAlreadySeenNewerPosts() {
+        alreadySeenNewerCandidates = [:]
+        alreadySeenNewerCount = 0
+        isShowingAlreadySeenNewerPosts = false
+    }
+
+    @MainActor
+    func showAlreadySeenNewerPosts() {
+        guard !isShowingAlreadySeenNewerPosts,
+              let config,
+              !alreadySeenNewerCandidates.isEmpty
+        else { return }
+
+        let ids = NXAlreadySeenNewerPosts.candidateIDs(
+            from: Array(alreadySeenNewerCandidates.values),
+            visibleCreatedAt: currentNRPostsOnScreen.map(\.created_at)
+        )
+        guard !ids.isEmpty else {
+            clearAlreadySeenNewerPosts()
+            return
+        }
+
+        isShowingAlreadySeenNewerPosts = true
+        let currentIdsOnScreen = self.currentIdsOnScreen
+        let currentPosts = currentNRPostsOnScreen
+        let since = currentPosts.map(\.created_at).max() ?? 0
+        let sessionGeneration = feedSessionGeneration
+        let wotEnabled = config.wotEnabled
+        let repliesEnabled = config.repliesEnabled
+
+        bg().perform { [weak self] in
+            guard let self else { return }
+            let request = Event.fetchRequest()
+            request.predicate = NSPredicate(format: "id IN %@", ids)
+            let events = (try? bg().fetch(request)) ?? []
+
+            self.processToScreen(
+                events,
+                config: config,
+                allShortIdsSeen: [],
+                currentIdsOnScreen: currentIdsOnScreen,
+                currentNRPostsOnScreen: currentPosts,
+                sinceOrUntil: Int(since),
+                older: false,
+                wotEnabled: wotEnabled,
+                repliesEnabled: repliesEnabled,
+                sessionGeneration: sessionGeneration
+            ) { [weak self] in
+                guard let self, self.feedSessionGeneration == sessionGeneration else { return }
+                self.clearAlreadySeenNewerPosts()
+                self.vmInner.abortPreparedScrollRestore()
+                self.vmInner.requestScroll(to: 0)
+            }
+        }
+    }
     
     @MainActor // all ids, leaf ids, parent ids, reposted ids, but only what is on screen NOW
     private var currentIdsOnScreen: Set<String> {
@@ -4094,7 +4176,8 @@ extension NXColumnViewModel {
         // every fetched event is filtered and produces no NRPost.
         let oldestScannedCreatedAt = older ? events.map(\.created_at).min() : nil
         // Apply WoT filter, remove already on screen
-        let preparedEvents = prepareEvents(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+        let preparation = prepareEvents(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+        let preparedEvents = preparation.events
 #if DEBUG
         let preparedAt = Date()
 #endif
@@ -4132,6 +4215,7 @@ extension NXColumnViewModel {
                 self.noteOlderPaginationScan(oldestScannedCreatedAt)
                 if !older {
                     self.suppressPaginationUntilRememberNewerLoad = false
+                    self.recordAlreadySeenNewerCandidates(preparation.alreadySeenCandidates)
                 }
                 if latestFirstPaintMinimum == nil,
                    let speedTest, !speedTest.relaysFinishedAt.isEmpty {
@@ -4155,6 +4239,7 @@ extension NXColumnViewModel {
             self.noteOlderPaginationScan(oldestScannedCreatedAt)
             if !older {
                 self.suppressPaginationUntilRememberNewerLoad = false
+                self.recordAlreadySeenNewerCandidates(preparation.alreadySeenCandidates)
             }
             self.putOnScreen(partialThreadsWithParent, config: config, insertAtEnd: older, completion: completion)
         }
@@ -4176,7 +4261,7 @@ extension NXColumnViewModel {
     // -- MARK: Subfunctions used by processToScreen():
     
     // Prepare events: apply WoT filter, remove already on screen, load .parentEvents
-    private func prepareEvents(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool) -> [Event] {
+    private func prepareEvents(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool) -> (events: [Event], alreadySeenCandidates: [NXAlreadySeenNewerPostCandidate]) {
         shouldBeBg()
         let isMediaFeed: Bool = switch config.columnType {
         case .picture, .vine, .yak: true
@@ -4208,6 +4293,9 @@ extension NXColumnViewModel {
         let wotFilteredEvents: [Event] = ((wotEnabled || isMediaFeed)
             ? applyWoT(timeFilteredEvents, config: config)
             : timeFilteredEvents)
+        let alreadySeenCandidates = older ? [] : wotFilteredEvents
+            .filter(isSeen)
+            .map { NXAlreadySeenNewerPostCandidate(id: $0.id, createdAt: $0.created_at) }
         let unseenEvents = wotFilteredEvents.filter { !isSeen($0) }
         let isHeldFirstPaint = !older
             && latestFirstPaintMinimum != nil
@@ -4250,17 +4338,17 @@ extension NXColumnViewModel {
 #if DEBUG
                 L.og.debug("☘️☘️ \(config.name) prepareEvents newCount \(fallbackEvents.count) (first load, ignore seen) -[LOG]-")
 #endif
-                return fallbackEvents
+                return (fallbackEvents, alreadySeenCandidates)
             }
 
-            return []
+            return ([], alreadySeenCandidates)
         }
         
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) prepareEvents newCount \(newCount.description) -[LOG]-")
 #endif
         
-        return newUnrenderedEvents
+        return (newUnrenderedEvents, alreadySeenCandidates)
     }
 
     private func firstPaintEventCap(from events: [Event], older: Bool, onScreenCount: Int = 0) -> [Event] {

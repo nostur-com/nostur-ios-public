@@ -2305,6 +2305,9 @@
         }
       }
     },
+    "%lld newer posts already seen" : {
+
+    },
     "%lld participants" : {
       "localizations" : {
         "es" : {
@@ -25424,6 +25427,9 @@
           }
         }
       }
+    },
+    "Show again" : {
+
     },
     "Show anyway" : {
       "comment" : "Button to show the blocked content anyway",
