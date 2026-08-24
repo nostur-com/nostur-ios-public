@@ -982,10 +982,12 @@ struct NXPostsFeed: View {
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background(Color.primary.opacity(0.025))
                 .overlay(alignment: .bottom) {
-                    Divider()
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.25))
+                        .frame(height: 1)
                 }
+                .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(.init())
             }
@@ -1139,6 +1141,7 @@ struct NXPostsFeed: View {
             // The stabilizer must resolve anchors by post identity after insertions/removals.
             // Index paths are not stable when unread posts are inserted above the viewport.
             layoutStabilizer.updateItemIDs(itemIDs)
+            attemptPendingRequestedScroll()
         }
         .onChange(of: feedImageTargetSize) { newTargetSize in
             updatePrefetchImageTargetSize(newTargetSize)
@@ -1146,7 +1149,6 @@ struct NXPostsFeed: View {
         .onReceive(vmInner.scrollToIndexSubject.compactMap { $0 }) { scrollToIndex in
             guard !vmInner.isPerformingScroll,
                   !vmInner.isPerformingScrollToFirstUnread else {
-                vmInner.clearScrollRequest()
                 return
             }
             
@@ -1154,7 +1156,7 @@ struct NXPostsFeed: View {
             L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) scroll request \(scrollToIndex.description) -[LOG]-")
 #endif
             
-            performScrollToIndex(scrollToIndex)
+            attemptRequestedScroll(to: scrollToIndex)
         }
         .overlay {
             if vm.isHidingFeedForRestore {
@@ -1305,7 +1307,8 @@ struct NXPostsFeed: View {
         vmInner.isPerformingScroll = true
         
         Task { @MainActor in
-            let restorePostID = vmInner.pendingScrollToPostID
+            let restorePostID = vmInner.requestedScrollPostID
+                ?? vmInner.pendingScrollToPostID
             let resolvedScrollToIndex: Int = if let restorePostID,
                                                 case .posts(let currentPosts) = vm.viewState,
                                                 let currentIndex = currentPosts.firstIndex(where: { $0.id == restorePostID }) {
@@ -1314,8 +1317,25 @@ struct NXPostsFeed: View {
                 scrollToIndex
             }
 
-            let scrollView: UIScrollView? = vm.collectionView ?? vm.tableView
-            guard let scrollView, let indexPath = feedIndexPath(for: resolvedScrollToIndex, in: scrollView) else {
+            // A reveal command can arrive in the same render pass that inserts
+            // its target row and removes the banner row. Give List a few layout
+            // passes to publish the new UIKit index path before giving up.
+            if vmInner.requestedScrollPostID != nil {
+                await Task.yield()
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+            var resolvedScrollView: UIScrollView?
+            var resolvedIndexPath: IndexPath?
+            for _ in 0..<20 {
+                if let scrollView = vm.collectionView ?? vm.tableView,
+                   let indexPath = feedIndexPath(for: resolvedScrollToIndex, in: scrollView) {
+                    resolvedScrollView = scrollView
+                    resolvedIndexPath = indexPath
+                    break
+                }
+                try? await Task.sleep(nanoseconds: 16_000_000)
+            }
+            guard let scrollView = resolvedScrollView, let indexPath = resolvedIndexPath else {
                 vmInner.isPerformingScroll = false
                 vmInner.abortPreparedScrollRestore()
                 return
@@ -1359,6 +1379,27 @@ struct NXPostsFeed: View {
             }
             vmInner.isPerformingScroll = false
             vmInner.updateIsAtTopSubject.send()
+        }
+    }
+
+    private func attemptPendingRequestedScroll() {
+        guard let requestedIndex = vmInner.scrollToIndexSubject.value else { return }
+        attemptRequestedScroll(to: requestedIndex)
+    }
+
+    private func attemptRequestedScroll(to requestedIndex: Int) {
+        guard !vmInner.isPerformingScroll,
+              !vmInner.isPerformingScrollToFirstUnread else { return }
+        if let requestedPostID = vmInner.requestedScrollPostID {
+            guard let resolvedIndex = posts.firstIndex(where: { $0.id == requestedPostID }) else {
+                // The row and scroll command can be published in the same update.
+                // Keep the command pending until List has received that row.
+                return
+            }
+            performScrollToIndex(resolvedIndex)
+        }
+        else {
+            performScrollToIndex(requestedIndex)
         }
     }
 

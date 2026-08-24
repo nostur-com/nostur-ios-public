@@ -97,12 +97,15 @@ class NXColumnViewModelInner {
     /// Retains the current command so a scroll restoration request is not lost
     /// if it is sent just before NXPostsFeed subscribes.
     public let scrollToIndexSubject = CurrentValueSubject<Int?, Never>(nil)
+    public private(set) var requestedScrollPostID: String?
 
-    public func requestScroll(to index: Int) {
+    public func requestScroll(to index: Int, postID: String? = nil) {
+        requestedScrollPostID = postID
         scrollToIndexSubject.send(index)
     }
 
     public func clearScrollRequest() {
+        requestedScrollPostID = nil
         scrollToIndexSubject.send(nil)
     }
 

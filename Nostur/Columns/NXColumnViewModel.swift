@@ -4659,11 +4659,16 @@ extension NXColumnViewModel {
                     vmInner.abortPreparedScrollRestore()
                     vmInner.cancelPendingFeedSettle?()
                     vmInner.holdUnreadAboveReadingPost = false
+                    vmInner.readingPostID = nil
+                    vmInner.unreadIds = [:]
                     vmInner.isAtTop = true
+                    vmInner.updateIsAtTopSubject.send()
                     withTransaction(Transaction(animation: nil)) {
                         viewState = .posts(addedAndExistingPostsTruncated)
                     }
-                    vmInner.requestScroll(to: 0)
+                    if let firstRevealedPostID = onlyNewAddedPosts.first?.id {
+                        vmInner.requestScroll(to: 0, postID: firstRevealedPostID)
+                    }
 #if DEBUG
                     recordFeedAction(
                         "revealed \(onlyNewAddedPosts.count) already-seen at top · \(existingPosts.count)→\(addedAndExistingPostsTruncated.count) · \(feedActionDebugViewport())"
