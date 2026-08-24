@@ -432,10 +432,12 @@ class NXColumnViewModel: ObservableObject {
     private var lastDisconnectionSub: AnyCancellable?
     private var onAppearSubjectSub: AnyCancellable?
     private var onScreenSeenInsertedSub: AnyCancellable?
+    private var cloudSeenInsertedSub: AnyCancellable?
     public var watchForFirstConnection = false
     public var saveLocalStateSub: AnyCancellable?
     private var subscriptions = Set<AnyCancellable>()
     private let seenReconciliationScheduler = NXSeenReconciliationScheduler()
+    private var pendingSyncedSeenIds: Set<String> = []
     private var initialMediaTimeoutTask: Task<Void, Never>?
     private var autoExploreRelaysAfterWoTTimeout = false
     private var mediaDiscoverySubscriptionId: String?
@@ -643,14 +645,23 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     private func scheduleAlreadySeenReconciliation() {
+        scheduleAlreadySeenReconciliation(removingVisiblePostsFor: [])
+    }
+
+    @MainActor
+    private func scheduleAlreadySeenReconciliation(removingVisiblePostsFor syncedSeenIds: Set<String>) {
+        pendingSyncedSeenIds.formUnion(syncedSeenIds)
         seenReconciliationScheduler.schedule(
             isBusy: { [weak self] in
                 self?.shouldDeferSeenReconciliation ?? false
             },
             apply: { [weak self] in
                 guard let self else { return }
+                let syncedSeenIds = self.pendingSyncedSeenIds
+                self.pendingSyncedSeenIds.removeAll(keepingCapacity: true)
                 self.removeUnreadPostsAlreadyMarkedReadInFeed()
                 self.removeUnreadPostsAlreadyMarkedRead(Deduplicator.shared.onScreenSeen)
+                self.removeUnreadPostsAlreadyMarkedRead(syncedSeenIds, preservingVisiblePosts: false)
             }
         )
     }
@@ -777,6 +788,7 @@ class NXColumnViewModel: ObservableObject {
         lastDisconnectionSub?.cancel()
         onAppearSubjectSub?.cancel()
         onScreenSeenInsertedSub?.cancel()
+        cloudSeenInsertedSub?.cancel()
         saveLocalStateSub?.cancel()
         muteListUpdatedSub?.cancel()
         mutedWordsChangedSub?.cancel()
@@ -802,6 +814,7 @@ class NXColumnViewModel: ObservableObject {
         selectedRelayAutoRetryAttempted = false
         clearLatestFeedSession()
         seenReconciliationScheduler.cancel()
+        pendingSyncedSeenIds.removeAll(keepingCapacity: true)
         // get initial feed state from
         self.subscriptions.forEach { $0.cancel() }
         self.subscriptions.removeAll()
@@ -859,6 +872,8 @@ class NXColumnViewModel: ObservableObject {
 
         onScreenSeenInsertedSub?.cancel()
         onScreenSeenInsertedSub = nil
+        cloudSeenInsertedSub?.cancel()
+        cloudSeenInsertedSub = nil
         listenForOnScreenSeenInserted(config)
 
         resumeFeedSub?.cancel()
@@ -920,6 +935,11 @@ class NXColumnViewModel: ObservableObject {
         onScreenSeenInsertedSub = Deduplicator.shared.onScreenSeenInsertedSubject
             .sink { [weak self] _ in
                 self?.scheduleAlreadySeenReconciliation()
+            }
+
+        cloudSeenInsertedSub = Deduplicator.shared.cloudSeenInsertedSubject
+            .sink { [weak self] syncedSeenIds in
+                self?.scheduleAlreadySeenReconciliation(removingVisiblePostsFor: syncedSeenIds)
             }
     }
 
@@ -2368,7 +2388,9 @@ class NXColumnViewModel: ObservableObject {
                             // CloudKit may have merged lastRead before the restored snapshot
                             // created its unread IDs. Reconcile once the snapshot exists, while
                             // deferring the List mutation until restore and scrolling are idle.
-                            self.scheduleAlreadySeenReconciliation()
+                            self.scheduleAlreadySeenReconciliation(
+                                removingVisiblePostsFor: Deduplicator.shared.cloudSyncedSeen
+                            )
 
 #if DEBUG
                             // Remember-on restores bypass putOnScreen(), so emit
@@ -3691,12 +3713,21 @@ class NXColumnViewModel: ObservableObject {
                 older: false,
                 wotEnabled: wotEnabled,
                 repliesEnabled: repliesEnabled,
+                revealAtTop: true,
                 sessionGeneration: sessionGeneration
             ) { [weak self] in
-                guard let self, self.feedSessionGeneration == sessionGeneration else { return }
-                self.clearAlreadySeenNewerPosts()
-                self.vmInner.abortPreparedScrollRestore()
-                self.vmInner.requestScroll(to: 0)
+                Task { @MainActor [weak self] in
+                    guard let self, self.feedSessionGeneration == sessionGeneration else { return }
+                    self.isShowingAlreadySeenNewerPosts = false
+                    if !Set(ids).isDisjoint(with: self.currentIdsOnScreen) {
+                        self.clearAlreadySeenNewerPosts()
+                    }
+                    else {
+#if DEBUG
+                        self.recordFeedAction("SHOW AGAIN produced no visible candidate")
+#endif
+                    }
+                }
             }
         }
     }
@@ -4174,7 +4205,7 @@ extension NXColumnViewModel {
     
     // Primary function to put Events on screen
     // allIdsSeen must be prefix / .shortId format
-    private func processToScreen(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool, sessionGeneration: UInt64? = nil, completion: (() -> Void)? = nil) {
+    private func processToScreen(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool, revealAtTop: Bool = false, sessionGeneration: UInt64? = nil, completion: (() -> Void)? = nil) {
 #if DEBUG
         let transformStartedAt = Date()
         L.og.debug("☘️☘️ \(config.name) processToScreen() -[LOG]-")
@@ -4248,7 +4279,13 @@ extension NXColumnViewModel {
                 self.suppressPaginationUntilRememberNewerLoad = false
                 self.recordAlreadySeenNewerCandidates(preparation.alreadySeenCandidates)
             }
-            self.putOnScreen(partialThreadsWithParent, config: config, insertAtEnd: older, completion: completion)
+            self.putOnScreen(
+                partialThreadsWithParent,
+                config: config,
+                insertAtEnd: older,
+                revealAtTop: revealAtTop,
+                completion: completion
+            )
         }
     }
 
@@ -4506,7 +4543,7 @@ extension NXColumnViewModel {
     }
     
     @MainActor
-    public func putOnScreen(_ addedPosts: [NRPost], config: NXColumnConfig, insertAtEnd: Bool = false, completion: (() -> Void)? = nil) {
+    public func putOnScreen(_ addedPosts: [NRPost], config: NXColumnConfig, insertAtEnd: Bool = false, revealAtTop: Bool = false, completion: (() -> Void)? = nil) {
 
         if !addedPosts.isEmpty {
             mediaUpdatesAvailable = false
@@ -4589,7 +4626,25 @@ extension NXColumnViewModel {
                     }
                 }
                 
-                if isAtTop {
+                if revealAtTop {
+                    // This update was explicitly requested by the user. Do not preserve
+                    // the old first row: that would insert the post above the viewport
+                    // and make the button appear to have done nothing.
+                    vmInner.abortPreparedScrollRestore()
+                    vmInner.cancelPendingFeedSettle?()
+                    vmInner.holdUnreadAboveReadingPost = false
+                    vmInner.isAtTop = true
+                    withTransaction(Transaction(animation: nil)) {
+                        viewState = .posts(addedAndExistingPostsTruncated)
+                    }
+                    vmInner.requestScroll(to: 0)
+#if DEBUG
+                    recordFeedAction(
+                        "revealed \(onlyNewAddedPosts.count) already-seen at top · \(existingPosts.count)→\(addedAndExistingPostsTruncated.count) · \(feedActionDebugViewport())"
+                    )
+#endif
+                }
+                else if isAtTop {
                     // Visually at top: pin to the on-screen first post. A leftover
                     // readingPostID from an unfinished restore is further down the list
                     // and would yank the user away from the post they just started reading.

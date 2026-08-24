@@ -923,21 +923,49 @@ struct NXPostsFeed: View {
         // tabBarMinimizeBehavior(.onScrollDown) can observe it as the primary scroller.
         List {
             if vm.alreadySeenNewerCount > 0 {
-                HStack(spacing: 8) {
-                    Text("\(vm.alreadySeenNewerCount) newer posts already seen")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                VStack(spacing: 6) {
+                    if vm.alreadySeenNewerCount == 1 {
+                        Text("1 newer post already seen")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    else {
+                        Text("\(vm.alreadySeenNewerCount) newer posts already seen")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
 
-                    Spacer(minLength: 8)
-
-                    Button("Show again") {
+                    Button {
                         vm.showAlreadySeenNewerPosts()
+                    } label: {
+                        HStack(spacing: 5) {
+                            if vm.isShowingAlreadySeenNewerPosts {
+                                ProgressView()
+                                    .controlSize(.mini)
+                            }
+                            else {
+                                Image(systemName: "arrow.counterclockwise")
+                                    .imageScale(.small)
+                            }
+                            Text("Show again")
+                        }
+                        .contentShape(Rectangle())
                     }
                     .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
                     .disabled(vm.isShowingAlreadySeenNewerPosts)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Color.primary.opacity(0.025))
+                .overlay(alignment: .bottom) {
+                    Divider()
+                }
                 .listRowSeparator(.hidden)
                 .listRowInsets(.init())
             }
