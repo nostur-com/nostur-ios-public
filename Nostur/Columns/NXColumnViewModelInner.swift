@@ -123,19 +123,35 @@ class NXColumnViewModelInner {
         return Date().timeIntervalSince(scrollRestoreStartedAt) > Self.scrollRestoreGraceInterval
     }
 
+    /// Invoked when the restored List should be covered or revealed.
+    public var onRestoreCoverChange: ((Bool) -> Void)?
+
     public func beginPreparedScrollRestore(postID: String, index: Int) {
         isPreparingForScrollRestore = true
         pendingScrollToIndex = index
         pendingScrollToPostID = postID
         scrollRestoreStartedAt = Date()
+        onRestoreCoverChange?(true)
     }
 
     public func abortPreparedScrollRestore() {
+        let wasHiding = isPreparingForScrollRestore
         isPreparingForScrollRestore = false
         pendingScrollToIndex = nil
         pendingScrollToPostID = nil
         scrollRestoreStartedAt = nil
         clearScrollRequest()
+        if wasHiding {
+            onRestoreCoverChange?(false)
+        }
+    }
+
+    public func finishPreparedScrollRestore() {
+        isPreparingForScrollRestore = false
+        pendingScrollToIndex = nil
+        pendingScrollToPostID = nil
+        scrollRestoreStartedAt = nil
+        onRestoreCoverChange?(false)
     }
     /// Last post the user was parked on after restore or while reading mid-feed.
     /// Used so a later top-insert cannot be mistaken for "user is at the top".

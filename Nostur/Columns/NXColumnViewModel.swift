@@ -9,11 +9,62 @@ import SwiftUI
 import Combine
 import NostrEssentials
 
+final class NXSeenReconciliationScheduler {
+    private var task: Task<Void, Never>?
+
+    @MainActor
+    func schedule(
+        isBusy: @escaping @MainActor () -> Bool,
+        apply: @escaping @MainActor () -> Void
+    ) {
+        task?.cancel()
+        task = Task { @MainActor [weak self] in
+            while isBusy() {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+                guard !Task.isCancelled else { return }
+            }
+
+            // Do not mutate the List on the first idle frame. UIKit can briefly report idle
+            // between a drag and deceleration or while a prepared restore starts scrolling.
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            guard !isBusy() else {
+                self?.schedule(isBusy: isBusy, apply: apply)
+                return
+            }
+
+            self?.task = nil
+            apply()
+        }
+    }
+
+    @MainActor
+    func cancel() {
+        task?.cancel()
+        task = nil
+    }
+}
+
 class NXColumnViewModel: ObservableObject {
     public let columnVMid = UUID()
 #if DEBUG
     var feedActionDebugRecord: ((String) -> Void)?
 #endif
+    /// Hides the List while a remember-on restore jumps from offset 0 to the saved post.
+    @Published var isHidingFeedForRestore = false
+
+    private func attachRestoreCoverIfNeeded() {
+        guard vmInner.onRestoreCoverChange == nil else { return }
+        vmInner.onRestoreCoverChange = { [weak self] hiding in
+            Task { @MainActor [weak self] in
+                guard let self, self.isHidingFeedForRestore != hiding else { return }
+                self.isHidingFeedForRestore = hiding
+#if DEBUG
+                self.recordFeedAction(hiding ? "RESTORE hide list" : "RESTORE reveal list")
+#endif
+            }
+        }
+    }
     
     public var speedTest: NXSpeedTest?
 
@@ -106,8 +157,18 @@ class NXColumnViewModel: ObservableObject {
     private var isFeedActivelyScrolling: Bool {
         collectionView?.isDragging == true
             || collectionView?.isDecelerating == true
+            || collectionView?.isTracking == true
             || tableView?.isDragging == true
             || tableView?.isDecelerating == true
+            || tableView?.isTracking == true
+    }
+
+    @MainActor
+    private var shouldDeferSeenReconciliation: Bool {
+        isFeedActivelyScrolling
+            || vmInner.isPerformingScroll
+            || vmInner.isPerformingScrollToFirstUnread
+            || vmInner.isPreparingForScrollRestore
     }
 
     @MainActor
@@ -370,6 +431,7 @@ class NXColumnViewModel: ObservableObject {
     public var watchForFirstConnection = false
     public var saveLocalStateSub: AnyCancellable?
     private var subscriptions = Set<AnyCancellable>()
+    private let seenReconciliationScheduler = NXSeenReconciliationScheduler()
     private var initialMediaTimeoutTask: Task<Void, Never>?
     private var autoExploreRelaysAfterWoTTimeout = false
     private var mediaDiscoverySubscriptionId: String?
@@ -530,7 +592,7 @@ class NXColumnViewModel: ObservableObject {
                 .sink(receiveValue: { [weak self] in
                     Task { @MainActor [weak self] in
                         await Task.yield()
-                        self?.removeUnreadPostsAlreadyMarkedReadInFeed()
+                        self?.scheduleAlreadySeenReconciliation()
                     }
                 })
                 .store(in: &subscriptions)
@@ -573,6 +635,20 @@ class NXColumnViewModel: ObservableObject {
 
         mergeFeedLastReadIntoSeen(feed)
         removeUnreadPostsAlreadyMarkedRead(Set(feed.lastRead), preservingVisiblePosts: false)
+    }
+
+    @MainActor
+    private func scheduleAlreadySeenReconciliation() {
+        seenReconciliationScheduler.schedule(
+            isBusy: { [weak self] in
+                self?.shouldDeferSeenReconciliation ?? false
+            },
+            apply: { [weak self] in
+                guard let self else { return }
+                self.removeUnreadPostsAlreadyMarkedReadInFeed()
+                self.removeUnreadPostsAlreadyMarkedRead(Deduplicator.shared.onScreenSeen)
+            }
+        )
     }
 
     @MainActor
@@ -710,6 +786,7 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     public func initialize(_ config: NXColumnConfig, speedTest: NXSpeedTest) {
+        attachRestoreCoverIfNeeded()
         var config = config
         refreshMediaSnapshots(in: &config)
         stopMediaDiscoverySession()
@@ -720,6 +797,7 @@ class NXColumnViewModel: ObservableObject {
         autoExploreRelaysAfterWoTTimeout = false
         selectedRelayAutoRetryAttempted = false
         clearLatestFeedSession()
+        seenReconciliationScheduler.cancel()
         // get initial feed state from
         self.subscriptions.forEach { $0.cancel() }
         self.subscriptions.removeAll()
@@ -836,8 +914,8 @@ class NXColumnViewModel: ObservableObject {
         }
 
         onScreenSeenInsertedSub = Deduplicator.shared.onScreenSeenInsertedSubject
-            .sink { [weak self] insertedShortIds in
-                self?.removeUnreadPostsAlreadyMarkedRead(insertedShortIds)
+            .sink { [weak self] _ in
+                self?.scheduleAlreadySeenReconciliation()
             }
     }
 
@@ -2261,6 +2339,7 @@ class NXColumnViewModel: ObservableObject {
                                 // the scroll actually lands — a leftover mid-feed id made
                                 // later prepends jump away from the visible top post.
                                 vmInner.beginPreparedScrollRestore(postID: scrollToId, index: restoreToIndex)
+                                isHidingFeedForRestore = true
                                 vmInner.holdUnreadAboveReadingPost = true
                                 
                                 // Update the view state without animation
@@ -2280,6 +2359,11 @@ class NXColumnViewModel: ObservableObject {
                             else {
                                 self.viewState = .posts(nrPosts)
                             }
+
+                            // CloudKit may have merged lastRead before the restored snapshot
+                            // created its unread IDs. Reconcile once the snapshot exists, while
+                            // deferring the List mutation until restore and scrolling are idle.
+                            self.scheduleAlreadySeenReconciliation()
 
 #if DEBUG
                             // Remember-on restores bypass putOnScreen(), so emit
@@ -4430,6 +4514,7 @@ extension NXColumnViewModel {
                         // ANTI-FLICKER:
                         if let previousFirstPostId, let restoreToIndex = addedAndExistingPostsTruncated.firstIndex(where: { $0.id == previousFirstPostId })  {
                             vmInner.beginPreparedScrollRestore(postID: previousFirstPostId, index: restoreToIndex)
+                            isHidingFeedForRestore = true
                             vmInner.holdUnreadAboveReadingPost = true
                             
                             // Update the view state without animation

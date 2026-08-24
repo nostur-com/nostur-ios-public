@@ -703,12 +703,15 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     private func coverViewportForPrepend(in scrollView: UIScrollView) {
         guard prependSnapshot == nil else { return }
-        guard let snapshot = scrollView.snapshotView(afterScreenUpdates: false),
-              let superview = scrollView.superview else { return }
+        guard let snapshot = scrollView.snapshotView(afterScreenUpdates: false) else { return }
 
-        snapshot.frame = scrollView.frame
+        // Pin to the window so a remounted SwiftUI List cannot draw on top of
+        // the cover (feed switches create a new hosting view after we snapshot).
+        let host = scrollView.window ?? scrollView.superview
+        guard let host else { return }
+        snapshot.frame = scrollView.convert(scrollView.bounds, to: host)
         snapshot.isUserInteractionEnabled = false
-        superview.addSubview(snapshot)
+        host.addSubview(snapshot)
         prependSnapshot = snapshot
         prependSnapshotGeneration += 1
         let generation = prependSnapshotGeneration
@@ -729,7 +732,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private func endPrependSettle(generation: Int) {
         pendingRestoreAnchor = nil
         guard anchorGeneration == generation else { return }
-        removePrependSnapshot()
+        scrollView?.layoutIfNeeded()
+        // Let the settled offset present under the cover before lifting it.
+        Task { @MainActor [weak self] in
+            await Task.yield()
+            guard let self, self.anchorGeneration == generation else { return }
+            self.removePrependSnapshot()
+        }
     }
 
     private func removePrependSnapshot() {
@@ -1033,6 +1042,9 @@ struct NXPostsFeed: View {
             vmInner.cancelPendingFeedSettle = { [weak layoutStabilizer] in
                 layoutStabilizer?.cancelPendingSettle()
             }
+            if vmInner.isPreparingForScrollRestore {
+                vm.isHidingFeedForRestore = true
+            }
             if let readingID = vmInner.readingPostID ?? vmInner.pendingScrollToPostID {
                 layoutStabilizer.rememberAnchor(id: readingID)
             }
@@ -1058,6 +1070,12 @@ struct NXPostsFeed: View {
 #endif
             
             performScrollToIndex(scrollToIndex)
+        }
+        .overlay {
+            if vm.isHidingFeedForRestore {
+                theme.listBackground
+                    .allowsHitTesting(false)
+            }
         }
         .overlay(alignment: .topTrailing) {
             unreadCounterView
@@ -1211,7 +1229,7 @@ struct NXPostsFeed: View {
             let scrollView: UIScrollView? = vm.collectionView ?? vm.tableView
             guard let scrollView, let indexPath = feedIndexPath(for: resolvedScrollToIndex, in: scrollView) else {
                 vmInner.isPerformingScroll = false
-                vmInner.clearScrollRequest()
+                vmInner.abortPreparedScrollRestore()
                 return
             }
 
@@ -1241,14 +1259,11 @@ struct NXPostsFeed: View {
             }
             
             vmInner.clearScrollRequest()
-            vmInner.pendingScrollToPostID = nil
-            vmInner.isPreparingForScrollRestore = false
-            vmInner.pendingScrollToIndex = nil
-            vmInner.scrollRestoreStartedAt = nil
 
             // This is feed restoration, not unread navigation. Keep the established lightweight
             // path so subsequent new-post insertion can preserve position with withAnimation.
             try? await Task.sleep(nanoseconds: 100_000_000)
+            vmInner.finishPreparedScrollRestore()
             vmInner.isPerformingScroll = false
             vmInner.updateIsAtTopSubject.send()
         }

@@ -7,6 +7,46 @@ import XCTest
 @testable import Nostur
 
 final class NXFeedViewportTests: XCTestCase {
+
+    @MainActor
+    func testSeenReconciliationWaitsUntilScrollingIsIdle() async {
+        let scheduler = NXSeenReconciliationScheduler()
+        var isScrolling = true
+        var applyCount = 0
+
+        scheduler.schedule(
+            isBusy: { isScrolling },
+            apply: { applyCount += 1 }
+        )
+
+        try? await Task.sleep(nanoseconds: 450_000_000)
+        XCTAssertEqual(applyCount, 0)
+
+        isScrolling = false
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        XCTAssertEqual(applyCount, 1)
+    }
+
+    @MainActor
+    func testSeenReconciliationReschedulesWhenScrollingRestartsDuringIdleGrace() async {
+        let scheduler = NXSeenReconciliationScheduler()
+        var isScrolling = false
+        var applyCount = 0
+
+        scheduler.schedule(
+            isBusy: { isScrolling },
+            apply: { applyCount += 1 }
+        )
+
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        isScrolling = true
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        XCTAssertEqual(applyCount, 0)
+
+        isScrolling = false
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        XCTAssertEqual(applyCount, 1)
+    }
     private struct Item: Equatable {
         let id: String
     }
