@@ -90,13 +90,8 @@ struct ContentTypeColumn: View {
     @ToolbarContentBuilder
     private func settingsButton(_ config: NXColumnConfig) -> some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
-            if case .vine(_) = config.columnType { // No settings for .vine
-               
-            }
-            else { // Settings on every feed type except .vine
-                Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
-                    AppSheetsModel.shared.feedSettingsFeed = config.feed
-                }
+            Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                AppSheetsModel.shared.feedSettingsFeed = config.feed
             }
         }
     }
