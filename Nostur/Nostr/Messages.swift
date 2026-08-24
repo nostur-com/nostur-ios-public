@@ -138,7 +138,7 @@ public struct RequestMessage {
     // Fetch anything that references given event ids in tags (1=REPLIES, 6=REPOSTS, 7=REACTIONS, 9735=ZAPS)
     // For when you have event(s) and you want to count replies, reposts, reactions, zaps.
     static func getEventReferences(ids:[String], limit:Int = 5000, subscriptionId:String? = nil, kinds:[Int]? = nil, since:NTimestamp? = nil) -> String {
-        let kindsJsonArr = JSON.shared.toString(kinds ?? [1,6,7,9735])
+        let kindsJsonArr = JSON.shared.toString(kinds ?? [1,1111,1244,6,7,9735])
         if let since {
             return """
     ["REQ", "\(subscriptionId ?? ("REF-"+UUID().uuidString))", {"#e": \(JSON.shared.toString(ids)), "kinds":\(kindsJsonArr), "limit": \(limit), "since": \(since.timestamp)}]
@@ -151,7 +151,7 @@ public struct RequestMessage {
     
     // Same as getEventReferences() but for a single Parameterized Replaceable Event
     static func getPREventReferences(aTag:String, limit:Int = 5000, subscriptionId:String? = nil, kinds:[Int]? = nil, since:NTimestamp? = nil) -> String {
-        let kindsJsonArr = JSON.shared.toString(kinds ?? [1,6,7,9735])
+        let kindsJsonArr = JSON.shared.toString(kinds ?? [1,1111,1244,6,7,9735])
         if let since {
             return """
     ["REQ", "\(subscriptionId ?? ("REF-A-"+UUID().uuidString))", {"#a": ["\(aTag)"], "kinds":\(kindsJsonArr), "limit": \(limit), "since": \(since.timestamp)}]
@@ -163,7 +163,7 @@ public struct RequestMessage {
     }
     
     static func getAddressableEvent(aTag: String, limit:Int = 5000, subscriptionId:String? = nil, kinds:[Int]? = nil, since:NTimestamp? = nil) -> String {
-        let kindsJsonArr = JSON.shared.toString(kinds ?? [1,6,7,9735])
+        let kindsJsonArr = JSON.shared.toString(kinds ?? [1,1111,1244,6,7,9735])
         if let since {
             return """
     ["REQ", "\(subscriptionId ?? ("REF-A-"+UUID().uuidString))", {"#a": ["\(aTag)"], "kinds":\(kindsJsonArr), "limit": \(limit), "since": \(since.timestamp)}]
