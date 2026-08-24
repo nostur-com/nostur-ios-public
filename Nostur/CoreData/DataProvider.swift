@@ -11,6 +11,10 @@ import Combine
 class DataProvider: ObservableObject {
     
     var subscriptions = Set<AnyCancellable>()
+    /// Emitted after another process or CloudKit changes a persistent store.
+    /// Consumers refetch the values they need instead of relying on a particular
+    /// registered managed object to publish a SwiftUI change.
+    let cloudStoreRemoteChangeSubject = PassthroughSubject<Void, Never>()
     
     // Debounced save to disk, 8 seconds.
     public func saveToDisk(_ saveContext: SaveContext = .all, completion: (() -> Void)? = nil) {
@@ -115,6 +119,14 @@ class DataProvider: ObservableObject {
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.undoManager = nil
         container.viewContext.name = "nostur-viewContext"
+
+        self.notificationToken = NotificationCenter.default.addObserver(
+            forName: .NSPersistentStoreRemoteChange,
+            object: container.persistentStoreCoordinator,
+            queue: nil
+        ) { [weak self] _ in
+            self?.cloudStoreRemoteChangeSubject.send()
+        }
         
         return container
     }()

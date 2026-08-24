@@ -6,7 +6,74 @@
 import XCTest
 @testable import Nostur
 
+private actor NXFeedTestGate {
+    private var continuation: CheckedContinuation<Void, Never>?
+
+    func wait() async {
+        await withCheckedContinuation { continuation in
+            self.continuation = continuation
+        }
+    }
+
+    func open() {
+        continuation?.resume()
+        continuation = nil
+    }
+}
+
 final class NXFeedViewportTests: XCTestCase {
+
+    @MainActor
+    func testCloudSeenRefreshCoalescesNotificationBurst() async {
+        let scheduler = NXCloudSeenRefreshScheduler()
+        var loadCount = 0
+        var appliedIds = Set<String>()
+
+        for index in 0..<5 {
+            scheduler.schedule(
+                debounceNanoseconds: 50_000_000,
+                load: {
+                    loadCount += 1
+                    return ["id-\(index)"]
+                },
+                apply: { appliedIds = $0 }
+            )
+        }
+
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        XCTAssertEqual(loadCount, 1)
+        XCTAssertEqual(appliedIds, ["id-4"])
+    }
+
+    @MainActor
+    func testCloudSeenRefreshDoesNotBlockUIWhileBackgroundLoadIsHeld() async {
+        let scheduler = NXCloudSeenRefreshScheduler()
+        let loadGate = NXFeedTestGate()
+        var didApply = false
+        var uiOperationCompleted = false
+
+        scheduler.schedule(
+            debounceNanoseconds: 0,
+            load: {
+                await loadGate.wait()
+                return ["synced-id"]
+            },
+            apply: { _ in didApply = true }
+        )
+
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        Task { @MainActor in
+            uiOperationCompleted = true
+        }
+        await Task.yield()
+
+        XCTAssertTrue(uiOperationCompleted)
+        XCTAssertFalse(didApply)
+
+        await loadGate.open()
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertTrue(didApply)
+    }
 
     @MainActor
     func testSeenReconciliationWaitsUntilScrollingIsIdle() async {
