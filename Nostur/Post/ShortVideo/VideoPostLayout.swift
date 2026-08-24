@@ -25,6 +25,10 @@ struct VideoPostLayout<Content: View>: View {
         isCompact ? 42.0 : 56.0
     }
 
+    private var hasDescriptionContent: Bool {
+        !nrPost.plainText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
         self.content
             // Post info
@@ -41,7 +45,7 @@ struct VideoPostLayout<Content: View>: View {
                     
                     MinimalNoteTextRenderView(nrPost: nrPost, textColor: Color.white)
                     
-                    if let summary = nrPost.eventSummary, !summary.isEmpty {
+                    if !hasDescriptionContent, let summary = nrPost.eventSummary, !summary.isEmpty {
                         Text(summary)
                             .foregroundColor(Color.white)
                             .lineLimit(isCompact ? 4 : 30)
