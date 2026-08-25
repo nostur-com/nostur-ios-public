@@ -47,7 +47,10 @@ struct CustomizableFooterFragmentView: View {
             // UNDO SEND AND SENT TO RELAYS
             if nrPost.ownPostAttributes.isOwnPost {
                 OwnPostFooter(nrPost: nrPost)
-                    .offset(y: 14)
+                    // Feed: shift into the extra bottom padding so it sits near the row divider.
+                    // Detail padding is only 5pt and PostLayout rasterizes this footer with
+                    // drawingGroup(opaque: true), which clips the offset text.
+                    .offset(y: isDetail ? 0 : 14)
             }
         }
         .padding(.top, 5)
