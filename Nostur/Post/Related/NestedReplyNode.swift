@@ -45,6 +45,16 @@ final class NestedReplyNode: Identifiable {
         )
     }
     
+    func withChildren(_ children: [NestedReplyNode]) -> NestedReplyNode {
+        NestedReplyNode(
+            nrPost: nrPost,
+            children: children,
+            depth: depth,
+            resolvedParentId: resolvedParentId,
+            placement: placement
+        )
+    }
+    
     /// One-line debug summary for UI / logs.
     var debugLine: String {
         let short: (String?) -> String = { id in

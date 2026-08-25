@@ -77,40 +77,30 @@ struct NestedThreadReplies: View {
     @ObservedObject var nrPost: NRPost
     @State private var showNotWoT = false
     
-    private var primaryNodes: [NestedReplyNode] {
-        if !nrPost.nestedRepliesSorted.isEmpty {
-            return nrPost.nestedRepliesSorted
-        }
-        if !nrPost.nestedRepliesNotWoT.isEmpty {
-            return nrPost.nestedRepliesNotWoT
-        }
-        return nrPost.groupedRepliesSorted.map { NestedReplyNode(nrPost: $0, children: [], depth: 0) }
-    }
-    
-    private var secondaryNodes: [NestedReplyNode] {
-        if !nrPost.nestedRepliesSorted.isEmpty {
-            return nrPost.nestedRepliesNotWoT
-        }
-        if !nrPost.nestedRepliesNotWoT.isEmpty {
-            return []
-        }
-        return nrPost.groupedRepliesNotWoT.map { NestedReplyNode(nrPost: $0, children: [], depth: 0) }
+    private var nestedDisplayLists: (primary: [NestedReplyNode], secondary: [NestedReplyNode]) {
+        NestedReplyWoTPartition.displayLists(
+            nestedSorted: nrPost.nestedRepliesSorted,
+            nestedNotWoT: nrPost.nestedRepliesNotWoT,
+            groupedSorted: nrPost.groupedRepliesSorted.map { NestedReplyNode(nrPost: $0, children: [], depth: 0) },
+            groupedNotWoT: nrPost.groupedRepliesNotWoT.map { NestedReplyNode(nrPost: $0, children: [], depth: 0) }
+        )
     }
     
     var body: some View {
 #if DEBUG
         let _ = nxLogChanges(of: Self.self)
 #endif
+        let lists = nestedDisplayLists
         VStack(alignment: .leading, spacing: 0) {
-            if primaryNodes.isEmpty && secondaryNodes.isEmpty {
+            if lists.primary.isEmpty && lists.secondary.isEmpty {
                 Color.clear.frame(height: 30)
             }
             
-            ForEach(Array(primaryNodes.enumerated()), id: \.element.id) { index, node in
+            ForEach(Array(lists.primary.enumerated()), id: \.element.id) { index, node in
                 NestedReplyRow(node: node, path: "\(index + 1)", visualInset: 0)
             }
             
-            if !secondaryNodes.isEmpty {
+            if !lists.secondary.isEmpty {
                 Divider().padding(.vertical, 8)
                 if WOT_FILTER_ENABLED() && !showNotWoT {
                     Button {
@@ -124,8 +114,8 @@ struct NestedThreadReplies: View {
                 }
                 if showNotWoT || !WOT_FILTER_ENABLED() {
                     // Secondary list continues numbering after primary roots.
-                    let pathOffset = primaryNodes.count
-                    ForEach(Array(secondaryNodes.enumerated()), id: \.element.id) { index, node in
+                    let pathOffset = lists.primary.count
+                    ForEach(Array(lists.secondary.enumerated()), id: \.element.id) { index, node in
                         NestedReplyRow(node: node, path: "\(pathOffset + index + 1)", visualInset: 0)
                     }
                 }

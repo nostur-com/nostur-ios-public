@@ -1518,7 +1518,7 @@ extension NRPost { // Helpers for grouped replies
         // With WoT enabled with add filter nr 5.
         return nrPosts
             // 5. People outside WoT last
-            .filter { $0.inWoT || AccountsState.shared.bgAccountPubkeys.contains($0.pubkey) || AnonReplySession.shared.bgAnonPubkeys.contains($0.pubkey) || $0.pubkey == self.pubkey }
+            .filter { replyAllowedByWoT($0) }
         
             // 4. Everything else in WoT last, newest at bottom
             .sorted(by: { $0.created_at < $1.created_at })
@@ -1538,8 +1538,16 @@ extension NRPost { // Helpers for grouped replies
     
     func sortGroupedRepliesNotWoT(_ nrPosts:[NRPost]) -> [NRPost] { // Read from bottom to top.
         return nrPosts
-            .filter { !$0.inWoT && !AccountsState.shared.bgAccountPubkeys.contains($0.pubkey) && !AnonReplySession.shared.bgAnonPubkeys.contains($0.pubkey) && $0.pubkey != self.pubkey }
+            .filter { !replyAllowedByWoT($0) }
             .sorted(by: { $0.created_at < $1.created_at })
+    }
+    
+    /// Live WoT check so a reply created before the snapshot finished loading is not stuck visible.
+    private func replyAllowedByWoT(_ post: NRPost) -> Bool {
+        if AccountsState.shared.bgAccountPubkeys.contains(post.pubkey) { return true }
+        if AnonReplySession.shared.bgAnonPubkeys.contains(post.pubkey) { return true }
+        if post.pubkey == self.pubkey { return true }
+        return post.event?.inWoT ?? post.inWoT
     }
     
     // TODO: 79.00 ms    0.7%    0 s          closure #2 in NRPost.loadGroupedReplies()
@@ -1835,23 +1843,16 @@ extension NRPost { // Helpers for grouped replies
         
         func isInWoT(_ post: NRPost) -> Bool {
             if !wotOn { return true }
-            return post.inWoT
+            return (post.event?.inWoT ?? post.inWoT)
                 || accountPubkeys.contains(post.pubkey)
                 || anonPubkeys.contains(post.pubkey)
                 || post.pubkey == detailPubkey
         }
         
-        func nodeOrDescendantInWoT(_ node: NestedReplyNode) -> Bool {
-            if isInWoT(node.nrPost) { return true }
-            return node.children.contains { nodeOrDescendantInWoT($0) }
-        }
-        
         // Nested mode must KEEP tree structure. Never promote children past an out-of-WoT
         // parent (that lifted da4897a1 to d0 when c2c1aa39 was notWoT and scrambled branches).
-        // Partition only top-level roots:
-        // - Main list: roots in WoT, OR roots out-of-WoT that still have in-WoT descendants
-        //   (parent stays as structural glue so reply-to-reply stays nested).
-        // - Show more: entire top-level branches with no in-WoT posts at all.
+        // Recurse into each branch so a not-in-WoT direct reply to a trusted root (or to
+        // any in-WoT parent) is hidden. Out-of-WoT parents of in-WoT replies stay as glue.
         let finalNestedInWoT: [NestedReplyNode]
         let finalNestedNotWoT: [NestedReplyNode]
         if !wotOn {
@@ -1859,18 +1860,14 @@ extension NRPost { // Helpers for grouped replies
             finalNestedNotWoT = []
         }
         else {
-            var main: [NestedReplyNode] = []
-            var more: [NestedReplyNode] = []
-            for root in fallbackTree {
-                if nodeOrDescendantInWoT(root) {
-                    main.append(root)
-                }
-                else {
-                    more.append(root)
-                }
-            }
-            finalNestedInWoT = main
-            finalNestedNotWoT = more
+            let partitioned = NestedReplyWoTPartition.partition(
+                fallbackTree,
+                isInWoT: { isInWoT($0.nrPost) },
+                children: { $0.children },
+                replacingChildren: { $0.withChildren($1) }
+            )
+            finalNestedInWoT = partitioned.main
+            finalNestedNotWoT = partitioned.more
         }
         
         self.event?.repliesCount = Int64(replies.count)
