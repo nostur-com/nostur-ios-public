@@ -1842,6 +1842,9 @@
         }
       }
     },
+    "%@ report" : {
+
+    },
     "%@ reposted" : {
       "comment" : "Heading for reposted post: '(Name) reposted'",
       "extractionState" : "stale",
@@ -6634,7 +6637,14 @@
       }
     },
     "Cache limit" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache limiet"
+          }
+        }
+      }
     },
     "Caches" : {
       "comment" : "Settings heading",
@@ -6841,7 +6851,15 @@
       }
     },
     "chat" : {
-      "comment" : "Label next to time indicating a live chat mention notification"
+      "comment" : "Label next to time indicating a live chat mention notification",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "chat"
+          }
+        }
+      }
     },
     "Check and prepare" : {
 
@@ -7398,7 +7416,14 @@
       }
     },
     "Clear All" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles wissen"
+          }
+        }
+      }
     },
     "Clear all non-kept DM files?" : {
       "localizations" : {
@@ -7534,10 +7559,24 @@
       }
     },
     "Clear Learned Web of Trust" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wis aangeleerde Web of Trust"
+          }
+        }
+      }
     },
     "Clear Learned Web of Trust?" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aangeleerde Web of Trust wissen?"
+          }
+        }
+      }
     },
     "Clear now" : {
       "localizations" : {
@@ -7598,6 +7637,12 @@
             "state" : "translated",
             "value" : "Papan klip tidak berisi URI Nostr Wallet Connect"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klembord heeft geen Nostr Wallet Connect URI"
+          }
         }
       }
     },
@@ -7614,6 +7659,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Papan klip tidak berisi URI Nostr Wallet Connect yang valid"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klembord heeft geen geldige Nostr Wallet Connect URI"
           }
         }
       }
@@ -9409,6 +9460,12 @@
             "state" : "translated",
             "value" : "Tidak dapat membuat permintaan zap pribadi"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé zapverzoek kon niet worden aangemaakt"
+          }
         }
       }
     },
@@ -11198,7 +11255,14 @@
       }
     },
     "Divine Feed settings" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Divine feed instellingen"
+          }
+        }
+      }
     },
     "diVines" : {
       "comment" : "Feed title\nTab title for short videos feed of people you follow",
@@ -14696,7 +14760,14 @@
       }
     },
     "Image is larger than 50 MB, not loaded." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afbeelding is groter dan 50 MB, niet geladen."
+          }
+        }
+      }
     },
     "Image uploading" : {
       "comment" : "Setting heading on settings screen",
@@ -14792,10 +14863,24 @@
       }
     },
     "Import from relays" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importeer van relays"
+          }
+        }
+      }
     },
     "Import from relays…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importeer van relays…"
+          }
+        }
+      }
     },
     "Import or export blocks" : {
 
@@ -15754,7 +15839,14 @@
 
     },
     "Learned Web of Trust" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aangeleerde Web of Trust"
+          }
+        }
+      }
     },
     "Leave" : {
       "localizations" : {
@@ -25037,6 +25129,9 @@
         }
       }
     },
+    "Reporter's note" : {
+
+    },
     "Repost" : {
       "comment" : "Button to Repost a post",
       "localizations" : {
@@ -25128,7 +25223,14 @@
       }
     },
     "Reposted post unavailable" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw geplaatst bericht niet beschikbaar"
+          }
+        }
+      }
     },
     "reposts" : {
       "comment" : "Label for reposts count, example: (7) reposts",
@@ -25317,7 +25419,8 @@
             "value" : "Latensi respons REQ"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Request delete" : {
       "localizations" : {
@@ -25764,7 +25867,8 @@
             "value" : "Sampel (5m/15m/1jam): %1$lld/%2$lld/%3$lld"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "sats" : {
       "comment" : "short for Satoshis",
@@ -25915,6 +26019,12 @@
             "state" : "translated",
             "value" : "Simpan ke pemilih"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewaar in kiezer"
+          }
         }
       }
     },
@@ -25930,6 +26040,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Disimpan ke pemilih"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewaard in kiezer"
           }
         }
       }
@@ -26191,7 +26307,14 @@
 
     },
     "Search on relays" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek op relays"
+          }
+        }
+      }
     },
     "Search..." : {
       "comment" : "Placeholder text in a search input box",
@@ -26257,7 +26380,14 @@
       }
     },
     "Select at least one relay first" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies minstens 1 relay"
+          }
+        }
+      }
     },
     "Select contacts" : {
       "comment" : "Section header for adding contacts to a feed",
@@ -26518,6 +26648,12 @@
             "state" : "translated",
             "value" : "Kirim Pos Nostr"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verstuur Nostr bericht"
+          }
         }
       }
     },
@@ -26716,6 +26852,12 @@
             "state" : "new",
             "value" : "Sent %1$@ sats to %2$@"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ sats verzonden naar %2$@"
+          }
         }
       }
     },
@@ -26726,6 +26868,12 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Sent %1$@ sats to %2$@ on [post](nostur:e:%3$@)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ sats verzonden naar %2$@ op [bericht](nostur:e:%3$@)"
           }
         }
       }
@@ -27580,7 +27728,14 @@
       }
     },
     "Show content from" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon berichten van"
+          }
+        }
+      }
     },
     "Show extra relays used on post preview" : {
       "comment" : "Setting on settings screen",
@@ -28684,7 +28839,14 @@
       }
     },
     "Start Divine videos with sound" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begin Divine videos met geluid"
+          }
+        }
+      }
     },
     "Start listening" : {
       "localizations" : {
@@ -29481,7 +29643,7 @@
       "shouldTranslate" : false
     },
     "Test build %@" : {
-
+      "shouldTranslate" : false
     },
     "Test Toggle" : {
       "extractionState" : "stale",
@@ -29972,6 +30134,9 @@
           }
         }
       }
+    },
+    "The report does not identify its target." : {
+
     },
     "The selected account could not be found. It may have been removed." : {
       "localizations" : {
@@ -31683,7 +31848,14 @@
       }
     },
     "Unable to fetch reposted post" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kan opnieuw geplaatst bericht niet ophalen"
+          }
+        }
+      }
     },
     "Unable to load conversation" : {
       "localizations" : {
@@ -32544,6 +32716,16 @@
       },
       "shouldTranslate" : false
     },
+    "User's media can be found on:" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media kan gevonden worden op:"
+          }
+        }
+      }
+    },
     "Users wallet does not support nostr" : {
       "localizations" : {
         "es" : {
@@ -32792,7 +32974,14 @@
       "shouldTranslate" : false
     },
     "Visibility" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zichtbaarheid"
+          }
+        }
+      }
     },
     "Voice" : {
       "localizations" : {
