@@ -669,19 +669,22 @@ struct MediaPlaceholder: View {
                     }
                 }
             }
-        case .error(_):
+        case .error(let errorMessage):
             failedImageView {
                 VStack {
-                    Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                    Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
                         .frame(maxWidth: .infinity, alignment: .center)
                     Text(galleryItem.url.absoluteString)
                         .truncationMode(.middle)
                         .fontItalic()
                         .foregroundColor(theme.accent)
                     Button(String(localized: "Try again", comment: "Button try again")) {
-                        load(forceLoad: true)
+                        load(forceLoad: true, recoverFromBlossom: true)
                     }
+                    .buttonStyle(.bordered)
+                    .tint(theme.accent)
                 }
+                .padding(10)
             }
         default:
             if let imageInfo {
@@ -767,7 +770,8 @@ struct MediaPlaceholder: View {
     private func load(
         forceLoad: Bool = false,
         loadAnyway: Bool = false,
-        preserveCurrentImage: Bool = false
+        preserveCurrentImage: Bool = false,
+        recoverFromBlossom: Bool = false
     ) {
         Task { @MainActor in
             await vm.load(
@@ -778,7 +782,8 @@ struct MediaPlaceholder: View {
                 usePFPpipeline: usePFPpipeline,
                 targetSize: imageRequestTargetSize,
                 cropToTarget: cropImageRequestToTarget && !fullScreen,
-                preserveCurrentImage: preserveCurrentImage
+                preserveCurrentImage: preserveCurrentImage,
+                blossomAuthorPubkey: recoverFromBlossom ? galleryItem.pubkey : nil
             )
         }
     }

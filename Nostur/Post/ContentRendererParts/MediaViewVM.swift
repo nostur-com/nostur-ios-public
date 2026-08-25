@@ -16,6 +16,7 @@ class MediaViewVM: ObservableObject {
     @Published var state: MediaViewState = .initial
     private var task: ImageTask?
     
+    @discardableResult
     public func load(
         _ url: URL,
         forceLoad: Bool = false,
@@ -24,20 +25,37 @@ class MediaViewVM: ObservableObject {
         usePFPpipeline: Bool = false,
         targetSize: CGSize? = nil,
         cropToTarget: Bool = false,
-        preserveCurrentImage: Bool = false
-    ) async {
+        preserveCurrentImage: Bool = false,
+        blossomAuthorPubkey: String? = nil,
+        reportFailure: Bool = true
+    ) async -> Bool {
+        // Start discovery alongside the normal retry. If the original server is back,
+        // it still wins without waiting for the author's kind-10063 response.
+        let blossomCandidatesTask: Task<[URL], Never>? = if let blossomAuthorPubkey,
+                                                               BlossomMediaRecovery.hash(from: url) != nil {
+            Task {
+                await BlossomMediaRecovery.candidateURLs(
+                    originalURL: url,
+                    authorPubkey: blossomAuthorPubkey
+                )
+            }
+        }
+        else {
+            nil
+        }
+
         if SettingsStore.shared.lowDataMode && !forceLoad {
             Task { @MainActor in
                 state = .lowDataMode
             }
-            return
+            return false
         }
         
         if url.absoluteString.prefix(7) == "http://" && !forceLoad {
             Task { @MainActor in
                 state = .httpBlocked
             }
-            return
+            return false
         }
         
         let request = makeImageRequest(
@@ -59,11 +77,13 @@ class MediaViewVM: ObservableObject {
         }
         
         guard let task = self.task else {
-            guard !preserveCurrentImage else { return }
-            Task { @MainActor in
-                state = .error("Error loading media")
+            guard !preserveCurrentImage else { return false }
+            if reportFailure {
+                await MainActor.run {
+                    state = .error("Failed to load image")
+                }
             }
-            return
+            return false
         }
         
         let initialProgress = await MainActor.run {
@@ -137,7 +157,7 @@ class MediaViewVM: ObservableObject {
                             }
                         }
                     }
-                    return
+                    return true
                 }
             }
             if response.container.type == .gif,
@@ -174,22 +194,66 @@ class MediaViewVM: ObservableObject {
                     }
                 }
             }
+            return true
         }
         catch {
-            guard !preserveCurrentImage else { return }
-            Task { @MainActor in
-                
-                // Paused is not error
-                if case .paused(_) = state { return }
-                
-                if Self.isDownloadSizeLimitError(error) {
-                    state = .imageTooLarge
-                }
-                else {
-                    state = .error(error.localizedDescription)
+            guard !preserveCurrentImage else { return false }
+
+            if let blossomCandidatesTask {
+                for candidateURL in await blossomCandidatesTask.value {
+                    if await load(
+                        candidateURL,
+                        forceLoad: true,
+                        loadAnyway: loadAnyway,
+                        generateIMeta: generateIMeta,
+                        usePFPpipeline: usePFPpipeline,
+                        targetSize: targetSize,
+                        cropToTarget: cropToTarget,
+                        preserveCurrentImage: false,
+                        reportFailure: false
+                    ) {
+                        return true
+                    }
                 }
             }
+
+            guard reportFailure else { return false }
+
+            let finalFailureState: MediaViewState
+            if Self.isDownloadSizeLimitError(error) {
+                finalFailureState = .imageTooLarge
+            }
+            else if let blossomCandidatesTask {
+                let mirrorCount = Self.mirrorCount(in: await blossomCandidatesTask.value)
+                if mirrorCount == 0 {
+                    finalFailureState = .error("Failed to load image (no mirrors found)")
+                }
+                else {
+                    let mirrorLabel = mirrorCount == 1 ? "mirror" : "mirrors"
+                    finalFailureState = .error("Failed to load image (tried \(mirrorCount) more \(mirrorLabel))")
+                }
+            }
+            else {
+                finalFailureState = .error("Failed to load image")
+            }
+
+            await MainActor.run {
+                // Paused is not error
+                if case .paused(_) = state { return }
+                state = finalFailureState
+            }
+            return false
         }
+    }
+
+    private static func mirrorCount(in candidateURLs: [URL]) -> Int {
+        Set(candidateURLs.map { url in
+            var components = URLComponents()
+            components.scheme = url.scheme
+            components.host = url.host
+            components.port = url.port
+            return components.string ?? url.host ?? url.absoluteString
+        }).count
     }
 
     private static func isDownloadSizeLimitError(_ error: Swift.Error) -> Bool {

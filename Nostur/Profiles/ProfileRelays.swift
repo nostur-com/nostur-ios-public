@@ -19,6 +19,7 @@ struct ProfileRelays: View {
     
     @State private var relayListItem: Event?
     @State private var dmRelayListItem: Event?
+    @State private var fetchedBlossomServers: [String] = []
     
     private var writeRelays:[String] {
         guard let relayListItem else { return [] }
@@ -33,6 +34,11 @@ struct ProfileRelays: View {
     private var dmRelays:[String] {
         guard let dmRelayListItem else { return [] }
         return dmRelayListItem.fastTags.filter { $0.0 == "relay" }.compactMap { $0.1 }
+    }
+
+    private var blossomServers: [String] {
+        var seen = Set<String>()
+        return fetchedBlossomServers.filter { seen.insert($0).inserted }
     }
     
     private var hasRelays: Bool {
@@ -75,68 +81,80 @@ struct ProfileRelays: View {
                         task.fetch()
                     }
             }
-            else if hasRelays {
-                if let relayListItem, !writeRelays.isEmpty {
-                    Section {
-                        ForEach(writeRelays.indices, id:\.self) { index in
-                            HStack {
-                                NRTextDynamic(writeRelays[index], plain: true)
-                                Spacer()
-                                RelayConnectButton(url: writeRelays[index])
+            else {
+                if hasRelays {
+                    if let relayListItem, !writeRelays.isEmpty {
+                        Section {
+                            ForEach(writeRelays.indices, id:\.self) { index in
+                                HStack {
+                                    NRTextDynamic(writeRelays[index], plain: true)
+                                    Spacer()
+                                    RelayConnectButton(url: writeRelays[index])
+                                }
+                            }
+                        } header: {
+                            Text("\(name)'s posts can be found at")
+                        } footer: {
+                            if readRelays.isEmpty {
+                                Text("Last updated \(relayListItem.date.formatted())")
+                                    .font(.caption)
+                                    .padding(.top, 40)
                             }
                         }
-                    } header: {
-                        Text("\(name)'s posts can be found at")
-                    } footer: {
-                        if readRelays.isEmpty {
-                            Text("Last updated \(relayListItem.date.formatted())")
-                                .font(.caption)
-                                .padding(.top, 40)
-                        }
+                        .listRowBackground(theme.background)
                     }
-                    .listRowBackground(theme.background)
-                }
                 
-                if !readRelays.isEmpty {
-                    Section {
-                        ForEach(readRelays.indices, id:\.self) { index in
-                            HStack {
-                                NRTextDynamic(readRelays[index], plain: true)
-                                Spacer()
-                                RelayConnectButton(url: readRelays[index])
+                    if !readRelays.isEmpty {
+                        Section {
+                            ForEach(readRelays.indices, id:\.self) { index in
+                                HStack {
+                                    NRTextDynamic(readRelays[index], plain: true)
+                                    Spacer()
+                                    RelayConnectButton(url: readRelays[index])
+                                }
                             }
+                        } header: {
+                            Text("\(name) reads posts from")
                         }
-                    } header: {
-                        Text("\(name) reads posts from")
+                        .listRowBackground(theme.background)
                     }
-                    .listRowBackground(theme.background)
-                }
                 
-                if !dmRelays.isEmpty {
-                    Section {
-                        ForEach(dmRelays.indices, id:\.self) { index in
-                            HStack {
-                                NRTextDynamic(dmRelays[index], plain: true)
-                                Spacer()
-                                RelayConnectButton(url: dmRelays[index])
+                    if !dmRelays.isEmpty {
+                        Section {
+                            ForEach(dmRelays.indices, id:\.self) { index in
+                                HStack {
+                                    NRTextDynamic(dmRelays[index], plain: true)
+                                    Spacer()
+                                    RelayConnectButton(url: dmRelays[index])
+                                }
                             }
+                        } header: {
+                            Text("\(name)'s private message relays")
                         }
-                    } header: {
-                        Text("\(name)'s private message relays")
+                        .listRowBackground(theme.background)
                     }
-                    .listRowBackground(theme.background)
-                }
                 
-                if let relayListItem {
-                    Text("Last updated \(relayListItem.date.formatted())")
-                        .font(.caption)
+                    if let relayListItem {
+                        Text("Last updated \(relayListItem.date.formatted())")
+                            .font(.caption)
+                    }
+                }
+                else {
+                    Text("\(name) has not published preferred relays or is using an older configuration.")
+                        .padding(10)
+                        .listRowBackground(theme.background)
                 }
 
-            }
-            else {
-                Text("\(name) has not published preferred relays or is using an older configuration.")
-                    .padding(10)
+                if !blossomServers.isEmpty {
+                    Section {
+                        ForEach(blossomServers, id: \.self) { server in
+                            NRTextDynamic(server, plain: true)
+                        }
+                    } header: {
+                        Text("User's media can be found on:")
+                    }
                     .listRowBackground(theme.background)
+                }
             }
         }
         .scrollContentBackgroundHidden()
@@ -146,6 +164,9 @@ struct ProfileRelays: View {
         .task {
             relayListMetadata.nsPredicate = NSPredicate(format: "kind IN {10002, 10050} AND pubkey == %@", pubkey)
             updateRelayItems()
+        }
+        .task(id: pubkey) {
+            fetchedBlossomServers = await BlossomMediaRecovery.fetchServerList(authorPubkey: pubkey)
         }
         .onChange(of: relayListMetadata.map { $0.id }) { _ in
             updateRelayItems()
@@ -222,6 +243,7 @@ struct RelayConnectButton: View {
         pe.parseMessages([
             ###"["EVENT","94d6e6f2-2b0c-4f66-a583-aa7d6c06bf8e",{"content":"","created_at":1700698284,"id":"7f48c8958c85985c8b65cd188acabdb35e7ae1bfc2f08bc88b560ec4a0d9f1f3","kind":10002,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","sig":"5fc7ff80e550c3f305f5ee92822eb43d09b450c32a9def89add5b46414ee8b702d76015c15a6b75b1e06aa7b308859396ceaa45a972c8f203b671291ccd26a10","tags":[["r","wss://nostr.wine", "read"],["r","wss://nos.lol", "read"],["r","wss://relay.damus.io","read"]]}]"###,
             ###"["EVENT","94d6e6f2-2b0c-4f66-a583-aa7d6c06bf8e",{"content":"","created_at":1700698285,"id":"c59a2fd3fcb72641ee71f0c8f04074e51fbadf208635a1fd25a2d612c7f6f875","kind":10050,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","sig":"5fc7ff80e550c3f305f5ee92822eb43d09b450c32a9def89add5b46414ee8b702d76015c15a6b75b1e06aa7b308859396ceaa45a972c8f203b671291ccd26a10","tags":[["relay","wss://nos.lol"],["relay","wss://relay.damus.io"]]}]"###
+            ,###"["EVENT","94d6e6f2-2b0c-4f66-a583-aa7d6c06bf8e",{"content":"","created_at":1700698286,"id":"4f09be38f37b35a619a48dd566a197555530267049902dc1a5f0396f295a3849","kind":10063,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","sig":"5fc7ff80e550c3f305f5ee92822eb43d09b450c32a9def89add5b46414ee8b702d76015c15a6b75b1e06aa7b308859396ceaa45a972c8f203b671291ccd26a10","tags":[["server","https://blossom.example.com"],["server","https://cdn.example.com"]]}]"###
         ])
     }){
         ProfileRelays(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: "Fabian")
