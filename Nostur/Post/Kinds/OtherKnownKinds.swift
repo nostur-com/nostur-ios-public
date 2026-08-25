@@ -105,6 +105,8 @@ func fallbackDescription(for nrPost: NRPost) -> String {
         "Badge"
     case 8:
         "A badge award"
+    case 1984:
+        "A content report"
     case 30008:
         "A badge set update"
     case 10008:
