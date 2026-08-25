@@ -113,7 +113,26 @@
       }
     },
     " to toggle)" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " para alternar)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " untuk beralih)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " op to schakelen)"
+          }
+        }
+      }
     },
     "__Source code__" : {
       "extractionState" : "manual",
@@ -326,7 +345,7 @@
       "shouldTranslate" : false
     },
     "-%@" : {
-
+      "shouldTranslate" : false
     },
     ":%@:" : {
       "localizations" : {
@@ -412,7 +431,26 @@
       }
     },
     "(%lld receive relays)" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(%lld relés de recepción)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(%lld relay penerima)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(%lld ontvangrelays)"
+          }
+        }
+      }
     },
     "(%lld relays disabled)" : {
       "localizations" : {
@@ -1515,6 +1553,24 @@
             "state" : "new",
             "value" : "%1$@ badge awarded by %2$@ to %3$lld recipients."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insignia %1$@ entregada por %2$@ a %3$lld destinatarios."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana %1$@ diberikan oleh %2$@ kepada %3$lld penerima."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille %1$@ door %2$@ uitgereikt aan %3$lld ontvangers."
+          }
         }
       }
     },
@@ -1525,6 +1581,24 @@
             "state" : "new",
             "value" : "%1$@ badge awarded to %2$@ by %3$@."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insignia %@ entregada a %@ por %@."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana %@ diberikan kepada %@ oleh %@."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille %@ uitgereikt aan %@ door %@."
+          }
         }
       }
     },
@@ -1534,6 +1608,24 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ badge issued by %2$@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insignia %@ emitida por %@."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana %@ diterbitkan oleh %@."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille %@ uitgegeven door %@."
           }
         }
       }
@@ -1882,6 +1974,12 @@
             "state" : "translated",
             "value" : "%@ disetel"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ deelnemers"
+          }
         }
       }
     },
@@ -2090,7 +2188,8 @@
             "value" : "%1$lld %2$@ · %3$@"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%lld contacts selected" : {
       "localizations" : {
@@ -2306,10 +2405,26 @@
       }
     },
     "%lld newer posts already seen" : {
-
-    },
-    "1 newer post already seen" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld publicaciones más recientes ya vistas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld postingan lebih baru sudah dilihat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld nieuwere berichten al gezien"
+          }
+        }
+      }
     },
     "%lld participants" : {
       "localizations" : {
@@ -2334,7 +2449,26 @@
       }
     },
     "%lld recipients" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld destinatarios"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld penerima"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ontvangers"
+          }
+        }
+      }
     },
     "%lld relays disabled" : {
       "localizations" : {
@@ -2697,7 +2831,8 @@
             "value" : "❤️"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "📸" : {
       "comment" : "Tab title for Olas/Picture feed",
@@ -2938,8 +3073,49 @@
     "1 GB" : {
       "shouldTranslate" : false
     },
+    "1 newer post already seen" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 publicación más reciente ya vista"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 postingan lebih baru sudah dilihat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 nieuwer bericht al gezien"
+          }
+        }
+      }
+    },
     "1 recipient" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 destinatario"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 penerima"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 ontvanger"
+          }
+        }
+      }
     },
     "1 year" : {
       "comment" : "DM expiration duration label",
@@ -3296,7 +3472,7 @@
       "shouldTranslate" : false
     },
     "99+" : {
-
+      "shouldTranslate" : false
     },
     "100 MB" : {
       "shouldTranslate" : false
@@ -3418,7 +3594,26 @@
       }
     },
     "About badge publishing" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca de la publicación de insignias"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentang penerbitan lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over het publiceren van medailles"
+          }
+        }
+      }
     },
     "About Discover more" : {
 
@@ -4427,7 +4622,26 @@
       }
     },
     "Add to profile" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir al perfil"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tambahkan ke profil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aan profiel toevoegen"
+          }
+        }
+      }
     },
     "Add to stage" : {
       "localizations" : {
@@ -4596,7 +4810,26 @@
 
     },
     "Advanced" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanzado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lanjutan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geavanceerd"
+          }
+        }
+      }
     },
     "After the specified time messages will be deleted. This is a collaborative feature and only works if all participants have it enabled and use relays that support it (NIP-40 Expiration Timestamp)." : {
       "localizations" : {
@@ -4692,7 +4925,26 @@
       }
     },
     "All received badges are on your profile" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las insignias recibidas están en tu perfil"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semua lencana yang diterima ada di profil Anda"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle ontvangen medailles staan op je profiel"
+          }
+        }
+      }
     },
     "Already in Nostur" : {
 
@@ -5038,7 +5290,26 @@
       }
     },
     "Artwork" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gambar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afbeelding"
+          }
+        }
+      }
     },
     "auth required" : {
       "comment" : "Small label to indicate auth is required",
@@ -5308,13 +5579,70 @@
       }
     },
     "Award badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entregar insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berikan lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille uitreiken"
+          }
+        }
+      }
     },
     "Award details" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles de la entrega"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail penghargaan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitreikingsdetails"
+          }
+        }
+      }
     },
     "Award history" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de entregas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riwayat penghargaan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitreikingsgeschiedenis"
+          }
+        }
+      }
     },
     "Award to" : {
       "comment" : "Navigation title of screen where you choose who to award badge to",
@@ -5364,7 +5692,26 @@
       }
     },
     "Awarded to" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entregada a"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diberikan kepada"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitgereikt aan"
+          }
+        }
+      }
     },
     "Awarded to %lld people" : {
       "comment" : "Text showing how many badges have been awarded",
@@ -5415,10 +5762,48 @@
       }
     },
     "Awarded to you and %lld others" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entregada a ti y a %lld personas más"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diberikan kepada Anda dan %lld lainnya"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitgereikt aan jou en %lld anderen"
+          }
+        }
+      }
     },
     "Awarding…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entregando…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memberikan…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitreiken…"
+          }
+        }
+      }
     },
     "Back" : {
       "comment" : "Button to go back",
@@ -5444,25 +5829,158 @@
       }
     },
     "Badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille"
+          }
+        }
+      }
     },
     "Badge address" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dirección de la insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alamat lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille-adres"
+          }
+        }
+      }
     },
     "Badge award" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrega de insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penghargaan lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille-uitreiking"
+          }
+        }
+      }
     },
     "Badge awarded" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insignia entregada"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana diberikan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille uitgereikt"
+          }
+        }
+      }
     },
     "Badge identifier" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador de la insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pengenal lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille-ID"
+          }
+        }
+      }
     },
     "Badge received" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insignia recibida"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana diterima"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille ontvangen"
+          }
+        }
+      }
     },
     "Badge unavailable" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insignia no disponible"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana tidak tersedia"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille niet beschikbaar"
+          }
+        }
+      }
     },
     "Badges" : {
       "comment" : "Side bar navigation button",
@@ -6301,7 +6819,26 @@
       }
     },
     "Change photo" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar foto"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ubah foto"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto wijzigen"
+          }
+        }
+      }
     },
     "chat" : {
       "comment" : "Label next to time indicating a live chat mention notification"
@@ -6310,7 +6847,26 @@
 
     },
     "Check out the “%@” badge." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echa un vistazo a la insignia «%@»."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lihat lencana “%@”."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekijk de medaille ‘%@’."
+          }
+        }
+      }
     },
     "Checked" : {
       "localizations" : {
@@ -6621,10 +7177,48 @@
       }
     },
     "Choose file" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir archivo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih file"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestand kiezen"
+          }
+        }
+      }
     },
     "Choose from Files" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir de Archivos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih dari File"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies uit Bestanden"
+          }
+        }
+      }
     },
     "Choose from library" : {
       "localizations" : {
@@ -6649,7 +7243,26 @@
       }
     },
     "Choose from Photos" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir de Fotos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih dari Foto"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies uit Foto's"
+          }
+        }
+      }
     },
     "Choose one or more public relays you read from so you can receive notifications when others mention you." : {
       "localizations" : {
@@ -6674,7 +7287,26 @@
       }
     },
     "Choose photo" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir foto"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih foto"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto kiezen"
+          }
+        }
+      }
     },
     "Choose relays for private messages" : {
       "localizations" : {
@@ -7169,7 +7801,26 @@
       "shouldTranslate" : false
     },
     "Combine safely" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Combinar de forma segura"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gabungkan dengan aman"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samenvoegen"
+          }
+        }
+      }
     },
     "Commenting on %@" : {
       "comment" : "Shown when adding a comment to a website",
@@ -7284,16 +7935,73 @@
       }
     },
     "Community Builder" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Constructor de comunidad"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pembangun Komunitas"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Communitybouwer"
+          }
+        }
+      }
     },
     "community_builder" : {
-
+      "shouldTranslate" : false
     },
     "Configuration looks good" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración es correcta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurasi sudah baik"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuratie ziet er goed uit"
+          }
+        }
+      }
     },
     "Configuration looks not optimal" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración no es óptima"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurasi belum optimal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuratie ziet er niet optimaal uit"
+          }
+        }
+      }
     },
     "Configure" : {
       "comment" : "Navigation title for screen to create a new feed",
@@ -7319,7 +8027,26 @@
       }
     },
     "Configure a media upload service in Settings before uploading badge artwork." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configura un servicio de carga de contenido multimedia en Ajustes antes de subir la imagen de la insignia."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurasikan layanan unggah media di Pengaturan sebelum mengunggah gambar lencana."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configureer in Instellingen een media-uploadservice voordat je een medaille-afbeelding uploadt."
+          }
+        }
+      }
     },
     "Configure announced relays" : {
       "localizations" : {
@@ -8308,7 +9035,26 @@
       }
     },
     "Copy %@" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salin %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer %@"
+          }
+        }
+      }
     },
     "Copy image URL" : {
       "localizations" : {
@@ -8583,7 +9329,26 @@
       }
     },
     "Could not award badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo entregar la insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat memberikan lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille kon niet worden uitgereikt"
+          }
+        }
+      }
     },
     "Could not convert data" : {
       "comment" : "Error message",
@@ -8609,7 +9374,26 @@
       }
     },
     "Could not create badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo crear la insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat membuat lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille kon niet worden aangemaakt"
+          }
+        }
+      }
     },
     "Could not create private zap request" : {
       "comment" : "Error message",
@@ -8765,7 +9549,26 @@
       }
     },
     "Could not publish badges" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron publicar las insignias"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat menerbitkan lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medailles konden niet worden gepubliceerd"
+          }
+        }
+      }
     },
     "Could not send NWC request" : {
       "comment" : "Error message",
@@ -8815,7 +9618,26 @@
       }
     },
     "Could not update badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo actualizar la insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat memperbarui lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille kon niet worden bijgewerkt"
+          }
+        }
+      }
     },
     "Counters for replies, likes, zaps etc." : {
       "comment" : "Setting on settings screen",
@@ -8863,7 +9685,26 @@
       }
     },
     "Create a badge, then award it from its detail screen." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea una insignia y entrégala desde su pantalla de detalles."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buat lencana, lalu berikan dari layar detailnya."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak een medaille aan en reik deze vervolgens uit via het detailscherm."
+          }
+        }
+      }
     },
     "Create a short video" : {
       "localizations" : {
@@ -8888,7 +9729,26 @@
       }
     },
     "Create badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crear insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buat lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille aanmaken"
+          }
+        }
+      }
     },
     "Create new account" : {
       "comment" : "Button to create a new account\nButton to start creating a new account\nNavigation title of create new account screen",
@@ -9831,7 +10691,26 @@
       }
     },
     "Details" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
     },
     "Direct Message Settings" : {
       "localizations" : {
@@ -10038,10 +10917,48 @@
       }
     },
     "Discard changes" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descartar cambios"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buang perubahan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wijzigingen negeren"
+          }
+        }
+      }
     },
     "Discard this badge?" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Descartar esta insignia?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buang lencana ini?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze medaille negeren?"
+          }
+        }
+      }
     },
     "Disconnect" : {
       "comment" : "Button to disconnect NWC (Nostr Wallet Connection)\nButton to disconnect from relay",
@@ -10182,7 +11099,26 @@
       }
     },
     "Discover more" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descubrir más"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temukan lebih banyak"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer ontdekken"
+          }
+        }
+      }
     },
     "Discover more temporarily searches additional sources without changing your saved feed setting." : {
 
@@ -10665,7 +11601,26 @@
       "shouldTranslate" : false
     },
     "Edit badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille bewerken"
+          }
+        }
+      }
     },
     "Edit muted word" : {
       "comment" : "Navigation title for screen to edit muted word",
@@ -11486,7 +12441,26 @@
       }
     },
     "Event ID" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID del evento"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID peristiwa"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebeurtenis-ID"
+          }
+        }
+      }
     },
     "eventId: %@" : {
       "localizations" : {
@@ -11511,10 +12485,48 @@
       }
     },
     "Everyone" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semua orang"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iedereen"
+          }
+        }
+      }
     },
     "Everyone on selected relays" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos en los relés seleccionados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semua orang di relay yang dipilih"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iedereen op gekozen relays"
+          }
+        }
+      }
     },
     "Example" : {
       "extractionState" : "stale",
@@ -11611,10 +12623,48 @@
       }
     },
     "Export to relays" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar a relés"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekspor ke relay"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteer naar relays"
+          }
+        }
+      }
     },
     "Export to relays…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar a relés…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekspor ke relay…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteer naar relays…"
+          }
+        }
+      }
     },
     "Extra information" : {
       "comment" : "Label for report field to give extra information",
@@ -12677,10 +13727,48 @@
       }
     },
     "Found" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encontrado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ditemukan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gevonden"
+          }
+        }
+      }
     },
     "From" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dari"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Van"
+          }
+        }
+      }
     },
     "Funny" : {
       "comment" : "Feed title\nTab title for the Funny feed",
@@ -13406,17 +14494,92 @@
             "state" : "new",
             "value" : "I awarded the “%1$@” badge to %2$lld people."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entregué la insignia «%@» a %lld personas."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya memberikan lencana “%@” kepada %lld orang."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik heb de medaille ‘%@’ uitgereikt aan %lld personen."
+          }
         }
       }
     },
     "I awarded the “%@” badge." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entregué la insignia «%@»."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya memberikan lencana “%@”."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik heb de medaille ‘%@’ uitgereikt."
+          }
+        }
+      }
     },
     "I created the “%@” badge." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "He creado la insignia «%@»."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya membuat lencana “%@”."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik heb de medaille ‘%@’ aangemaakt."
+          }
+        }
+      }
     },
     "I was awarded the “%@” badge! 🎉" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Me entregaron la insignia «%@»! 🎉"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya menerima lencana “%@”! 🎉"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik heb de medaille ‘%@’ ontvangen! 🎉"
+          }
+        }
+      }
     },
     "ID" : {
       "comment" : "Label for post identifier (ID)",
@@ -13846,7 +15009,26 @@
       }
     },
     "Invalid badge award" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrega de insignia no válida"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penghargaan lencana tidak valid"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige medaille-uitreiking"
+          }
+        }
+      }
     },
     "Invalid key" : {
       "comment" : "Message shown when user has entered an invalid key",
@@ -13940,7 +15122,26 @@
       }
     },
     "Issued by" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emitida por"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diterbitkan oleh"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitgegeven door"
+          }
+        }
+      }
     },
     "It looks like %lld contacts were removed from your following list, perhaps from another nostr app%@" : {
       "localizations" : {
@@ -14041,7 +15242,26 @@
       }
     },
     "Keep editing" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir editando"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lanjutkan mengedit"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doorgaan met bewerken"
+          }
+        }
+      }
     },
     "Keep files permanently" : {
       "localizations" : {
@@ -14395,7 +15615,26 @@
       }
     },
     "Last awarded" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última entrega"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terakhir diberikan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatst uitgereikt"
+          }
+        }
+      }
     },
     "Last optimize: %@" : {
       "comment" : "Last run: (date) of maintanace",
@@ -15185,7 +16424,26 @@
       }
     },
     "Loading badge…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando insignia…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memuat lencana…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille laden…"
+          }
+        }
+      }
     },
     "Loading emoji sets…" : {
       "localizations" : {
@@ -16605,7 +17863,26 @@
       }
     },
     "My web of trust" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi Web of Trust"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web of Trust saya"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn Web of Trust"
+          }
+        }
+      }
     },
     "Name" : {
       "comment" : "Label of Name text field on Create new account screen",
@@ -16855,7 +18132,26 @@
       }
     },
     "New badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana baru"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe medaille"
+          }
+        }
+      }
     },
     "New blocks" : {
 
@@ -17545,7 +18841,26 @@
       }
     },
     "No badges created" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han creado insignias"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belum ada lencana yang dibuat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen medailles aangemaakt"
+          }
+        }
+      }
     },
     "No Blossom server configured. Please configure a Blossom server in Nostur settings to upload images." : {
       "localizations" : {
@@ -17723,10 +19038,48 @@
       }
     },
     "No valid badge awards found" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontraron entregas de insignias válidas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ditemukan penghargaan lencana yang valid"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen geldige medaille-uitreikingen gevonden"
+          }
+        }
+      }
     },
     "No verified wearers found" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontraron personas verificadas que la usen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ditemukan pemakai terverifikasi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen geverifieerde dragers gevonden"
+          }
+        }
+      }
     },
     "non-https media blocked" : {
       "comment" : "Displayed when an image in a post is blocked",
@@ -17842,7 +19195,26 @@
       }
     },
     "Nostr badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insignia de Nostr"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana Nostr"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostr-medaille"
+          }
+        }
+      }
     },
     "Nostr Dunbar Number" : {
       "localizations" : {
@@ -18013,7 +19385,26 @@
 
     },
     "Nostur crops the image to a square and creates the required sizes automatically." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur recorta la imagen en un cuadrado y crea automáticamente los tamaños necesarios."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur memotong gambar menjadi persegi dan membuat ukuran yang diperlukan secara otomatis."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur snijdt de afbeelding bij tot een vierkant en maakt automatisch de vereiste formaten."
+          }
+        }
+      }
     },
     "Nostur does not have permissions to set a reminder" : {
       "comment" : "Error message",
@@ -18092,7 +19483,26 @@
 
     },
     "Not on your profile" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No está en tu perfil"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada di profil Anda"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet op je profiel"
+          }
+        }
+      }
     },
     "Not yet" : {
       "extractionState" : "stale",
@@ -18211,10 +19621,48 @@
       }
     },
     "Nothing found in your network" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró nada en tu red"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ditemukan apa pun di jaringan Anda"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niks gevonden in jouw netwerk"
+          }
+        }
+      }
     },
     "Nothing found on the selected relays" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró nada en los relés seleccionados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ditemukan apa pun di relay yang dipilih"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niks gevonden op gekozen relays"
+          }
+        }
+      }
     },
     "Nothing here :(" : {
       "localizations" : {
@@ -18239,10 +19687,48 @@
       }
     },
     "Nothing new from your follows" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada nuevo de las personas que sigues"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada yang baru dari orang yang Anda ikuti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niks nieuws van wie jij volgt"
+          }
+        }
+      }
     },
     "Nothing new to import" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada nuevo que importar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada yang baru untuk diimpor"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niks nieuws om te importeren"
+          }
+        }
+      }
     },
     "Notices" : {
       "localizations" : {
@@ -18557,7 +20043,26 @@
       }
     },
     "On your profile" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En tu perfil"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Di profil Anda"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Op je profiel"
+          }
+        }
+      }
     },
     "Only connect to additional relays when a VPN is active" : {
       "localizations" : {
@@ -18626,10 +20131,48 @@
       }
     },
     "Only me" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo yo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hanya saya"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen ik"
+          }
+        }
+      }
     },
     "Only posts from people you follow" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo publicaciones de las personas que sigues"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hanya postingan dari orang yang Anda ikuti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen berichten van wie jij volgt"
+          }
+        }
+      }
     },
     "Only show content from your follows or follows-follows" : {
       "localizations" : {
@@ -18972,7 +20515,26 @@
 
     },
     "People I follow" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personas que sigo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orang yang saya ikuti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensen die ik volg"
+          }
+        }
+      }
     },
     "People you reply or react to will appear here automatically." : {
 
@@ -19346,7 +20908,26 @@
       }
     },
     "Pin message" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fijar mensaje"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sematkan pesan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht vastpinnen"
+          }
+        }
+      }
     },
     "Pin on tab bar" : {
       "comment" : "Toggle to pin/unpin a feed on tab bar",
@@ -19484,13 +21065,70 @@
       }
     },
     "Pinned message" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensaje fijado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pesan yang disematkan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vastgepind bericht"
+          }
+        }
+      }
     },
     "Pinned messages" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensajes fijados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pesan yang disematkan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vastgepinde berichten"
+          }
+        }
+      }
     },
     "Play sound automatically" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproducir sonido automáticamente"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Putar suara secara otomatis"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch geluid afspelen"
+          }
+        }
+      }
     },
     "Please read these Terms and Conditions (\"Terms\", \"Terms and Conditions\") carefully before using Nostur (the \"App\") operated by the independent developer (\"Developer\")." : {
       "comment" : "Terms and conditions paragraph",
@@ -20237,7 +21875,26 @@
       }
     },
     "Preparing artwork…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparando imagen…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyiapkan gambar…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afbeelding voorbereiden…"
+          }
+        }
+      }
     },
     "Preparing video..." : {
       "localizations" : {
@@ -20968,7 +22625,26 @@
 
     },
     "Published" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicada"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diterbitkan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerd"
+          }
+        }
+      }
     },
     "Published relays" : {
       "extractionState" : "manual",
@@ -21055,7 +22731,26 @@
       }
     },
     "Publishing badge…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicando insignia…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menerbitkan lencana…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille publiceren…"
+          }
+        }
+      }
     },
     "Purple" : {
       "localizations" : {
@@ -21645,7 +23340,26 @@
       }
     },
     "Received from" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recibido de"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diterima dari"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvangen van"
+          }
+        }
+      }
     },
     "Received from:" : {
       "comment" : "Heading for list of relays received from",
@@ -21716,7 +23430,26 @@
       }
     },
     "Recipients" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destinatarios"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penerima"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvangers"
+          }
+        }
+      }
     },
     "Recommendation: reduce receive relays to %lld–%lld max (tap on the " : {
       "localizations" : {
@@ -21724,6 +23457,24 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Recommendation: reduce receive relays to %1$lld–%2$lld max (tap on the "
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recomendación: reduce los relés de recepción a un máximo de %1$lld–%2$lld (toca "
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rekomendasi: kurangi relay penerima menjadi maks. %1$lld–%2$lld (ketuk "
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aanbeveling: verminder ontvangrelays naar %1$lld–%2$lld max (druk op "
           }
         }
       }
@@ -22020,13 +23771,70 @@
       }
     },
     "Relay configuration looks good" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración de relés es correcta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurasi relay sudah baik"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay instellingen zien er goed uit"
+          }
+        }
+      }
     },
     "Relay configuration looks not optimal" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración de relés no es óptima"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurasi relay belum optimal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay instellingen zijn niet optimaal"
+          }
+        }
+      }
     },
     "Relay configuration looks not optimal." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración de relés no es óptima."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurasi relay belum optimal."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay instellingen zijn niet optimaal."
+          }
+        }
+      }
     },
     "Relay connection stats" : {
       "localizations" : {
@@ -22566,7 +24374,26 @@
       }
     },
     "Remove artwork" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar imagen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus gambar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afbeelding verwijderen"
+          }
+        }
+      }
     },
     "Remove audio" : {
       "localizations" : {
@@ -22636,7 +24463,26 @@
       }
     },
     "Remove from profile" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar del perfil"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus dari profil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Van profiel verwijderen"
+          }
+        }
+      }
     },
     "Remove from stage" : {
       "localizations" : {
@@ -23787,7 +25633,26 @@
       }
     },
     "Retry loading badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a cargar la insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coba muat lencana lagi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille opnieuw laden"
+          }
+        }
+      }
     },
     "Retry with authentication" : {
       "localizations" : {
@@ -23972,7 +25837,26 @@
       }
     },
     "Save profile badges" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar insignias del perfil"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simpan lencana profil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profielmedailles opslaan"
+          }
+        }
+      }
     },
     "Save to file..." : {
       "localizations" : {
@@ -25072,25 +26956,158 @@
       }
     },
     "Share as image" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir como imagen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan sebagai gambar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel als afbeelding"
+          }
+        }
+      }
     },
     "Share award" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir entrega"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan penghargaan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel uitreiking"
+          }
+        }
+      }
     },
     "Share award as image" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir entrega como imagen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan penghargaan sebagai gambar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel uitreiking als afbeelding"
+          }
+        }
+      }
     },
     "Share award in a post" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir entrega en una publicación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan penghargaan dalam postingan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel uitreiking in bericht"
+          }
+        }
+      }
     },
     "Share badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel medaille"
+          }
+        }
+      }
     },
     "Share badge as image" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir insignia como imagen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan lencana sebagai gambar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deels als afbeelding"
+          }
+        }
+      }
     },
     "Share badge in a post" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir insignia en una publicación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan lencana dalam postingan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel medaille in een bericht"
+          }
+        }
+      }
     },
     "Share highlight" : {
       "comment" : "Navigation title for screen to Share a Highlighted Text",
@@ -25116,7 +27133,26 @@
       }
     },
     "Share in a post" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir en una publicación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan dalam postingan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel als bericht"
+          }
+        }
+      }
     },
     "Share link" : {
       "comment" : "Post context menu button",
@@ -25432,7 +27468,26 @@
       }
     },
     "Show again" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar de nuevo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan lagi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon opnieuw"
+          }
+        }
+      }
     },
     "Show anyway" : {
       "comment" : "Button to show the blocked content anyway",
@@ -25802,7 +27857,26 @@
       "shouldTranslate" : false
     },
     "Show new posts" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar publicaciones nuevas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan postingan baru"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon nieuwe berichten"
+          }
+        }
+      }
     },
     "Show post stats on timeline" : {
       "comment" : "Setting on settings screen",
@@ -27287,7 +29361,26 @@
       }
     },
     "Technical details" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles técnicos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail teknis"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Technische details"
+          }
+        }
+      }
     },
     "Temporary blocks skipped" : {
 
@@ -27465,11 +29558,48 @@
             "state" : "new",
             "value" : "The “%1$@” badge was awarded to %2$lld people."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La insignia «%@» fue entregada a %lld personas."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana “%@” diberikan kepada %lld orang."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De medaille ‘%@’ is aan %lld personen uitgereikt."
+          }
         }
       }
     },
     "The “%@” badge was awarded." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La insignia «%@» fue entregada."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana “%@” telah diberikan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De medaille ‘%@’ is uitgereikt."
+          }
+        }
+      }
     },
     "The account names are protected so only you can read them." : {
 
@@ -27529,7 +29659,26 @@
       }
     },
     "The artwork upload could not be authorized." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo autorizar la carga de la imagen."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unggahan gambar tidak dapat diotorisasi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De upload van de afbeelding kon niet worden geautoriseerd."
+          }
+        }
+      }
     },
     "The database could not be loaded." : {
       "localizations" : {
@@ -27715,16 +29864,92 @@
       }
     },
     "The identifier “%@” already exists. Publishing will replace its name, description, and artwork." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El identificador «%@» ya existe. Al publicar se reemplazarán su nombre, descripción e imagen."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pengenal “%@” sudah ada. Penerbitan akan mengganti nama, deskripsi, dan gambarnya."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De ID ‘%@’ bestaat al. Bij publicatie worden de naam, beschrijving en afbeelding vervangen."
+          }
+        }
+      }
     },
     "The identifier cannot be changed because it is the permanent address of this badge." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El identificador no se puede cambiar porque es la dirección permanente de esta insignia."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pengenal tidak dapat diubah karena merupakan alamat permanen lencana ini."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De ID kan niet worden gewijzigd, omdat deze het permanente adres van deze medaille is."
+          }
+        }
+      }
     },
     "The media service did not return a usable image URL." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servicio multimedia no devolvió una URL de imagen válida."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layanan media tidak mengembalikan URL gambar yang dapat digunakan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De mediaservice heeft geen bruikbare afbeeldings-URL teruggestuurd."
+          }
+        }
+      }
     },
     "The media service took too long to process the artwork." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servicio multimedia tardó demasiado en procesar la imagen."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layanan media terlalu lama memproses gambar."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het verwerken van de afbeelding door de mediaservice duurde te lang."
+          }
+        }
+      }
     },
     "The profile above was found to be similar to one below that you are already following:" : {
       "localizations" : {
@@ -27765,10 +29990,48 @@
       }
     },
     "The selected image could not be prepared." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo preparar la imagen seleccionada."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gambar yang dipilih tidak dapat disiapkan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De geselecteerde afbeelding kon niet worden voorbereid."
+          }
+        }
+      }
     },
     "The selected image could not be read." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo leer la imagen seleccionada."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gambar yang dipilih tidak dapat dibaca."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De geselecteerde afbeelding kon niet worden gelezen."
+          }
+        }
+      }
     },
     "The text content of the post to publish." : {
       "localizations" : {
@@ -27998,13 +30261,70 @@
       }
     },
     "This award event has no valid recipients." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este evento de entrega no tiene destinatarios válidos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peristiwa penghargaan ini tidak memiliki penerima yang valid."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze uitreiking heeft geen geldige ontvangers."
+          }
+        }
+      }
     },
     "This badge or its recipients are invalid." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta insignia o sus destinatarios no son válidos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana ini atau penerimanya tidak valid."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze medaille of de ontvangers ervan zijn ongeldig."
+          }
+        }
+      }
     },
     "This becomes part of the badge’s permanent Nostr address. Changing it creates a different badge." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto pasa a formar parte de la dirección Nostr permanente de la insignia. Al cambiarlo, se crea una insignia diferente."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ini menjadi bagian dari alamat Nostr permanen lencana. Mengubahnya akan membuat lencana yang berbeda."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit wordt onderdeel van het permanente Nostr-adres van de medaille. Als je dit wijzigt, wordt er een andere medaille aangemaakt."
+          }
+        }
+      }
     },
     "This can be caused by the receiver switching to a different lightning address" : {
       "localizations" : {
@@ -28052,7 +30372,26 @@
       }
     },
     "This identifier is already used by “%@”. Creating will update that badge." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este identificador ya lo usa «%@». Al crear, se actualizará esa insignia."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pengenal ini sudah digunakan oleh “%@”. Pembuatan akan memperbarui lencana tersebut."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze ID wordt al gebruikt door ‘%@’. Bij aanmaken wordt die medaille bijgewerkt."
+          }
+        }
+      }
     },
     "This list is public" : {
       "localizations" : {
@@ -29212,7 +31551,26 @@
       }
     },
     "Unable to fetch badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede obtener la insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat mengambil lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille kan niet worden opgehaald"
+          }
+        }
+      }
     },
     "Unable to fetch contacts" : {
       "localizations" : {
@@ -29373,7 +31731,26 @@
       }
     },
     "Unable to open badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede abrir la insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat membuka lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille kan niet worden geopend"
+          }
+        }
+      }
     },
     "Unavailable" : {
       "extractionState" : "stale",
@@ -29656,7 +32033,26 @@
       }
     },
     "Unnamed badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insignia sin nombre"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lencana tanpa nama"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naamloze medaille"
+          }
+        }
+      }
     },
     "Unpin" : {
       "localizations" : {
@@ -29704,7 +32100,26 @@
       }
     },
     "Unpin message" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desfijar mensaje"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lepaskan sematan pesan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht losmaken"
+          }
+        }
+      }
     },
     "Unsigned or invalid event" : {
       "comment" : "Error message",
@@ -29776,10 +32191,48 @@
       }
     },
     "Update badge" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar insignia"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui lencana"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medaille bijwerken"
+          }
+        }
+      }
     },
     "Update existing badge?" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Actualizar la insignia existente?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui lencana yang ada?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestaande medaille bijwerken?"
+          }
+        }
+      }
     },
     "Updates refer to people added or removed from this list, not posts or content." : {
       "localizations" : {
@@ -29872,7 +32325,26 @@
       }
     },
     "Uploading artwork…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subiendo imagen…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengunggah gambar…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afbeelding uploaden…"
+          }
+        }
+      }
     },
     "Uploading to Blossom server(s)..." : {
       "localizations" : {
@@ -29941,7 +32413,26 @@
       }
     },
     "Use Edit to reorder the badges shown on your profile." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa Editar para cambiar el orden de las insignias que aparecen en tu perfil."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gunakan Edit untuk mengubah urutan lencana yang ditampilkan di profil Anda."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik Bewerk om de volgorde van de medailles op je profiel te wijzigen."
+          }
+        }
+      }
     },
     "Use existing account" : {
       "comment" : "Button to start using an existing account",
@@ -30664,7 +33155,26 @@
       "shouldTranslate" : false
     },
     "What did someone do to earn this badge?" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Qué hizo alguien para obtener esta insignia?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apa yang dilakukan seseorang untuk mendapatkan lencana ini?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat heeft iemand gedaan om deze medaille te verdienen?"
+          }
+        }
+      }
     },
     "What do you want to talk about?" : {
       "localizations" : {
@@ -30845,7 +33355,26 @@
       }
     },
     "Who can see the blocks?" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quién puede ver los bloqueos?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa yang dapat melihat pemblokiran?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie kan blokkeringen zien?"
+          }
+        }
+      }
     },
     "Will not download media and previews" : {
       "comment" : "Setting on settings screen",
@@ -30917,7 +33446,26 @@
       }
     },
     "Worn by" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usada por"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dikenakan oleh"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedragen door"
+          }
+        }
+      }
     },
     "write" : {
       "localizations" : {
@@ -31031,7 +33579,7 @@
       }
     },
     "wss://relay.example.com" : {
-
+      "shouldTranslate" : false
     },
     "WTF" : {
       "localizations" : {
@@ -31277,10 +33825,48 @@
       }
     },
     "Your badge definition will be signed by your current account and published publicly to Nostr." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La definición de tu insignia será firmada por tu cuenta actual y publicada en Nostr."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Definisi lencana Anda akan ditandatangani oleh akun saat ini dan diterbitkan secara publik ke Nostr."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De definitie van je medaille wordt ondertekend door je huidige account en openbaar gepubliceerd op Nostr."
+          }
+        }
+      }
     },
     "Your badge details and selected artwork will be lost." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se perderán los detalles de la insignia y la imagen seleccionada."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail lencana dan gambar yang dipilih akan hilang."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De medaillegegevens en geselecteerde afbeelding gaan verloren."
+          }
+        }
+      }
     },
     "Your balance:" : {
       "localizations" : {
@@ -31305,7 +33891,26 @@
       }
     },
     "Your existing Nostur blocks will not be removed." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus bloqueos existentes en Nostur no se eliminarán."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemblokiran Nostur Anda yang ada tidak akan dihapus."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je huidige blokkeringen worden niet verwijderd"
+          }
+        }
+      }
     },
     "Your name" : {
       "comment" : "Label for entering your name on Edit Profile screen",
@@ -31342,6 +33947,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kunci pribadi Anda mengontrol akun Anda. Jangan pernah membaginya dengan siapa pun. Siapa pun yang memiliki kunci ini dapat mengakses sepenuhnya akun Anda dan memposting sebagai Anda."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je privésleutel geeft volledige toegang tot jouw account. Deel het met niemand."
           }
         }
       }
