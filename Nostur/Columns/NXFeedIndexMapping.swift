@@ -103,9 +103,13 @@ enum NXFeedViewport {
     /// down that snapshot, not for restore, prepend, or estimated near-tail.
     static func shouldAllowRememberOnOlderFetch(
         continueEnabled: Bool,
-        userHasScrolledTowardOlder: Bool
+        userHasScrolledTowardOlder: Bool,
+        visiblePostCount: Int = .max,
+        sparseFeedMinimum: Int = 6
     ) -> Bool {
-        !continueEnabled || userHasScrolledTowardOlder
+        !continueEnabled
+            || userHasScrolledTowardOlder
+            || visiblePostCount < sparseFeedMinimum
     }
 
     /// Select the visible row that actually crosses the viewport's top edge. Falling back to

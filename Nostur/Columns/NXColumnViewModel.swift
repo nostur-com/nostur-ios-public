@@ -568,31 +568,15 @@ class NXColumnViewModel: ObservableObject {
                 .sink(receiveValue: { [weak self] (postId, columnVMid) in
                     guard let self, columnVMid != self.columnVMid else { return }
                     guard SettingsStore.shared.appWideSeenTracker else { return }
-                    
-                    // Only the keys of self.unreadIds where self.unreadIds[key] > 0
-                    let unreadIds: Set<String> = Set(
-                        self.vmInner.unreadIds.filter({ $0.value > 0 })
-                            .keys
-                    )
-                    
-                    // postId is the id marked as read in another column
-                    // unreadIds is currently unread in the current column
-                    guard unreadIds.contains(postId) else { return }
-                    
-                    if case .posts(let existingPosts) = self.viewState {
-                        vmInner.updateUnreadIds { unreadIds in
-                            unreadIds[postId] = nil
-                        }
-                        vmInner.updateIsAtTopSubject.send()
 
-                        Task { @MainActor [weak self] in
-                            guard let self else { return }
-                            // Never pull a currently visible row out of another column. That
-                            // mutation was scrolling/fading sibling Mac columns after unread tap.
-                            let visibleIds = self.currentVisiblePostIds()
-                            guard !visibleIds.contains(postId) else { return }
-                            self.setPosts(existingPosts.filter { $0.id != postId })
-                        }
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        // A row may represent a whole reply chain, so reconcile the
+                        // exact component seen in the other column. Keep the row on
+                        // screen: switching feeds must never drain an inactive feed.
+                        var seenShortIds = Deduplicator.shared.onScreenSeen
+                        seenShortIds.insert(String(postId.prefix(8)))
+                        self.removeUnreadPostsAlreadyMarkedRead(seenShortIds)
                     }
                 })
                 .store(in: &subscriptions)
@@ -639,15 +623,6 @@ class NXColumnViewModel: ObservableObject {
     }
     
     @MainActor
-    private func removeUnreadPostsAlreadyMarkedReadInFeed() {
-        guard let feed else { return }
-        guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
-
-        mergeFeedLastReadIntoSeen(feed)
-        removeUnreadPostsAlreadyMarkedRead(Set(feed.lastRead), preservingVisiblePosts: false)
-    }
-
-    @MainActor
     private func scheduleAlreadySeenReconciliation() {
         scheduleAlreadySeenReconciliation(removingVisiblePostsFor: [])
     }
@@ -663,46 +638,45 @@ class NXColumnViewModel: ObservableObject {
                 guard let self else { return }
                 let syncedSeenIds = self.pendingSyncedSeenIds
                 self.pendingSyncedSeenIds.removeAll(keepingCapacity: true)
-                self.removeUnreadPostsAlreadyMarkedReadInFeed()
-                self.removeUnreadPostsAlreadyMarkedRead(Deduplicator.shared.onScreenSeen)
-                self.removeUnreadPostsAlreadyMarkedRead(syncedSeenIds, preservingVisiblePosts: false)
+                var seenShortIds = Deduplicator.shared.onScreenSeen
+                seenShortIds.formUnion(syncedSeenIds)
+                if let feed = self.feed,
+                   SettingsStore.shared.appWideSeenTrackeriCloud {
+                    self.mergeFeedLastReadIntoSeen(feed)
+                    seenShortIds.formUnion(feed.lastRead)
+                }
+                self.removeUnreadPostsAlreadyMarkedRead(seenShortIds)
             }
         )
     }
 
     @MainActor
-    private func removeUnreadPostsAlreadyMarkedRead(_ seenShortIds: Set<String>, preservingVisiblePosts: Bool = true) {
+    private func removeUnreadPostsAlreadyMarkedRead(_ seenShortIds: Set<String>) {
         guard SettingsStore.shared.appWideSeenTracker else { return }
         guard !seenShortIds.isEmpty else { return }
+        guard case .posts(let existingPosts) = viewState else { return }
 
-        let unreadKeysToRemove = Set(
-            vmInner.unreadIds
-                .filter { key, value in
-                    value > 0 && seenShortIds.contains(String(key.prefix(8)))
+        let postIdsMarkedRead = Set(
+            existingPosts
+                .filter {
+                    vmInner.unreadIds[$0.id, default: 0] > 0
+                        && postContainsAnyShortId($0, in: seenShortIds)
                 }
-                .keys
+                .map(\.id)
         )
-
-        let visiblePostIds = preservingVisiblePosts ? currentVisiblePostIds() : []
-        var postIdsToRemove = unreadKeysToRemove.subtracting(visiblePostIds)
-        if case .posts(let existingPosts) = viewState {
-            for post in existingPosts where !visiblePostIds.contains(post.id) && vmInner.unreadIds[post.id, default: 0] > 0 && postContainsAnyShortId(post, in: seenShortIds) {
-                postIdsToRemove.insert(post.id)
-            }
-        }
-
-        guard !postIdsToRemove.isEmpty else { return }
+        guard !postIdsMarkedRead.isEmpty else { return }
 
         vmInner.updateUnreadIds { unreadIds in
-            for key in postIdsToRemove {
-                unreadIds[key] = nil
+            for postId in postIdsMarkedRead {
+                unreadIds[postId] = nil
             }
         }
         vmInner.updateIsAtTopSubject.send()
-
-        if case .posts(let existingPosts) = viewState {
-            setPosts(existingPosts.filter { !postIdsToRemove.contains($0.id) })
-        }
+#if DEBUG
+        recordFeedAction(
+            "seen reconciliation · marked \(postIdsMarkedRead.count) rows read · kept \(existingPosts.count) posts"
+        )
+#endif
     }
 
     @MainActor
@@ -733,7 +707,11 @@ class NXColumnViewModel: ObservableObject {
 
     private func postContainsAnyShortId(_ post: NRPost, in shortIds: Set<String>) -> Bool {
         if shortIds.contains(post.shortId) { return true }
-        if post.kind == 6, let firstQuoteId = post.firstQuoteId, shortIds.contains(String(firstQuoteId.prefix(8))) { return true }
+        if post.kind == 6,
+           let firstQuoteId = post.firstQuoteId,
+           shortIds.contains(String(firstQuoteId.prefix(8))) {
+            return true
+        }
         return post.parentPosts.contains { shortIds.contains($0.shortId) }
     }
 
@@ -2210,7 +2188,8 @@ class NXColumnViewModel: ObservableObject {
     private func loadOlderPage(_ config: NXColumnConfig, requestNetwork: Bool = true) {
         guard NXFeedViewport.shouldAllowRememberOnOlderFetch(
             continueEnabled: config.continue,
-            userHasScrolledTowardOlder: userHasScrolledTowardOlder
+            userHasScrolledTowardOlder: userHasScrolledTowardOlder,
+            visiblePostCount: currentNRPostsOnScreen.count
         ) else {
 #if DEBUG
             recordFeedAction("PAGE skip · loadOlderPage · remember-on until scroll down")
@@ -2359,6 +2338,13 @@ class NXColumnViewModel: ObservableObject {
                         // put on screen
                         let nrPosts = idsToPutInScreen.compactMap { eventsMap[$0] }
                         Task { @MainActor in
+                            guard self.shouldAcceptResults(
+                                for: config,
+                                sessionGeneration: sessionGeneration
+                            ) else {
+                                completion?()
+                                return
+                            }
                             guard !nrPosts.isEmpty else {
                                 // Saved IDs can belong to a previously selected
                                 // media source. Fall back to the normal local query
@@ -4291,6 +4277,9 @@ extension NXColumnViewModel {
                     }
                 }
                 completion?()
+                if !older {
+                    self.recoverSparseRememberOnFeedIfNeeded(config)
+                }
             }
             return
         }
@@ -4310,9 +4299,28 @@ extension NXColumnViewModel {
                 config: config,
                 insertAtEnd: older,
                 revealAtTop: revealAtTop,
-                completion: completion
+                completion: {
+                    completion?()
+                    if !older {
+                        self.recoverSparseRememberOnFeedIfNeeded(config)
+                    }
+                }
             )
         }
+    }
+
+    @MainActor
+    private func recoverSparseRememberOnFeedIfNeeded(_ config: NXColumnConfig) {
+        guard config.continue,
+              currentNRPostsOnScreen.count < 6,
+              let oldest = currentNRPostsOnScreen.last
+        else { return }
+#if DEBUG
+        recordFeedAction(
+            "PAGE recover sparse restore · \(currentNRPostsOnScreen.count) posts · \(feedActionDebugViewport())"
+        )
+#endif
+        requestNextPageIfNeeded(until: oldest.created_at, trigger: "sparse restore")
     }
 
     @MainActor
@@ -5148,7 +5156,11 @@ extension NXColumnViewModel {
             return
         }
 
-        if config?.continue == true, !userHasScrolledTowardOlder {
+        if !NXFeedViewport.shouldAllowRememberOnOlderFetch(
+            continueEnabled: config?.continue == true,
+            userHasScrolledTowardOlder: userHasScrolledTowardOlder,
+            visiblePostCount: currentNRPostsOnScreen.count
+        ) {
 #if DEBUG
             recordPageSkipIfNeeded(trigger: trigger, reason: "remember-on until scroll down")
 #endif

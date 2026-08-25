@@ -140,19 +140,39 @@ final class NXFeedViewportTests: XCTestCase {
         XCTAssertFalse(
             NXFeedViewport.shouldAllowRememberOnOlderFetch(
                 continueEnabled: true,
-                userHasScrolledTowardOlder: false
+                userHasScrolledTowardOlder: false,
+                visiblePostCount: 24
             )
         )
         XCTAssertTrue(
             NXFeedViewport.shouldAllowRememberOnOlderFetch(
                 continueEnabled: true,
-                userHasScrolledTowardOlder: true
+                userHasScrolledTowardOlder: true,
+                visiblePostCount: 24
             )
         )
         XCTAssertTrue(
             NXFeedViewport.shouldAllowRememberOnOlderFetch(
                 continueEnabled: false,
-                userHasScrolledTowardOlder: false
+                userHasScrolledTowardOlder: false,
+                visiblePostCount: 24
+            )
+        )
+    }
+
+    func testSparseRememberOnFeedCanRecoverWithoutAUserScroll() {
+        XCTAssertTrue(
+            NXFeedViewport.shouldAllowRememberOnOlderFetch(
+                continueEnabled: true,
+                userHasScrolledTowardOlder: false,
+                visiblePostCount: 1
+            )
+        )
+        XCTAssertFalse(
+            NXFeedViewport.shouldAllowRememberOnOlderFetch(
+                continueEnabled: true,
+                userHasScrolledTowardOlder: false,
+                visiblePostCount: 6
             )
         )
     }
