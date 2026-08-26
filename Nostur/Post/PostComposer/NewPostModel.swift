@@ -666,6 +666,9 @@ public final class NewPostModel: ObservableObject {
             }
 
             _sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+            for videoURL in typingTextModel.compressedVideoFiles {
+                try? FileManager.default.removeItem(at: videoURL)
+            }
         }
         catch {
             failImageUpload("Encrypted media upload failed: \(error.localizedDescription)")
