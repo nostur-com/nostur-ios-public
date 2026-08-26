@@ -22,59 +22,48 @@ struct ProfilePostsView: View {
 #if DEBUG
         let _ = nxLogChanges(of: Self.self)
 #endif
-        switch vm.state {
-        case .initializing, .loading:
-            ProgressView()
-                .padding(10)
-                .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
-                .onAppear { vm.load() }
-                .task(id: "profileposts") {
-                    do {
-                        try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
-                        
-                        Task { @MainActor in
-                            if vm.state == .loading || vm.state == .initializing {
-                                vm.state = .timeout
-                            }
+        Group {
+            switch vm.state {
+            case .initializing, .loading:
+                ProgressView()
+                    .padding(10)
+                    .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
+                    .onAppear { vm.load() }
+            case .ready:
+                ForEach(Array(vm.posts.enumerated()), id: \.element.id) { index, nrPost in
+                    ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                        Box(nrPost: nrPost) {
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: theme)
                         }
-                    } catch { }
-                }
-        case .ready:
-            ForEach(Array(vm.posts.enumerated()), id: \.element.id) { index, nrPost in
-                ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                    Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: theme)
                     }
+                    .task {
+                        // SettingsStore.shared.fetchCounts should be true for below to work
+                        vm.prefetch(nrPost, at: index)
+
+                        // on iPhone we can use vm.posts.last but on macOS it only works on second to last?? wtf!
+                        guard nrPost.id == vm.posts[safe: vm.posts.count - 2]?.id else { return }
+
+                        guard lastFetchAtId != nrPost.id else { return }
+                        // There is no way to query just root posts separate from replies
+                        // So if we want to find root posts we increase the limit to increase the chance of getting enough root posts. (There could be many replies included in the response and we don't need them, unless we are querying for replies)
+                        let requestLimit = vm.type == .posts ? 40 : 20
+
+                        vm.fetchMore(after: nrPost, amount: requestLimit)
+                        lastFetchAtId = nrPost.id
+                    }
+                    .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                 }
-                .task {
-                    // SettingsStore.shared.fetchCounts should be true for below to work
-                    vm.prefetch(nrPost, at: index)
-                    
-                    // on iPhone we can use vm.posts.last but on macOS it only works on second to last?? wtf!
-                    guard nrPost.id == vm.posts[safe: vm.posts.count - 2]?.id else { return }
-                    
-                    guard lastFetchAtId != nrPost.id else { return }
-                    vm.loadMore(after: nrPost, amount: 10)
-                    
-                    // There is no way to query just root posts separate from replies
-                    // So if we want to find root posts we increase the limit to increase the chance of getting enough root posts. (There could be many replies included in the response and we don't need them, unless we are querying for replies)
-                    let requestLimit = vm.type == .posts ? 40 : 20
-                    
-                    vm.fetchMore(after: nrPost, amount: requestLimit)
-//                            vm.loadMore(after: nrPost, amount: max(20, vm.posts.count * 2))
-                    lastFetchAtId = nrPost.id
+            case .timeout:
+                VStack(alignment: .center) {
+                    Text("Unable to fetch posts")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Button("Try again") { vm.reload() }
                 }
-                .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-        case .timeout:
-            VStack(alignment: .center) {
-                Text("Unable to fetch posts")
-                    .frame(maxWidth: .infinity, alignment: .center)
-                Button("Try again") { vm.reload() }
-            }
-            .padding(10)
-            .frame(maxWidth: .infinity, alignment: .center)
         }
+        .onDisappear { vm.cancel() }
     }
 }
 

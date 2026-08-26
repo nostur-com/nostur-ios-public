@@ -29,6 +29,15 @@ let POPULAR_RELAYS: Set<String> = [
 
 public typealias CanonicalRelayUrl = String // lowercased, without trailing slash on root domain
 
+func usesBoundedPreferredRelayFanOut(_ subscriptionId: String) -> Bool {
+    subscriptionId.hasPrefix("RESUME-")
+        || subscriptionId.hasPrefix("PAGE-")
+        || subscriptionId.hasPrefix("MEDIA-PAGE-")
+        || subscriptionId.hasPrefix("G-PAGE-")
+        || subscriptionId.hasPrefix("prio-MEDIA-RESUME-")
+        || subscriptionId.hasPrefix("prio-PROFILEPOSTS-")
+}
+
 private extension RelayConnection {
     func mergeRelayData(_ relayData: RelayData) {
         if relayData.read && !self.relayData.read {
@@ -50,8 +59,8 @@ private extension RelayConnection {
 }
 
 public class ConnectionPool: ObservableObject {
-    public struct RequestTargetSnapshot {
-        public enum OutboxPlanState: Equatable {
+    public struct RequestTargetSnapshot: Sendable {
+        public enum OutboxPlanState: Equatable, Sendable {
             case notRequested
             case limitedToSelectedRelays
             case lowDataMode
@@ -257,19 +266,34 @@ public class ConnectionPool: ObservableObject {
         in relays: Set<RelayData>,
         timeout: TimeInterval = 12.0
     ) async -> Bool {
-        let relayIds = Set(relays.map(\.id))
+        await waitForAnyConnectedRelay(in: Set(relays.map(\.id)), timeout: timeout)
+    }
+
+    /// Wait for any target from a request plan, including an already-created
+    /// outbox connection. This keeps a bounded request's response deadline
+    /// from being consumed by WebSocket setup.
+    public func waitForAnyConnectedRelay(
+        in relayIds: Set<CanonicalRelayUrl>,
+        timeout: TimeInterval = 12.0
+    ) async -> Bool {
         guard !relayIds.isEmpty else { return false }
 
         let deadline = Date().addingTimeInterval(timeout)
         while !Task.isCancelled, Date() < deadline {
             let isConnected = queue.sync {
-                relayIds.contains(where: { connections[$0]?.isSocketConnected == true })
+                relayIds.contains { relayId in
+                    connections[relayId]?.isSocketConnected == true
+                        || outboxConnections[relayId]?.isSocketConnected == true
+                }
             }
             if isConnected { return true }
             try? await Task.sleep(nanoseconds: 100_000_000)
         }
         return queue.sync {
-            relayIds.contains(where: { connections[$0]?.isSocketConnected == true })
+            relayIds.contains { relayId in
+                connections[relayId]?.isSocketConnected == true
+                    || outboxConnections[relayId]?.isSocketConnected == true
+            }
         }
     }
 
@@ -1056,12 +1080,9 @@ public class ConnectionPool: ObservableObject {
 
     private func preferredRelayLimit(for subscriptionId: String?) -> Int {
         guard let subscriptionId else { return maxPreferredRelays }
-        let isCatchUp = subscriptionId.hasPrefix("RESUME-")
-            || subscriptionId.hasPrefix("PAGE-")
-            || subscriptionId.hasPrefix("MEDIA-PAGE-")
-            || subscriptionId.hasPrefix("G-PAGE-")
-            || subscriptionId.hasPrefix("prio-MEDIA-RESUME-")
-        return isCatchUp ? min(maxPreferredRelays, maxCatchUpPreferredRelays) : maxPreferredRelays
+        return usesBoundedPreferredRelayFanOut(subscriptionId)
+            ? min(maxPreferredRelays, maxCatchUpPreferredRelays)
+            : maxPreferredRelays
     }
     
     // Relays to find posts on relays not in our relay set
