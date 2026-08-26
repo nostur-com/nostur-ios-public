@@ -125,7 +125,7 @@ struct PostPreview: View {
     }
 }
 
-func createPreviewEvent(_ event: NEvent) -> Event {
+func createPreviewEvent(_ event: NEvent, isPrivate: Bool = false) -> Event {
     let context = bg()
     let previewEvent = Event(context: context)
     previewEvent.insertedAt = Date.now
@@ -136,6 +136,14 @@ func createPreviewEvent(_ event: NEvent) -> Event {
     previewEvent.pubkey = event.publicKey
     previewEvent.likesCount = 0
     previewEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
+
+    // Decrypted private replies are represented as unsigned rumors: `otherId`
+    // contains the gift-wrap id while `id` remains the rumor id. The preview is
+    // created before gift wrapping, so preserve the same shape explicitly to
+    // let NRPost and the shared post header display the private lock.
+    if isPrivate {
+        previewEvent.otherId = event.id
+    }
             
     if (event.kind == .textNote || event.kind == .comment) {
         // THIS EVENT REPLYING TO SOMETHING

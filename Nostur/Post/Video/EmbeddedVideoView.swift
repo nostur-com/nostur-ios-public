@@ -258,6 +258,69 @@ struct EmbeddedVideoView: View {
     }
 }
 
+struct EncryptedEmbeddedVideoView: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.availableWidth) private var availableWidth
+
+    let fileInfo: FileMessageInfo
+    let pubkey: String
+    var nrPost: NRPost?
+    let autoload: Bool
+
+    @State private var decryptedURL: URL?
+    @State private var loadError: String?
+    @State private var shouldLoad = false
+
+    var body: some View {
+        Group {
+            if let decryptedURL {
+                EmbeddedVideoView(
+                    url: decryptedURL,
+                    pubkey: pubkey,
+                    nrPost: nrPost,
+                    autoload: autoload
+                )
+            }
+            else if let loadError {
+                theme.background.opacity(0.7)
+                    .frame(width: availableWidth, height: 95)
+                    .overlay { Text(loadError) }
+            }
+            else if shouldLoad {
+                theme.background.opacity(0.7)
+                    .frame(width: availableWidth, height: 95)
+                    .overlay { ProgressView() }
+            }
+            else {
+                theme.background.opacity(0.7)
+                    .frame(width: availableWidth, height: 95)
+                    .overlay {
+                        Button("Load encrypted media") {
+                            shouldLoad = true
+                        }
+                    }
+            }
+        }
+        .onAppear {
+            if !SettingsStore.shared.lowDataMode && !(nrPost?.isNSFW ?? false) {
+                shouldLoad = true
+            }
+        }
+        .task(id: shouldLoad) {
+            guard shouldLoad, decryptedURL == nil else { return }
+            do {
+                decryptedURL = try await DMFileCache.shared.previewURL(
+                    fileInfo: fileInfo,
+                    conversationId: nrPost?.id ?? fileInfo.originalHash ?? fileInfo.url
+                )
+            }
+            catch {
+                loadError = "Failed to decrypt media"
+            }
+        }
+    }
+}
+
 @available(iOS 18.0, *)
 #Preview("NosturVideoViewur") {
     VStack {

@@ -193,12 +193,24 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.vertical, 10)
                         
                     case .video(let mediaContent):
-                        EmbeddedVideoView(
-                            url: mediaContent.url,
-                            pubkey: nrPost.pubkey,
-                            nrPost: nrPost,
-                            autoload: shouldAutoload
-                        )
+                        Group {
+                            if let encryptedFile = mediaContent.encryptedFile {
+                                EncryptedEmbeddedVideoView(
+                                    fileInfo: encryptedFile,
+                                    pubkey: nrPost.pubkey,
+                                    nrPost: nrPost,
+                                    autoload: shouldAutoload
+                                )
+                            }
+                            else {
+                                EmbeddedVideoView(
+                                    url: mediaContent.url,
+                                    pubkey: nrPost.pubkey,
+                                    nrPost: nrPost,
+                                    autoload: shouldAutoload
+                                )
+                            }
+                        }
                         .environment(\.availableWidth, availableWidth + (fullWidth ? 20 : 0))
                         .padding(.horizontal, fullWidth ? -10 : 0)
                         .padding(.vertical, 10)

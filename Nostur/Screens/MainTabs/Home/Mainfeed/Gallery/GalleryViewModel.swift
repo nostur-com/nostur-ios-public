@@ -482,14 +482,16 @@ struct GalleryItem: Identifiable, Equatable, Hashable {
     var blurhash: String?
     var imageInfo: ImageInfo?
     var gifInfo: GifInfo?
+    var encryptedFile: FileMessageInfo?
         
-    init(url: URL, pubkey: String? = nil, eventId: String? = nil, dimensions: CGSize? = nil, blurhash: String? = nil, imageInfo: ImageInfo? = nil, gifInfo: GifInfo? = nil) {
+    init(url: URL, pubkey: String? = nil, eventId: String? = nil, dimensions: CGSize? = nil, blurhash: String? = nil, imageInfo: ImageInfo? = nil, gifInfo: GifInfo? = nil, encryptedFile: FileMessageInfo? = nil) {
         self.url = url
         self.eventId = eventId
         self.id = Self.stableId(eventId: eventId, url: url)
         self.pubkey = pubkey
         self.imageInfo = imageInfo
         self.gifInfo = gifInfo
+        self.encryptedFile = encryptedFile
         self.blurhash = blurhash
         self.dimensions = dimensions
         if let pubkey {

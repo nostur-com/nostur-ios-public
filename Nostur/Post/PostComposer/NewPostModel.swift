@@ -599,6 +599,79 @@ public final class NewPostModel: ObservableObject {
         }
     }
 
+    @MainActor
+    private func uploadEncryptedPrivateReplyMedia(pubkey: String, replyTo: ReplyTo?, quotePost: QuotePost?, onDismiss: @escaping () -> Void) async {
+        guard SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL,
+              let serverString = SettingsStore.shared.blossomServerList.first,
+              let blossomServer = URL(string: serverString) else {
+            failImageUpload("Encrypted private-reply media requires a Blossom server")
+            return
+        }
+        guard let privateKey = AccountManager.shared.getPrivateKeyHex(pubkey: pubkey) else {
+            failImageUpload("Could not access private key for encrypted media upload")
+            return
+        }
+
+        let preparedItems = await prepareUploadItems(
+            pubkey: pubkey,
+            images: typingTextModel.pastedImages,
+            videos: typingTextModel.pastedVideos,
+            voiceMessage: typingTextModel.voiceRecording,
+            typingTextModel: typingTextModel,
+            isVineVideoPost: nEvent?.kind == .shortVideos,
+            uploadMethod: .blossom
+        )
+
+        guard !preparedItems.isEmpty else {
+            failImageUpload("Could not prepare media for encrypted upload")
+            return
+        }
+
+        do {
+            var imetas: [Imeta] = []
+            imetas.reserveCapacity(preparedItems.count)
+
+            for item in preparedItems {
+                let originalData = item.0
+                let encrypted = try await Task.detached(priority: .userInitiated) {
+                    try encryptFileForDM(data: originalData)
+                }.value
+                let blossomFile = BlossomUploadFile(
+                    data: encrypted.encryptedData,
+                    contentType: "application/octet-stream"
+                )
+                let authHeader = try await getBlossomAuthHeader(
+                    keys: Keys(privateKeyHex: privateKey),
+                    blossomFile: blossomFile
+                )
+                let downloadURL = try await blossomUpload(
+                    authHeader: authHeader,
+                    blossomFile: blossomFile,
+                    contentType: "application/octet-stream",
+                    blossomServer: blossomServer,
+                    timeout: 60.0
+                )
+
+                let dimensions = UIImage(data: originalData).map {
+                    "\(Int($0.size.width))x\(Int($0.size.height))"
+                }
+                imetas.append(Imeta(
+                    url: downloadURL,
+                    dim: dimensions,
+                    hash: encrypted.encryptedHash,
+                    blurhash: item.2,
+                    mimeType: item.1,
+                    encryptedFile: encrypted
+                ))
+            }
+
+            _sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+        }
+        catch {
+            failImageUpload("Encrypted media upload failed: \(error.localizedDescription)")
+        }
+    }
+
     private func filename(for contentType: String) -> String {
         switch contentType {
         case PostedImageMeta.ImageType.jpeg.rawValue:
@@ -817,6 +890,16 @@ public final class NewPostModel: ObservableObject {
         if (!typingTextModel.pastedImages.isEmpty || !typingTextModel.pastedVideos.isEmpty || typingTextModel.voiceRecording != nil) {
             Task { @MainActor in
                 typingTextModel.uploading = true
+
+                if isReplyInPrivate {
+                    await uploadEncryptedPrivateReplyMedia(
+                        pubkey: pubkey,
+                        replyTo: replyTo,
+                        quotePost: quotePost,
+                        onDismiss: onDismiss
+                    )
+                    return
+                }
                 
                 // Convert older api url to nip96 endpoint
                 if (nip96apiUrl.isEmpty && SettingsStore.shared.defaultMediaUploadService.name == "nostrcheck.me") { // upgrade nostrcheck.me v1 to v2
@@ -1435,6 +1518,7 @@ public final class NewPostModel: ObservableObject {
             content = imeta.url
             
             var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
+            appendEncryptedIMetaFields(for: imeta, to: &imetaParts)
             if let duration = typingTextModel.voiceRecording?.duration {
                 imetaParts.append("duration \(duration)")
             }
@@ -1477,7 +1561,8 @@ public final class NewPostModel: ObservableObject {
             nEvent.tags.append(NostrTag(["client", "nostur"]))
             
             // imeta tag
-            var imetaParts: [String] = ["imeta", "url \(videoImeta.url)", "m video/mp4"]
+            var imetaParts: [String] = ["imeta", "url \(videoImeta.url)"]
+            appendEncryptedIMetaFields(for: videoImeta, defaultMimeType: "video/mp4", to: &imetaParts)
             if let thumbnailURL = imetas.first(where: { !isLikelyVideoURL($0.url) })?.url, !thumbnailURL.isEmpty {
                 imetaParts.append("image \(thumbnailURL)")
             }
@@ -1514,6 +1599,7 @@ public final class NewPostModel: ObservableObject {
                 }
                 
                 var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
+                appendEncryptedIMetaFields(for: imeta, to: &imetaParts)
                 if let dim = imeta.dim, !dim.isEmpty {
                     imetaParts.append("dim \(dim)")
                 }
@@ -1731,10 +1817,11 @@ public final class NewPostModel: ObservableObject {
         if finalNEventWithId.id.isEmpty {
             finalNEventWithId = finalNEventWithId.withId()
         }
+        let isPrivatePreview = isReplyInPrivate
 
         bg().perform { [weak self] in
             guard let self else { return }
-            let previewEvent = createPreviewEvent(finalNEventWithId)
+            let previewEvent = createPreviewEvent(finalNEventWithId, isPrivate: isPrivatePreview)
             if (!self.typingTextModel.pastedImages.isEmpty) {
                 previewEvent.previewImages = self.typingTextModel.pastedImages
             }
@@ -2453,6 +2540,23 @@ struct Imeta {
     var duration: Int?
     var waveform: [Int]?
     var alt: String?
+    var mimeType: String? = nil
+    var encryptedFile: EncryptedFileResult? = nil
+}
+
+func appendEncryptedIMetaFields(
+    for imeta: Imeta,
+    defaultMimeType: String? = nil,
+    to parts: inout [String]
+) {
+    if let mimeType = imeta.mimeType ?? defaultMimeType, !mimeType.isEmpty {
+        parts.append("m \(mimeType)")
+    }
+    guard let encrypted = imeta.encryptedFile else { return }
+
+    parts.append("decryption-key \(encrypted.key.hexEncodedString())")
+    parts.append("decryption-nonce \(encrypted.nonce.hexEncodedString())")
+    parts.append("ox \(encrypted.originalHash)")
 }
 
 

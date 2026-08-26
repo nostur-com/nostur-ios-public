@@ -167,7 +167,14 @@ struct NXContentRenderer: View { // VIEW things
                             .padding(.vertical, 10)
                             .id(index)
                     case .video(let mediaContent):
-                        EmbeddedVideoView(url: mediaContent.url, pubkey: nxEvent.pubkey , autoload: shouldAutoload)
+                        Group {
+                            if let encryptedFile = mediaContent.encryptedFile {
+                                EncryptedEmbeddedVideoView(fileInfo: encryptedFile, pubkey: nxEvent.pubkey, autoload: shouldAutoload)
+                            }
+                            else {
+                                EmbeddedVideoView(url: mediaContent.url, pubkey: nxEvent.pubkey, autoload: shouldAutoload)
+                            }
+                        }
                             .environment(\.availableWidth, availableWidth + (vc.fullWidthImages ? 20 : 0))
                             .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
 

@@ -106,7 +106,14 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, autoload: false)
+                    Group {
+                        if let encryptedFile = mediaContent.encryptedFile {
+                            EncryptedEmbeddedVideoView(fileInfo: encryptedFile, pubkey: pubkey, autoload: false)
+                        }
+                        else {
+                            EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, autoload: false)
+                        }
+                    }
                         .environment(\.availableWidth, dmAvailableWidth)
                     
                 case .image(let galleryItem):

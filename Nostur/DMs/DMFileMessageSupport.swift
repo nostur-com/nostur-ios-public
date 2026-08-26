@@ -11,7 +11,7 @@ import CryptoSwift
 
 // MARK: - File Message Info (parsed from kind 15 event tags)
 
-struct FileMessageInfo {
+struct FileMessageInfo: Hashable, Sendable {
     let url: String              // encrypted file URL (from event content)
     let mimeType: String         // from "file-type" tag
     let encryptionAlgorithm: String // "aes-gcm"
@@ -98,7 +98,7 @@ struct FileMessageInfo {
 
 // MARK: - AES-GCM Encryption Result
 
-struct EncryptedFileResult {
+struct EncryptedFileResult: Sendable {
     let encryptedData: Data       // Combined: nonce (12 bytes) + ciphertext + tag (16 bytes) -- actually we store nonce separately
     let key: Data                 // 32 bytes AES-256 key
     let nonce: Data               // 12 bytes GCM nonce

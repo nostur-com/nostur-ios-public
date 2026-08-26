@@ -27,11 +27,13 @@ class MediaViewVM: ObservableObject {
         cropToTarget: Bool = false,
         preserveCurrentImage: Bool = false,
         blossomAuthorPubkey: String? = nil,
+        encryptedFile: FileMessageInfo? = nil,
+        encryptedFileCacheId: String? = nil,
         reportFailure: Bool = true
     ) async -> Bool {
         // Start discovery alongside the normal retry. If the original server is back,
         // it still wins without waiting for the author's kind-10063 response.
-        let blossomCandidatesTask: Task<[URL], Never>? = if let blossomAuthorPubkey,
+        let blossomCandidatesTask: Task<[URL], Never>? = if encryptedFile == nil, let blossomAuthorPubkey,
                                                                BlossomMediaRecovery.hash(from: url) != nil {
             Task {
                 await BlossomMediaRecovery.candidateURLs(
@@ -57,9 +59,30 @@ class MediaViewVM: ObservableObject {
             }
             return false
         }
+
+        let loadURL: URL
+        if let encryptedFile {
+            do {
+                loadURL = try await DMFileCache.shared.previewURL(
+                    fileInfo: encryptedFile,
+                    conversationId: encryptedFileCacheId ?? encryptedFile.originalHash ?? url.absoluteString
+                )
+            }
+            catch {
+                if reportFailure {
+                    await MainActor.run {
+                        state = .error("Failed to decrypt image")
+                    }
+                }
+                return false
+            }
+        }
+        else {
+            loadURL = url
+        }
         
         let request = makeImageRequest(
-            url,
+            loadURL,
             label: "MediaViewVM.load",
             overrideLowDataMode: forceLoad,
             targetSize: targetSize,
@@ -67,7 +90,7 @@ class MediaViewVM: ObservableObject {
             crop: cropToTarget
         )
         self.task = if usePFPpipeline {
-            ImageProcessing.shared.pfp.imageTask(with: pfpImageRequestFor(url))
+            ImageProcessing.shared.pfp.imageTask(with: pfpImageRequestFor(loadURL))
         }
         else if loadAnyway {
             ImageProcessing.shared.contentLoadAnyway.imageTask(with: request)
@@ -138,8 +161,8 @@ class MediaViewVM: ObservableObject {
             let response = try await task.response
             // WebP: After the resize processor runs, Nuke reports type as PNG, not WebP.
             // Detect WebP by URL extension instead, then fetch raw bytes from the data cache.
-            if url.pathExtension.lowercased() == "webp" {
-                let request = ImageRequest(url: url)
+            if loadURL.pathExtension.lowercased() == "webp" {
+                let request = ImageRequest(url: loadURL)
                 let cacheKey = ImageProcessing.shared.content.cache.makeDataCacheKey(for: request)
                 let rawData = ImageProcessing.shared.content.configuration.dataCache?.cachedData(for: cacheKey)
                     ?? response.container.data

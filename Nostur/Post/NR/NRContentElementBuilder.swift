@@ -48,7 +48,7 @@ class NRContentElementBuilder {
                 if !matchString.matchingStrings(regex: Self.imageUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
                         let iMeta: iMetaInfo? = findImeta(fastTags, url: matchString)
-                        let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash)
+                        let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile)
                         result.append(ContentElement.image(galleryItem))
                         galleryItems.append(galleryItem)
                     }
@@ -59,7 +59,7 @@ class NRContentElementBuilder {
                 else if !matchString.matchingStrings(regex: Self.videoUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
                         let iMeta: iMetaInfo? = findImeta(fastTags, url: matchString)
-                        result.append(ContentElement.video(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash)))
+                        result.append(ContentElement.video(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile)))
                     }
                     else {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
@@ -69,12 +69,12 @@ class NRContentElementBuilder {
                     if let url = URL(string: matchString) {
                         let iMeta = findImeta(fastTags, url: matchString)
                         if iMeta?.mimeType?.hasPrefix("image/") == true {
-                            let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash)
+                            let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile)
                             result.append(ContentElement.image(galleryItem))
                             galleryItems.append(galleryItem)
                         }
                         else if iMeta?.mimeType?.hasPrefix("video/") == true {
-                            result.append(ContentElement.video(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash)))
+                            result.append(ContentElement.video(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile)))
                         }
                         else {
                             result.append(ContentElement.linkPreview(url))
@@ -443,6 +443,7 @@ struct MediaContent: Hashable {
     var url: URL
     var dimensions: CGSize?
     var blurHash: String?
+    var encryptedFile: FileMessageInfo?
     
     var aspect: CGFloat {
         if let dimensions {
@@ -490,6 +491,7 @@ struct iMetaInfo {
     var size: CGSize?
     var blurHash: String?
     var mimeType: String? = nil
+    var encryptedFile: FileMessageInfo? = nil
     
     var aspect: CGFloat? {
         if let size {
@@ -532,13 +534,22 @@ func iMetaFromFastTag(_ fastTag: FastTag) -> iMetaInfo? {
     var size: CGSize?
     var blurHash: String?
     var mimeType: String?
+    var url: String?
+    var decryptionKey: Data?
+    var decryptionNonce: Data?
+    var originalHash: String?
+    var encryptedHash: String?
+    var fileSize: Int?
 
     for value in getTagValues(fastTag) {
         guard let value = value else { continue }
         let parts = value.split(separator: " ", maxSplits: 1)
         guard parts.count == 2 else { continue }
 
-        if parts[0] == "dim" {
+        if parts[0] == "url" {
+            url = String(parts[1])
+        }
+        else if parts[0] == "dim" {
             let dim = parts[1].split(separator: "x", maxSplits: 1)
             if dim.count == 2, let width = Int(dim[0]), let height = Int(dim[1]) {
                 size = CGSize(width: width, height: height)
@@ -550,10 +561,45 @@ func iMetaFromFastTag(_ fastTag: FastTag) -> iMetaInfo? {
         else if parts[0] == "m" {
             mimeType = String(parts[1]).lowercased()
         }
+        else if parts[0] == "decryption-key" {
+            decryptionKey = Data(hexOrBase64: String(parts[1]))
+        }
+        else if parts[0] == "decryption-nonce" {
+            decryptionNonce = Data(hexOrBase64: String(parts[1]))
+        }
+        else if parts[0] == "ox" {
+            originalHash = String(parts[1])
+        }
+        else if parts[0] == "x" || parts[0] == "sha256" {
+            encryptedHash = String(parts[1])
+        }
+        else if parts[0] == "size" {
+            fileSize = Int(parts[1])
+        }
+    }
+
+    let encryptedFile: FileMessageInfo? = if let url, let mimeType,
+                                             let decryptionKey, decryptionKey.count == 32,
+                                             let decryptionNonce, decryptionNonce.count == 12 || decryptionNonce.count == 16 {
+        FileMessageInfo(
+            url: url,
+            mimeType: mimeType,
+            encryptionAlgorithm: "aes-gcm",
+            decryptionKey: decryptionKey,
+            decryptionNonce: decryptionNonce,
+            encryptedHash: encryptedHash,
+            originalHash: originalHash,
+            fileSize: fileSize,
+            dimensions: size.map { "\(Int($0.width))x\(Int($0.height))" },
+            blurhash: blurHash
+        )
+    }
+    else {
+        nil
     }
     
-    if blurHash != nil || size != nil || mimeType != nil {
-        return iMetaInfo(size: size, blurHash: blurHash, mimeType: mimeType)
+    if blurHash != nil || size != nil || mimeType != nil || encryptedFile != nil {
+        return iMetaInfo(size: size, blurHash: blurHash, mimeType: mimeType, encryptedFile: encryptedFile)
     }
     
     return nil
@@ -615,5 +661,5 @@ func imageUrlFromIMetaFastTag(_ tag: FastTag) -> URL? {
 func galleryItemFromIMetaFastTag(_ tag: FastTag, pubkey: String? = nil, eventId: String? = nil) -> GalleryItem? {
     guard let url = imageUrlFromIMetaFastTag(tag) else { return nil }
     let iMeta: iMetaInfo? = iMetaFromFastTag(tag)
-    return GalleryItem(url: url, pubkey: pubkey, eventId: eventId, dimensions: iMeta?.size, blurhash: iMeta?.blurHash)
+    return GalleryItem(url: url, pubkey: pubkey, eventId: eventId, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile)
 }

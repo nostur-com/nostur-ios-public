@@ -783,7 +783,9 @@ struct MediaPlaceholder: View {
                 targetSize: imageRequestTargetSize,
                 cropToTarget: cropImageRequestToTarget && !fullScreen,
                 preserveCurrentImage: preserveCurrentImage,
-                blossomAuthorPubkey: recoverFromBlossom ? galleryItem.pubkey : nil
+                blossomAuthorPubkey: recoverFromBlossom ? galleryItem.pubkey : nil,
+                encryptedFile: galleryItem.encryptedFile,
+                encryptedFileCacheId: galleryItem.eventId
             )
         }
     }
