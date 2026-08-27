@@ -8,17 +8,31 @@
 import SwiftUI
 import Combine
 
-// Catch up - resume feed
-// Fetch posts since last time in X hour windows
-// Wait Y seconds per window
-// Can't know if fetch window has no posts or connection failure
-// So before advancing to next window, make sure we have connection
+enum NXRememberOnCatchUp {
+    static let maxAge: TimeInterval = 86_400
+
+    /// Remember-on catch-up asks for the newest events since `since`.
+    /// Never bound `until` — a 4-hour slice starting 24h ago returns day-old
+    /// notes and hides everything more recent until later windows finish.
+    static func requestRange(
+        since: Int64,
+        now: Int64 = Int64(Date().timeIntervalSince1970),
+        maxAge: TimeInterval = maxAge
+    ) -> (since: Int, until: Int?) {
+        let oldest = max(Int(since), Int(now) - Int(maxAge))
+        return (oldest, nil)
+    }
+}
+
+// Catch up - resume feed.
+// Ask relays for everything since the last fetch (capped at 24h) with no `until`.
+// A 4-hour `until` starting at `since` returned day-old notes first and hid
+// the last hours until later windows finished — or forever if the first timed out.
 // Note: don't use for "older"
 class NXGapFiller {
     private var since: Int64
-    private var windowSize: Int // Hours
     private var timeout: Double // Seconds
-    private var currentGap: Int // used to calculate nextGapSince
+    private var currentGap: Int
     private weak var columnVM: NXColumnViewModel?
     private var backlog: Backlog
     private var completionTracker: BoundedRelayRequestCompletionTracker?
@@ -29,17 +43,12 @@ class NXGapFiller {
         boundedSubscriptionId != nil || completionTracker != nil
     }
     
-    private var windowStart: Int { // Depending on older or not we use start/end as since/until
-        return Int(since) + (currentGap * 3600 * windowSize)
-    }
-    private var windowEnd: Int { // Depending on older or not we use start/end as since/until
-        windowStart + (3600 * windowSize)
-    }
+    private var didAttemptUnscopedCatchUp = false
     
     public init(since: Int64, windowSize: Int = 4, timeout: Double = 2, currentGap: Int = 0, columnVM: NXColumnViewModel) {
         self.since = since
-        self.windowSize = windowSize
         self.timeout = timeout
+        _ = windowSize
         self.currentGap = currentGap
         self.columnVM = columnVM
         self.backlog = Backlog(timeout: timeout, auto: true, backlogDebugName: "NXGapFiller")
@@ -50,6 +59,10 @@ class NXGapFiller {
         guard let columnVM, let config = columnVM.config else { return }
         self.since = since
         self.currentGap = currentGap
+        if currentGap == 0 {
+            didAttemptUnscopedCatchUp = false
+        }
+        let range = NXRememberOnCatchUp.requestRange(since: since)
         
         guard ConnectionPool.shared.anyConnected else {
 #if DEBUG
@@ -70,8 +83,11 @@ class NXGapFiller {
             return
         }
                 
+#if DEBUG
+        latestDebugSummary = "\(config.name) catch-up \(Date(timeIntervalSince1970: TimeInterval(range.since)).formatted()) → now"
+#endif
         // send REQ
-        if let (cmd, subId, targets) = columnVM.getFillGapReqStatement(config, since: windowStart, until: windowEnd) {
+        if let (cmd, subId, targets) = columnVM.getFillGapReqStatement(config, since: range.since, until: range.until) {
             if let targets {
                 runBoundedRequest(config: config, command: cmd, subscriptionId: subId, targets: targets())
                 return
@@ -84,7 +100,7 @@ class NXGapFiller {
                     guard let self else { return }
                     self.columnVM?.speedTest?.requestStarted()
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted()) -[LOG]-")
+                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) catch-up since \(Date(timeIntervalSince1970: TimeInterval(range.since)).formatted()) until=nil now=\(Date.now.formatted()) -[LOG]-")
                     self.attachFetchDebug(subscriptionId: subId, config: config, targets: nil)
 #endif
                     cmd()
@@ -92,35 +108,17 @@ class NXGapFiller {
                 processResponseCommand: { [weak self] subId, _, _ in
                     guard let self else { return }
                     self.columnVM?.feed?.lastLocalFetchAt = Date()
-#if DEBUG
-                    let isFinalWindow = self.windowEnd >= Int(Date().timeIntervalSince1970)
-#endif
 
                     self.columnVM?.speedTest?.relayFinished()
                     
                     self.columnVM?.loadLocal(config, older: false) {
                         if self.columnVM?.currentNRPostsOnScreen.isEmpty ?? false {
-                            self.columnVM?.loadAnyFlag = true
-                            self.fetchGap(since: 1622888074, currentGap: self.currentGap)
+                            self.retryUnscopedCatchUpIfNeeded(config: config)
                             return
                         }
 #if DEBUG
-                        if isFinalWindow {
-                            self.columnVM?.recordFeedAction("initial newer pass finished · no new posts")
-                        }
+                        self.columnVM?.recordFeedAction("initial newer pass finished")
 #endif
-                    }
-                    
-                    self.currentGap += 1
-                    
-                    if self.windowStart < Int(Date().timeIntervalSince1970) {
-#if DEBUG
-                        L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") subId: \(subId) processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1) -[LOG]-")
-#endif
-                        self.fetchGap(since: self.since, currentGap: self.currentGap) // next gap (no since param)
-                    }
-                    else {
-                        self.currentGap = 0
                     }
                 },
                 timeoutCommand: { [weak self] subId in
@@ -142,6 +140,14 @@ class NXGapFiller {
             self.backlog.add(reqTask)
             reqTask.fetch()
         }
+    }
+
+    @MainActor
+    private func retryUnscopedCatchUpIfNeeded(config: NXColumnConfig) {
+        guard !didAttemptUnscopedCatchUp else { return }
+        didAttemptUnscopedCatchUp = true
+        columnVM?.loadAnyFlag = true
+        fetchGap(since: 1622888074, currentGap: 1)
     }
     
     private enum LatestPhase: Equatable {
@@ -475,9 +481,6 @@ class NXGapFiller {
                     switch outcome {
                     case .finished:
                         columnVM.feed?.lastLocalFetchAt = Date()
-#if DEBUG
-                        let isFinalWindow = self.windowEnd >= Int(Date().timeIntervalSince1970)
-#endif
                         if config.mediaFeedSourceSnapshot != nil,
                            columnVM.currentNRPostsOnScreen.isEmpty {
                             // A bounded media response is not necessarily newer than
@@ -499,27 +502,13 @@ class NXGapFiller {
                         columnVM.loadLocal(config, older: false) { [weak self] in
                             guard let self else { return }
                             if self.columnVM?.currentNRPostsOnScreen.isEmpty ?? false {
-                                self.columnVM?.loadAnyFlag = true
-                                self.fetchGap(since: 1622888074, currentGap: self.currentGap)
+                                self.retryUnscopedCatchUpIfNeeded(config: config)
                                 return
                             }
 
 #if DEBUG
-                            if isFinalWindow {
-                                self.columnVM?.recordFeedAction("initial newer pass finished · no new posts")
-                            }
+                            self.columnVM?.recordFeedAction("initial newer pass finished")
 #endif
-
-                            if self.windowStart < Int(Date().timeIntervalSince1970) {
-                                self.fetchGap(since: self.since, currentGap: self.currentGap)
-                            }
-                            else {
-                                self.currentGap = 0
-                            }
-                        }
-
-                        if advanceWindows {
-                            self.currentGap += 1
                         }
 
                     case .timedOut:
@@ -565,7 +554,7 @@ class NXGapFiller {
     ) {
         let relayIds = targets?.relayIds ?? ConnectionPool.shared.requestTargetSnapshot().relayIds
         let summary = latestDebugSummary
-            ?? "\(config.name) gap \(Date(timeIntervalSince1970: TimeInterval(windowStart)).formatted()) – \(Date(timeIntervalSince1970: TimeInterval(windowEnd)).formatted())"
+            ?? "\(config.name) catch-up \(Date(timeIntervalSince1970: TimeInterval(NXRememberOnCatchUp.requestRange(since: since).since)).formatted()) → now"
         FeedFetchDebug.shared.attach(
             columnVM?.speedTest,
             subscriptionId: subscriptionId,

@@ -5451,7 +5451,8 @@ let DEFAULT_REQ_LIMIT: Int? = 500
 //   PAGE requests have per-session IDs so late imports cannot satisfy a newer page.
 // - Bottom append is a raw `existing + older` assign. Do not run the prepend
 //   pin/settle on that path — it scrollToItem's a stale reading post.
-// Remember-on fetchGap is intentionally unchanged.
+// Remember-on catch-up is a single since→now REQ (no 4h `until`). Walking
+// 4h windows from 24h ago showed day-old notes first and hid recent posts.
 let LATEST_FEED_FIRST_PAINT_COUNT = 6
 let LATEST_FEED_FIRST_PAINT_EVENT_CAP = LATEST_FEED_FIRST_PAINT_COUNT + 2
 let LATEST_FEED_FIRST_PAINT_LIMIT = 20
