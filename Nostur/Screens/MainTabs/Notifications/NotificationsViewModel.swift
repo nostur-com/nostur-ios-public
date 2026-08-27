@@ -203,28 +203,52 @@ class NotificationsViewModel: ObservableObject {
         guard let pubkey = self.pubkey else { return }
         switch event.kind {
         case 1,1111,1222,1244,4,20,9802,30023,34235,1311: // TODO: Should check if not muted or blocked
-            let before = needsUpdate
             let isMention = event.flags != "is_update"
                 && event.pubkey != pubkey
                 && event.fastPs.contains(where: { $0.1 == pubkey })
-            needsUpdate = isMention
+            let decision = Self.mergeNeedsUpdate(current: needsUpdate, eventIsNotification: isMention)
+            needsUpdate = decision.needsUpdate
             if isMention {
                 ViewUpdates.shared.feedUpdates.send(
                     FeedUpdate(type: .Mentions, accountPubkey: pubkey)
                 )
             }
-            if needsUpdate && needsUpdate != before {
+            if decision.shouldCheckNow {
                 self.checkForUnreadMentions(accountData: accountData)
             }
         case 6:
-            needsUpdate = (event.otherPubkey == pubkey) // TODO: Should ignore blocked or muted
+            // TODO: Should ignore blocked or muted
+            let decision = Self.mergeNeedsUpdate(current: needsUpdate, eventIsNotification: event.otherPubkey == pubkey)
+            needsUpdate = decision.needsUpdate
+            if decision.shouldCheckNow && !muteReposts {
+                self.checkForUnreadReposts(accountData: accountData)
+            }
         case 7:
-            needsUpdate = (event.otherPubkey == pubkey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
+            // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
+            let decision = Self.mergeNeedsUpdate(current: needsUpdate, eventIsNotification: event.otherPubkey == pubkey)
+            needsUpdate = decision.needsUpdate
+            if decision.shouldCheckNow && !muteReactions {
+                self.checkForUnreadReactions(accountData: accountData)
+            }
         case 9735:
-            needsUpdate = (event.otherPubkey == pubkey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
+            // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
+            let decision = Self.mergeNeedsUpdate(current: needsUpdate, eventIsNotification: event.otherPubkey == pubkey)
+            needsUpdate = decision.needsUpdate
+            if decision.shouldCheckNow && !muteZaps {
+                self.checkForUnreadZaps(accountData: accountData)
+            }
         default:
             return
         }
+    }
+    
+    /// Feed imports send every saved event through `checkNeedsUpdate`. Unrelated notes must
+    /// not clear a pending unread recount; only `checkForEverything` resets the flag.
+    static func mergeNeedsUpdate(current: Bool, eventIsNotification: Bool) -> (needsUpdate: Bool, shouldCheckNow: Bool) {
+        guard eventIsNotification else {
+            return (current, false)
+        }
+        return (true, !current)
     }
     
     // Total for the notifications tab on the main tab bar
