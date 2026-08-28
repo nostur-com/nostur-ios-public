@@ -45,6 +45,49 @@ final class NXSeenReconciliationScheduler {
     }
 }
 
+enum NXUnreadSeenReconciliation {
+    struct ParentResult: Equatable {
+        let visibleRange: Range<Int>
+        let unreadCount: Int
+    }
+
+    /// An unread row represents its leaf event. Seeing an ancestor in another
+    /// thread must not consume this row's unread state.
+    static func isLeafSeen(_ leafShortId: String, in seenShortIds: Set<String>) -> Bool {
+        seenShortIds.contains(leafShortId)
+    }
+
+    /// Keeps the contiguous unread context nearest the leaf. The direct parent
+    /// is always retained, even when already read, but read ancestors above it
+    /// terminate the visible chain. Retained read context is not counted unread.
+    static func reconcileParents(
+        _ parentShortIds: [String],
+        seenShortIds: Set<String>
+    ) -> ParentResult {
+        guard !parentShortIds.isEmpty else {
+            return ParentResult(visibleRange: 0..<0, unreadCount: 1)
+        }
+
+        var firstVisibleIndex = parentShortIds.index(before: parentShortIds.endIndex)
+        if !seenShortIds.contains(parentShortIds[firstVisibleIndex]) {
+            while firstVisibleIndex > parentShortIds.startIndex {
+                let precedingIndex = parentShortIds.index(before: firstVisibleIndex)
+                guard !seenShortIds.contains(parentShortIds[precedingIndex]) else { break }
+                firstVisibleIndex = precedingIndex
+            }
+        }
+
+        let visibleRange = firstVisibleIndex..<parentShortIds.endIndex
+        let unreadParentCount = parentShortIds[visibleRange].count {
+            !seenShortIds.contains($0)
+        }
+        return ParentResult(
+            visibleRange: visibleRange,
+            unreadCount: 1 + unreadParentCount
+        )
+    }
+}
+
 class NXColumnViewModel: ObservableObject {
     public let columnVMid = UUID()
 #if DEBUG
@@ -656,25 +699,61 @@ class NXColumnViewModel: ObservableObject {
         guard !seenShortIds.isEmpty else { return }
         guard case .posts(let existingPosts) = viewState else { return }
 
-        let postIdsMarkedRead = Set(
-            existingPosts
-                .filter {
-                    vmInner.unreadIds[$0.id, default: 0] > 0
-                        && postContainsAnyShortId($0, in: seenShortIds)
-                }
-                .map(\.id)
-        )
-        guard !postIdsMarkedRead.isEmpty else { return }
+        var postIdsMarkedRead = Set<String>()
+        var unreadCountUpdates: [String: Int] = [:]
+        var parentUpdates: [(PostOrThreadAttributes, [NRPost])] = []
 
-        vmInner.updateUnreadIds { unreadIds in
-            for postId in postIdsMarkedRead {
-                unreadIds[postId] = nil
+        for post in existingPosts where vmInner.unreadIds[post.id, default: 0] > 0 {
+            if NXUnreadSeenReconciliation.isLeafSeen(post.shortId, in: seenShortIds) {
+                postIdsMarkedRead.insert(post.id)
+                continue
+            }
+
+            let displayedParents = post.postOrThreadAttributes.parentPosts
+            let parentResult = NXUnreadSeenReconciliation.reconcileParents(
+                displayedParents.map(\.shortId),
+                seenShortIds: seenShortIds
+            )
+            let visibleParents = Array(displayedParents[parentResult.visibleRange])
+
+            if parentResult.unreadCount != vmInner.unreadIds[post.id] {
+                unreadCountUpdates[post.id] = parentResult.unreadCount
+            }
+            if visibleParents.map(\.id) != displayedParents.map(\.id) {
+                parentUpdates.append((post.postOrThreadAttributes, visibleParents))
             }
         }
-        vmInner.updateIsAtTopSubject.send()
+
+        guard !postIdsMarkedRead.isEmpty
+                || !unreadCountUpdates.isEmpty
+                || !parentUpdates.isEmpty else { return }
+
+        let applyUpdates = { [weak self] () -> [String] in
+            guard let self else { return [] }
+            self.vmInner.updateUnreadIds { unreadIds in
+                for postId in postIdsMarkedRead {
+                    unreadIds[postId] = nil
+                }
+                for (postId, unreadCount) in unreadCountUpdates
+                where unreadIds[postId, default: 0] > 0 {
+                    unreadIds[postId] = unreadCount
+                }
+            }
+            for (attributes, visibleParents) in parentUpdates {
+                attributes.parentPosts = visibleParents
+            }
+            self.vmInner.updateIsAtTopSubject.send()
+            return self.currentNRPostsOnScreen.map(\.id)
+        }
+
+        if !parentUpdates.isEmpty, let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
+            performAnchoredFeedUpdate("read thread parents trimmed", applyUpdates)
+        } else {
+            _ = applyUpdates()
+        }
 #if DEBUG
         recordFeedAction(
-            "seen reconciliation · marked \(postIdsMarkedRead.count) rows read · kept \(existingPosts.count) posts"
+            "seen reconciliation · marked \(postIdsMarkedRead.count) rows read · trimmed \(parentUpdates.count) threads · kept \(existingPosts.count) posts"
         )
 #endif
     }
@@ -703,16 +782,6 @@ class NXColumnViewModel: ObservableObject {
             ), posts.indices.contains(itemIndex) else { return nil }
             return posts[itemIndex].id
         })
-    }
-
-    private func postContainsAnyShortId(_ post: NRPost, in shortIds: Set<String>) -> Bool {
-        if shortIds.contains(post.shortId) { return true }
-        if post.kind == 6,
-           let firstQuoteId = post.firstQuoteId,
-           shortIds.contains(String(firstQuoteId.prefix(8))) {
-            return true
-        }
-        return post.parentPosts.contains { shortIds.contains($0.shortId) }
     }
 
     private var syncFeedSubject = PassthroughSubject<Void, Never>()

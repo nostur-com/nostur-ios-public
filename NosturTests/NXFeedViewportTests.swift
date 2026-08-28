@@ -23,6 +23,52 @@ private actor NXFeedTestGate {
 
 final class NXFeedViewportTests: XCTestCase {
 
+    func testSeenParentDoesNotConsumeUnreadLeaf() {
+        let seenShortIds: Set<String> = ["parent01", "root0001"]
+
+        XCTAssertFalse(
+            NXUnreadSeenReconciliation.isLeafSeen("leaf0001", in: seenShortIds)
+        )
+    }
+
+    func testSeenLeafConsumesUnreadLeaf() {
+        let seenShortIds: Set<String> = ["parent01", "leaf0001"]
+
+        XCTAssertTrue(
+            NXUnreadSeenReconciliation.isLeafSeen("leaf0001", in: seenShortIds)
+        )
+    }
+
+    func testReadAncestorTrimsOlderContextButKeepsUnreadParentsNearestLeaf() {
+        let result = NXUnreadSeenReconciliation.reconcileParents(
+            ["root0001", "parent01", "parent02"],
+            seenShortIds: ["root0001"]
+        )
+
+        XCTAssertEqual(result.visibleRange, 1..<3)
+        XCTAssertEqual(result.unreadCount, 3)
+    }
+
+    func testReadDirectParentIsStillKeptForContext() {
+        let result = NXUnreadSeenReconciliation.reconcileParents(
+            ["root0001", "parent01", "parent02"],
+            seenShortIds: ["parent02"]
+        )
+
+        XCTAssertEqual(result.visibleRange, 2..<3)
+        XCTAssertEqual(result.unreadCount, 1)
+    }
+
+    func testParentlessUnreadLeafStillCountsAsOne() {
+        let result = NXUnreadSeenReconciliation.reconcileParents(
+            [],
+            seenShortIds: ["root0001"]
+        )
+
+        XCTAssertEqual(result.visibleRange, 0..<0)
+        XCTAssertEqual(result.unreadCount, 1)
+    }
+
     @MainActor
     func testCloudSeenRefreshCoalescesNotificationBurst() async {
         let scheduler = NXCloudSeenRefreshScheduler()
