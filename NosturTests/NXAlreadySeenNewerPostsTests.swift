@@ -41,4 +41,21 @@ final class NXAlreadySeenNewerPostsTests: XCTestCase {
             ).isEmpty
         )
     }
+
+    func testExcludesCandidateAlreadyRenderedAsThreadContext() {
+        let now = Date(timeIntervalSince1970: 10_000)
+
+        XCTAssertEqual(
+            NXAlreadySeenNewerPosts.candidateIDs(
+                from: [
+                    NXAlreadySeenNewerPostCandidate(id: "thread-parent", createdAt: 9_900),
+                    NXAlreadySeenNewerPostCandidate(id: "actually-hidden", createdAt: 9_800),
+                ],
+                visibleCreatedAt: [7_000],
+                excludingIDs: ["thread-parent"],
+                now: now
+            ),
+            ["actually-hidden"]
+        )
+    }
 }

@@ -16,6 +16,7 @@ enum NXAlreadySeenNewerPosts {
     static func candidateIDs(
         from candidates: [NXAlreadySeenNewerPostCandidate],
         visibleCreatedAt: [Int64],
+        excludingIDs: Set<String> = [],
         now: Date = Date()
     ) -> [String] {
         guard let newestVisibleCreatedAt = visibleCreatedAt.max(),
@@ -26,7 +27,10 @@ enum NXAlreadySeenNewerPosts {
         }
 
         return candidates
-            .filter { $0.createdAt > newestVisibleCreatedAt }
+            .filter {
+                $0.createdAt > newestVisibleCreatedAt
+                    && !excludingIDs.contains($0.id)
+            }
             .sorted { $0.createdAt > $1.createdAt }
             .map(\.id)
     }

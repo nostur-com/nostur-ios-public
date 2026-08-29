@@ -3819,9 +3819,19 @@ class NXColumnViewModel: ObservableObject {
 
     private func refreshAlreadySeenNewerPosts(for posts: [NRPost], publishWhenPending: Bool = false) {
         let visibleCreatedAt = posts.map(\.created_at)
+        let visibleIDs = posts.reduce(into: Set<String>()) { ids, post in
+            ids.insert(post.id)
+            if post.isRepost, let firstQuoteId = post.firstQuoteId {
+                ids.insert(firstQuoteId)
+            }
+            else {
+                ids.formUnion(post.parentPosts.map(\.id))
+            }
+        }
         let candidateIDs = NXAlreadySeenNewerPosts.candidateIDs(
             from: Array(alreadySeenNewerCandidates.values),
-            visibleCreatedAt: visibleCreatedAt
+            visibleCreatedAt: visibleCreatedAt,
+            excludingIDs: visibleIDs
         )
         // Empty means a genuinely newer post reached the screen. Hide the
         // banner immediately. Non-empty candidates are only published after
@@ -3854,7 +3864,8 @@ class NXColumnViewModel: ObservableObject {
 
         let ids = NXAlreadySeenNewerPosts.candidateIDs(
             from: Array(alreadySeenNewerCandidates.values),
-            visibleCreatedAt: currentNRPostsOnScreen.map(\.created_at)
+            visibleCreatedAt: currentNRPostsOnScreen.map(\.created_at),
+            excludingIDs: currentIdsOnScreen
         )
         guard !ids.isEmpty else {
             clearAlreadySeenNewerPosts()
@@ -4174,7 +4185,7 @@ class NXColumnViewModel: ObservableObject {
         
     }
     
-    private func fetchParents(_ danglers: [NRPost], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool = false, sessionGeneration: UInt64? = nil) {
+    private func fetchParents(_ danglers: [NRPost], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool = false, revealAtTop: Bool = false, sessionGeneration: UInt64? = nil, completion: (() -> Void)? = nil) {
         for nrPost in danglers {
             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "CVM.001")
         }
@@ -4227,7 +4238,10 @@ class NXColumnViewModel: ObservableObject {
                     Task { @MainActor [weak self] in
                         guard let self else { return }
                         self.mergeFeedLastReadIntoSeen(config.feed)
-                        let allShortIdsSeen = self.allShortIdsSeen
+                        // A user-requested reveal must keep bypassing the seen filter
+                        // after its missing parent arrives. Otherwise the second pass
+                        // silently filters the dangling post again.
+                        let allShortIdsSeen = revealAtTop ? [] : self.allShortIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let wotEnabled = config.wotEnabled
                         let repliesEnabled = config.repliesEnabled
@@ -4238,7 +4252,7 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen -[LOG]-")
 #endif
-                            self.processToScreen(danglingEvents, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration)
+                            self.processToScreen(danglingEvents, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, revealAtTop: revealAtTop, sessionGeneration: sessionGeneration, completion: completion)
                         }
                     }
                 }
@@ -4257,7 +4271,7 @@ class NXColumnViewModel: ObservableObject {
                     Task { @MainActor [weak self] in
                         guard let self else { return }
                         self.mergeFeedLastReadIntoSeen(config.feed)
-                        let allShortIdsSeen = self.allShortIdsSeen
+                        let allShortIdsSeen = revealAtTop ? [] : self.allShortIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let wotEnabled = config.wotEnabled
                         let repliesEnabled = config.repliesEnabled
@@ -4268,7 +4282,7 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen (timeoutCommand) -[LOG]-")
 #endif
-                            self.processToScreen(danglingEvents, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, sessionGeneration: sessionGeneration)
+                            self.processToScreen(danglingEvents, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, revealAtTop: revealAtTop, sessionGeneration: sessionGeneration, completion: completion)
                         }
                     }
 
@@ -4413,7 +4427,18 @@ extension NXColumnViewModel {
         let newDanglers = danglers.filter { !self.danglingIds.contains($0.id) }
         if !newDanglers.isEmpty && repliesEnabled {
             danglingIds = danglingIds.union(newDanglers.map { $0.id })
-            fetchParents(newDanglers, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, sessionGeneration: sessionGeneration)
+            fetchParents(
+                newDanglers,
+                config: config,
+                allShortIdsSeen: allShortIdsSeen,
+                currentIdsOnScreen: currentIdsOnScreen,
+                currentNRPostsOnScreen: currentNRPostsOnScreen,
+                sinceOrUntil: sinceOrUntil,
+                older: older,
+                revealAtTop: revealAtTop,
+                sessionGeneration: sessionGeneration,
+                completion: revealAtTop ? completion : nil
+            )
         }
         
         guard !partialThreadsWithParent.isEmpty else {
@@ -4436,7 +4461,9 @@ extension NXColumnViewModel {
                         speedTest.loadingBarViewState = .finalLoad
                     }
                 }
-                completion?()
+                if !revealAtTop || newDanglers.isEmpty {
+                    completion?()
+                }
                 if !older {
                     self.recoverSparseRememberOnFeedIfNeeded(config)
                 }
