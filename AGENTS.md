@@ -13,6 +13,21 @@ Nostur is a social media client for the Nostr protocol, built for Mac, iPhone, a
 3. Open `Nostur.xcodeproj` in Xcode
 4. Dependencies are managed by Swift Package Manager (`Package.resolved`)
 
+### Sidebar Test Build ID
+
+The debug sidebar displays `TEST_BUILD_ID`, which is derived at runtime from
+the first eight characters of the Mach-O UUID of `Nostur.debug.dylib` (lowercase).
+When reporting a simulator build ID, use the debug dylib from the newest
+`Debug-iphonesimulator/Nostur.app` produced by `./scripts/run-sim.sh`; do not
+glob older DerivedData products. For example:
+
+```bash
+dwarfdump --uuid \
+  /path/to/DerivedData/Nostur-*/Build/Products/Debug-iphonesimulator/Nostur.app/Nostur.debug.dylib
+```
+
+Take the first eight UUID characters and lowercase them to match the sidebar.
+
 ### Build Commands
 
 ```bash
@@ -31,7 +46,7 @@ xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
 After changes are mode:
 
 1. Build and launch with `./scripts/run-sim.sh` (shares Xcode’s default DerivedData; use `--no-build` only if the app is already built and only reinstall/launch is needed).
-2. Tell the user the app is ready to test — do **not** only print the command for them to run.
+2. Tell the user the app with TEST_BUILD_ID (see BuildIdentity.swift) is ready to test — do **not** only print the command for them to run.
 
 ### Tests
 
