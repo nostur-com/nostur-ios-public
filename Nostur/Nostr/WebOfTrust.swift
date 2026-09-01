@@ -369,7 +369,7 @@ class WebOfTrust: ObservableObject {
         if snapshot.followingFollowingPubkeys.contains(pubkey) { return true }
         
         // Also allow outgoing DM conv pubkeys we initiated
-        if DMsVM.shared.allowedWoT.contains(pubkey) {
+        if DMsVM.shared.isAllowedByWoT(pubkey) {
             return true
         }
         
