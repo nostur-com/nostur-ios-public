@@ -57,6 +57,16 @@ enum NXUnreadSeenReconciliation {
         seenShortIds.contains(leafShortId)
     }
 
+    /// A leaf read elsewhere should disappear from this feed once it is offscreen.
+    /// Keep a currently visible row stable; synced/feed state may explicitly require
+    /// removal even when the row happens to be visible.
+    static func shouldRemoveSeenLeafRow(
+        isVisible: Bool,
+        removeEvenIfVisible: Bool
+    ) -> Bool {
+        removeEvenIfVisible || !isVisible
+    }
+
     /// Keeps the contiguous unread context nearest the leaf. The direct parent
     /// is always retained, even when already read, but read ancestors above it
     /// terminate the visible chain. Retained read context is not counted unread.
@@ -100,6 +110,8 @@ class NXColumnViewModel: ObservableObject {
     @Published private(set) var alreadySeenNewerCount = 0
     @Published private(set) var isShowingAlreadySeenNewerPosts = false
     private var alreadySeenNewerCandidates: [String: NXAlreadySeenNewerPostCandidate] = [:]
+    private var alreadySeenNewerDisplayTask: Task<Void, Never>?
+    private static let alreadySeenNewerStabilityDelay: TimeInterval = 1.5
 
     private func attachRestoreCoverIfNeeded() {
         guard vmInner.onRestoreCoverChange == nil else { return }
@@ -615,11 +627,16 @@ class NXColumnViewModel: ObservableObject {
                     Task { @MainActor [weak self] in
                         guard let self else { return }
                         // A row may represent a whole reply chain, so reconcile the
-                        // exact component seen in the other column. Keep the row on
-                        // screen: switching feeds must never drain an inactive feed.
+                        // exact component seen in the other column. Offscreen leaf rows
+                        // are removed; a currently visible row stays stable until a
+                        // later feed refresh.
+                        let otherColumnShortId = String(postId.prefix(8))
                         var seenShortIds = Deduplicator.shared.onScreenSeen
-                        seenShortIds.insert(String(postId.prefix(8)))
-                        self.removeUnreadPostsAlreadyMarkedRead(seenShortIds)
+                        seenShortIds.insert(otherColumnShortId)
+                        self.removeUnreadPostsAlreadyMarkedRead(
+                            seenShortIds,
+                            otherColumnSeenShortIds: [otherColumnShortId]
+                        )
                     }
                 })
                 .store(in: &subscriptions)
@@ -683,29 +700,60 @@ class NXColumnViewModel: ObservableObject {
                 self.pendingSyncedSeenIds.removeAll(keepingCapacity: true)
                 var seenShortIds = Deduplicator.shared.onScreenSeen
                 seenShortIds.formUnion(syncedSeenIds)
+                var syncedOrFeedSeenIds = syncedSeenIds
                 if let feed = self.feed,
                    SettingsStore.shared.appWideSeenTrackeriCloud {
                     self.mergeFeedLastReadIntoSeen(feed)
                     seenShortIds.formUnion(feed.lastRead)
+                    syncedOrFeedSeenIds.formUnion(feed.lastRead)
                 }
-                self.removeUnreadPostsAlreadyMarkedRead(seenShortIds)
+                self.removeUnreadPostsAlreadyMarkedRead(
+                    seenShortIds,
+                    syncedOrFeedSeenShortIds: syncedOrFeedSeenIds
+                )
             }
         )
     }
 
     @MainActor
-    private func removeUnreadPostsAlreadyMarkedRead(_ seenShortIds: Set<String>) {
+    private func removeUnreadPostsAlreadyMarkedRead(
+        _ seenShortIds: Set<String>,
+        otherColumnSeenShortIds: Set<String> = [],
+        syncedOrFeedSeenShortIds: Set<String> = []
+    ) {
         guard SettingsStore.shared.appWideSeenTracker else { return }
         guard !seenShortIds.isEmpty else { return }
         guard case .posts(let existingPosts) = viewState else { return }
 
         var postIdsMarkedRead = Set<String>()
+        var postIdsToRemove = Set<String>()
+#if DEBUG
+        var postReadReasons: [String: String] = [:]
+#endif
         var unreadCountUpdates: [String: Int] = [:]
         var parentUpdates: [(PostOrThreadAttributes, [NRPost])] = []
+        let visiblePostIds = currentVisiblePostIds()
 
         for post in existingPosts where vmInner.unreadIds[post.id, default: 0] > 0 {
             if NXUnreadSeenReconciliation.isLeafSeen(post.shortId, in: seenShortIds) {
                 postIdsMarkedRead.insert(post.id)
+                if NXUnreadSeenReconciliation.shouldRemoveSeenLeafRow(
+                    isVisible: visiblePostIds.contains(post.id),
+                    removeEvenIfVisible: syncedOrFeedSeenShortIds.contains(post.shortId)
+                ) {
+                    postIdsToRemove.insert(post.id)
+                }
+#if DEBUG
+                let reason: String
+                if otherColumnSeenShortIds.contains(post.shortId) {
+                    reason = "other column"
+                } else if syncedOrFeedSeenShortIds.contains(post.shortId) {
+                    reason = "synced/feed seen"
+                } else {
+                    reason = "app-wide seen"
+                }
+                postReadReasons[post.id] = reason
+#endif
                 continue
             }
 
@@ -728,6 +776,12 @@ class NXColumnViewModel: ObservableObject {
                 || !unreadCountUpdates.isEmpty
                 || !parentUpdates.isEmpty else { return }
 
+#if DEBUG
+        for (postId, reason) in postReadReasons {
+            vmInner.recordUnreadReadReason(id: postId, reason: reason)
+        }
+#endif
+
         let applyUpdates = { [weak self] () -> [String] in
             guard let self else { return [] }
             self.vmInner.updateUnreadIds { unreadIds in
@@ -742,20 +796,35 @@ class NXColumnViewModel: ObservableObject {
             for (attributes, visibleParents) in parentUpdates {
                 attributes.parentPosts = visibleParents
             }
+            let resultingPosts: [NRPost]
+            if postIdsToRemove.isEmpty {
+                resultingPosts = self.currentNRPostsOnScreen
+            } else {
+                resultingPosts = self.currentNRPostsOnScreen.filter {
+                    !postIdsToRemove.contains($0.id)
+                }
+                withTransaction(Transaction(animation: nil)) {
+                    self.viewState = .posts(resultingPosts)
+                }
+            }
             self.vmInner.updateIsAtTopSubject.send()
-            return self.currentNRPostsOnScreen.map(\.id)
+#if DEBUG
+            self.recordFeedAction(
+                "seen reconciliation · marked \(postIdsMarkedRead.count) rows read · removed \(postIdsToRemove.count) rows · trimmed \(parentUpdates.count) threads · kept \(resultingPosts.count) posts"
+            )
+#endif
+            return resultingPosts.map(\.id)
         }
 
-        if !parentUpdates.isEmpty, let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
-            performAnchoredFeedUpdate("read thread parents trimmed", applyUpdates)
+        if (!postIdsToRemove.isEmpty || !parentUpdates.isEmpty),
+           let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
+            let reason = !postIdsToRemove.isEmpty
+                ? "read leaf rows removed"
+                : "read thread parents trimmed"
+            performAnchoredFeedUpdate(reason, applyUpdates)
         } else {
             _ = applyUpdates()
         }
-#if DEBUG
-        recordFeedAction(
-            "seen reconciliation · marked \(postIdsMarkedRead.count) rows read · trimmed \(parentUpdates.count) threads · kept \(existingPosts.count) posts"
-        )
-#endif
     }
 
     @MainActor
@@ -3733,22 +3802,44 @@ class NXColumnViewModel: ObservableObject {
         for candidate in candidates {
             alreadySeenNewerCandidates[candidate.id] = candidate
         }
-        refreshAlreadySeenNewerPosts(for: currentNRPostsOnScreen)
+
+        // A launch can produce several local/relay newer passes. Hold the
+        // banner until the feed has been quiet briefly, otherwise it flashes
+        // and disappears as soon as an unseen post is prepended.
+        alreadySeenNewerDisplayTask?.cancel()
+        alreadySeenNewerDisplayTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(
+                nanoseconds: UInt64(NXColumnViewModel.alreadySeenNewerStabilityDelay * 1_000_000_000)
+            )
+            guard !Task.isCancelled, let self else { return }
+            self.alreadySeenNewerDisplayTask = nil
+            self.refreshAlreadySeenNewerPosts(for: self.currentNRPostsOnScreen, publishWhenPending: true)
+        }
     }
 
-    private func refreshAlreadySeenNewerPosts(for posts: [NRPost]) {
+    private func refreshAlreadySeenNewerPosts(for posts: [NRPost], publishWhenPending: Bool = false) {
         let visibleCreatedAt = posts.map(\.created_at)
         let candidateIDs = NXAlreadySeenNewerPosts.candidateIDs(
             from: Array(alreadySeenNewerCandidates.values),
             visibleCreatedAt: visibleCreatedAt
         )
-        if alreadySeenNewerCount != candidateIDs.count {
+        // Empty means a genuinely newer post reached the screen. Hide the
+        // banner immediately. Non-empty candidates are only published after
+        // the stability delay unless a banner is already visible.
+        if candidateIDs.isEmpty {
+            alreadySeenNewerDisplayTask?.cancel()
+            alreadySeenNewerDisplayTask = nil
+        }
+        if (publishWhenPending || alreadySeenNewerCount > 0),
+           alreadySeenNewerCount != candidateIDs.count {
             alreadySeenNewerCount = candidateIDs.count
         }
     }
 
     @MainActor
     private func clearAlreadySeenNewerPosts() {
+        alreadySeenNewerDisplayTask?.cancel()
+        alreadySeenNewerDisplayTask = nil
         alreadySeenNewerCandidates = [:]
         alreadySeenNewerCount = 0
         isShowingAlreadySeenNewerPosts = false

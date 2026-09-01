@@ -39,6 +39,57 @@ final class NXFeedViewportTests: XCTestCase {
         )
     }
 
+    func testSeenOffscreenLeafRowIsRemoved() {
+        XCTAssertTrue(
+            NXUnreadSeenReconciliation.shouldRemoveSeenLeafRow(
+                isVisible: false,
+                removeEvenIfVisible: false
+            )
+        )
+    }
+
+    func testSeenVisibleLeafRowIsKeptStable() {
+        XCTAssertFalse(
+            NXUnreadSeenReconciliation.shouldRemoveSeenLeafRow(
+                isVisible: true,
+                removeEvenIfVisible: false
+            )
+        )
+    }
+
+    func testSyncedSeenLeafRowCanBeRemovedWhileVisible() {
+        XCTAssertTrue(
+            NXUnreadSeenReconciliation.shouldRemoveSeenLeafRow(
+                isVisible: true,
+                removeEvenIfVisible: true
+            )
+        )
+    }
+
+    func testUnreadNavigationUsesLiveViewportInsteadOfStaleReadingAnchorWhenIdle() {
+        let start = NXUnreadNavigation.start(
+            liveVisibleIndex: 12,
+            readingIndex: 7,
+            fallbackVisibleIndex: 12,
+            isViewportTransitioning: false,
+            postCount: 20
+        )
+
+        XCTAssertEqual(start, .init(index: 12, source: "live-visible"))
+    }
+
+    func testUnreadNavigationUsesReadingAnchorDuringViewportTransition() {
+        let start = NXUnreadNavigation.start(
+            liveVisibleIndex: 12,
+            readingIndex: 7,
+            fallbackVisibleIndex: 12,
+            isViewportTransitioning: true,
+            postCount: 20
+        )
+
+        XCTAssertEqual(start, .init(index: 7, source: "reading"))
+    }
+
     func testReadAncestorTrimsOlderContextButKeepsUnreadParentsNearestLeaf() {
         let result = NXUnreadSeenReconciliation.reconcileParents(
             ["root0001", "parent01", "parent02"],

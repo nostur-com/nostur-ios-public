@@ -46,6 +46,7 @@ class NXColumnViewModelInner {
     public var unreadIds: [String: Int] {
         get { unreadState.unreadIds }
         set {
+            let previousUnreadIds = unreadState.unreadIds
             let previousUnreadCount = unreadState.unreadCount
             unreadState.replaceUnreadIds(newValue)
             let newUnreadCount = unreadState.unreadCount
@@ -57,6 +58,13 @@ class NXColumnViewModelInner {
             }
             
 #if DEBUG
+            for (id, unreadCount) in newValue where unreadCount > 0 {
+                unreadReadReasons[id] = nil
+            }
+            for (id, unreadCount) in previousUnreadIds
+            where unreadCount > 0 && newValue[id, default: 0] <= 0 && unreadReadReasons[id] == nil {
+                recordUnreadReadReason(id: id, reason: "unattributed unread mutation")
+            }
             finishFirstUnreadMeasurementIfNeeded(previousUnreadCount: previousUnreadCount, newUnreadCount: newUnreadCount)
 #endif
         }
@@ -73,8 +81,36 @@ class NXColumnViewModelInner {
     }
     
 #if DEBUG
+    private var unreadReadReasons: [String: String] = [:]
+    private var unreadReadReasonOrder: [String] = []
+    private static let unreadReadReasonLimit = 1_000
     private var firstUnreadMeasurementStart: Date?
     private var firstUnreadMeasurementFeedName: String?
+
+    public func recordUnreadReadReason(id: String, reason: String) {
+        if unreadReadReasons[id] == nil {
+            unreadReadReasonOrder.append(id)
+        }
+        unreadReadReasons[id] = reason
+
+        let overflow = unreadReadReasonOrder.count - Self.unreadReadReasonLimit
+        if overflow > 0 {
+            for expiredID in unreadReadReasonOrder.prefix(overflow) {
+                unreadReadReasons[expiredID] = nil
+            }
+            unreadReadReasonOrder.removeFirst(overflow)
+        }
+    }
+
+    public func recordUnreadReadReasons(ids: some Sequence<String>, reason: String) {
+        for id in ids {
+            recordUnreadReadReason(id: id, reason: reason)
+        }
+    }
+
+    public func unreadReadReason(for id: String) -> String {
+        unreadReadReasons[id] ?? "unknown"
+    }
     
     public func startFirstUnreadMeasurement(feedName: String, reason: String) {
         firstUnreadMeasurementStart = Date()

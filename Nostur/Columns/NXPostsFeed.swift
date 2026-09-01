@@ -10,6 +10,32 @@ import QuartzCore
 @_spi(Advanced) import SwiftUIIntrospect
 import Combine
 
+enum NXUnreadNavigation {
+    struct Start: Equatable {
+        let index: Int
+        let source: String
+    }
+
+    static func start(
+        liveVisibleIndex: Int?,
+        readingIndex: Int?,
+        fallbackVisibleIndex: Int?,
+        isViewportTransitioning: Bool,
+        postCount: Int
+    ) -> Start {
+        if !isViewportTransitioning, let liveVisibleIndex {
+            return Start(index: liveVisibleIndex, source: "live-visible")
+        }
+        if let readingIndex {
+            return Start(index: readingIndex, source: "reading")
+        }
+        if let fallbackVisibleIndex {
+            return Start(index: fallbackVisibleIndex, source: "visible fallback")
+        }
+        return Start(index: postCount, source: "feed-end fallback")
+    }
+}
+
 private struct NXFeedLayoutStabilizerKey: EnvironmentKey {
     static let defaultValue: NXFeedLayoutStabilizer? = nil
 }
@@ -103,6 +129,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     func visiblePostID() -> String? {
         guard let scrollView, scrollView.window != nil else { return lastKnownAnchor?.id }
         return visibleAnchor(in: scrollView)?.id ?? lastKnownAnchor?.id
+    }
+
+    /// The actual top-edge row currently reported by UIKit. Unlike `visiblePostID()`,
+    /// this never falls back to a remembered anchor.
+    func liveVisiblePostID() -> String? {
+        guard let scrollView, scrollView.window != nil else { return nil }
+        return visibleAnchor(in: scrollView)?.id
     }
 
     /// Preserve reading position across tab/detail navigation. Row content can finish resolving
@@ -1235,22 +1268,36 @@ struct NXPostsFeed: View {
         // Walk upward from the post on screen, not from the bottom of the list.
         // After restore, a false appear on a newer row can mark a block as read;
         // the nearest unread above the reading position is still the next tap.
-        let startIndex: Int = {
-            if let readingID = vmInner.readingPostID ?? vmInner.pendingScrollToPostID,
-               let index = posts.firstIndex(where: { $0.id == readingID }) {
-                return index
-            }
-            if let visibleID = layoutStabilizer.visiblePostID(),
-               let index = posts.firstIndex(where: { $0.id == visibleID }) {
-                return index
-            }
-            return posts.count
-        }()
+        // Once the feed is idle, the UIKit viewport is authoritative. A row removal
+        // can leave readingPostID pointing at the pre-update row even though UIKit
+        // preserved a different top-edge row. Using that stale ID makes an adjacent
+        // logical jump animate across a much larger physical distance.
+        let liveVisibleIndex = layoutStabilizer.liveVisiblePostID().flatMap { visibleID in
+            posts.firstIndex(where: { $0.id == visibleID })
+        }
+        let readingIndex = (vmInner.readingPostID ?? vmInner.pendingScrollToPostID).flatMap { readingID in
+            posts.firstIndex(where: { $0.id == readingID })
+        }
+        let fallbackVisibleIndex = layoutStabilizer.visiblePostID().flatMap { visibleID in
+            posts.firstIndex(where: { $0.id == visibleID })
+        }
+        let start = NXUnreadNavigation.start(
+            liveVisibleIndex: liveVisibleIndex,
+            readingIndex: readingIndex,
+            fallbackVisibleIndex: fallbackVisibleIndex,
+            isViewportTransitioning: vmInner.isPreparingForScrollRestore
+                || layoutStabilizer.isProgrammaticScrollPending,
+            postCount: posts.count
+        )
+        let startIndex = start.index
 
         if startIndex > 0 {
             var index = startIndex - 1
             while index >= 0 {
                 if let unreadCount = vmInner.unreadIds[posts[index].id], unreadCount > 0 {
+#if DEBUG
+                    recordUnreadJump(startIndex: startIndex, startSource: start.source, targetIndex: index)
+#endif
                     scrollToIndex(index)
                     return
                 }
@@ -1261,7 +1308,15 @@ struct NXPostsFeed: View {
         for post in posts.reversed() {
             if let unreadCount = vmInner.unreadIds[post.id], unreadCount > 0 {
                 if let firstUnreadPostIndex = posts.firstIndex(where: { $0.id == post.id }) {
+#if DEBUG
+                    recordUnreadJump(
+                        startIndex: startIndex,
+                        startSource: "\(start.source) wrap",
+                        targetIndex: firstUnreadPostIndex
+                    )
+#endif
                     scrollToIndex(firstUnreadPostIndex)
+                    return
 
 //                    // Regular updateIsAtTop() in onPostAppearOnce { } doesn't catch the first row appearing to set isAtTop to 0, probably because
 //                    // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
@@ -1276,14 +1331,47 @@ struct NXPostsFeed: View {
                 break
             }
         }
+
+#if DEBUG
+        vm.recordFeedAction(
+            "UNREAD tap · no target · anchor \(start.source) \(startIndex)/\(posts.count) · counter \(vmInner.unreadCount)"
+        )
+#endif
     }
+
+#if DEBUG
+    private func recordUnreadJump(startIndex: Int, startSource: String, targetIndex: Int) {
+        let lowerBound = min(targetIndex + 1, posts.count)
+        let upperBound = min(max(startIndex, lowerBound), posts.count)
+        let crossedPosts = lowerBound < upperBound ? Array(posts[lowerBound..<upperBound]) : []
+        let retainedReadPosts = crossedPosts.filter {
+            vmInner.unreadIds[$0.id, default: 0] <= 0
+        }
+        let target = posts[targetIndex]
+        let anchorID = posts[safe: min(startIndex, posts.count - 1)]?.shortId ?? "end"
+
+        vm.recordFeedAction(
+            "UNREAD tap · \(startSource) \(anchorID)@\(startIndex) → \(target.shortId)@\(targetIndex) · crossed \(crossedPosts.count), retained-read \(retainedReadPosts.count)"
+        )
+
+        guard !retainedReadPosts.isEmpty else { return }
+        let details = retainedReadPosts.prefix(8).map { post in
+            let state = vmInner.unreadIds[post.id].map(String.init) ?? "nil"
+            return "\(post.shortId):\(state):\(vmInner.unreadReadReason(for: post.id))"
+        }.joined(separator: " · ")
+        let remaining = retainedReadPosts.count - min(retainedReadPosts.count, 8)
+        vm.recordFeedAction(
+            "UNREAD crossed · \(details)\(remaining > 0 ? " · +\(remaining) more" : "")"
+        )
+    }
+#endif
     
     private func scrollToTop() {
         scrollToIndex(0)
         vmInner.isAtTop = true
         vmInner.readingPostID = nil
         vmInner.holdUnreadAboveReadingPost = false
-        markAllAsRead()
+        markAllAsRead(reason: "explicit scroll to top")
 //        
 //        // Regular updateIsAtTop() in onPostAppearOnce { } doesn't catch the first row appearing to set isAtTop to 0, probably because
 //        // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
@@ -1508,6 +1596,12 @@ struct NXPostsFeed: View {
                 }
             }
             if let targetPost {
+#if DEBUG
+                let landedID = layoutStabilizer.visiblePostID()
+                vm.recordFeedAction(
+                    "UNREAD settle · target \(targetPost.shortId) · landed \(landedID.map { String($0.prefix(8)) } ?? "none") · \(landedID == targetPost.id ? "match" : "MISMATCH")"
+                )
+#endif
                 // Do not depend on onAppear here: List may reuse an already-visible row and never
                 // fire it again. Consume exactly the post selected by the unread index at tap time.
                 performIDCollectionUpdates(for: targetPost, vm: vm)
@@ -1577,7 +1671,7 @@ struct NXPostsFeed: View {
         if isAtTopNow && !vmInner.isPreparingForScrollRestore {
             vmInner.readingPostID = nil
             vmInner.holdUnreadAboveReadingPost = false
-            markAllAsRead()
+            markAllAsRead(reason: "live at-top detection")
         }
 
         guard !vmInner.isPreparingForScrollRestore else { return }
@@ -1602,10 +1696,17 @@ struct NXPostsFeed: View {
         vmInner.updateIsAtTopSubject.send()
     }
     
-    private func markAllAsRead() {
+    private func markAllAsRead(reason: String) {
         if !vmInner.unreadIds.isEmpty {
 #if DEBUG
-            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.markAllAsRead() -[LOG]-")
+            let unreadRowIDs = vmInner.unreadIds.compactMap { id, unreadCount in
+                unreadCount > 0 ? id : nil
+            }
+            vm.recordFeedAction(
+                "UNREAD clear all · \(reason) · \(unreadRowIDs.count) rows · restore \(vmInner.isPreparingForScrollRestore) · scroll \(vmInner.isPerformingScroll) · unread-scroll \(vmInner.isPerformingScrollToFirstUnread) · pending-layout \(layoutStabilizer.isProgrammaticScrollPending) · \(vm.feedActionDebugViewport())"
+            )
+            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.markAllAsRead() · \(reason) · \(unreadRowIDs.count) rows -[LOG]-")
+            vmInner.recordUnreadReadReasons(ids: unreadRowIDs, reason: reason)
 #endif
             vmInner.unreadIds = [:]
         }
@@ -1639,10 +1740,20 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
     // Batch unread ID updates
     var idsToMarkAsRead: [String] = []
     var notificationPairs: [(String, UUID)] = []
+
+#if DEBUG
+    let readReason = vmInner.isPerformingScrollToFirstUnread
+        ? "unread button selected \(nrPost.shortId)"
+        : "visible row \(nrPost.shortId)"
+    var rowIdsMarkedRead = Set<String>()
+#endif
     
     vmInner.updateUnreadIds { unreadIds in
         // Current post
         unreadIds[nrPost.id] = 0
+#if DEBUG
+        rowIdsMarkedRead.insert(nrPost.id)
+#endif
         idsToMarkAsRead.append(nrPost.shortId)
         notificationPairs.append((nrPost.id, vm.columnVMid))
 
@@ -1665,6 +1776,9 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
             for i in appearedIndex..<vm.currentNRPostsOnScreen.count {
                 if unreadIds[vm.currentNRPostsOnScreen[i].id] != 0 {
                     unreadIds[vm.currentNRPostsOnScreen[i].id] = 0
+#if DEBUG
+                    rowIdsMarkedRead.insert(vm.currentNRPostsOnScreen[i].id)
+#endif
                     idsToMarkAsRead.append(vm.currentNRPostsOnScreen[i].shortId)
 
                     if vm.currentNRPostsOnScreen[i].isRepost, let firstQuoteId = vm.currentNRPostsOnScreen[i].firstQuoteId {
@@ -1678,6 +1792,10 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
             }
         }
     }
+
+#if DEBUG
+    vmInner.recordUnreadReadReasons(ids: rowIdsMarkedRead, reason: readReason)
+#endif
     
     vm.markAsRead(idsToMarkAsRead)
     
