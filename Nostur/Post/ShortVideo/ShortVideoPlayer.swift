@@ -10,52 +10,20 @@ import SwiftUI
 import AVKit
 
 // MARK: - Reusable Smooth Video Player (TikTok-style)
+@MainActor
 struct ShortVideoPlayer: UIViewControllerRepresentable {
     let url: URL
     @Binding var isPlaying: Bool
     @Binding var isMuted: Bool
-    
 
-    // Reuse or create player
-    private static func getPlayer(for url: URL) -> AVPlayer {
-        ShortVideoPlayerPool.shared.queue.sync {
-            // Try to reuse an existing player with the same URL
-            if let existing = ShortVideoPlayerPool.shared.playerPool.first(where: { ($0.currentItem?.asset as? AVURLAsset)?.url == url }) {
-                if let index = ShortVideoPlayerPool.shared.playerPool.firstIndex(of: existing) {
-                    ShortVideoPlayerPool.shared.playerPool.remove(at: index)
-                }
-                existing.seek(to: .zero)
-                existing.volume = 1.0
-                return existing
-            }
-            
-            // Create new player with buffering optimizations
-            let player = AVPlayer()
-            player.isMuted = true
-            player.automaticallyWaitsToMinimizeStalling = true
-            
-            // Aggressive prefetching
-            let item = AVPlayerItem(url: url)
-            player.replaceCurrentItem(with: item)
-            
-            // Pre-buffer as much as possible
-            player.currentItem?.preferredForwardBufferDuration = 10
-            
-            return player
-        }
-    }
-    
-    // Return player to pool when done
-    private static func returnPlayer(_ player: AVPlayer) {
-        ShortVideoPlayerPool.shared.queue.async {
-            player.pause()
-            player.replaceCurrentItem(with: nil)
-            ShortVideoPlayerPool.shared.playerPool.append(player)
-            // Keep pool reasonable size
-            if ShortVideoPlayerPool.shared.playerPool.count > 8 {
-                ShortVideoPlayerPool.shared.playerPool.removeFirst()
-            }
-        }
+    private static func makePlayer(for url: URL) -> AVPlayer {
+        let item = AVPlayerItem(url: url)
+        item.preferredForwardBufferDuration = 10
+
+        let player = AVPlayer(playerItem: item)
+        player.isMuted = true
+        player.automaticallyWaitsToMinimizeStalling = true
+        return player
     }
     
     func makeUIViewController(context: Context) -> AVPlayerViewController {
@@ -69,8 +37,7 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
         
         let playbackURLs = shortVideoPlaybackURLs(for: url)
 
-        // Critical for smoothness
-        controller.player = Self.getPlayer(for: playbackURLs[0])
+        controller.player = Self.makePlayer(for: playbackURLs[0])
         controller.player?.isMuted = isMuted
 
         context.coordinator.playerController = controller
@@ -98,6 +65,7 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
         Coordinator(isPlaying: $isPlaying)
     }
     
+    @MainActor
     class Coordinator: NSObject {
         var player: AVPlayer?
         var playerController: AVPlayerViewController?
@@ -145,8 +113,8 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
             guard let item = player?.currentItem else { return }
 
             itemStatusObservation = item.observe(\.status, options: [.initial, .new]) { [weak self, weak item] _, _ in
-                guard let self, let item, item.status == .failed else { return }
-                DispatchQueue.main.async {
+                Task { @MainActor [weak self, weak item] in
+                    guard let self, let item, item.status == .failed else { return }
                     self.advanceAfterFailure(of: item)
                 }
             }
@@ -156,10 +124,12 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
                 object: item,
                 queue: .main
             ) { [weak self, weak item] _ in
-                guard let self, let item, self.player?.currentItem === item else { return }
-                self.player?.seek(to: .zero)
-                if self.isPlaying {
-                    self.player?.play()
+                Task { @MainActor [weak self, weak item] in
+                    guard let self, let item, self.player?.currentItem === item else { return }
+                    self.player?.seek(to: .zero)
+                    if self.isPlaying {
+                        self.player?.play()
+                    }
                 }
             }
 
@@ -168,8 +138,10 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
                 object: item,
                 queue: .main
             ) { [weak self, weak item] _ in
-                guard let self, let item else { return }
-                self.advanceAfterFailure(of: item)
+                Task { @MainActor [weak self, weak item] in
+                    guard let self, let item else { return }
+                    self.advanceAfterFailure(of: item)
+                }
             }
         }
 
@@ -199,27 +171,27 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
                 self.failedToPlayToEndObserver = nil
             }
         }
-        
-        deinit {
+
+        fileprivate func dismantle(_ playerController: AVPlayerViewController) {
             stopObserving()
-            if let player = player {
-                ShortVideoPlayer.returnPlayer(player)
-            }
+
+            // AVPlayerViewController internally observes its player via KVO. Detach the
+            // controller before clearing the item so AVKit cannot deliver a pending change
+            // to a controller that is being torn down while a scrolling cell disappears.
+            let player = self.player
+            player?.pause()
+            playerController.player = nil
+            player?.replaceCurrentItem(with: nil)
+
+            self.playerController = nil
+            self.player = nil
+            playbackURLs.removeAll()
+            playbackURLIndex = 0
         }
     }
     
     // Clean up on disappear
     static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: Coordinator) {
-        uiViewController.player?.pause()
-        coordinator.stopObserving()
+        coordinator.dismantle(uiViewController)
     }
-}
-
-
-class ShortVideoPlayerPool {
-    public let queue = DispatchQueue(label: "com.nostur.playerpool")
-    public var playerPool: [AVPlayer] = []
-    
-    private init() { }
-    static let shared: ShortVideoPlayerPool = .init()
 }
