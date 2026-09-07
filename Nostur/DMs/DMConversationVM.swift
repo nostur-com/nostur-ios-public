@@ -606,8 +606,6 @@ class ConversionVM: ObservableObject {
         }
     }
     
-    private var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>)] = []
-        
     private var lastAddedIds: RecentSet<String> = .init(capacity: 10)
 
     private func addReactionToView(_ reactionNEvent: NEvent) {
@@ -872,10 +870,14 @@ class ConversionVM: ObservableObject {
         let addedChatMessage = addToView(rumorNEvent, ourkeys, messageDate)
         
         // Wrap and create send jobs for all receivers (including self)
+        // Keep jobs local so successive or overlapping sends cannot share wraps or delivery status.
+        var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>, details: DMGiftWrapDetails?)] = []
         for (n, receiverPubkey) in participants.enumerated() {
             // wrap message
             do {
-                let giftWrap = try createGiftWrapWithExpiration(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys, expiresAt: expiresAt)
+                var capturedSeal: NostrEssentials.Event?
+                let giftWrap = try createGiftWrapWithExpiration(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys, expiresAt: expiresAt, onSeal: { capturedSeal = $0 })
+                let details = capturedSeal.map { DMGiftWrapDetails(giftWrap: giftWrap, seal: $0, rumor: createRumor(rumorEvent)) }
                 let giftWrapId = giftWrap.fallbackId()
                 if receiverPubkey == ourAccountPubkey {
                     // save message to local db and giftwrap to ourselve (relay backup)  (we can't unwrap sent to receipents, can only unwrap received to our pubkey)
@@ -902,7 +904,7 @@ class ConversionVM: ObservableObject {
                     addedChatMessage?.dmSendResult[receiverPubkey] = RecipientResult(recipientPubkey: receiverPubkey, relayResults: [:])
                 }
                 
-                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relaysWithFallback))
+                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relaysWithFallback, details: details))
             }
             catch {
 #if DEBUG
@@ -916,7 +918,8 @@ class ConversionVM: ObservableObject {
                 recipientPubkey: sendJob.receiver,
                 relayResults: sendJob.relays.reduce(into: [:]) { relays, relay in
                     relays[relay] = .sending
-                }
+                },
+                giftWrapDetails: sendJob.details
             )
         }
         
@@ -990,10 +993,12 @@ class ConversionVM: ObservableObject {
         let addedChatMessage = addToView(rumorNEvent, ourkeys, messageDate)
         
         // 5. Gift wrap and send to all participants (same as sendMessage17)
-        sendJobs = []
+        var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>, details: DMGiftWrapDetails?)] = []
         for (n, receiverPubkey) in participants.enumerated() {
             do {
-                let giftWrap = try createGiftWrapWithExpiration(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys, expiresAt: expiresAt)
+                var capturedSeal: NostrEssentials.Event?
+                let giftWrap = try createGiftWrapWithExpiration(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys, expiresAt: expiresAt, onSeal: { capturedSeal = $0 })
+                let details = capturedSeal.map { DMGiftWrapDetails(giftWrap: giftWrap, seal: $0, rumor: createRumor(rumorEvent)) }
                 let giftWrapId = giftWrap.fallbackId()
                 if receiverPubkey == ourAccountPubkey {
                     await bg().perform {
@@ -1017,7 +1022,7 @@ class ConversionVM: ObservableObject {
                     addedChatMessage?.dmSendResult[receiverPubkey] = RecipientResult(recipientPubkey: receiverPubkey, relayResults: [:])
                 }
                 
-                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relaysWithFallback))
+                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relaysWithFallback, details: details))
             }
             catch {
 #if DEBUG
@@ -1031,7 +1036,8 @@ class ConversionVM: ObservableObject {
                 recipientPubkey: sendJob.receiver,
                 relayResults: sendJob.relays.reduce(into: [:]) { relays, relay in
                     relays[relay] = .sending
-                }
+                },
+                giftWrapDetails: sendJob.details
             )
         }
         

@@ -83,8 +83,9 @@ enum DMExpiry {
 /// kind:1059 gift wrap so relays and other clients can honor NIP-40. NostrEssentials is a
 /// remote package and its `createGiftWrap` doesn't accept extra tags, so we assemble the wrap
 /// here from its public primitives. Pass `expiresAt == nil` to build a normal (non-expiring) wrap.
-func createGiftWrapWithExpiration(_ rumor: NostrEssentials.Event, receiverPubkey: String, keys: NostrEssentials.Keys, expiresAt: Int?) throws -> NostrEssentials.Event {
-    guard let expiresAt else {
+/// `onSeal` captures the actual seal for delivery inspection before the temporary wrap key is discarded.
+func createGiftWrapWithExpiration(_ rumor: NostrEssentials.Event, receiverPubkey: String, keys: NostrEssentials.Keys, expiresAt: Int?, onSeal: ((NostrEssentials.Event) -> Void)? = nil) throws -> NostrEssentials.Event {
+    if expiresAt == nil && onSeal == nil {
         // No expiration → identical to the stock helper.
         return try createGiftWrap(rumor, receiverPubkey: receiverPubkey, keys: keys)
     }
@@ -95,15 +96,19 @@ func createGiftWrapWithExpiration(_ rumor: NostrEssentials.Event, receiverPubkey
     guard let sealJson = seal.json() else { throw GiftWrapError.EncodeSealError }
     guard let sealJsonEncrypted = NostrEssentials.Keys.encryptDirectMessageContent44(withPrivatekey: oneTimeUseKeys.privateKeyHex, pubkey: receiverPubkey, content: sealJson) else { throw GiftWrapError.EncryptSealError }
 
+    var tags = [Tag(["p", receiverPubkey])]
+    if let expiresAt {
+        tags.append(Tag(["expiration", String(expiresAt)]))
+    }
+
     var giftWrap = NostrEssentials.Event(
         pubkey: oneTimeUseKeys.publicKeyHex,
         content: sealJsonEncrypted,
         kind: 1059,
         created_at: nip59CreatedAt(),
-        tags: [
-            Tag(["p", receiverPubkey]),
-            Tag(["expiration", String(expiresAt)])
-        ]
+        tags: tags
     )
-    return try giftWrap.sign(oneTimeUseKeys)
+    let signedWrap = try giftWrap.sign(oneTimeUseKeys)
+    onSeal?(seal)
+    return signedWrap
 }

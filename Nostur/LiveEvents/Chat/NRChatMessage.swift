@@ -308,7 +308,15 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
 }
 
 
+struct DMGiftWrapDetails {
+    // In-memory delivery diagnostics; never retain the temporary wrapping private key.
+    let giftWrap: NostrEssentials.Event
+    let seal: NostrEssentials.Event
+    let rumor: NostrEssentials.Event
+}
+
 class RecipientResult: ObservableObject, Identifiable {
+    let giftWrapDetails: DMGiftWrapDetails?
     let id: UUID
     @Published var anySuccess = false
     @Published var allFailed = false
@@ -338,7 +346,8 @@ class RecipientResult: ObservableObject, Identifiable {
         }
     }
     
-    init(recipientPubkey: String, relayResults: [String : DMSendResult]) {
+    init(recipientPubkey: String, relayResults: [String : DMSendResult], giftWrapDetails: DMGiftWrapDetails? = nil) {
+        self.giftWrapDetails = giftWrapDetails
         self.id = UUID()
         self.recipientPubkey = recipientPubkey
         self.relayResults = relayResults

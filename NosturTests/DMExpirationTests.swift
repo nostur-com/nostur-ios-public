@@ -106,6 +106,28 @@ struct DMExpirationTests {
         #expect(unwrapped.content == "secret")
     }
 
+    @Test func delivery_debug_seal_matches_the_transmitted_wrap() throws {
+        let sender = try Keys.newKeys()
+        let receiver = try Keys.newKeys()
+        let rumor = createRumor(NostrEssentials.Event(pubkey: sender.publicKeyHex, content: "debug message", kind: 14, tags: [Tag(["p", receiver.publicKeyHex])]))
+
+        let expirations: [Int?] = [nil, 1_900_000_000]
+        for expiresAt in expirations {
+            var capturedSeal: NostrEssentials.Event?
+            let wrap = try createGiftWrapWithExpiration(rumor, receiverPubkey: receiver.publicKeyHex, keys: sender, expiresAt: expiresAt, onSeal: { capturedSeal = $0 })
+            let (decodedRumor, decodedSeal) = try unwrapGift(wrap, ourKeys: receiver)
+            let seal = try #require(capturedSeal)
+            #expect(try wrap.verified())
+            #expect(try seal.verified())
+            #expect(seal.id == decodedSeal.id)
+            #expect(seal.content == decodedSeal.content)
+            #expect(decodedRumor.id == rumor.id)
+            #expect(decodedRumor.content == rumor.content)
+            #expect(decodedRumor.sig == "")
+            #expect(wrap.tags.first(where: { $0.type == "expiration" })?.value == expiresAt.map(String.init))
+        }
+    }
+
     @Test func nip17_without_a_duration_has_no_expiration_tag() throws {
         let sender = try Keys.newKeys()
         let receiver = try Keys.newKeys()

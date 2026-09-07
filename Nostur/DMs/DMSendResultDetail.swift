@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct DMSendResultDetail: View {
     @Environment(\.dismiss) var dismiss
     let dmSentResult: RecipientResult
     let isOwnRelays: Bool
+    @State private var showGiftWrap = false
     
     var body: some View {
         VStack {
@@ -34,7 +36,7 @@ struct DMSendResultDetail: View {
             }
             
             Color.clear.frame(height: 20)
-            
+
             ForEach(dmSentResult.relayResults.keys.sorted(), id: \.self) { key in
                 HStack {
                     Image(systemName: iconName(for: dmSentResult.relayResults[key]!))
@@ -51,6 +53,14 @@ struct DMSendResultDetail: View {
                     Spacer()
                 }
             }
+
+            if dmSentResult.giftWrapDetails != nil {
+                Button("Message source") {
+                    showGiftWrap = true
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 24)
+            }
         }
         .padding(20)
         .toolbar {
@@ -62,6 +72,13 @@ struct DMSendResultDetail: View {
         }
         .navigationTitle("Message Delivery")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showGiftWrap) {
+            if let details = dmSentResult.giftWrapDetails {
+                NBNavigationStack {
+                    DMGiftWrapJSONSheet(details: details, layer: .giftWrap, close: { showGiftWrap = false })
+                }
+            }
+        }
     }
     
     private func iconName(for result: DMSendResult) -> String {
@@ -83,6 +100,98 @@ struct DMSendResultDetail: View {
             return Color.red
         case .sending:
             return Color.gray
+        }
+    }
+}
+
+private struct DMGiftWrapJSONSheet: View {
+    enum Layer {
+        case giftWrap, seal, rumor
+
+        var title: LocalizedStringKey {
+            switch self {
+            case .giftWrap: return "Giftwrap"
+            case .seal: return "Seal"
+            case .rumor: return "Rumor"
+            }
+        }
+    }
+
+    @Environment(\.theme) private var theme
+    let details: DMGiftWrapDetails
+    let layer: Layer
+    let close: () -> Void
+    @State private var json = ""
+
+    var body: some View {
+        if #available(iOS 26.0, *) {
+            content
+                .toolbar {
+                    closeToolbarItem
+                    copyToolbarItem
+                    ToolbarSpacer(.fixed, placement: .primaryAction)
+                    nextLayerToolbarItem
+                }
+        }
+        else {
+            content
+                .toolbar {
+                    closeToolbarItem
+                    copyToolbarItem
+                    nextLayerToolbarItem
+                }
+        }
+    }
+
+    private var content: some View {
+        PostRawJSONTextView(text: json, textColor: theme.primary, accentColor: theme.accent)
+            .background(theme.listBackground)
+            .navigationTitle(layer.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .task {
+                let event = switch layer {
+                case .giftWrap: details.giftWrap
+                case .seal: details.seal
+                case .rumor: details.rumor
+                }
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+                if let data = try? encoder.encode(event), let text = String(data: data, encoding: .utf8) {
+                    json = text
+                }
+            }
+    }
+
+    private var closeToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Close", systemImage: "xmark", action: close)
+        }
+    }
+
+    private var copyToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                UIPasteboard.general.string = json
+            } label: {
+                Label("Copy", systemImage: "doc.on.doc")
+            }
+            .disabled(json.isEmpty)
+        }
+    }
+
+    private var nextLayerToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if layer != .rumor {
+                NavigationLink {
+                    DMGiftWrapJSONSheet(details: details, layer: layer == .giftWrap ? .seal : .rumor, close: close)
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(layer == .giftWrap ? "Seal" : "Rumor")
+                        Image(systemName: "chevron.forward")
+                            .font(.caption.weight(.semibold))
+                    }
+                }
+            }
         }
     }
 }
