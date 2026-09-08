@@ -224,7 +224,10 @@ extension Search {
     func neventSearch(_ term: String, searchID: UUID) {
         guard let identifier = try? ShareableIdentifier(term),
               let noteHex = identifier.eventId
-        else { return }
+        else {
+            searchError = String(localized: "This event link is invalid.", comment: "Error shown when a pasted nevent identifier cannot be parsed")
+            return
+        }
 
         searching = true
         contacts = []
@@ -236,23 +239,42 @@ extension Search {
                 guard self.searchID == searchID else { return }
                 self.nrPosts = [nrPost]
                 searching = false
+                searchError = nil
             }
         }
 
-        let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
-            req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .READ)
-            req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH_ONLY)
-        }, processResponseCommand: { taskId, _, _ in
-            bg().perform {
-                guard let event = Event.fetchEvent(id: noteHex, context: bg()) else { return }
-                let nrPost = NRPost(event: event)
-                Task { @MainActor in
-                    guard self.searchID == searchID else { return }
-                    self.nrPosts = [nrPost]
-                    searching = false
+        let searchTask1 = ReqTask(
+            prefix: "SEA-",
+            reqCommand: { taskId in
+                req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .READ)
+                req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH_ONLY)
+            },
+            processResponseCommand: { taskId, _, _ in
+                bg().perform {
+                    guard let event = Event.fetchEvent(id: noteHex, context: bg()) else {
+                        Task { @MainActor in
+                            guard self.searchID == searchID else { return }
+                            self.searching = false
+                            self.searchError = neventNotFoundMessage(hasRelayHints: !identifier.relays.isEmpty)
+                        }
+                        return
+                    }
+                    let nrPost = NRPost(event: event)
+                    Task { @MainActor in
+                        guard self.searchID == searchID else { return }
+                        self.nrPosts = [nrPost]
+                        self.searching = false
+                        self.searchError = nil
+                    }
                 }
-            }
-        })
+            },
+            timeoutCommand: { _ in
+                guard self.searchID == searchID, self.nrPosts.isEmpty else { return }
+                self.searching = false
+                self.searchError = neventNotFoundMessage(hasRelayHints: !identifier.relays.isEmpty)
+            },
+            timeoutDelivery: .main
+        )
         backlog.add(searchTask1)
         searchTask1.fetch()
 
@@ -814,6 +836,13 @@ extension Search {
         backlog.add(searchTask1)
         searchTask1.fetch()
     }
+}
+
+func neventNotFoundMessage(hasRelayHints: Bool) -> String {
+    if hasRelayHints {
+        return String(localized: "Event not found on your relays or the relay in this link.", comment: "Error shown after a nevent lookup with relay hints times out")
+    }
+    return String(localized: "Event not found on your relays. This link does not include a relay hint.", comment: "Error shown after a nevent lookup without relay hints times out")
 }
 
 func removeUriPrefix(_ term:String) -> String {

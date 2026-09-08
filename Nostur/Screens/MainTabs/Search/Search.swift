@@ -18,6 +18,7 @@ struct Search: View {
     @State var nrPosts: [NRPost] = []
     @State var contacts: [NRContact] = []
     @State var searching = false
+    @State var searchError: String? = nil
     @State private var navPath = NBNavigationPath()
 
     @State private var searchText = ""
@@ -74,6 +75,20 @@ struct Search: View {
                         }
                         if (contacts.isEmpty && nrPosts.isEmpty && searchPostResults.isEmpty && searching) {
                             CenteredProgressView()
+                        }
+                        else if contacts.isEmpty,
+                                nrPosts.isEmpty,
+                                searchPostResults.isEmpty,
+                                let searchError {
+                            VStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.magnifyingglass")
+                                    .font(.title2)
+                                Text(searchError)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .foregroundStyle(.secondary)
+                            .padding(20)
+                            .frame(maxWidth: .infinity)
                         }
                         LazyVStack(spacing: GUTTER) {
                             ForEach(contacts) { nrContact in
@@ -185,6 +200,7 @@ struct Search: View {
                 let newSearchID = UUID()
                 searchID = newSearchID
                 searching = false
+                searchError = nil
 
                 navPath.removeLast(navPath.count)
                 let searchType = typeOfSearch(searchInput)

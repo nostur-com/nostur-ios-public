@@ -71,4 +71,15 @@ final class SearchNavigationModelTests: XCTestCase {
             XCTAssertNil(searchQuery(forExternalNostrURL: url))
         }
     }
+
+    func testNeventTimeoutExplainsWhetherRelayHintsWereAvailable() {
+        XCTAssertEqual(
+            neventNotFoundMessage(hasRelayHints: true),
+            "Event not found on your relays or the relay in this link."
+        )
+        XCTAssertEqual(
+            neventNotFoundMessage(hasRelayHints: false),
+            "Event not found on your relays. This link does not include a relay hint."
+        )
+    }
 }
