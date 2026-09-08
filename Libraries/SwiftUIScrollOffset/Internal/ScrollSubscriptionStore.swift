@@ -14,18 +14,22 @@ internal final class ScrollSubscriptionStore {
     let offsetChangedSubject = PassthroughSubject<AnyHashable, Never>()
     
     subscript(offset id: AnyHashable) -> ScrollOffsetValue? {
-        subscriptions[id]?.offset
+        lock.withLock {
+            subscriptions[id]?.offset
+        }
     }
     
     subscript(scrollView id: AnyHashable) -> PlatformScrollView? {
-        guard let subscription = subscriptions[id]
-        else { return nil }
-        
-        if let scrollView = subscription.scrollView {
-            return scrollView
-        } else {
-            subscriptions.removeValue(forKey: id)
-            return nil
+        lock.withLock {
+            guard let subscription = subscriptions[id]
+            else { return nil }
+            
+            if let scrollView = subscription.scrollView {
+                return scrollView
+            } else {
+                subscriptions.removeValue(forKey: id)
+                return nil
+            }
         }
     }
     
@@ -42,26 +46,32 @@ internal final class ScrollSubscriptionStore {
             self.updateOffset(for: id)
         }
         
-        subscriptions[id] = ScrollSubscription(
+        let subscription = ScrollSubscription(
             contentOffsetCancellable: contentOffsetCancellable,
             contentSizeCancellable: contentSizeCancellable,
             scrollView: scrollView
         )
+        
+        lock.withLock {
+            subscriptions[id] = subscription
+        }
         
         updateOffset(for: id)
     }
     
     func unsubscribe(id: AnyHashable) {
         DispatchQueue.main.async {
-            if let subscription = self.subscriptions[id], subscription.scrollView == nil {
-                self.subscriptions.removeValue(forKey: id)
+            self.lock.withLock {
+                if let subscription = self.subscriptions[id], subscription.scrollView == nil {
+                    self.subscriptions.removeValue(forKey: id)
+                }
             }
         }
     }
     
     @MainActor
     func updateOffset(for id: AnyHashable) {
-        guard let scrollView = self[scrollView: id] else { return }
+        guard let (scrollView, currentValue) = subscriptionValues(for: id) else { return }
         
         let top = -scrollView.adjustedContentInset.top - scrollView.scrollContentOffset.y
         let bottom = scrollView.scrollContentSize.height
@@ -76,32 +86,53 @@ internal final class ScrollSubscriptionStore {
         let leading = scrollView.isRightToLeft ? -right : left
         let trailing = scrollView.isRightToLeft ? -left : right
         
-        let currentValue = self[offset: id]
         let displayScale = scrollView.displayScale
         
-        let (resolvedTop, didTopChange) = resolve(top, oldValue: currentValue?.top, scale: displayScale)
-        let (resolvedLeading, didLeadingChange) = resolve(leading, oldValue: currentValue?.leading, scale: displayScale)
-        let (resolvedBottom, didBottomChange) = resolve(bottom, oldValue: currentValue?.bottom, scale: displayScale)
-        let (resolvedTrailing, didTrailingChange) = resolve(trailing, oldValue: currentValue?.trailing, scale: displayScale)
+        let (resolvedTop, didTopChange) = resolve(top, oldValue: currentValue.top, scale: displayScale)
+        let (resolvedLeading, didLeadingChange) = resolve(leading, oldValue: currentValue.leading, scale: displayScale)
+        let (resolvedBottom, didBottomChange) = resolve(bottom, oldValue: currentValue.bottom, scale: displayScale)
+        let (resolvedTrailing, didTrailingChange) = resolve(trailing, oldValue: currentValue.trailing, scale: displayScale)
         
         if didTopChange || didLeadingChange || didBottomChange || didTrailingChange {
-            subscriptions[id]?.offset = ScrollOffsetValue(
+            let newOffset = ScrollOffsetValue(
                 top: resolvedTop,
                 leading: resolvedLeading,
                 bottom: resolvedBottom,
                 trailing: resolvedTrailing
             )
+            
+            lock.withLock {
+                subscriptions[id]?.offset = newOffset
+            }
+            
             offsetChangedSubject.send(id)
         }
     }
     
     @MainActor
     func updateSubscription(from oldID: AnyHashable, to newID: AnyHashable) {
-        subscriptions[newID] = subscriptions[oldID]
-        subscriptions.removeValue(forKey: oldID)
+        lock.withLock {
+            subscriptions[newID] = subscriptions[oldID]
+            subscriptions.removeValue(forKey: oldID)
+        }
     }
     
+    private let lock = NSLock()
     private var subscriptions = [AnyHashable : ScrollSubscription]()
+    
+    private func subscriptionValues(for id: AnyHashable) -> (PlatformScrollView, ScrollOffsetValue)? {
+        lock.withLock {
+            guard let subscription = subscriptions[id]
+            else { return nil }
+            
+            if let scrollView = subscription.scrollView {
+                return (scrollView, subscription.offset)
+            } else {
+                subscriptions.removeValue(forKey: id)
+                return nil
+            }
+        }
+    }
     
     private func resolve(_ first: CGFloat, oldValue second: CGFloat?, scale displayScale: CGFloat) -> (CGFloat, Bool) {
         let firstRounded = Int(round(first * displayScale))
