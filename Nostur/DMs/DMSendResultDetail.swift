@@ -38,16 +38,20 @@ struct DMSendResultDetail: View {
             Color.clear.frame(height: 20)
 
             ForEach(dmSentResult.relayResults.keys.sorted(), id: \.self) { key in
-                HStack {
-                    Image(systemName: iconName(for: dmSentResult.relayResults[key]!))
-                        .foregroundStyle(color(for: dmSentResult.relayResults[key]!))
+                let result = dmSentResult.relayResults[key]!
+                HStack(alignment: .top) {
+                    Image(systemName: iconName(for: result))
+                        .foregroundStyle(color(for: result))
                         .frame(width: 24, alignment: .center)
                     
-                    if dmSentResult.relayResults[key]! == .timeout {
-                        Text("\(key) (Timeout or other error)")
-                    }
-                    else {
+                    VStack(alignment: .leading, spacing: 3) {
                         Text(key)
+                        if let detail = detail(for: result) {
+                            Text(detail)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .textSelection(.enabled)
+                        }
                     }
                     
                     Spacer()
@@ -85,6 +89,8 @@ struct DMSendResultDetail: View {
         switch result {
         case .success:
             return "checkmark.circle.fill"
+        case .rejected:
+            return "xmark.circle.fill"
         case .timeout:
             return "exclamationmark.triangle.fill"
         case .sending:
@@ -96,10 +102,25 @@ struct DMSendResultDetail: View {
         switch result {
         case .success:
             return Color.green
+        case .rejected:
+            return Color.red
         case .timeout:
             return Color.red
         case .sending:
             return Color.gray
+        }
+    }
+
+    private func detail(for result: DMSendResult) -> String? {
+        switch result {
+        case .success:
+            return nil
+        case .rejected(let message):
+            return message.isEmpty ? "OK: rejected (relay gave no reason)" : "OK: rejected — \(message)"
+        case .timeout:
+            return "No OK response received within \(Int(DMSendResult.timeoutInterval)) seconds (still listening)"
+        case .sending:
+            return "Waiting for relay response…"
         }
     }
 }
@@ -235,7 +256,7 @@ struct RecipientResultView: View {
                 relayResults: [
                     "wss://nos.lol": DMSendResult.sending,
                     "wss://relay.nostr.band": DMSendResult.timeout,
-                    "wss://nostr.wine":DMSendResult.success
+                    "wss://nostr.wine": DMSendResult.success(message: "")
                 ]
             ),
             isOwnRelays: false

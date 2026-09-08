@@ -63,8 +63,12 @@ class DMSendJob: Equatable {
 //}
 
 
-enum DMSendResult {
+enum DMSendResult: Equatable {
+    static let timeoutInterval: TimeInterval = 10.0
+    static let lateResponseRetentionInterval: TimeInterval = 60.0
+
     case sending
-    case success
+    case success(message: String)
+    case rejected(message: String)
     case timeout
 }

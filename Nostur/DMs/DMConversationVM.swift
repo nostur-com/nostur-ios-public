@@ -1056,18 +1056,28 @@ class ConversionVM: ObservableObject {
     
     private func sendToDMRelays(receiverPubkey: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>, rumorId: String, addedChatMessage: NRChatMessage) {
         let nxJob = DMSendJob(
-            timeout: 4.0,
+            timeout: DMSendResult.timeoutInterval,
             setup: { job in
-                MessageParser.shared.okSub
-                    .filter { !job.didSucceed && $0.id == wrappedEvent.id }
+                MessageParser.shared.commandResultSub
+                    .filter { $0.id == wrappedEvent.id }
+                    .receive(on: DispatchQueue.main)
                     .sink { message in
 #if DEBUG
-                        L.og.debug("✅✅ 💌💌 3.A message.id: \(message.id) message.relayId: \(message.relay) - receiverPubkey: \(nameOrPubkey(receiverPubkey))")
+                        L.og.debug("\(message.success ? "✅✅" : "🔴🔴") 💌💌 3.A message.id: \(message.id) message.relayId: \(message.relay) success: \(message.success) response: \(message.message) - receiverPubkey: \(nameOrPubkey(receiverPubkey))")
 #endif
                         if let recipientResult = addedChatMessage.dmSendResult[receiverPubkey] {
-                            recipientResult.relayResults[message.relay] = DMSendResult.success
-                            Task { @MainActor in
-                                addedChatMessage.objectWillChange.send()
+                            let relay = normalizeRelayUrl(message.relay)
+                            guard recipientResult.relayResults[relay] != nil else { return }
+                            if message.success {
+                                recipientResult.relayResults[relay] = .success(message: message.message)
+                            }
+                            else {
+                                recipientResult.relayResults[relay] = .rejected(message: message.message)
+                            }
+                            addedChatMessage.objectWillChange.send()
+
+                            if !recipientResult.relayResults.values.contains(.sending) {
+                                job.onDidSucceed()
                             }
                         }
                     }
@@ -1077,7 +1087,7 @@ class ConversionVM: ObservableObject {
                 var didActuallyTimeout = false
                 if let recipientResult: RecipientResult = addedChatMessage.dmSendResult[receiverPubkey] {
                     for (relay, result) in recipientResult.relayResults {
-                        if result != .success {
+                        if result == .sending {
                             recipientResult.relayResults[relay] = .timeout
                             didActuallyTimeout = true
 #if DEBUG
@@ -1094,7 +1104,15 @@ class ConversionVM: ObservableObject {
             },
             onFinally: { job in
                 Task { @MainActor in
-                    self.nxJobs.removeAll(where: { $0 == job })
+                    if job.didSucceed {
+                        self.nxJobs.removeAll(where: { $0 == job })
+                    }
+                    else {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + DMSendResult.lateResponseRetentionInterval) { [weak self, weak job] in
+                            guard let job else { return }
+                            self?.nxJobs.removeAll(where: { $0 == job })
+                        }
+                    }
                 }
             })
         

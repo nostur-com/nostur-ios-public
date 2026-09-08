@@ -325,23 +325,17 @@ class RecipientResult: ObservableObject, Identifiable {
     
     public var relayResults: [String: DMSendResult] = [:]  { // [pubkey: [relay: DMSendResult]]
         didSet {
-            guard !allFailed else { return }
-            var failed = 0
-            for (_, sendResult) in relayResults {
-                if sendResult == .success {
-                    Task { @MainActor in
-                        anySuccess = true
-                    }
-                    break
-                }
-                else if sendResult == .timeout {
-                    failed += 1
-                }
+            let hasSuccess = relayResults.values.contains { result in
+                if case .success = result { return true }
+                return false
             }
-            if failed > 0 && failed == relayResults.count {
-                Task { @MainActor in
-                    allFailed = true
-                }
+            let hasPending = relayResults.values.contains { result in
+                result == .sending
+            }
+            let allFailed = !relayResults.isEmpty && !hasSuccess && !hasPending
+            Task { @MainActor in
+                self.anySuccess = hasSuccess
+                self.allFailed = allFailed
             }
         }
     }
@@ -351,8 +345,14 @@ class RecipientResult: ObservableObject, Identifiable {
         self.id = UUID()
         self.recipientPubkey = recipientPubkey
         self.relayResults = relayResults
-        if relayResults.isEmpty {
-            self.allFailed = true
+        self.anySuccess = relayResults.values.contains { result in
+            if case .success = result { return true }
+            return false
+        }
+        self.allFailed = relayResults.isEmpty || relayResults.values.allSatisfy { result in
+            if case .timeout = result { return true }
+            if case .rejected = result { return true }
+            return false
         }
     }
 }

@@ -50,6 +50,9 @@ class MessageParser {
     
     // (id, relay)
     public let okSub = PassthroughSubject<(id: String, relay: String), Never>()
+    // Every NIP-20 OK response, including relay rejections. `okSub` intentionally
+    // remains success-only for existing callers that use it as a delivery signal.
+    public let commandResultSub = PassthroughSubject<(id: String, relay: String, success: Bool, message: String), Never>()
     public let requestTerminalSub = PassthroughSubject<(subscriptionId: String, relay: String), Never>()
     
     // if "OK" comes back, .updateRelays should update the rumor (.otherId), not the wrap
@@ -80,6 +83,14 @@ class MessageParser {
 #if DEBUG
                     L.sockets.debug("\(relayUrl): \(message.message) (OK)")
 #endif
+                    if let id = message.id, let success = message.success {
+                        commandResultSub.send((
+                            id: id,
+                            relay: normalizeRelayUrl(relayUrl),
+                            success: success,
+                            message: message.message
+                        ))
+                    }
                     if message.success ?? false {
                         if let id = message.id {
                             // if "OK" comes back, .updateRelays should update the rumor (.otherId), not the wrap
