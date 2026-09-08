@@ -57,7 +57,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ini akan **menghapus**:\n - Profil nostr publik\n - Daftar berikut nostr Publik"
+            "value" : "Ini akan **menghapus**:\n - Profil Nostr publik Anda\n - Daftar akun yang Anda ikuti di Nostr"
           }
         },
         "nl" : {
@@ -324,13 +324,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "- Elija un relay que requiera autenticación para recibir mensajes privados.\n- Puedes elegir relays público, los mensajes serán codificados y anonimizados."
+            "value" : "- Elige un relay que requiera autenticación para recibir mensajes directos.\n- También puedes elegir relays públicos; los mensajes se cifrarán y anonimizarán."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "- Pilih relay yang memerlukan otentikasi untuk menerima pesan pribadi.\n- Anda dapat memilih relays publik, pesan akan diacak dan dianonimkan."
+            "value" : "- Pilih relay yang memerlukan autentikasi untuk menerima pesan pribadi.\n- Anda juga dapat memilih relay publik; pesan akan diacak dan dianonimkan."
           }
         },
         "nl" : {
@@ -435,7 +435,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(%lld relés de recepción)"
+            "value" : "(%lld relays de recepción)"
           }
         },
         "id" : {
@@ -457,13 +457,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(%lld relays deshabilitado)"
+            "value" : "(%lld relays deshabilitados)"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(%lld relays dinonaktifkan)"
+            "value" : "(%lld relay dinonaktifkan)"
           }
         },
         "nl" : {
@@ -486,7 +486,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(Re) menghubungkan/Pesan/Kesalahan"
+            "value" : "Koneksi/Pesan/Kesalahan"
           }
         },
         "nl" : {
@@ -508,7 +508,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(Re)koneksi/Pesan/Kesalahan di %@ terakhir"
+            "value" : "Koneksi/Pesan/Kesalahan dalam %@ terakhir"
           }
         },
         "nl" : {
@@ -729,7 +729,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[#memes](nostur:t:meme)"
+            "value" : "[#memes](nostur:t:memes)"
           }
         },
         "nl" : {
@@ -745,13 +745,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[#música](nostur:t:música)"
+            "value" : "[#music](nostur:t:music)"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[#musik](nostur:t:musik)"
+            "value" : "[#music](nostur:t:music)"
           }
         },
         "nl" : {
@@ -1144,7 +1144,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**%lld** Berikut"
+            "value" : "**%lld** Mengikuti"
           }
         },
         "nl" : {
@@ -1234,7 +1234,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**KUNCI PRIBADI:** %@∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗"
+            "value" : "**KUNCI PRIVAT:** %@∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗"
           }
         },
         "nl" : {
@@ -1251,7 +1251,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**LLAVE PÚBLICA:** %@"
+            "value" : "**CLAVE PÚBLICA:** %@"
           }
         },
         "id" : {
@@ -1339,7 +1339,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**Publicación de firma...**"
+            "value" : "**Firmando la publicación...**"
           }
         },
         "id" : {
@@ -1469,6 +1469,7 @@
       "shouldTranslate" : false
     },
     "%@ (Timeout or other error)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -1691,7 +1692,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ Memeriksa relays..."
+            "value" : "%@ Memeriksa relay..."
           }
         },
         "nl" : {
@@ -1753,13 +1754,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ no ha publicado relays preferido o está utilizando una configuración anterior."
+            "value" : "%@ no ha publicado sus relays preferidos o utiliza una configuración anterior."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ belum menerbitkan relays pilihan atau menggunakan konfigurasi lama."
+            "value" : "%@ belum menerbitkan relay pilihan atau menggunakan konfigurasi lama."
           }
         },
         "nl" : {
@@ -1843,7 +1844,20 @@
       }
     },
     "%@ report" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denuncia de %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laporan %@"
+          }
+        }
+      }
     },
     "%@ reposted" : {
       "comment" : "Heading for reposted post: '(Name) reposted'",
@@ -1998,7 +2012,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan %@"
+            "value" : "Feed %@"
           }
         },
         "nl" : {
@@ -2199,7 +2213,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Contactos %lld seleccionados"
+            "value" : "%lld contactos seleccionados"
           }
         },
         "id" : {
@@ -2242,13 +2256,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Conversación %lld ocultada por ti"
+                  "value" : "%lld conversación oculta por ti"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Conversaciones %lld ocultas por ti"
+                  "value" : "%lld conversaciones ocultas por ti"
                 }
               }
             }
@@ -2260,13 +2274,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Percakapan %lld disembunyikan oleh Anda"
+                  "value" : "%lld percakapan Anda sembunyikan"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Percakapan %lld disembunyikan oleh Anda"
+                  "value" : "%lld percakapan Anda sembunyikan"
                 }
               }
             }
@@ -2297,7 +2311,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "emojis %lld"
+            "value" : "%lld emojis"
           }
         },
         "id" : {
@@ -2315,7 +2329,20 @@
       }
     },
     "%lld existing private blocks are included." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se incluyen %lld bloqueos privados existentes."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld blokir privat yang ada disertakan."
+          }
+        }
+      }
     },
     "%lld Following" : {
       "comment" : "Label for Following count",
@@ -2345,7 +2372,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oyentes %lld"
+            "value" : "%lld oyentes"
           }
         },
         "id" : {
@@ -2367,7 +2394,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld lectura mínima"
+            "value" : "%lld min de lectura"
           }
         },
         "id" : {
@@ -2434,7 +2461,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Participantes de %lld"
+            "value" : "%lld participantes"
           }
         },
         "id" : {
@@ -2478,13 +2505,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld relays deshabilitado"
+            "value" : "%lld relays deshabilitados"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld relays dinonaktifkan"
+            "value" : "%lld relay dinonaktifkan"
           }
         },
         "nl" : {
@@ -2501,7 +2528,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Solicitudes %lld no mostradas"
+            "value" : "%lld solicitudes no mostradas"
           }
         },
         "id" : {
@@ -2544,13 +2571,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Solicitud %lld fuera de Web of Trust"
+                  "value" : "%lld solicitud fuera de la Web of Trust"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Solicitudes %lld fuera de Web of Trust"
+                  "value" : "%lld solicitudes fuera de la Web of Trust"
                 }
               }
             }
@@ -2562,13 +2589,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Permintaan %lld di luar Web of Trust"
+                  "value" : "%lld permintaan di luar Web of Trust"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Permintaan %lld di luar Web of Trust"
+                  "value" : "%lld permintaan di luar Web of Trust"
                 }
               }
             }
@@ -2599,7 +2626,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Espectadores %lld"
+            "value" : "%lld espectadores"
           }
         },
         "id" : {
@@ -3148,7 +3175,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1) Envíe una captura de pantalla de este error y espere una actualización que solucione el problema."
+            "value" : "1) Envía una captura de pantalla de este error y espera una actualización que lo solucione"
           }
         },
         "id" : {
@@ -3194,7 +3221,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 metro"
+            "value" : "1 min"
           }
         },
         "id" : {
@@ -3265,7 +3292,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "2) Reinstale la aplicación y comience de nuevo"
+            "value" : "2) Reinstala la aplicación y empieza de nuevo"
           }
         },
         "id" : {
@@ -3619,7 +3646,20 @@
       }
     },
     "About Discover more" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca de Descubrir más"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentang Temukan lebih banyak"
+          }
+        }
+      }
     },
     "Accept" : {
       "comment" : "Button to accept terms and conditions",
@@ -3633,7 +3673,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menerima"
+            "value" : "Terima"
           }
         },
         "nl" : {
@@ -3725,7 +3765,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Akun tidak memiliki kunci pribadi"
+            "value" : "Akun tidak memiliki kunci privat"
           }
         },
         "nl" : {
@@ -3845,7 +3885,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mengaktifkan"
+            "value" : "Aktifkan"
           }
         },
         "nl" : {
@@ -3885,7 +3925,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activa este filtro"
+            "value" : "Activar este filtro"
           }
         },
         "id" : {
@@ -3945,13 +3985,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar"
+            "value" : "Añadir"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menambahkan"
+            "value" : "Tambah"
           }
         },
         "nl" : {
@@ -3991,13 +4031,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar (firmante remoto)"
+            "value" : "Añadir (firmante remoto)"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tambahkan (penandatangan jarak jauh)"
+            "value" : "Tambah (penanda tangan jarak jauh)"
           }
         },
         "nl" : {
@@ -4013,13 +4053,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar (firmante remoto)"
+            "value" : "Añadir (firmante remoto)"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tambahkan (Penandatangan Jarak Jauh)"
+            "value" : "Tambah (penanda tangan jarak jauh)"
           }
         },
         "nl" : {
@@ -4031,7 +4071,20 @@
       }
     },
     "Add %lld blocks to Nostur" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir %lld bloqueos a Nostur"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tambahkan %lld blokir ke Nostur"
+          }
+        }
+      }
     },
     "Add %lld contacts to custom feed" : {
       "comment" : "Post context menu button",
@@ -4040,13 +4093,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar contactos %lld al feed personalizado"
+            "value" : "Añadir %lld contactos al feed personalizado"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tambahkan kontak %lld ke umpan khusus"
+            "value" : "Tambahkan kontak %lld ke feed khusus"
           }
         },
         "nl" : {
@@ -4063,7 +4116,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar contactos %lld a la lista"
+            "value" : "Añadir %lld contactos a la lista"
           }
         },
         "id" : {
@@ -4110,7 +4163,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar un título"
+            "value" : "Añadir un pie de foto"
           }
         },
         "id" : {
@@ -4178,13 +4231,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar servidor de flores"
+            "value" : "Añadir servidor Blossom"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tambahkan server mekar"
+            "value" : "Tambah server Blossom"
           }
         },
         "nl" : {
@@ -4312,7 +4365,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar contactos"
+            "value" : "Añadir contactos"
           }
         },
         "id" : {
@@ -4336,13 +4389,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar contactos al feed"
+            "value" : "Añadir contactos al feed"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tambahkan kontak ke umpan"
+            "value" : "Tambahkan kontak ke feed"
           }
         },
         "nl" : {
@@ -4359,7 +4412,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar cuenta existente"
+            "value" : "Añadir cuenta existente"
           }
         },
         "id" : {
@@ -4405,7 +4458,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar palabra silenciada"
+            "value" : "Añadir palabra silenciada"
           }
         },
         "id" : {
@@ -4451,7 +4504,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar nota privada"
+            "value" : "Añadir nota privada"
           }
         },
         "id" : {
@@ -4473,7 +4526,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar nota privada (opcional)"
+            "value" : "Añadir nota privada (opcional)"
           }
         },
         "id" : {
@@ -4496,7 +4549,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar nota privada a la publicación"
+            "value" : "Añadir una nota privada a la publicación"
           }
         },
         "id" : {
@@ -4518,7 +4571,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agregar nota pública (opcional)"
+            "value" : "Añadir nota pública (opcional)"
           }
         },
         "id" : {
@@ -4569,7 +4622,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tambahkan umpan ini ke tab Anda"
+            "value" : "Tambahkan feed ini ke tab Anda"
           }
         },
         "nl" : {
@@ -4681,7 +4734,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tambahkan/Hapus %@ dari umpan khusus"
+            "value" : "Tambahkan/Hapus %@ dari feed khusus"
           }
         },
         "nl" : {
@@ -4705,7 +4758,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tambah/Hapus dari umpan"
+            "value" : "Tambah/Hapus dari feed"
           }
         },
         "nl" : {
@@ -4810,7 +4863,20 @@
       }
     },
     "Added %lld blocks" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld bloqueos añadidos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld blokir ditambahkan"
+          }
+        }
+      }
     },
     "Advanced" : {
       "localizations" : {
@@ -4857,7 +4923,20 @@
       }
     },
     "AirPlay and output" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPlay y salida"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPlay dan output"
+          }
+        }
+      }
     },
     "All" : {
       "comment" : "Menu choice to filter by All",
@@ -4910,13 +4989,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Todos los participantes deben tener publicado su DM relays para iniciar un chat grupal."
+            "value" : "Todos los participantes deben haber publicado sus relays de mensajes directos para iniciar un chat grupal."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Semua peserta harus mempublikasikan DM relays mereka untuk memulai obrolan grup."
+            "value" : "Semua peserta harus memublikasikan relay DM mereka untuk memulai obrolan grup."
           }
         },
         "nl" : {
@@ -4950,10 +5029,36 @@
       }
     },
     "Already in Nostur" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya está en Nostur"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sudah ada di Nostur"
+          }
+        }
+      }
     },
     "Already saved" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya está guardado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sudah disimpan"
+          }
+        }
+      }
     },
     "Amount (satoshis)" : {
       "localizations" : {
@@ -5049,13 +5154,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anuncie su relays..."
+            "value" : "Anuncia tus relays..."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umumkan relays Anda..."
+            "value" : "Umumkan relay Anda..."
           }
         },
         "nl" : {
@@ -5071,13 +5176,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anunciado relays"
+            "value" : "Relays anunciados"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diumumkan relays"
+            "value" : "Relay yang diumumkan"
           }
         },
         "nl" : {
@@ -5093,13 +5198,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anunciado relays para %@"
+            "value" : "Relays anunciados para %@"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mengumumkan relays untuk %@"
+            "value" : "Relay yang diumumkan untuk %@"
           }
         },
         "nl" : {
@@ -5111,7 +5216,20 @@
       }
     },
     "Anyone can see which accounts are blocked." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cualquiera puede ver qué cuentas están bloqueadas."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa pun dapat melihat akun yang diblokir."
+          }
+        }
+      }
     },
     "App theme" : {
       "localizations" : {
@@ -5236,7 +5354,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pengaturan umpan artikel"
+            "value" : "Pengaturan feed artikel"
           }
         },
         "nl" : {
@@ -5252,13 +5370,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Periodo de tiempo de alimentación del artículo"
+            "value" : "Periodo del feed de artículos"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kerangka waktu pengumpanan artikel"
+            "value" : "Rentang waktu feed artikel"
           }
         },
         "nl" : {
@@ -5519,13 +5637,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conéctate automáticamente a relays adicionales de las personas que sigues para reducir el contenido faltante que no se puede encontrar en tu propio conjunto relay."
+            "value" : "Conéctate automáticamente a relays adicionales de las personas que sigues para reducir el contenido faltante que no se puede encontrar en tu propio conjunto de relays."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terhubung secara otomatis ke relays tambahan dari orang yang Anda ikuti untuk mengurangi konten hilang yang tidak dapat ditemukan di kumpulan relay Anda sendiri"
+            "value" : "Terhubung secara otomatis ke relay tambahan dari orang yang Anda ikuti untuk mengurangi konten hilang yang tidak dapat ditemukan di kumpulan relay Anda sendiri"
           }
         },
         "nl" : {
@@ -5570,7 +5688,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autopilot akan disiarkan ke relays tambahan berikut"
+            "value" : "Autopilot akan disiarkan ke relay tambahan berikut"
           }
         },
         "nl" : {
@@ -5654,7 +5772,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Premio a"
+            "value" : "Conceder a"
           }
         },
         "id" : {
@@ -5677,7 +5795,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Premio a la gente"
+            "value" : "Conceder a personas"
           }
         },
         "id" : {
@@ -5723,7 +5841,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otorgado a personas %lld"
+            "value" : "Concedida a %lld personas"
           }
         },
         "id" : {
@@ -5747,7 +5865,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otorgado a personas %lld en %@"
+            "value" : "Concedida a %lld personas en %@"
           }
         },
         "id" : {
@@ -5814,7 +5932,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Atrás"
+            "value" : "Volver"
           }
         },
         "id" : {
@@ -6058,7 +6176,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Según su selección, se publicará el siguiente conjunto relay para que otros puedan acceder a la cuenta: %@."
+            "value" : "Según tu selección, se publicará el siguiente conjunto de relays para que otras personas puedan contactar con la cuenta: %@."
           }
         },
         "id" : {
@@ -6154,7 +6272,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Memblokir"
+            "value" : "Blokir"
           }
         },
         "nl" : {
@@ -6171,7 +6289,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bloque %@"
+            "value" : "Bloquear a %@"
           }
         },
         "id" : {
@@ -6511,7 +6629,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bookmark"
+            "value" : "Penanda"
           }
         },
         "nl" : {
@@ -6557,7 +6675,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Siarkan acara nostr"
+            "value" : "Siarkan event Nostr"
           }
         },
         "nl" : {
@@ -6619,7 +6737,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Al continuar aceptas las"
+            "value" : "Al continuar, aceptas los"
           }
         },
         "id" : {
@@ -6638,6 +6756,18 @@
     },
     "Cache limit" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Límite de caché"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batas cache"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6676,7 +6806,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Calculador..."
+            "value" : "Calculando..."
           }
         },
         "id" : {
@@ -6727,7 +6857,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Membatalkan"
+            "value" : "Batal"
           }
         },
         "nl" : {
@@ -6744,7 +6874,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cancelado"
+            "value" : "Cancelada"
           }
         },
         "id" : {
@@ -6766,7 +6896,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No puedo encontrar una cuenta para autenticarme"
+            "value" : "No se encuentra ninguna cuenta con la que autenticarse"
           }
         },
         "id" : {
@@ -6853,6 +6983,18 @@
     "chat" : {
       "comment" : "Label next to time indicating a live chat mention notification",
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "chat"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "obrolan"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6862,7 +7004,20 @@
       }
     },
     "Check and prepare" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar y preparar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periksa dan siapkan"
+          }
+        }
+      }
     },
     "Check out the “%@” badge." : {
       "localizations" : {
@@ -6904,20 +7059,33 @@
       "shouldTranslate" : false
     },
     "Checking existing blocks…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando los bloqueos existentes…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memeriksa blokir yang ada…"
+          }
+        }
+      }
     },
     "Checking relays for your blossom server list..." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comprobando relays para su lista de servidores Blossom..."
+            "value" : "Comprobando los relays para tu lista de servidores Blossom..."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Memeriksa relays untuk daftar server blossom Anda..."
+            "value" : "Memeriksa relay untuk daftar server blossom Anda..."
           }
         },
         "nl" : {
@@ -6933,7 +7101,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comprobando qué les pareció gracioso a tus seguidores..."
+            "value" : "Comprobando lo que les pareció divertido a las personas que sigues..."
           }
         },
         "id" : {
@@ -6955,7 +7123,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comprobando a qué volvieron a publicar o reaccionaron tus seguidores..."
+            "value" : "Comprobando lo que republicaron o a lo que reaccionaron las personas que sigues..."
           }
         },
         "id" : {
@@ -7043,7 +7211,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elija un relay popular para que la gente pueda encontrar fácilmente sus publicaciones y elija un relay alternativo, preferiblemente el suyo, donde la gente siempre pueda encontrar sus publicaciones en caso de que el popular relay tenga problemas."
+            "value" : "Elige un relay popular para que tus publicaciones sean fáciles de encontrar y otro relay alternativo, preferiblemente uno propio, por si el relay popular tiene problemas."
           }
         },
         "id" : {
@@ -7065,7 +7233,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elija un relay que requiera autenticación para recibir mensajes privados."
+            "value" : "Elige un relay que requiera autenticación para recibir mensajes directos."
           }
         },
         "id" : {
@@ -7110,7 +7278,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elija contenido para esta columna"
+            "value" : "Elige el contenido de esta columna"
           }
         },
         "id" : {
@@ -7154,7 +7322,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elija la lista existente"
+            "value" : "Elige una lista existente"
           }
         },
         "id" : {
@@ -7183,7 +7351,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pilih umpan"
+            "value" : "Pilih feed"
           }
         },
         "nl" : {
@@ -7287,13 +7455,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elija uno o más relays públicos desde los que lea para poder recibir notificaciones cuando otros lo mencionen."
+            "value" : "Elige uno o más relays públicos de los que lees para recibir notificaciones cuando otras personas te mencionen."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pilih satu atau lebih relays publik yang Anda baca sehingga Anda dapat menerima pemberitahuan ketika orang lain menyebut Anda."
+            "value" : "Pilih satu atau lebih relay publik yang Anda baca sehingga Anda dapat menerima pemberitahuan ketika orang lain menyebut Anda."
           }
         },
         "nl" : {
@@ -7331,13 +7499,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elija relays para mensajes privados"
+            "value" : "Elige relays para mensajes directos"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pilih relays untuk pesan pribadi"
+            "value" : "Pilih relay untuk pesan pribadi"
           }
         },
         "nl" : {
@@ -7398,13 +7566,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Claro"
+            "value" : "Borrar"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jernih"
+            "value" : "Bersihkan"
           }
         },
         "nl" : {
@@ -7417,6 +7585,18 @@
     },
     "Clear All" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar todo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus semua"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7560,6 +7740,18 @@
     },
     "Clear Learned Web of Trust" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar la Web of Trust aprendida"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus Web of Trust yang dipelajari"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7570,6 +7762,18 @@
     },
     "Clear Learned Web of Trust?" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Borrar la Web of Trust aprendida?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus Web of Trust yang dipelajari?"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7606,7 +7810,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Claro..."
+            "value" : "Borrando..."
           }
         },
         "id" : {
@@ -7787,13 +7991,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Colapsar"
+            "value" : "Contraer"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Runtuh"
+            "value" : "Ciutkan"
           }
         },
         "nl" : {
@@ -8104,13 +8308,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configurar anunciado relays"
+            "value" : "Configurar relays anunciados"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasikan relays yang diumumkan"
+            "value" : "Konfigurasikan relay yang diumumkan"
           }
         },
         "nl" : {
@@ -8126,13 +8330,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configurar servidores de Blossom"
+            "value" : "Configurar servidores Blossom"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasikan server mekar"
+            "value" : "Konfigurasikan server Blossom"
           }
         },
         "nl" : {
@@ -8200,7 +8404,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasikan umpan"
+            "value" : "Konfigurasikan feed"
           }
         },
         "nl" : {
@@ -8217,13 +8421,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configurar el tipo de alimentación"
+            "value" : "Configurar el tipo de feed"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasikan jenis umpan"
+            "value" : "Konfigurasikan jenis feed"
           }
         },
         "nl" : {
@@ -8240,13 +8444,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configurar relays publicado"
+            "value" : "Configurar relays publicados"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasikan relays yang diterbitkan"
+            "value" : "Konfigurasikan relay yang diterbitkan"
           }
         },
         "nl" : {
@@ -8269,7 +8473,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasikan relays..."
+            "value" : "Konfigurasikan relay..."
           }
         },
         "nl" : {
@@ -8308,13 +8512,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configura tu DM relays..."
+            "value" : "Configura tus relays de mensajes directos..."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasikan DM Anda relays..."
+            "value" : "Konfigurasikan relay DM Anda..."
           }
         },
         "nl" : {
@@ -8330,13 +8534,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configura tu relays..."
+            "value" : "Configura tus relays..."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasikan relays Anda..."
+            "value" : "Konfigurasikan relay Anda..."
           }
         },
         "nl" : {
@@ -8423,13 +8627,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conéctese a relays adicionales de personas que sigue para reducir el contenido faltante que no se puede encontrar en su propio conjunto relay"
+            "value" : "Conéctate a relays adicionales de las personas que sigues para recuperar contenido que no se encuentra en tus propios relays"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hubungkan ke relays tambahan dari orang yang Anda ikuti untuk mengurangi konten hilang yang tidak dapat ditemukan di kumpulan relay Anda sendiri"
+            "value" : "Hubungkan ke relay tambahan dari orang yang Anda ikuti untuk mengurangi konten hilang yang tidak dapat ditemukan di kumpulan relay Anda sendiri"
           }
         },
         "nl" : {
@@ -8446,13 +8650,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conéctese a relays incluido en los enlaces nostr cuando no se pueda encontrar el contenido"
+            "value" : "Conéctate a los relays incluidos en los enlaces Nostr cuando no se encuentre el contenido"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hubungkan ke relays yang disertakan dalam tautan nostr ketika konten tidak dapat ditemukan"
+            "value" : "Hubungkan ke relay yang disertakan dalam tautan nostr ketika konten tidak dapat ditemukan"
           }
         },
         "nl" : {
@@ -8869,7 +9073,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El contenido de estas cuentas que sigues se recibió este relay"
+            "value" : "El contenido de estas cuentas que sigues se recibió de este relay"
           }
         },
         "id" : {
@@ -8887,7 +9091,20 @@
       }
     },
     "Content relays" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays de contenido"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay konten"
+          }
+        }
+      }
     },
     "Content types" : {
       "comment" : "Header for a feed setting",
@@ -9210,7 +9427,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salin kunci pribadi"
+            "value" : "Salin kunci privat"
           }
         },
         "nl" : {
@@ -9227,13 +9444,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Copie la clave privada (nsec) al portapapeles"
+            "value" : "Copiar la clave privada (nsec) al portapapeles"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salin kunci pribadi (nsec) ke clipboard"
+            "value" : "Salin kunci privat (nsec) ke clipboard"
           }
         },
         "nl" : {
@@ -9346,7 +9563,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salin ke papan klip"
+            "value" : "Salin ke clipboard"
           }
         },
         "nl" : {
@@ -9526,7 +9743,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tidak dapat menemukan DM relays untuk:"
+            "value" : "Tidak dapat menemukan DM relay untuk:"
           }
         },
         "nl" : {
@@ -9548,7 +9765,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tidak dapat menemukan profil pengguna terbaru (jenis-0)"
+            "value" : "Tidak dapat menemukan profil pengguna terbaru (kind-0)"
           }
         },
         "nl" : {
@@ -9730,7 +9947,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Membuat"
+            "value" : "Buat"
           }
         },
         "nl" : {
@@ -9860,13 +10077,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Crear nueva fuente"
+            "value" : "Crear un feed"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Buat umpan baru"
+            "value" : "Buat feed baru"
           }
         },
         "nl" : {
@@ -9932,7 +10149,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Membuat daftar publik di nostr relays"
+            "value" : "Membuat daftar publik di nostr relay"
           }
         },
         "nl" : {
@@ -9992,13 +10209,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Costumbre"
+            "value" : "Personalizado"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kebiasaan"
+            "value" : "Kustom"
           }
         },
         "nl" : {
@@ -10021,7 +10238,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Khusus"
+            "value" : "Feed Khusus"
           }
         },
         "nl" : {
@@ -10043,7 +10260,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Khusus"
+            "value" : "Feed Khusus"
           }
         },
         "nl" : {
@@ -10113,7 +10330,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "D"
+            "value" : "hari"
           }
         },
         "nl" : {
@@ -10437,13 +10654,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Por defecto"
+            "value" : "Predeterminado"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bawaan"
+            "value" : "Default"
           }
         },
         "nl" : {
@@ -10465,7 +10682,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan bawaan"
+            "value" : "Feed bawaan"
           }
         },
         "nl" : {
@@ -10526,13 +10743,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Borrar"
+            "value" : "Eliminar"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menghapus"
+            "value" : "Hapus"
           }
         },
         "nl" : {
@@ -10578,7 +10795,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hapus umpan %@"
+            "value" : "Hapus feed %@"
           }
         },
         "nl" : {
@@ -10669,7 +10886,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pengiriman ke relays dari"
+            "value" : "Pengiriman ke relay dari"
           }
         },
         "nl" : {
@@ -10691,7 +10908,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pengiriman ke DM relays Anda (cadangan):"
+            "value" : "Pengiriman ke DM relay Anda (cadangan):"
           }
         },
         "nl" : {
@@ -10736,7 +10953,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keterangan"
+            "value" : "Deskripsi"
           }
         },
         "nl" : {
@@ -10886,13 +11103,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deshabilitado relays"
+            "value" : "Relays deshabilitados"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "relays dinonaktifkan"
+            "value" : "relay dinonaktifkan"
           }
         },
         "nl" : {
@@ -11023,7 +11240,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Desconectar"
+            "value" : "Desconectarse"
           }
         },
         "id" : {
@@ -11075,7 +11292,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menemukan"
+            "value" : "Temukan"
           }
         },
         "nl" : {
@@ -11114,13 +11331,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descubra el período de tiempo de alimentación"
+            "value" : "Periodo del feed Descubrir"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Temukan kerangka waktu umpan"
+            "value" : "Temukan kerangka waktu feed"
           }
         },
         "nl" : {
@@ -11178,13 +11395,52 @@
       }
     },
     "Discover more temporarily searches additional sources without changing your saved feed setting." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descubrir más busca temporalmente en fuentes adicionales sin cambiar los ajustes guardados del feed."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temukan lebih banyak mencari sumber tambahan untuk sementara tanpa mengubah pengaturan feed tersimpan Anda."
+          }
+        }
+      }
     },
     "Discover more temporarily searches the discovery relays configured in Feed Settings. Your saved feed setting does not change." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descubrir más busca temporalmente en los relays de descubrimiento configurados en Ajustes del feed. Los ajustes guardados del feed no cambian."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temukan lebih banyak mencari sementara di relay penemuan yang dikonfigurasi dalam Pengaturan Feed. Pengaturan feed tersimpan Anda tidak berubah."
+          }
+        }
+      }
     },
     "Discover more temporarily searches your Web of Trust. If nothing is found there, it also searches the discovery relays configured in Feed Settings. Your saved feed setting does not change." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descubrir más busca temporalmente en tu Web of Trust. Si no encuentra nada, también busca en los relays de descubrimiento configurados en Ajustes del feed. Los ajustes guardados del feed no cambian."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temukan lebih banyak mencari sementara di Web of Trust Anda. Jika tidak ada hasil, pencarian dilanjutkan ke relay penemuan yang dikonfigurasi dalam Pengaturan Feed. Pengaturan feed tersimpan Anda tidak berubah."
+          }
+        }
+      }
     },
     "Discover Nostr" : {
       "localizations" : {
@@ -11256,6 +11512,18 @@
     },
     "Divine Feed settings" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes del feed Divine"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pengaturan feed Divine"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11384,13 +11652,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "DM relays"
+            "value" : "Relays de mensajes directos"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "DM relays"
+            "value" : "DM relay"
           }
         },
         "nl" : {
@@ -11428,7 +11696,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "DM"
+            "value" : "Mensajes directos"
           }
         },
         "id" : {
@@ -11645,7 +11913,21 @@
       }
     },
     "Earlier replies are unavailable." : {
-      "comment" : "Shown between a thread root and a visible reply when intermediate private or missing replies cannot be fetched"
+      "comment" : "Shown between a thread root and a visible reply when intermediate private or missing replies cannot be fetched",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las respuestas anteriores no están disponibles."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balasan sebelumnya tidak tersedia."
+          }
+        }
+      }
     },
     "earlyLoad" : {
       "localizations" : {
@@ -11784,13 +12066,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Editar feed relays"
+            "value" : "Editar feed de relays"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit umpan relays"
+            "value" : "Edit feed relay"
           }
         },
         "nl" : {
@@ -11836,7 +12118,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Emoji"
+            "value" : "Feed Emoji"
           }
         },
         "nl" : {
@@ -11852,13 +12134,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Periodo de tiempo de alimentación de emojis"
+            "value" : "Periodo del feed de emojis"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kerangka waktu umpan emoji"
+            "value" : "Kerangka waktu feed emoji"
           }
         },
         "nl" : {
@@ -12124,7 +12406,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingrese una dirección de servidor de medios compatible con NIP-96 para alojar sus imágenes"
+            "value" : "Introduce una dirección de servidor de medios compatible con NIP-96 para alojar sus imágenes"
           }
         },
         "id" : {
@@ -12191,7 +12473,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingrese la nueva dirección relay..."
+            "value" : "Introduce la nueva dirección relay..."
           }
         },
         "id" : {
@@ -12214,7 +12496,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingrese la dirección nsecBunker relay"
+            "value" : "Introduce la dirección nsecBunker relay"
           }
         },
         "id" : {
@@ -12237,7 +12519,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingrese una nota privada sobre %@ para usted"
+            "value" : "Introduce una nota privada sobre %@ para ti"
           }
         },
         "id" : {
@@ -12260,7 +12542,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingrese una nota privada sobre esta publicación para usted"
+            "value" : "Introduce una nota privada sobre esta publicación para ti"
           }
         },
         "id" : {
@@ -12283,7 +12565,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingrese una nota privada sobre este usuario para usted"
+            "value" : "Introduce una nota privada sobre este usuario para ti"
           }
         },
         "id" : {
@@ -12306,7 +12588,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingrese una nota privada para usted"
+            "value" : "Introduce una nota privada para ti"
           }
         },
         "id" : {
@@ -12526,6 +12808,20 @@
         }
       }
     },
+    "Event not found on your relays or the relay in this link." : {
+      "comment" : "Error shown after a nevent lookup with relay hints times out",
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se ha encontrado el evento en tus relays ni en el relay incluido en este enlace." } },
+        "id" : { "stringUnit" : { "state" : "translated", "value" : "Event tidak ditemukan di relay Anda maupun di relay dalam tautan ini." } }
+      }
+    },
+    "Event not found on your relays. This link does not include a relay hint." : {
+      "comment" : "Error shown after a nevent lookup without relay hints times out",
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se ha encontrado el evento en tus relays. Este enlace no incluye ninguna indicación de relay." } },
+        "id" : { "stringUnit" : { "state" : "translated", "value" : "Event tidak ditemukan di relay Anda. Tautan ini tidak menyertakan petunjuk relay." } }
+      }
+    },
     "eventId: %@" : {
       "localizations" : {
         "es" : {
@@ -12575,7 +12871,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Todos en los relés seleccionados"
+            "value" : "Todos en los relays seleccionados"
           }
         },
         "id" : {
@@ -12616,7 +12912,20 @@
       }
     },
     "Existing private items will be kept exactly as they are." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los elementos privados existentes se conservarán sin cambios."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Item privat yang ada akan tetap disimpan tanpa perubahan."
+          }
+        }
+      }
     },
     "Expand" : {
       "localizations" : {
@@ -12629,7 +12938,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Memperluas"
+            "value" : "Perluas"
           }
         },
         "nl" : {
@@ -12691,7 +13000,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exportar a relés"
+            "value" : "Exportar a relays"
           }
         },
         "id" : {
@@ -12713,7 +13022,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exportar a relés…"
+            "value" : "Exportar a relays…"
           }
         },
         "id" : {
@@ -12867,13 +13176,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alimentar"
+            "value" : "Feed"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Memberi makan"
+            "value" : "Feed"
           }
         },
         "nl" : {
@@ -12896,7 +13205,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konten umpan"
+            "value" : "Konten feed"
           }
         },
         "nl" : {
@@ -12912,13 +13221,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opciones de alimentación"
+            "value" : "Opciones del feed"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opsi umpan"
+            "value" : "Opsi feed"
           }
         },
         "nl" : {
@@ -12940,7 +13249,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pratinjau umpan"
+            "value" : "Pratinjau feed"
           }
         },
         "nl" : {
@@ -12957,13 +13266,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configuración de alimentación"
+            "value" : "Ajustes del feed"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pengaturan umpan"
+            "value" : "Pengaturan feed"
           }
         },
         "nl" : {
@@ -12980,13 +13289,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configuración de alimentación"
+            "value" : "Ajustes del feed"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pengaturan Umpan"
+            "value" : "Pengaturan Feed"
           }
         },
         "nl" : {
@@ -13003,13 +13312,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configuración de alimentación..."
+            "value" : "Ajustes del feed..."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setelan umpan..."
+            "value" : "Setelan feed..."
           }
         },
         "nl" : {
@@ -13032,7 +13341,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan"
+            "value" : "Feed"
           }
         },
         "nl" : {
@@ -13443,7 +13752,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mengikuti"
+            "value" : "Ikuti"
           }
         },
         "nl" : {
@@ -13526,7 +13835,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sigue a todas las personas %lld en esta lista"
+            "value" : "Seguir a las %lld personas de esta lista"
           }
         },
         "id" : {
@@ -13683,7 +13992,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "siguiente"
+            "value" : "siguiendo"
           }
         },
         "id" : {
@@ -13706,7 +14015,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Siguiente"
+            "value" : "Siguiendo"
           }
         },
         "id" : {
@@ -13728,13 +14037,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Siguientes configuraciones de feed"
+            "value" : "Ajustes del feed Siguiendo"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mengikuti pengaturan Umpan"
+            "value" : "Mengikuti pengaturan Feed"
           }
         },
         "nl" : {
@@ -13868,7 +14177,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Lucu"
+            "value" : "Feed Lucu"
           }
         },
         "nl" : {
@@ -13907,13 +14216,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Periodo de tiempo de alimentación de la galería"
+            "value" : "Periodo del feed de galería"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kerangka waktu umpan galeri"
+            "value" : "Kerangka waktu feed galeri"
           }
         },
         "nl" : {
@@ -13944,6 +14253,12 @@
             "value" : ""
           }
         }
+      }
+    },
+    "Giftwrap" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Gift-wrap" } },
+        "id" : { "stringUnit" : { "state" : "translated", "value" : "Gift-wrap" } }
       }
     },
     "gmmm broken %@" : {
@@ -14024,7 +14339,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "H"
+            "value" : "jam"
           }
         },
         "nl" : {
@@ -14170,13 +14485,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esconder"
+            "value" : "Ocultar"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bersembunyi"
+            "value" : "Sembunyikan"
           }
         },
         "nl" : {
@@ -14266,7 +14581,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sembunyikan kunci pribadi"
+            "value" : "Sembunyikan kunci privat"
           }
         },
         "nl" : {
@@ -14330,13 +14645,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reflejos"
+            "value" : "Destacados"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Highlight"
+            "value" : "Sorotan"
           }
         },
         "nl" : {
@@ -14352,13 +14667,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hogar"
+            "value" : "Inicio"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rumah"
+            "value" : "Beranda"
           }
         },
         "nl" : {
@@ -14425,7 +14740,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tuan rumah"
+            "value" : "Host"
           }
         },
         "nl" : {
@@ -14464,13 +14779,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Periodo de tiempo de alimentación caliente"
+            "value" : "Periodo del feed Popular"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kerangka waktu umpan panas"
+            "value" : "Kerangka waktu feed panas"
           }
         },
         "nl" : {
@@ -14487,7 +14802,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Las noticias destacadas, Descubrir, Galería y Artículos no serán visibles si no sigues a más de 10 personas."
+            "value" : "Los feeds Popular, Descubrir, Galería y Artículos no estarán disponibles hasta que sigas a más de 10 personas."
           }
         },
         "id" : {
@@ -14511,7 +14826,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Las noticias destacadas, la galería y los artículos no serán visibles si no sigues a más de 10 personas."
+            "value" : "Los feeds Popular, Galería y Artículos no estarán disponibles hasta que sigas a más de 10 personas."
           }
         },
         "id" : {
@@ -14674,13 +14989,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Si no se puede encontrar una publicación al recibir relays, intente encontrar la publicación en este relay"
+            "value" : "Si no se encuentra una publicación en los relays de recepción, intenta buscarla en este relay"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jika postingan pada penerimaan relays tidak dapat ditemukan, coba cari postingan pada relay ini"
+            "value" : "Jika postingan pada penerimaan relay tidak dapat ditemukan, coba cari postingan pada relay ini"
           }
         },
         "nl" : {
@@ -14697,13 +15012,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Si el piloto automático Relay está habilitado, muestre qué relays adicional se utilizará"
+            "value" : "Si el piloto automático Relay está habilitado, muestre qué relays adicionales se utilizará"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jika Relay Autopilot diaktifkan, tunjukkan relays tambahan mana yang akan digunakan"
+            "value" : "Jika Relay Autopilot diaktifkan, tunjukkan relay tambahan mana yang akan digunakan"
           }
         },
         "nl" : {
@@ -14761,6 +15076,18 @@
     },
     "Image is larger than 50 MB, not loaded." : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La imagen supera los 50 MB y no se ha cargado."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gambar lebih besar dari 50 MB dan tidak dimuat."
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14845,13 +15172,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Interpretación"
+            "value" : "Suplantación de identidad"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Peniruan"
+            "value" : "Penyamaran identitas"
           }
         },
         "nl" : {
@@ -14864,6 +15191,18 @@
     },
     "Import from relays" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importar desde relays"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impor dari relay"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14874,6 +15213,18 @@
     },
     "Import from relays…" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importando desde relays…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengimpor dari relay…"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14883,7 +15234,20 @@
       }
     },
     "Import or export blocks" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importar o exportar bloqueos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impor atau ekspor blokir"
+          }
+        }
+      }
     },
     "Import private key" : {
       "comment" : "Label for importing your private key on Edit Profile screen",
@@ -14897,7 +15261,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Impor kunci pribadi"
+            "value" : "Impor kunci privat"
           }
         },
         "nl" : {
@@ -15024,7 +15388,20 @@
       }
     },
     "Includes people outside your web of trust" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluye personas ajenas a tu Web of Trust"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencakup orang di luar Web of Trust Anda"
+          }
+        }
+      }
     },
     "Increase privacy" : {
       "localizations" : {
@@ -15121,7 +15498,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clave no válida"
+            "value" : "Clave inválida"
           }
         },
         "id" : {
@@ -15150,7 +15527,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kunci pribadi tidak valid"
+            "value" : "Kunci privat tidak valid"
           }
         },
         "nl" : {
@@ -15233,7 +15610,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Parece que los contactos de %lld se eliminaron de su siguiente lista, tal vez de otra aplicación nostr%@"
+            "value" : "Parece que se han eliminado %lld contactos de tu lista de seguidos, quizá desde otra aplicación de Nostr%@"
           }
         },
         "id" : {
@@ -15261,7 +15638,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terserah relays dan aplikasi lain untuk memenuhi permintaan Anda"
+            "value" : "Terserah relay dan aplikasi lain untuk memenuhi permintaan Anda"
           }
         },
         "nl" : {
@@ -15273,13 +15650,52 @@
       }
     },
     "joined" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "se ha unido"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bergabung"
+          }
+        }
+      }
     },
     "Jumps to the original message" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Va al mensaje original"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka pesan asli"
+          }
+        }
+      }
     },
     "Jumps to the quoted message" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Va al mensaje citado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka pesan yang dikutip"
+          }
+        }
+      }
     },
     "just now" : {
       "comment" : "Time ago (less than 30 seconds)",
@@ -15464,7 +15880,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Llaves"
+            "value" : "Claves"
           }
         },
         "id" : {
@@ -15515,7 +15931,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "jenis: %@"
+            "value" : "kind: %@"
           }
         },
         "nl" : {
@@ -15824,7 +16240,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terakhir diperbarui: 27 Mei 2023\n    \nAkses Anda ke dan penggunaan Aplikasi dikondisikan pada penerimaan dan kepatuhan Anda terhadap Ketentuan ini. Ketentuan ini berlaku untuk semua pengguna Aplikasi.\n\nDengan mengakses atau menggunakan Aplikasi, Anda setuju untuk terikat oleh Ketentuan ini. Jika Anda tidak setuju dengan bagian mana pun dari ketentuan ini, maka Anda tidak memiliki izin untuk mengakses Aplikasi.\n\nAkun\nSaat Anda membuat akun dengan Aplikasi, Anda bertanggung jawab untuk menjaga kerahasiaan kunci akun Anda, serta membatasi akses ke perangkat Anda. Anda setuju untuk menerima tanggung jawab atas setiap dan seluruh aktivitas atau tindakan yang terjadi dalam akun Anda.\n\nKonten\nAplikasi ini memungkinkan Anda mengakses, membaca, dan memposting konten melalui koneksi ke relays. Anda bertanggung jawab atas konten yang Anda posting atau akses melalui Aplikasi, termasuk legalitas, keandalan, dan kesesuaiannya.\n\nDengan memposting konten melalui Aplikasi, Anda menyatakan dan menjamin bahwa konten tersebut adalah milik Anda (Anda adalah pemiliknya) dan/atau Anda mempunyai hak untuk menggunakannya, dan bahwa postingan konten Anda melalui Aplikasi tidak melanggar hak privasi, hak publisitas, hak cipta, hak kontrak, atau hak lain apa pun dari orang atau entitas mana pun.\n\nKegiatan yang Dilarang\nAnda setuju untuk tidak menggunakan Aplikasi untuk aktivitas ilegal, berbahaya, atau menyinggung, termasuk namun tidak terbatas pada:\n\nTerlibat dalam pelecehan, intimidasi, atau segala bentuk intimidasi\nMendistribusikan atau mempromosikan materi seksual eksplisit atau pornografi\nMempromosikan ujaran kebencian, rasisme, atau diskriminasi dalam bentuk apa pun\nMelanggar hak kekayaan intelektual orang lain\nTerlibat dalam segala bentuk penipuan, phishing, atau pengumpulan data tanpa izin\nKekayaan Intelektual\nAplikasi dan konten aslinya (tidak termasuk Konten yang disediakan oleh pengguna), fitur, dan fungsionalitasnya adalah dan akan tetap menjadi milik eksklusif Pengembang. Aplikasi ini dilindungi oleh hak cipta, merek dagang, dan undang-undang lain di Amerika Serikat dan negara asing. Merek dagang dan tampilan dagang apa pun tidak boleh digunakan sehubungan dengan produk atau layanan apa pun tanpa izin tertulis sebelumnya dari Pengembang.\n\nBatasan Tanggung Jawab\nDalam keadaan apa pun, Pengembang tidak bertanggung jawab atas kerugian tidak langsung, insidental, khusus, konsekuensial, atau hukuman, termasuk namun tidak terbatas pada, hilangnya keuntungan, data, penggunaan, niat baik, atau kerugian tidak berwujud lainnya, yang diakibatkan oleh (i) akses Anda ke atau penggunaan atau ketidakmampuan untuk mengakses atau menggunakan Aplikasi; (ii) segala perilaku atau konten pihak ketiga mana pun di Aplikasi; (iii) konten apa pun yang diperoleh dari Aplikasi; dan (iv) akses, penggunaan, atau perubahan tidak sah atas transmisi atau konten Anda, baik berdasarkan jaminan, kontrak, kesalahan (termasuk kelalaian), atau teori hukum lainnya, baik Pengembang telah diberitahu atau tidak mengenai kemungkinan kerusakan tersebut, dan bahkan jika upaya hukum yang ditetapkan di sini ternyata gagal mencapai tujuan utamanya.\n\nKebijakan Privasi\nNostur tidak mengumpulkan informasi tentang Anda. Aplikasi ini menyimpan informasi yang Anda berikan tentang profil nostr Anda, bisa berupa apa pun yang Anda pilih untuk dibagikan atau tidak. Pos dan konten yang Anda bagikan dari Nostur dikirim ke relays publik sehingga siapa pun dapat melihatnya dan Nostur menyimpannya di perangkat Anda sehingga Anda selalu dapat melihatnya sendiri.\nAplikasi ini menggunakan layanan eksternal berikut:\nTenor: untuk menyertakan GIF animasi di postingan Anda\nLayanan unggah gambar: Untuk menyertakan gambar dalam postingan Anda. Anda dapat memilih untuk tidak menggunakan layanan ini dengan tidak menyertakan gambar atau GIF di postingan Anda dan tidak mengunggah gambar profil atau spanduk di aplikasi.\n\nUntuk pertanyaan apa pun, silakan hubungi feedback@nostur.com."
+            "value" : "Terakhir diperbarui: 27 Mei 2023\n    \nAkses Anda ke dan penggunaan Aplikasi dikondisikan pada penerimaan dan kepatuhan Anda terhadap Ketentuan ini. Ketentuan ini berlaku untuk semua pengguna Aplikasi.\n\nDengan mengakses atau menggunakan Aplikasi, Anda setuju untuk terikat oleh Ketentuan ini. Jika Anda tidak setuju dengan bagian mana pun dari ketentuan ini, maka Anda tidak memiliki izin untuk mengakses Aplikasi.\n\nAkun\nSaat Anda membuat akun dengan Aplikasi, Anda bertanggung jawab untuk menjaga kerahasiaan kunci akun Anda, serta membatasi akses ke perangkat Anda. Anda setuju untuk menerima tanggung jawab atas setiap dan seluruh aktivitas atau tindakan yang terjadi dalam akun Anda.\n\nKonten\nAplikasi ini memungkinkan Anda mengakses, membaca, dan memposting konten melalui koneksi ke relay. Anda bertanggung jawab atas konten yang Anda posting atau akses melalui Aplikasi, termasuk legalitas, keandalan, dan kesesuaiannya.\n\nDengan memposting konten melalui Aplikasi, Anda menyatakan dan menjamin bahwa konten tersebut adalah milik Anda (Anda adalah pemiliknya) dan/atau Anda mempunyai hak untuk menggunakannya, dan bahwa postingan konten Anda melalui Aplikasi tidak melanggar hak privasi, hak publisitas, hak cipta, hak kontrak, atau hak lain apa pun dari orang atau entitas mana pun.\n\nKegiatan yang Dilarang\nAnda setuju untuk tidak menggunakan Aplikasi untuk aktivitas ilegal, berbahaya, atau menyinggung, termasuk namun tidak terbatas pada:\n\nTerlibat dalam pelecehan, intimidasi, atau segala bentuk intimidasi\nMendistribusikan atau mempromosikan materi seksual eksplisit atau pornografi\nMempromosikan ujaran kebencian, rasisme, atau diskriminasi dalam bentuk apa pun\nMelanggar hak kekayaan intelektual orang lain\nTerlibat dalam segala bentuk penipuan, phishing, atau pengumpulan data tanpa izin\nKekayaan Intelektual\nAplikasi dan konten aslinya (tidak termasuk Konten yang disediakan oleh pengguna), fitur, dan fungsionalitasnya adalah dan akan tetap menjadi milik eksklusif Pengembang. Aplikasi ini dilindungi oleh hak cipta, merek dagang, dan undang-undang lain di Amerika Serikat dan negara asing. Merek dagang dan tampilan dagang apa pun tidak boleh digunakan sehubungan dengan produk atau layanan apa pun tanpa izin tertulis sebelumnya dari Pengembang.\n\nBatasan Tanggung Jawab\nDalam keadaan apa pun, Pengembang tidak bertanggung jawab atas kerugian tidak langsung, insidental, khusus, konsekuensial, atau hukuman, termasuk namun tidak terbatas pada, hilangnya keuntungan, data, penggunaan, niat baik, atau kerugian tidak berwujud lainnya, yang diakibatkan oleh (i) akses Anda ke atau penggunaan atau ketidakmampuan untuk mengakses atau menggunakan Aplikasi; (ii) segala perilaku atau konten pihak ketiga mana pun di Aplikasi; (iii) konten apa pun yang diperoleh dari Aplikasi; dan (iv) akses, penggunaan, atau perubahan tidak sah atas transmisi atau konten Anda, baik berdasarkan jaminan, kontrak, kesalahan (termasuk kelalaian), atau teori hukum lainnya, baik Pengembang telah diberitahu atau tidak mengenai kemungkinan kerusakan tersebut, dan bahkan jika upaya hukum yang ditetapkan di sini ternyata gagal mencapai tujuan utamanya.\n\nKebijakan Privasi\nNostur tidak mengumpulkan informasi tentang Anda. Aplikasi ini menyimpan informasi yang Anda berikan tentang profil nostr Anda, bisa berupa apa pun yang Anda pilih untuk dibagikan atau tidak. Pos dan konten yang Anda bagikan dari Nostur dikirim ke relay publik sehingga siapa pun dapat melihatnya dan Nostur menyimpannya di perangkat Anda sehingga Anda selalu dapat melihatnya sendiri.\nAplikasi ini menggunakan layanan eksternal berikut:\nTenor: untuk menyertakan GIF animasi di postingan Anda\nLayanan unggah gambar: Untuk menyertakan gambar dalam postingan Anda. Anda dapat memilih untuk tidak menggunakan layanan ini dengan tidak menyertakan gambar atau GIF di postingan Anda dan tidak mengunggah gambar profil atau spanduk di aplikasi.\n\nUntuk pertanyaan apa pun, silakan hubungi feedback@nostur.com."
           }
         },
         "nl" : {
@@ -15836,10 +16252,35 @@
       }
     },
     "Learned through interactions" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aprendido mediante interacciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dipelajari melalui interaksi"
+          }
+        }
+      }
     },
     "Learned Web of Trust" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web of Trust aprendida"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web of Trust yang dipelajari"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15859,7 +16300,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meninggalkan"
+            "value" : "Tinggalkan"
           }
         },
         "nl" : {
@@ -16052,7 +16493,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gustos"
+            "value" : "Me gusta"
           }
         },
         "id" : {
@@ -16096,7 +16537,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Limite las notificaciones de la pantalla de inicio/bloqueo solo de las personas que sigue"
+            "value" : "Limita las notificaciones de las pantallas de inicio y bloqueo a las personas que sigues"
           }
         },
         "id" : {
@@ -16236,7 +16677,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Daftar & Umpan"
+            "value" : "Daftar & Feed"
           }
         },
         "nl" : {
@@ -16349,7 +16790,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Streaming Langsung"
+            "value" : "Siaran langsung"
           }
         },
         "nl" : {
@@ -16428,7 +16869,20 @@
       }
     },
     "Load encrypted media" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargar contenido multimedia cifrado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muat media terenkripsi"
+          }
+        }
+      }
     },
     "Load preset 1" : {
       "localizations" : {
@@ -16586,7 +17040,20 @@
       }
     },
     "Loading older posts" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando publicaciones anteriores"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memuat postingan lama"
+          }
+        }
+      }
     },
     "Loading paused (Low data mode)" : {
       "comment" : "Displayed when a short video is blocked\nDisplayed when media in a post is blocked",
@@ -16612,13 +17079,54 @@
       }
     },
     "Loading replied message…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando el mensaje respondido…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memuat pesan yang dibalas…"
+          }
+        }
+      }
     },
     "Loading selected photo..." : {
-      "comment" : "Shown while a selected photo is being imported into the post composer"
+      "comment" : "Shown while a selected photo is being imported into the post composer",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando la foto seleccionada..."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memuat foto yang dipilih..."
+          }
+        }
+      }
     },
     "Loading selected photos..." : {
-      "comment" : "Shown while multiple selected photos are being imported into the post composer"
+      "comment" : "Shown while multiple selected photos are being imported into the post composer",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando las fotos seleccionadas..."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memuat foto yang dipilih..."
+          }
+        }
+      }
     },
     "Loading..." : {
       "localizations" : {
@@ -16754,19 +17262,84 @@
       }
     },
     "Looking for posts from people you follow…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando publicaciones de personas que sigues…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencari postingan dari orang yang Anda ikuti…"
+          }
+        }
+      }
     },
     "Looking for posts from your web of trust…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando publicaciones de tu Web of Trust…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencari postingan dari Web of Trust Anda…"
+          }
+        }
+      }
     },
     "Looking for posts on the selected relays…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando publicaciones en los relays seleccionados…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencari postingan di relay yang dipilih…"
+          }
+        }
+      }
     },
     "Looking for saved blocks…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando bloqueos guardados…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencari blokir tersimpan…"
+          }
+        }
+      }
     },
     "Looking up recipient DM relays…" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando los relays de mensajes directos del destinatario…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencari relay DM penerima…"
+          }
+        }
+      }
     },
     "Low Data mode" : {
       "comment" : "Setting on settings screen",
@@ -16821,13 +17394,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "metro"
+            "value" : "min"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "M"
+            "value" : "menit"
           }
         },
         "nl" : {
@@ -16959,13 +17532,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Asegúrese de tener una copia de seguridad de su clave privada (nsec)\nNostur no puede recuperar su cuenta sin él"
+            "value" : "Asegúrate de tener una copia de seguridad de tu clave privada (nsec)\nNostur no puede recuperar tu cuenta sin ella"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pastikan Anda memiliki cadangan kunci pribadi Anda (nsec)\nNostur tidak dapat memulihkan akun Anda tanpanya"
+            "value" : "Pastikan Anda memiliki cadangan kunci privat Anda (nsec)\nNostur tidak dapat memulihkan akun Anda tanpanya"
           }
         },
         "nl" : {
@@ -16982,13 +17555,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Asegúrese de tener una copia de seguridad de su clave privada (nsec). Nostur no puede recuperar su cuenta sin él."
+            "value" : "Asegúrate de tener una copia de seguridad de tu clave privada (nsec). Nostur no puede recuperar tu cuenta sin ella."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pastikan Anda memiliki cadangan kunci pribadi Anda (nsec). Nostur tidak dapat memulihkan akun Anda tanpanya."
+            "value" : "Pastikan Anda memiliki cadangan kunci privat Anda (nsec). Nostur tidak dapat memulihkan akun Anda tanpanya."
           }
         },
         "nl" : {
@@ -17162,7 +17735,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Medios de publicaciones de cualquier persona que más les gusten o que las personas que sigues vuelven a publicar"
+            "value" : "Contenido multimedia de cualquier persona con más Me gusta o republicaciones de las personas que sigues"
           }
         },
         "id" : {
@@ -17185,7 +17758,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Medios de las publicaciones que más me gustaron o que las personas que sigues volvieron a publicar"
+            "value" : "Contenido multimedia de las publicaciones con más Me gusta o republicaciones de las personas que sigues"
           }
         },
         "id" : {
@@ -17428,6 +18001,12 @@
         }
       }
     },
+    "Message source" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Origen del mensaje" } },
+        "id" : { "stringUnit" : { "state" : "translated", "value" : "Sumber pesan" } }
+      }
+    },
     "Message verification" : {
       "comment" : "Setting heading on settings screen",
       "localizations" : {
@@ -17479,13 +18058,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Los mensajes se envían utilizando un protocolo de cifrado antiguo porque el mensaje privado del destinatario relays no se ha publicado o no se ha podido encontrar."
+            "value" : "Los mensajes se envían con un protocolo de cifrado anterior porque los relays de mensajes directos de los destinatarios no se han publicado o no se han encontrado."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pesan dikirim menggunakan protokol enkripsi lama karena pesan pribadi penerima relays belum dipublikasikan atau tidak dapat ditemukan."
+            "value" : "Pesan dikirim menggunakan protokol enkripsi lama karena pesan pribadi penerima relay belum dipublikasikan atau tidak dapat ditemukan."
           }
         },
         "nl" : {
@@ -17833,7 +18412,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bisu"
+            "value" : "Bisukan"
           }
         },
         "nl" : {
@@ -18249,20 +18828,33 @@
       }
     },
     "New blocks" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloqueos nuevos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokir baru"
+          }
+        }
+      }
     },
     "New contacts list feed" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nueva lista de contactos"
+            "value" : "Nuevo feed de una lista de contactos"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan daftar kontak baru"
+            "value" : "Feed daftar kontak baru"
           }
         },
         "nl" : {
@@ -18303,13 +18895,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nueva alimentación"
+            "value" : "Nuevo feed"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan baru"
+            "value" : "Feed baru"
           }
         },
         "nl" : {
@@ -18325,13 +18917,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nueva fuente"
+            "value" : "Nuevo feed"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Baru"
+            "value" : "Feed Baru"
           }
         },
         "nl" : {
@@ -18354,7 +18946,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan baru dari kontak"
+            "value" : "Feed baru dari kontak"
           }
         },
         "nl" : {
@@ -18370,13 +18962,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nueva fuente..."
+            "value" : "Nuevo feed..."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Baru..."
+            "value" : "Feed Baru..."
           }
         },
         "nl" : {
@@ -18736,7 +19328,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan relay baru"
+            "value" : "Feed relay baru"
           }
         },
         "nl" : {
@@ -18818,7 +19410,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zap nuevos"
+            "value" : "Nuevos zaps"
           }
         },
         "id" : {
@@ -18857,7 +19449,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Próximo"
+            "value" : "Siguiente"
           }
         },
         "id" : {
@@ -19016,13 +19608,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No se encontró DM relays para"
+            "value" : "No se encontraron relays de mensajes directos para"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tidak ditemukan DM relays"
+            "value" : "Tidak ditemukan DM relay"
           }
         },
         "nl" : {
@@ -19056,7 +19648,20 @@
       }
     },
     "No existing block list found." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha encontrado ninguna lista de bloqueos existente."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daftar blokir yang ada tidak ditemukan."
+          }
+        }
+      }
     },
     "No internet connection" : {
       "comment" : "Relay no internet status",
@@ -19082,7 +19687,20 @@
       }
     },
     "No learned contacts yet" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no hay contactos aprendidos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belum ada kontak yang dipelajari"
+          }
+        }
+      }
     },
     "No message requests" : {
       "comment" : "Shown on the DM requests view when there aren't any message requests to show",
@@ -19108,7 +19726,20 @@
       }
     },
     "No saved blocks found" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han encontrado bloqueos guardados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokir tersimpan tidak ditemukan"
+          }
+        }
+      }
     },
     "No stats collected yet." : {
       "localizations" : {
@@ -19344,7 +19975,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "acara Nostr"
+            "value" : "event Nostr"
           }
         },
         "nl" : {
@@ -19366,7 +19997,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Acara Nostr:"
+            "value" : "Event Nostr:"
           }
         },
         "nl" : {
@@ -19474,10 +20105,36 @@
       }
     },
     "Nostur could not check whether this account already has a block list. Publishing may replace an existing list that could not be found." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur no ha podido comprobar si esta cuenta ya tiene una lista de bloqueos. Al publicar, podría sustituirse una lista existente que no se pudo encontrar."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur tidak dapat memeriksa apakah akun ini sudah memiliki daftar blokir. Publikasi dapat mengganti daftar yang tidak berhasil ditemukan."
+          }
+        }
+      }
     },
     "Nostur could not find an existing block list." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur no ha encontrado ninguna lista de bloqueos existente."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur tidak dapat menemukan daftar blokir yang ada."
+          }
+        }
+      }
     },
     "Nostur crops the image to a square and creates the required sizes automatically." : {
       "localizations" : {
@@ -19572,10 +20229,36 @@
       }
     },
     "Nostur will first check what this account already saved, then combine it with your Nostur blocks." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur comprobará primero lo que ya ha guardado esta cuenta y después lo combinará con tus bloqueos de Nostur."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur akan memeriksa apa yang sudah disimpan akun ini, lalu menggabungkannya dengan blokir Nostur Anda."
+          }
+        }
+      }
     },
     "Nostur will look for blocks this account saved using other apps. Nothing changes until you confirm." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur buscará los bloqueos que esta cuenta haya guardado con otras aplicaciones. No cambiará nada hasta que confirmes."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur akan mencari blokir yang disimpan akun ini melalui aplikasi lain. Tidak ada yang berubah sampai Anda mengonfirmasi."
+          }
+        }
+      }
     },
     "Not on your profile" : {
       "localizations" : {
@@ -19742,7 +20425,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No se encontró nada en los relés seleccionados"
+            "value" : "No se encontró nada en los relays seleccionados"
           }
         },
         "id" : {
@@ -19881,7 +20564,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pemberitahuan"
+            "value" : "Notifikasi"
           }
         },
         "nl" : {
@@ -20076,7 +20759,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apagado"
+            "value" : "Desactivado"
           }
         },
         "id" : {
@@ -20164,13 +20847,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conéctese solo a relays adicional cuando una VPN esté activa"
+            "value" : "Conéctate solo a relays adicionales cuando una VPN esté activa"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hanya sambungkan ke relays tambahan saat VPN aktif"
+            "value" : "Hanya sambungkan ke relay tambahan saat VPN aktif"
           }
         },
         "nl" : {
@@ -20208,7 +20891,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sólo de lo siguiente"
+            "value" : "Solo de personas que sigues"
           }
         },
         "id" : {
@@ -20274,7 +20957,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mostrar solo contenido de tus seguidores o seguidores-sigue"
+            "value" : "Mostrar solo contenido de las personas que sigues o de quienes ellas siguen"
           }
         },
         "id" : {
@@ -20466,14 +21149,27 @@
       }
     },
     "Original message unavailable" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensaje original no disponible"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pesan asli tidak tersedia"
+          }
+        }
+      }
     },
     "Other" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otro"
+            "value" : "Otros"
           }
         },
         "id" : {
@@ -20491,7 +21187,20 @@
       }
     },
     "Other people may still be able to tell that a list was saved and roughly how large it is." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es posible que otras personas sepan que se ha guardado una lista y calculen aproximadamente su tamaño."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orang lain mungkin masih dapat mengetahui bahwa sebuah daftar disimpan dan memperkirakan ukurannya."
+          }
+        }
+      }
     },
     "Outrage feed may or may not be available in a future release" : {
       "extractionState" : "stale",
@@ -20505,7 +21214,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan kemarahan mungkin tersedia atau tidak tersedia di rilis mendatang"
+            "value" : "Feed kemarahan mungkin tersedia atau tidak tersedia di rilis mendatang"
           }
         },
         "nl" : {
@@ -20573,7 +21282,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Membayar"
+            "value" : "Bayar"
           }
         },
         "nl" : {
@@ -20607,7 +21316,20 @@
       }
     },
     "People already included through follows remain in your Web of Trust." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las personas ya incluidas porque las sigues permanecerán en tu Web of Trust."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orang yang sudah disertakan melalui akun yang Anda ikuti tetap berada di Web of Trust Anda."
+          }
+        }
+      }
     },
     "People I follow" : {
       "localizations" : {
@@ -20632,10 +21354,36 @@
       }
     },
     "People you reply or react to will appear here automatically." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las personas a las que respondas o reacciones aparecerán aquí automáticamente."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orang yang Anda balas atau tanggapi akan muncul di sini secara otomatis."
+          }
+        }
+      }
     },
     "Permanent blocks in Nostur" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloqueos permanentes en Nostur"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokir permanen di Nostur"
+          }
+        }
+      }
     },
     "PFP's here (max 10)" : {
       "extractionState" : "stale",
@@ -20694,7 +21442,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pengaturan Umpan Foto"
+            "value" : "Pengaturan Feed Foto"
           }
         },
         "nl" : {
@@ -20818,7 +21566,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Gambar saja, Hot, Temukan, Galeri, dan Artikel tidak akan terlihat jika Anda tidak mengikuti lebih dari 10 orang."
+            "value" : "Feed Gambar saja, Hot, Temukan, Galeri, dan Artikel tidak akan terlihat jika Anda tidak mengikuti lebih dari 10 orang."
           }
         },
         "nl" : {
@@ -20835,13 +21583,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Solo imágenes, Yaks, diVines, Hot, Discover, Gallery y Articles no serán visibles si no sigues a más de 10 personas."
+            "value" : "Los feeds Solo imágenes, Yaks, diVines, Popular, Descubrir, Galería y Artículos no estarán disponibles hasta que sigas a más de 10 personas."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Gambar saja, Yaks, diVines, Hot, Discover, Gallery, dan Articles tidak akan terlihat jika Anda tidak mengikuti lebih dari 10 orang."
+            "value" : "Feed Gambar saja, Yaks, diVines, Hot, Discover, Gallery, dan Articles tidak akan terlihat jika Anda tidak mengikuti lebih dari 10 orang."
           }
         },
         "nl" : {
@@ -20857,13 +21605,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Solo imágenes, Yaks, Divines, Hot, Discover, Gallery y Articles no serán visibles si no sigues a más de 10 personas."
+            "value" : "Los feeds Solo imágenes, Yaks, Divines, Popular, Descubrir, Galería y Artículos no estarán disponibles hasta que sigas a más de 10 personas."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Gambar saja, Yaks, Divines, Hot, Discover, Gallery, dan Articles tidak akan terlihat jika Anda tidak mengikuti lebih dari 10 orang."
+            "value" : "Feed Gambar saja, Yaks, Divines, Hot, Discover, Gallery, dan Articles tidak akan terlihat jika Anda tidak mengikuti lebih dari 10 orang."
           }
         }
       }
@@ -20896,7 +21644,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fotos"
+            "value" : "Imágenes"
           }
         },
         "id" : {
@@ -20947,7 +21695,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan hanya gambar dari orang yang Anda ikuti"
+            "value" : "Feed hanya gambar dari orang yang Anda ikuti"
           }
         },
         "nl" : {
@@ -20991,7 +21739,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sematkan umpan sebagai tab"
+            "value" : "Sematkan feed sebagai tab"
           }
         },
         "nl" : {
@@ -21058,7 +21806,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sematkan umpan relay sebagai tab"
+            "value" : "Sematkan feed relay sebagai tab"
           }
         },
         "nl" : {
@@ -21657,7 +22405,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Destino"
+            "value" : "Publicando"
           }
         },
         "id" : {
@@ -21768,7 +22516,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publicaciones de cualquier persona que más les gustan o que las personas que sigues vuelven a publicar"
+            "value" : "Publicaciones de cualquier persona con más Me gusta o republicaciones de las personas que sigues"
           }
         },
         "id" : {
@@ -21790,7 +22538,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publicaciones de cualquiera que recibieron más zap de las personas que sigues"
+            "value" : "Publicaciones de cualquier persona que hayan recibido más zaps de las personas que sigues"
           }
         },
         "id" : {
@@ -21813,7 +22561,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publicaciones de cualquier persona a las que las personas a las que sigues reaccionan con varios emojis específicos"
+            "value" : "Publicaciones de cualquier persona a las que las personas que sigues hayan reaccionado con determinados emojis"
           }
         },
         "id" : {
@@ -21864,7 +22612,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Postingan dari orang yang diikuti oleh akun [Jelajahi Umpan](nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320)"
+            "value" : "Postingan dari orang yang diikuti oleh akun [Jelajahi Feed](nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320)"
           }
         },
         "nl" : {
@@ -21881,7 +22629,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publicaciones de personas que no sigues que les gustan más o que las personas que sigues vuelven a publicar"
+            "value" : "Publicaciones de personas que no sigues con más Me gusta o republicaciones de las personas que sigues"
           }
         },
         "id" : {
@@ -21910,7 +22658,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Postingan dari relays"
+            "value" : "Postingan dari relay"
           }
         },
         "nl" : {
@@ -21922,7 +22670,20 @@
       }
     },
     "Posts from your follows and their follows" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicaciones de las personas que sigues y de quienes siguen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan dari orang yang Anda ikuti dan orang yang mereka ikuti"
+          }
+        }
+      }
     },
     "Posts most liked or reposted by people you follow" : {
       "extractionState" : "manual",
@@ -21930,7 +22691,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publicaciones que más les gustaron o volvieron a publicar las personas que sigues"
+            "value" : "Publicaciones con más Me gusta o republicaciones de las personas que sigues"
           }
         },
         "id" : {
@@ -22132,7 +22893,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kunci pribadi"
+            "value" : "Kunci privat"
           }
         },
         "nl" : {
@@ -22155,7 +22916,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kunci pribadi disalin ke papan klip"
+            "value" : "Kunci privat disalin ke papan klip"
           }
         },
         "nl" : {
@@ -22177,7 +22938,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kunci pribadi tidak tersedia untuk akun ini."
+            "value" : "Kunci privat tidak tersedia untuk akun ini."
           }
         }
       }
@@ -22268,7 +23029,20 @@
       }
     },
     "Private reply unavailable (recipient has no DM relays)" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respuesta privada no disponible (el destinatario no tiene relays de mensajes directos)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balasan privat tidak tersedia (penerima tidak memiliki relay DM)"
+          }
+        }
+      }
     },
     "Private zap" : {
       "localizations" : {
@@ -22321,7 +23095,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blasfemia"
+            "value" : "Lenguaje ofensivo"
           }
         },
         "id" : {
@@ -22590,19 +23364,84 @@
       }
     },
     "Publish a new list" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicar una lista nueva"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publikasikan daftar baru"
+          }
+        }
+      }
     },
     "Publish a new list anyway" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicar una lista nueva de todos modos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tetap publikasikan daftar baru"
+          }
+        }
+      }
     },
     "Publish a new list with %lld blocks" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicar una lista nueva con %lld bloqueos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publikasikan daftar baru dengan %lld blokir"
+          }
+        }
+      }
     },
     "Publish a new list with 1 block" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicar una lista nueva con 1 bloqueo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publikasikan daftar baru dengan 1 blokir"
+          }
+        }
+      }
     },
     "Publish combined list" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicar la lista combinada"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publikasikan daftar gabungan"
+          }
+        }
+      }
     },
     "Publish list now" : {
       "localizations" : {
@@ -22631,13 +23470,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publica en qué relays deseas recibir DM.\n\nEsto le permite utilizar un formato de mensajería más privado (NIP-17).\n\nOtras personas que no hayan actualizado aún pueden comunicarse con usted utilizando el formato anterior (NIP-04)."
+            "value" : "Publica los relays en los que quieres recibir mensajes directos.\n\nEsto te permite usar un formato de mensajería más privado (NIP-17).\n\nQuienes aún no hayan actualizado podrán seguir comunicándose contigo mediante el formato anterior (NIP-04)."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publikasikan relays mana yang ingin Anda terima DM.\n\nHal ini memungkinkan Anda untuk menggunakan format pesan yang lebih pribadi (NIP-17).\n\nOrang lain yang belum melakukan upgrade masih dapat berkomunikasi dengan Anda menggunakan format lama (NIP-04)."
+            "value" : "Publikasikan relay mana yang ingin Anda terima DM.\n\nHal ini memungkinkan Anda untuk menggunakan format pesan yang lebih pribadi (NIP-17).\n\nOrang lain yang belum melakukan upgrade masih dapat berkomunikasi dengan Anda menggunakan format lama (NIP-04)."
           }
         },
         "nl" : {
@@ -22682,7 +23521,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publikasikan ke relays"
+            "value" : "Publikasikan ke relay"
           }
         },
         "nl" : {
@@ -22717,7 +23556,20 @@
       }
     },
     "Publish without checking?" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Publicar sin comprobar?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publikasikan tanpa memeriksa?"
+          }
+        }
+      }
     },
     "Published" : {
       "localizations" : {
@@ -22747,13 +23599,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publicado relays"
+            "value" : "Relays publicados"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diterbitkan relays"
+            "value" : "Diterbitkan relay"
           }
         },
         "nl" : {
@@ -22770,13 +23622,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publicado relays para %@"
+            "value" : "Relays publicados para %@"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "relays yang diterbitkan untuk %@"
+            "value" : "relay yang diterbitkan untuk %@"
           }
         },
         "nl" : {
@@ -22960,7 +23812,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "levantar la mano"
+            "value" : "Levantar la mano"
           }
         },
         "id" : {
@@ -23134,7 +23986,20 @@
       }
     },
     "Read %lld private blocks." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se han leído %lld bloqueos privados."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld blokir privat dibaca."
+          }
+        }
+      }
     },
     "read + write" : {
       "extractionState" : "stale",
@@ -23233,13 +24098,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lee"
+            "value" : "Lecturas"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Membaca"
+            "value" : "Bacaan"
           }
         },
         "nl" : {
@@ -23417,7 +24282,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recibió"
+            "value" : "Recibido"
           }
         },
         "id" : {
@@ -23557,7 +24422,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recomendación: reduce los relés de recepción a un máximo de %1$lld–%2$lld (toca "
+            "value" : "Recomendación: reduce los relays de recepción a un máximo de %1$lld–%2$lld (toca "
           }
         },
         "id" : {
@@ -23602,13 +24467,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reconfigurar anunciado relays"
+            "value" : "Reconfigurar relays anunciados"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasi ulang mengumumkan relays"
+            "value" : "Konfigurasi ulang mengumumkan relay"
           }
         },
         "nl" : {
@@ -23624,13 +24489,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reconfigurar anunciado relays..."
+            "value" : "Reconfigurar relays anunciados..."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasi ulang relays yang diumumkan..."
+            "value" : "Konfigurasi ulang relay yang diumumkan..."
           }
         },
         "nl" : {
@@ -23647,13 +24512,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reconfigurar publicado relays"
+            "value" : "Reconfigurar relays publicados"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfigurasikan ulang relays yang diterbitkan"
+            "value" : "Konfigurasikan ulang relay yang diterbitkan"
           }
         },
         "nl" : {
@@ -23870,7 +24735,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La configuración de relés es correcta"
+            "value" : "La configuración de relays es correcta"
           }
         },
         "id" : {
@@ -23892,7 +24757,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La configuración de relés no es óptima"
+            "value" : "La configuración de relays no es óptima"
           }
         },
         "id" : {
@@ -23914,7 +24779,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La configuración de relés no es óptima."
+            "value" : "La configuración de relays no es óptima."
           }
         },
         "id" : {
@@ -23986,7 +24851,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Relay"
+            "value" : "Feed Relay"
           }
         },
         "nl" : {
@@ -24146,7 +25011,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relays"
+            "value" : "Relay"
           }
         },
         "nl" : {
@@ -24169,7 +25034,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relays Nostur digunakan untuk mencari konten"
+            "value" : "Relay Nostur digunakan untuk mencari konten"
           }
         },
         "nl" : {
@@ -24191,7 +25056,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relays Nostur digunakan untuk mencari atau mempublikasikan konten"
+            "value" : "Relay Nostur digunakan untuk mencari atau mempublikasikan konten"
           }
         },
         "nl" : {
@@ -24213,7 +25078,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relays yang akan digunakan orang lain untuk menemukan konten Anda"
+            "value" : "Relay yang akan digunakan orang lain untuk menemukan konten Anda"
           }
         },
         "nl" : {
@@ -24235,7 +25100,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relays untuk menerima pesan pribadi"
+            "value" : "Relay untuk menerima pesan pribadi"
           }
         },
         "nl" : {
@@ -24257,7 +25122,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relays tempat Anda memposting"
+            "value" : "Relay tempat Anda memposting"
           }
         },
         "nl" : {
@@ -24279,7 +25144,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relays tempat Anda membaca"
+            "value" : "Relay tempat Anda membaca"
           }
         },
         "nl" : {
@@ -24301,7 +25166,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relays:"
+            "value" : "Relay:"
           }
         },
         "nl" : {
@@ -24340,13 +25205,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recuerda alimentar"
+            "value" : "Recordar el feed"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingat memberi makan"
+            "value" : "Ingat feed"
           }
         },
         "nl" : {
@@ -24435,7 +25300,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menghapus"
+            "value" : "Hapus"
           }
         },
         "nl" : {
@@ -24758,10 +25623,36 @@
       }
     },
     "Replies and reactions" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respuestas y reacciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balasan dan reaksi"
+          }
+        }
+      }
     },
     "Reply" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Responder"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balas"
+          }
+        }
+      }
     },
     "Reply anonymously" : {
       "localizations" : {
@@ -25133,7 +26024,20 @@
       }
     },
     "Reporter's note" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nota del denunciante"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Catatan pelapor"
+          }
+        }
+      }
     },
     "Repost" : {
       "comment" : "Button to Repost a post",
@@ -25141,7 +26045,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Volver a publicar"
+            "value" : "Republicar"
           }
         },
         "id" : {
@@ -25227,6 +26131,18 @@
     },
     "Reposted post unavailable" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicación republicada no disponible"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan ulang tidak tersedia"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -25269,7 +26185,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Repost"
+            "value" : "Posting ulang"
           }
         },
         "nl" : {
@@ -25381,7 +26297,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publikasikan ulang ke DM relays"
+            "value" : "Publikasikan ulang ke DM relay"
           }
         }
       }
@@ -25397,7 +26313,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Publikasikan ulang ke relays"
+            "value" : "Publikasikan ulang ke relay"
           }
         },
         "nl" : {
@@ -25683,7 +26599,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lanjutkan umpan dari bagian terakhir yang Anda tinggalkan saat Anda membuka kembali aplikasi"
+            "value" : "Lanjutkan feed dari bagian terakhir yang Anda tinggalkan saat Anda membuka kembali aplikasi"
           }
         },
         "nl" : {
@@ -25721,13 +26637,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rever"
+            "value" : "Volver a intentar"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mencoba kembali"
+            "value" : "Coba lagi"
           }
         },
         "nl" : {
@@ -25816,7 +26732,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ungkapkan kunci pribadi"
+            "value" : "Ungkapkan kunci privat"
           }
         },
         "nl" : {
@@ -25825,6 +26741,12 @@
             "value" : "Toon privésleutel"
           }
         }
+      }
+    },
+    "Rumor" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Rumor" } },
+        "id" : { "stringUnit" : { "state" : "translated", "value" : "Rumor" } }
       }
     },
     "s" : {
@@ -25926,13 +26848,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ahorrar"
+            "value" : "Guardar"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menyimpan"
+            "value" : "Simpan"
           }
         },
         "nl" : {
@@ -26111,7 +27033,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Memindai relays untuk pesan %lld/12 bulan yang lalu..."
+            "value" : "Memindai relay untuk pesan %lld/12 bulan yang lalu..."
           }
         },
         "nl" : {
@@ -26133,7 +27055,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Memindai relays untuk pesan %lld/36 bulan yang lalu..."
+            "value" : "Memindai relay untuk pesan %lld/36 bulan yang lalu..."
           }
         },
         "nl" : {
@@ -26188,6 +27110,12 @@
             "value" : "schermafdruk"
           }
         }
+      }
+    },
+    "Seal" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sello" } },
+        "id" : { "stringUnit" : { "state" : "translated", "value" : "Segel" } }
       }
     },
     "Search" : {
@@ -26307,10 +27235,35 @@
       }
     },
     "Search learned contacts" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar contactos aprendidos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cari kontak yang dipelajari"
+          }
+        }
+      }
     },
     "Search on relays" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar en relays"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cari di relay"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26384,6 +27337,18 @@
     },
     "Select at least one relay first" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona primero al menos un relay"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih setidaknya satu relay terlebih dahulu"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26464,7 +27429,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seleccione foto o video"
+            "value" : "Selecciona una foto o un vídeo"
           }
         },
         "id" : {
@@ -26486,7 +27451,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seleccione relay(es)"
+            "value" : "Selecciona uno o varios relays"
           }
         },
         "id" : {
@@ -26537,7 +27502,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mengirim"
+            "value" : "Kirim"
           }
         },
         "nl" : {
@@ -26856,6 +27821,18 @@
             "value" : "Sent %1$@ sats to %2$@"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has enviado %1$@ sats a %2$@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengirim %1$@ sats kepada %2$@"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26871,6 +27848,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Sent %1$@ sats to %2$@ on [post](nostur:e:%3$@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has enviado %1$@ sats a %2$@ en una [publicación](nostur:e:%3$@)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengirim %1$@ sats kepada %2$@ di [postingan](nostur:e:%3$@)"
           }
         },
         "nl" : {
@@ -26893,7 +27882,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dikirim ke %lld relays"
+            "value" : "Dikirim ke %lld relay"
           }
         },
         "nl" : {
@@ -27095,7 +28084,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Membagikan"
+            "value" : "Bagikan"
           }
         },
         "nl" : {
@@ -27511,13 +28500,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Videos cortos de personas que sigues"
+            "value" : "Feed de vídeos cortos de las personas que sigues"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan video pendek dari orang yang Anda ikuti"
+            "value" : "Feed video pendek dari orang yang Anda ikuti"
           }
         },
         "nl" : {
@@ -27534,13 +28523,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Espectáculo"
+            "value" : "Mostrar"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menunjukkan"
+            "value" : "Tampilkan"
           }
         },
         "nl" : {
@@ -27563,7 +28552,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tampilkan umpan %@"
+            "value" : "Tampilkan feed %@"
           }
         },
         "nl" : {
@@ -27732,6 +28721,18 @@
     },
     "Show content from" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar contenido de"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan konten dari"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -27746,13 +28747,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mostrar relays adicional usado en la vista previa de la publicación"
+            "value" : "Mostrar los relays adicionales en la vista previa de la publicación"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tampilkan relays tambahan yang digunakan pada pratinjau posting"
+            "value" : "Tampilkan relay tambahan yang digunakan pada pratinjau posting"
           }
         },
         "nl" : {
@@ -27775,7 +28776,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tampilkan umpan"
+            "value" : "Tampilkan feed"
           }
         },
         "nl" : {
@@ -27820,7 +28821,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tampilkan umpan di bilah tab"
+            "value" : "Tampilkan feed di bilah tab"
           }
         },
         "nl" : {
@@ -27951,7 +28952,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mostrar más"
+            "value" : "Ver más"
           }
         },
         "id" : {
@@ -28388,7 +29389,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tanda tangani acara nostr apa pun"
+            "value" : "Tanda tangani event nostr apa pun"
           }
         },
         "nl" : {
@@ -28513,13 +29514,52 @@
       }
     },
     "Some existing private items could not be read. Saving is disabled so they are not lost." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han podido leer algunos elementos privados existentes. Para no perderlos, no se permite guardar."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beberapa item privat yang ada tidak dapat dibaca. Penyimpanan dinonaktifkan agar item tersebut tidak hilang."
+          }
+        }
+      }
     },
     "Some private blocks could not be read by this device." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este dispositivo no ha podido leer algunos bloqueos privados."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beberapa blokir privat tidak dapat dibaca oleh perangkat ini."
+          }
+        }
+      }
     },
     "Some private blocks could not be read." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han podido leer algunos bloqueos privados."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beberapa blokir privat tidak dapat dibaca."
+          }
+        }
+      }
     },
     "Some relays may require authentication" : {
       "localizations" : {
@@ -28532,7 +29572,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Beberapa relays mungkin memerlukan otentikasi"
+            "value" : "Beberapa relay mungkin memerlukan otentikasi"
           }
         },
         "nl" : {
@@ -28549,13 +29589,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La alimentación de alguien"
+            "value" : "Feed de otra persona"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Seseorang"
+            "value" : "Feed Seseorang"
           }
         }
       },
@@ -28801,13 +29841,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vocero"
+            "value" : "Altavoz"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pembicara"
+            "value" : "Pengeras suara"
           }
         },
         "nl" : {
@@ -28843,6 +29883,18 @@
     },
     "Start Divine videos with sound" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproducir los vídeos de Divine con sonido"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mulai video Divine dengan suara"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -29548,10 +30600,36 @@
       }
     },
     "Temporary blocks skipped" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloqueos temporales omitidos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokir sementara dilewati"
+          }
+        }
+      }
     },
     "Temporary blocks stay in Nostur because other apps would not know when to remove them." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los bloqueos temporales permanecen en Nostur porque otras aplicaciones no sabrían cuándo eliminarlos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokir sementara tetap berada di Nostur karena aplikasi lain tidak tahu kapan harus menghapusnya."
+          }
+        }
+      }
     },
     "Terms and Conditions" : {
       "localizations" : {
@@ -29767,7 +30845,20 @@
       }
     },
     "The account names are protected so only you can read them." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los nombres de las cuentas están protegidos para que solo tú puedas leerlos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nama akun dilindungi sehingga hanya Anda yang dapat membacanya."
+          }
+        }
+      }
     },
     "The account to post from. Defaults to the currently active account if not specified." : {
       "localizations" : {
@@ -29812,7 +30903,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan artikel menampilkan artikel dari orang yang Anda ikuti dalam jangka waktu yang dipilih"
+            "value" : "Feed artikel menampilkan artikel dari orang yang Anda ikuti dalam jangka waktu yang dipilih"
           }
         },
         "nl" : {
@@ -29872,13 +30963,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El feed Discover muestra publicaciones de personas a las que no sigues que les gustan más o que las personas que sigues vuelven a publicar en las últimas horas %lld"
+            "value" : "El feed Descubrir muestra publicaciones de personas que no sigues que han recibido más Me gusta o republicaciones de las personas que sigues durante las últimas %lld horas"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Temukan menunjukkan postingan dari orang yang tidak Anda ikuti yang paling disukai atau diposkan ulang oleh orang yang Anda ikuti dalam %lld jam terakhir"
+            "value" : "Feed Temukan menunjukkan postingan dari orang yang tidak Anda ikuti yang paling disukai atau diposkan ulang oleh orang yang Anda ikuti dalam %lld jam terakhir"
           }
         },
         "nl" : {
@@ -29894,13 +30985,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El feed de Emoji muestra publicaciones de cualquier persona a las que las personas que sigues reaccionan con emojis específicos en las últimas horas %lld."
+            "value" : "El feed de emojis muestra publicaciones a las que las personas que sigues han reaccionado con determinados emojis durante las últimas %lld horas."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Emoji menunjukkan kiriman dari siapa pun yang ditanggapi dengan emoji tertentu oleh orang yang Anda ikuti dalam %lld jam terakhir"
+            "value" : "Feed Emoji menunjukkan kiriman dari siapa pun yang ditanggapi dengan emoji tertentu oleh orang yang Anda ikuti dalam %lld jam terakhir"
           }
         },
         "nl" : {
@@ -29912,20 +31003,33 @@
       }
     },
     "The existing block list could not be checked. Publishing may replace one that could not be found." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido comprobar la lista de bloqueos existente. Al publicar, podría sustituirse una lista que no se pudo encontrar."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daftar blokir yang ada tidak dapat diperiksa. Publikasi dapat mengganti daftar yang tidak berhasil ditemukan."
+          }
+        }
+      }
     },
     "The Gallery feed shows pictures most liked or reposted by people you follow in the last %lld hours" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El feed de la Galería muestra las imágenes que más les gustaron o que las personas que sigues han vuelto a publicar en las últimas horas %lld."
+            "value" : "El feed Galería muestra las imágenes con más Me gusta o republicaciones de las personas que sigues durante las últimas %lld horas."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Galeri menampilkan gambar yang paling disukai atau diposkan ulang oleh orang yang Anda ikuti dalam beberapa jam %lld terakhir"
+            "value" : "Feed Galeri menampilkan gambar yang paling disukai atau diposkan ulang oleh orang yang Anda ikuti dalam beberapa jam %lld terakhir"
           }
         },
         "nl" : {
@@ -29943,7 +31047,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La cuenta de invitado ya sigue a algunas personas. Puede leer publicaciones y ver perfiles, pero no puede publicar ni darle me gusta a cosas hasta que cree una nueva cuenta usted mismo."
+            "value" : "La cuenta de invitado ya sigue a algunas personas. Puedes leer publicaciones y ver perfiles, pero no puedes publicar ni indicar que te gusta algo hasta que crees tu propia cuenta."
           }
         },
         "id" : {
@@ -29966,7 +31070,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La cuenta de invitado ya sigue a algunas personas. Puede leer publicaciones y ver perfiles, pero no puede publicar ni reaccionar ante nada hasta que cree una nueva cuenta usted mismo."
+            "value" : "La cuenta de invitado ya sigue a algunas personas. Puedes leer publicaciones y ver perfiles, pero no puedes publicar ni reaccionar hasta que crees tu propia cuenta."
           }
         },
         "id" : {
@@ -29988,13 +31092,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El feed Hot muestra las publicaciones de cualquier persona que hayan recibido más me gusta o que hayan vuelto a publicar las personas que sigues en las últimas horas %lld."
+            "value" : "El feed Popular muestra las publicaciones con más Me gusta o republicaciones de las personas que sigues durante las últimas %lld horas."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Panas menampilkan kiriman dari siapa pun yang paling disukai atau diposkan ulang oleh orang yang Anda ikuti dalam %lld jam terakhir"
+            "value" : "Feed Panas menampilkan kiriman dari siapa pun yang paling disukai atau diposkan ulang oleh orang yang Anda ikuti dalam %lld jam terakhir"
           }
         },
         "nl" : {
@@ -30011,13 +31115,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El feed Hot muestra las publicaciones que más les gustaron o que las personas que sigues han vuelto a publicar en las últimas horas %lld."
+            "value" : "El feed Popular muestra las publicaciones con más Me gusta o republicaciones de las personas que sigues durante las últimas %lld horas."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Panas menampilkan kiriman yang paling disukai atau diposkan ulang oleh orang yang Anda ikuti dalam beberapa jam %lld terakhir"
+            "value" : "Feed Panas menampilkan kiriman yang paling disukai atau diposkan ulang oleh orang yang Anda ikuti dalam beberapa jam %lld terakhir"
           }
         },
         "nl" : {
@@ -30139,7 +31243,20 @@
       }
     },
     "The report does not identify its target." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La denuncia no identifica su objetivo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laporan tidak menyebutkan targetnya."
+          }
+        }
+      }
     },
     "The selected account could not be found. It may have been removed." : {
       "localizations" : {
@@ -30222,7 +31339,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El feed Zapped muestra publicaciones de cualquiera que recibieron más zap de las personas que sigues en las últimas %lld horas"
+            "value" : "El feed Zapped muestra las publicaciones que han recibido más zaps de las personas que sigues durante las últimas %lld horas"
           }
         },
         "id" : {
@@ -30307,7 +31424,20 @@
       }
     },
     "These blocks are visible to everyone." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estos bloqueos son visibles para todo el mundo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokir ini dapat dilihat semua orang."
+          }
+        }
+      }
     },
     "These relays are used for all accounts, and are not announced unless configured on the account specific settings." : {
       "extractionState" : "stale",
@@ -30321,7 +31451,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "relays ini digunakan untuk semua akun, dan tidak diumumkan kecuali dikonfigurasi pada pengaturan khusus akun."
+            "value" : "relay ini digunakan untuk semua akun, dan tidak diumumkan kecuali dikonfigurasi pada pengaturan khusus akun."
           }
         },
         "nl" : {
@@ -30344,7 +31474,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "relays ini digunakan untuk semua akun, dan tidak dipublikasikan kecuali dikonfigurasi pada tab khusus akun."
+            "value" : "relay ini digunakan untuk semua akun, dan tidak dipublikasikan kecuali dikonfigurasi pada tab khusus akun."
           }
         },
         "nl" : {
@@ -30366,7 +31496,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "relays ini digunakan untuk semua akun Anda, dan tidak diumumkan kecuali dikonfigurasi pada tab khusus akun."
+            "value" : "relay ini digunakan untuk semua akun Anda, dan tidak diumumkan kecuali dikonfigurasi pada tab khusus akun."
           }
         },
         "nl" : {
@@ -30388,7 +31518,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Langkah-langkah ini membantu Anda memberi tahu orang lain di relays mana mereka dapat menemukan postingan %@ dan relays mana yang harus digunakan orang lain untuk mencapai %@."
+            "value" : "Langkah-langkah ini membantu Anda memberi tahu orang lain di relay mana mereka dapat menemukan postingan %@ dan relay mana yang harus digunakan orang lain untuk mencapai %@."
           }
         },
         "nl" : {
@@ -30400,10 +31530,36 @@
       }
     },
     "This account cannot create a private list on this device." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta cuenta no puede crear una lista privada en este dispositivo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akun ini tidak dapat membuat daftar privat di perangkat ini."
+          }
+        }
+      }
     },
     "This account does not appear to have a saved block list yet." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parece que esta cuenta todavía no tiene una lista de bloqueos guardada."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akun ini tampaknya belum memiliki daftar blokir tersimpan."
+          }
+        }
+      }
     },
     "This article has been updated" : {
       "comment" : "Message shown when there is a newer version available of an article",
@@ -30514,6 +31670,13 @@
             "value" : "Dit kan worden veroorzaakt door een gewijzigd lightning-adres van de ontvanger"
           }
         }
+      }
+    },
+    "This event link is invalid." : {
+      "comment" : "Error shown when a pasted nevent identifier cannot be parsed",
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este enlace de evento no es válido." } },
+        "id" : { "stringUnit" : { "state" : "translated", "value" : "Tautan event ini tidak valid." } }
       }
     },
     "This gives more screen space when scrolling" : {
@@ -30725,13 +31888,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esta respuesta se publica desde una nueva identidad única que no está vinculada a ninguna de sus cuentas. Es desechable: no puedes editarlo, eliminarlo, deshacerlo ni responder nuevamente con esta identidad. Relays aún puede ver su dirección IP y su estilo de escritura puede identificarlo."
+            "value" : "Esta respuesta se publica desde una identidad nueva y de un solo uso que no está vinculada a ninguna de tus cuentas. No podrás editarla, eliminarla, deshacerla ni volver a responder con esta identidad. Los relays aún pueden ver tu dirección IP y tu forma de escribir podría identificarte."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Balasan ini dikirim dari identitas baru yang tidak tertaut ke akun Anda. Ini hanya sekali pakai — Anda tidak dapat mengedit, menghapus, membatalkan, atau membalas lagi dengan identitas ini. Relays masih dapat melihat alamat IP Anda, dan gaya penulisan Anda mungkin mengidentifikasi Anda."
+            "value" : "Balasan ini dikirim dari identitas baru yang tidak tertaut ke akun Anda. Ini hanya sekali pakai — Anda tidak dapat mengedit, menghapus, membatalkan, atau membalas lagi dengan identitas ini. Relay masih dapat melihat alamat IP Anda, dan gaya penulisan Anda mungkin mengidentifikasi Anda."
           }
         }
       }
@@ -30748,7 +31911,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ini akan **menghapus**:\n - Akun dari Nostur\n - Kunci pribadi (nsec) dari Apple Keychain"
+            "value" : "Ini akan **menghapus**:\n - Akun dari Nostur\n - Kunci privat (nsec) dari Apple Keychain"
           }
         },
         "nl" : {
@@ -30816,7 +31979,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Benang"
+            "value" : "Utas"
           }
         },
         "nl" : {
@@ -31075,13 +32238,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tiempo de espera mientras se carga alimentación caliente"
+            "value" : "Tiempo de espera agotado al cargar el feed Popular"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Waktu habis saat memuat umpan panas"
+            "value" : "Waktu habis saat memuat feed panas"
           }
         },
         "nl" : {
@@ -31097,7 +32260,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tiempo de espera mientras se carga la transmisión de transmisiones en vivo"
+            "value" : "Tiempo de espera agotado al cargar el feed de emisiones en directo"
           }
         },
         "id" : {
@@ -31389,7 +32552,20 @@
       }
     },
     "Total after combining" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total después de combinar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total setelah digabungkan"
+          }
+        }
+      }
     },
     "Total: %lld" : {
       "localizations" : {
@@ -31576,7 +32752,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mencoba lebih banyak relays..."
+            "value" : "Mencoba lebih banyak relay..."
           }
         },
         "nl" : {
@@ -31593,13 +32769,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apágalo para ahorrar batería y confía en el relays para la autenticidad de los mensajes."
+            "value" : "Desactívalo para ahorrar batería y confiar en los relays para verificar la autenticidad de los mensajes"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Matikan untuk menghemat masa pakai baterai dan percayakan relays untuk keaslian pesan"
+            "value" : "Matikan untuk menghemat masa pakai baterai dan percayakan relay untuk keaslian pesan"
           }
         },
         "nl" : {
@@ -31852,6 +33028,18 @@
     },
     "Unable to fetch reposted post" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido obtener la publicación republicada"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat mengambil postingan ulang"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -32168,13 +33356,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dejar de silenciar"
+            "value" : "Reactivar"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Membunyikan"
+            "value" : "Aktifkan suara"
           }
         },
         "nl" : {
@@ -32234,13 +33422,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Desprender"
+            "value" : "Desfijar"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Membuka peniti"
+            "value" : "Lepas sematan"
           }
         },
         "nl" : {
@@ -32459,13 +33647,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Actualice sus DM publicando en qué relays desea recibir DM.\n\nEsto le permite utilizar un formato de mensajería más privado (NIP-17).\n\nOtras personas que no hayan actualizado aún pueden comunicarse con usted utilizando el formato anterior (NIP-04)."
+            "value" : "Mejora tus mensajes directos publicando los relays en los que quieres recibirlos.\n\nEsto te permite usar un formato de mensajería más privado (NIP-17).\n\nQuienes aún no hayan actualizado podrán seguir comunicándose contigo mediante el formato anterior (NIP-04)."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tingkatkan DM Anda dengan memublikasikan relays mana yang ingin Anda terima DM.\n\nHal ini memungkinkan Anda untuk menggunakan format pesan yang lebih pribadi (NIP-17).\n\nOrang lain yang belum melakukan upgrade masih dapat berkomunikasi dengan Anda menggunakan format lama (NIP-04)."
+            "value" : "Tingkatkan DM Anda dengan memublikasikan relay mana yang ingin Anda terima DM.\n\nHal ini memungkinkan Anda untuk menggunakan format pesan yang lebih pribadi (NIP-17).\n\nOrang lain yang belum melakukan upgrade masih dapat berkomunikasi dengan Anda menggunakan format lama (NIP-04)."
           }
         },
         "nl" : {
@@ -32570,13 +33758,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Utilice relays adicional de los contactos en este feed para buscar publicaciones"
+            "value" : "Usa relays adicionales de los contactos en este feed para buscar publicaciones"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gunakan relays tambahan dari kontak di feed ini untuk mengambil postingan"
+            "value" : "Gunakan relay tambahan dari kontak di feed ini untuk mengambil postingan"
           }
         },
         "nl" : {
@@ -32660,7 +33848,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Utilice relay para buscar publicaciones"
+            "value" : "Usa relay para buscar publicaciones"
           }
         },
         "id" : {
@@ -32700,7 +33888,20 @@
       }
     },
     "Used when everyone on selected relays is selected. Blocked accounts and muted content are always hidden." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se usa cuando se selecciona a todo el mundo en los relays elegidos. Las cuentas bloqueadas y el contenido silenciado siempre permanecen ocultos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digunakan saat semua orang di relay yang dipilih disertakan. Akun yang diblokir dan konten yang dibisukan selalu disembunyikan."
+          }
+        }
+      }
     },
     "User does not have a lightning address set" : {
       "localizations" : {
@@ -32721,6 +33922,18 @@
     },
     "User's media can be found on:" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El contenido multimedia del usuario está en:"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media pengguna dapat ditemukan di:"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -32978,6 +34191,18 @@
     },
     "Visibility" : {
       "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visibilidad"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visibilitas"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -33013,13 +34238,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configuración de la fuente de mensajes de voz"
+            "value" : "Ajustes del feed de mensajes de voz"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pengaturan umpan Pesan Suara"
+            "value" : "Pengaturan feed Pesan Suara"
           }
         },
         "nl" : {
@@ -33079,13 +34304,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Los mensajes de voz provienen de las personas que sigues"
+            "value" : "Feed de mensajes de voz de las personas que sigues"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umpan Pesan Suara dari orang yang Anda ikuti"
+            "value" : "Feed Pesan Suara dari orang yang Anda ikuti"
           }
         },
         "nl" : {
@@ -33265,7 +34490,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pekan"
+            "value" : "Minggu"
           }
         },
         "nl" : {
@@ -33485,13 +34710,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¿Qué relays deberían usar otros para buscar publicaciones para la cuenta: %@? (elija 3 máximo)"
+            "value" : "¿Qué relays deberían usar otros para buscar publicaciones para la cuenta: %@? (elige 3 máximo)"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "relays mana yang harus digunakan orang lain untuk menemukan postingan untuk akun: %@? (pilih maks 3)"
+            "value" : "relay mana yang harus digunakan orang lain untuk menemukan postingan untuk akun: %@? (pilih maks 3)"
           }
         },
         "nl" : {
@@ -33507,13 +34732,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¿Qué relays deberían usar otros para acceder a la cuenta: %@? (elija 3 máximo)"
+            "value" : "¿Qué relays deberían usar otros para acceder a la cuenta: %@? (elige 3 máximo)"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "relays mana yang harus digunakan orang lain untuk mencapai akun: %@? (pilih maks 3)"
+            "value" : "relay mana yang harus digunakan orang lain untuk mencapai akun: %@? (pilih maks 3)"
           }
         },
         "nl" : {
@@ -33529,13 +34754,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¿Qué relays deberían usar otros para enviar mensajes privados a %@? (elija 3 máximo)"
+            "value" : "¿Qué relays deberían usar otros para enviar mensajes privados a %@? (elige 3 máximo)"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "relays mana yang harus digunakan orang lain untuk mengirim pesan pribadi ke %@? (pilih maks 3)"
+            "value" : "relay mana yang harus digunakan orang lain untuk mengirim pesan pribadi ke %@? (pilih maks 3)"
           }
         },
         "nl" : {
@@ -33938,7 +35163,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anda menggunakan akun hanya-baca.\n\nBeralih ke akun lain atau tambahkan kunci pribadi untuk menggunakan akun ini sepenuhnya."
+            "value" : "Anda menggunakan akun hanya-baca.\n\nBeralih ke akun lain atau tambahkan kunci privat untuk menggunakan akun ini sepenuhnya."
           }
         },
         "nl" : {
@@ -34132,13 +35357,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Su clave privada controla su cuenta. Nunca lo compartas con nadie. Cualquier persona con esta clave puede acceder completamente a su cuenta y publicar como usted."
+            "value" : "Tu clave privada controla tu cuenta. No la compartas nunca. Cualquiera que tenga esta clave podrá acceder por completo a tu cuenta y publicar en tu nombre."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kunci pribadi Anda mengontrol akun Anda. Jangan pernah membaginya dengan siapa pun. Siapa pun yang memiliki kunci ini dapat mengakses sepenuhnya akun Anda dan memposting sebagai Anda."
+            "value" : "Kunci privat Anda mengontrol akun Anda. Jangan pernah membaginya dengan siapa pun. Siapa pun yang memiliki kunci ini dapat mengakses sepenuhnya akun Anda dan memposting sebagai Anda."
           }
         },
         "nl" : {
@@ -34406,7 +35631,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zap"
+            "value" : "Zaps"
           }
         },
         "id" : {
