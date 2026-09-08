@@ -159,6 +159,154 @@ final class NXFeedIndexMappingTests: XCTestCase {
         )
     }
 
+    func testAnchorIndexShiftedDetectsInsertAndRemoveAbove() {
+        let oldIDs = ["a", "b", "c"]
+
+        XCTAssertTrue(
+            NXFeedIndexMapping.anchorIndexShifted(
+                oldIDs: oldIDs,
+                newIDs: ["n1", "a", "b", "c"],
+                anchorID: "b"
+            )
+        )
+        XCTAssertTrue(
+            NXFeedIndexMapping.anchorIndexShifted(
+                oldIDs: ["n1", "a", "b", "c"],
+                newIDs: oldIDs,
+                anchorID: "b"
+            )
+        )
+        XCTAssertFalse(
+            NXFeedIndexMapping.anchorIndexShifted(
+                oldIDs: oldIDs,
+                newIDs: oldIDs,
+                anchorID: "b"
+            )
+        )
+        XCTAssertFalse(
+            NXFeedIndexMapping.anchorIndexShifted(
+                oldIDs: oldIDs,
+                newIDs: ["a", "b"],
+                anchorID: "missing"
+            )
+        )
+    }
+
+    func testAlreadySeenBannerInSameSectionIsNotAPost() {
+        let sectionCounts = [22]
+        let itemCount = 20
+        let leading = 1
+
+        XCTAssertNil(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 0, section: 0),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            )
+        )
+        XCTAssertEqual(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 1, section: 0),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            ),
+            0
+        )
+        XCTAssertEqual(
+            NXFeedIndexMapping.indexPath(
+                forItemIndex: 0,
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            ),
+            IndexPath(item: 1, section: 0)
+        )
+        XCTAssertNil(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 21, section: 0),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            )
+        )
+    }
+
+    func testAlreadySeenBannerAsOwnSectionThenPosts() {
+        let sectionCounts = [1, 20]
+        let itemCount = 20
+        let leading = 1
+
+        XCTAssertNil(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 0, section: 0),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            )
+        )
+        XCTAssertEqual(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 0, section: 1),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            ),
+            0
+        )
+        XCTAssertEqual(
+            NXFeedIndexMapping.indexPath(
+                forItemIndex: 0,
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            ),
+            IndexPath(item: 0, section: 1)
+        )
+    }
+
+    func testOneItemPerSectionSkipsAlreadySeenBanner() {
+        let sectionCounts = Array(repeating: 1, count: 14)
+        let itemCount = 12
+        let leading = 1
+
+        XCTAssertNil(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 0, section: 0),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            )
+        )
+        XCTAssertEqual(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 0, section: 1),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            ),
+            0
+        )
+        XCTAssertEqual(
+            NXFeedIndexMapping.indexPath(
+                forItemIndex: 11,
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            ),
+            IndexPath(item: 0, section: 12)
+        )
+        XCTAssertNil(
+            NXFeedIndexMapping.itemIndex(
+                for: IndexPath(item: 0, section: 13),
+                sectionCounts: sectionCounts,
+                itemCount: itemCount,
+                leadingNonPostRows: leading
+            )
+        )
+    }
+
     func testOffsetFromVisibleTopIsIndependentOfTopInset() {
         let atTopWithoutBanner = NXFeedViewport.offsetFromVisibleTop(
             itemMinY: 0,

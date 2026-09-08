@@ -66,6 +66,97 @@ final class NXFeedViewportTests: XCTestCase {
         )
     }
 
+    func testParkedSettlePinsParkedEvenWhenLiveVisibleDiffers() {
+        let parked = NXFeedPark.Post(id: "355a0eb9-restored", visibleTopOffset: 0)
+        let live = NXFeedPark.Post(id: "c93fb328-neighbor", visibleTopOffset: 0)
+
+        XCTAssertEqual(
+            NXFeedPark.settleTarget(
+                parked: parked,
+                newIDs: ["c93fb328-neighbor", "355a0eb9-restored"],
+                live: live
+            ),
+            .pin(parked)
+        )
+    }
+
+    func testParkedSettleRetargetsWhenParkedIdWasRemoved() {
+        let parked = NXFeedPark.Post(id: "removed", visibleTopOffset: 0)
+        let live = NXFeedPark.Post(id: "c93fb328-neighbor", visibleTopOffset: 0)
+
+        XCTAssertEqual(
+            NXFeedPark.settleTarget(
+                parked: parked,
+                newIDs: ["c93fb328-neighbor", "other"],
+                live: live
+            ),
+            .retarget(live)
+        )
+    }
+
+    func testParkedSettleSkipsWhenParkedUnsetAndNoLiveVisible() {
+        XCTAssertEqual(
+            NXFeedPark.settleTarget(parked: nil, newIDs: ["a"], live: nil),
+            .skip
+        )
+    }
+
+    func testParkedSettleDoesNotChaseStaleIdWhenParkedWasNeverSet() {
+        let live = NXFeedPark.Post(id: "c93fb328-neighbor", visibleTopOffset: 0)
+        XCTAssertEqual(
+            NXFeedPark.settleTarget(
+                parked: nil,
+                newIDs: ["c93fb328-neighbor"],
+                live: live
+            ),
+            .retarget(live)
+        )
+    }
+
+    func testRestoreDoesNotCompleteUntilLiveTopMatchesParked() {
+        XCTAssertFalse(
+            NXFeedPark.shouldCompleteRestore(parkedID: "saved", liveVisibleID: nil)
+        )
+        XCTAssertFalse(
+            NXFeedPark.shouldCompleteRestore(parkedID: "saved", liveVisibleID: "other")
+        )
+        XCTAssertTrue(
+            NXFeedPark.shouldCompleteRestore(parkedID: "saved", liveVisibleID: "saved")
+        )
+        XCTAssertFalse(
+            NXFeedPark.shouldCompleteRestore(parkedID: nil, liveVisibleID: "saved")
+        )
+    }
+
+    func testUnreadPostAnimationPinIsCoveredOnlyWhenItWouldSnap() {
+        XCTAssertFalse(
+            NXUnreadNavigation.shouldCoverPostAnimationCorrection(misalignment: 1.0)
+        )
+        XCTAssertFalse(
+            NXUnreadNavigation.shouldCoverPostAnimationCorrection(misalignment: -1.4)
+        )
+        XCTAssertTrue(
+            NXUnreadNavigation.shouldCoverPostAnimationCorrection(misalignment: 8.0)
+        )
+        XCTAssertTrue(
+            NXUnreadNavigation.shouldCoverPostAnimationCorrection(misalignment: -40)
+        )
+        XCTAssertTrue(
+            NXUnreadNavigation.shouldCoverPostAnimationCorrection(
+                misalignment: 0.2,
+                rowHeight: 94,
+                frozeSelfSizing: true
+            )
+        )
+        XCTAssertFalse(
+            NXUnreadNavigation.shouldCoverPostAnimationCorrection(
+                misalignment: 0.2,
+                rowHeight: 320,
+                frozeSelfSizing: true
+            )
+        )
+    }
+
     func testUnreadNavigationUsesLiveViewportInsteadOfStaleReadingAnchorWhenIdle() {
         let start = NXUnreadNavigation.start(
             liveVisibleIndex: 12,
@@ -346,27 +437,13 @@ final class NXFeedViewportTests: XCTestCase {
         XCTAssertEqual(result.map(\.id), ["4", "3", "2", "new-page"])
     }
 
-    func testLiveScrollViewAtTopIgnoresUnfinishedRestoreAfterExpiry() {
-        XCTAssertTrue(
-            NXFeedViewport.isActuallyAtTop(
-                hasLiveScrollView: true,
-                contentOffsetY: -47,
-                insetTop: 47,
-                isPreparingRestore: true,
-                restoreExpired: true,
-                fallbackIsAtTop: false
-            )
-        )
-    }
-
-    func testInProgressRestoreIsNotTreatedAsAtTop() {
+    func testUnfinishedRestoreIsNeverTreatedAsAtTop() {
         XCTAssertFalse(
             NXFeedViewport.isActuallyAtTop(
                 hasLiveScrollView: true,
                 contentOffsetY: -47,
                 insetTop: 47,
                 isPreparingRestore: true,
-                restoreExpired: false,
                 fallbackIsAtTop: true
             )
         )
@@ -379,7 +456,6 @@ final class NXFeedViewportTests: XCTestCase {
                 contentOffsetY: -47,
                 insetTop: 47,
                 isPreparingRestore: false,
-                restoreExpired: false,
                 fallbackIsAtTop: false
             )
         )
@@ -389,7 +465,6 @@ final class NXFeedViewportTests: XCTestCase {
                 contentOffsetY: 420,
                 insetTop: 47,
                 isPreparingRestore: false,
-                restoreExpired: false,
                 fallbackIsAtTop: true
             )
         )
@@ -402,9 +477,108 @@ final class NXFeedViewportTests: XCTestCase {
                 contentOffsetY: 0,
                 insetTop: 0,
                 isPreparingRestore: false,
-                restoreExpired: false,
                 fallbackIsAtTop: false
             )
+        )
+    }
+
+    func testUnreadRegionRemovesOffscreenReadRowsAboveReadingPost() {
+        XCTAssertEqual(
+            NXUnreadRegion.postIDsToRemove(
+                postIDs: ["new", "read-a", "read-b", "reading", "older"],
+                unreadCount: { id in
+                    ["new": 1, "read-a": 0, "read-b": 0, "reading": 0, "older": 0][id, default: 0]
+                },
+                readingPostID: "reading",
+                visiblePostIDs: ["reading"]
+            ),
+            ["read-a", "read-b"]
+        )
+    }
+
+    func testUnreadRegionKeepsVisibleAndUnreadRows() {
+        XCTAssertEqual(
+            NXUnreadRegion.postIDsToRemove(
+                postIDs: ["unread", "peeking", "reading"],
+                unreadCount: { id in
+                    ["unread": 1, "peeking": 0, "reading": 0][id, default: 0]
+                },
+                readingPostID: "reading",
+                visiblePostIDs: ["peeking", "reading"]
+            ),
+            []
+        )
+    }
+
+    func testUnreadRegionDoesNotCompactWithoutAReadingPost() {
+        XCTAssertTrue(
+            NXUnreadRegion.postIDsToRemove(
+                postIDs: ["a", "b"],
+                unreadCount: { _ in 0 },
+                readingPostID: nil,
+                visiblePostIDs: []
+            ).isEmpty
+        )
+    }
+
+    func testAppearOnceIgnoresRowsAboveTheTopEdge() {
+        XCTAssertFalse(
+            NXUnreadAppearance.shouldConsumeAppearance(
+                appearedID: "above",
+                postIDs: ["above", "top", "below"],
+                topEdgeID: "top",
+                readingID: "top",
+                holdUnreadAboveReadingPost: false,
+                visibleIDs: ["above", "top"],
+                isPreparingRestore: false,
+                isPerformingScroll: false,
+                isPerformingUnreadScroll: false
+            )
+        )
+        XCTAssertTrue(
+            NXUnreadAppearance.shouldConsumeAppearance(
+                appearedID: "top",
+                postIDs: ["above", "top", "below"],
+                topEdgeID: "top",
+                readingID: "top",
+                holdUnreadAboveReadingPost: false,
+                visibleIDs: ["top"],
+                isPreparingRestore: false,
+                isPerformingScroll: false,
+                isPerformingUnreadScroll: false
+            )
+        )
+    }
+
+    func testAppearOnceIgnoresRestorePaint() {
+        XCTAssertFalse(
+            NXUnreadAppearance.shouldConsumeAppearance(
+                appearedID: "newest",
+                postIDs: ["newest", "saved"],
+                topEdgeID: "newest",
+                readingID: nil,
+                holdUnreadAboveReadingPost: true,
+                visibleIDs: ["newest"],
+                isPreparingRestore: true,
+                isPerformingScroll: false,
+                isPerformingUnreadScroll: false
+            )
+        )
+    }
+
+    func testViewportCoverIncludesUnreadRemovals() {
+        XCTAssertTrue(
+            NXFeedViewport.shouldCoverViewport(
+                updateReasons: [NXFeedViewport.unreadRemovalCoverReason]
+            )
+        )
+        XCTAssertTrue(
+            NXFeedViewport.shouldCoverViewport(
+                updateReasons: [NXFeedViewport.prependCoverReason]
+            )
+        )
+        XCTAssertFalse(
+            NXFeedViewport.shouldCoverViewport(updateReasons: ["older posts append"])
         )
     }
 }

@@ -33,11 +33,10 @@ struct NXListRow<Content: View>: View {
         // Keep tracking in an overlay so removing it does not recreate the post/image subtree.
         if #available(iOS 16.0, *) {
             Color.clear
-                .onGeometryChange(for: Bool.self) { proxy in
-                    let frame = proxy.frame(in: .global)
-                    return (frame.minY - containerTopOffset) > -25
-                } action: { isVisible in
-                    guard !didAppearOnce && isVisible else { return }
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.frame(in: .global).minY - containerTopOffset
+                } action: { offset in
+                    guard !didAppearOnce, offset > -25 else { return }
                     if vm.handleAppearOnce(nrPost: nrPost) {
                         didAppearOnce = true
                     }

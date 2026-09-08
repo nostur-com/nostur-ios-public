@@ -16,6 +16,11 @@ enum NXUnreadNavigation {
         let source: String
     }
 
+    static let pinTolerance: CGFloat = 1.5
+    /// List estimated rows sit near `defaultMinListRowHeight` (~50–100pt).
+    /// Real posts are much taller; those still-estimated landings need a cover.
+    static let estimatedRowHeightThreshold: CGFloat = 140
+
     static func start(
         liveVisibleIndex: Int?,
         readingIndex: Int?,
@@ -33,6 +38,20 @@ enum NXUnreadNavigation {
             return Start(index: fallbackVisibleIndex, source: "visible fallback")
         }
         return Start(index: postCount, source: "feed-end fallback")
+    }
+
+    /// After the unread animation lands, cover a pin that would snap, or a still-
+    /// estimated row whose real height would pop when self-sizing is re-enabled.
+    static func shouldCoverPostAnimationCorrection(
+        misalignment: CGFloat,
+        rowHeight: CGFloat? = nil,
+        frozeSelfSizing: Bool = false
+    ) -> Bool {
+        if abs(misalignment) > pinTolerance { return true }
+        if frozeSelfSizing, let rowHeight, rowHeight < estimatedRowHeightThreshold {
+            return true
+        }
+        return false
     }
 }
 
@@ -59,15 +78,17 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     private weak var scrollView: UIScrollView?
     private var itemIDs: [String] = []
+    private var leadingNonPostRowCount = 0
     private var pendingUpdates: [PendingUpdate] = []
     private var pendingPinByIdentity = false
     private var flushTask: Task<Void, Never>?
     private var settleTask: Task<Void, Never>?
     private var isProgrammaticScrollInProgress = false
     private var isSuspended = false
-    private var lastKnownAnchor: (id: String, visibleTopOffset: CGFloat)?
-    private var suspendedAnchor: (id: String, visibleTopOffset: CGFloat)?
-    private var pendingRestoreAnchor: (id: String, visibleTopOffset: CGFloat)?
+    private var parked: NXFeedPark.Post?
+    /// Last successful live top-edge sample. Never a settle fallback.
+    private var lastLive: NXFeedPark.Post?
+    private var suspendedAnchor: NXFeedPark.Post?
     private var anchorGeneration = 0
     private var lastContentOffsetY: CGFloat = 0
     private var lastInsetTop: CGFloat = 0
@@ -104,31 +125,40 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         if replaced {
             observeScrollGeometry(of: scrollView)
         }
-        guard replaced, !isSuspended, let anchor = pendingRestoreAnchor else { return }
+        guard replaced, !isSuspended, let parked else { return }
 #if DEBUG
         onDebugAction?(
-            "VIEW attach restore · \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset)) · \(viewportDebugSummary())"
+            "VIEW attach restore · \(shortID(parked.id)) @ \(String(format: "%.1f", parked.visibleTopOffset)) · \(viewportDebugSummary())"
         )
 #endif
-        pendingRestoreAnchor = nil
-        startSettling(anchor: anchor, extended: true, bringOnScreen: true)
+        startSettling(anchor: (parked.id, parked.visibleTopOffset), extended: true, bringOnScreen: true)
     }
 
-    func updateItemIDs(_ itemIDs: [String]) {
+    func updateItemIDs(_ itemIDs: [String], leadingNonPostRowCount: Int? = nil) {
         self.itemIDs = itemIDs
+        if let leadingNonPostRowCount {
+            self.leadingNonPostRowCount = leadingNonPostRowCount
+        }
     }
 
     func rememberAnchor(id: String, visibleTopOffset: CGFloat = 0) {
-        lastKnownAnchor = (id, visibleTopOffset)
+        parked = NXFeedPark.Post(id: id, visibleTopOffset: visibleTopOffset)
         if let scrollView {
             lastContentOffsetY = scrollView.contentOffset.y
             lastInsetTop = scrollView.adjustedContentInset.top
         }
     }
 
+    func isParkedLive() -> Bool {
+        NXFeedPark.shouldCompleteRestore(
+            parkedID: parked?.id,
+            liveVisibleID: liveVisiblePostID()
+        )
+    }
+
     func visiblePostID() -> String? {
-        guard let scrollView, scrollView.window != nil else { return lastKnownAnchor?.id }
-        return visibleAnchor(in: scrollView)?.id ?? lastKnownAnchor?.id
+        guard let scrollView, scrollView.window != nil else { return lastLive?.id ?? parked?.id }
+        return visibleAnchor(in: scrollView)?.id ?? lastLive?.id ?? parked?.id
     }
 
     /// The actual top-edge row currently reported by UIKit. Unlike `visiblePostID()`,
@@ -141,11 +171,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     /// Preserve reading position across tab/detail navigation. Row content can finish resolving
     /// while its List is hidden, when UIKit's visible-cell anchoring is not reliable.
     func suspendPositionTracking() {
-        if let scrollView {
-            suspendedAnchor = visibleAnchor(in: scrollView) ?? lastKnownAnchor ?? suspendedAnchor
-        } else {
-            suspendedAnchor = lastKnownAnchor ?? suspendedAnchor
+        if let scrollView, let live = visibleAnchor(in: scrollView) {
+            parked = NXFeedPark.Post(id: live.id, visibleTopOffset: live.visibleTopOffset)
         }
+        suspendedAnchor = parked ?? suspendedAnchor
         isSuspended = true
 #if DEBUG
         onDebugAction?("VIEW suspend pin · \(anchorSummary(in: scrollView))")
@@ -161,15 +190,16 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     func resumePositionTracking() {
         isSuspended = false
+        let anchor = suspendedAnchor ?? parked
+        suspendedAnchor = nil
 #if DEBUG
         onDebugAction?(
-            "VIEW resume pin · \(suspendedAnchor.map { "\(shortID($0.id)) @ \(String(format: "%.1f", $0.visibleTopOffset))" } ?? "none") · \(viewportDebugSummary())"
+            "VIEW resume pin · \(anchor.map { "\(shortID($0.id)) @ \(String(format: "%.1f", $0.visibleTopOffset))" } ?? "none") · \(viewportDebugSummary())"
         )
 #endif
-        guard let anchor = suspendedAnchor else { return }
-        suspendedAnchor = nil
-        lastKnownAnchor = anchor
-        startSettling(anchor: anchor, extended: true, bringOnScreen: true)
+        guard let anchor else { return }
+        parked = anchor
+        startSettling(anchor: (anchor.id, anchor.visibleTopOffset), extended: true, bringOnScreen: true)
     }
 
     func beginProgrammaticScroll() {
@@ -188,16 +218,15 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     /// Bottom inserts must not run a leftover prepend settle / restore pin.
     func cancelPendingSettle() {
 #if DEBUG
-        if settleTask != nil || pendingRestoreAnchor != nil {
+        if settleTask != nil || parked != nil {
             onDebugAction?(
-                "SETTLE cancelled · pin \(pendingRestoreAnchor.map { shortID($0.id) } ?? "none") · \(anchorSummary(in: scrollView))"
+                "SETTLE cancelled · pin \(parked.map { shortID($0.id) } ?? "none") · \(anchorSummary(in: scrollView))"
             )
         }
 #endif
         anchorGeneration += 1
         settleTask?.cancel()
         settleTask = nil
-        pendingRestoreAnchor = nil
         removePrependSnapshot()
         onPrependCoverEnded?()
     }
@@ -255,6 +284,122 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         isProgrammaticScrollInProgress = false
     }
 
+    /// Animated unread jump. Self-sizing is frozen so estimated row heights cannot
+    /// pop mid-flight. The follow-up pin is covered only when it would snap.
+    func animateItemToVisibleTop(id: String, indexPath: IndexPath, in scrollView: UIScrollView) async {
+        beginProgrammaticScroll()
+        rememberAnchor(id: id, visibleTopOffset: 0)
+
+        let collectionView = scrollView as? UICollectionView
+        var restoredSelfSizing: (() -> Void)?
+        if #available(iOS 16.0, *), let collectionView {
+            let previous = collectionView.selfSizingInvalidation
+            collectionView.selfSizingInvalidation = .disabled
+            restoredSelfSizing = { collectionView.selfSizingInvalidation = previous }
+        }
+
+        if let collectionView {
+            collectionView.scrollToItem(at: indexPath, at: .top, animated: true)
+        } else if let tableView = scrollView as? UITableView {
+            tableView.scrollToRow(at: indexPath, at: .top, animated: true)
+        }
+
+        var previousOffset: CGFloat?
+        var stableSamples = 0
+        for _ in 0..<40 {
+            if scrollView.isDragging || scrollView.isTracking {
+                restoredSelfSizing?()
+                isProgrammaticScrollInProgress = false
+                scheduleFlush()
+                return
+            }
+            let currentOffset = scrollView.contentOffset.y
+            if let previousOffset, abs(previousOffset - currentOffset) < 0.5 {
+                stableSamples += 1
+            } else {
+                stableSamples = 0
+            }
+            previousOffset = currentOffset
+            if stableSamples >= 3 { break }
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+
+        let frozeSelfSizing = restoredSelfSizing != nil
+        let misalignment = visibleTopMisalignment(for: id, in: scrollView) ?? .greatestFiniteMagnitude
+        let rowHeight = visibleRowHeight(for: id, in: scrollView)
+        let shouldCover = NXUnreadNavigation.shouldCoverPostAnimationCorrection(
+            misalignment: misalignment,
+            rowHeight: rowHeight,
+            frozeSelfSizing: frozeSelfSizing
+        )
+#if DEBUG
+        onDebugAction?(
+            String(
+                format: "UNREAD land · %@ · misalignment %.1f · %@",
+                shortID(id),
+                misalignment == .greatestFiniteMagnitude ? -1 : misalignment,
+                shouldCover ? "cover pin" : "clean"
+            )
+        )
+#endif
+
+        if shouldCover {
+            coverViewportForPrepend(in: scrollView)
+        }
+        restoredSelfSizing?()
+        UIView.performWithoutAnimation {
+            restore(anchor: (id, 0), in: scrollView, bringOnScreen: false)
+            scrollView.layoutIfNeeded()
+        }
+        if shouldCover {
+            var coveredStableSamples = 0
+            for _ in 0..<6 {
+                if scrollView.isDragging || scrollView.isTracking { break }
+                try? await Task.sleep(nanoseconds: 16_000_000)
+                let before = scrollView.contentOffset.y
+                UIView.performWithoutAnimation {
+                    restore(anchor: (id, 0), in: scrollView, bringOnScreen: false)
+                    scrollView.layoutIfNeeded()
+                }
+                if abs(scrollView.contentOffset.y - before) > 0.5 {
+                    coveredStableSamples = 0
+                } else {
+                    coveredStableSamples += 1
+                    if coveredStableSamples >= 2 { break }
+                }
+            }
+            await Task.yield()
+            removePrependSnapshot()
+        }
+
+        isProgrammaticScrollInProgress = false
+        scheduleFlush()
+    }
+
+    private func visibleTopMisalignment(for id: String, in scrollView: UIScrollView) -> CGFloat? {
+        guard let frame = visibleRowFrame(for: id, in: scrollView) else { return nil }
+        return NXFeedViewport.offsetFromVisibleTop(
+            itemMinY: frame.minY,
+            contentOffsetY: scrollView.contentOffset.y,
+            insetTop: scrollView.adjustedContentInset.top
+        )
+    }
+
+    private func visibleRowHeight(for id: String, in scrollView: UIScrollView) -> CGFloat? {
+        visibleRowFrame(for: id, in: scrollView)?.height
+    }
+
+    private func visibleRowFrame(for id: String, in scrollView: UIScrollView) -> CGRect? {
+        guard let itemIndex = itemIDs.firstIndex(of: id),
+              let indexPath = NXFeedIndexMapping.indexPath(
+                forItemIndex: itemIndex,
+                sectionCounts: sectionCounts(in: scrollView),
+                itemCount: itemIDs.count,
+                leadingNonPostRows: leadingNonPostRowCount
+              ) else { return nil }
+        return itemFrame(at: indexPath, in: scrollView)
+    }
+
     /// Pins `id` to the visible top. No-ops when it is already there so an unread
     /// animation that landed correctly is not followed by a second scrollToItem jump.
     func pinItemToVisibleTop(id: String) {
@@ -268,7 +413,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
               let indexPath = NXFeedIndexMapping.indexPath(
                 forItemIndex: itemIndex,
                 sectionCounts: sectionCounts(in: scrollView),
-                itemCount: itemIDs.count
+                itemCount: itemIDs.count,
+                leadingNonPostRows: leadingNonPostRowCount
               ) else {
             restore(anchor: (id, 0), in: scrollView, bringOnScreen: true)
             return
@@ -306,10 +452,9 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard let scrollView, scrollView.window != nil else {
 #if DEBUG
             onDebugAction?(
-                "PIN skipped · no window · \(reason) · pending \(lastKnownAnchor.map { shortID($0.id) } ?? "none")"
+                "PIN skipped · no window · \(reason) · parked \(parked.map { shortID($0.id) } ?? "none")"
             )
 #endif
-            pendingRestoreAnchor = lastKnownAnchor ?? pendingRestoreAnchor
             update()
             return
         }
@@ -365,15 +510,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard !updates.isEmpty else { return }
 
         let oldIDs = itemIDs
-        let capturedAnchor = (scrollView.flatMap { visibleAnchor(in: $0) })
-            ?? lastKnownAnchor
-            ?? pendingRestoreAnchor
+        let parkedBefore = parked
 
         // Photograph the current (correct) viewport before an unanimated
         // mid-feed prepend paints the wrong post at the top. Skip when a
         // restore overlay is already hiding the list — a second cover on the
         // window would show the unrestored top, then lift before the overlay.
-        if NXFeedViewport.shouldCoverPrepend(updateReasons: updates.map(\.reason)),
+        if NXFeedViewport.shouldCoverViewport(updateReasons: updates.map(\.reason)),
            shouldSkipPrependSnapshot?() != true,
            let scrollView {
             coverViewportForPrepend(in: scrollView)
@@ -391,50 +534,55 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         }
 #endif
 
-        let insertedAbove = capturedAnchor.map {
-            NXFeedIndexMapping.itemsInsertedAbove(oldIDs: oldIDs, newIDs: itemIDs, anchorID: $0.id)
-        } ?? false
-        let needsExtendedSettling = pinByIdentity || insertedAbove
+        let live = scrollView.flatMap { visibleAnchor(in: $0) }.map {
+            NXFeedPark.Post(id: $0.id, visibleTopOffset: $0.visibleTopOffset)
+        }
+        let target = NXFeedPark.settleTarget(
+            parked: parkedBefore,
+            newIDs: itemIDs,
+            live: live
+        )
 
-        // Self-sizing row changes do not alter feed identity. UICollectionView/TableView
-        // already account for those layout changes; applying our own correction afterward
-        // can visibly move the feed a second time. Manual settling is reserved for an actual
-        // prepend (or an explicit identity pin), where UIKit cannot infer our intended anchor.
-        guard needsExtendedSettling else {
-            pendingRestoreAnchor = nil
-            removePrependSnapshot()
-            if let currentAnchor = scrollView.flatMap({ visibleAnchor(in: $0) }) {
-                lastKnownAnchor = currentAnchor
-            }
+        switch target {
+        case .pin(let post):
+            parked = post
+            let shifted = parkedBefore.map {
+                NXFeedIndexMapping.anchorIndexShifted(oldIDs: oldIDs, newIDs: itemIDs, anchorID: $0.id)
+            } ?? false
+            let needsExtendedSettling = pinByIdentity || shifted
+            guard needsExtendedSettling else {
+                removePrependSnapshot()
 #if DEBUG
-            let reasons = updates.map(\.reason).uniqued().joined(separator: ", ")
+                let reasons = updates.map(\.reason).uniqued().joined(separator: ", ")
+                onDebugAction?(
+                    "applied \(reasons) · pin parked \(shortID(post.id)) · UIKit owns viewport · \(anchorSummary(in: scrollView))"
+                )
+#endif
+                return
+            }
+            guard let scrollView, scrollView.window != nil else {
+                removePrependSnapshot()
+                return
+            }
+            startSettling(
+                anchor: (post.id, post.visibleTopOffset),
+                extended: needsExtendedSettling,
+                bringOnScreen: pinByIdentity
+            )
+        case .retarget(let livePost):
+            parked = livePost
+            removePrependSnapshot()
+#if DEBUG
             onDebugAction?(
-                "applied \(reasons) · no manual correction · UIKit owns viewport · \(anchorSummary(in: scrollView))"
+                "parked retarget · \(shortID(livePost.id)) (previous id gone or unset) · \(anchorSummary(in: scrollView))"
             )
 #endif
-            return
-        }
-
-        guard let anchor = capturedAnchor else {
+        case .skip:
             removePrependSnapshot()
-            return
+#if DEBUG
+            onDebugAction?("parked skip settle · no live visible")
+#endif
         }
-        lastKnownAnchor = anchor
-
-        guard let scrollView, scrollView.window != nil else {
-            pendingRestoreAnchor = anchor
-            removePrependSnapshot()
-            return
-        }
-
-        // A normal prepend starts with the anchor already visible. Calling
-        // scrollToItem before SwiftUI's List has reconciled its new indices can
-        // target the old row at that index and jump backward several posts.
-        startSettling(
-            anchor: anchor,
-            extended: needsExtendedSettling,
-            bringOnScreen: pinByIdentity
-        )
     }
 
     private func startSettling(
@@ -445,8 +593,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         anchorGeneration += 1
         let generation = anchorGeneration
         settleTask?.cancel()
-        pendingRestoreAnchor = anchor
-        lastKnownAnchor = anchor
+        parked = NXFeedPark.Post(id: anchor.id, visibleTopOffset: anchor.visibleTopOffset)
 
         // Prepends need a few frames for estimated rows to self-size. Ordinary
         // image/repost height changes only need one or two offset corrections.
@@ -482,7 +629,6 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 }
 
                 if self.scrollView == nil || self.scrollView?.window == nil {
-                    self.pendingRestoreAnchor = anchor
                     self.endPrependSettle(generation: generation)
                     return
                 }
@@ -593,7 +739,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 
     private func anchorSummary(in scrollView: UIScrollView?) -> String {
-        let anchor = scrollView.flatMap { visibleAnchor(in: $0) } ?? lastKnownAnchor
+        let anchor = scrollView.flatMap { visibleAnchor(in: $0) } ?? parked.map { ($0.id, $0.visibleTopOffset) }
         let anchorText = anchor.map {
             "anchor \(shortID($0.id)) @ \(String(format: "%.1f", $0.visibleTopOffset))"
         } ?? "anchor none"
@@ -617,7 +763,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard let indexPath = NXFeedIndexMapping.indexPath(
             forItemIndex: itemIndex,
             sectionCounts: sectionCounts,
-            itemCount: itemIDs.count
+            itemCount: itemIDs.count,
+            leadingNonPostRows: leadingNonPostRowCount
         ) else { return false }
 
         if bringOnScreen {
@@ -686,7 +833,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard let itemIndex = NXFeedIndexMapping.itemIndex(
             for: anchor.0,
             sectionCounts: sectionCounts,
-            itemCount: itemIDs.count
+            itemCount: itemIDs.count,
+            leadingNonPostRows: leadingNonPostRowCount
         ),
               let id = itemIDs[safe: itemIndex] else { return nil }
         let visibleTopOffset = NXFeedViewport.offsetFromVisibleTop(
@@ -695,7 +843,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             insetTop: scrollView.adjustedContentInset.top
         )
         let resolved = (id, visibleTopOffset)
-        lastKnownAnchor = resolved
+        lastLive = NXFeedPark.Post(id: id, visibleTopOffset: visibleTopOffset)
         lastContentOffsetY = scrollView.contentOffset.y
         lastInsetTop = scrollView.adjustedContentInset.top
         return resolved
@@ -777,7 +925,6 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 
     private func endPrependSettle(generation: Int) {
-        pendingRestoreAnchor = nil
         guard anchorGeneration == generation else { return }
         scrollView?.layoutIfNeeded()
         // Let the settled offset present under the cover before lifting it.
@@ -829,6 +976,9 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         }
         if isFinger, newOffsetY > lastContentOffsetY + 8 {
             onUserScrolledTowardOlder?()
+        }
+        if isFinger, !isProgrammaticScrollInProgress, let live = visibleAnchor(in: scrollView) {
+            parked = NXFeedPark.Post(id: live.id, visibleTopOffset: live.visibleTopOffset)
         }
         lastContentOffsetY = newOffsetY
         lastInsetTop = scrollView.adjustedContentInset.top
@@ -1112,21 +1262,27 @@ struct NXPostsFeed: View {
         .scrollContentBackgroundHidden()
         .background(theme.listBackground)
         .onAppear {
-            vmInner.performAnchoredFeedUpdate = { [weak layoutStabilizer] reason, update in
+            vmInner.performAnchoredFeedUpdate = { [weak layoutStabilizer, weak vm] reason, update in
                 guard let layoutStabilizer else {
                     _ = update()
                     return
                 }
-                // Do not force pinByIdentity here. Cross-column unread removals would
-                // scrollToItem every other Mac column. Prepends still pin via itemsInsertedAbove.
+                // Pin by offset when the reading post's index shifts (insert or
+                // remove above it). Do not scrollToItem — that yanks other Mac columns.
                 layoutStabilizer.performAnchored(reason: reason) {
                     let itemIDs = update()
                     // Make the post-ID lookup deterministic for the correction pass rather than
                     // depending on SwiftUI's onChange delivery order after the List mutation.
-                    layoutStabilizer.updateItemIDs(itemIDs)
+                    layoutStabilizer.updateItemIDs(
+                        itemIDs,
+                        leadingNonPostRowCount: vm?.feedLeadingNonPostRowCount ?? 0
+                    )
                 }
             }
-            layoutStabilizer.updateItemIDs(posts.map(\.id))
+            layoutStabilizer.updateItemIDs(
+                posts.map(\.id),
+                leadingNonPostRowCount: vm.feedLeadingNonPostRowCount
+            )
             layoutStabilizer.onViewportChange = { [weak vmInner] in
                 vmInner?.updateIsAtTopSubject.send()
             }
@@ -1173,8 +1329,17 @@ struct NXPostsFeed: View {
         .onChange(of: posts.map(\.id)) { itemIDs in
             // The stabilizer must resolve anchors by post identity after insertions/removals.
             // Index paths are not stable when unread posts are inserted above the viewport.
-            layoutStabilizer.updateItemIDs(itemIDs)
+            layoutStabilizer.updateItemIDs(
+                itemIDs,
+                leadingNonPostRowCount: vm.feedLeadingNonPostRowCount
+            )
             attemptPendingRequestedScroll()
+        }
+        .onChange(of: vm.alreadySeenNewerCount) { _ in
+            layoutStabilizer.updateItemIDs(
+                posts.map(\.id),
+                leadingNonPostRowCount: vm.feedLeadingNonPostRowCount
+            )
         }
         .onChange(of: feedImageTargetSize) { newTargetSize in
             updatePrefetchImageTargetSize(newTargetSize)
@@ -1387,11 +1552,6 @@ struct NXPostsFeed: View {
     private func performScrollToIndex(_ scrollToIndex: Int) {
         // While we scroll to previous index here, we are triggering onPostAppearOnce(), which updates markAsRead
         // But it wasn't a real onPostAppearOnce, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
-        if shouldAbortLatePreparedRestore() {
-            vmInner.abortPreparedScrollRestore()
-            return
-        }
-
         vmInner.isPerformingScroll = true
         
         Task { @MainActor in
@@ -1423,18 +1583,12 @@ struct NXPostsFeed: View {
                 }
                 try? await Task.sleep(nanoseconds: 16_000_000)
             }
-            guard let scrollView = resolvedScrollView, let indexPath = resolvedIndexPath else {
+            guard resolvedScrollView != nil, let indexPath = resolvedIndexPath else {
                 vmInner.isPerformingScroll = false
                 vmInner.abortPreparedScrollRestore()
                 return
             }
 
-            if shouldAbortLatePreparedRestore(in: scrollView) {
-                vmInner.isPerformingScroll = false
-                vmInner.abortPreparedScrollRestore()
-                return
-            }
-            
             // Disable animations for smoother performance
             UIView.performWithoutAnimation {
                 if let collectionView = vm.collectionView {
@@ -1456,9 +1610,13 @@ struct NXPostsFeed: View {
             
             vmInner.clearScrollRequest()
 
-            // This is feed restoration, not unread navigation. Keep the established lightweight
-            // path so subsequent new-post insertion can preserve position with withAnimation.
-            try? await Task.sleep(nanoseconds: 100_000_000)
+            for _ in 0..<20 {
+                if layoutStabilizer.isParkedLive() { break }
+                if let rememberedID {
+                    layoutStabilizer.pinItemToVisibleTop(id: rememberedID)
+                }
+                try? await Task.sleep(nanoseconds: 16_000_000)
+            }
             if layoutStabilizer.hasActivePrependCover {
                 vm.delayRestoreRevealUntilPrependSettles = true
                 vmInner.finishPreparedScrollRestore(reveal: false)
@@ -1491,17 +1649,6 @@ struct NXPostsFeed: View {
         }
     }
 
-    private func shouldAbortLatePreparedRestore(in scrollView: UIScrollView? = nil) -> Bool {
-        guard vmInner.isPreparingForScrollRestore,
-              vmInner.isPreparedScrollRestoreExpired else { return false }
-        let scrollView = scrollView ?? vm.collectionView ?? vm.tableView
-        guard let scrollView, scrollView.window != nil else { return false }
-        return NXFeedViewport.isOffsetAtTop(
-            contentOffsetY: scrollView.contentOffset.y,
-            insetTop: scrollView.adjustedContentInset.top
-        )
-    }
-    
     private func scrollToIndex(_ scrollToIndex: Int) {
         vmInner.isPerformingScrollToFirstUnread = true
         let targetPost = posts[safe: scrollToIndex]
@@ -1509,23 +1656,24 @@ struct NXPostsFeed: View {
             layoutStabilizer.rememberAnchor(id: targetPost.id, visibleTopOffset: 0)
             vmInner.readingPostID = targetPost.id
         }
+        vmInner.isAtTop = scrollToIndex == 0
 
         let scrollView: UIScrollView? = vm.collectionView ?? vm.tableView
         let indexPath = scrollView.flatMap { feedIndexPath(for: scrollToIndex, in: $0) }
 
-        if #available(iOS 16.0, *), let collectionView = vm.collectionView, let indexPath {
-            layoutStabilizer.beginProgrammaticScroll()
-            collectionView.scrollToItem(at: indexPath, at: .top, animated: true)
-            vmInner.isAtTop = scrollToIndex == 0
-            finishUnreadScroll(targetPost: targetPost)
-        } else if let tableView = vm.tableView, let indexPath {
-            layoutStabilizer.beginProgrammaticScroll()
-            tableView.scrollToRow(at: indexPath, at: .top, animated: true)
-            vmInner.isAtTop = scrollToIndex == 0
-            finishUnreadScroll(targetPost: targetPost)
-        } else {
+        guard let scrollView, let indexPath, let targetPost else {
             vmInner.isPerformingScrollToFirstUnread = false
             layoutStabilizer.cancelProgrammaticScroll()
+            return
+        }
+
+        Task { @MainActor in
+            await layoutStabilizer.animateItemToVisibleTop(
+                id: targetPost.id,
+                indexPath: indexPath,
+                in: scrollView
+            )
+            finishUnreadScroll(targetPost: targetPost)
         }
     }
 
@@ -1554,70 +1702,31 @@ struct NXPostsFeed: View {
                 }
                 return []
             }(),
-            itemCount: posts.count
+            itemCount: posts.count,
+            leadingNonPostRows: vm.feedLeadingNonPostRowCount
         )
     }
 
     private func finishUnreadScroll(targetPost: NRPost?) {
-        Task { @MainActor in
-            // Animated scroll duration varies with distance. Wait for UIKit to actually finish,
-            // then correct once after any self-sizing rows encountered along the way have laid out.
-            var previousOffset: CGFloat?
-            var stableSamples = 0
-            for _ in 0..<40 {
-                let scrollView: UIScrollView? = vm.collectionView ?? vm.tableView
-                guard let scrollView else { break }
-                let currentOffset = scrollView.contentOffset.y
-                if let previousOffset, abs(previousOffset - currentOffset) < 0.5,
-                   !scrollView.isDragging, !scrollView.isDecelerating, !scrollView.isTracking {
-                    stableSamples += 1
-                } else {
-                    stableSamples = 0
-                }
-                previousOffset = currentOffset
-
-                // Programmatic animated scrolling does not consistently set isDecelerating.
-                // Requiring several stable presentation samples avoids interrupting its animation.
-                if stableSamples >= 3 {
-                    await layoutStabilizer.finishProgrammaticScroll {
-                        if let id = targetPost?.id {
-                            layoutStabilizer.pinItemToVisibleTop(id: id)
-                        }
-                    }
-                    break
-                }
-                try? await Task.sleep(nanoseconds: 50_000_000)
-            }
-            if layoutStabilizer.isProgrammaticScrollPending {
-                await layoutStabilizer.finishProgrammaticScroll {
-                    if let id = targetPost?.id {
-                        layoutStabilizer.pinItemToVisibleTop(id: id)
-                    }
-                }
-            }
-            if let targetPost {
+        if let targetPost {
 #if DEBUG
-                let landedID = layoutStabilizer.visiblePostID()
-                vm.recordFeedAction(
-                    "UNREAD settle · target \(targetPost.shortId) · landed \(landedID.map { String($0.prefix(8)) } ?? "none") · \(landedID == targetPost.id ? "match" : "MISMATCH")"
-                )
+            let landedID = layoutStabilizer.visiblePostID()
+            vm.recordFeedAction(
+                "UNREAD settle · target \(targetPost.shortId) · landed \(landedID.map { String($0.prefix(8)) } ?? "none") · \(landedID == targetPost.id ? "match" : "MISMATCH")"
+            )
 #endif
-                // Do not depend on onAppear here: List may reuse an already-visible row and never
-                // fire it again. Consume exactly the post selected by the unread index at tap time.
-                performIDCollectionUpdates(for: targetPost, vm: vm)
-                performUnreadMarkingUpdates(for: targetPost, vm: vm)
-            }
-            vmInner.isPerformingScrollToFirstUnread = false
-            vmInner.updateIsAtTopSubject.send()
+            // Do not depend on onAppear here: List may reuse an already-visible row and never
+            // fire it again. Consume exactly the post selected by the unread index at tap time.
+            performIDCollectionUpdates(for: targetPost, vm: vm)
+            performUnreadMarkingUpdates(for: targetPost, vm: vm)
         }
+        vmInner.isPerformingScrollToFirstUnread = false
+        vm.compactReadRowsAboveReadingPosition()
+        vmInner.updateIsAtTopSubject.send()
     }
 
     private func restorePreparedScrollPositionIfNeeded(in scrollView: UIScrollView) {
         guard vmInner.isPreparingForScrollRestore else { return }
-        if shouldAbortLatePreparedRestore(in: scrollView) {
-            vmInner.abortPreparedScrollRestore()
-            return
-        }
         let restorePostID = vmInner.pendingScrollToPostID ?? vmInner.readingPostID
         let restoreIndex = restorePostID.flatMap { postID in posts.firstIndex(where: { $0.id == postID }) }
             ?? vmInner.pendingScrollToIndex
@@ -1634,7 +1743,8 @@ struct NXPostsFeed: View {
         guard let indexPath = NXFeedIndexMapping.indexPath(
             forItemIndex: restoreIndex,
             sectionCounts: sectionCounts,
-            itemCount: posts.count
+            itemCount: posts.count,
+            leadingNonPostRows: vm.feedLeadingNonPostRowCount
         ) else { return }
 
         UIView.setAnimationsEnabled(false)
@@ -1805,4 +1915,5 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
     
     // Update UI immediately for responsiveness
     vmInner.updateIsAtTopSubject.send()
+    vm.compactReadRowsAboveReadingPosition()
 }

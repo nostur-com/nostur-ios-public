@@ -154,13 +154,10 @@ class NXColumnViewModelInner {
     public var isPreparingForScrollRestore = false
     public var pendingScrollToIndex: Int?
     public var pendingScrollToPostID: String?
-    public var scrollRestoreStartedAt: Date?
-    public static let scrollRestoreGraceInterval: TimeInterval = 0.5
-
-    public var isPreparedScrollRestoreExpired: Bool {
-        guard let scrollRestoreStartedAt else { return false }
-        return Date().timeIntervalSince(scrollRestoreStartedAt) > Self.scrollRestoreGraceInterval
-    }
+    /// Fired once when restore lands or is abandoned, so newer-post loads wait for the pin.
+    public var onRestoreCompleted: (() -> Void)?
+    private var restoreFailsafeTask: Task<Void, Never>?
+    public static let restoreFailsafeInterval: TimeInterval = 3
 
     /// Invoked when the restored List should be covered or revealed.
     public var onRestoreCoverChange: ((Bool) -> Void)?
@@ -169,30 +166,42 @@ class NXColumnViewModelInner {
         isPreparingForScrollRestore = true
         pendingScrollToIndex = index
         pendingScrollToPostID = postID
-        scrollRestoreStartedAt = Date()
+        readingPostID = postID
         onRestoreCoverChange?(true)
+        restoreFailsafeTask?.cancel()
+        restoreFailsafeTask = Task { @MainActor [weak self] in
+            let nanoseconds = UInt64(Self.restoreFailsafeInterval * 1_000_000_000)
+            try? await Task.sleep(nanoseconds: nanoseconds)
+            guard !Task.isCancelled, let self, self.isPreparingForScrollRestore else { return }
+            self.abortPreparedScrollRestore()
+        }
     }
 
     public func abortPreparedScrollRestore() {
+        endPreparedScrollRestore(reveal: true, clearPendingScroll: true)
+    }
+
+    public func finishPreparedScrollRestore(reveal: Bool = true) {
+        endPreparedScrollRestore(reveal: reveal, clearPendingScroll: false)
+    }
+
+    private func endPreparedScrollRestore(reveal: Bool, clearPendingScroll: Bool) {
+        restoreFailsafeTask?.cancel()
+        restoreFailsafeTask = nil
         let wasHiding = isPreparingForScrollRestore
         isPreparingForScrollRestore = false
         pendingScrollToIndex = nil
         pendingScrollToPostID = nil
-        scrollRestoreStartedAt = nil
-        clearScrollRequest()
-        if wasHiding {
+        if clearPendingScroll {
+            clearScrollRequest()
+            readingPostID = nil
+        }
+        if reveal && wasHiding {
             onRestoreCoverChange?(false)
         }
-    }
-
-    public func finishPreparedScrollRestore(reveal: Bool = true) {
-        isPreparingForScrollRestore = false
-        pendingScrollToIndex = nil
-        pendingScrollToPostID = nil
-        scrollRestoreStartedAt = nil
-        if reveal {
-            onRestoreCoverChange?(false)
-        }
+        let completed = onRestoreCompleted
+        onRestoreCompleted = nil
+        completed?()
     }
     /// Last post the user was parked on after restore or while reading mid-feed.
     /// Used so a later top-insert cannot be mistaken for "user is at the top".

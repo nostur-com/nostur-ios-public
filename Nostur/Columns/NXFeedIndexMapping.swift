@@ -10,70 +10,81 @@ import Foundation
 
 enum NXFeedIndexMapping {
     /// Maps a UIKit index path to a `ForEach` item index.
-    /// Prefers a section whose size matches the feed so a Mac List header row is not counted as a post.
-    static func itemIndex(for indexPath: IndexPath, sectionCounts: [Int], itemCount: Int) -> Int? {
+    ///
+    /// Extra List rows are skipped rather than counted as posts:
+    /// a Mac header section, an already-seen banner (`leadingNonPostRows`),
+    /// and trailing pagination / spinner rows.
+    static func itemIndex(
+        for indexPath: IndexPath,
+        sectionCounts: [Int],
+        itemCount: Int,
+        leadingNonPostRows: Int = 0
+    ) -> Int? {
         guard itemCount > 0, sectionCounts.indices.contains(indexPath.section) else { return nil }
         guard indexPath.item >= 0, indexPath.item < sectionCounts[indexPath.section] else { return nil }
 
-        if let contentSection = contentSection(sectionCounts: sectionCounts, itemCount: itemCount) {
-            guard indexPath.section == contentSection else { return nil }
-            return (0..<itemCount).contains(indexPath.item) ? indexPath.item : nil
-        }
-
-        if isOneItemPerSection(sectionCounts) {
-            var seen = 0
-            for section in 0...indexPath.section where sectionCounts[section] > 0 {
-                if section == indexPath.section {
-                    return (0..<itemCount).contains(seen) ? seen : nil
-                }
-                seen += 1
-            }
-            return nil
-        }
-
-        var index = 0
-        for section in 0..<indexPath.section {
-            index += sectionCounts[section]
-        }
-        index += indexPath.item
-        return (0..<itemCount).contains(index) ? index : nil
+        let cells = flattenedCells(sectionCounts)
+        guard let flatIndex = cells.firstIndex(where: {
+            $0.section == indexPath.section && $0.item == indexPath.item
+        }) else { return nil }
+        let postIndex = flatIndex - postStart(
+            sectionCounts: sectionCounts,
+            itemCount: itemCount,
+            leadingNonPostRows: leadingNonPostRows
+        )
+        return (0..<itemCount).contains(postIndex) ? postIndex : nil
     }
 
-    /// Inverse of `itemIndex(for:sectionCounts:itemCount:)`.
-    static func indexPath(forItemIndex itemIndex: Int, sectionCounts: [Int], itemCount: Int) -> IndexPath? {
+    /// Inverse of `itemIndex(for:sectionCounts:itemCount:leadingNonPostRows:)`.
+    static func indexPath(
+        forItemIndex itemIndex: Int,
+        sectionCounts: [Int],
+        itemCount: Int,
+        leadingNonPostRows: Int = 0
+    ) -> IndexPath? {
         guard (0..<itemCount).contains(itemIndex), !sectionCounts.isEmpty else { return nil }
-
-        if let contentSection = contentSection(sectionCounts: sectionCounts, itemCount: itemCount),
-           sectionCounts[contentSection] > itemIndex {
-            return IndexPath(item: itemIndex, section: contentSection)
-        }
-
-        if isOneItemPerSection(sectionCounts) {
-            var seen = 0
-            for section in sectionCounts.indices where sectionCounts[section] > 0 {
-                if seen == itemIndex {
-                    return IndexPath(item: 0, section: section)
-                }
-                seen += 1
-            }
-            return nil
-        }
-
-        var remaining = itemIndex
-        for section in sectionCounts.indices {
-            let count = sectionCounts[section]
-            if remaining < count {
-                return IndexPath(item: remaining, section: section)
-            }
-            remaining -= count
-        }
-        return nil
+        let cells = flattenedCells(sectionCounts)
+        let flatIndex = postStart(
+            sectionCounts: sectionCounts,
+            itemCount: itemCount,
+            leadingNonPostRows: leadingNonPostRows
+        ) + itemIndex
+        guard cells.indices.contains(flatIndex) else { return nil }
+        let cell = cells[flatIndex]
+        return IndexPath(item: cell.item, section: cell.section)
     }
 
-    /// A section that holds the feed rows (or feed rows + the pagination sentinel).
-    /// A leading singleton section is treated as a header, not as a post.
-    private static func contentSection(sectionCounts: [Int], itemCount: Int) -> Int? {
-        sectionCounts.firstIndex(where: { $0 == itemCount || $0 == itemCount + 1 })
+    static func leadingNonPostRowCount(alreadySeenNewerBannerVisible: Bool) -> Int {
+        alreadySeenNewerBannerVisible ? 1 : 0
+    }
+
+    private static func flattenedCells(_ sectionCounts: [Int]) -> [(section: Int, item: Int)] {
+        var cells: [(section: Int, item: Int)] = []
+        for section in sectionCounts.indices where sectionCounts[section] > 0 {
+            for item in 0..<sectionCounts[section] {
+                cells.append((section, item))
+            }
+        }
+        return cells
+    }
+
+    /// Cells before the first post: an inferred Mac header section (not used
+    /// when every section is a singleton) plus the already-seen banner.
+    private static func postStart(
+        sectionCounts: [Int],
+        itemCount: Int,
+        leadingNonPostRows: Int
+    ) -> Int {
+        var headerCells = 0
+        if !isOneItemPerSection(sectionCounts),
+           let first = sectionCounts.firstIndex(where: { $0 > 0 }),
+           sectionCounts[first] == 1 {
+            let remainingAfterHeader = flattenedCells(sectionCounts).count - 1
+            if remainingAfterHeader - leadingNonPostRows >= itemCount {
+                headerCells = 1
+            }
+        }
+        return headerCells + leadingNonPostRows
     }
 
     private static func isOneItemPerSection(_ sectionCounts: [Int]) -> Bool {
@@ -86,6 +97,48 @@ enum NXFeedIndexMapping {
               let newIndex = newIDs.firstIndex(of: anchorID) else { return false }
         return newIndex > oldIndex
     }
+
+    /// True when the reading post moved because rows were inserted or removed above it.
+    static func anchorIndexShifted(oldIDs: [String], newIDs: [String], anchorID: String) -> Bool {
+        guard let oldIndex = oldIDs.firstIndex(of: anchorID),
+              let newIndex = newIDs.firstIndex(of: anchorID) else { return false }
+        return newIndex != oldIndex
+    }
+}
+
+/// The only post the feed is allowed to settle to.
+enum NXFeedPark {
+    struct Post: Equatable {
+        var id: String
+        var visibleTopOffset: CGFloat
+    }
+
+    enum SettleTarget: Equatable {
+        case pin(Post)
+        case retarget(Post)
+        case skip
+    }
+
+    /// Mutations pin `parked` when it is still in the feed. If that id was
+    /// removed, retarget once to the live top-edge. Never chase a stale id.
+    static func settleTarget(
+        parked: Post?,
+        newIDs: [String],
+        live: Post?
+    ) -> SettleTarget {
+        if let parked, newIDs.contains(parked.id) {
+            return .pin(parked)
+        }
+        if let live {
+            return .retarget(live)
+        }
+        return .skip
+    }
+
+    static func shouldCompleteRestore(parkedID: String?, liveVisibleID: String?) -> Bool {
+        guard let parkedID else { return false }
+        return parkedID == liveVisibleID
+    }
 }
 
 /// Visible-top relative feed coordinates. Safe-area / live-banner inset changes
@@ -94,9 +147,15 @@ enum NXFeedViewport {
     /// `performAnchored` reason for a mid-feed newer-post insert. Used to cover
     /// the viewport before the unanimated prepend paints.
     static let prependCoverReason = "newer posts"
+    /// `performAnchored` reason for removing already-read rows above the reading post.
+    static let unreadRemovalCoverReason = "read leaf rows removed"
 
     static func shouldCoverPrepend(updateReasons: [String]) -> Bool {
         updateReasons.contains(prependCoverReason)
+    }
+
+    static func shouldCoverViewport(updateReasons: [String]) -> Bool {
+        shouldCoverPrepend(updateReasons: updateReasons) || updateReasons.contains(unreadRemovalCoverReason)
     }
 
     /// Remember-on restores already-seen posts. Older pages are for scrolling
@@ -154,17 +213,16 @@ enum NXFeedViewport {
         contentOffsetY <= -insetTop + threshold
     }
 
-    /// Live scroll offset wins. A leftover reading-post id from an unfinished
-    /// restore must not pretend the user is mid-feed while they are looking at the top.
+    /// Live scroll offset wins. An unfinished restore paints from offset 0, so
+    /// that offset must not be treated as "the user is at the top".
     static func isActuallyAtTop(
         hasLiveScrollView: Bool,
         contentOffsetY: CGFloat,
         insetTop: CGFloat,
         isPreparingRestore: Bool,
-        restoreExpired: Bool,
         fallbackIsAtTop: Bool
     ) -> Bool {
-        if isPreparingRestore && !restoreExpired {
+        if isPreparingRestore {
             return false
         }
         if hasLiveScrollView {

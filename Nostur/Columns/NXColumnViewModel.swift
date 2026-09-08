@@ -98,6 +98,60 @@ enum NXUnreadSeenReconciliation {
     }
 }
 
+enum NXUnreadRegion {
+    /// Already-read rows above the parked post that are not on screen. Removing
+    /// them keeps unread navigation on the previous unread row instead of skipping.
+    static func postIDsToRemove(
+        postIDs: [String],
+        unreadCount: (String) -> Int,
+        readingPostID: String?,
+        visiblePostIDs: Set<String>
+    ) -> [String] {
+        guard let readingPostID,
+              let readingIndex = postIDs.firstIndex(of: readingPostID),
+              readingIndex > 0 else { return [] }
+        return postIDs.prefix(readingIndex).filter { id in
+            unreadCount(id) <= 0 && !visiblePostIDs.contains(id)
+        }
+    }
+}
+
+enum NXUnreadAppearance {
+    /// Rows above the live top-edge (or held reading post) are in the unread
+    /// stack and must not consume unread state, even if they peek into view.
+    static func shouldConsumeAppearance(
+        appearedID: String,
+        postIDs: [String],
+        topEdgeID: String?,
+        readingID: String?,
+        holdUnreadAboveReadingPost: Bool,
+        visibleIDs: Set<String>,
+        isPreparingRestore: Bool,
+        isPerformingScroll: Bool,
+        isPerformingUnreadScroll: Bool
+    ) -> Bool {
+        if isPerformingScroll || isPerformingUnreadScroll || isPreparingRestore {
+            return false
+        }
+        guard let appearedIndex = postIDs.firstIndex(of: appearedID) else { return false }
+        if !visibleIDs.isEmpty && !visibleIDs.contains(appearedID) {
+            return false
+        }
+        if let topEdgeID,
+           let topEdgeIndex = postIDs.firstIndex(of: topEdgeID),
+           appearedIndex < topEdgeIndex {
+            return false
+        }
+        if holdUnreadAboveReadingPost,
+           let readingID,
+           let readingIndex = postIDs.firstIndex(of: readingID),
+           appearedIndex < readingIndex {
+            return false
+        }
+        return true
+    }
+}
+
 class NXColumnViewModel: ObservableObject {
     public let columnVMid = UUID()
 #if DEBUG
@@ -240,34 +294,16 @@ class NXColumnViewModel: ObservableObject {
             contentOffsetY: scrollView?.contentOffset.y ?? 0,
             insetTop: scrollView?.adjustedContentInset.top ?? 0,
             isPreparingRestore: vmInner.isPreparingForScrollRestore && (vmInner.pendingScrollToIndex ?? 0) > 0,
-            restoreExpired: vmInner.isPreparedScrollRestoreExpired,
             fallbackIsAtTop: vmInner.isAtTop
         )
     }
 
-    @MainActor
-    private func shouldAbortLatePreparedRestoreFromViewModel() -> Bool {
-        guard vmInner.isPreparingForScrollRestore,
-              vmInner.isPreparedScrollRestoreExpired else { return false }
-        return isFeedActuallyAtTop
-    }
-
     /// Incoming prepends must not complete a pending jump to a saved mid-feed
-    /// post if the user is already looking at the painted top.
+    /// post if the user is already looking at the painted top. Restore paints
+    /// from offset 0, so that state is never treated as at-top.
     @MainActor
     private func isVisuallyAtTopForIncomingPosts() -> Bool {
-        if isFeedActuallyAtTop { return true }
-        let scrollView: UIScrollView? = collectionView ?? tableView
-        guard vmInner.isPreparingForScrollRestore,
-              let scrollView, scrollView.window != nil,
-              NXFeedViewport.isOffsetAtTop(
-                contentOffsetY: scrollView.contentOffset.y,
-                insetTop: scrollView.adjustedContentInset.top
-              ) else {
-            return false
-        }
-        vmInner.abortPreparedScrollRestore()
-        return true
+        isFeedActuallyAtTop
     }
 
     /// `withAnimation` is intentional for ordinary updates where SwiftUI owns positioning.
@@ -361,6 +397,14 @@ class NXColumnViewModel: ObservableObject {
     }
     
     private var didLoadFirstLocalState = false
+    private var pendingRestorePrepend: (posts: [NRPost], config: NXColumnConfig, completions: [() -> Void])?
+
+    @MainActor
+    var feedLeadingNonPostRowCount: Int {
+        NXFeedIndexMapping.leadingNonPostRowCount(
+            alreadySeenNewerBannerVisible: alreadySeenNewerCount > 0
+        )
+    }
     
     @MainActor
     func handleAppearOnce(nrPost: NRPost) -> Bool {
@@ -370,29 +414,23 @@ class NXColumnViewModel: ObservableObject {
         // Animated unread navigation can bring several lazy rows through the appearance threshold.
         // The selected indexed target is marked explicitly when the scroll finishes.
         guard !vmInner.isPerformingScrollToFirstUnread else { return false }
-        // The restored list paints from offset 0 before it jumps to the saved post.
-        // Those newest rows must not mark the unread stack as read.
-        if vmInner.isPreparingForScrollRestore {
-            if shouldAbortLatePreparedRestoreFromViewModel() {
-                vmInner.abortPreparedScrollRestore()
-            } else {
-                return false
-            }
-        }
         let scrollView: UIScrollView? = collectionView ?? tableView
         if scrollView?.isDragging == true || scrollView?.isTracking == true {
             vmInner.holdUnreadAboveReadingPost = false
         }
-        if vmInner.holdUnreadAboveReadingPost,
-           let readingID = vmInner.readingPostID,
-           case .posts(let posts) = viewState,
-           let readingIndex = posts.firstIndex(where: { $0.id == readingID }),
-           let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }),
-           appearedIndex < readingIndex {
-            return false
-        }
+        guard case .posts(let posts) = viewState else { return false }
         let visibleIds = currentVisiblePostIds()
-        if !visibleIds.isEmpty && !visibleIds.contains(nrPost.id) {
+        guard NXUnreadAppearance.shouldConsumeAppearance(
+            appearedID: nrPost.id,
+            postIDs: posts.map(\.id),
+            topEdgeID: currentTopEdgePostID(),
+            readingID: vmInner.readingPostID,
+            holdUnreadAboveReadingPost: vmInner.holdUnreadAboveReadingPost,
+            visibleIDs: visibleIds,
+            isPreparingRestore: vmInner.isPreparingForScrollRestore,
+            isPerformingScroll: vmInner.isPerformingScroll,
+            isPerformingUnreadScroll: vmInner.isPerformingScrollToFirstUnread
+        ) else {
             return false
         }
     #if DEBUG
@@ -772,9 +810,23 @@ class NXColumnViewModel: ObservableObject {
             }
         }
 
+        postIdsToRemove.formUnion(
+            NXUnreadRegion.postIDsToRemove(
+                postIDs: existingPosts.map(\.id),
+                unreadCount: { id in
+                    if postIdsMarkedRead.contains(id) { return 0 }
+                    if let updated = unreadCountUpdates[id] { return updated }
+                    return vmInner.unreadIds[id, default: 0]
+                },
+                readingPostID: vmInner.readingPostID,
+                visiblePostIDs: visiblePostIds
+            )
+        )
+
         guard !postIdsMarkedRead.isEmpty
                 || !unreadCountUpdates.isEmpty
-                || !parentUpdates.isEmpty else { return }
+                || !parentUpdates.isEmpty
+                || !postIdsToRemove.isEmpty else { return }
 
 #if DEBUG
         for (postId, reason) in postReadReasons {
@@ -819,7 +871,7 @@ class NXColumnViewModel: ObservableObject {
         if (!postIdsToRemove.isEmpty || !parentUpdates.isEmpty),
            let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
             let reason = !postIdsToRemove.isEmpty
-                ? "read leaf rows removed"
+                ? NXFeedViewport.unreadRemovalCoverReason
                 : "read thread parents trimmed"
             performAnchoredFeedUpdate(reason, applyUpdates)
         } else {
@@ -847,10 +899,97 @@ class NXColumnViewModel: ObservableObject {
             guard let itemIndex = NXFeedIndexMapping.itemIndex(
                 for: indexPath,
                 sectionCounts: sectionCounts,
-                itemCount: posts.count
+                itemCount: posts.count,
+                leadingNonPostRows: feedLeadingNonPostRowCount
             ), posts.indices.contains(itemIndex) else { return nil }
             return posts[itemIndex].id
         })
+    }
+
+    @MainActor
+    private func currentTopEdgePostID() -> String? {
+        guard case .posts(let posts) = viewState else { return nil }
+        let scrollView: UIScrollView? = collectionView ?? tableView
+        guard let scrollView, scrollView.window != nil else { return vmInner.readingPostID }
+
+        let indexPaths: [IndexPath]
+        let sectionCounts: [Int]
+        if let collectionView {
+            indexPaths = collectionView.indexPathsForVisibleItems
+            sectionCounts = (0..<collectionView.numberOfSections).map { collectionView.numberOfItems(inSection: $0) }
+        } else if let tableView {
+            indexPaths = tableView.indexPathsForVisibleRows ?? []
+            sectionCounts = (0..<tableView.numberOfSections).map { tableView.numberOfRows(inSection: $0) }
+        } else {
+            return vmInner.readingPostID
+        }
+
+        let top = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+        let candidates: [(IndexPath, CGRect)] = indexPaths.compactMap { indexPath in
+            let frame: CGRect?
+            if let collectionView {
+                frame = collectionView.layoutAttributesForItem(at: indexPath)?.frame
+            } else if let tableView,
+                      tableView.numberOfSections > indexPath.section,
+                      tableView.numberOfRows(inSection: indexPath.section) > indexPath.row {
+                frame = tableView.rectForRow(at: indexPath)
+            } else {
+                frame = nil
+            }
+            guard let frame else { return nil }
+            return (indexPath, frame)
+        }
+        guard let anchorIndex = NXFeedViewport.topEdgeAnchorIndex(
+            itemFrames: candidates.map(\.1),
+            visibleTopY: top
+        ),
+              let anchor = candidates[safe: anchorIndex] else {
+            return vmInner.readingPostID
+        }
+        guard let itemIndex = NXFeedIndexMapping.itemIndex(
+            for: anchor.0,
+            sectionCounts: sectionCounts,
+            itemCount: posts.count,
+            leadingNonPostRows: feedLeadingNonPostRowCount
+        ),
+              posts.indices.contains(itemIndex) else {
+            return vmInner.readingPostID
+        }
+        return posts[itemIndex].id
+    }
+
+    @MainActor
+    func compactReadRowsAboveReadingPosition() {
+        guard !vmInner.isPreparingForScrollRestore,
+              !vmInner.isPerformingScroll,
+              !vmInner.isPerformingScrollToFirstUnread else { return }
+        guard case .posts(let posts) = viewState else { return }
+        let idsToRemove = NXUnreadRegion.postIDsToRemove(
+            postIDs: posts.map(\.id),
+            unreadCount: { vmInner.unreadIds[$0, default: 0] },
+            readingPostID: vmInner.readingPostID,
+            visiblePostIDs: currentVisiblePostIds()
+        )
+        guard !idsToRemove.isEmpty else { return }
+        let idSet = Set(idsToRemove)
+        let applyUpdates = { [weak self] () -> [String] in
+            guard let self else { return [] }
+            let resultingPosts = self.currentNRPostsOnScreen.filter { !idSet.contains($0.id) }
+            withTransaction(Transaction(animation: nil)) {
+                self.viewState = .posts(resultingPosts)
+            }
+#if DEBUG
+            self.recordFeedAction(
+                "unread region compact · removed \(idSet.count) read rows · kept \(resultingPosts.count) posts"
+            )
+#endif
+            return resultingPosts.map(\.id)
+        }
+        if let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
+            performAnchoredFeedUpdate(NXFeedViewport.unreadRemovalCoverReason, applyUpdates)
+        } else {
+            _ = applyUpdates()
+        }
     }
 
     private var syncFeedSubject = PassthroughSubject<Void, Never>()
@@ -2516,6 +2655,14 @@ class NXColumnViewModel: ObservableObject {
                                 vmInner.beginPreparedScrollRestore(postID: scrollToId, index: restoreToIndex)
                                 isHidingFeedForRestore = true
                                 vmInner.holdUnreadAboveReadingPost = true
+                                vmInner.onRestoreCompleted = { [weak self] in
+                                    guard let self else { return }
+                                    self.flushPostsQueuedDuringRestore()
+                                    self.scheduleAlreadySeenReconciliation(
+                                        removingVisiblePostsFor: Deduplicator.shared.cloudSyncedSeen
+                                    )
+                                    self.loadLocal(config)
+                                }
                                 
                                 // Update the view state without animation
                                 withTransaction(Transaction(animation: nil)) {
@@ -2533,14 +2680,10 @@ class NXColumnViewModel: ObservableObject {
                             }
                             else {
                                 self.viewState = .posts(nrPosts)
+                                self.scheduleAlreadySeenReconciliation(
+                                    removingVisiblePostsFor: Deduplicator.shared.cloudSyncedSeen
+                                )
                             }
-
-                            // CloudKit may have merged lastRead before the restored snapshot
-                            // created its unread IDs. Reconcile once the snapshot exists, while
-                            // deferring the List mutation until restore and scrolling are idle.
-                            self.scheduleAlreadySeenReconciliation(
-                                removingVisiblePostsFor: Deduplicator.shared.cloudSyncedSeen
-                            )
 
 #if DEBUG
                             // Remember-on restores bypass putOnScreen(), so emit
@@ -2554,11 +2697,11 @@ class NXColumnViewModel: ObservableObject {
                             self.recordFeedAction("restored feed · queued newer reconciliation")
 #endif
                             // Restoring the remembered snapshot is only the first paint.
-                            // Queue a normal local read behind this one so posts newer than
-                            // the snapshot are either inserted (unseen) or offered by the
-                            // already-seen banner. didLoadFirstLocalState is already true,
-                            // so this request cannot restore the same snapshot again.
-                            self.loadLocal(config)
+                            // Newer posts wait until the saved row is pinned so a prepend
+                            // cannot land on the unrestored offset-0 list.
+                            if self.vmInner.onRestoreCompleted == nil {
+                                self.loadLocal(config)
+                            }
                             completion?()
                         }
                     }
@@ -4764,6 +4907,37 @@ extension NXColumnViewModel {
     }
     
     @MainActor
+    private func queuePostsDuringRestore(
+        _ posts: [NRPost],
+        config: NXColumnConfig,
+        completion: (() -> Void)?
+    ) {
+        if var pending = pendingRestorePrepend {
+            let existingIDs = Set(pending.posts.map(\.id))
+            let newPosts = posts.filter { !existingIDs.contains($0.id) }
+            pending.posts = (newPosts + pending.posts).sorted { $0.created_at > $1.created_at }
+            if let completion {
+                pending.completions.append(completion)
+            }
+            pendingRestorePrepend = pending
+        } else {
+            pendingRestorePrepend = (posts, config, completion.map { [$0] } ?? [])
+        }
+#if DEBUG
+        recordFeedAction("PREPEND queued until restore · \(posts.count) posts")
+#endif
+    }
+
+    @MainActor
+    private func flushPostsQueuedDuringRestore() {
+        guard let pending = pendingRestorePrepend else { return }
+        pendingRestorePrepend = nil
+        putOnScreen(pending.posts, config: pending.config, insertAtEnd: false) {
+            pending.completions.forEach { $0() }
+        }
+    }
+
+    @MainActor
     public func putOnScreen(_ addedPosts: [NRPost], config: NXColumnConfig, insertAtEnd: Bool = false, revealAtTop: Bool = false, completion: (() -> Void)? = nil) {
 
         if !addedPosts.isEmpty {
@@ -4801,6 +4975,15 @@ extension NXColumnViewModel {
                 L.og.debug("☘️☘️ \(config.name) putOnScreen skip prepend until latest fill finishes -[LOG]-")
 #endif
                 completion?()
+                return
+            }
+
+            if !insertAtEnd && !revealAtTop && vmInner.isPreparingForScrollRestore {
+                guard !onlyNewAddedPosts.isEmpty else {
+                    completion?()
+                    return
+                }
+                queuePostsDuringRestore(onlyNewAddedPosts, config: config, completion: completion)
                 return
             }
 
