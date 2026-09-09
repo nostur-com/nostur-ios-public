@@ -922,6 +922,13 @@ class ConversionVM: ObservableObject {
                 giftWrapDetails: sendJob.details
             )
         }
+
+        for sendJob in sendJobs {
+            addedChatMessage?.dmSendResult[sendJob.receiver]?.retryHandler = { [weak self, weak addedChatMessage] relay in
+                guard let self, let addedChatMessage else { return }
+                self.sendToDMRelays(receiverPubkey: sendJob.receiver, wrappedEvent: sendJob.wrappedEvent, relays: [relay], rumorId: rumorEvent.fallbackId(), addedChatMessage: addedChatMessage)
+            }
+        }
         
         guard let addedChatMessage else { return }
         let rumorEventId = rumorEvent.fallbackId()
@@ -1039,6 +1046,13 @@ class ConversionVM: ObservableObject {
                 },
                 giftWrapDetails: sendJob.details
             )
+        }
+
+        for sendJob in sendJobs {
+            addedChatMessage?.dmSendResult[sendJob.receiver]?.retryHandler = { [weak self, weak addedChatMessage] relay in
+                guard let self, let addedChatMessage else { return }
+                self.sendToDMRelays(receiverPubkey: sendJob.receiver, wrappedEvent: sendJob.wrappedEvent, relays: [relay], rumorId: rumorEvent.fallbackId(), addedChatMessage: addedChatMessage)
+            }
         }
         
         guard let addedChatMessage else { return }

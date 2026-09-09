@@ -320,6 +320,7 @@ class RecipientResult: ObservableObject, Identifiable {
     let id: UUID
     @Published var anySuccess = false
     @Published var allFailed = false
+    var retryHandler: ((String) -> Void)?
     
     public var recipientPubkey: String
     
@@ -354,5 +355,12 @@ class RecipientResult: ObservableObject, Identifiable {
             if case .rejected = result { return true }
             return false
         }
+    }
+
+    func retry(relay: String) {
+        guard relayResults[relay] == .timeout else { return }
+        allFailed = false
+        relayResults[relay] = .sending
+        retryHandler?(relay)
     }
 }

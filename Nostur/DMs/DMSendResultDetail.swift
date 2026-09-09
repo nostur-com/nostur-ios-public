@@ -44,7 +44,13 @@ struct DMSendResultDetail: View {
                         .foregroundStyle(color(for: result))
                         .frame(width: 24, alignment: .center)
                     
-                    VStack(alignment: .leading, spacing: 3) {
+                    if dmSentResult.relayResults[key]! == .timeout {
+                        Text("\(key) (Timeout or other error)")
+                        Button("Retry", systemImage: "arrow.clockwise") {
+                            dmSentResult.retry(relay: key)
+                        }
+                    }
+                    else {
                         Text(key)
                         if let detail = detail(for: result) {
                             Text(detail)
