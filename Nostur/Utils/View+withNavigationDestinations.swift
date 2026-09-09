@@ -107,6 +107,7 @@ enum ViewPath: IdentifiableDestination {
     case PostMentions(id: String)
     case PostZaps(nrPost: NRPost)
     case Settings
+    case Wallet
     case Lists
     case Relays
     case Badges
@@ -257,6 +258,10 @@ struct NavigationDestinationsModifier: ViewModifier {
                         .environment(\.containerID, self.containerID)
                     case .PostZaps(let nrPost):
                         PostZaps(nrPost: nrPost)
+                            .environment(\.containerID, self.containerID)
+                    case .Wallet:
+                        WalletView()
+                            .tabBarSpaceCompat()
                             .environment(\.containerID, self.containerID)
                     case .Settings:
                         Settings()

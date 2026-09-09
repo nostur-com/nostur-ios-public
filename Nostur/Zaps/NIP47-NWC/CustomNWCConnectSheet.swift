@@ -159,12 +159,22 @@ struct CustomNWCConnectSheet: View {
             let nwcInfoNotification = notification.object as! NWCInfoNotification
             
             bg().perform {
-                if let _ = NWCConnection.fetchConnection(awaitingConnectionId, context: bg()) {
+                if let connection = NWCConnection.fetchConnection(awaitingConnectionId, context: bg()),
+                   let secret = connection.privateKey {
+                    let connectionSnapshot = NWCWalletClient.Connection(
+                        id: connection.connectionId,
+                        walletPubkey: connection.walletPubkey,
+                        pubkey: connection.pubkey,
+                        secret: secret,
+                        relay: connection.relay,
+                        methods: Set(nwcInfoNotification.methods.split(separator: " ").map(String.init))
+                    )
                     if nwcInfoNotification.methods.split(separator: " ").map({ String($0) }).contains("pay_invoice") {
                         DispatchQueue.main.async {
                             finishConnectionAttempt()
                             ss.activeNWCconnectionId = awaitingConnectionId
                             nwcConnectSuccess = true
+                            acknowledgeConnection(connectionSnapshot, info: nwcInfoNotification)
                         }
                     }
                     // NIP47 spec says to uses space separator, but Alby uses comma.
@@ -173,6 +183,7 @@ struct CustomNWCConnectSheet: View {
                             finishConnectionAttempt()
                             ss.activeNWCconnectionId = awaitingConnectionId
                             nwcConnectSuccess = true
+                            acknowledgeConnection(connectionSnapshot, info: nwcInfoNotification)
                         }
                     }
                     else {
@@ -352,6 +363,18 @@ struct CustomNWCConnectSheet: View {
         tryingConnection = false
         cancelConnectionTimeout()
     }
+
+    private func acknowledgeConnection(_ connection: NWCWalletClient.Connection, info: NWCInfoNotification) {
+        let advertised = Set((info.encryption ?? "nip04").split(separator: " ").map(String.init))
+        let encryption = advertised.contains("nip44_v2") ? "nip44_v2" : "nip04"
+        Task {
+            do {
+                try await NWCWalletClient.shared.acknowledgeConnection(connection, encryption: encryption)
+            } catch {
+                L.og.error("Could not acknowledge new NWC connection: \(error.localizedDescription)")
+            }
+        }
+    }
 }
 
 import NavigationBackport
@@ -369,4 +392,5 @@ struct CustomNWCConnectSheet_Previews: PreviewProvider {
 struct NWCInfoNotification: Identifiable {
     let id = UUID()
     let methods:String
+    let encryption:String?
 }

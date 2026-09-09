@@ -328,7 +328,7 @@ class MessageParser {
     }    
     
     func handleNWCResponse(message: NXRelayMessage, nEvent: NEvent) throws {
-        guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
+        guard try nEvent.verified() else {
             throw NXRelayMessageError.INVALID_SIGNATURE
         }
         
@@ -339,6 +339,8 @@ class MessageParser {
 #endif
             return
         }
+        guard nEvent.publicKey == nwcConnection.walletPubkey,
+              nEvent.tags.contains(where: { $0.type == "p" && $0.value == nwcConnection.pubkey }) else { return }
         guard let pk = nwcConnection.privateKey else {
 #if DEBUG
             L.og.error("⚡️ NWC response but private key missing \(nEvent.eventJson())")
@@ -357,6 +359,13 @@ class MessageParser {
 #endif
             return
         }
+        if let requestId = nEvent.eTags().first {
+            let walletPubkey = nEvent.publicKey
+            Task { @MainActor in
+                NWCWalletClient.shared.receive(nwcResponse, requestId: requestId, walletPubkey: walletPubkey)
+            }
+        }
+        if nwcResponse.result_type == "get_info" || nwcResponse.result_type == "list_transactions" { return }
         if balanceResponseHandled(nwcResponse) {
             return
         }
@@ -457,7 +466,7 @@ class MessageParser {
     }
     
     func handleNWCInfoResponse(message: NXRelayMessage, nEvent: NEvent) throws {
-        guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
+        guard try nEvent.verified() else {
             throw NXRelayMessageError.INVALID_SIGNATURE
         }
         
@@ -466,9 +475,15 @@ class MessageParser {
 #if DEBUG
         L.og.debug("⚡️ Received 13194 info event, saving methods: \(nEvent.content)")
 #endif
+        let walletPubkey = nEvent.publicKey
+        let methods = nEvent.content
+        let encryption = nEvent.tags.first(where: { $0.type == "encryption" })?.value
+        Task { @MainActor in
+            NWCWalletClient.shared.receiveInfo(walletPubkey: walletPubkey, methods: methods, encryption: encryption)
+        }
         nwcConnection.methods = nEvent.content
         DispatchQueue.main.async {
-            sendNotification(.nwcInfoReceived, NWCInfoNotification(methods: nEvent.content))
+            sendNotification(.nwcInfoReceived, NWCInfoNotification(methods: nEvent.content, encryption: encryption))
         }
     }
     

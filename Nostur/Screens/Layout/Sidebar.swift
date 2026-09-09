@@ -221,6 +221,19 @@ struct SideBar: View {
                         }
                     }
                     Button {
+                        if selectedTab() != "Main" { setSelectedTab("Main") }
+                        navigateToOnMain(ViewPath.Wallet)
+                        showSidebar = false
+                    } label: {
+                        Label {
+                            Text("Wallet").frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                        } icon: {
+                            Image(systemName: "wallet.pass").frame(width: Self.ICON_WIDTH)
+                        }
+                        .padding(.vertical, Self.BUTTON_VPADDING)
+                        .contentShape(Rectangle())
+                    }
+                    Button {
                         if selectedTab() != "Main" {
                             setSelectedTab("Main")
                         }
