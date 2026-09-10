@@ -129,7 +129,7 @@ struct ComposePost: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             .toolbar {
                                 ToolbarItem(placement: .cancellationAction) {
-                                    Button("Cancel", systemImage: "xmark") { onDismiss() }
+                                    Button("Cancel", systemImage: "xmark", role: .cancel) { onDismiss() }
                                 }
                             }
                     }
@@ -225,7 +225,7 @@ struct ComposePost: View {
                                                     .navigationBarTitleDisplayMode(.inline)
                                                     .toolbar {
                                                         ToolbarItem(placement: .cancellationAction) {
-                                                            Button("Cancel", systemImage: "xmark") {
+                                                            Button("Cancel", systemImage: "xmark", role: .cancel) {
                                                                 isAuthorSelectionShown = false
                                                             }
                                                         }

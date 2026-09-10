@@ -99,7 +99,7 @@ struct AlbyNWCConnectSheet: View {
             
             ToolbarItem(placement: .cancellationAction) {
                 if !nwcConnectSuccess {
-                    Button("Cancel", systemImage: "xmark") {
+                    Button("Cancel", systemImage: "xmark", role: .cancel) {
                         dismiss()
                     }
                 }

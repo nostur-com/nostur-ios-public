@@ -63,7 +63,7 @@ struct ReportPostSheet: View {
         .navigationTitle(String(localized: "Report post", comment: "Navigation title"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", role: .cancel) {
+                Button("Cancel", systemImage: "xmark", role: .cancel) {
                     dismiss()
                 }
             }

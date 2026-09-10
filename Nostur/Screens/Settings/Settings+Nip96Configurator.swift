@@ -99,7 +99,7 @@ struct Nip96Configurator: View {
             }
             ToolbarItem(placement: .cancellationAction) {
                 if state != .success {
-                    Button("Cancel", systemImage: "xmark") { dismiss() }
+                    Button("Cancel", systemImage: "xmark", role: .cancel) { dismiss() }
                 }
             }
         }

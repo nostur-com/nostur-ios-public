@@ -22,7 +22,7 @@ struct NewRelayView: View {
         .navigationTitle(String(localized:"Add relay", comment:"Navigation title for Add relay screen"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", systemImage: "xmark") {
+                Button("Cancel", systemImage: "xmark", role: .cancel) {
                     dismiss()
                 }
             }

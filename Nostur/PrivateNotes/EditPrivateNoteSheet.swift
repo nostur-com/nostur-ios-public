@@ -50,7 +50,7 @@ struct EditPrivateNoteSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", systemImage: "xmark") { dismiss() }
+                Button("Cancel", systemImage: "xmark", role: .cancel) { dismiss() }
             }
             ToolbarItem(placement: .destructiveAction) {
                 Button(role: .destructive) {

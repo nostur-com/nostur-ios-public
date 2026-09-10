@@ -37,7 +37,7 @@ struct NWCQRScannerSheet: View {
         .navigationTitle(String(localized: "Scan QR", comment: "Navigation title for the Nostr Wallet Connect QR scanner"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", systemImage: "xmark") {
+                Button("Cancel", systemImage: "xmark", role: .cancel) {
                     dismiss()
                 }
             }

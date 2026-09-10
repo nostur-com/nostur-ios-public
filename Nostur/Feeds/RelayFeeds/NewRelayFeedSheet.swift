@@ -70,7 +70,7 @@ struct NewRelayFeedSheet: View {
         
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", systemImage: "xmark") { dismiss() }
+                Button("Cancel", systemImage: "xmark", role: .cancel) { dismiss() }
             }
             
             ToolbarItem(placement: .confirmationAction) {
@@ -188,7 +188,7 @@ struct RelayPreviewFeedSheet: View {
         
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", systemImage: "xmark") {
+                Button("Cancel", systemImage: "xmark", role: .cancel) {
                     AppSheetsModel.shared.dismiss()
                 }
             }

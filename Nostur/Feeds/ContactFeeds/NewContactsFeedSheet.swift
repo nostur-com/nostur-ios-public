@@ -154,7 +154,7 @@ struct NewContactsFeedSheet: View {
 
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", systemImage: "xmark") { dismiss() }
+                Button("Cancel", systemImage: "xmark", role: .cancel) { dismiss() }
             }
             ToolbarItem(placement: .primaryAction) {
                 Button("Done", systemImage: "checkmark") {

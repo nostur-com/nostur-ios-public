@@ -117,7 +117,7 @@ struct MutedWordsView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel", systemImage: "xmark") {
+                        Button("Cancel", systemImage: "xmark", role: .cancel) {
                             dismiss()
                         }
                     }
@@ -165,7 +165,7 @@ struct MutedWordsView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel", systemImage: "xmark") {
+                        Button("Cancel", systemImage: "xmark", role: .cancel) {
                             dismiss()
                         }
                     }

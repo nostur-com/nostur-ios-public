@@ -46,7 +46,7 @@ struct AddBlossomServerSheet: View {
         
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", systemImage: "xmark") { dismiss() }
+                Button("Cancel", systemImage: "xmark", role: .cancel) { dismiss() }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if checking {

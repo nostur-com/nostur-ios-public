@@ -122,7 +122,7 @@ struct DMsInnerList: View {
                     UpgradeDMsSheet(accountPubkey: pubkey)
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
-                                Button("Cancel", systemImage: "xmark") {
+                                Button("Cancel", systemImage: "xmark", role: .cancel) {
                                     Task { @MainActor [weak vm] in
                                         showUpgradeDMsSheet = false
                                         vm?.showUpgradeNotice = false

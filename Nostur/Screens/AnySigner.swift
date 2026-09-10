@@ -116,7 +116,7 @@ struct AnySigner: View {
             .navigationTitle(tab == "Signer" ? String(localized:"Sign any nostr event", comment:"Navigation title for screen to sign any nostr event") : String(localized:"Broadcast nostr event", comment:"Navigation title for screen to broadcast any nostr event"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", systemImage: "xmark") { dismiss() }
+                    Button("Cancel", systemImage: "xmark", role: .cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { UIPasteboard.general.string = input } label: { Image(systemName: "doc.on.doc") }

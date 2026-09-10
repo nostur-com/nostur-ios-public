@@ -46,12 +46,12 @@ struct ReportContactSheet: View {
         .navigationTitle(String(localized: "Report person", comment: "Navigation title"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", role: .cancel) {
+                Button("Cancel", systemImage: "xmark", role: .cancel) {
                     dismiss()
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button(String(localized: "Report.verb", comment: "Button to publish report")) {
+                Button(String(localized: "Report.verb", comment: "Button to publish report"), systemImage: "checkmark") {
                     guard let account = account() else { return }
                     if account.isNC {
                         var report = EventMessageBuilder.makeReportContact(pubkey: reportContact.nrContact.pubkey, type: reason, note: comment)

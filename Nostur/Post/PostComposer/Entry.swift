@@ -299,7 +299,7 @@ struct Entry: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel", systemImage: "xmark") {
+                        Button("Cancel", systemImage: "xmark", role: .cancel) {
                             isAuthorSelectionShown = false
                         }
                     }
@@ -358,7 +358,7 @@ struct Entry: View {
     @ToolbarContentBuilder
     func toolbar15() -> some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark") { onDismiss() }
+            Button("Cancel", systemImage: "xmark", role: .cancel) { onDismiss() }
         }
         
         ToolbarItem(placement: .primaryAction) {
@@ -412,7 +412,7 @@ struct Entry: View {
     @ToolbarContentBuilder
     func toolbar16() -> some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark") { onDismiss() }
+            Button("Cancel", systemImage: "xmark", role: .cancel) { onDismiss() }
         }
         
         ToolbarItemGroup(placement: .primaryAction) {
@@ -463,7 +463,7 @@ struct Entry: View {
     @ToolbarContentBuilder
     func toolbar26() -> some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark") { onDismiss() }
+            Button("Cancel", systemImage: "xmark", role: .cancel) { onDismiss() }
         }
         
         if kind != .shortVideos && kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {

@@ -132,7 +132,7 @@ struct CustomNWCConnectSheet: View {
         
             ToolbarItem(placement: .cancellationAction) {
                 if !nwcConnectSuccess {
-                    Button("Cancel", systemImage: "xmark") { dismiss() }
+                    Button("Cancel", systemImage: "xmark", role: .cancel) { dismiss() }
                 }
             }
         }

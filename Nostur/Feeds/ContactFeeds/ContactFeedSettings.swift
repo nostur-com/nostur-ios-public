@@ -359,7 +359,7 @@ struct ContactFeedSettings: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel", systemImage: "xmark") {
+                        Button("Cancel", systemImage: "xmark", role: .cancel) {
                             addContactsSheetShown = false
                         }
                     }

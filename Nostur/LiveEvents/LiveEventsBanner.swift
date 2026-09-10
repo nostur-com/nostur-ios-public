@@ -71,7 +71,7 @@ struct LiveEventsBanner: View {
                     CreateNest(account: account)
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
-                                Button("Cancel", systemImage: "xmark") { showCreateNestsSheetWithAccount = nil }
+                                Button("Cancel", systemImage: "xmark", role: .cancel) { showCreateNestsSheetWithAccount = nil }
                             }
                         }
                         .padding()

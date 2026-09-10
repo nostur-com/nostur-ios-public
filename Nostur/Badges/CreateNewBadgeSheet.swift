@@ -98,13 +98,17 @@ struct CreateNewBadgeSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { cancel() }
-                    .disabled(isCreating)
+                Button("Cancel", systemImage: "xmark", role: .cancel) {
+                    cancel()
+                }
+                .disabled(isCreating)
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button(createButtonTitle) { submit() }
-                    .buttonStyleGlassProminent()
-                    .disabled(isCreating || !isValid || (isEditing && !hasChanges))
+                Button(createButtonTitle, systemImage: "checkmark") {
+                    submit()
+                }
+                .buttonStyleGlassProminent()
+                .disabled(isCreating || !isValid || (isEditing && !hasChanges))
             }
         }
         .interactiveDismissDisabled(hasChanges || isCreating)

@@ -191,7 +191,9 @@ struct BadgeDetailView: View {
                 .environmentObject(la)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel", systemImage: "xmark") { isChoosingRecipients = false }
+                        Button("Cancel", systemImage: "xmark", role: .cancel) {
+                            isChoosingRecipients = false
+                        }
                     }
                 }
             }
