@@ -136,11 +136,17 @@ class ShareableIdentifier: Hashable {
                             throw "EncodingError.invalidPrefix.2"
                     }
                 case 3:
+                    guard value.count == MemoryLayout<UInt32>.size else {
+                        throw "EncodingError.invalidFormat"
+                    }
+                    let decodedKind = value.reduce(UInt32.zero) { partialResult, byte in
+                        (partialResult << 8) | UInt32(byte)
+                    }
                     switch prefix {
                         case "naddr":
-                            kind = Int64(value.withUnsafeBytes { $0.load(as: UInt32.self) }.bigEndian)
+                            kind = Int64(decodedKind)
                         case "nevent":
-                            kind = Int64(value.withUnsafeBytes { $0.load(as: UInt32.self) }.bigEndian)
+                            kind = Int64(decodedKind)
                         default:
                             throw "EncodingError.invalidPrefix.3"
                     }
@@ -235,4 +241,3 @@ class ShareableIdentifier: Hashable {
         self.bech32string = bech32.encode(prefix, values: tlvData, eightToFive: true)
     }
 }
-
