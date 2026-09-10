@@ -117,7 +117,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     }
     
     private func startPlaybackIfNeeded(on avpc: AVPlayerViewController) {
-        guard isPlaying, viewMode != .audioOnlyBar else { return }
+        guard isPlaying, AnyPlayerModel.shared.playbackSessionReady, viewMode != .audioOnlyBar else { return }
         if !IS_CATALYST, avpc.player !== player {
             avpc.player = player
         }
@@ -411,7 +411,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
             }
             
             // Ensure playback intent is applied on the new layer.
-            if parent.isPlaying, parent.player.timeControlStatus != .playing {
+            if parent.isPlaying, AnyPlayerModel.shared.playbackSessionReady, parent.player.timeControlStatus != .playing {
                 if AnyPlayerModel.shared.isStream {
                     parent.player.playImmediately(atRate: 1.0)
                 }
@@ -543,7 +543,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
                 }
                 
                 // System PiP often leaves rate at 0 while our intent is still "playing".
-                if AnyPlayerModel.shared.isPlaying, !AnyPlayerModel.shared.didFinishPlaying {
+                if AnyPlayerModel.shared.isPlaying, AnyPlayerModel.shared.playbackSessionReady, !AnyPlayerModel.shared.didFinishPlaying {
                     if AnyPlayerModel.shared.isStream {
                         AnyPlayerModel.shared.player.playImmediately(atRate: 1.0)
                     }
@@ -553,6 +553,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
                     // Second kick after layout — live HLS can stall on the first attempt after PiP.
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                         guard AnyPlayerModel.shared.isPlaying,
+                              AnyPlayerModel.shared.playbackSessionReady,
                               !AnyPlayerModel.shared.didFinishPlaying,
                               AnyPlayerModel.shared.player.timeControlStatus != .playing
                         else { return }

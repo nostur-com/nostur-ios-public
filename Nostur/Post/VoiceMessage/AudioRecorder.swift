@@ -16,6 +16,10 @@ public struct VoiceRecording {
 
 class AudioRecorder: ObservableObject {
     private var audioRecorder: AVAudioRecorder?
+    private var recordingTask: Task<Void, Never>?
+    private var recordingRequest: UUID?
+    private var meteringStarted = false
+    @Published var isPreparingRecording = false
     private var audioSession: AVAudioSession = AVAudioSession.sharedInstance()
     @Published var isRecording = false {
         didSet {
@@ -41,7 +45,9 @@ class AudioRecorder: ObservableObject {
         }
     }
     
+    @MainActor
     func startRecording() {
+        guard !isRecording, !isPreparingRecording, !waitingForSamples else { return }
         // Check permissions first
         let permissionStatus = audioSession.recordPermission
 #if DEBUG
@@ -74,96 +80,79 @@ class AudioRecorder: ObservableObject {
             AVLinearPCMIsFloatKey: false
         ] as [String : Any]
         
-        do {
-            // Platform-specific audio session configuration
-            #if targetEnvironment(macCatalyst)
-            // macOS Catalyst needs different audio session setup
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth, .allowBluetoothA2DP])
-            L.a0.debug("AudioRecorder: Using macOS Catalyst audio session configuration")
-            
-//            // Try to set preferred input
-//            if let availableInputs = audioSession.availableInputs {
-//                L.a0.debug("AudioRecorder: Available inputs: \(availableInputs.map { $0.portName })")
-//                for input in availableInputs {
-//                    if input.portType == .builtInMic {
-//                        try audioSession.setPreferredInput(input)
-//                        L.a0.debug("AudioRecorder: Set preferred input to built-in mic: \(input.portName)")
-//                        break
-//                    }
-//                }
-//            } else {
-//                L.a0.debug("AudioRecorder: No available inputs found")
-//            }
-            #else
-            // iOS configuration
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
-            L.a0.debug("AudioRecorder: Using iOS audio session configuration")
-            #endif
-            
-            try audioSession.setActive(true)
-    
-            audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
-//            audioRecorder?.isMeteringEnabled = true // Enable metering for getting audio levels
-            audioRecorder?.record()
-            isRecording = true
-//            samplesFromMic = []
-            samples = [] // Reset samples
-#if DEBUG
-            L.a0.debug("Recording started")
-#endif
-            
-            try self.startMetering()
-        } catch {
-#if DEBUG
-            L.a0.error("Failed to start recording: \(error.localizedDescription) - \(audioFilename)")
-#endif
-        }
-    }
-    
-    func stopRecording() {
-#if DEBUG
-        L.a0.debug("AudioRecorder.stopRecording()")
-#endif
-        self.stopMetering()
-        Task { @MainActor in
-            waitingForSamples = true
-            isRecording = false
-        }
-        guard let recorder = audioRecorder else { return }
-        
-        if recordingURL != nil {
-            Task.detached(priority: .userInitiated) {
-                let currentTime = recorder.currentTime
-#if DEBUG
-                L.a0.debug("Recorded time: \(currentTime.description)")
-#endif
-                recorder.stop()
-                
-//                let samples: [Int] = samplesFromMicToFullIntegers(self.samplesFromMic, limit: DEFAULT_SAMPLE_COUNT)
-//                let samples: [Int] = samplesFromMicToFullIntegers(self.envelope, limit: DEFAULT_SAMPLE_COUNT)
-                let samples: [Int] = resampleEnvelope(self.samplesFromMic, targetCount: 300)
-                
-                Task { @MainActor in
-                    withAnimation {
-                        self.duration = currentTime
-                        self.waitingForSamples = false
-                        self.samples = samples
-                        
-                        
-#if DEBUG
-                        L.a0.debug("Recording stopped - Duration: \(self.duration) seconds")
-                        L.a0.debug("Recording stopped - Samples: \(samples)")
-#endif
-                    }
-#if DEBUG
-                    L.a0.debug("self.audioSession.setActive(false)")
-#endif
-                    try? self.audioSession.setActive(false)
+        let request = UUID()
+        recordingRequest = request
+        isPreparingRecording = true
+        recordingTask = Task { @MainActor in
+            do {
+                try await AudioSessionController.shared.prepare(.recording, owner: request)
+                try Task.checkCancellation()
+                guard recordingRequest == request else { return }
+                let recorder = try AVAudioRecorder(url: audioFilename, settings: settings)
+                audioRecorder = recorder
+                guard recorder.record() else {
+                    throw NSError(domain: "AudioRecorder", code: 1,
+                                  userInfo: [NSLocalizedDescriptionKey: "Recording could not be started."])
+                }
+                try startMetering()
+                samples = []
+                isPreparingRecording = false
+                isRecording = true
+                recordingTask = nil
+            } catch {
+                guard recordingRequest == request else { return }
+                audioRecorder?.stop()
+                audioRecorder = nil
+                stopMetering()
+                isPreparingRecording = false
+                isRecording = false
+                recordingTask = nil
+                recordingURL = nil
+                try? await AudioSessionController.shared.deactivate(owner: request)
+                if !(error is CancellationError) {
+                    L.a0.error("Failed to start recording: \(error.localizedDescription)")
                 }
             }
         }
     }
-    
+
+    @MainActor
+    func stopRecording() {
+        recordingTask?.cancel()
+        recordingTask = nil
+        isPreparingRecording = false
+        let request = recordingRequest
+        recordingRequest = nil
+        stopMetering()
+        isRecording = false
+        guard let recorder = audioRecorder else {
+            if let request {
+                Task { try? await AudioSessionController.shared.deactivate(owner: request) }
+            }
+            // A cancelled activation never produced a recording.
+            if request != nil { recordingURL = nil }
+            return
+        }
+        audioRecorder = nil
+        waitingForSamples = true
+        let recordedSamples = samplesFromMic
+        Task.detached(priority: .userInitiated) {
+            let currentTime = recorder.currentTime
+            recorder.stop()
+            let samples = resampleEnvelope(recordedSamples, targetCount: 300)
+            await MainActor.run {
+                withAnimation {
+                    self.duration = currentTime
+                    self.samples = samples
+                }
+            }
+            if let request {
+                try? await AudioSessionController.shared.deactivate(owner: request)
+            }
+            await MainActor.run { self.waitingForSamples = false }
+        }
+    }
+
     func resetRecording() {
         Task { @MainActor in
             recordingURL = nil
@@ -240,10 +229,6 @@ class AudioRecorder: ObservableObject {
       private let maxBars = 300             // how many bars to keep
 
     func startMetering() throws {
-//            let session = AVAudioSession.sharedInstance()
-//            try session.setCategory(.playAndRecord, mode: .measurement, options: [.allowBluetooth, .defaultToSpeaker])
-//            try session.setActive(true)
-
             let input = engine.inputNode
             let format = input.inputFormat(forBus: 0)
 
@@ -289,10 +274,13 @@ class AudioRecorder: ObservableObject {
                 }
             }
 
+            meteringStarted = true
             try engine.start()
         }
 
     func stopMetering() {
+        guard meteringStarted else { return }
+        meteringStarted = false
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
     }
@@ -458,7 +446,7 @@ struct AudioRecorderContentView: View {
     private var onSwitchBack: () -> Void
     
     private var shouldDisablePostButton: Bool {
-        (typingTextModel.sending || typingTextModel.uploading || recorder.isRecording || recorder.waitingForSamples || recorder.recordingURL == nil)
+        (typingTextModel.sending || typingTextModel.uploading || recorder.isRecording || recorder.isPreparingRecording || recorder.waitingForSamples || recorder.recordingURL == nil)
     }
     
     init(vm: NewPostModel, replyTo: ReplyTo? = nil, onDismiss: @escaping () -> Void, onSwitchBack: @escaping () -> Void) {
@@ -473,7 +461,7 @@ struct AudioRecorderContentView: View {
         VStack(spacing: 0) {
             
             // FINISHED RECORDING
-            if !recorder.isRecording && !recorder.waitingForSamples, let recordingURL = recorder.recordingURL { //, recorder.duration > 0 {
+            if !recorder.isRecording && !recorder.isPreparingRecording && !recorder.waitingForSamples, let recordingURL = recorder.recordingURL { //, recorder.duration > 0 {
                 HStack(spacing: 10) {
                     Button(action: {
                         recorder.resetRecording()
@@ -600,7 +588,7 @@ struct AudioRecorderContentView: View {
             }
         }
         .onDisappear {
-            if recorder.isRecording {
+            if recorder.isRecording || recorder.isPreparingRecording {
                 recorder.stopRecording()
             }
         }

@@ -106,9 +106,16 @@ struct iOSApp: App {
     }
 }
 
+@MainActor
 func enableAudioPlayback() {
-    try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-    try? AVAudioSession.sharedInstance().setActive(true)
+    Task {
+        do {
+            try await AudioSessionController.shared.prepareDefaultPlayback()
+        } catch is CancellationError {
+        } catch {
+            L.og.error("Failed to prepare audio playback: \(error.localizedDescription)")
+        }
+    }
 }
 
 func hideTitleBarOnCatalyst() {

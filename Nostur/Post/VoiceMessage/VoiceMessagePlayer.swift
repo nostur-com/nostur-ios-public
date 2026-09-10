@@ -20,6 +20,10 @@ struct VoiceMessagePlayer: View {
     @State private var cancellable: AnyCancellable?
     @State private var localFileURL: URL? // downloaded file url
     @State private var player: AVPlayer?
+    @State private var playbackTask: Task<Void, Never>?
+    @State private var playbackRequest: UUID?
+    @State private var audioLoadRequest: UUID?
+    @State private var autoplayRequested = false
     @State private var isPlaying: Bool = false
     @State private var audioObserver: AudioPlayerObserver?
     @State private var errorMessage: String?
@@ -68,6 +72,9 @@ struct VoiceMessagePlayer: View {
     }
     
     private func cleanup() {
+        audioLoadRequest = nil
+        autoplayRequested = false
+        cancelPendingPlayback()
         progressTimer?.invalidate()
         progressTimer = nil
         
@@ -82,6 +89,8 @@ struct VoiceMessagePlayer: View {
     }
     
     private func pausePlayback() {
+        autoplayRequested = false
+        cancelPendingPlayback()
         guard isPlaying else { return }
         player?.pause()
         isPlaying = false
@@ -89,6 +98,49 @@ struct VoiceMessagePlayer: View {
         progressTimer = nil
     }
     
+    private func cancelPendingPlayback() {
+        playbackTask?.cancel()
+        playbackTask = nil
+        if let playbackRequest {
+            AudioSessionController.shared.abandon(owner: playbackRequest)
+        }
+        playbackRequest = nil
+    }
+
+    private func startPlayback() {
+        guard let player else { return }
+        cancelPendingPlayback()
+        AnyPlayerModel.shared.pauseVideo()
+        sendNotification(.voiceMessagePlayerDidStartPlayback, playerId)
+        let request = UUID()
+        playbackRequest = request
+        errorMessage = nil
+        isPlaying = true // Playback intent also allows Pause while activation is pending.
+        playbackTask = Task { @MainActor in
+            do {
+                try await AudioSessionController.shared.prepare(.playback, owner: request)
+                try Task.checkCancellation()
+                guard playbackRequest == request, self.player === player, isPlaying else { return }
+                if isFinished {
+                    player.seek(to: .zero, completionHandler: { _ in })
+                    isFinished = false
+                }
+                player.play()
+                playbackTask = nil
+                startProgressTimer()
+            } catch {
+                guard playbackRequest == request else { return }
+                playbackTask = nil
+                playbackRequest = nil
+                isPlaying = false
+                if !(error is CancellationError) {
+                    errorMessage = error.localizedDescription
+                    L.og.error("Failed to activate voice message audio: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
     private func startProgressTimer() {
         guard progressTimer == nil else { return }
         progressTimer?.invalidate()
@@ -111,22 +163,9 @@ struct VoiceMessagePlayer: View {
             if let localFileURL {
                 Button {
                     if isPlaying {
-                        player?.pause()
-                        isPlaying = false
+                        pausePlayback()
                     } else {
-                        // Notify other players to pause
-                        AnyPlayerModel.shared.pauseVideo()
-                        sendNotification(.voiceMessagePlayerDidStartPlayback, playerId)
-                        
-                        if isFinished {
-                            player?.seek(to: .zero)
-                            isFinished = false
-                        }
-                        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-                        try? AVAudioSession.sharedInstance().setActive(true)
-                        player?.play()
-                        isPlaying = true
-                        startProgressTimer()
+                        startPlayback()
                     }
                 } label: {
                     Image(systemName: isPlaying ? "pause.fill" : "play.fill")
@@ -139,6 +178,9 @@ struct VoiceMessagePlayer: View {
                 .buttonStyle(PlainButtonStyle())
                 .disabled(player == nil)
                 .onAppear {
+                    let loadRequest = UUID()
+                    audioLoadRequest = loadRequest
+                    autoplayRequested = forceDownload
                     Task.detached(priority: .userInitiated) {
                         // Convert webm to m4a if needed
                         let processedFileURL: URL
@@ -219,11 +261,16 @@ struct VoiceMessagePlayer: View {
                         }
                         
                         Task { @MainActor in
+                            guard audioLoadRequest == loadRequest else { return }
                             player = AVPlayer(playerItem: playerItem)
 #if DEBUG
                             L.a0.debug("VoiceMessagePlayer.onAppear: Trying to load: \(processedFileURL)")
 #endif
                             audioObserver?.addFinishObserver(to: player!)
+                            if autoplayRequested {
+                                autoplayRequested = false
+                                startPlayback()
+                            }
                         }
                         
                         // Observe when player item finishes
@@ -253,19 +300,6 @@ struct VoiceMessagePlayer: View {
                             }
                         }
                         
-                        if await forceDownload {
-                            Task { @MainActor in
-                                // Notify other players to pause
-                                AnyPlayerModel.shared.pauseVideo()
-                                sendNotification(.voiceMessagePlayerDidStartPlayback, playerId)
-                                
-                                try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-                                try? AVAudioSession.sharedInstance().setActive(true)
-                                player?.play()
-                                isPlaying = true
-                                startProgressTimer()
-                            }
-                        }
                     }
                 }
                 

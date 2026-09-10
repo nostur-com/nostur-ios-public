@@ -9,23 +9,19 @@ import Foundation
 import AVKit
 import AVFoundation
 
-class SoundManager {
+@MainActor
+class SoundManager: NSObject, AVAudioPlayerDelegate {
     
     static let shared = SoundManager()
     
     private var player: AVAudioPlayer?
+    private var playbackTask: Task<Void, Never>?
+    private var playbackRequest: UUID?
     
     public func playThunderzap() {
         guard SettingsStore.shared.thunderzapLevel != ThunderzapLevel.off.rawValue else { return }
         
-        // Configure audio session to mix with other audio
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [.mixWithOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            L.og.error("Failed to configure audio session: \(error.localizedDescription)")
-        }
-        
+        stop()
         let thunderzapFile = if SettingsStore.shared.thunderzapLevel == ThunderzapLevel.low.rawValue {
             "Thunderzap16"
         }
@@ -33,23 +29,50 @@ class SoundManager {
             "Thunderzap71"
         }
         guard let url = Bundle.main.url(forResource: thunderzapFile, withExtension: ".m4a") else { return }
-        do {
-            player = try AVAudioPlayer(contentsOf: url)
-            player?.play()
-            
-            
-            // Need to restore for media control center
-            // but only if our app was playing, else it will stop music/podcast from other apps
-            if AnyPlayerModel.shared.isPlaying {
-                try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+        let request = UUID()
+        playbackRequest = request
+        playbackTask = Task { @MainActor in
+            do {
+                try await AudioSessionController.shared.prepareEffect(owner: request)
+                try Task.checkCancellation()
+                guard playbackRequest == request else { return }
+                player = try AVAudioPlayer(contentsOf: url)
+                player?.delegate = self
+                if player?.play() != true {
+                    AudioSessionController.shared.abandon(owner: request)
+                }
+                playbackTask = nil
+            } catch {
+                guard playbackRequest == request else { return }
+                AudioSessionController.shared.abandon(owner: request)
+                playbackTask = nil
+                if !(error is CancellationError) {
+                    L.og.error("Failed to play thunderzap: \(error.localizedDescription)")
+                }
             }
         }
-        catch let error {
-            L.og.error("Error: \(error.localizedDescription)")
+    }
+    public func stop() {
+        playbackTask?.cancel()
+        playbackTask = nil
+        if let playbackRequest {
+            AudioSessionController.shared.abandon(owner: playbackRequest)
+        }
+        playbackRequest = nil
+        player?.stop()
+    }
+
+    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        Task { @MainActor [weak self] in
+            guard let self, self.player === player else { return }
+            self.stop()
         }
     }
-    
-    public func stop() {
-        player?.stop()
+
+    nonisolated func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+        Task { @MainActor [weak self] in
+            guard let self, self.player === player else { return }
+            self.stop()
+        }
     }
 }

@@ -22,6 +22,9 @@ class AnyPlayerModel: ObservableObject {
     @Published var player = AVPlayer()
     private var hlsResourceLoaderDelegate: CompatibleHLSResourceLoader?
     @Published var isPlaying = false
+    @Published private(set) var playbackSessionReady = false
+    private var playbackTask: Task<Void, Never>?
+    private var playbackRequest: UUID?
     @Published var didFinishPlaying = false // to show Like/Zap
     @Published var showsPlaybackControls = false
     @Published var timeControlStatus: AVPlayer.TimeControlStatus = .paused
@@ -142,7 +145,7 @@ class AnyPlayerModel: ObservableObject {
                     .prefix(1)
                     .sink { [weak self, weak item] _ in
                         guard let self, item === self.player.currentItem else { return }
-                        guard self.isPlaying, !self.didFinishPlaying,
+                        guard self.isPlaying, self.playbackSessionReady, !self.didFinishPlaying,
                               self.player.timeControlStatus != .playing else { return }
 #if DEBUG
                         self.playbackDebugLog("item became ready; resuming intended playback once")
@@ -167,6 +170,7 @@ class AnyPlayerModel: ObservableObject {
         playbackDebugLog("loadLiveEvent mode=\(availableViewModes.first ?? .detailstream) ended=\(nrLiveEvent.streamHasEnded)")
 #endif
         
+        pauseVideo()
         // View updates
         sendNotification(.stopPlayingVideo)
         self.nrPost = nil
@@ -224,6 +228,7 @@ class AnyPlayerModel: ObservableObject {
     public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay, .audioOnlyBar], nrPost: NRPost? = nil, cachedFirstFrame: CachedFirstFrame? = nil) async {
         guard let url = URL(string: url) else { return }
         
+        pauseVideo()
         // View updates
         sendNotification(.stopPlayingVideo)
         self.nrPost = nrPost
@@ -486,30 +491,51 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     func playVideo() {
+        cancelPendingPlayback()
+        let request = UUID()
+        playbackRequest = request
+        let item = player.currentItem
         let shouldRestartFromBeginning = didFinishPlaying || isAtEndOfCurrentItem
         didFinishPlaying = false
         isPlaying = true
-        configurePlaybackSession()
-        
-        if shouldRestartFromBeginning {
-            player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
-        }
+        playbackTask = Task { @MainActor [weak self] in
+            do {
+                try await AudioSessionController.shared.prepare(.playback, owner: request)
+                try Task.checkCancellation()
+                guard let self, self.playbackRequest == request,
+                      self.isPlaying, self.player.currentItem === item else { return }
+                self.playbackSessionReady = true
+                self.playbackTask = nil
+                UIApplication.shared.beginReceivingRemoteControlEvents()
+                UIApplication.shared.isIdleTimerDisabled = true
+                if shouldRestartFromBeginning {
+                    self.player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero, completionHandler: { _ in })
+                }
 #if DEBUG
-        playbackDebugLog("play() requested itemStatus=\(debugItemStatus(player.currentItem?.status)) playerStatus=\(debugPlayerStatus(player.status))")
+                self.playbackDebugLog("audio session ready; applying playback intent")
 #endif
-        if isStream {
-            player.automaticallyWaitsToMinimizeStalling = false
-            player.playImmediately(atRate: 1.0)
-        }
-        else {
-            player.automaticallyWaitsToMinimizeStalling = true
-            player.play()
-        }
+                if self.isStream {
+                    self.player.automaticallyWaitsToMinimizeStalling = false
+                    self.player.playImmediately(atRate: 1.0)
+                } else {
+                    self.player.automaticallyWaitsToMinimizeStalling = true
+                    self.player.play()
+                }
 #if os(macOS)
-        MPNowPlayingInfoCenter.default().playbackState = .playing
+                MPNowPlayingInfoCenter.default().playbackState = .playing
 #endif
+            } catch {
+                guard let self, self.playbackRequest == request else { return }
+                self.playbackTask = nil
+                self.playbackRequest = nil
+                self.isPlaying = false
+                if !(error is CancellationError) {
+                    L.og.error("Failed to activate video audio: \(error.localizedDescription)")
+                }
+            }
+        }
     }
-    
+
     private var isAtEndOfCurrentItem: Bool {
         guard let duration = player.currentItem?.duration.seconds, duration.isFinite, duration > 0 else { return false }
         let currentTime = player.currentTime().seconds
@@ -518,19 +544,19 @@ class AnyPlayerModel: ObservableObject {
     }
     
     @MainActor
-    private func configurePlaybackSession() {
-        // Always re-apply .playback without .mixWithOthers (app launch uses mixWithOthers).
-        // Avoid setActive(false) first — that can stall the next play on device after reopen.
-        let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playback, mode: .default, options: [])
-        try? session.setActive(true)
-        
-        UIApplication.shared.beginReceivingRemoteControlEvents()
-        UIApplication.shared.isIdleTimerDisabled = true
+    private func cancelPendingPlayback() {
+        playbackTask?.cancel()
+        playbackTask = nil
+        playbackSessionReady = false
+        if let playbackRequest {
+            AudioSessionController.shared.abandon(owner: playbackRequest)
+        }
+        playbackRequest = nil
     }
-    
+
     @MainActor
     func pauseVideo() {
+        cancelPendingPlayback()
 #if DEBUG
         playbackDebugLog("pause() requested")
 #endif
@@ -567,6 +593,7 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     public func close() {
+        cancelPendingPlayback()
 #if DEBUG
         playbackDebugLog("close()")
 #endif

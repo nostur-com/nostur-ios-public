@@ -129,8 +129,7 @@ extension AppView {
                 RelayConfigHealth.checkInBackground()
                 AppState.shared.startTaskTimers()
                 if !IS_CATALYST {
-                    try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-                    try? AVAudioSession.sharedInstance().setActive(true)
+                    enableAudioPlayback()
                 }
 
                 // NIP-40: promptly drop expired DM copies when returning from background
