@@ -581,4 +581,31 @@ final class NXFeedViewportTests: XCTestCase {
             NXFeedViewport.shouldCoverViewport(updateReasons: ["older posts append"])
         )
     }
+
+    func testPureOffscreenRemovalUsesListAnimationWithoutViewportSettle() {
+        XCTAssertTrue(
+            NXFeedViewport.shouldAnimateOffscreenRemoval(
+                removedPostIDs: ["read-above"],
+                visiblePostIDs: ["reading", "below"],
+                hasParentUpdates: false
+            )
+        )
+    }
+
+    func testVisibleRemovalOrRowResizeStillUsesAnchoredUpdate() {
+        XCTAssertFalse(
+            NXFeedViewport.shouldAnimateOffscreenRemoval(
+                removedPostIDs: ["reading"],
+                visiblePostIDs: ["reading", "below"],
+                hasParentUpdates: false
+            )
+        )
+        XCTAssertFalse(
+            NXFeedViewport.shouldAnimateOffscreenRemoval(
+                removedPostIDs: ["read-above"],
+                visiblePostIDs: ["reading", "below"],
+                hasParentUpdates: true
+            )
+        )
+    }
 }

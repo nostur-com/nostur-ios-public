@@ -158,6 +158,19 @@ enum NXFeedViewport {
         shouldCoverPrepend(updateReasons: updateReasons) || updateReasons.contains(unreadRemovalCoverReason)
     }
 
+    /// Let SwiftUI/List animate a pure offscreen deletion. List already keeps the
+    /// visible rows stable for this case, while an identity settle can fight its
+    /// transient self-sizing layout and visibly correct a viewport that never moved.
+    static func shouldAnimateOffscreenRemoval(
+        removedPostIDs: Set<String>,
+        visiblePostIDs: Set<String>,
+        hasParentUpdates: Bool
+    ) -> Bool {
+        !removedPostIDs.isEmpty
+            && removedPostIDs.isDisjoint(with: visiblePostIDs)
+            && !hasParentUpdates
+    }
+
     /// Remember-on restores already-seen posts. Older pages are for scrolling
     /// down that snapshot, not for restore, prepend, or estimated near-tail.
     static func shouldAllowRememberOnOlderFetch(

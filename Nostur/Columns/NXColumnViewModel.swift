@@ -834,6 +834,12 @@ class NXColumnViewModel: ObservableObject {
         }
 #endif
 
+        let shouldAnimateOffscreenRemoval = NXFeedViewport.shouldAnimateOffscreenRemoval(
+            removedPostIDs: postIdsToRemove,
+            visiblePostIDs: visiblePostIds,
+            hasParentUpdates: !parentUpdates.isEmpty
+        )
+
         let applyUpdates = { [weak self] () -> [String] in
             guard let self else { return [] }
             self.vmInner.updateUnreadIds { unreadIds in
@@ -855,8 +861,16 @@ class NXColumnViewModel: ObservableObject {
                 resultingPosts = self.currentNRPostsOnScreen.filter {
                     !postIdsToRemove.contains($0.id)
                 }
-                withTransaction(Transaction(animation: nil)) {
-                    self.viewState = .posts(resultingPosts)
+                if shouldAnimateOffscreenRemoval {
+                    // List natively preserves the viewport when rows outside it
+                    // disappear. Avoid covering and re-pinning an already-stable view.
+                    withAnimation {
+                        self.viewState = .posts(resultingPosts)
+                    }
+                } else {
+                    withTransaction(Transaction(animation: nil)) {
+                        self.viewState = .posts(resultingPosts)
+                    }
                 }
             }
             self.vmInner.updateIsAtTopSubject.send()
@@ -868,7 +882,7 @@ class NXColumnViewModel: ObservableObject {
             return resultingPosts.map(\.id)
         }
 
-        if (!postIdsToRemove.isEmpty || !parentUpdates.isEmpty),
+        if ((!shouldAnimateOffscreenRemoval && !postIdsToRemove.isEmpty) || !parentUpdates.isEmpty),
            let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
             let reason = !postIdsToRemove.isEmpty
                 ? NXFeedViewport.unreadRemovalCoverReason
