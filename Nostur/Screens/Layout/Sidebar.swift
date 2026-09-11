@@ -14,6 +14,7 @@ struct SideBar: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var loggedInAccount: LoggedInAccount
     @EnvironmentObject private var dm: DMsVM
+    @ObservedObject private var settings: SettingsStore = .shared
     @Binding var showSidebar: Bool
     
     @State private var accountsSheetIsShown = false
@@ -220,18 +221,20 @@ struct SideBar: View {
                             .contentShape(Rectangle())
                         }
                     }
-                    Button {
-                        if selectedTab() != "Main" { setSelectedTab("Main") }
-                        navigateToOnMain(ViewPath.Wallet)
-                        showSidebar = false
-                    } label: {
-                        Label {
-                            Text("Wallet").frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
-                        } icon: {
-                            Image(systemName: "wallet.pass").frame(width: Self.ICON_WIDTH)
+                    if settings.nwcReady {
+                        Button {
+                            if selectedTab() != "Main" { setSelectedTab("Main") }
+                            navigateToOnMain(ViewPath.Wallet)
+                            showSidebar = false
+                        } label: {
+                            Label {
+                                Text("Wallet").frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                            } icon: {
+                                Image(systemName: "bitcoinsign.circle").frame(width: Self.ICON_WIDTH)
+                            }
+                            .padding(.vertical, Self.BUTTON_VPADDING)
+                            .contentShape(Rectangle())
                         }
-                        .padding(.vertical, Self.BUTTON_VPADDING)
-                        .contentShape(Rectangle())
                     }
                     Button {
                         if selectedTab() != "Main" {

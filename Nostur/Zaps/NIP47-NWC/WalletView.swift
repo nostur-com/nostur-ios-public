@@ -261,7 +261,11 @@ struct WalletView: View {
         .sheet(item: $selectedTransaction) { transaction in
             NBNavigationStack {
                 WalletTransactionDetail(transaction: transaction)
-                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { selectedTransaction = nil } } }
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close", systemImage: "xmark") { selectedTransaction = nil }
+                        }
+                    }
             }
             .environment(\.theme, theme)
         }
@@ -486,6 +490,12 @@ private struct WalletConnectionView: View {
         }
         .navigationTitle("Wallet connection")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
+                    dismiss()
+                }
+            }
+        }
     }
 }
