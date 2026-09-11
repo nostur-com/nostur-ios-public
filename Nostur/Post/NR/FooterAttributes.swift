@@ -190,8 +190,6 @@ class FooterAttributes: ObservableObject {
             .sink { [weak self] change in
                 guard let self else { return }
                 
-                self.objectWillChange.send()
-                
                 if let likes = change.likes, likes != self.likesCount, likes != 0 {
                     self.likesCount = likes
                 }

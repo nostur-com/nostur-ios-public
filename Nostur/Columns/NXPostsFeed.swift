@@ -1717,6 +1717,11 @@ struct NXPostsFeed: View {
 #endif
             // Do not depend on onAppear here: List may reuse an already-visible row and never
             // fire it again. Consume exactly the post selected by the unread index at tap time.
+            // Appearance-driven count prefetching is suppressed during the animated scroll, so
+            // explicitly schedule the same bounded prefetch for the row where we settle.
+            Task { @MainActor in
+                vm.prefetch(targetPost)
+            }
             performIDCollectionUpdates(for: targetPost, vm: vm)
             performUnreadMarkingUpdates(for: targetPost, vm: vm)
         }
