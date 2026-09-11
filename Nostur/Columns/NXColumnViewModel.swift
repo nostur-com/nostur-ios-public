@@ -313,16 +313,25 @@ class NXColumnViewModel: ObservableObject {
     /// deferred by the anchor coordinator until scrolling finishes.
     @MainActor
     private func setPosts(_ posts: [NRPost], animated: Bool = true) {
+        let oldIDs = Set(currentNRPostsOnScreen.map(\.id))
+        let newIDs = Set(posts.map(\.id))
+        let insertedPostIDs = newIDs.subtracting(oldIDs)
+        let removedPostIDs = oldIDs.subtracting(newIDs)
+        let shouldAnimateOffscreenInsertion = !isFeedActivelyScrolling && NXFeedViewport.shouldAnimateOffscreenInsertion(
+            insertedPostIDs: insertedPostIDs,
+            removedPostIDs: removedPostIDs,
+            visiblePostIDs: currentVisiblePostIds(),
+            isPreparingRestore: vmInner.isPreparingForScrollRestore
+        )
         // Pin whenever newer rows land above the reading post. That includes
         // autoScroll-off at the visual top: keep the current first post instead
         // of a hide-and-scrollTo restore. Auto-scroll at top still lets SwiftUI
         // move to the newest post.
         let pinInsertAbove = shouldPinFeedUpdate(to: posts)
             && (!isFeedActuallyAtTop || !SettingsStore.shared.autoScroll)
-        if pinInsertAbove,
+        if pinInsertAbove && !shouldAnimateOffscreenInsertion,
            let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
             let oldPosts = currentNRPostsOnScreen
-            let oldIDs = Set(oldPosts.map(\.id))
             let requestedNewCount = posts.count { !oldIDs.contains($0.id) }
             performAnchoredFeedUpdate(NXFeedViewport.prependCoverReason) { [weak self] in
                 guard let self else { return [] }
@@ -353,7 +362,7 @@ class NXColumnViewModel: ObservableObject {
             return
         }
 
-        if animated && !isFeedActivelyScrolling {
+        if (animated || shouldAnimateOffscreenInsertion) && !isFeedActivelyScrolling {
             withAnimation {
                 viewState = .posts(posts)
             }

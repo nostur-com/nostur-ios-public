@@ -608,4 +608,34 @@ final class NXFeedViewportTests: XCTestCase {
             )
         )
     }
+
+    func testPureOffscreenInsertionUsesListAnimationWithoutViewportSettle() {
+        XCTAssertTrue(
+            NXFeedViewport.shouldAnimateOffscreenInsertion(
+                insertedPostIDs: ["new-above"],
+                removedPostIDs: [],
+                visiblePostIDs: ["reading", "below"],
+                isPreparingRestore: false
+            )
+        )
+    }
+
+    func testMixedInsertionOrRestoreStillUsesAnchoredUpdate() {
+        XCTAssertFalse(
+            NXFeedViewport.shouldAnimateOffscreenInsertion(
+                insertedPostIDs: ["new-above"],
+                removedPostIDs: ["old-tail"],
+                visiblePostIDs: ["reading", "below"],
+                isPreparingRestore: false
+            )
+        )
+        XCTAssertFalse(
+            NXFeedViewport.shouldAnimateOffscreenInsertion(
+                insertedPostIDs: ["new-above"],
+                removedPostIDs: [],
+                visiblePostIDs: ["reading", "below"],
+                isPreparingRestore: true
+            )
+        )
+    }
 }

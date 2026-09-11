@@ -171,6 +171,22 @@ enum NXFeedViewport {
             && !hasParentUpdates
     }
 
+    /// Let SwiftUI/List preserve the viewport for a pure prepend whose new rows
+    /// are outside the current viewport. Mixed snapshot changes still need the
+    /// explicit anchor because they can remove or replace the row being viewed.
+    static func shouldAnimateOffscreenInsertion(
+        insertedPostIDs: Set<String>,
+        removedPostIDs: Set<String>,
+        visiblePostIDs: Set<String>,
+        isPreparingRestore: Bool
+    ) -> Bool {
+        !insertedPostIDs.isEmpty
+            && removedPostIDs.isEmpty
+            && !visiblePostIDs.isEmpty
+            && insertedPostIDs.isDisjoint(with: visiblePostIDs)
+            && !isPreparingRestore
+    }
+
     /// Remember-on restores already-seen posts. Older pages are for scrolling
     /// down that snapshot, not for restore, prepend, or estimated near-tail.
     static func shouldAllowRememberOnOlderFetch(
