@@ -18,13 +18,17 @@ final class NestedReplyNode: Identifiable {
     let resolvedParentId: String?
     /// How this node was placed: "root-direct", "child", "root-orphan", etc.
     let placement: String
+    /// Immediate parent that was referenced but unavailable while building the tree.
+    /// When set, this node must not be presented as an ordinary direct child.
+    let missingParentId: String?
     
     init(
         nrPost: NRPost,
         children: [NestedReplyNode] = [],
         depth: Int = 0,
         resolvedParentId: String? = nil,
-        placement: String = ""
+        placement: String = "",
+        missingParentId: String? = nil
     ) {
         self.id = nrPost.id
         self.nrPost = nrPost
@@ -32,6 +36,7 @@ final class NestedReplyNode: Identifiable {
         self.depth = depth
         self.resolvedParentId = resolvedParentId
         self.placement = placement
+        self.missingParentId = missingParentId
     }
     
     /// Rebuild tree with corrected depths (e.g. after WoT promotion).
@@ -41,7 +46,8 @@ final class NestedReplyNode: Identifiable {
             children: children.map { $0.withDepth(depth + 1) },
             depth: depth,
             resolvedParentId: resolvedParentId,
-            placement: placement
+            placement: placement,
+            missingParentId: missingParentId
         )
     }
     
@@ -51,7 +57,8 @@ final class NestedReplyNode: Identifiable {
             children: children,
             depth: depth,
             resolvedParentId: resolvedParentId,
-            placement: placement
+            placement: placement,
+            missingParentId: missingParentId
         )
     }
     
@@ -62,6 +69,21 @@ final class NestedReplyNode: Identifiable {
             return String(id.prefix(8))
         }
         return "d\(depth) id=\(short(id)) replyTo=\(short(nrPost.replyToId)) root=\(short(nrPost.replyToRootId)) parent=\(short(resolvedParentId)) [\(placement)]"
+    }
+}
+
+enum NestedReplyParentResolution {
+    /// Returns the unavailable immediate parent that would otherwise be hidden by
+    /// promoting the reply higher in the visible tree.
+    static func missingParentId(
+        preferredParentId: String?,
+        detailPostId: String,
+        knownPostIds: Set<String>
+    ) -> String? {
+        guard let preferredParentId else { return nil }
+        guard preferredParentId != detailPostId else { return nil }
+        guard !knownPostIds.contains(preferredParentId) else { return nil }
+        return preferredParentId
     }
 }
 

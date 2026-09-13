@@ -1803,6 +1803,7 @@ extension NRPost { // Helpers for grouped replies
         let uniqueRoots = rootPosts
             .uniqued(on: { $0.id })
             .filter { !childIds.contains($0.id) }
+        let knownPostIds = Set(byId.keys)
         
         func buildNodes(_ posts: [NRPost], depth: Int, remaining: inout Int, path: Set<String>) -> [NestedReplyNode] {
             guard remaining > 0 else { return [] }
@@ -1819,7 +1820,12 @@ extension NRPost { // Helpers for grouped replies
                     children: childNodes,
                     depth: depth,
                     resolvedParentId: resolvedParentById[post.id] ?? nil,
-                    placement: placementById[post.id] ?? "?"
+                    placement: placementById[post.id] ?? "?",
+                    missingParentId: NestedReplyParentResolution.missingParentId(
+                        preferredParentId: resolvedParentById[post.id] ?? nil,
+                        detailPostId: self.id,
+                        knownPostIds: knownPostIds
+                    )
                 ))
             }
             return nodes
@@ -1832,7 +1838,19 @@ extension NRPost { // Helpers for grouped replies
         // so nested mode can never be blank while classic mode has content.
         let fallbackTree: [NestedReplyNode] = fullTree.isEmpty
             ? (groupedRepliesSorted + groupedRepliesNotWoT).map {
-                NestedReplyNode(nrPost: $0, children: [], depth: 0, resolvedParentId: self.id, placement: "flat-fallback")
+                let parentId = self.preferredReplyParentId(for: $0)
+                return NestedReplyNode(
+                    nrPost: $0,
+                    children: [],
+                    depth: 0,
+                    resolvedParentId: parentId,
+                    placement: "flat-fallback",
+                    missingParentId: NestedReplyParentResolution.missingParentId(
+                        preferredParentId: parentId,
+                        detailPostId: self.id,
+                        knownPostIds: knownPostIds
+                    )
+                )
             }
             : fullTree
         

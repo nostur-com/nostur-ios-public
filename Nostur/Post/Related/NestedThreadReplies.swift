@@ -135,6 +135,7 @@ struct NestedReplyRow: View {
     @Environment(\.theme) private var theme
     @Environment(\.availableWidth) private var availableWidth
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.nxViewingContext) private var nxViewingContext
     
     let node: NestedReplyNode
     /// Hierarchical index for debug (e.g. `"1.3.2"`).
@@ -147,6 +148,7 @@ struct NestedReplyRow: View {
     @State private var isCollapsed = false
     @State private var isAnimatingPFP = false
     @State private var animatedPFPIsCollapsed = false
+    @State private var didRequestMissingParent = false
     
     private var hasChildren: Bool { !node.children.isEmpty }
 
@@ -308,16 +310,25 @@ struct NestedReplyRow: View {
         // spacing here creates a real gap between bodySpine (on the Box) and
         // the incoming rail (on the first child).
         VStack(alignment: .leading, spacing: 0) {
+            if let missingParentId = node.missingParentId {
+                missingReplyView(parentId: missingParentId)
+                    .onAppear {
+                        guard !didRequestMissingParent else { return }
+                        didRequestMissingParent = true
+                        fetchMissingParent(missingParentId)
+                    }
+            }
+
             Box(nrPost: node.nrPost, showGutter: false) {
-            PostRowDeletable(
-                nrPost: node.nrPost,
-                    missingReplyTo: false,
+                PostRowDeletable(
+                    nrPost: node.nrPost,
+                    missingReplyTo: node.missingParentId != nil,
                     connect: nil,
                     fullWidth: false,
                     isDetail: false,
-                theme: theme
-            )
-            .environment(\.nestedReplyPFPHidden, isAnimatingPFP)
+                    theme: theme
+                )
+                .environment(\.nestedReplyPFPHidden, isAnimatingPFP)
             }
             .id(node.id)
             .environment(\.availableWidth, nestedAvailableWidth)
@@ -352,6 +363,39 @@ struct NestedReplyRow: View {
                     .padding(.top, 2)
                     .padding(.bottom, 2)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func missingReplyView(parentId: String) -> some View {
+        HStack(spacing: 6) {
+            Text(String(localized: "Missing reply.", comment: "Shown in a thread when an intermediate reply is missing"))
+                .foregroundColor(theme.secondary)
+
+            Button(String(localized: "Try to fetch", comment: "Button to fetch missing reply in thread")) {
+                fetchMissingParent(parentId)
+            }
+            .buttonStyle(.plain)
+            .foregroundColor(theme.accent)
+            .disabled(nxViewingContext.contains(.preview))
+
+            Spacer(minLength: 0)
+        }
+        .font(.footnote)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(theme.listBackground)
+    }
+
+    private func fetchMissingParent(_ parentId: String) {
+        if parentId.count > 64 && parentId.contains(":") {
+            QueuedFetcher.shared.enqueue(aTag: parentId)
+        }
+        else {
+            QueuedFetcher.shared.enqueue(id: parentId)
+            req(RM.getEvent(id: parentId), relayType: .SEARCH)
+            guard vpnGuardOK() else { return }
+            fetchEventFromRelayHint(parentId, fastTags: node.nrPost.fastTags)
         }
     }
     
