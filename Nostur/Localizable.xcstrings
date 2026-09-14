@@ -1469,7 +1469,6 @@
       "shouldTranslate" : false
     },
     "%@ (Timeout or other error)" : {
-      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -1905,6 +1904,9 @@
         }
       }
     },
+    "%@ sats" : {
+
+    },
     "%@ sats %@" : {
       "localizations" : {
         "en" : {
@@ -2085,6 +2087,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@'s reacties"
+          }
+        }
+      }
+    },
+    "%@%@ sats" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@ sats"
           }
         }
       }
@@ -2642,6 +2654,9 @@
           }
         }
       }
+    },
+    "•••••• sats" : {
+
     },
     "+" : {
       "localizations" : {
@@ -3979,6 +3994,9 @@
           }
         }
       }
+    },
+    "Activity" : {
+
     },
     "Add" : {
       "localizations" : {
@@ -5478,6 +5496,7 @@
       }
     },
     "Authenticate with" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -5698,6 +5717,9 @@
           }
         }
       }
+    },
+    "Available features" : {
+
     },
     "Award badge" : {
       "localizations" : {
@@ -6170,6 +6192,12 @@
           }
         }
       }
+    },
+    "Balance is not available for this connection." : {
+
+    },
+    "Balance unavailable" : {
+
     },
     "Based on your selection, the following relay set will be published so others can reach account: %@." : {
       "localizations" : {
@@ -7919,6 +7947,7 @@
       }
     },
     "Close All Tabs" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -8597,6 +8626,12 @@
         }
       }
     },
+    "Connect a Nostr Wallet Connect wallet to see your balance and payment activity." : {
+
+    },
+    "Connect a wallet" : {
+
+    },
     "Connect Alby wallet" : {
       "comment" : "Button to connect to Alby wallet",
       "localizations" : {
@@ -8666,6 +8701,9 @@
           }
         }
       }
+    },
+    "Connect to your wallet to load activity." : {
+
     },
     "Connect wallet" : {
       "comment" : "Button to connect a wallet to Nostur",
@@ -8758,6 +8796,7 @@
       }
     },
     "connecting" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -11930,6 +11969,7 @@
       }
     },
     "earlyLoad" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -12811,15 +12851,35 @@
     "Event not found on your relays or the relay in this link." : {
       "comment" : "Error shown after a nevent lookup with relay hints times out",
       "localizations" : {
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se ha encontrado el evento en tus relays ni en el relay incluido en este enlace." } },
-        "id" : { "stringUnit" : { "state" : "translated", "value" : "Event tidak ditemukan di relay Anda maupun di relay dalam tautan ini." } }
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha encontrado el evento en tus relays ni en el relay incluido en este enlace."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Event tidak ditemukan di relay Anda maupun di relay dalam tautan ini."
+          }
+        }
       }
     },
     "Event not found on your relays. This link does not include a relay hint." : {
       "comment" : "Error shown after a nevent lookup without relay hints times out",
       "localizations" : {
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se ha encontrado el evento en tus relays. Este enlace no incluye ninguna indicación de relay." } },
-        "id" : { "stringUnit" : { "state" : "translated", "value" : "Event tidak ditemukan di relay Anda. Tautan ini tidak menyertakan petunjuk relay." } }
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha encontrado el evento en tus relays. Este enlace no incluye ninguna indicación de relay."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Event tidak ditemukan di relay Anda. Tautan ini tidak menyertakan petunjuk relay."
+          }
+        }
       }
     },
     "eventId: %@" : {
@@ -13399,6 +13459,7 @@
       }
     },
     "fetching" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -13639,6 +13700,7 @@
       }
     },
     "finalLoad" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -13701,6 +13763,7 @@
       }
     },
     "finished" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -14257,8 +14320,18 @@
     },
     "Giftwrap" : {
       "localizations" : {
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Gift-wrap" } },
-        "id" : { "stringUnit" : { "state" : "translated", "value" : "Gift-wrap" } }
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gift-wrap"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gift-wrap"
+          }
+        }
       }
     },
     "gmmm broken %@" : {
@@ -14501,6 +14574,9 @@
           }
         }
       }
+    },
+    "Hide balance" : {
+
     },
     "Hide keyboard" : {
       "localizations" : {
@@ -15943,6 +16019,7 @@
       }
     },
     "Landscape" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -16883,6 +16960,9 @@
           }
         }
       }
+    },
+    "Load more" : {
+
     },
     "Load preset 1" : {
       "localizations" : {
@@ -18003,8 +18083,18 @@
     },
     "Message source" : {
       "localizations" : {
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Origen del mensaje" } },
-        "id" : { "stringUnit" : { "state" : "translated", "value" : "Sumber pesan" } }
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Origen del mensaje"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sumber pesan"
+          }
+        }
       }
     },
     "Message verification" : {
@@ -19725,6 +19815,9 @@
         }
       }
     },
+    "No payments found." : {
+
+    },
     "No saved blocks found" : {
       "localizations" : {
         "es" : {
@@ -21064,6 +21157,9 @@
         }
       }
     },
+    "Open zapped post" : {
+
+    },
     "Optimize now" : {
       "comment" : "Button to run database clean up now",
       "localizations" : {
@@ -21314,6 +21410,9 @@
           }
         }
       }
+    },
+    "Payments" : {
+
     },
     "People already included through follows remain in your Web of Trust." : {
       "localizations" : {
@@ -22042,6 +22141,7 @@
       }
     },
     "Portrait" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -24686,6 +24786,9 @@
         }
       }
     },
+    "Refresh wallet" : {
+
+    },
     "Relay" : {
       "localizations" : {
         "es" : {
@@ -26654,6 +26757,9 @@
         }
       }
     },
+    "Retry activity" : {
+
+    },
     "Retry loading badge" : {
       "localizations" : {
         "es" : {
@@ -26745,8 +26851,18 @@
     },
     "Rumor" : {
       "localizations" : {
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Rumor" } },
-        "id" : { "stringUnit" : { "state" : "translated", "value" : "Rumor" } }
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rumor"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rumor"
+          }
+        }
       }
     },
     "s" : {
@@ -27114,8 +27230,18 @@
     },
     "Seal" : {
       "localizations" : {
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sello" } },
-        "id" : { "stringUnit" : { "state" : "translated", "value" : "Segel" } }
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sello"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segel"
+          }
+        }
       }
     },
     "Search" : {
@@ -27296,6 +27422,7 @@
       }
     },
     "secondFetching" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -27759,6 +27886,9 @@
           }
         }
       }
+    },
+    "Sent" : {
+
     },
     "Sent %@ sats" : {
       "comment" : "Sent X sats (Replying to text)",
@@ -28651,6 +28781,9 @@
           }
         }
       }
+    },
+    "Show balance" : {
+
     },
     "Show blocked (%lld)" : {
       "localizations" : {
@@ -30060,6 +30193,7 @@
       }
     },
     "Stream" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -30252,6 +30386,7 @@
       }
     },
     "Tab" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -30269,6 +30404,7 @@
       "shouldTranslate" : false
     },
     "Tab 1" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -30286,6 +30422,7 @@
       "shouldTranslate" : false
     },
     "Tab 2" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -30303,6 +30440,7 @@
       "shouldTranslate" : false
     },
     "Tab 3" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -30320,6 +30458,7 @@
       "shouldTranslate" : false
     },
     "Tab 4" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -30337,6 +30476,7 @@
       "shouldTranslate" : false
     },
     "Tab 5" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -31675,8 +31815,18 @@
     "This event link is invalid." : {
       "comment" : "Error shown when a pasted nevent identifier cannot be parsed",
       "localizations" : {
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este enlace de evento no es válido." } },
-        "id" : { "stringUnit" : { "state" : "translated", "value" : "Tautan event ini tidak valid." } }
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este enlace de evento no es válido."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tautan event ini tidak valid."
+          }
+        }
       }
     },
     "This gives more screen space when scrolling" : {
@@ -32588,6 +32738,12 @@
           }
         }
       }
+    },
+    "Transaction" : {
+
+    },
+    "Transaction history is not available for this connection. Your wallet may require history permission or a new connection." : {
+
     },
     "Trim" : {
       "localizations" : {
@@ -34172,7 +34328,11 @@
         }
       }
     },
+    "View profile" : {
+
+    },
     "viewState: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -34387,6 +34547,15 @@
           }
         }
       }
+    },
+    "Wallet" : {
+
+    },
+    "Wallet connection" : {
+
+    },
+    "Wallet settings" : {
+
     },
     "We Don't Need No Stinkin' Badges" : {
       "comment" : "Setting on settings screen",
