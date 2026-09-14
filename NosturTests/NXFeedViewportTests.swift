@@ -615,7 +615,8 @@ final class NXFeedViewportTests: XCTestCase {
                 insertedPostIDs: ["new-above"],
                 removedPostIDs: [],
                 visiblePostIDs: ["reading", "below"],
-                isPreparingRestore: false
+                isPreparingRestore: false,
+                isAtTop: false
             )
         )
     }
@@ -626,7 +627,8 @@ final class NXFeedViewportTests: XCTestCase {
                 insertedPostIDs: ["new-above"],
                 removedPostIDs: ["old-tail"],
                 visiblePostIDs: ["reading", "below"],
-                isPreparingRestore: false
+                isPreparingRestore: false,
+                isAtTop: false
             )
         )
         XCTAssertFalse(
@@ -634,7 +636,17 @@ final class NXFeedViewportTests: XCTestCase {
                 insertedPostIDs: ["new-above"],
                 removedPostIDs: [],
                 visiblePostIDs: ["reading", "below"],
-                isPreparingRestore: true
+                isPreparingRestore: true,
+                isAtTop: false
+            )
+        )
+        XCTAssertFalse(
+            NXFeedViewport.shouldAnimateOffscreenInsertion(
+                insertedPostIDs: ["new-above"],
+                removedPostIDs: [],
+                visiblePostIDs: ["reading", "below"],
+                isPreparingRestore: false,
+                isAtTop: true
             )
         )
     }

@@ -321,7 +321,8 @@ class NXColumnViewModel: ObservableObject {
             insertedPostIDs: insertedPostIDs,
             removedPostIDs: removedPostIDs,
             visiblePostIDs: currentVisiblePostIds(),
-            isPreparingRestore: vmInner.isPreparingForScrollRestore
+            isPreparingRestore: vmInner.isPreparingForScrollRestore,
+            isAtTop: isFeedActuallyAtTop
         )
         // Pin whenever newer rows land above the reading post. That includes
         // autoScroll-off at the visual top: keep the current first post instead
@@ -5099,6 +5100,9 @@ extension NXColumnViewModel {
                         if vmInner.readingPostID == nil {
                             vmInner.readingPostID = previousFirstPostId
                                 ?? vmInner.pendingScrollToPostID
+                        }
+                        if let previousFirstPostId {
+                            vmInner.rememberFeedAnchor?(previousFirstPostId)
                         }
                         vmInner.holdUnreadAboveReadingPost = true
                         setPosts(addedAndExistingPostsTruncated)

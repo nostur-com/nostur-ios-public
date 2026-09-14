@@ -214,6 +214,9 @@ class NXColumnViewModelInner {
     /// Installed by the visible feed so passive list mutations can preserve the exact post and
     /// viewport offset the user is reading, even when rows are inserted above it.
     public var performAnchoredFeedUpdate: ((_ reason: String, _ update: @escaping () -> [String]) -> Void)?
+    /// Gives the visible feed an explicit anchor before a mutation. Setting only
+    /// `readingPostID` is too late for the layout stabilizer when it has no parked row yet.
+    public var rememberFeedAnchor: ((_ postID: String) -> Void)?
     /// Cancels a leftover prepend settle so a bottom append cannot be pinned.
     public var cancelPendingFeedSettle: (() -> Void)?
     

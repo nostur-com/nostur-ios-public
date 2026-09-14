@@ -1279,6 +1279,9 @@ struct NXPostsFeed: View {
                     )
                 }
             }
+            vmInner.rememberFeedAnchor = { [weak layoutStabilizer] postID in
+                layoutStabilizer?.rememberAnchor(id: postID)
+            }
             layoutStabilizer.updateItemIDs(
                 posts.map(\.id),
                 leadingNonPostRowCount: vm.feedLeadingNonPostRowCount
@@ -1403,6 +1406,7 @@ struct NXPostsFeed: View {
 #endif
             vm.pauseViewUpdates()
             vmInner.performAnchoredFeedUpdate = nil
+            vmInner.rememberFeedAnchor = nil
             vmInner.cancelPendingFeedSettle = nil
         }
     }

@@ -178,13 +178,15 @@ enum NXFeedViewport {
         insertedPostIDs: Set<String>,
         removedPostIDs: Set<String>,
         visiblePostIDs: Set<String>,
-        isPreparingRestore: Bool
+        isPreparingRestore: Bool,
+        isAtTop: Bool
     ) -> Bool {
         !insertedPostIDs.isEmpty
             && removedPostIDs.isEmpty
             && !visiblePostIDs.isEmpty
             && insertedPostIDs.isDisjoint(with: visiblePostIDs)
             && !isPreparingRestore
+            && !isAtTop
     }
 
     /// Remember-on restores already-seen posts. Older pages are for scrolling
