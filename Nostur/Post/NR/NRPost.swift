@@ -1214,11 +1214,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     /// All events that claim this post (or its root) as replyToRoot. Must run on a bg context.
     private func fetchRepliesToRootNRPosts(cancellationIds: [String: UUID], context: NSManagedObjectContext) -> [NRPost] {
         let afterCreatedAt = self.created_at - 7200
-        let rootId = self.replyToRootId ?? self.id
+        let rootIds = Set([self.replyToRootId ?? self.id, self.aTag])
+            .filter { !$0.isEmpty }
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(
-            format: "created_at > %i AND replyToRootId = %@ AND kind IN {1,1111,1244} AND NOT pubkey IN %@",
-            afterCreatedAt, rootId, blocks()
+            format: "created_at > %i AND replyToRootId IN %@ AND kind IN {1,1111,1244} AND NOT pubkey IN %@",
+            afterCreatedAt, rootIds, blocks()
         )
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
         let events = (try? context.fetch(fr)) ?? []
@@ -1580,7 +1581,6 @@ extension NRPost { // Helpers for grouped replies
                 self.suppressRepliesToRootDidSet = false
             }
             
-            self.event?.repliesCount = Int64(nrDirectReplies.count)
             // Build on this bg context now (do not re-queue).
             self.rebuildFlatAndNestedReplies(directReplies: nrDirectReplies)
         }
@@ -1654,6 +1654,7 @@ extension NRPost { // Helpers for grouped replies
         let underThisPost = (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot)
         let threadCandidates = (replies + underThisPost)
             .uniqued(on: { $0.id })
+        let repliesCount = Int64(threadCandidates.count)
         let unblockedThreadCandidates = threadCandidates.filter { nrPost in
             !AppState.shared.bgAppState.blockedPubkeys.contains(nrPost.pubkey)
         }
@@ -1888,7 +1889,7 @@ extension NRPost { // Helpers for grouped replies
             finalNestedNotWoT = partitioned.more
         }
         
-        self.event?.repliesCount = Int64(replies.count)
+        self.event?.repliesCount = repliesCount
         
         // Nested tree debug dump — use notice + .public so Console shows strings
         // (debug level is often hidden; private privacy redacts interpolations).
@@ -1920,7 +1921,7 @@ extension NRPost { // Helpers for grouped replies
             self.nestedRepliesSorted = finalNestedInWoT
             self.nestedRepliesNotWoT = finalNestedNotWoT
             self.footerAttributes.objectWillChange.send()
-            self.footerAttributes.repliesCount = Int64(replies.count)
+            self.footerAttributes.repliesCount = repliesCount
         }
     }
     
