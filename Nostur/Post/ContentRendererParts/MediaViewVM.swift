@@ -9,6 +9,7 @@ import SwiftUI
 import NukeUI
 import Nuke
 
+@MainActor
 class MediaViewVM: ObservableObject {
     private static let progressStep = 5
     private static let minimumProgressUpdateInterval: TimeInterval = 0.1
