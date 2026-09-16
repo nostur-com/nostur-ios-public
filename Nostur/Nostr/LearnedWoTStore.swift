@@ -6,6 +6,7 @@
 import CloudKit
 import Combine
 import Foundation
+import Security
 
 enum LearnedWoTInteractionKind: String, Codable, CaseIterable, Sendable {
     case reply
@@ -108,7 +109,8 @@ final class LearnedWoTStore: ObservableObject, @unchecked Sendable {
 
         let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         let isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-        cloudSync = cloudSyncEnabled && !isRunningTests && !isPreview ? LearnedWoTCloudSync() : nil
+        let canUseCloudKit = Self.hasCloudKitContainerEntitlement
+        cloudSync = cloudSyncEnabled && !isRunningTests && !isPreview && canUseCloudKit ? LearnedWoTCloudSync() : nil
 
         NotificationCenter.default.publisher(for: .scenePhaseActive)
             .sink { [weak self] _ in
@@ -119,6 +121,27 @@ final class LearnedWoTStore: ObservableObject, @unchecked Sendable {
         stateQueue.async { [weak self] in
             self?.loadFromDisk()
         }
+    }
+
+    private static var hasCloudKitContainerEntitlement: Bool {
+#if targetEnvironment(macCatalyst) && DEBUG
+        // Local Catalyst builds use ad-hoc signing and cannot access the
+        // production CloudKit container. Constructing CKContainer traps before
+        // it can report a recoverable error, so keep learned WoT local in Debug.
+        return false
+#elseif targetEnvironment(macCatalyst)
+        guard let task = SecTaskCreateFromSelf(nil),
+              let value = SecTaskCopyValueForEntitlement(
+                  task,
+                  "com.apple.developer.icloud-container-identifiers" as CFString,
+                  nil
+              ) else {
+            return false
+        }
+        return (value as? [String])?.contains("iCloud.com.nostur.data") == true
+#else
+        return true
+#endif
     }
 
     func contains(_ pubkey: String) -> Bool {
