@@ -206,6 +206,7 @@ struct AddExistingAccountSheet: View {
                             Text(bunkerManager.error).foregroundColor(Color.red)
                         }
                     }
+                    .frame(maxWidth: 360)
                     VStack {
                         Spacer()
                         Text("Note: You can also add someone elses public key to try out Nostur from their perspective.", comment: "Informational message on Add Existing Account screen").opacity(0.7)
