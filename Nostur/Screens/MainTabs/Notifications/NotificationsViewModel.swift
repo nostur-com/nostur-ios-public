@@ -42,6 +42,31 @@ func migrateNotificationTimestampsIfNeeded() {
     defaults.setValue(true, forKey: migrationKey)
 }
 
+private func markPersistentNotificationsAsRead(
+    matching predicate: NSPredicate,
+    context: NSManagedObjectContext
+) {
+    let stores = context.persistentStoreCoordinator?.persistentStores ?? []
+
+    if !stores.isEmpty, stores.allSatisfy({ $0.type == NSSQLiteStoreType }) {
+        let request = NSBatchUpdateRequest(entityName: "PersistentNotification")
+        request.propertiesToUpdate = ["readAt": NSDate()]
+        request.predicate = predicate
+        request.resultType = .updatedObjectIDsResultType
+        _ = try? context.execute(request) as? NSBatchUpdateResult
+    }
+    else {
+        let request = PersistentNotification.fetchRequest()
+        request.predicate = predicate
+        if let notifications = try? context.fetch(request) {
+            let readAt = Date.now
+            for notification in notifications {
+                notification.readAt = readAt
+            }
+        }
+    }
+}
+
 private func notificationMention(from event: Event, context: NSManagedObjectContext) -> Mention {
     let roomTitle: String? = {
         guard event.kind == 1311,
@@ -943,12 +968,10 @@ class NotificationsViewModel: ObservableObject {
         
         bg().perform { [weak self] in
             guard let self = self else { return }
-            let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
-            r3.propertiesToUpdate = ["readAt": NSDate()]
-            r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil", PNType.newPosts.rawValue)
-            r3.resultType = .updatedObjectIDsResultType
-
-            let _ = try? bg().execute(r3) as? NSBatchUpdateResult
+            markPersistentNotificationsAsRead(
+                matching: NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil", PNType.newPosts.rawValue),
+                context: bg()
+            )
 
             DataProvider.shared().saveToDiskNow(.bgContext)
             DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
@@ -1068,12 +1091,10 @@ class NotificationsViewModel: ObservableObject {
             }
             
             // Also do failed zap notifications
-            let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
-            r3.propertiesToUpdate = ["readAt": NSDate()]
-            r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ IN %@", accountData.publicKey, [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue])
-            r3.resultType = .updatedObjectIDsResultType
-
-            let _ = try? bg().execute(r3) as? NSBatchUpdateResult
+            markPersistentNotificationsAsRead(
+                matching: NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ IN %@", accountData.publicKey, [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue]),
+                context: bg()
+            )
 
             DataProvider.shared().saveToDiskNow(.bgContext)
             DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
@@ -1089,14 +1110,15 @@ class NotificationsViewModel: ObservableObject {
         
         bg().perform { [weak self] in
             guard let self = self else { return }
-                    
-            let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
-            r3.propertiesToUpdate = ["readAt": NSDate()]
-            r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@ AND NOT id == nil",
-                                       accountPubkey, PNType.newFollowers.rawValue)
-            r3.resultType = .updatedObjectIDsResultType
 
-            let _ = try? bg().execute(r3) as? NSBatchUpdateResult
+            markPersistentNotificationsAsRead(
+                matching: NSPredicate(
+                    format: "readAt == nil AND pubkey == %@ AND type_ == %@ AND NOT id == nil",
+                    accountPubkey,
+                    PNType.newFollowers.rawValue
+                ),
+                context: bg()
+            )
 
             DataProvider.shared().saveToDiskNow(.bgContext)
             DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
@@ -1110,13 +1132,13 @@ class NotificationsViewModel: ObservableObject {
         self.unreadRelayConfig_ = 0
         
         bg().perform {
-            let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
-            r3.propertiesToUpdate = ["readAt": NSDate()]
-            r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil",
-                                       PNType.relayConfigNotOptimal.rawValue)
-            r3.resultType = .updatedObjectIDsResultType
-
-            let _ = try? bg().execute(r3) as? NSBatchUpdateResult
+            markPersistentNotificationsAsRead(
+                matching: NSPredicate(
+                    format: "readAt == nil AND type_ == %@ AND NOT id == nil",
+                    PNType.relayConfigNotOptimal.rawValue
+                ),
+                context: bg()
+            )
             DataProvider.shared().saveToDiskNow(.bgContext)
         }
     }

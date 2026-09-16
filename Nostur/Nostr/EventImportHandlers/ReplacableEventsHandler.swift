@@ -12,8 +12,28 @@ func handleReplacableEvent(nEvent: NEvent, context: NSManagedObjectContext) {
     guard (nEvent.kind.id >= 10000 && nEvent.kind.id < 20000) || nEvent.kind == .setMetadata || nEvent.kind == .contactList else { return }
     
     // delete older events
+    let predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND created_at < %d", nEvent.kind.id, nEvent.publicKey, nEvent.createdAt.timestamp)
+    let stores = context.persistentStoreCoordinator?.persistentStores ?? []
+
+    // Batch deletes are SQLite-only. Canvas previews use isolated in-memory
+    // stores, so delete their small fixture result sets through the context.
+    if stores.isEmpty || stores.contains(where: { $0.type != NSSQLiteStoreType }) {
+        let fetchRequest = Event.fetchRequest()
+        fetchRequest.predicate = predicate
+        fetchRequest.includesPropertyValues = false
+
+        do {
+            for event in try context.fetch(fetchRequest) {
+                context.delete(event)
+            }
+        } catch {
+            L.og.error("🔴🔴 Failed to delete older replaceable events for \(nEvent.id)")
+        }
+        return
+    }
+
     let r = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-    r.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND created_at < %d", nEvent.kind.id, nEvent.publicKey, nEvent.createdAt.timestamp)
+    r.predicate = predicate
     let batchDelete = NSBatchDeleteRequest(fetchRequest: r)
     batchDelete.resultType = .resultTypeCount
     

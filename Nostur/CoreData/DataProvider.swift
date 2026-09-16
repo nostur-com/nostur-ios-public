@@ -79,8 +79,11 @@ class DataProvider: ObservableObject {
 
         
         if inMemory {
-            localStoreDescription.url = URL(fileURLWithPath: "/dev/null")
-            cloudStoreDescription.url = URL(fileURLWithPath: "/dev/null")
+            // Previews still need both model configurations. Two SQLite stores
+            // cannot share /dev/null reliably on Mac Catalyst, so use actual
+            // in-memory stores and keep their distinct description URLs.
+            localStoreDescription.type = NSInMemoryStoreType
+            cloudStoreDescription.type = NSInMemoryStoreType
         }
         else {
 #if DEBUG
@@ -88,10 +91,8 @@ class DataProvider: ObservableObject {
 #endif
             localStoreDescription.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
             cloudStoreDescription.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
+            cloudStoreDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.nostur.data")
         }
-        
-        // Set the container options on the cloud store
-        cloudStoreDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.nostur.data")
             
         // Update the container's list of store descriptions
         container.persistentStoreDescriptions = [cloudStoreDescription, localStoreDescription]
