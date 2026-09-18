@@ -37,9 +37,29 @@ public final class LocalFeedStateManager {
     public static let shared = LocalFeedStateManager()
     
     private let userDefaultsKey = "localFeedStates"
-    private var states: LocalFeedStates?
+    // Writers stay on the main actor; maintenance reads value snapshots from
+    // its background context. Never hold this lock during Core Data or disk I/O.
+    private let statesLock = NSLock()
+    private var storedStates: LocalFeedStates?
+    private var states: LocalFeedStates? {
+        get {
+            statesLock.lock()
+            defer { statesLock.unlock() }
+            return storedStates
+        }
+        set {
+            statesLock.lock()
+            defer { statesLock.unlock() }
+            storedStates = newValue
+        }
+    }
     private var saveToDiskSub: AnyCancellable?
     private var wipStatesSub: AnyCancellable?
+
+    // Isolated in-memory instance, without persistence or save subscriptions.
+    init(initialStates: LocalFeedStates) {
+        storedStates = initialStates
+    }
     
     private init() {
         loadFromDisk()

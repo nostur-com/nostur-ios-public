@@ -540,7 +540,7 @@ class NXColumnViewModel: ObservableObject {
     private var onAppearSubjectSub: AnyCancellable?
     private var onScreenSeenInsertedSub: AnyCancellable?
     private var cloudSeenInsertedSub: AnyCancellable?
-    public var watchForFirstConnection = false
+    @MainActor public var watchForFirstConnection = false
     public var saveLocalStateSub: AnyCancellable?
     private var subscriptions = Set<AnyCancellable>()
     private let seenReconciliationScheduler = NXSeenReconciliationScheduler()
@@ -4290,11 +4290,11 @@ class NXColumnViewModel: ObservableObject {
         firstConnectionSub = receiveNotification(.firstConnection)
             .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
             .sink { [weak self] _ in
-                guard let self, watchForFirstConnection else { return }
+                Task { @MainActor [weak self] in
+                    guard let self, self.watchForFirstConnection else { return }
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.name) listenForFirstConnection.load(config) -[LOG]-")
+                    L.og.debug("☘️☘️ \(config.name) listenForFirstConnection.load(config) -[LOG]-")
 #endif
-                Task { @MainActor in
                     self.watchForFirstConnection = false
                     self.firstLoad(config)
                 }
