@@ -94,15 +94,6 @@ class DataProvider: ObservableObject {
             cloudStoreDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.nostur.data")
         }
         
-        // Ad-hoc Debug Catalyst builds cannot access the production CloudKit
-        // container. Keep using the on-disk "Cloud" configuration locally,
-        // but do not install the mirroring delegate in that environment.
-#if targetEnvironment(macCatalyst) && DEBUG
-        cloudStoreDescription.cloudKitContainerOptions = nil
-#else
-        cloudStoreDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.nostur.data")
-#endif
-            
         // Update the container's list of store descriptions
         container.persistentStoreDescriptions = [cloudStoreDescription, localStoreDescription]
             
