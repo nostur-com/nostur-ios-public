@@ -30,6 +30,7 @@ Take the first eight UUID characters and lowercase them to match the sidebar.
 
 ### Build Commands
 
+Note: When doing iPhone Duo related things, run in the 'iPhone Duo' simulator, not 'iPhone 17 Pro'.
 ```bash
 # iOS Simulator (omit -derivedDataPath to share Xcode's default DerivedData/cache)
 xcodebuild -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
