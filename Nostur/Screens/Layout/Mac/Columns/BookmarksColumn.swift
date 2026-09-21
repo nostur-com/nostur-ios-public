@@ -51,21 +51,25 @@ struct BookmarksColumn: View {
     }
     
     @ToolbarContentBuilder
-    private var filtersButtonAndBookmarksCount: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            HStack {
-                if vm.nrLazyBookmarks.count > 0 {
-                    Text(vm.nrLazyBookmarks.count.description).lineLimit(1)
-                        .font(.caption)
-                        .foregroundColor(theme.accent.opacity(0.5))
-                }
-                
-                Button("Filter", systemImage: bookmarkFilters.count < BOOKMARK_COLORS.count ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle") {
-                    showBookmarkFilterOptions = true
-                }
-                .foregroundStyle(filterColor)
-                .help("Toggle filters...")
+    private var bookmarksCount: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            if vm.nrLazyBookmarks.count > 0 {
+                Text(vm.nrLazyBookmarks.count.description)
+                    .lineLimit(1)
+                    .font(.caption)
+                    .foregroundColor(theme.accent.opacity(0.5))
             }
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private var filtersButton: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button("Filter", systemImage: bookmarkFilters.count < BOOKMARK_COLORS.count ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle") {
+                showBookmarkFilterOptions = true
+            }
+            .tint(filterColor)
+            .help("Toggle filters...")
         }
     }
 
@@ -101,6 +105,13 @@ struct BookmarksColumn: View {
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)
                 .padding(0)
+                .modifier {
+                    if #available(iOS 26.0, *) {
+                        $0.scrollEdgeEffectStyle(.soft, for: .top)
+                    } else {
+                        $0
+                    }
+                }
                 
                 .preference(key: BookmarksCountPreferenceKey.self, value: vm.nrLazyBookmarks.count.description)
             }
@@ -152,13 +163,16 @@ struct BookmarksColumn: View {
         .modifier { // need to hide glass bg in 26+
             if #available(iOS 26.0, *) {
                 $0.toolbar {
-                    filtersButtonAndBookmarksCount
+                    bookmarksCount
+                        .sharedBackgroundVisibility(.hidden)
+                    filtersButton
                         .sharedBackgroundVisibility(.hidden)
                 }
             }
             else {
                 $0.toolbar {
-                    filtersButtonAndBookmarksCount
+                    bookmarksCount
+                    filtersButton
                 }
             }
         }
