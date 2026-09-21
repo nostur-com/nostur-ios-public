@@ -21,13 +21,16 @@ struct NosturMainView: View {
     
     var body: some View {
         AppEnvironment(la: la) {
-            if IS_CATALYST && ss.proMode {
+            if IS_CATALYST && ss.proMode { // macOS Desktop multi-column mode (pro mode)_
                 WithSidebar {
                     MacMainWindow()
                 }
             }
+            else if #available(iOS 26, *) { // iPhone Duo using layout overhaul and more native components
+                EmptyView()
+            }
             else {
-                WithSidebar {
+                WithSidebar { // Old layout iPhone / iPad / classic macOS Desktop (with detail pane)
                     NosturTabsView()
                 }
             }
