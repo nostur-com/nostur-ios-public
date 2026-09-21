@@ -21,6 +21,7 @@ struct DMsColumn: View {
     
     @State private var showSettingsSheet = false
     @State private var showNewDMSheet = false
+    @State private var showToolbarMenu = false
 
     public init(pubkey: String, navPath: Binding<NBNavigationPath>, columnType: Binding<MacColumnType>, config: MacColumnConfig) {
         self.pubkey = pubkey
@@ -73,19 +74,28 @@ struct DMsColumn: View {
     @ToolbarContentBuilder
     private var toolbarMenu: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            Menu {
-                if case .DMs(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
-                    Button("Change account", systemImage: "person.crop.circle") {
-                        columnType = .DMs(nil)
-                    }
-                }
-                Button("Settings", systemImage: "gearshape") {
-                    showSettingsSheet = true
-                }
-            } label: {
-                if case .DMs(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
+            if case .DMs(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
+                Button {
+                    showToolbarMenu = true
+                } label: {
                     PFP(pubkey: accountPubkey, account: account, size: 30)
-                    .accessibilityLabel("Account menu")
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Account menu")
+                .popover(isPresented: $showToolbarMenu) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Button("Change account", systemImage: "person.crop.circle") {
+                            showToolbarMenu = false
+                            columnType = .DMs(nil)
+                        }
+                        Button("Settings", systemImage: "gearshape") {
+                            showToolbarMenu = false
+                            showSettingsSheet = true
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .labelStyle(.titleAndIcon)
+                    .padding(12)
                 }
             }
         }

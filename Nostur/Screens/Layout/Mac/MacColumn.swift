@@ -163,7 +163,7 @@ struct MacColumn: View {
                     Text("Conversation column") // TODO: need to make parentDMsVM optional
                 }
             }
-            
+            .environment(\.macColumnScrollEdgeEffectEnabled, true)
             .withColumnConfigToolbarMenu(feeds: vm.availableFeeds, columnType: $columnType, title: selectedTitle)
             
             .onAppear {

@@ -58,6 +58,7 @@ struct NotificationsColumnInner: View {
                 } label: {
                     PFP(pubkey: accountPubkey, account: account, size: 30)
                 }
+                .buttonStyle(.plain)
                 .accessibilityLabel("Account menu")
             }
         }

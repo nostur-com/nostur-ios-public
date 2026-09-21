@@ -181,6 +181,17 @@ extension EnvironmentValues {
     }
 }
 
+struct MacColumnScrollEdgeEffectEnvironmentKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var macColumnScrollEdgeEffectEnabled: Bool {
+        get { self[MacColumnScrollEdgeEffectEnvironmentKey.self] }
+        set { self[MacColumnScrollEdgeEffectEnvironmentKey.self] = newValue }
+    }
+}
+
 struct RelayFeedRelaysEnvironmentKey: EnvironmentKey {
     static let defaultValue: Set<RelayData> = []
 }

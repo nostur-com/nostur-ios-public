@@ -1223,6 +1223,7 @@ struct NXPostsFeed: View {
                 }
             }
         }
+        .modifier(MacColumnScrollEdgeEffectModifier())
         .withContainerTopOffsetEnvironmentKey()
         .scrollOffsetID(vm.columnVMid)
         .environment(\.defaultMinListRowHeight, 50)
@@ -1828,6 +1829,20 @@ struct NXPostsFeed: View {
             vmInner.recordUnreadReadReasons(ids: unreadRowIDs, reason: reason)
 #endif
             vmInner.unreadIds = [:]
+        }
+    }
+}
+
+private struct MacColumnScrollEdgeEffectModifier: ViewModifier {
+    @Environment(\.macColumnScrollEdgeEffectEnabled) private var isEnabled
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *), isEnabled {
+            content.scrollEdgeEffectStyle(.soft, for: .top)
+        }
+        else {
+            content
         }
     }
 }
