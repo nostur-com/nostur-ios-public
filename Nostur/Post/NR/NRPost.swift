@@ -1548,7 +1548,18 @@ extension NRPost { // Helpers for grouped replies
         if AccountsState.shared.bgAccountPubkeys.contains(post.pubkey) { return true }
         if AnonReplySession.shared.bgAnonPubkeys.contains(post.pubkey) { return true }
         if post.pubkey == self.pubkey { return true }
-        return post.event?.inWoT ?? post.inWoT
+        guard let event = post.event else { return post.inWoT }
+        let path = Array(event.parentEvents.reversed()) + [event]
+        return NestedReplyWoTPartition.isVisibleLeaf(
+            path: path,
+            isInWoT: { event in
+                event.inWoT
+                    || AccountsState.shared.bgAccountPubkeys.contains(event.pubkey)
+                    || AnonReplySession.shared.bgAnonPubkeys.contains(event.pubkey)
+                    || event.pubkey == self.pubkey
+            },
+            author: { $0.pubkey }
+        )
     }
     
     // TODO: 79.00 ms    0.7%    0 s          closure #2 in NRPost.loadGroupedReplies()
@@ -1674,6 +1685,7 @@ extension NRPost { // Helpers for grouped replies
         }
         
         var uniqueThreads = [NRPostID: NRPost]()
+        let preferWoTEndpoint = SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue
         
         for thread in groupedThreads {
             if let replyToPostOrZapId = thread.replyToPostOrZapId, replyToPostOrZapId == self.id {
@@ -1685,7 +1697,10 @@ extension NRPost { // Helpers for grouped replies
             
             let firstId = thread.event?.parentEvents.first?.id ?? thread.id
             if let existingThread = uniqueThreads[firstId] {
-                if thread.threadPostsCount > existingThread.threadPostsCount {
+                let threadAllowed = !preferWoTEndpoint || self.replyAllowedByWoT(thread)
+                let existingAllowed = !preferWoTEndpoint || self.replyAllowedByWoT(existingThread)
+                if (preferWoTEndpoint && threadAllowed && !existingAllowed)
+                    || (threadAllowed == existingAllowed && thread.threadPostsCount > existingThread.threadPostsCount) {
                     uniqueThreads[firstId] = thread
                 }
             } else {
@@ -1882,6 +1897,7 @@ extension NRPost { // Helpers for grouped replies
             let partitioned = NestedReplyWoTPartition.partition(
                 fallbackTree,
                 isInWoT: { isInWoT($0.nrPost) },
+                author: { $0.nrPost.pubkey },
                 children: { $0.children },
                 replacingChildren: { $0.withChildren($1) }
             )

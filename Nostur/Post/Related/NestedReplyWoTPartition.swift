@@ -2,10 +2,10 @@
 //  NestedReplyWoTPartition.swift
 //  Nostur
 //
-//  Nested reply trees keep parent/child structure, but WoT still applies per post:
-//  a reply from someone outside WoT is hidden even when it is a direct child of a
-//  trusted root. Out-of-WoT parents of in-WoT replies stay as glue so a trusted
-//  reply-to-reply is not promoted out of its thread.
+//  Nested reply trees keep parent/child structure while applying WoT to whole
+//  conversation paths. Out-of-WoT parents of trusted replies stay as glue. Once
+//  a trusted participant replies to an out-of-WoT author, that author's replies
+//  further down the same branch remain visible as part of that conversation.
 //
 
 import Foundation
@@ -17,19 +17,70 @@ enum NestedReplyWoTPartition {
     static func partition<Node>(
         _ nodes: [Node],
         isInWoT: (Node) -> Bool,
+        author: (Node) -> String,
+        children: (Node) -> [Node],
+        replacingChildren: (Node, [Node]) -> Node
+    ) -> (main: [Node], more: [Node]) {
+        partition(
+            nodes,
+            engagedAuthors: [],
+            parentAuthor: nil,
+            isInWoT: isInWoT,
+            author: author,
+            children: children,
+            replacingChildren: replacingChildren
+        )
+    }
+
+    /// Whether the final node in a root-to-leaf path belongs in the main list.
+    /// This is also used by the classic flat thread presentation.
+    static func isVisibleLeaf<Node>(
+        path: [Node],
+        isInWoT: (Node) -> Bool,
+        author: (Node) -> String
+    ) -> Bool {
+        guard let leaf = path.last else { return false }
+        var engagedAuthors = Set<String>()
+        var previousAuthor: String?
+
+        for node in path {
+            if isInWoT(node), let previousAuthor {
+                engagedAuthors.insert(previousAuthor)
+            }
+            previousAuthor = author(node)
+        }
+
+        return isInWoT(leaf) || engagedAuthors.contains(author(leaf))
+    }
+
+    private static func partition<Node>(
+        _ nodes: [Node],
+        engagedAuthors: Set<String>,
+        parentAuthor: String?,
+        isInWoT: (Node) -> Bool,
+        author: (Node) -> String,
         children: (Node) -> [Node],
         replacingChildren: (Node, [Node]) -> Node
     ) -> (main: [Node], more: [Node]) {
         var main: [Node] = []
         var more: [Node] = []
         for node in nodes {
-            if containsInWoT(node, isInWoT: isInWoT, children: children) {
-                let (kept, pruned) = partition(
-                    children(node),
-                    isInWoT: isInWoT,
-                    children: children,
-                    replacingChildren: replacingChildren
-                )
+            let trusted = isInWoT(node)
+            var childEngagedAuthors = engagedAuthors
+            if trusted, let parentAuthor {
+                childEngagedAuthors.insert(parentAuthor)
+            }
+            let (kept, pruned) = partition(
+                children(node),
+                engagedAuthors: childEngagedAuthors,
+                parentAuthor: author(node),
+                isInWoT: isInWoT,
+                author: author,
+                children: children,
+                replacingChildren: replacingChildren
+            )
+
+            if trusted || engagedAuthors.contains(author(node)) || !kept.isEmpty {
                 main.append(replacingChildren(node, kept))
                 more.append(contentsOf: pruned)
             }
@@ -55,14 +106,4 @@ enum NestedReplyWoTPartition {
         return (groupedSorted, groupedNotWoT)
     }
     
-    private static func containsInWoT<Node>(
-        _ node: Node,
-        isInWoT: (Node) -> Bool,
-        children: (Node) -> [Node]
-    ) -> Bool {
-        if isInWoT(node) { return true }
-        return children(node).contains {
-            containsInWoT($0, isInWoT: isInWoT, children: children)
-        }
-    }
 }

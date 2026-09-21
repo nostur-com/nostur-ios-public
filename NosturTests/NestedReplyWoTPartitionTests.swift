@@ -5,6 +5,7 @@ import Testing
 struct NestedReplyWoTPartitionTests {
     private struct Node: Equatable {
         let id: String
+        var author: String = "author"
         let inWoT: Bool
         var children: [Node] = []
     }
@@ -13,6 +14,7 @@ struct NestedReplyWoTPartitionTests {
         NestedReplyWoTPartition.partition(
             nodes,
             isInWoT: { $0.inWoT },
+            author: { $0.author },
             children: { $0.children },
             replacingChildren: {
                 var copy = $0
@@ -76,6 +78,50 @@ struct NestedReplyWoTPartitionTests {
         #expect(result.main.map(\.id) == ["outside-wot"])
         #expect(result.main[0].children.map(\.id) == ["trusted-reply"])
         #expect(result.more.map(\.id) == ["spam-sibling"])
+    }
+
+    @Test func keepsReplyFromAuthorWhoWasEngagedByTrustedParticipant() {
+        let tree = [
+            Node(id: "outside-parent", author: "B", inWoT: false, children: [
+                Node(id: "trusted-reply", author: "C", inWoT: true, children: [
+                    Node(id: "outside-response", author: "B", inWoT: false)
+                ])
+            ])
+        ]
+
+        let result = partition(tree)
+
+        #expect(result.main[0].children[0].children.map(\.id) == ["outside-response"])
+        #expect(result.more.isEmpty)
+    }
+
+    @Test func stillHidesDifferentOutsideAuthorAfterTrustedParticipant() {
+        let tree = [
+            Node(id: "outside-parent", author: "B", inWoT: false, children: [
+                Node(id: "trusted-reply", author: "C", inWoT: true, children: [
+                    Node(id: "unrelated-response", author: "D", inWoT: false)
+                ])
+            ])
+        ]
+
+        let result = partition(tree)
+
+        #expect(result.main[0].children[0].children.isEmpty)
+        #expect(result.more.map(\.id) == ["unrelated-response"])
+    }
+
+    @Test func flatLeafUsesSameConversationRule() {
+        let path = [
+            Node(id: "outside-parent", author: "B", inWoT: false),
+            Node(id: "trusted-reply", author: "C", inWoT: true),
+            Node(id: "outside-response", author: "B", inWoT: false)
+        ]
+
+        #expect(NestedReplyWoTPartition.isVisibleLeaf(
+            path: path,
+            isInWoT: { $0.inWoT },
+            author: { $0.author }
+        ))
     }
     
     @Test func neverPromotesNotWoTIntoPrimaryWhenInWoTListIsEmpty() {
