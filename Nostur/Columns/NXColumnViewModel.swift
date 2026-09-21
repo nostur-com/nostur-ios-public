@@ -737,6 +737,11 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     private func scheduleAlreadySeenReconciliation(removingVisiblePostsFor syncedSeenIds: Set<String>) {
+        // Detail navigation leaves the column selected but removes its List from the
+        // window. Treat seen reconciliation like every other view update while away:
+        // with no live visible rows it would prune the post being viewed (and the read
+        // region above it), invalidating the scroll anchor before Back returns.
+        guard !isViewPaused else { return }
         pendingSyncedSeenIds.formUnion(syncedSeenIds)
         seenReconciliationScheduler.schedule(
             isBusy: { [weak self] in
@@ -769,6 +774,9 @@ class NXColumnViewModel: ObservableObject {
         otherColumnSeenShortIds: Set<String> = [],
         syncedOrFeedSeenShortIds: Set<String> = []
     ) {
+        // This can also be called directly by another column's marked-as-read event,
+        // bypassing the scheduler above. Never mutate an offscreen detail source feed.
+        guard !isViewPaused else { return }
         guard SettingsStore.shared.appWideSeenTracker else { return }
         guard !seenShortIds.isEmpty else { return }
         guard case .posts(let existingPosts) = viewState else { return }
@@ -2073,6 +2081,10 @@ class NXColumnViewModel: ObservableObject {
     public func pauseViewUpdates() {
         if case .loading = viewState { return }
         isViewPaused = true
+        // A reconciliation already inside its idle grace period must not run after
+        // the List disappears and mistakes every row for offscreen.
+        seenReconciliationScheduler.cancel()
+        pendingSyncedSeenIds.removeAll(keepingCapacity: true)
     }
     
     @MainActor

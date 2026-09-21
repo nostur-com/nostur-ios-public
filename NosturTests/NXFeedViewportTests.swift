@@ -302,6 +302,24 @@ final class NXFeedViewportTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 500_000_000)
         XCTAssertEqual(applyCount, 1)
     }
+
+    @MainActor
+    func testSeenReconciliationCancellationDropsPendingMutation() async {
+        let scheduler = NXSeenReconciliationScheduler()
+        var applyCount = 0
+
+        scheduler.schedule(
+            isBusy: { false },
+            apply: { applyCount += 1 }
+        )
+
+        // Detail navigation pauses the feed during this idle grace period.
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        scheduler.cancel()
+        try? await Task.sleep(nanoseconds: 350_000_000)
+
+        XCTAssertEqual(applyCount, 0)
+    }
     private struct Item: Equatable {
         let id: String
     }
