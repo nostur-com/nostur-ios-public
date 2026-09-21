@@ -9,6 +9,26 @@ import SwiftUI
 import CoreData
 import NostrEssentials
 
+/// A value snapshot that can be replaced and read from unrelated queues.
+/// Keep the critical sections limited to copying the in-memory value.
+final class FollowingPublicKeysSnapshot: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storedValue: Set<String> = []
+
+    var value: Set<String> {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return storedValue
+        }
+        set {
+            lock.lock()
+            storedValue = newValue
+            lock.unlock()
+        }
+    }
+}
+
 // Helpers, cache etc for CloudAccount
 // Must be initialized with account
 class LoggedInAccount: ObservableObject, Equatable, Hashable {
@@ -41,7 +61,11 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
     
     // BG high speed
     public var accountCache: AccountCache?
-    public var followingPublicKeys: Set<String> = []
+    private let followingPublicKeysSnapshot = FollowingPublicKeysSnapshot()
+    public var followingPublicKeys: Set<String> {
+        get { followingPublicKeysSnapshot.value }
+        set { followingPublicKeysSnapshot.value = newValue }
+    }
     public var followingCache: [String: FollowCache] = [:]
     
     // View context
