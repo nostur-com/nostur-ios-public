@@ -27,11 +27,111 @@ import FileProvider
 import Foundation
 import Combine
 
+struct WebOfTrustSnapshotStore {
+    private let fileManager: FileManager
+    private let applicationSupportDirectory: URL
+    private let cachesDirectory: URL
+
+    init(fileManager: FileManager = .default) throws {
+        self.fileManager = fileManager
+        self.applicationSupportDirectory = try fileManager.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        self.cachesDirectory = try fileManager.url(
+            for: .cachesDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+    }
+
+    init(fileManager: FileManager = .default, applicationSupportDirectory: URL, cachesDirectory: URL) {
+        self.fileManager = fileManager
+        self.applicationSupportDirectory = applicationSupportDirectory
+        self.cachesDirectory = cachesDirectory
+    }
+
+    func snapshotURL(for pubkey: String) throws -> URL {
+        let directory = applicationSupportDirectory.appendingPathComponent("Nostur", isDirectory: true)
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory.appendingPathComponent("web-of-trust-\(pubkey).bin")
+    }
+
+    func legacySnapshotURL(for pubkey: String) -> URL {
+        cachesDirectory.appendingPathComponent("web-of-trust-\(pubkey).bin")
+    }
+
+    @discardableResult
+    func migrateLegacySnapshotIfNeeded(for pubkey: String) throws -> URL {
+        let destination = try snapshotURL(for: pubkey)
+        guard !fileManager.fileExists(atPath: destination.path) else { return destination }
+
+        let legacy = legacySnapshotURL(for: pubkey)
+        guard fileManager.fileExists(atPath: legacy.path) else { return destination }
+        try fileManager.moveItem(at: legacy, to: destination)
+        return destination
+    }
+
+    func containsSnapshot(for pubkey: String) -> Bool {
+        guard let url = try? migrateLegacySnapshotIfNeeded(for: pubkey) else { return false }
+        return fileManager.fileExists(atPath: url.path)
+    }
+
+    func read(for pubkey: String) throws -> Set<String> {
+        let url = try migrateLegacySnapshotIfNeeded(for: pubkey)
+        let data = try Data(contentsOf: url)
+        guard let values = try NSKeyedUnarchiver.unarchivedObject(
+            ofClasses: [NSArray.self, NSString.self],
+            from: data
+        ) as? [String] else {
+            throw CocoaError(.coderReadCorrupt)
+        }
+        return Set(values)
+    }
+
+    func write(_ pubkeys: Set<String>, for pubkey: String) throws {
+        let url = try snapshotURL(for: pubkey)
+        let data = try NSKeyedArchiver.archivedData(
+            withRootObject: Array(pubkeys),
+            requiringSecureCoding: false
+        )
+        try data.write(to: url, options: .atomic)
+    }
+
+    func modificationDate(for pubkey: String) throws -> Date {
+        let url = try migrateLegacySnapshotIfNeeded(for: pubkey)
+        let attributes = try fileManager.attributesOfItem(atPath: url.path)
+        guard let date = attributes[.modificationDate] as? Date else {
+            throw CocoaError(.fileReadUnknown)
+        }
+        return date
+    }
+
+    func removeSnapshot(for pubkey: String) throws {
+        let urls = [try snapshotURL(for: pubkey), legacySnapshotURL(for: pubkey)]
+        for url in urls where fileManager.fileExists(atPath: url.path) {
+            try fileManager.removeItem(at: url)
+        }
+    }
+}
+
 class WebOfTrust: ObservableObject {
     
     static let shared = WebOfTrust()
  
     private let ENABLE_THRESHOLD = 2000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
+    private let snapshotStore = try? WebOfTrustSnapshotStore()
+    private let rebuildStateLock = NSLock()
+    private var needsDeferredRebuild = false
+    private var maintenanceRebuildActive = false
+    private var maintenanceBatches: [[String]] = []
+    private var maintenanceCompleted = 0
+    private var maintenanceTotal = 0
+    private var maintenanceRelays: Set<RelayData> = []
+    private var deferredRebuildTask: Task<Void, Never>?
 
     private struct FilteringSnapshot {
         var mainPubkey = ""
@@ -69,6 +169,10 @@ class WebOfTrust: ObservableObject {
     @Published public var allowedKeysCount: Int = 0
     
     @Published public var updatingWoT = false
+
+    @Published public private(set) var rebuildQueued = false
+
+    @Published public private(set) var rebuildProgress: (completed: Int, total: Int)?
     
     // Only accessed from bg thread
     // Keep separate lists for faster filtering
@@ -169,22 +273,69 @@ class WebOfTrust: ObservableObject {
 
         guard let startupData else { return }
 
-        let loadedAllowedKeysCount = await bg().perform {
+        let startupSnapshot = await bg().perform {
             self.followingPubkeys = startupData.followingPubkeys.union(startupData.ownFollowingPubkeys)
             self.followingFollowingPubkeys = self.loadData(startupData.mainPubkey)
+            // Check after loading so legacy .txt migration and corrupt-snapshot
+            // removal are reflected in the rebuild decision.
+            let hadPersistedSnapshot = self.snapshotStore?.containsSnapshot(for: startupData.mainPubkey) == true
             self.updateViewData(localSnapshotLoaded: true)
             self.filteringSnapshotLock.lock()
             let count = self.filteringSnapshot.allowedKeysCount
             self.filteringSnapshotLock.unlock()
-            return count
+            return (allowedKeysCount: count, hadPersistedSnapshot: hadPersistedSnapshot)
         }
 
         await MainActor.run {
             // Set this synchronously before startNosturing continues. The @Published
             // value remains view state, while filtering reads the locked snapshot.
-            self.allowedKeysCount = loadedAllowedKeysCount
+            self.allowedKeysCount = startupSnapshot.allowedKeysCount
+            if !startupSnapshot.hadPersistedSnapshot {
+                self.rebuildStateLock.lock()
+                self.needsDeferredRebuild = true
+                self.rebuildStateLock.unlock()
+                self.rebuildQueued = true
+            }
             self.woTisReady()
         }
+    }
+
+    /// A missing snapshot is repaired after the first feed and notification work has
+    /// had time to enter the network/import pipeline. This task never blocks startup.
+    public func scheduleDeferredRebuildIfNeeded() {
+        rebuildStateLock.lock()
+        let shouldSchedule = needsDeferredRebuild && deferredRebuildTask == nil
+        rebuildStateLock.unlock()
+        guard shouldSchedule else { return }
+
+        let task = Task(priority: .utility) { [weak self] in
+            // Let the first visible feed and notification requests win the initial
+            // connection/import burst after a restore.
+            try? await Task.sleep(nanoseconds: 12_000_000_000)
+            guard !Task.isCancelled else { return }
+
+            // Require a short quiet window. If interactive imports resume, the
+            // maintenance rebuild remains queued instead of competing with them.
+            var quietChecks = 0
+            while !Task.isCancelled && quietChecks < 2 {
+                if Importer.shared.hasPendingImportPasses {
+                    quietChecks = 0
+                }
+                else {
+                    quietChecks += 1
+                }
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                self?.loadWoT(force: true)
+            }
+        }
+
+        rebuildStateLock.lock()
+        deferredRebuildTask = task
+        rebuildStateLock.unlock()
     }
     
     // For first time guessing the main account, user can change actual main account in Settings
@@ -431,33 +582,130 @@ class WebOfTrust: ObservableObject {
             return
         }
         self.woTisReady()
-        
-        // Fetch kind 3s
+        self.startMaintenanceRebuild(pubkeys: pubkeys)
+    }
+
+    /// Fetches contact lists in small batches. Each batch waits for interactive
+    /// importer work to drain, so a restore cannot monopolize feeds or notifications.
+    private func startMaintenanceRebuild(pubkeys: Set<String>) {
+        rebuildStateLock.lock()
+        guard !maintenanceRebuildActive else {
+            rebuildStateLock.unlock()
+            return
+        }
+        maintenanceRebuildActive = true
+        needsDeferredRebuild = false
+        deferredRebuildTask = nil
+        maintenanceCompleted = 0
+        maintenanceTotal = pubkeys.count
+        let sorted = pubkeys.sorted()
+        maintenanceBatches = stride(from: 0, to: sorted.count, by: 20).map { start in
+            return Array(sorted[start..<min(start + 20, sorted.count)])
+        }
+        maintenanceRelays = ConnectionPool.shared.connectedReadRelaysForMaintenance(limit: 2)
+        let hasRelays = !maintenanceRelays.isEmpty
+        rebuildStateLock.unlock()
+
+        guard hasRelays else {
+            rebuildStateLock.lock()
+            maintenanceRebuildActive = false
+            needsDeferredRebuild = true
+            deferredRebuildTask = nil
+            rebuildStateLock.unlock()
+            DispatchQueue.main.async { [weak self] in
+                self?.rebuildQueued = true
+                self?.updatingWoT = false
+            }
+            scheduleDeferredRebuildIfNeeded()
+            return
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            self?.rebuildQueued = false
+            self?.updatingWoT = true
+            self?.rebuildProgress = (0, pubkeys.count)
+        }
+
+        // Restored Core Data usually already contains many kind-3 events. Rebuild
+        // from those first so the usable snapshot returns before network refreshes.
+        generateWoT(markUpdateFinished: false, persistSnapshot: false) { [weak self] in
+            self?.fetchNextMaintenanceBatchWhenIdle()
+        }
+    }
+
+    private func fetchNextMaintenanceBatchWhenIdle() {
+        if Importer.shared.hasPendingImportPasses {
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                bg().perform {
+                    self?.fetchNextMaintenanceBatchWhenIdle()
+                }
+            }
+            return
+        }
+
+        rebuildStateLock.lock()
+        guard maintenanceRebuildActive else {
+            rebuildStateLock.unlock()
+            return
+        }
+        guard !maintenanceBatches.isEmpty else {
+            rebuildStateLock.unlock()
+            finishMaintenanceRebuild()
+            return
+        }
+        let batch = maintenanceBatches.removeFirst()
+        let relays = maintenanceRelays
+        rebuildStateLock.unlock()
+
         let task = ReqTask(
-            debounceTime: 5.0, // in test, default 0.1 stops at 2000 contacts, with 5.0 its 10000+ contacts
-            prefix: "WoTFol-",
+            debounceTime: 2.0,
+            timeout: 15.0,
+            prefix: "WoTFol-M-",
             reqCommand: { taskId in
 #if DEBUG
-                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Fetching contact lists for \(pubkeys.count) contacts")
+                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Maintenance batch for \(batch.count) contacts")
 #endif
-                req(RM.getAuthorContactsLists(pubkeys: Array(pubkeys), subscriptionId: taskId))
+                req(
+                    RM.getAuthorContactsLists(pubkeys: batch, limit: batch.count, subscriptionId: taskId),
+                    relays: relays
+                )
             },
-            processResponseCommand: { [weak self] taskId, _, _ in
-                self?.updatingWoT = true
-#if DEBUG
-                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Received contact list(s)")
-#endif
-                self?.generateWoT()
+            processResponseCommand: { [weak self] _, _, _ in
+                self?.maintenanceBatchFinished(batch.count)
             },
-            timeoutCommand: { [weak self] taskId in
-#if DEBUG
-                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Time-out")
-#endif
-                self?.generateWoT()
-            })
-
+            timeoutCommand: { [weak self] _ in
+                self?.maintenanceBatchFinished(batch.count)
+            }
+        )
         backlog.add(task)
         task.fetch()
+    }
+
+    private func maintenanceBatchFinished(_ count: Int) {
+        rebuildStateLock.lock()
+        maintenanceCompleted += count
+        let progress = (completed: maintenanceCompleted, total: maintenanceTotal)
+        rebuildStateLock.unlock()
+
+        DispatchQueue.main.async { [weak self] in
+            self?.rebuildProgress = progress
+        }
+        fetchNextMaintenanceBatchWhenIdle()
+    }
+
+    private func finishMaintenanceRebuild() {
+        generateWoT(markUpdateFinished: true) { [weak self] in
+            guard let self else { return }
+            self.rebuildStateLock.lock()
+            self.maintenanceRebuildActive = false
+            self.maintenanceBatches.removeAll()
+            self.maintenanceRelays.removeAll()
+            self.rebuildStateLock.unlock()
+            DispatchQueue.main.async {
+                self.rebuildQueued = false
+                self.rebuildProgress = nil
+            }
+        }
     }
     
     public func localReload(wotFollowingPubkeys: Set<String>) {
@@ -474,10 +722,17 @@ class WebOfTrust: ObservableObject {
         generateWoT()
     }
     
-    private func generateWoT() {
+    private func generateWoT(
+        markUpdateFinished: Bool = true,
+        persistSnapshot: Bool = true,
+        completion: (() -> Void)? = nil
+    ) {
         guard mainAccountWoTpubkey != "" else {
             self.woTisReady()
-            updatingWoT = false
+            if markUpdateFinished {
+                updatingWoT = false
+            }
+            completion?()
             return
         }
         bg().perform { [weak self] in
@@ -498,22 +753,24 @@ class WebOfTrust: ObservableObject {
 #if DEBUG
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
 #endif
-            self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
+            if persistSnapshot {
+                self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
+            }
+            completion?()
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.woTisReady()
-                self.updatingWoT = false
+                if markUpdateFinished {
+                    self.updatingWoT = false
+                }
             }
         }
     }
     
     private func storeData(pubkeys: Set<String>, pubkey: String) {
         do {
-            let filename = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-                .appendingPathComponent("web-of-trust-\(pubkey).bin")
-            
-            let data = try NSKeyedArchiver.archivedData(withRootObject: Array(pubkeys), requiringSecureCoding: false)
-                   try data.write(to: filename)
+            guard let snapshotStore else { return }
+            try snapshotStore.write(pubkeys, for: pubkey)
 
             if let lastUpdated = lastUpdatedDate(pubkey) {
 #if DEBUG
@@ -534,29 +791,18 @@ class WebOfTrust: ObservableObject {
     // Get data from documents directory
     private func loadData(_ pubkey: String) -> Set<String> {
         do {
-            let binFilename = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-                .appendingPathComponent("web-of-trust-\(pubkey).bin")
-            
             migrateDataIfNeeded(pubkey)
-            
-            let data = try Data(contentsOf: binFilename)
-            if let pubkeysArray = try NSKeyedUnarchiver.unarchivedObject(ofClasses: [NSArray.self, NSString.self], from: data) as? [String] {
-                let pubkeys = Set(pubkeysArray)
-                if pubkeys.count < 2 {
-                    // Something wrong, delete corrupt file
-                    try FileManager.default.removeItem(at: binFilename)
+            guard let snapshotStore else { return [] }
+            let pubkeys = try snapshotStore.read(for: pubkey)
+            if pubkeys.count < 2 {
+                // Something wrong, delete corrupt file
+                try snapshotStore.removeSnapshot(for: pubkey)
 #if DEBUG
-                    L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Something wrong, deleting corrupt file: \(binFilename.lastPathComponent)")
+                L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Something wrong, deleting corrupt snapshot")
 #endif
-                    return Set<String>()
-                }
-                return pubkeys
-            } else {
-#if DEBUG
-                L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to decode file: \(binFilename.lastPathComponent)")
-#endif
-                return Set<String>()
+                return []
             }
+            return pubkeys
         }
         catch {
 #if DEBUG
@@ -600,12 +846,8 @@ class WebOfTrust: ObservableObject {
     
     private func lastUpdatedDate(_ pubkey: String) -> Date? {
         do {
-            let filename = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-                .appendingPathComponent("web-of-trust-\(pubkey).bin")
-
-            let attributes = try FileManager.default.attributesOfItem(atPath: filename.path)
-            let date = attributes[FileAttributeKey.modificationDate] as! Date
-            return date
+            guard let snapshotStore else { return nil }
+            return try snapshotStore.modificationDate(for: pubkey)
         }
         catch {
 #if DEBUG

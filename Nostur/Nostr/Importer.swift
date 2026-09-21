@@ -60,6 +60,9 @@ class Importer {
     private let normalImportGate = ImportPassGate()
     private let priorityImportGate = ImportPassGate()
     var isImporting: Bool { normalImportGate.isScheduled }
+    var hasPendingImportPasses: Bool {
+        normalImportGate.isScheduled || priorityImportGate.isScheduled
+    }
     var subscriptions = Set<AnyCancellable>()
     var addedRelayMessage = PassthroughSubject<Void, Never>()
     var addedPrioRelayMessage = PassthroughSubject<Void, Never>()

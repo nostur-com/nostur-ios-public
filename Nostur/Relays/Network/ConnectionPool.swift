@@ -258,6 +258,18 @@ public class ConnectionPool: ObservableObject {
         }
     }
 
+    /// A small, already-connected relay set for background maintenance requests.
+    /// This avoids waking every configured relay or multiplying duplicate imports.
+    public func connectedReadRelaysForMaintenance(limit: Int = 2) -> Set<RelayData> {
+        queue.sync {
+            Set(connections.values
+                .filter { $0.relayData.read && $0.isSocketConnected && !$0.isNWC && !$0.isNC }
+                .sorted { $0.url < $1.url }
+                .prefix(max(1, limit))
+                .map(\.relayData))
+        }
+    }
+
     /// Wait until at least one explicitly selected relay has completed its WebSocket
     /// handshake. A REQ sent before this point is only queued locally, so starting
     /// an EOSE/deadline tracker earlier measures connection setup rather than the

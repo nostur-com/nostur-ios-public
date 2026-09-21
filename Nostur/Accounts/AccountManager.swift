@@ -200,9 +200,10 @@ class AccountManager {
         let fileManager = FileManager.default
         let cachesDirectory = try! fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
         let txtFilename = cachesDirectory.appendingPathComponent("web-of-trust-\(logoutAccountPubkey).txt")
+
+        try? WebOfTrustSnapshotStore(fileManager: fileManager).removeSnapshot(for: logoutAccountPubkey)
         
         if fileManager.fileExists(atPath: txtFilename.path) {
-            // Migrate from .txt to .bin
             do {
                 try fileManager.removeItem(at: txtFilename)
 #if DEBUG

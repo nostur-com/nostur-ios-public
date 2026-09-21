@@ -96,9 +96,20 @@ struct SpamFilteringSettings: View {
                         }
                     }
                 }
+
+                if wot.rebuildQueued {
+                    Text("Web of Trust rebuild queued — filtering temporarily allows everyone")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                else if let progress = wot.rebuildProgress {
+                    Text("Rebuilding Web of Trust: \(progress.completed) of \(progress.total) contact lists")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
                 
                 Group {
-                    if wot.allowedKeysCount == 0 || settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
+                    if !wot.tresholdReached || settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
                         Text("Currently allowed by the filter: Everyone")
                     }
                     else {

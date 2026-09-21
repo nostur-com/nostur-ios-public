@@ -321,6 +321,7 @@ func startNosturing() async {
     
     await setupConnections()
     AppState.shared.finishedTasks.insert(.didRunConnectAll)
+    WebOfTrust.shared.scheduleDeferredRebuildIfNeeded()
     
     Task {
         async let nwcTask: () = initializeNWCConnection()
