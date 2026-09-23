@@ -855,7 +855,8 @@ class NXColumnViewModel: ObservableObject {
         let shouldAnimateOffscreenRemoval = NXFeedViewport.shouldAnimateOffscreenRemoval(
             removedPostIDs: postIdsToRemove,
             visiblePostIDs: visiblePostIds,
-            hasParentUpdates: !parentUpdates.isEmpty
+            hasParentUpdates: !parentUpdates.isEmpty,
+            isViewportMovingOrRecently: vmInner.isFeedViewportMovingOrRecently?() == true
         )
 
         let applyUpdates = { [weak self] () -> [String] in

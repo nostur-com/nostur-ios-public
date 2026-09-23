@@ -158,15 +158,30 @@ enum NXFeedViewport {
         shouldCoverPrepend(updateReasons: updateReasons) || updateReasons.contains(unreadRemovalCoverReason)
     }
 
+    /// A covered mutation must keep its pre-mutation post pinned until List finishes
+    /// reconciling self-sized geometry. Row removal can invalidate estimated heights
+    /// even when the anchor's array index is unchanged.
+    static func shouldSettleAnchoredUpdate(
+        updateReasons: [String],
+        pinByIdentity: Bool,
+        anchorIndexShifted: Bool
+    ) -> Bool {
+        pinByIdentity
+            || anchorIndexShifted
+            || shouldCoverViewport(updateReasons: updateReasons)
+    }
+
     /// Let SwiftUI/List animate a pure offscreen deletion. List already keeps the
     /// visible rows stable for this case, while an identity settle can fight its
     /// transient self-sizing layout and visibly correct a viewport that never moved.
     static func shouldAnimateOffscreenRemoval(
         removedPostIDs: Set<String>,
         visiblePostIDs: Set<String>,
-        hasParentUpdates: Bool
+        hasParentUpdates: Bool,
+        isViewportMovingOrRecently: Bool = false
     ) -> Bool {
-        !removedPostIDs.isEmpty
+        !isViewportMovingOrRecently
+            && !removedPostIDs.isEmpty
             && removedPostIDs.isDisjoint(with: visiblePostIDs)
             && !hasParentUpdates
     }

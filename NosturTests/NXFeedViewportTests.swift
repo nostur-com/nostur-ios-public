@@ -600,12 +600,40 @@ final class NXFeedViewportTests: XCTestCase {
         )
     }
 
+    func testCoveredUnreadRemovalSettlesEvenWhenAnchorIndexDoesNotChange() {
+        XCTAssertTrue(
+            NXFeedViewport.shouldSettleAnchoredUpdate(
+                updateReasons: [NXFeedViewport.unreadRemovalCoverReason],
+                pinByIdentity: false,
+                anchorIndexShifted: false
+            )
+        )
+        XCTAssertFalse(
+            NXFeedViewport.shouldSettleAnchoredUpdate(
+                updateReasons: ["media row resized"],
+                pinByIdentity: false,
+                anchorIndexShifted: false
+            )
+        )
+    }
+
     func testPureOffscreenRemovalUsesListAnimationWithoutViewportSettle() {
         XCTAssertTrue(
             NXFeedViewport.shouldAnimateOffscreenRemoval(
                 removedPostIDs: ["read-above"],
                 visiblePostIDs: ["reading", "below"],
                 hasParentUpdates: false
+            )
+        )
+    }
+
+    func testOffscreenRemovalDuringPostScrollCooldownUsesAnchoredQueue() {
+        XCTAssertFalse(
+            NXFeedViewport.shouldAnimateOffscreenRemoval(
+                removedPostIDs: ["read-above"],
+                visiblePostIDs: ["reading", "below"],
+                hasParentUpdates: false,
+                isViewportMovingOrRecently: true
             )
         )
     }

@@ -119,6 +119,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         isProgrammaticScrollInProgress
     }
 
+    var isViewportMovingOrRecently: Bool {
+        guard let scrollView else { return false }
+        return isUserScrollingOrRecently(in: scrollView)
+    }
+
     func attach(to scrollView: UIScrollView) {
         let replaced = self.scrollView !== scrollView
         self.scrollView = scrollView
@@ -344,7 +349,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 #endif
 
         if shouldCover {
-            coverViewportForPrepend(in: scrollView)
+            coverViewport(in: scrollView, hostedInWindow: false)
         }
         restoredSelfSizing?()
         UIView.performWithoutAnimation {
@@ -459,7 +464,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             return
         }
 
-        if isProgrammaticScrollInProgress || isUserScrollingOrRecently(in: scrollView) {
+        if isProgrammaticScrollInProgress
+            || isUserScrollingOrRecently(in: scrollView)
+            || settleTask != nil
+            || prependSnapshot != nil {
             pendingUpdates.append(pendingUpdate)
             pendingPinByIdentity = pendingPinByIdentity || pinByIdentity
 #if DEBUG
@@ -478,7 +486,9 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         flushTask = Task { @MainActor [weak self] in
             guard let self else { return }
             while self.isProgrammaticScrollInProgress
-                    || self.scrollView.map({ self.isUserScrollingOrRecently(in: $0) }) == true {
+                    || self.scrollView.map({ self.isUserScrollingOrRecently(in: $0) }) == true
+                    || self.settleTask != nil
+                    || self.prependSnapshot != nil {
                 try? await Task.sleep(nanoseconds: 50_000_000)
                 guard !Task.isCancelled else { return }
             }
@@ -510,16 +520,30 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard !updates.isEmpty else { return }
 
         let oldIDs = itemIDs
-        let parkedBefore = parked
+        // A queued update can flush after finger-up deceleration has moved several rows
+        // beyond `parked` (which is intentionally only updated while the finger is down).
+        // Capture the real top edge immediately before mutating the List so a deferred
+        // removal never restores or reasons about that stale drag-time post.
+        let liveBefore = scrollView.flatMap { visibleAnchor(in: $0) }.map {
+            NXFeedPark.Post(id: $0.id, visibleTopOffset: $0.visibleTopOffset)
+        }
+        let parkedBefore = liveBefore ?? parked
+        if let parkedBefore {
+            parked = parkedBefore
+        }
+        let updateReasons = updates.map(\.reason)
 
         // Photograph the current (correct) viewport before an unanimated
         // mid-feed prepend paints the wrong post at the top. Skip when a
         // restore overlay is already hiding the list — a second cover on the
         // window would show the unrestored top, then lift before the overlay.
-        if NXFeedViewport.shouldCoverViewport(updateReasons: updates.map(\.reason)),
+        if NXFeedViewport.shouldCoverViewport(updateReasons: updateReasons),
            shouldSkipPrependSnapshot?() != true,
            let scrollView {
-            coverViewportForPrepend(in: scrollView)
+            coverViewport(
+                in: scrollView,
+                hostedInWindow: NXFeedViewport.shouldCoverPrepend(updateReasons: updateReasons)
+            )
         }
 
         updates.forEach { $0.apply() }
@@ -549,7 +573,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             let shifted = parkedBefore.map {
                 NXFeedIndexMapping.anchorIndexShifted(oldIDs: oldIDs, newIDs: itemIDs, anchorID: $0.id)
             } ?? false
-            let needsExtendedSettling = pinByIdentity || shifted
+            let needsExtendedSettling = NXFeedViewport.shouldSettleAnchoredUpdate(
+                updateReasons: updateReasons,
+                pinByIdentity: pinByIdentity,
+                anchorIndexShifted: shifted
+            )
             guard needsExtendedSettling else {
                 removePrependSnapshot()
 #if DEBUG
@@ -735,6 +763,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         if scrollView.isDragging || scrollView.isTracking { return "dragging" }
         if scrollView.isDecelerating { return "decelerating" }
         if isProgrammaticScrollInProgress { return "programmatic scroll" }
+        if settleTask != nil || prependSnapshot != nil { return "viewport settling" }
         return "recent scrolling"
     }
 
@@ -896,13 +925,16 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         removePrependSnapshot()
     }
 
-    private func coverViewportForPrepend(in scrollView: UIScrollView) {
+    private func coverViewport(in scrollView: UIScrollView, hostedInWindow: Bool) {
         guard prependSnapshot == nil else { return }
         guard let snapshot = scrollView.snapshotView(afterScreenUpdates: false) else { return }
 
-        // Pin to the window so a remounted SwiftUI List cannot draw on top of
-        // the cover (feed switches create a new hosting view after we snapshot).
-        let host = scrollView.window ?? scrollView.superview
+        // True prepends can remount the SwiftUI List, so their cover must survive
+        // at window level. Ordinary row removals and unread corrections stay in
+        // the List hierarchy so they never flash over toolbar/tab-bar chrome.
+        let host = hostedInWindow
+            ? (scrollView.window ?? scrollView.superview)
+            : (scrollView.superview ?? scrollView.window)
         guard let host else { return }
         snapshot.frame = scrollView.convert(scrollView.bounds, to: host)
         snapshot.isUserInteractionEnabled = false
@@ -911,7 +943,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         prependSnapshotGeneration += 1
         let generation = prependSnapshotGeneration
 #if DEBUG
-        onDebugAction?("SNAPSHOT cover")
+        onDebugAction?("SNAPSHOT cover · \(hostedInWindow ? "window" : "local")")
 #endif
 
         Task { @MainActor [weak self] in
@@ -926,6 +958,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     private func endPrependSettle(generation: Int) {
         guard anchorGeneration == generation else { return }
+        settleTask = nil
         scrollView?.layoutIfNeeded()
         // Let the settled offset present under the cover before lifting it.
         Task { @MainActor [weak self] in
@@ -1283,6 +1316,9 @@ struct NXPostsFeed: View {
             vmInner.rememberFeedAnchor = { [weak layoutStabilizer] postID in
                 layoutStabilizer?.rememberAnchor(id: postID)
             }
+            vmInner.isFeedViewportMovingOrRecently = { [weak layoutStabilizer] in
+                layoutStabilizer?.isViewportMovingOrRecently ?? false
+            }
             layoutStabilizer.updateItemIDs(
                 posts.map(\.id),
                 leadingNonPostRowCount: vm.feedLeadingNonPostRowCount
@@ -1408,6 +1444,7 @@ struct NXPostsFeed: View {
             vm.pauseViewUpdates()
             vmInner.performAnchoredFeedUpdate = nil
             vmInner.rememberFeedAnchor = nil
+            vmInner.isFeedViewportMovingOrRecently = nil
             vmInner.cancelPendingFeedSettle = nil
         }
     }
