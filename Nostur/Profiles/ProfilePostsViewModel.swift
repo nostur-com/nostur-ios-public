@@ -10,7 +10,7 @@ import SwiftUI
 import CoreData
 import Combine
 
-let PROFILE_KINDS = Set([1,1222,5,6,20,9802,34235])
+let PROFILE_KINDS = Set([1,1222,5,6,20,9802,34235,34236])
 let PROFILE_KINDS_REPLIES = Set([1,1111,1244,5])
 let ARTICLE_KINDS = Set([30023])
 let LIST_KINDS = Set([30000,39089])
@@ -20,6 +20,11 @@ let LIST_KINDS = Set([30000,39089])
 struct ProfilePostsLoadingPolicy {
     static let firstPaintCount = 3
     static let firstPaintLimit = 10
+    // Profile requests fan out to author-specific relays that are commonly
+    // cold when a profile is first opened. The generic three-second deadline
+    // is long enough for warm feeds, but can expire during their handshake.
+    static let connectedRelayDeadline: TimeInterval = 9.0
+    static let connectingRelayDeadline: TimeInterval = 12.0
 
     enum TerminalDecision: Equatable {
         case revealImportedPosts
@@ -143,17 +148,6 @@ class ProfilePostsViewModel: ObservableObject {
         returnedEventIds = []
         let generation = requestGeneration
 
-        let kinds = switch self.type {
-        case .posts:
-            PROFILE_KINDS
-        case .replies:
-            PROFILE_KINDS_REPLIES
-        case .articles:
-            ARTICLE_KINDS
-        case .lists:
-            LIST_KINDS
-        }
-
         let subscriptionId = "prio-PROFILEPOSTS-" + UUID().uuidString
         let clientMessage = NostrEssentials.ClientMessage(
             type: .REQ,
@@ -161,7 +155,7 @@ class ProfilePostsViewModel: ObservableObject {
             filters: [
                 Filters(
                     authors: Set([self.pubkey]),
-                    kinds: kinds,
+                    kinds: profileKinds(for: self.type),
                     limit: 25
                 )
             ]
@@ -195,6 +189,8 @@ class ProfilePostsViewModel: ObservableObject {
             self.profileRequestTracker = BoundedRelayRequestCompletionTracker(
                 subscriptionId: subscriptionId,
                 targets: targets,
+                connectedDeadline: ProfilePostsLoadingPolicy.connectedRelayDeadline,
+                connectingDeadline: ProfilePostsLoadingPolicy.connectingRelayDeadline,
                 onImport: {},
                 onCompletion: { [weak self] outcome in
                     guard let self, self.requestGeneration == generation else { return }
@@ -435,22 +431,12 @@ class ProfilePostsViewModel: ObservableObject {
         guard !didPrefetchOlderPosts else { return }
         guard let oldestPostDate = self.posts.last?.createdAt else { return }
         didPrefetchOlderPosts = true
-        let kinds = switch self.type {
-        case .posts:
-            PROFILE_KINDS
-        case .replies:
-            PROFILE_KINDS_REPLIES
-        case .articles:
-            ARTICLE_KINDS
-        case .lists:
-            LIST_KINDS
-        }
         outboxReq(NostrEssentials
                     .ClientMessage(type: .REQ,
                                    filters: [
                                     Filters(
                                         authors: Set([self.pubkey]),
-                                        kinds: kinds,
+                                        kinds: profileKinds(for: self.type),
                                         until: Int(oldestPostDate.timeIntervalSince1970),
                                         limit: 50
                                     )
@@ -618,16 +604,6 @@ class ProfilePostsViewModel: ObservableObject {
     @MainActor
     public func fetchMore(after: NRPost, amount: Int) {
         guard activePaginationSubscriptionId == nil else { return }
-        let kinds = switch self.type {
-        case .posts:
-            PROFILE_KINDS
-        case .replies:
-            PROFILE_KINDS_REPLIES
-        case .articles:
-            ARTICLE_KINDS
-        case .lists:
-            LIST_KINDS
-        }
         let generation = requestGeneration
         let paginationUntil = Int(after.created_at)
         let subscriptionId = "prio-PROFILEPOSTS-PAGE-" + UUID().uuidString
@@ -637,7 +613,7 @@ class ProfilePostsViewModel: ObservableObject {
             filters: [
                 Filters(
                     authors: Set([self.pubkey]),
-                    kinds: kinds,
+                    kinds: profileKinds(for: self.type),
                     until: paginationUntil,
                     limit: amount
                 )
@@ -711,6 +687,19 @@ class ProfilePostsViewModel: ObservableObject {
         case loading
         case ready
         case timeout
+    }
+}
+
+func profileKinds(for type: ProfilePostsViewModel.ProfilePostsType) -> Set<Int> {
+    switch type {
+    case .posts:
+        PROFILE_KINDS
+    case .replies:
+        PROFILE_KINDS_REPLIES
+    case .articles:
+        ARTICLE_KINDS
+    case .lists:
+        LIST_KINDS
     }
 }
 

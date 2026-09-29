@@ -38,6 +38,15 @@ struct ProfilePostsLoadingPolicyTests {
         #expect(ProfilePostsLoadingPolicy.shouldReveal(postCount: 1, force: true))
     }
 
+    @Test("Cold profile relays get a full connection window")
+    func coldRelayDeadline() {
+        #expect(ProfilePostsLoadingPolicy.connectedRelayDeadline >= 9.0)
+        #expect(
+            ProfilePostsLoadingPolicy.connectingRelayDeadline
+                > ProfilePostsLoadingPolicy.connectedRelayDeadline
+        )
+    }
+
     @Test("Cached posts are not revealed without a matching import")
     func noUnvalidatedCacheReveal() {
         #expect(

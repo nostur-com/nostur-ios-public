@@ -1487,11 +1487,24 @@ class NXColumnViewModel: ObservableObject {
 
                 let currentIdsOnScreen = self.currentIdsOnScreen
                 let repliesEnabled = config.repliesEnabled
+                let followingSeparateFeedKinds: Set<Int> = switch config.columnType {
+                case .following(let feed) where feed.kinds.isEmpty:
+                    currentSeparateFeedKindsToRemove()
+                default:
+                    []
+                }
                 
                 let event = notification.object as! Event
                 bg().perform { [weak self] in
                     // Make sure the post is not a reply or that replies are enabled for this feed
                     guard event.replyToId == nil || repliesEnabled else { return }
+
+                    // Keep live inserts consistent with local and relay loads. When a
+                    // dedicated media feed is enabled, its posts belong there instead
+                    // of temporarily appearing in Following until the next reload.
+                    if followingSeparateFeedKinds.contains(Int(event.kind)) {
+                        return
+                    }
                     
                     // Only kind 1222/1244 on yak-only feed
                     if case .yak(_) = config.columnType, (event.kind != 1222 && event.kind != 1244) {
@@ -2814,12 +2827,7 @@ class NXColumnViewModel: ObservableObject {
 #endif
             
             // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
-            let removeSeperateFeedKinds: Set<Int> = [
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_picture_feed")) ? 20 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1222 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1244 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_vine_feed")) ? 34236 : -1,
-            ]
+            let removeSeperateFeedKinds = currentSeparateFeedKindsToRemove()
             
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
@@ -3129,12 +3137,7 @@ class NXColumnViewModel: ObservableObject {
             
             
             // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
-            let removeSeperateFeedKinds: Set<Int> = [
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_picture_feed")) ? 20 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1222 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1244 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_vine_feed")) ? 34236 : -1,
-            ]
+            let removeSeperateFeedKinds = currentSeparateFeedKindsToRemove()
             
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
@@ -3339,12 +3342,7 @@ class NXColumnViewModel: ObservableObject {
             }
             
             // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
-            let removeSeperateFeedKinds: Set<Int> = [
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_picture_feed")) ? 20 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1222 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1244 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_vine_feed")) ? 34236 : -1,
-            ]
+            let removeSeperateFeedKinds = currentSeparateFeedKindsToRemove()
             
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
@@ -3703,12 +3701,7 @@ class NXColumnViewModel: ObservableObject {
             guard !pubkeys.isEmpty else { return false }
              
             // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
-            let removeSeperateFeedKinds: Set<Int> = [
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_picture_feed")) ? 20 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1222 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1244 : -1,
-                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_vine_feed")) ? 34236 : -1,
-            ]
+            let removeSeperateFeedKinds = currentSeparateFeedKindsToRemove()
             
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
@@ -5891,6 +5884,30 @@ let QUERY_FOLLOWING_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,20,9802,3
 let REPLY_KINDS: Set<Int> = [1111,1244] // substract these is replies toggle is off
 
 let QUERY_FETCH_LIMIT = 50 // Was 25 before, but seems we are missing posts, maybe too much non WoT-hashtag coming back. Increase limit or split query? or could be the time cutoff is too short/strict
+
+func separateFeedKindsToRemove(
+    isDesktopColumns: Bool,
+    pictureFeedEnabled: Bool,
+    yakFeedEnabled: Bool,
+    vineFeedEnabled: Bool
+) -> Set<Int> {
+    guard !isDesktopColumns else { return [] }
+
+    var kinds = Set<Int>()
+    if pictureFeedEnabled { kinds.insert(20) }
+    if yakFeedEnabled { kinds.formUnion([1222, 1244]) }
+    if vineFeedEnabled { kinds.insert(34236) }
+    return kinds
+}
+
+private func currentSeparateFeedKindsToRemove() -> Set<Int> {
+    separateFeedKindsToRemove(
+        isDesktopColumns: IS_DESKTOP_COLUMNS(),
+        pictureFeedEnabled: UserDefaults.standard.bool(forKey: "enable_picture_feed"),
+        yakFeedEnabled: UserDefaults.standard.bool(forKey: "enable_yak_feed"),
+        vineFeedEnabled: UserDefaults.standard.bool(forKey: "enable_vine_feed")
+    )
+}
 
 
 import CoreData
