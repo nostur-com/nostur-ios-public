@@ -115,8 +115,19 @@ final class WalletViewModel: ObservableObject {
             let result = try await client.request("list_transactions", params: params, connection: connection, encryption: encryption)
             guard self.generation == generation && self.historyGeneration == historyGeneration else { return }
             guard let page = result.transactions else { throw NWCWalletClient.Failure.invalidResponse }
+            let outgoingHashes = Set(page.lazy.filter { $0.type == "outgoing" && $0.zapRequest == nil }.map(\.payment_hash))
+            let localZapDetails = await NWCOutgoingZapStore.shared.details(
+                for: outgoingHashes,
+                accountPubkey: AccountsState.shared.activeAccountPublicKey
+            )
+            guard self.generation == generation && self.historyGeneration == historyGeneration else { return }
             var ids = Set(transactions.map(\.id))
-            transactions.append(contentsOf: page.filter { ids.insert($0.id).inserted })
+            transactions.append(contentsOf: page.compactMap { transaction in
+                guard ids.insert(transaction.id).inserted else { return nil }
+                var transaction = transaction
+                transaction.localZapDetails = localZapDetails[transaction.payment_hash.lowercased()]
+                return transaction
+            })
             offset += page.count
             hasMore = result.total_count.map { offset < $0 && !page.isEmpty } ?? (page.count == 20)
         } catch is CancellationError {
@@ -454,7 +465,7 @@ private struct WalletZapIdentity: View {
     }
 
     private var zapContent: String? {
-        let value = (transaction.zapRequest?.content ?? transaction.description)?
+        let value = (transaction.zapContent ?? transaction.description)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return value?.isEmpty == false ? value : nil
     }

@@ -421,6 +421,21 @@ class MessageParser {
 #if DEBUG
                 L.og.info("⚡️ Zap success \(result.preimage ?? "-") - \(decrypted)")
 #endif
+                if awaitingZap.supportsZap, let invoice = awaitingZap.pr {
+                    let accountPubkey = awaitingZap.fromAccountPubkey
+                    let recipientPubkey = awaitingZap.contactPubkey
+                    let postId = awaitingZap.eventId
+                    let content = awaitingZap.isPrivateZap ? nil : awaitingZap.zapMessage
+                    Task {
+                        await NWCOutgoingZapStore.shared.record(
+                            invoice: invoice,
+                            accountPubkey: accountPubkey,
+                            recipientPubkey: recipientPubkey,
+                            postId: postId,
+                            content: content
+                        )
+                    }
+                }
                 NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
                 NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
                 if (SettingsStore.shared.nwcShowBalance) {

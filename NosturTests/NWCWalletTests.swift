@@ -30,6 +30,43 @@ struct NWCWalletTests {
         #expect(transaction.zapRequest?.content == "Great post")
     }
 
+    @Test func identifiesOutgoingZapRememberedBySender() throws {
+        var transaction = try JSONDecoder().decode(NWCTransaction.self, from: Data("""
+        {"type":"outgoing","payment_hash":"hash","amount":1000,"created_at":1700000000}
+        """.utf8))
+        #expect(transaction.zapContactPubkey == nil)
+
+        transaction.localZapDetails = .init(recipientPubkey: "recipient", postId: "post", content: "Great post")
+
+        #expect(transaction.zapContactPubkey == "recipient")
+        #expect(transaction.zapPostId == "post")
+        #expect(transaction.zapContent == "Great post")
+    }
+
+    @Test func persistsOutgoingZapPerAccount() async throws {
+        let suiteName = "NWCWalletTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let store = NWCOutgoingZapStore(defaults: defaults, defaultsKey: "outgoing-zaps")
+
+        await store.record(
+            paymentHash: "ABC123",
+            accountPubkey: "sender",
+            recipientPubkey: "recipient",
+            postId: "post",
+            content: "Great post"
+        )
+
+        let match = await store.details(for: ["abc123"], accountPubkey: "sender")
+        let otherAccount = await store.details(for: ["abc123"], accountPubkey: "someone-else")
+        #expect(match["abc123"] == NWCTransaction.ZapDetails(
+            recipientPubkey: "recipient",
+            postId: "post",
+            content: "Great post"
+        ))
+        #expect(otherAccount.isEmpty)
+    }
+
     @MainActor
     private func connection() throws -> NWCWalletClient.Connection {
         let keys = try Keys.newKeys()

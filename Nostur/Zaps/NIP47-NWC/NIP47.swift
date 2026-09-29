@@ -60,6 +60,13 @@ struct NWCTransaction: Codable, Identifiable {
     let description: String?
     let invoice: String?
     var metadata: Metadata? = nil
+    var localZapDetails: ZapDetails? = nil
+
+    struct ZapDetails: Codable, Equatable, Sendable {
+        let recipientPubkey: String
+        let postId: String?
+        let content: String?
+    }
 
     struct Metadata: Codable {
         var nostr: ZapRequest?
@@ -96,10 +103,15 @@ struct NWCTransaction: Codable, Identifiable {
               request.kind == nil || request.kind == 9734 else { return nil }
         return request
     }
-    var zapPostId: String? { zapRequest?.tags?.first { $0.first == "e" && $0.count > 1 }?[1] }
-    var zapContactPubkey: String? {
-        type == "incoming" ? zapRequest?.pubkey : zapRequest?.tags?.first { $0.first == "p" && $0.count > 1 }?[1]
+    var zapPostId: String? {
+        zapRequest?.tags?.first { $0.first == "e" && $0.count > 1 }?[1] ?? localZapDetails?.postId
     }
+    var zapContactPubkey: String? {
+        if type == "incoming" { return zapRequest?.pubkey }
+        return zapRequest?.tags?.first { $0.first == "p" && $0.count > 1 }?[1]
+            ?? localZapDetails?.recipientPubkey
+    }
+    var zapContent: String? { zapRequest?.content ?? localZapDetails?.content }
 
     var title: String {
         if let description, !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -110,5 +122,69 @@ struct NWCTransaction: Codable, Identifiable {
     var date: Date { Date(timeIntervalSince1970: TimeInterval(created_at)) }
     static func formattedSats(_ msats: Int64) -> String {
         (Decimal(msats) / 1000).formatted(.number.precision(.fractionLength(0...3)))
+    }
+}
+
+/// NWC transaction history does not normally include the zap request for payments we send.
+/// Keep the association Nostur already knows when a zap succeeds so Wallet can restore it.
+actor NWCOutgoingZapStore {
+    static let shared = NWCOutgoingZapStore()
+
+    private struct Record: Codable {
+        let accountPubkey: String
+        let details: NWCTransaction.ZapDetails
+        let createdAt: Date
+    }
+
+    private let defaults: UserDefaults
+    private let defaultsKey: String
+    private let maximumRecordCount = 500
+
+    init(defaults: UserDefaults = .standard, defaultsKey: String = "nwc_outgoing_zaps") {
+        self.defaults = defaults
+        self.defaultsKey = defaultsKey
+    }
+
+    func record(invoice: String, accountPubkey: String, recipientPubkey: String, postId: String?, content: String?) {
+        guard let paymentHash = Bolt11.decode(string: invoice)?.paymentHash?.hexEncodedString() else { return }
+        record(
+            paymentHash: paymentHash,
+            accountPubkey: accountPubkey,
+            recipientPubkey: recipientPubkey,
+            postId: postId,
+            content: content
+        )
+    }
+
+    func record(paymentHash: String, accountPubkey: String, recipientPubkey: String, postId: String?, content: String?) {
+        var records = loadRecords()
+        records[paymentHash.lowercased()] = Record(
+            accountPubkey: accountPubkey,
+            details: .init(recipientPubkey: recipientPubkey, postId: postId, content: content),
+            createdAt: .now
+        )
+        if records.count > maximumRecordCount {
+            for key in records.sorted(by: { $0.value.createdAt < $1.value.createdAt })
+                .prefix(records.count - maximumRecordCount).map(\.key) {
+                records.removeValue(forKey: key)
+            }
+        }
+        if let data = try? JSONEncoder().encode(records) {
+            defaults.set(data, forKey: defaultsKey)
+        }
+    }
+
+    func details(for paymentHashes: Set<String>, accountPubkey: String) -> [String: NWCTransaction.ZapDetails] {
+        let normalizedHashes = Set(paymentHashes.map { $0.lowercased() })
+        return loadRecords().reduce(into: [:]) { result, item in
+            guard normalizedHashes.contains(item.key), item.value.accountPubkey == accountPubkey else { return }
+            result[item.key] = item.value.details
+        }
+    }
+
+    private func loadRecords() -> [String: Record] {
+        guard let data = defaults.data(forKey: defaultsKey),
+              let records = try? JSONDecoder().decode([String: Record].self, from: data) else { return [:] }
+        return records
     }
 }
