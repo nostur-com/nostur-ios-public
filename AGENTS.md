@@ -49,6 +49,9 @@ After changes are mode:
 1. Build and launch with `./scripts/run-sim.sh` (shares Xcode’s default DerivedData; use `--no-build` only if the app is already built and only reinstall/launch is needed).
 2. Tell the user the app with TEST_BUILD_ID (see BuildIdentity.swift) is ready to test — do **not** only print the command for them to run.
 
+### Worktrees
+When creating a new worktree, copy the Config.xcconfig from our existing folder. Don't read the file, just copy it.
+
 ### Tests
 
 - Run tests:
