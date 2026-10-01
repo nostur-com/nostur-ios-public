@@ -11,7 +11,7 @@ import NavigationBackport
 struct ProfileToolbar: View {
     @Environment(\.theme) private var theme
     public let pubkey: String
-    public let nrContact: NRContact
+    @ObservedObject public var nrContact: NRContact
     @ObservedObject var scrollPosition: NXScrollPosition
     @Binding var editingAccount: CloudAccount?
     

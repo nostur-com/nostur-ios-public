@@ -50,6 +50,11 @@ struct PostReactions: View {
                                 navigateTo(ContactPath(key: nrPost.pubkey), context: containerID)
                             }
                             .id(nrPost.id)
+                            .onAppear {
+                                if nrPost.contact.metadata_created_at == 0 {
+                                    QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
+                                }
+                            }
                         }
                     }
                     if model.foundSpam && !model.includeSpam {
@@ -83,16 +88,6 @@ struct PostReactions: View {
                     task.process()
                 }
             }
-        }
-        .onChange(of: model.reactions) { reactions in
-            let missingPs: [String] = reactions
-                .filter {
-                    $0.contact.metadata_created_at == 0
-                }
-                .map {
-                    $0.pubkey
-                }
-            QueuedFetcher.shared.enqueue(pTags: missingPs)
         }
     }
     
