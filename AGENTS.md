@@ -8,7 +8,7 @@ Nostur is a social media client for the Nostr protocol, built for Mac, iPhone, a
 
 ## Build And Setup
 
-1. Requirements: Xcode 26.x, iOS SDK 26.x
+1. Current toolchain: Xcode 27.1 with its bundled iOS SDK; install the iOS 27.1 simulator runtime for iPhone Duo testing.
 2. Copy `Config.xcconfig.dist` to `Config.xcconfig` and set required API keys
 3. Open `Nostur.xcodeproj` in Xcode
 4. Dependencies are managed by Swift Package Manager (`Package.resolved`)
@@ -31,7 +31,20 @@ Take the first eight UUID characters and lowercase them to match the sidebar.
 ### Build Commands
 
 Note: When doing iPhone Duo related things, run in the 'iPhone Duo' simulator, not 'iPhone 17 Pro'.
+The existing iPhone 17 Pro / iOS 26.5 simulator remains usable for general testing.
+Device Hub replaces the Simulator UI in Xcode 27; `xcodebuild` destinations and
+`xcrun simctl` build/install/launch workflows still use the same commands.
+
 ```bash
+# Verify the selected toolchain and available simulator names/UDIDs
+xcode-select -p
+xcodebuild -version
+xcrun simctl list devices available
+
+# Build, install, and launch (opens Device Hub from the selected Xcode)
+./scripts/run-sim.sh
+./scripts/run-sim.sh "iPhone Duo"
+
 # iOS Simulator (omit -derivedDataPath to share Xcode's default DerivedData/cache)
 xcodebuild -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 
@@ -42,9 +55,19 @@ xcodebuild -scheme Nostur -destination 'platform=iOS,id=<device_id>' build
 xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
 ```
 
+If multiple Xcodes are installed, set `DEVELOPER_DIR` to the intended
+`Xcode.app/Contents/Developer` directory when running commands, or select it in
+Xcode Settings → Locations → Command Line Tools. Avoid `open -a Simulator` or
+opening Device Hub by name: macOS may choose a different Xcode's app.
+Open Device Hub through Xcode → Open Developer Tool → Device Hub, or let the
+script open the matching copy. Select the target device there to view its screen
+and use its controls, including iPhone Duo's poses.
+If a simulator name exists under multiple runtimes, use
+`-destination 'platform=iOS Simulator,id=<simulator_udid>'` with `xcodebuild`.
+
 ### When finishing code changes
 
-After changes are mode:
+After changes are made:
 
 1. Build and launch with `./scripts/run-sim.sh` (shares Xcode’s default DerivedData; use `--no-build` only if the app is already built and only reinstall/launch is needed).
 2. Tell the user the app with TEST_BUILD_ID (see BuildIdentity.swift) is ready to test — do **not** only print the command for them to run.

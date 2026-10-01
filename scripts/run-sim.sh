@@ -4,6 +4,7 @@
 # Usage:
 #   ./scripts/run-sim.sh
 #   ./scripts/run-sim.sh "iPhone 17 Pro"
+#   ./scripts/run-sim.sh "iPhone Duo"
 #   DEVICE="iPhone Air" ./scripts/run-sim.sh
 #   ./scripts/run-sim.sh --build-only
 #   ./scripts/run-sim.sh --no-build   # reinstall/launch last build only
@@ -54,11 +55,13 @@ Build, install, and launch Nostur on the iOS Simulator (Xcode Play equivalent).
 Usage:
   ./scripts/run-sim.sh
   ./scripts/run-sim.sh "iPhone 17 Pro"
+  ./scripts/run-sim.sh "iPhone Duo"
   DEVICE="iPhone Air" ./scripts/run-sim.sh
   ./scripts/run-sim.sh --build-only
   ./scripts/run-sim.sh --no-build   # reinstall/launch last build only
 
 Env:
+  DEVELOPER_DIR Optional Xcode Developer directory; otherwise uses xcode-select.
   DEVICE        Simulator name (default: iPhone 17 Pro)
   SCHEME        Xcode scheme (default: Nostur)
   BUNDLE_ID     App id (default: nostur.com.Nostur)
@@ -102,7 +105,24 @@ fi
 
 echo "==> UDID:        ${UDID}"
 
-# Boot only our target first (before opening Simulator.app).
+# Resolve the UI from the same Xcode that supplies simctl and xcodebuild.
+# Xcode 27 moved the simulator UI to Contents/Applications/DeviceHub.app.
+XCODE_DEVELOPER_DIR="$(xcode-select -p)"
+if [[ -n "${DEVELOPER_DIR:-}" ]]; then
+  XCODE_DEVELOPER_DIR="$DEVELOPER_DIR"
+fi
+# DEVELOPER_DIR also accepts an Xcode.app bundle path.
+if [[ "$XCODE_DEVELOPER_DIR" == *.app ]]; then
+  XCODE_DEVELOPER_DIR="$XCODE_DEVELOPER_DIR/Contents/Developer"
+fi
+DEVICE_HUB_APP="$XCODE_DEVELOPER_DIR/../Applications/DeviceHub.app"
+SIMULATOR_APP="$XCODE_DEVELOPER_DIR/Applications/Simulator.app"
+if [[ ! -d "$DEVICE_HUB_APP" && ! -d "$SIMULATOR_APP" ]]; then
+  echo "error: no Device Hub or Simulator app in selected Xcode: $XCODE_DEVELOPER_DIR"
+  exit 1
+fi
+
+# Boot only our target first (before opening the simulator UI).
 STATE="$(xcrun simctl list devices | grep "$UDID" | grep -oE '\((Shutdown|Booted|Booting)\)' | head -1 || true)"
 if [[ "$STATE" != "(Booted)" ]]; then
   echo "==> Booting simulator..."
@@ -110,18 +130,24 @@ if [[ "$STATE" != "(Booted)" ]]; then
   xcrun simctl bootstatus "$UDID" -b
 fi
 
-# Shut down any other booted simulators so Simulator.app doesn't open extra windows.
-# (open -a Simulator restores last-used devices; CurrentDeviceUDID may differ from our target.)
-while read -r other_udid; do
-  [[ -z "$other_udid" || "$other_udid" == "$UDID" ]] && continue
-  echo "==> Shutting down other simulator: $other_udid"
-  xcrun simctl shutdown "$other_udid" 2>/dev/null || true
-done < <(xcrun simctl list devices | awk -F '[()]' '/\(Booted\)/ { print $2 }')
+if [[ -d "$DEVICE_HUB_APP" ]]; then
+  echo "==> Opening Device Hub: $DEVICE_HUB_APP"
+  open -a "$DEVICE_HUB_APP"
+  echo "==> Select $DEVICE in Device Hub to view its screen."
+else
+  # Legacy Xcode: shut down other booted simulators to avoid extra windows.
+  # (open -a Simulator restores last-used devices; CurrentDeviceUDID may differ from our target.)
+  while read -r other_udid; do
+    [[ -z "$other_udid" || "$other_udid" == "$UDID" ]] && continue
+    echo "==> Shutting down other simulator: $other_udid"
+    xcrun simctl shutdown "$other_udid" 2>/dev/null || true
+  done < <(xcrun simctl list devices | awk -F '[()]' '/\(Booted\)/ { print $2 }')
 
-# Point Simulator.app at our device so it doesn't reopen a different last-used one.
-defaults write com.apple.iphonesimulator CurrentDeviceUDID "$UDID"
+  # Point Simulator.app at our device so it doesn't reopen a different last-used one.
+  defaults write com.apple.iphonesimulator CurrentDeviceUDID "$UDID"
 
-open -a Simulator
+  open -a "$SIMULATOR_APP"
+fi
 
 DESTINATION="platform=iOS Simulator,id=${UDID}"
 
