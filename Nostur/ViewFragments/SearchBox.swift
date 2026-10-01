@@ -12,6 +12,7 @@ struct SearchBox: View {
     @StateObject private var debounceObject: DebounceObject
     private var prompt: String
     @Binding var text: String
+    private var onScan: (() -> Void)?
     private var autoFocus: Bool
     private var onImmediateTextChange: ((String) -> Void)?
     @FocusState private var isFocused: Bool
@@ -21,8 +22,10 @@ struct SearchBox: View {
         text: Binding<String>,
         autoFocus: Bool = true,
         debounceDelay: @escaping (String) -> TimeInterval = { _ in 0.5 },
-        onImmediateTextChange: ((String) -> Void)? = nil
+        onImmediateTextChange: ((String) -> Void)? = nil,
+        onScan: (() -> Void)? = nil
     ) {
+        self.onScan = onScan
         self.prompt = prompt
         self._text = text
         self.autoFocus = autoFocus
@@ -47,7 +50,7 @@ struct SearchBox: View {
         }
         .padding(10)
         .padding(.leading, 25)
-        .padding(.trailing, 25)
+        .padding(.trailing, onScan == nil ? 25 : 70)
         .background {
             theme.listBackground.opacity(0.5)
                 .overlay(alignment:.leading) {
@@ -58,17 +61,27 @@ struct SearchBox: View {
                 }
         }
         .overlay(alignment:.trailing) {
-            if debounceObject.text != "" {
-                Image(systemName: "multiply.circle.fill")
-                    .imageScale(.medium)
-                    .foregroundColor(Color.secondary)
-                    .padding(.leading, 10)
-                    .padding(.trailing, 5)
-                    .padding(.vertical, 10)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        debounceObject.text = ""
-                    }
+            HStack(spacing: 0) {
+                if let onScan {
+                    Button {
+                        isFocused = false
+                        onScan()
+                    } label: {
+                        Image(systemName: "qrcode.viewfinder").frame(width: 44, height: 44)
+                    }.accessibilityLabel("Scan profile QR code")
+                }
+                if debounceObject.text != "" {
+                    Image(systemName: "multiply.circle.fill")
+                        .imageScale(.medium)
+                        .foregroundColor(Color.secondary)
+                        .padding(.leading, 10)
+                        .padding(.trailing, 5)
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            debounceObject.text = ""
+                        }
+                }
             }
         }
         .cornerRadius(8.0)

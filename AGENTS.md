@@ -119,6 +119,14 @@ When creating a new worktree, copy the Config.xcconfig from our existing folder.
 - Respect existing theming in `NosturStyles.swift` and theme assets
 - Use `Nostur/Playground/` for component-level experimentation
 
+### Native sheet and sharing controls
+
+- Use standard icon-only toolbar actions for sheets: a `checkmark` for Done in `.confirmationAction`, and `square.and.arrow.up` for Share. Keep localized accessibility labels. Do not substitute a text-only Done button or a prominent Share button in the sheet body.
+- Check comparable existing screens before adding new controls, and follow the app's native iOS toolbar conventions.
+- When sharing offers multiple formats, use a simple labeled picker. Derive the QR payload, displayed/copyable text, clipboard value, and system-share value from the same selected value, including any URI prefix. Reset copy feedback when that value changes.
+- Give changing feedback icons (such as Copy changing to a checkmark) a fixed-size label so adjacent text does not shift. In the sidebar, show the shortened npub followed by an icon-only Share action.
+- For the sidebar npub row, reuse `CopyableTextView` with its share action. The name and npub open the profile; only the Share icon opens the sharing sheet. Preserve the original typography, truncation, spacing, and row height; do not recreate it with extra padding or a fixed 44-point icon frame.
+
 ## Performance Notes
 
 - Prefer lazy/on-demand loading in feed-like views

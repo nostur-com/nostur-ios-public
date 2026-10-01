@@ -22,6 +22,10 @@ struct Search: View {
     @State private var navPath = NBNavigationPath()
 
     @State private var searchText = ""
+    @State private var showProfileScanner = false
+    @State private var scannedProfile: ScannedProfile?
+    @State private var scanError = false
+    @State private var pendingScanError = false
     @State var searchTask: Task<Void, Never>? = nil
     @State var searchID = UUID()
     @State var searchCancellationToken: SearchCancellationToken? = nil
@@ -63,7 +67,8 @@ struct Search: View {
                         prompt: String(localized: "Search...", comment: "Placeholder text in a search input box"),
                         text: $searchText,
                         debounceDelay: searchDebounceDelay,
-                        onImmediateTextChange: refineDisplayedSearchResults
+                        onImmediateTextChange: refineDisplayedSearchResults,
+                        onScan: { showProfileScanner = true }
                     )
                         .padding(10)
                 }
@@ -174,6 +179,30 @@ struct Search: View {
             .environmentObject(VideoPostPlaybackCoordinator())
             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
             .withNavigationDestinations(navPath: $navPath)
+            .nbNavigationDestination(for: ScannedProfile.self) { profile in
+                ScannedProfileView(profile: profile)
+            }
+            .sheet(isPresented: $showProfileScanner, onDismiss: {
+                if let scannedProfile {
+                    navPath.append(scannedProfile)
+                    self.scannedProfile = nil
+                }
+                scanError = pendingScanError
+                pendingScanError = false
+            }) {
+                if #available(iOS 16.0, *) {
+                    ProfileScannerSheet(onScan: receiveProfileScan)
+                } else {
+                    NBNavigationStack {
+                        NWCQRScannerSheet(instruction: String(localized: "Point your camera at a Nostr profile QR code"), onScan: receiveProfileScan)
+                    }.nbUseNavigationStack(.never)
+                }
+            }
+            .alert("No profile found", isPresented: $scanError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Scan a Nostr npub or nprofile QR code.")
+            }
             .environment(\.containerID, containerID)
             .simultaneousGesture(TapGesture().onEnded({ _ in
                 AppState.shared.containerIDTapped = containerID
@@ -291,6 +320,12 @@ struct Search: View {
             .tabBarSpaceCompat()
         }
         .nbUseNavigationStack(.never)
+    }
+
+    private func receiveProfileScan(_ value: String) {
+        if let profile = ScannedProfile.parse(value) {
+            scannedProfile = profile
+        } else { pendingScanError = true }
     }
 
     @ViewBuilder

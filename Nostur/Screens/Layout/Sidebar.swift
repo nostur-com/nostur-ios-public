@@ -22,6 +22,7 @@ struct SideBar: View {
     @State private var showAnySigner = false
     @State private var sidebarOffset: CGFloat = -NOSTUR_SIDEBAR_WIDTH
     @State private var npub = ""
+    @State private var showProfileShare = false
     
     static let ICON_WIDTH = 30.0
     static let MENU_TEXT_WIDTH = NOSTUR_SIDEBAR_WIDTH - 70.0
@@ -31,6 +32,20 @@ struct SideBar: View {
         loggedInAccount.account
     }
     
+    private func openProfile() {
+        let pubkey = account.publicKey
+        if IS_IPAD && !IS_DESKTOP_COLUMNS() {
+            showSidebar = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                navigateTo(ContactPath(key: pubkey), context: "Default")
+            }
+        } else {
+            if selectedTab() != "Main" { setSelectedTab("Main") }
+            navigateTo(ContactPath(key: pubkey), context: "Default")
+            showSidebar = false
+        }
+    }
+
     var body: some View {
 #if DEBUG
         let _ = nxLogChanges(of: Self.self)
@@ -44,21 +59,7 @@ struct SideBar: View {
                             Circle()
                                 .strokeBorder(theme.listBackground, lineWidth: 3)
                         )
-                        .onTapGesture {
-                            if IS_IPAD && !IS_DESKTOP_COLUMNS() {
-                                showSidebar = false
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                                    navigateTo(ContactPath(key: account.publicKey, navigationTitle: account.anyName), context: "Default")
-                                }
-                            }
-                            else {
-                                if selectedTab() != "Main" {
-                                    setSelectedTab("Main")
-                                }
-                                navigateTo(ContactPath(key: account.publicKey), context: "Default")
-                                showSidebar = false
-                            }
-                        }
+                        .onTapGesture(perform: openProfile)
                         .offset(x: 10, y: 37)
                 })
                 .overlay(alignment: .bottomTrailing) {
@@ -83,8 +84,11 @@ struct SideBar: View {
                 VStack(alignment: .leading, spacing: 5.0) {
                     HStack(alignment: .bottom) {
                         VStack(alignment: .leading) {
-                            Text("\(account.name)").font(.headline)
-                            CopyableTextView(text: account.npub)
+                            Button(action: openProfile) {
+                                Text("\(account.name)").font(.headline)
+                            }
+                            .buttonStyle(.plain)
+                            CopyableTextView(text: account.npub, shareAction: { showProfileShare = true }, textAction: openProfile)
                                 .lineLimit(1)
                                 .frame(width: 140, alignment: .leading)
                             Text("**\(account.followingPubkeys.count)**  Following", comment: "Number of people following").font(.caption)
@@ -329,6 +333,9 @@ struct SideBar: View {
             .padding(10)
         }
         .edgesIgnoringSafeArea(.all)
+        .sheet(isPresented: $showProfileShare) {
+            ProfileShareSheet(pubkey: account.publicKey, name: account.anyName, pictureUrl: account.pictureUrl)
+        }
         .sheet(isPresented: $accountsSheetIsShown) {
             NBNavigationStack {
                 AccountsSheet(onDismiss: {

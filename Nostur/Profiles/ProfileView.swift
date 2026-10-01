@@ -34,6 +34,7 @@ struct ProfileView: View {
     @StateObject private var scrollPosition = NXScrollPosition()
     @State private var mainContact: Contact?
     
+    @State private var showProfileShare = false
     @State private var showFollowing = false
     @State private var showFollowers = false
     
@@ -84,6 +85,9 @@ struct ProfileView: View {
                             ContactPrivateNoteToggle(contact: mainContact)
                         }
                         Menu {
+                            Button { showProfileShare = true } label: {
+                                Label("Share profile", systemImage: "square.and.arrow.up")
+                            }
                             Button {
                                 UIPasteboard.general.string = vm.npub
                             } label: {
@@ -200,6 +204,9 @@ struct ProfileView: View {
                       .buttonStyleGlassProminent()
                    }
             }
+        }
+        .sheet(isPresented: $showProfileShare) {
+            ProfileShareSheet(pubkey: nrContact.pubkey, name: nrContact.anyName, pictureUrl: nrContact.pictureUrl)
         }
         .sheet(item: $editingAccount) { account in
             NBNavigationStack {
@@ -346,6 +353,12 @@ struct ProfileView: View {
                 } label: { Image(systemName: "envelope.fill") }
                     .buttonStyle(NosturButton())
             }
+
+            Button { showProfileShare = true } label: {
+                Image(systemName: "square.and.arrow.up")
+            }
+            .buttonStyle(NosturButton())
+            .accessibilityLabel("Share profile")
             
             if nrContact.anyLud {
                 ProfileLightningButton(

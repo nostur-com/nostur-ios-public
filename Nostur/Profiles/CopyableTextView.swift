@@ -11,10 +11,33 @@ struct CopyableTextView: View {
     @Environment(\.theme) private var theme
     let text: String
     var copyText: String? = nil
+    var shareAction: (() -> Void)? = nil
+    var textAction: (() -> Void)? = nil
     
     @State private var tapped1 = false
     
     var body: some View {
+        if let shareAction {
+            HStack {
+                Button(action: { textAction?() }) {
+                    Text(text)
+                }
+                .buttonStyle(.plain)
+                Button(action: shareAction) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.footnote)
+                        .foregroundColor(theme.accent)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Share profile")
+            }
+            .opacity(text.isEmpty ? 0.0 : 1.0)
+        } else {
+            copyableText
+        }
+    }
+
+    private var copyableText: some View {
         HStack {
             Text(text)
             Image(systemName: tapped1 ? "doc.on.doc.fill" : "doc.on.doc")

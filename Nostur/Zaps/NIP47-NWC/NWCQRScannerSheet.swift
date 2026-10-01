@@ -19,6 +19,7 @@ struct NWCQRScannerSheet: View {
     @State private var cameraAccess: CameraAccessState = .checking
     @State private var isTorchOn = false
     
+    var instruction: String = String(localized: "Point your camera at your wallet's NWC QR code")
     let onScan: (String) -> Void
     
     var body: some View {
@@ -101,7 +102,7 @@ struct NWCQRScannerSheet: View {
 #endif
     
     private var instructionBanner: some View {
-        Text(String(localized: "Point your camera at your wallet's NWC QR code", comment: "Instruction shown while scanning a Nostr Wallet Connect QR code"))
+        Text(instruction)
             .font(.footnote.weight(.semibold))
             .foregroundStyle(.white)
             .padding(.horizontal, 16)
@@ -116,7 +117,7 @@ struct NWCQRScannerSheet: View {
                 .font(.system(size: 40))
                 .foregroundStyle(.white)
             
-            Text(String(localized: "Camera access is needed to scan an NWC QR code", comment: "Explanation shown when camera permission is denied for the NWC QR scanner"))
+            Text(String(localized: "Camera access is needed to scan a QR code", comment: "Explanation shown when camera permission is denied for the NWC QR scanner"))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white)
             
