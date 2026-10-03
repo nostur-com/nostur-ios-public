@@ -153,12 +153,26 @@ struct Maintenance {
             L.maintenance.info("🧹🧹 Skipping maintenance");
             return false
         }
-        SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
+        do {
+            try await LiveHistoryRecorder.shared.flush()
+            let accounts = try await context.perform {
+                Set(try context.fetch(CloudAccount.fetchRequest()).map { $0.publicKey })
+            }
+            let seedContext = DataProvider.shared().newTaskContext()
+            try await LiveHistoryRecorder.preserveCache(
+                active: UserDefaults.standard.string(forKey: "activeAccountPublicKey") ?? "",
+                accounts: accounts, context: seedContext)
+            try Task.checkCancellation()
+        } catch {
+            L.maintenance.error("Deferring database cleanup until public history is archived: \(error.localizedDescription)")
+            return false
+        }
         L.maintenance.info("🧹🧹 Starting time based maintenance")
         
         return await context.perform {
             Self.audioDownloadCacheCleanUp()
             Self.databaseCleanUp(context)
+            SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
             try? context.save()
             return true
         }

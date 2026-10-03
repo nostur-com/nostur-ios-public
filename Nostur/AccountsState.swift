@@ -199,6 +199,7 @@ class AccountsState: ObservableObject {
         self.accounts = CloudAccount.fetchAccounts(context: context())
         let accountPubkeys = Set(accounts.map { $0.publicKey })
         let fullAccountPubkeys = Set(accounts.filter { $0.isFullAccount }.map { $0.publicKey })
+        LiveHistoryRecorder.shared.setAccounts(accountPubkeys)
         bg().perform {
             self.bgAccountPubkeys = accountPubkeys
             self.bgFullAccountPubkeys = fullAccountPubkeys

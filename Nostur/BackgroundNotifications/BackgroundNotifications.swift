@@ -75,30 +75,13 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 #if DEBUG
         L.maintenance.debug("handleDatabaseCleaning()")
 #endif
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 1
-
         let context = DataProvider.shared().newTaskContext()
-        let cleanDatabaseOperation = DatabaseCleanUpOperation(context: context)
-        
-        task.expirationHandler = {
-            // After all operations are cancelled, the completion block below is called to set the task to complete.
-            queue.cancelAllOperations()
+        let work = Task {
+            let didRun = await Maintenance.dailyMaintenance(context: context, force: true)
+            if didRun { await Importer.shared.preloadExistingIdsCache() }
+            task.setTaskCompleted(success: didRun && !Task.isCancelled)
         }
-
-        cleanDatabaseOperation.completionBlock = {
-            let success = !cleanDatabaseOperation.isCancelled
-            if success {
-                // Update the last clean date to the current time.
-                SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
-            }
-#if DEBUG
-            L.maintenance.debug("cleanDatabaseOperation.completionBlock: success: \(success)")
-#endif
-            task.setTaskCompleted(success: success)
-        }
-        
-        queue.addOperation(cleanDatabaseOperation)
+        task.expirationHandler = { work.cancel() }
     }
     
     func handleAppRefresh(task: BGAppRefreshTask) {

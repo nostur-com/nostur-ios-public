@@ -533,7 +533,7 @@ class Importer {
 
         handleContactList(event, subscriptionId: message.subscriptionId)
         
-        let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, wrapId: wrapId, context: bgContext)
+        let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, wrapId: wrapId, context: bgContext, countReaction: !message.restoredAfterPruning)
         FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
             NeedsUpdateInfo(event: savedEvent)
         )

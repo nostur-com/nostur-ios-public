@@ -1098,7 +1098,7 @@ extension Event {
     }
     
     // TODO: .saveEvent() and .importEvents() needs a refactor, to cleanly handle each kind in a reusable/maintainable way, this long list of if statements is becoming a mess.
-    static func saveEvent(event: NEvent, relays: String? = nil, flags: String = "", kind6firstQuote: Event? = nil, wrapId: String? = nil, context: NSManagedObjectContext) -> Event {
+    static func saveEvent(event: NEvent, relays: String? = nil, flags: String = "", kind6firstQuote: Event? = nil, wrapId: String? = nil, context: NSManagedObjectContext, countReaction: Bool = true) -> Event {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -1136,7 +1136,7 @@ extension Event {
             ? isDMReactionEvent(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, context: context)
             : false
         handleZap(nEvent: event, savedEvent: savedEvent, context: context)
-        handleReaction(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, isDM: isDMReaction, context: context)
+        handleReaction(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, isDM: isDMReaction, context: context, countReaction: countReaction)
         handleDMReaction(nEvent: event, savedEvent: savedEvent, wrapId: wrapId, isDM: isDMReaction, context: context)
         handleTextPost(nEvent: event, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
         handlePostRelations(nEvent: event, savedEvent: savedEvent, context: context)

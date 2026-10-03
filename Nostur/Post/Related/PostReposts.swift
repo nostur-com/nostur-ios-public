@@ -6,6 +6,7 @@
 
 
 import SwiftUI
+import CoreData
 import NostrEssentials
 
 struct PostReposts: View {
@@ -16,6 +17,8 @@ struct PostReposts: View {
     
     @MainActor
     @State private var viewState: ViewState = .loading
+    @State private var isRefreshing = false
+    @State private var backlog = Backlog(auto: true, backlogDebugName: "PostReposts")
     @State private var showNotWoT = false
     @State private var showBlocked = false
     
@@ -24,9 +27,6 @@ struct PostReposts: View {
             switch viewState {
             case .loading:
                 CenteredProgressView()
-                    .task(id: "reposts") {
-                        viewState = await loadReposts(id: id)
-                    }
             case .ready(let contactsTuple):
                 reposts(contactsTuple)
             case .error(let message):
@@ -39,10 +39,11 @@ struct PostReposts: View {
             .filter { $0.type == .Reposts && $0.eventId == self.id }
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main), perform: { _ in
                 Task {
-                    viewState = await loadReposts(id: id)
+                    await refreshCachedReposts()
                 }
         })
 
+        .task(id: id) { await refreshReposts() }
         .navigationTitle("Reposted by")
     }
 
@@ -94,14 +95,17 @@ struct PostReposts: View {
         ZStack(alignment: .center) {
             theme.listBackground
             VStack(spacing: 20) {
-                Text("Nothing here :(")
+                if isRefreshing {
+                    ProgressView("Loading reposts…")
+                } else { Text("No reposts found on the available relays.") }
                 Button(action: {
-
+                    Task { await refreshReposts() }
                 }) {
                     Label("Retry", systemImage: "arrow.clockwise")
                         .labelStyle(.iconOnly)
                         .foregroundColor(theme.accent)
                 }
+                .disabled(isRefreshing)
             }
         }
     }
@@ -134,27 +138,41 @@ struct PostReposts: View {
         .padding(.bottom, 10)
     }
 
-    private func loadReposts(id: String) async -> ViewState {
-        _ = try? await relayReq(Filters(kinds: [6], tagFilter: TagFilter(tag: "e", values: [id])), timeout: 5.5)
-        
-        // Get reposts, return related contact
-        let nrContacts: ([NRContact], [NRContact], [NRContact]) = await withBgContext { bg in
-            let blocked = blocks()
-            let reposts = Event.fetchReposts(id: id)
-            return (
-                reposts.filter { $0.inWoT && !blocked.contains($0.pubkey) }
-                    .map { NRContact.instance(of: $0.pubkey ) },
-                reposts.filter { !$0.inWoT && !blocked.contains($0.pubkey) }
-                    .map { NRContact.instance(of: $0.pubkey ) },
-                reposts.filter { blocked.contains($0.pubkey) }
-                    .map { NRContact.instance(of: $0.pubkey ) }
-            )
-        }
-        
-        Task { fetchMissingPs(nrContacts.0) }
-        
-        return ViewState.ready(nrContacts)
+    @MainActor
+    private func refreshCachedReposts() async {
+        let contacts = await PostRepostsLoader.load(id: id, blocked: blocks(),
+            context: DataProvider.shared().newTaskContext())
+        guard !Task.isCancelled else { return }
+        viewState = .ready(contacts)
+        fetchMissingPs(contacts.inWoT)
     }
+
+    @MainActor
+    private func refreshReposts() async {
+        guard !isRefreshing else { return }
+        isRefreshing = true
+        // Show saved rows before waiting for a relay or the shared importer.
+        await refreshCachedReposts()
+        guard !Task.isCancelled else { isRefreshing = false; return }
+        let task = ReqTask(timeout: 5.5,
+            reqCommand: { taskId in
+                nxReq(Filters(kinds: [6], tagFilter: TagFilter(tag: "e", values: [id]), limit: 500), subscriptionId: taskId)
+            },
+            processResponseCommand: { _, _, _ in
+                DataProvider.shared().saveToDiskNow(.bgContext) {
+                    Task { @MainActor in
+                        await refreshCachedReposts()
+                        isRefreshing = false
+                    }
+                }
+            },
+            timeoutCommand: { _ in
+                Task { @MainActor in isRefreshing = false }
+            }, timeoutDelivery: .main)
+        backlog.add(task)
+        task.fetch()
+    }
+
 }
 
 extension PostReposts {
@@ -167,4 +185,30 @@ extension PostReposts {
 
 #Preview {
     PostReposts(id: "e94ac42f1f09ae06fa7b7eaaee199e29d6c45537308a198f89cad91624f999a2")
+}
+
+
+/// A saved repost lookup does not queue behind live feed imports or network work.
+enum PostRepostsLoader {
+    typealias Contacts = (inWoT: [NRContact], notWoT: [NRContact], blocked: [NRContact])
+
+    static func load(id: String, blocked: Set<String>, context: NSManagedObjectContext) async -> Contacts {
+        await context.perform {
+            defer { context.reset() }
+            let reposts = Event.fetchReposts(id: id, context: context)
+            var result: Contacts = ([], [], [])
+            var seen = Set<String>()
+            for event in reposts where event.deletedById == nil && seen.insert(event.pubkey).inserted {
+                let contact: Contact
+                if let existing = Contact.fetchByPubkey(event.pubkey, context: context) { contact = existing }
+                else { contact = Contact(context: context); contact.pubkey = event.pubkey }
+                // Passing the context-owned contact avoids NRContact's shared-context fallback.
+                let snapshot = NRContact.instance(of: event.pubkey, contact: contact)
+                if blocked.contains(event.pubkey) { result.blocked.append(snapshot) }
+                else if event.inWoT { result.inWoT.append(snapshot) }
+                else { result.notWoT.append(snapshot) }
+            }
+            return result
+        }
+    }
 }

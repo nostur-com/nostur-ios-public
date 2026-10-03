@@ -1231,18 +1231,33 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             .map { NRPost(event: $0, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[$0.id]) }
     }
     
+    /// A cached parent must still match the reference on this post.
+    var resolvedReplyTo: NRPost? {
+        guard let replyTo, let reference = replyToPostOrZapId,
+              Self.matchesParentReference(reference, id: replyTo.id, aTag: replyTo.aTag) else { return nil }
+        return replyTo
+    }
+
+    static func matchesParentReference(_ reference: String, id: String, aTag: String) -> Bool {
+        guard id.count == 64 else { return false }
+        return reference.contains(":") ? aTag == reference : id == reference
+    }
+
     public func loadReplyTo() {
         if (!self.withReplyTo) {
             self.withReplyTo = true
             relationListener()
         }
+        let reference = self.replyToPostOrZapId
         bg().perform { [weak self] in
             guard let self = self else { return }
-            guard self.replyToPostOrZapId != nil && self.replyTo == nil else { return }
-            
-            if let replyTo = self.event?.replyTo {
+            guard let reference, self.resolvedReplyTo == nil else { return }
+            // Resolve from the immutable reference, even if our cached Event is stale.
+            let replyTo = Event.fetchThreadParent(reference: reference, context: bg())
+            if let replyTo, Self.matchesParentReference(reference, id: replyTo.id, aTag: replyTo.aTag) {
                 let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
                 DispatchQueue.main.async { [weak self] in
+                    guard self?.replyToPostOrZapId == reference else { return }
                     self?.objectWillChange.send()
                     self?.replyTo = nrReplyTo
                 }

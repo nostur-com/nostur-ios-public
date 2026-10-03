@@ -14,6 +14,11 @@ struct NotePath: IdentifiableDestination {
     var navigationTitle: String? = nil
 }
 
+struct YearReviewPath: IdentifiableDestination {
+    var year: Int? = nil
+    var id: String { "year-review-" + (year.map(String.init) ?? "default") }
+}
+
 struct ContactPath: IdentifiableDestination {
     var id: String { key }
     var key: String
@@ -123,6 +128,11 @@ struct NavigationDestinationsModifier: ViewModifier {
     @ViewBuilder
     func body(content: Content) -> some View {
         content
+            .nbNavigationDestination(for: YearReviewPath.self) { path in
+                if #available(iOS 17.0, *) {
+                    YearReviewView(initialYear: path.year).environment(\.containerID, self.containerID)
+                }
+            }
             .nbNavigationDestination(for: NewDMConversation.self) { newDMConversation in
                 DMConversationView(participants: newDMConversation.participants, ourAccountPubkey: newDMConversation.accountPubkey, parentDMsVM: newDMConversation.parentDMsVM)
                     .environment(\.containerID, self.containerID)

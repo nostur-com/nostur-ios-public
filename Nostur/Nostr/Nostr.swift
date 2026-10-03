@@ -402,7 +402,7 @@ public struct NEvent: Codable {
         return self
     }
 
-    func verified() throws -> Bool {
+    func verified(logInvalidID: Bool = true) throws -> Bool {
 //        L.og.debug("✍️ VERIFYING SIG ✍️")
         let serializableEvent = NSerializableEvent(publicKey: self.publicKey, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
 
@@ -413,7 +413,7 @@ public struct NEvent: Codable {
 
         guard self.id == String(bytes:sha256Serialized.bytes) else {
 #if DEBUG
-            L.og.debug("🔴🔴 Invalid ID 🔴🔴: \(self.id)")
+            if logInvalidID { L.og.debug("🔴🔴 Invalid ID 🔴🔴: \(self.id)") }
 #endif
             throw "🔴🔴 Invalid ID 🔴🔴"
         }

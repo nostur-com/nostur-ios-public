@@ -1,2 +1,6 @@
 Config.xcconfig
 .claude
+
+# Local registered-device test packages and distribution settings
+.ota-builds/
+scripts/ota-config.json

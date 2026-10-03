@@ -15,6 +15,7 @@ struct NXRelayMessage {
     var message: String
     var subscriptionId: String?
     var event: NEvent?
+    var restoredAfterPruning = false
     
     var id: String?
     var success: Bool?
@@ -172,6 +173,16 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
                     context: bgContext
                 ) ?? Event.fetchEvent(id: messageId, isWrapId: false, context: bgContext)
 
+                // Batch cleanup can remove a row without clearing the saved-ID cache.
+                // Re-decode it so the importer can restore it instead of discarding it.
+                if savedEvent == nil, mMessage.kind == 7 {
+                    Importer.shared.existingIds[messageId] = nil
+                    updateEventCache(messageId, status: .RECEIVED, relays: relay)
+                    var restored = try decodeRelayEvent(data: dataFromString, text: text, relay: relay)
+                    restored.restoredAfterPruning = true
+                    return restored
+                }
+
                 // Relay feeds filter against Event.relays. Merge the relay before
                 // notifying priority subscribers so their first DB read cannot
                 // reject an existing event and only find it after Retry.
@@ -226,7 +237,11 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
         }
     }
     
-    guard var relayMessage = try? d.decode(NMessage.self, from: dataFromString) else {
+    return try decodeRelayEvent(data: dataFromString, text: text, relay: relay)
+}
+
+private func decodeRelayEvent(data: Data, text: String, relay: String) throws -> NXRelayMessage {
+    guard var relayMessage = try? nxJSONDecoder.decode(NMessage.self, from: data) else {
         throw NXRelayMessageError.FAILED_TO_PARSE
     }
 

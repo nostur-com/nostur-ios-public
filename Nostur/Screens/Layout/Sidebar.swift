@@ -124,6 +124,22 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                     }
+                    if #available(iOS 17.0, *) {
+                        Button {
+                            if selectedTab() != "Main" { setSelectedTab("Main") }
+                            navigateToOnMain(YearReviewPath(year: YearReviewPeriod.defaultYear()))
+                            showSidebar = false
+                        } label: {
+                            Label {
+                                Text("Your year on Nostr", comment: "Side bar navigation button")
+                                    .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                            } icon: {
+                                Image(systemName: "sparkles").frame(width: Self.ICON_WIDTH)
+                            }
+                            .padding(.vertical, Self.BUTTON_VPADDING)
+                            .contentShape(Rectangle())
+                        }
+                    }
                     Button {
                         if selectedTab() != "Main" {
                             setSelectedTab("Main")

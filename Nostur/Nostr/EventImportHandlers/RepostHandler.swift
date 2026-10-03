@@ -62,7 +62,7 @@ func handleRepost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = n
         
         // We need to get firstQuote from db or cache
         if let firstE = nEvent.firstE() {
-            if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
+            if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE, context: context) {
                 repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
             }

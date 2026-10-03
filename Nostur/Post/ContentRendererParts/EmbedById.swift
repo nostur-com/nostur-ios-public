@@ -57,7 +57,7 @@ struct EmbedById: View {
             VStack {
                 Text("Unable to fetch content:")
                     .onAppear {
-                        note1 = (try? NostrEssentials.ShareableIdentifier("note", id: id))?.identifier
+                        note1 = try? NIP19(prefix: "note", hexString: id).displayString
                     }
                 if let note1 {
                     CopyableTextView(text: note1, copyText: note1)
@@ -95,6 +95,10 @@ struct EmbedById: View {
     
     private func load() {
         let eventId = self.id
+        guard (try? NIP19(prefix: "note", hexString: eventId)) != nil else {
+            vm.error("Problem parsing nostr identifier")
+            return
+        }
         let fetchParams: FetchVM.FetchParams = (
             prio: true,
             req: { [weak vm = self.vm] taskId in

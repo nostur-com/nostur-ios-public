@@ -8,6 +8,7 @@
 #   DEVICE="iPhone Air" ./scripts/run-sim.sh
 #   ./scripts/run-sim.sh --build-only
 #   ./scripts/run-sim.sh --no-build   # reinstall/launch last build only
+#   ./scripts/run-sim.sh --no-ui      # leave simulator windows and other devices alone
 #
 # By default uses Xcode’s normal DerivedData (same cache as Xcode / bare xcodebuild).
 # Optional: DERIVED_DATA=/path/to/project-derived-data for an isolated build root.
@@ -24,6 +25,7 @@ BUNDLE_ID="${BUNDLE_ID:-nostur.com.Nostur}"
 DEVICE="${DEVICE:-iPhone 17 Pro}"
 DO_BUILD=1
 DO_LAUNCH=1
+OPEN_UI=1
 
 # Optional isolated DerivedData. Empty = Xcode default (…/DerivedData/Nostur-<hash>/).
 DERIVED_DATA="${DERIVED_DATA:-}"
@@ -48,6 +50,9 @@ for arg in "$@"; do
     --no-build)
       DO_BUILD=0
       ;;
+    --no-ui)
+      OPEN_UI=0
+      ;;
     --help|-h)
       cat <<'HELP'
 Build, install, and launch Nostur on the iOS Simulator (Xcode Play equivalent).
@@ -59,6 +64,7 @@ Usage:
   DEVICE="iPhone Air" ./scripts/run-sim.sh
   ./scripts/run-sim.sh --build-only
   ./scripts/run-sim.sh --no-build   # reinstall/launch last build only
+  ./scripts/run-sim.sh --no-ui      # do not open the UI or change other devices
 
 Env:
   DEVELOPER_DIR Optional Xcode Developer directory; otherwise uses xcode-select.
@@ -117,7 +123,7 @@ if [[ "$XCODE_DEVELOPER_DIR" == *.app ]]; then
 fi
 DEVICE_HUB_APP="$XCODE_DEVELOPER_DIR/../Applications/DeviceHub.app"
 SIMULATOR_APP="$XCODE_DEVELOPER_DIR/Applications/Simulator.app"
-if [[ ! -d "$DEVICE_HUB_APP" && ! -d "$SIMULATOR_APP" ]]; then
+if [[ "$OPEN_UI" -eq 1 && ! -d "$DEVICE_HUB_APP" && ! -d "$SIMULATOR_APP" ]]; then
   echo "error: no Device Hub or Simulator app in selected Xcode: $XCODE_DEVELOPER_DIR"
   exit 1
 fi
@@ -130,7 +136,9 @@ if [[ "$STATE" != "(Booted)" ]]; then
   xcrun simctl bootstatus "$UDID" -b
 fi
 
-if [[ -d "$DEVICE_HUB_APP" ]]; then
+if [[ "$OPEN_UI" -eq 0 ]]; then
+  echo "==> Leaving simulator UI and other devices unchanged"
+elif [[ -d "$DEVICE_HUB_APP" ]]; then
   echo "==> Opening Device Hub: $DEVICE_HUB_APP"
   open -a "$DEVICE_HUB_APP"
   echo "==> Select $DEVICE in Device Hub to view its screen."

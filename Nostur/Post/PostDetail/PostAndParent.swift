@@ -42,7 +42,7 @@ struct PostAndParent: View {
         VStack(spacing: 0) {
             // MARK: PARENT POST WITH POTENTIALLY ANOTHER PARENT
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId/.zappedEventId
-            if let replyTo = nrPost.replyTo {
+            if let replyTo = nrPost.resolvedReplyTo {
                 if replyTo.deletedById == nil {
                     let connect:ThreadConnectDirection? = replyTo.replyToPostOrZapId != nil ? .both : .bottom
                     PostAndParent(nrPost: replyTo, connect: connect)
@@ -106,7 +106,7 @@ struct PostAndParent: View {
                         .padding(.bottom, 10)
                 }
                 else {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != nil && nrPost.replyTo == nil, connect: detailConnect, fullWidth: true, isDetail: true, theme: theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToPostOrZapId != nil && nrPost.resolvedReplyTo == nil, connect: detailConnect, fullWidth: true, isDetail: true, theme: theme)
                         .environment(\.nxViewingContext, [.selectableText, .postDetail, .detailPane])
 //                        .id(nrPost.id)
 //                        .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
@@ -161,12 +161,12 @@ struct PostAndParent: View {
 
     private var detailConnect: ThreadConnectDirection? {
         guard nrPost.replyToPostOrZapId != nil else { return nil }
-        guard let replyTo = nrPost.replyTo, isPicturePost(replyTo) else { return .top }
+        guard let replyTo = nrPost.resolvedReplyTo, isPicturePost(replyTo) else { return .top }
         return nil
     }
 
     private var postParentConnect: ThreadConnectDirection? {
-        guard let replyTo = nrPost.replyTo, isPicturePost(replyTo) else { return connect }
+        guard let replyTo = nrPost.resolvedReplyTo, isPicturePost(replyTo) else { return connect }
 
         switch connect {
         case .both:
@@ -226,8 +226,13 @@ struct PostAndParent: View {
     }
 
     private func distinctReplyToRoot(from replyToPostOrZapId: String) -> NRPost? {
-        guard nrPost.replyToRootId != replyToPostOrZapId else { return nil }
-        return nrPost.replyToRoot ?? locallyResolvedReplyToRoot
+        guard let reference = nrPost.replyToRootId, reference != replyToPostOrZapId else { return nil }
+        for root in [nrPost.replyToRoot, locallyResolvedReplyToRoot].compactMap({ $0 }) {
+            if NRPost.matchesParentReference(reference, id: root.id, aTag: root.aTag) {
+                return root
+            }
+        }
+        return nil
     }
 
     private func startParentLookup(_ replyToPostOrZapId: String) {
@@ -251,7 +256,7 @@ struct PostAndParent: View {
                 try await Task.sleep(nanoseconds: UInt64(2.25) * NSEC_PER_SEC)
                 nrPost.loadReplyTo()
 
-                guard nrPost.replyTo == nil else { return }
+                guard nrPost.resolvedReplyTo == nil else { return }
                 requestReference(replyToPostOrZapId)
                 if let replyToRootId = nrPost.replyToRootId, replyToRootId != replyToPostOrZapId, nrPost.replyToRoot == nil {
                     requestReference(replyToRootId)
@@ -259,7 +264,7 @@ struct PostAndParent: View {
 
                 try await Task.sleep(nanoseconds: UInt64(4) * NSEC_PER_SEC)
                 nrPost.loadReplyTo()
-                if nrPost.replyTo == nil {
+                if nrPost.resolvedReplyTo == nil {
                     if let replyToRootId = nrPost.replyToRootId, replyToRootId != replyToPostOrZapId {
                         resolveReplyToRootFromLocalStorage(replyToRootId)
                     }
@@ -282,14 +287,9 @@ struct PostAndParent: View {
     private func resolveReplyToRootFromLocalStorage(_ replyToRootId: String) {
         let bgContext = bg()
         bgContext.perform {
-            let rootEvent: Event? = if replyToRootId.contains(":") {
-                Event.fetchReplacableEvent(aTag: replyToRootId, context: bgContext)
-            }
-            else {
-                Event.fetchEvent(id: replyToRootId, context: bgContext)
-            }
+            let rootEvent = Event.fetchThreadParent(reference: replyToRootId, context: bgContext)
 
-            guard let rootEvent else { return }
+            guard let rootEvent, NRPost.matchesParentReference(replyToRootId, id: rootEvent.id, aTag: rootEvent.aTag) else { return }
             let rootPost = NRPost(event: rootEvent, withReplyTo: true)
             DispatchQueue.main.async {
                 guard nrPost.replyToRootId == replyToRootId else { return }
@@ -327,7 +327,7 @@ struct PostAndParent: View {
                 }
             },
             processResponseCommand: { _, _, event in
-                guard let event else { return }
+                guard let event, NRPost.matchesParentReference(reference, id: event.id, aTag: event.aTag) else { return }
                 let fetchedPost = NRPost(event: event, withReplyTo: true)
                 DispatchQueue.main.async {
                     if nrPost.replyToPostOrZapId == reference {

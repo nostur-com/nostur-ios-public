@@ -12,6 +12,7 @@ import Nuke
 import NavigationBackport
 
 struct Settings: View {
+    @Environment(\.containerID) private var containerID
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
@@ -76,6 +77,7 @@ struct Settings: View {
             } label: {
                 Label("Database & Cache", systemImage: "cylinder.split.1x2")
             }
+
             
        
             

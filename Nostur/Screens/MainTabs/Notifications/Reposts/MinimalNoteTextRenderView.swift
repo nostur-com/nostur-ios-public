@@ -34,49 +34,40 @@ struct MinimalNoteTextRenderView: View {
     }
 
     var body: some View {
-        if showMediaThumbnail, let firstGalleryItem = nrPost.galleryItems.first {
-            HStack(alignment: .top, spacing: 10) {
-                MinimalMediaThumbnail(url: firstGalleryItem.url, extraCount: (nrPost.galleryItems.count - 1) + videoContents.count)
-                    .padding(.vertical, 5) // same vertical padding as the text, so the image top aligns with the first text line
-                if snippet.isEmpty { Spacer() } else { textView(snippet) }
-            }
-            .contentShape(Rectangle()) // keep the area next to a caption-less thumbnail tappable for the row's tap gesture
-        }
-        else if showMediaThumbnail, let firstVideo = videoContents.first {
-            HStack(alignment: .top, spacing: 10) {
-                MinimalMediaThumbnail(url: firstVideo.url, extraCount: videoContents.count - 1, isVideo: true)
-                    .padding(.vertical, 5) // same vertical padding as the text, so the image top aligns with the first text line
-                if snippet.isEmpty { Spacer() } else { textView(snippet) }
-            }
-            .contentShape(Rectangle()) // keep the area next to a caption-less thumbnail tappable for the row's tap gesture
-        }
-        else {
-            textView(nrPost.plainText)
-        }
+        MinimalNotePreviewContent(text: showMediaThumbnail ? snippet : nrPost.plainText,
+            thumbnail: showMediaThumbnail ? nrPost.galleryItems.first?.url ?? videoContents.first?.url : nil,
+            extraCount: max(0, nrPost.galleryItems.count + videoContents.count - 1),
+            isVideo: nrPost.galleryItems.isEmpty, lineLimit: lineLimit, textColor: textColor)
     }
+}
 
-    @ViewBuilder
-    private func textView(_ plainText: String) -> some View {
-        VStack(alignment: .leading) {
-            if #available(iOS 16.0, *) {
-                Text(plainText)//.border(.cyan)
-                    .lineLimit(lineLimit, reservesSpace: false)
-                    .multilineTextAlignment(TextAlignment.leading)
-                    .foregroundColor(textColor)
-                    .lineSpacing(3)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+/// Passive preview shared by notifications and archived year highlights.
+struct MinimalNotePreviewContent: View {
+    let text: String
+    var thumbnail: URL? = nil
+    var extraCount = 0
+    var isVideo = false
+    var lineLimit = 6
+    var textColor: Color = .primary.opacity(0.5)
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            if let thumbnail {
+                MinimalMediaThumbnail(url: thumbnail, extraCount: extraCount, isVideo: isVideo)
                     .padding(.vertical, 5)
             }
+            if thumbnail != nil && text.isEmpty { Spacer() }
             else {
-                Text(plainText)//.border(.cyan)
+                Text(text)
                     .lineLimit(lineLimit)
-                    .multilineTextAlignment(TextAlignment.leading)
-                    .foregroundColor(textColor)
+                    .multilineTextAlignment(.leading)
+                    .foregroundStyle(textColor)
                     .lineSpacing(3)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 5)
             }
         }
+        .contentShape(Rectangle())
     }
 }
 

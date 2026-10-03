@@ -28,6 +28,20 @@ struct PostReactions: View {
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
                     LazyVStack(spacing: GUTTER) {
+                        if model.reactions.isEmpty {
+                            if model.isLoading {
+                                ProgressView("Loading reactions…").padding()
+                            } else if !model.foundSpam {
+                                VStack(spacing: 12) {
+                                    if model.fetchTimedOut {
+                                        Text("Reactions could not finish loading. Try again.").foregroundStyle(.secondary)
+                                    } else {
+                                        Text("No reactions found on the available relays.").foregroundStyle(.secondary)
+                                    }
+                                    Button("Retry") { fetchNewer() }
+                                }.padding()
+                            }
+                        }
                         ForEach(model.reactions) { nrPost in
                             HStack(alignment: .top) {
                                 ObservedPFP(nrContact: nrPost.contact)
@@ -63,7 +77,7 @@ struct PostReactions: View {
                             model.load(limit: 500, includeSpam: model.includeSpam)
                                 
                         } label: {
-                           Text("Show more")
+                           Text("Show \(model.hiddenReactionCount) reactions outside your Web of Trust")
                                 .padding(10)
                                 .contentShape(Rectangle())
                         }
@@ -95,24 +109,18 @@ struct PostReactions: View {
 #if DEBUG
         L.og.debug("🥎🥎 fetchNewer() (POST REACTIONS)")
 #endif
+        model.beginFetch()
         let fetchNewerTask = ReqTask(
             reqCommand: { taskId in
-                bg().perform {
-                    req(RM.getEventReferences(
-                        ids: [eventId],
-                        limit: 500,
-                        subscriptionId: taskId,
-                        kinds: [7],
-                        since: NTimestamp(timestamp: Int(model.mostRecentReactionCreatedAt))
-                    ))
-                }
+                req(PostReactionsModel.historyRequest(eventId: eventId, subscriptionId: taskId))
             },
             processResponseCommand: { (taskId, _, _) in
-                model.load(limit: 500, includeSpam: model.includeSpam)
+                Task { @MainActor in model.load(limit: 500, includeSpam: model.includeSpam, finishesFetch: true) }
             },
             timeoutCommand: { taskId in
+                model.markFetchTimedOut()
                 model.load(limit: 500, includeSpam: model.includeSpam)
-            })
+            }, timeoutDelivery: .main)
         
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()

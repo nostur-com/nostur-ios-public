@@ -41,27 +41,3 @@ func scheduleDatabaseCleaningIfNeeded() {
 #endif
     }
 }
-
-import CoreData
-
-class DatabaseCleanUpOperation: Operation, @unchecked Sendable {
-    private let context: NSManagedObjectContext
-    
-    init(context: NSManagedObjectContext) {
-        self.context = context
-    }
-    
-    override func main() {
-        context.performAndWait {
-            do {
-                Maintenance.databaseCleanUp(context)
-                try context.save() // backgroundContext (but saves to store) (.parent is store)
-                Task {
-                    await Importer.shared.preloadExistingIdsCache()
-                }
-            } catch {
-                L.maintenance.error("Error running daily maintenance: \(error)")
-            }
-        }
-    }
-}

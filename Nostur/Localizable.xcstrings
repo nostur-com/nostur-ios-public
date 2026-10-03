@@ -386,6 +386,9 @@
       },
       "shouldTranslate" : false
     },
+    ". %lld items received, including duplicates" : {
+
+    },
     "·" : {
       "localizations" : {
         "es" : {
@@ -1445,6 +1448,16 @@
         }
       }
     },
+    "%@ · %llds" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$llds"
+          }
+        }
+      }
+    },
     "%@ (%lld)" : {
       "localizations" : {
         "en" : {
@@ -1907,6 +1920,16 @@
     "%@ sats" : {
 
     },
+    "%@ sats · %lld zaps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ sats · %2$lld zaps"
+          }
+        }
+      }
+    },
     "%@ sats %@" : {
       "localizations" : {
         "en" : {
@@ -1980,6 +2003,9 @@
         }
       }
     },
+    "%@ so far" : {
+
+    },
     "%@ tuned in" : {
       "localizations" : {
         "es" : {
@@ -2021,6 +2047,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@'s Feed"
+          }
+        }
+      }
+    },
+    "%@'s Nostr in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@'s Nostr in %2$@"
           }
         }
       }
@@ -2220,6 +2256,12 @@
       },
       "shouldTranslate" : false
     },
+    "%lld anonymous zaps contribute only to post totals" : {
+
+    },
+    "%lld authors excluded by trust or block filtering" : {
+
+    },
     "%lld contacts selected" : {
       "localizations" : {
         "es" : {
@@ -2356,6 +2398,16 @@
         }
       }
     },
+    "%lld extra checks completed · %lld queued" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld extra checks completed · %2$lld queued"
+          }
+        }
+      }
+    },
     "%lld Following" : {
       "comment" : "Label for Following count",
       "localizations" : {
@@ -2378,6 +2430,12 @@
           }
         }
       }
+    },
+    "%lld interactions by others" : {
+
+    },
+    "%lld invalid or unrelated events excluded" : {
+
     },
     "%lld listeners" : {
       "localizations" : {
@@ -2490,6 +2548,31 @@
         }
       }
     },
+    "%lld people reacted" : {
+
+    },
+    "%lld posts or interactions by you" : {
+
+    },
+    "%lld posts reacted to" : {
+
+    },
+    "%lld public interactions" : {
+
+    },
+    "%lld reactions · %lld reposts · %lld zaps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld reactions · %2$lld reposts · %3$lld zaps"
+          }
+        }
+      }
+    },
+    "%lld received" : {
+
+    },
     "%lld recipients" : {
       "localizations" : {
         "es" : {
@@ -2512,6 +2595,29 @@
         }
       }
     },
+    "%lld relay queries completed · %lld queued" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld relay queries completed · %2$lld queued"
+          }
+        }
+      }
+    },
+    "%lld relays · %lld requests checked" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld relays · %2$lld requests checked"
+          }
+        }
+      }
+    },
+    "%lld relays active" : {
+
+    },
     "%lld relays disabled" : {
       "localizations" : {
         "es" : {
@@ -2530,6 +2636,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld relays uitgeschakeld"
+          }
+        }
+      }
+    },
+    "%lld replies · %lld people" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld replies · %2$lld people"
+          }
+        }
+      }
+    },
+    "%lld replies from you · %lld back" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld replies from you · %2$lld back"
+          }
+        }
+      }
+    },
+    "%lld replies still have missing parents" : {
+
+    },
+    "%lld replies to you" : {
+
+    },
+    "%lld reposts · %lld quotes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld reposts · %2$lld quotes"
           }
         }
       }
@@ -2651,6 +2793,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld kijkers"
+          }
+        }
+      }
+    },
+    "%lld zap receipts could not be validated and are excluded" : {
+
+    },
+    "%lld zaps" : {
+
+    },
+    "%lld zaps · %@ sats" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld zaps · %2$@ sats"
           }
         }
       }
@@ -3638,6 +3796,27 @@
         }
       }
     },
+    "A relay closed the history request. Check its access settings and retry." : {
+
+    },
+    "A relay did not finish responding. You can retry it later." : {
+
+    },
+    "A relay exceeded the history response limit. This source is incomplete." : {
+
+    },
+    "A relay is cooling down. Resume later to collect its remaining history." : {
+
+    },
+    "A relay returned an unreadable history response." : {
+
+    },
+    "A source capped one timestamp. Some history remains unresolved." : {
+
+    },
+    "A year worth sharing" : {
+
+    },
     "About badge publishing" : {
       "localizations" : {
         "es" : {
@@ -3675,6 +3854,12 @@
           }
         }
       }
+    },
+    "About sharing formats" : {
+
+    },
+    "About your year" : {
+
     },
     "Accept" : {
       "comment" : "Button to accept terms and conditions",
@@ -5166,6 +5351,9 @@
           }
         }
       }
+    },
+    "And who you want to include. Nothing is posted automatically." : {
+
     },
     "Announce your relays..." : {
       "localizations" : {
@@ -6691,6 +6879,9 @@
         }
       }
     },
+    "Both month passes checked" : {
+
+    },
     "Broadcast nostr event" : {
       "comment" : "Navigation title for screen to broadcast any nostr event",
       "localizations" : {
@@ -6828,6 +7019,9 @@
         }
       }
     },
+    "Calculating archive storage…" : {
+
+    },
     "Calculating..." : {
       "comment" : "Shown when calculating disk space",
       "localizations" : {
@@ -6851,8 +7045,12 @@
         }
       }
     },
+    "Camera access is needed to scan a QR code" : {
+      "comment" : "Explanation shown when camera permission is denied for the NWC QR scanner"
+    },
     "Camera access is needed to scan an NWC QR code" : {
       "comment" : "Explanation shown when camera permission is denied for the NWC QR scanner",
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -7031,6 +7229,9 @@
         }
       }
     },
+    "Check all sources again" : {
+
+    },
     "Check and prepare" : {
       "localizations" : {
         "es" : {
@@ -7101,6 +7302,15 @@
           }
         }
       }
+    },
+    "Checking profile on relays…" : {
+
+    },
+    "Checking references to your posts" : {
+
+    },
+    "Checking relay limits" : {
+
     },
     "Checking relays for your blossom server list..." : {
       "localizations" : {
@@ -7212,6 +7422,9 @@
         }
       }
     },
+    "Checking zap receipts before counting lightning totals." : {
+
+    },
     "Choose a photo" : {
       "localizations" : {
         "es" : {
@@ -7234,6 +7447,9 @@
         }
       }
     },
+    "Choose a photo containing a Nostr npub or nprofile QR code." : {
+
+    },
     "Choose a popular relay so people can easily find your posts and choose an alternative relay, preferably your own, where people can always find your posts in case the popular relay has issues." : {
       "localizations" : {
         "es" : {
@@ -7255,6 +7471,12 @@
           }
         }
       }
+    },
+    "Choose a profile" : {
+
+    },
+    "Choose a profile for this report" : {
+
     },
     "Choose a relay that requires authentication to receive private messages." : {
       "localizations" : {
@@ -7299,6 +7521,9 @@
           }
         }
       }
+    },
+    "Choose at least one relay, or preview your saved history." : {
+
     },
     "Choose content for this column" : {
       "extractionState" : "stale",
@@ -7565,6 +7790,21 @@
           }
         }
       }
+    },
+    "Choose up to 20 relays. Nostur checks different relays in parallel, with one history request at a time per relay. Old relays may have history that your current relays no longer store." : {
+
+    },
+    "Choose what to share" : {
+
+    },
+    "Choose what you want to highlight" : {
+
+    },
+    "Choose who appears in your report and shared image." : {
+
+    },
+    "Choosing your standout posts and people." : {
+
     },
     "Classic" : {
       "localizations" : {
@@ -8059,6 +8299,15 @@
           }
         }
       }
+    },
+    "Collecting conversations, reactions, reposts and zaps." : {
+
+    },
+    "Collecting your public posts, month by month." : {
+
+    },
+    "Collection is paced per relay and saves progress as it goes. Relays may omit old content or cap results, so your report only reflects the history we could find." : {
+
     },
     "Color Blue" : {
       "extractionState" : "stale",
@@ -9212,6 +9461,9 @@
         }
       }
     },
+    "Continue gathering" : {
+
+    },
     "Conversation" : {
       "comment" : "Feed title",
       "localizations" : {
@@ -9318,6 +9570,9 @@
           }
         }
       }
+    },
+    "Copied" : {
+
     },
     "Copy" : {
       "localizations" : {
@@ -9952,6 +10207,12 @@
         }
       }
     },
+    "Couldn't confirm this profile on any relay. You can share the npub or try again." : {
+
+    },
+    "Couldn't load this profile. Check your connection and try again." : {
+
+    },
     "Counters for replies, likes, zaps etc." : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -9974,6 +10235,9 @@
           }
         }
       }
+    },
+    "Counts cover the report period and collected history, with your trust filters applied. Post details can include more recent reactions, people outside those filters, or multiple reactions from the same person." : {
+
     },
     "Create" : {
       "localizations" : {
@@ -10063,6 +10327,9 @@
         }
       }
     },
+    "Create my year" : {
+
+    },
     "Create new account" : {
       "comment" : "Button to create a new account\nButton to start creating a new account\nNavigation title of create new account screen",
       "localizations" : {
@@ -10133,6 +10400,9 @@
         }
       }
     },
+    "Create report" : {
+
+    },
     "Create test keys" : {
       "localizations" : {
         "es" : {
@@ -10176,6 +10446,9 @@
           }
         }
       }
+    },
+    "Created with Nostur" : {
+
     },
     "Creates a public list on nostr relays" : {
       "localizations" : {
@@ -10822,6 +11095,12 @@
         }
       }
     },
+    "Delete archive" : {
+
+    },
+    "Delete collected history" : {
+
+    },
     "Delete feed %@" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -10890,6 +11169,12 @@
           }
         }
       }
+    },
+    "Delete this account's collected public history?" : {
+
+    },
+    "Delete this profile's saved public history?" : {
+
     },
     "Deleting in %lld seconds" : {
       "comment" : "Text that is counting down when you are deleting your account",
@@ -11524,6 +11809,9 @@
           }
         }
       }
+    },
+    "Dismiss year report reminder" : {
+
     },
     "Display" : {
       "comment" : "Setting heading on settings screen",
@@ -12463,6 +12751,9 @@
         }
       }
     },
+    "Enter a valid ws:// or wss:// relay URL." : {
+
+    },
     "Enter JSON" : {
       "comment" : "Label for field to enter a nostr json event",
       "localizations" : {
@@ -13055,6 +13346,9 @@
         }
       }
     },
+    "Export signed public history" : {
+
+    },
     "Export to relays" : {
       "localizations" : {
         "es" : {
@@ -13476,6 +13770,12 @@
       },
       "shouldTranslate" : false
     },
+    "Fetching interactions" : {
+
+    },
+    "Fetching your content" : {
+
+    },
     "Fetching..." : {
       "localizations" : {
         "es" : {
@@ -13632,6 +13932,12 @@
         }
       }
     },
+    "Fill gaps" : {
+
+    },
+    "Filling in conversations…" : {
+
+    },
     "Filter" : {
       "localizations" : {
         "es" : {
@@ -13761,6 +14067,15 @@
           }
         }
       }
+    },
+    "Finding missed interactions…" : {
+
+    },
+    "Finding replies, reactions, reposts, quotes and zaps linked directly to your posts." : {
+
+    },
+    "Finding your highlights…" : {
+
     },
     "finished" : {
       "extractionState" : "stale",
@@ -14296,6 +14611,15 @@
         }
       }
     },
+    "Gather your history" : {
+
+    },
+    "Gathering replies and support…" : {
+
+    },
+    "Gathering your posts…" : {
+
+    },
     "get_public_key" : {
       "localizations" : {
         "es" : {
@@ -14575,6 +14899,9 @@
         }
       }
     },
+    "Hide %@ from shared cards" : {
+
+    },
     "Hide balance" : {
 
     },
@@ -14737,6 +15064,21 @@
           }
         }
       }
+    },
+    "History" : {
+
+    },
+    "History archive" : {
+
+    },
+    "History collection paused" : {
+
+    },
+    "History coverage" : {
+
+    },
+    "History sources" : {
+
     },
     "Home" : {
       "localizations" : {
@@ -14918,6 +15260,9 @@
           }
         }
       }
+    },
+    "How highlights are counted" : {
+
     },
     "Huge" : {
       "comment" : "Mac text size setting: huge",
@@ -15463,6 +15808,9 @@
         }
       }
     },
+    "Included relays" : {
+
+    },
     "Includes people outside your web of trust" : {
       "localizations" : {
         "es" : {
@@ -15478,6 +15826,9 @@
           }
         }
       }
+    },
+    "Incomplete month sources" : {
+
     },
     "Increase privacy" : {
       "localizations" : {
@@ -16237,6 +16588,16 @@
         }
       }
     },
+    "Last response: %lld items received · %lld newly archived" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last response: %1$lld items received · %2$lld newly archived"
+          }
+        }
+      }
+    },
     "Last seen: %@ ago" : {
       "comment" : "Label on profile showing when last seen, example: Last seen: 10m ago",
       "localizations" : {
@@ -16523,6 +16884,9 @@
           }
         }
       }
+    },
+    "Lightning totals use provider-authorized receipts. Anonymous zaps contribute to post totals without identifying a sender." : {
+
     },
     "Lightning wallet" : {
       "comment" : "Setting on settings screen",
@@ -17119,6 +17483,9 @@
         }
       }
     },
+    "Loading missing posts so replies can be matched to the right people." : {
+
+    },
     "Loading older posts" : {
       "localizations" : {
         "es" : {
@@ -17158,6 +17525,12 @@
         }
       }
     },
+    "Loading profile…" : {
+
+    },
+    "Loading reactions…" : {
+
+    },
     "Loading replied message…" : {
       "localizations" : {
         "es" : {
@@ -17173,6 +17546,9 @@
           }
         }
       }
+    },
+    "Loading reposts…" : {
+
     },
     "Loading selected photo..." : {
       "comment" : "Shown while a selected photo is being imported into the post composer",
@@ -17924,6 +18300,9 @@
         }
       }
     },
+    "Mentioned you in %lld posts" : {
+
+    },
     "mentions" : {
       "comment" : "Label for quoted count, example: (7) quoted",
       "localizations" : {
@@ -18444,6 +18823,9 @@
         }
       }
     },
+    "More report actions" : {
+
+    },
     "Most received recently on" : {
       "comment" : "Heading above posts which received the most zaps",
       "extractionState" : "stale",
@@ -18625,6 +19007,18 @@
           }
         }
       }
+    },
+    "My Nostr Gang" : {
+
+    },
+    "My Nostr in %@" : {
+
+    },
+    "My Nostr in %@ so far" : {
+
+    },
+    "My profile" : {
+
     },
     "My web of trust" : {
       "localizations" : {
@@ -19753,6 +20147,9 @@
         }
       }
     },
+    "No highlights to show yet. Try gathering more history or adjusting your selection in settings." : {
+
+    },
     "No internet connection" : {
       "comment" : "Relay no internet status",
       "localizations" : {
@@ -19818,6 +20215,15 @@
     "No payments found." : {
 
     },
+    "No profile found" : {
+
+    },
+    "No reactions found on the available relays." : {
+
+    },
+    "No reposts found on the available relays." : {
+
+    },
     "No saved blocks found" : {
       "localizations" : {
         "es" : {
@@ -19833,6 +20239,9 @@
           }
         }
       }
+    },
+    "No saved public history" : {
+
     },
     "No stats collected yet." : {
       "localizations" : {
@@ -20756,6 +21165,15 @@
         }
       }
     },
+    "nprofile" : {
+
+    },
+    "npub" : {
+
+    },
+    "npub shares just your Nostr ID.\n\nnprofile shares your Nostr ID plus up to two relays where your profile can be found, when available. This helps other apps find you." : {
+
+    },
     "nsecBunker appears offline, post will be saved but not published" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -20846,6 +21264,9 @@
         }
       }
     },
+    "of your posts found" : {
+
+    },
     "Off" : {
       "comment" : "DM expiration disabled",
       "localizations" : {
@@ -20891,6 +21312,9 @@
         }
       }
     },
+    "Older outgoing receipts without a sender tag can be included when known locally, but may not be discoverable on relays. Receipts from historical providers we cannot authorize are excluded." : {
+
+    },
     "On" : {
       "localizations" : {
         "es" : {
@@ -20934,6 +21358,9 @@
           }
         }
       }
+    },
+    "One or more relays could not finish. Retry incomplete sources to gather more history." : {
+
     },
     "Only connect to additional relays when a VPN is active" : {
       "localizations" : {
@@ -21045,6 +21472,9 @@
         }
       }
     },
+    "Only selected cards and visible people appear in the shared image. Nothing is posted automatically." : {
+
+    },
     "Only show content from your follows or follows-follows" : {
       "localizations" : {
         "es" : {
@@ -21066,6 +21496,12 @@
           }
         }
       }
+    },
+    "Open %@'s profile" : {
+
+    },
+    "Open highlighted post" : {
+
     },
     "Open in %@" : {
       "localizations" : {
@@ -21298,6 +21734,9 @@
         }
       }
     },
+    "Other people’s activity · %@" : {
+
+    },
     "Outrage feed may or may not be available in a future release" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -21321,6 +21760,9 @@
         }
       }
     },
+    "Outside the selected period" : {
+
+    },
     "P" : {
       "localizations" : {
         "es" : {
@@ -21342,6 +21784,9 @@
           }
         }
       }
+    },
+    "Partial history" : {
+
     },
     "Paste" : {
       "comment" : "Button to paste a Nostr Wallet Connect URI from the clipboard",
@@ -21365,6 +21810,9 @@
           }
         }
       }
+    },
+    "Pause collection" : {
+
     },
     "Pay" : {
       "comment" : "Button to pay a lightning invoice",
@@ -21451,6 +21899,9 @@
           }
         }
       }
+    },
+    "People in your report" : {
+
     },
     "People you reply or react to will appear here automatically." : {
       "localizations" : {
@@ -21617,6 +22068,9 @@
           }
         }
       }
+    },
+    "Picture post" : {
+
     },
     "Picture-in-picture" : {
       "extractionState" : "stale",
@@ -22116,6 +22570,9 @@
           }
         }
       }
+    },
+    "Point your camera at a Nostr profile QR code" : {
+
     },
     "Point your camera at your wallet's NWC QR code" : {
       "comment" : "Instruction shown while scanning a Nostr Wallet Connect QR code",
@@ -22808,6 +23265,9 @@
         }
       }
     },
+    "Posts, photos, videos, voice messages and articles. Your private messages stay private." : {
+
+    },
     "prefix: %@" : {
       "localizations" : {
         "es" : {
@@ -23327,6 +23787,9 @@
         }
       }
     },
+    "Profile QR code" : {
+
+    },
     "pubkey: %@" : {
       "localizations" : {
         "es" : {
@@ -23370,6 +23833,15 @@
           }
         }
       }
+    },
+    "Public activity only" : {
+
+    },
+    "Public history archive" : {
+
+    },
+    "Public history is stored locally and syncs in batches through iCloud Drive when available." : {
+
     },
     "Public key" : {
       "localizations" : {
@@ -23439,6 +23911,9 @@
           }
         }
       }
+    },
+    "Public post" : {
+
     },
     "Publish" : {
       "comment" : "Button to publish",
@@ -23838,6 +24313,9 @@
         }
       }
     },
+    "Queued" : {
+
+    },
     "Quote" : {
       "comment" : "Button to Quote a post",
       "localizations" : {
@@ -24041,6 +24519,12 @@
         }
       }
     },
+    "Reactions and reposts count each person once per post. Supporters combine reactions, reposts and validated zaps." : {
+
+    },
+    "Reactions could not finish loading. Try again." : {
+
+    },
     "Reactions to your posts will show up here" : {
       "localizations" : {
         "es" : {
@@ -24192,6 +24676,9 @@
         }
       }
     },
+    "Reading photo…" : {
+
+    },
     "Reads" : {
       "comment" : "Feed title\nTab title for feed of articles\nTab title for the Reads (Articles) feed",
       "localizations" : {
@@ -24214,6 +24701,9 @@
           }
         }
       }
+    },
+    "Ready to gather your year" : {
+
     },
     "Reason" : {
       "comment" : "Label for the reason of a report",
@@ -24282,6 +24772,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Publiceer (opnieuw)"
+          }
+        }
+      }
+    },
+    "Rebuilding Web of Trust: %lld of %lld contact lists" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Rebuilding Web of Trust: %1$lld of %2$lld contact lists"
           }
         }
       }
@@ -24786,6 +25286,9 @@
         }
       }
     },
+    "Refresh from saved history" : {
+
+    },
     "Refresh wallet" : {
 
     },
@@ -25125,6 +25628,9 @@
         }
       }
     },
+    "Relays & missing history" : {
+
+    },
     "Relays Nostur uses to find content" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -25279,6 +25785,9 @@
           }
         }
       }
+    },
+    "Relays: %lld" : {
+
     },
     "Reload" : {
       "comment" : "Reload button",
@@ -26533,6 +27042,9 @@
         }
       }
     },
+    "Resolving conversation references" : {
+
+    },
     "Restart room" : {
       "localizations" : {
         "es" : {
@@ -26576,6 +27088,9 @@
           }
         }
       }
+    },
+    "Restore hidden people" : {
+
     },
     "Restore previous NWC configuration" : {
       "localizations" : {
@@ -27069,6 +27584,9 @@
         }
       }
     },
+    "Saved history only · partial history" : {
+
+    },
     "Saved to picker" : {
       "localizations" : {
         "es" : {
@@ -27090,6 +27608,18 @@
           }
         }
       }
+    },
+    "Saving your existing history…" : {
+
+    },
+    "Scan a Nostr npub or nprofile QR code." : {
+
+    },
+    "Scan from photo" : {
+
+    },
+    "Scan profile QR code" : {
+
     },
     "Scan QR" : {
       "comment" : "Button to scan a QR code for Nostr Wallet Connect setup\nNavigation title for the Nostr Wallet Connect QR scanner",
@@ -27462,6 +27992,9 @@
         }
       }
     },
+    "See your year on Nostr" : {
+
+    },
     "Select at least one relay first" : {
       "localizations" : {
         "es" : {
@@ -27594,6 +28127,9 @@
           }
         }
       }
+    },
+    "Selected sources checked" : {
+
     },
     "Self-hosted nsecBunker" : {
       "extractionState" : "manual",
@@ -28225,6 +28761,9 @@
         }
       }
     },
+    "Share as" : {
+
+    },
     "Share as image" : {
       "localizations" : {
         "es" : {
@@ -28379,6 +28918,9 @@
         }
       }
     },
+    "Share format" : {
+
+    },
     "Share highlight" : {
       "comment" : "Navigation title for screen to Share a Highlighted Text",
       "localizations" : {
@@ -28401,6 +28943,9 @@
           }
         }
       }
+    },
+    "Share history archive" : {
+
     },
     "Share in a post" : {
       "localizations" : {
@@ -28470,6 +29015,9 @@
         }
       }
     },
+    "Share profile" : {
+
+    },
     "Share screenshot" : {
       "localizations" : {
         "es" : {
@@ -28536,6 +29084,9 @@
         }
       }
     },
+    "Share your year" : {
+
+    },
     "Share..." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -28580,6 +29131,9 @@
           }
         }
       }
+    },
+    "Sharing formats" : {
+
     },
     "Short videos" : {
       "localizations" : {
@@ -28736,6 +29290,9 @@
           }
         }
       }
+    },
+    "Show %lld reactions outside your Web of Trust" : {
+
     },
     "Show again" : {
       "localizations" : {
@@ -29694,6 +30251,9 @@
         }
       }
     },
+    "Some relays did not confirm exhaustive responses. More activity may exist elsewhere." : {
+
+    },
     "Some relays may require authentication" : {
       "localizations" : {
         "es" : {
@@ -29715,6 +30275,9 @@
           }
         }
       }
+    },
+    "Some sources remain incomplete. Tap for relay details" : {
+
     },
     "Someone's Feed" : {
       "comment" : "Feed title",
@@ -30169,6 +30732,9 @@
         }
       }
     },
+    "Starting with public history already saved on this device." : {
+
+    },
     "Status" : {
       "comment" : "Connection status header",
       "localizations" : {
@@ -30293,6 +30859,9 @@
           }
         }
       }
+    },
+    "Summary" : {
+
     },
     "Support people who curate high quality lists by zapping them" : {
       "localizations" : {
@@ -30866,6 +31435,16 @@
     "Test build %@" : {
       "shouldTranslate" : false
     },
+    "Test report: %@ – %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Test report: %1$@ – %2$@"
+          }
+        }
+      }
+    },
     "Test Toggle" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -31360,6 +31939,12 @@
         }
       }
     },
+    "The mentions highlight needs more than ten explicit mentions in public posts or comments. Threading tags alone do not count." : {
+
+    },
+    "The missing-parent lookup reached its limit. Some conversations remain unresolved." : {
+
+    },
     "The profile above was found to be similar to one below that you are already following:" : {
       "localizations" : {
         "es" : {
@@ -31457,6 +32042,9 @@
           }
         }
       }
+    },
+    "The share image could not be created. Please try again." : {
+
     },
     "The text content of the post to publish." : {
       "localizations" : {
@@ -31852,6 +32440,9 @@
         }
       }
     },
+    "This history collection reached its storage limit. Your saved history is still available." : {
+
+    },
     "This identifier is already used by “%@”. Creating will update that badge." : {
       "localizations" : {
         "es" : {
@@ -32033,6 +32624,21 @@
         }
       }
     },
+    "This relay connection is paused by your relay or VPN settings." : {
+
+    },
+    "This relay does not allow historical queries." : {
+
+    },
+    "This relay is disabled in your relay settings. Enable it there first." : {
+
+    },
+    "This relay requires authentication for more history." : {
+
+    },
+    "This removes the saved history and report progress for this profile on your devices, including its iCloud archive. If offline, iCloud deletion will continue when available. Some older interactions may no longer be available from relays. Browsing and cache maintenance can collect history again." : {
+
+    },
     "This reply posts from a new one-time identity that isn't linked to any of your accounts. It's a throwaway — you can't edit, delete, undo it, or reply again as this identity. Relays can still see your IP address, and your writing style may identify you." : {
       "localizations" : {
         "es" : {
@@ -32139,6 +32745,9 @@
           }
         }
       }
+    },
+    "Through %@" : {
+
     },
     "Thumbnail URL (256x256)" : {
       "comment" : "Label for input field for badge image on Badge creation screen",
@@ -32701,6 +33310,9 @@
         }
       }
     },
+    "Total" : {
+
+    },
     "Total after combining" : {
       "localizations" : {
         "es" : {
@@ -32788,6 +33400,12 @@
           }
         }
       }
+    },
+    "Trusted public activity · %lld of your posts found" : {
+
+    },
+    "Trusted public activity found through %@" : {
+
     },
     "Try again" : {
       "comment" : "Button try again",
@@ -33753,6 +34371,12 @@
         }
       }
     },
+    "Update my year" : {
+
+    },
+    "Update report" : {
+
+    },
     "Updates refer to people added or removed from this list, not posts or content." : {
       "localizations" : {
         "es" : {
@@ -34182,6 +34806,9 @@
         }
       }
     },
+    "Validating zap receipts…" : {
+
+    },
     "Verify again" : {
       "localizations" : {
         "es" : {
@@ -34227,6 +34854,9 @@
         }
       }
     },
+    "Verifying and saving response" : {
+
+    },
     "Verifying..." : {
       "localizations" : {
         "es" : {
@@ -34260,6 +34890,9 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "Video post" : {
+
     },
     "Video ready" : {
       "extractionState" : "stale",
@@ -34392,6 +35025,9 @@
           }
         }
       }
+    },
+    "Voice message" : {
+
     },
     "Voice Message feed settings" : {
       "localizations" : {
@@ -34548,6 +35184,12 @@
         }
       }
     },
+    "Waiting for relay response" : {
+
+    },
+    "Waiting for the relay pacing interval" : {
+
+    },
     "Wallet" : {
 
     },
@@ -34624,6 +35266,9 @@
           }
         }
       }
+    },
+    "Web of Trust rebuild queued — filtering temporarily allows everyone" : {
+
     },
     "Web of Trust spam filter" : {
       "comment" : "Header for a feed setting",
@@ -34940,6 +35585,9 @@
         }
       }
     },
+    "While gathering history" : {
+
+    },
     "Who can see the blocks?" : {
       "localizations" : {
         "es" : {
@@ -34961,6 +35609,18 @@
           }
         }
       }
+    },
+    "Who can't stop talking about you?" : {
+
+    },
+    "Who sent you the most zaps?" : {
+
+    },
+    "Who spread your words?" : {
+
+    },
+    "Who you zapped the most" : {
+
     },
     "Will not download media and previews" : {
       "comment" : "Setting on settings screen",
@@ -35253,6 +35913,9 @@
         }
       }
     },
+    "Year settings" : {
+
+    },
     "you · anon" : {
       "localizations" : {
         "es" : {
@@ -35343,6 +36006,21 @@
         }
       }
     },
+    "You can browse Nostur while collection runs. Keep the app on screen; if you close it, continue later from saved progress." : {
+
+    },
+    "You can select up to 20 relays. Deselect one before adding another." : {
+
+    },
+    "You couldn't help reacting" : {
+
+    },
+    "You got people talking" : {
+
+    },
+    "You got people talking includes direct replies, sub-replies and your own replies in the collected conversation. People are counted once per thread. Relationship highlights count direct exchanges." : {
+
+    },
     "You have not received any messages" : {
       "comment" : "Shown on the DM view when there aren't any direct messages to show",
       "localizations" : {
@@ -35362,6 +36040,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je hebt nog geen berichten ontvangen"
+          }
+        }
+      }
+    },
+    "You posted an average of %@ times per day and your most active day was %@ with %lld posts." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You posted an average of %1$@ times per day and your most active day was %2$@ with %3$lld posts."
           }
         }
       }
@@ -35476,6 +36164,30 @@
         }
       }
     },
+    "Your biggest fans" : {
+
+    },
+    "Your biggest lightning moment" : {
+
+    },
+    "Your closest connections" : {
+
+    },
+    "Your content" : {
+
+    },
+    "Your content · %@" : {
+
+    },
+    "Your content checked; interactions queued" : {
+
+    },
+    "Your conversations. Your people. Your year." : {
+
+    },
+    "Your downloaded items are saved. These relays did not finish every request for this month. Retry incomplete sources to gather more history.\n\n%@" : {
+
+    },
     "Your existing Nostur blocks will not be removed." : {
       "localizations" : {
         "es" : {
@@ -35497,6 +36209,30 @@
           }
         }
       }
+    },
+    "Your feed database and posts on relays will remain available." : {
+
+    },
+    "Your highlights are ready to share." : {
+
+    },
+    "Your history archive could not be opened or saved." : {
+
+    },
+    "Your history is saved. Resume to continue gathering the remaining sources." : {
+
+    },
+    "Your month scans are saved. Some extra checks remain; resume later to improve the report." : {
+
+    },
+    "Your most active day counts public posts, including replies, pictures, videos, voice messages and articles. Reactions, reposts and zaps are not posts. Edited articles count once on their original publication day. The daily average includes every calendar day covered by the report, including days without posts." : {
+
+    },
+    "Your most-loved post" : {
+
+    },
+    "Your most-zapped post" : {
+
     },
     "Your name" : {
       "comment" : "Label for entering your name on Edit Profile screen",
@@ -35521,6 +36257,21 @@
         }
       }
     },
+    "Your Nostr year is ready" : {
+
+    },
+    "Your people and highlights from %@" : {
+
+    },
+    "Your posting rhythm" : {
+
+    },
+    "Your posts, your people, your standout moments." : {
+
+    },
+    "Your preview is ready" : {
+
+    },
     "Your private key controls your account. Never share it with anyone. Anyone with this key can fully access your account and post as you." : {
       "localizations" : {
         "es" : {
@@ -35542,6 +36293,9 @@
           }
         }
       }
+    },
+    "Your public conversations" : {
+
     },
     "Your report is public, other users can use your report to improve the network" : {
       "comment" : "Informational message",
@@ -35566,6 +36320,15 @@
         }
       }
     },
+    "Your saved progress is ready to continue." : {
+
+    },
+    "Your supporters" : {
+
+    },
+    "Your top reply guy" : {
+
+    },
     "Your wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!" : {
       "localizations" : {
         "es" : {
@@ -35587,6 +36350,9 @@
           }
         }
       }
+    },
+    "Your year on Nostr" : {
+      "comment" : "Side bar navigation button"
     },
     "Zap custom amount" : {
       "localizations" : {
@@ -35655,6 +36421,9 @@
           }
         }
       }
+    },
+    "Zap validation" : {
+
     },
     "Zapped" : {
       "comment" : "Feed title\nTab title for feed of most zapped posts\nTab title for the Zapped feed",

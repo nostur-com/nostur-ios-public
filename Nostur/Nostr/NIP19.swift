@@ -22,17 +22,19 @@ struct NIP19 {
     
     public init(prefix:String, hexString: String) throws {
         self.key = hexString.hexToBytes()
+        guard hexString.count == 64, key.count == 32 else { throw "Invalid NIP-19 key" }
         self.hexString = key.hexString()
         let bech32 = Bech32()
-        let grouped = try bech32.convertBits(from: 8, to: 5, pad: true, idata: Data(bytes: key, count: 32))
+        let grouped = try bech32.convertBits(from: 8, to: 5, pad: true, idata: Data(key))
         self.displayString = bech32.encode(prefix, values: grouped)
     }
     
     public init(prefix:String, key: [UInt8]) throws {
+        guard key.count == 32 else { throw "Invalid NIP-19 key" }
         self.key = key
         self.hexString = key.hexString()
         let bech32 = Bech32()
-        let grouped = try bech32.convertBits(from: 8, to: 5, pad: true, idata: Data(bytes: key, count: 32))
+        let grouped = try bech32.convertBits(from: 8, to: 5, pad: true, idata: Data(key))
         self.displayString = bech32.encode(prefix, values: grouped)
     }
     

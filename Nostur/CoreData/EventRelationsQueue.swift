@@ -113,8 +113,21 @@ class EventRelationsQueue {
         return self.waitingEvents.values.map { $0.event }
     }
     
-    public func getAwaitingBgEvent(byId id:EventId) -> Event? {
-        return self.waitingEvents[id]?.event ?? EventCache.shared.retrieveObject(at: id)
+    // Call inside context.perform. Cache keys can outlive the managed object's row.
+    public func getAwaitingBgEvent(byId id: EventId, context: NSManagedObjectContext = bg()) -> Event? {
+        guard context === bg() else { return nil }
+        if let event = self.waitingEvents[id]?.event {
+            if event.managedObjectContext === context, !event.isDeleted, event.id == id {
+                return event
+            }
+            self.waitingEvents[id] = nil
+        }
+        guard let event = EventCache.shared.retrieveObject(at: id) else { return nil }
+        guard event.managedObjectContext === context, !event.isDeleted, event.id == id else {
+            EventCache.shared.removeValue(forKey: id)
+            return nil
+        }
+        return event
     }
     
     public func removeAll() {

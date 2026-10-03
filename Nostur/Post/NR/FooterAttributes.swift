@@ -177,7 +177,7 @@ class FooterAttributes: ObservableObject {
                     mergedChange.reposts = max(change.reposts ?? 0, acc.reposts ?? 0)
                     mergedChange.mentions = max(change.mentions ?? 0, acc.mentions ?? 0)
                     mergedChange.replies = max(change.replies ?? 0, acc.replies ?? 0)
-                    mergedChange.likes = max(change.likes ?? 0, acc.likes ?? 0)
+                    mergedChange.likes = change.likes ?? acc.likes
                     mergedChange.zaps = max(change.zaps ?? 0, acc.zaps ?? 0)
                     mergedChange.zapTally = max(change.zapTally ?? 0, acc.zapTally ?? 0)
                     return mergedChange
@@ -190,7 +190,7 @@ class FooterAttributes: ObservableObject {
             .sink { [weak self] change in
                 guard let self else { return }
                 
-                if let likes = change.likes, likes != self.likesCount, likes != 0 {
+                if let likes = change.likes, likes != self.likesCount {
                     self.likesCount = likes
                 }
                 if let replies = change.replies, replies != self.repliesCount, replies != 0 {

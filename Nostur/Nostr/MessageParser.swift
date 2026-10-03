@@ -69,6 +69,11 @@ class MessageParser {
     }
     
     func socketReceivedMessage(text: String, relayUrl: String, client: RelayConnection) {
+        // Annual history has its own bounded utility sink. Capture original signed
+        // payloads before duplicate detection or Core Data import transforms them.
+        if YearReviewRelayInbox.shared.route(text: text, relay: relayUrl) { return }
+        LiveHistoryRecorder.shared.receive(text: text, source: relayUrl,
+            owner: UserDefaults.standard.string(forKey: "activeAccountPublicKey") ?? "")
         bgQueue.perform { [unowned self] in
             do {
                 let message = try nxParseRelayMessage(text: text, relay: relayUrl)

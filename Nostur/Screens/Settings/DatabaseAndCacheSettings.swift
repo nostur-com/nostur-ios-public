@@ -124,6 +124,8 @@ struct DatabaseAndCacheSettings: View {
 
             }
             
+            HistoryArchiveStorageSection(isOptimizingDatabase: isOptimizing)
+
             Section(header: Text("Database status", comment: "Settings heading")) {
                 HStack {
                     Text("Nostr events:")
@@ -215,6 +217,131 @@ struct DatabaseAndCacheSettings: View {
         formatter.allowedUnits = [.useKB, .useMB, .useGB]
         formatter.countStyle = .file
         return formatter.string(fromByteCount: bytes)
+    }
+}
+
+private struct HistoryArchiveStorageSection: View {
+    let isOptimizingDatabase: Bool
+    @State private var usage: [YearReviewArchiveUsage] = []
+    @State private var profiles: [String: HistoryArchiveProfile] = [:]
+    @State private var isLoading = true
+    @State private var pendingDelete: YearReviewArchiveUsage?
+    @State private var showDelete = false
+    @State private var deletingOwner: String?
+    @State private var errorMessage: String?
+
+    var body: some View {
+        Section {
+            if isLoading {
+                HStack { Text("Calculating archive storage…"); Spacer(); ProgressView() }
+            } else if usage.isEmpty {
+                Text("No saved public history").foregroundStyle(.secondary)
+            } else {
+                ForEach(usage) { archive in
+                    HistoryArchiveStorageRow(usage: archive, profile: profiles[archive.owner],
+                        isDeleting: deletingOwner == archive.owner,
+                        disabled: deletingOwner != nil || reportArchiveIsDeleting) {
+                            pendingDelete = archive
+                            showDelete = true
+                        }
+                }
+                HStack {
+                    Text("Total")
+                    Spacer()
+                    Text(DatabaseAndCacheSettings.formattedBytes(usage.reduce(0) { $0 + $1.bytes }))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Text("Public history archive")
+        } footer: {
+            Text("Public history is stored locally and syncs in batches through iCloud Drive when available.")
+        }
+        .task(id: isOptimizingDatabase) {
+            if !isOptimizingDatabase { await reload() }
+        }
+        .confirmationDialog("Delete this profile's saved public history?", isPresented: $showDelete, titleVisibility: .visible) {
+            Button("Delete archive", role: .destructive) {
+                guard let archive = pendingDelete else { return }
+                deletingOwner = archive.owner
+                Task {
+                    do {
+                        if #available(iOS 17.0, *) { try await YearReviewModel.shared.deleteArchive(owner: archive.owner) }
+                        else { try await YearReviewArchives.shared.clear(owner: archive.owner) }
+                    } catch { errorMessage = error.localizedDescription }
+                    await reload()
+                    deletingOwner = nil
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This removes the saved history and report progress for this profile on your devices, including its iCloud archive. If offline, iCloud deletion will continue when available. Some older interactions may no longer be available from relays. Browsing and cache maintenance can collect history again.")
+        }
+        .alert("History archive", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            Button("OK", role: .cancel) { errorMessage = nil }
+        } message: { Text(errorMessage ?? "") }
+    }
+
+    private var reportArchiveIsDeleting: Bool {
+        if #available(iOS 17.0, *) { return YearReviewModel.shared.isDeleting }
+        return false
+    }
+
+    @MainActor
+    private func reload() async {
+        do {
+            let values = try await YearReviewArchives.shared.usage()
+            let owners = values.map(\.owner)
+            let mainContext = context()
+            let identities = await mainContext.perform { () -> [String: HistoryArchiveProfile] in
+                var result: [String: HistoryArchiveProfile] = [:]
+                let request = Contact.fetchRequest()
+                request.predicate = NSPredicate(format: "pubkey IN %@", owners)
+                for contact in (try? mainContext.fetch(request)) ?? [] {
+                    result[contact.pubkey] = HistoryArchiveProfile(name: contact.anyName, picture: contact.picture.flatMap(URL.init(string:)))
+                }
+                for account in CloudAccount.fetchAccounts(context: mainContext) where owners.contains(account.publicKey) {
+                    result[account.publicKey] = HistoryArchiveProfile(name: account.anyName, picture: account.pictureUrl)
+                }
+                return result
+            }
+            usage = values
+            profiles = identities
+        } catch { errorMessage = error.localizedDescription }
+        isLoading = false
+    }
+}
+
+private struct HistoryArchiveProfile: Sendable {
+    let name: String
+    let picture: URL?
+}
+
+private struct HistoryArchiveStorageRow: View {
+    let usage: YearReviewArchiveUsage
+    let profile: HistoryArchiveProfile?
+    let isDeleting: Bool
+    let disabled: Bool
+    let delete: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            PFP(pubkey: usage.owner, pictureUrl: profile?.picture, size: 36)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(profile?.name ?? String(npub(usage.owner).prefix(16)) + "…").lineLimit(1)
+                Text(DatabaseAndCacheSettings.formattedBytes(usage.bytes))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            if isDeleting { ProgressView() }
+            else {
+                Button(role: .destructive, action: delete) {
+                    Label("Delete archive", systemImage: "trash").labelStyle(.iconOnly)
+                }
+                .buttonStyle(.borderless)
+                .disabled(disabled)
+            }
+        }
     }
 }
 

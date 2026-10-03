@@ -55,7 +55,7 @@ func isDMReactionEvent(
     return false
 }
 
-func handleReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, isDM: Bool = false, context: NSManagedObjectContext) {
+func handleReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, isDM: Bool = false, context: NSManagedObjectContext, countReaction: Bool = true) {
     // Only post reactions (not DM / NIP-17 private-message reactions)
     guard nEvent.kind == .reaction, !isDM else { return }
     
@@ -68,7 +68,7 @@ func handleReaction(nEvent: NEvent, savedEvent: Event, wrapId: String? = nil, is
     }
     
     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-    Event.updateLikeCountCache(savedEvent, content: nEvent.content, context: context)
+    if countReaction { Event.updateLikeCountCache(savedEvent, content: nEvent.content, context: context) }
     if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
         // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
         ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
