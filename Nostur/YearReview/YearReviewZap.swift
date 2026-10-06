@@ -1,7 +1,9 @@
 import Foundation
 import CryptoKit
 
-struct YearReviewZap: Sendable {
+struct YearReviewZap: Codable, Equatable, Sendable {
+    // Bump when receipt/provider validation rules change.
+    static let validationVersion = 1
     let sender: String?
     let recipient: String
     let target: String?
@@ -80,7 +82,20 @@ struct YearReviewZap: Sendable {
     private static func hex(_ data: Data) -> String { data.map { String(format: "%02x", $0) }.joined() }
 }
 
-struct YearReviewZapProvider: Sendable {
+struct YearReviewZapProviderCheck: Codable, Sendable {
+    let checkedAt: Date
+    let endpoint: String?
+    let signers: Set<String>
+
+    func shouldRetry(endpoint: String?, signers: Set<String>, now: Date = .now) -> Bool {
+        if let endpoint, endpoint != self.endpoint { return true }
+        let age = now.timeIntervalSince(checkedAt)
+        if age >= 24 * 60 * 60 { return true }
+        return age >= 5 * 60 && !signers.isSubset(of: self.signers)
+    }
+}
+
+struct YearReviewZapProvider: Codable, Sendable {
     let pubkey: String
     let keys: Set<String>
     let lud16: String?

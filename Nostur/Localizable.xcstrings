@@ -2548,9 +2548,6 @@
         }
       }
     },
-    "%lld people reacted" : {
-
-    },
     "%lld posts or interactions by you" : {
 
     },
@@ -2558,6 +2555,9 @@
 
     },
     "%lld public interactions" : {
+
+    },
+    "%lld reactions" : {
 
     },
     "%lld reactions · %lld reposts · %lld zaps" : {
@@ -2676,6 +2676,12 @@
         }
       }
     },
+    "%lld requests deferred for cooldown" : {
+
+    },
+    "%lld requests failed in this month" : {
+
+    },
     "%lld requests not shown" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2774,6 +2780,9 @@
           }
         }
       }
+    },
+    "%lld requests skipped in this month" : {
+
     },
     "%lld viewers" : {
       "localizations" : {
@@ -3797,9 +3806,6 @@
       }
     },
     "A relay closed the history request. Check its access settings and retry." : {
-
-    },
-    "A relay did not finish responding. You can retry it later." : {
 
     },
     "A relay exceeded the history response limit. This source is incomplete." : {
@@ -5437,6 +5443,9 @@
         }
       }
     },
+    "App relays inherit their Auth setting unless you change it here. Report-only relays start with Auth off." : {
+
+    },
     "App theme" : {
       "localizations" : {
         "es" : {
@@ -5638,6 +5647,9 @@
         }
       }
     },
+    "At least %lld items received before the request stopped" : {
+
+    },
     "auth required" : {
       "comment" : "Small label to indicate auth is required",
       "localizations" : {
@@ -5705,6 +5717,9 @@
           }
         }
       }
+    },
+    "Authenticate with your logged-in signing account. This identifies your public key to the relay, including when gathering a report for someone else." : {
+
     },
     "Authenticating with account: %@" : {
       "localizations" : {
@@ -7422,6 +7437,25 @@
         }
       }
     },
+    "Checking zap providers may fetch missing profiles from relays and contact Lightning services to verify who signed the receipts. Slow services and missing provider information can make this step take longer. Saved provider keys are reused." : {
+
+    },
+    "Checking zap providers: %lld of %lld…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Checking zap providers: %1$lld of %2$lld…"
+          }
+        }
+      }
+    },
+    "Checking zap providers: 0 of %lld…" : {
+
+    },
+    "Checking zap providers…" : {
+
+    },
     "Checking zap receipts before counting lightning totals." : {
 
     },
@@ -8443,6 +8477,9 @@
           }
         }
       }
+    },
+    "Comments on your posts" : {
+
     },
     "Communities" : {
       "comment" : "Navigation title for Communities view",
@@ -9549,6 +9586,9 @@
         }
       }
     },
+    "Conversation parents" : {
+
+    },
     "Conversations" : {
       "localizations" : {
         "es" : {
@@ -10235,9 +10275,6 @@
           }
         }
       }
-    },
-    "Counts cover the report period and collected history, with your trust filters applied. Post details can include more recent reactions, people outside those filters, or multiple reactions from the same person." : {
-
     },
     "Create" : {
       "localizations" : {
@@ -12524,6 +12561,9 @@
         }
       }
     },
+    "Enable Auth for this history source and use a signing account to access this relay." : {
+
+    },
     "Enable authentication" : {
       "comment" : "Label for toggle to enable AUTH on this relay",
       "localizations" : {
@@ -14068,6 +14108,9 @@
         }
       }
     },
+    "Finding Lightning profiles for %lld people…" : {
+
+    },
     "Finding missed interactions…" : {
 
     },
@@ -14900,6 +14943,9 @@
       }
     },
     "Hide %@ from shared cards" : {
+
+    },
+    "Hide %@ from your report" : {
 
     },
     "Hide balance" : {
@@ -15827,7 +15873,10 @@
         }
       }
     },
-    "Incomplete month sources" : {
+    "Incoming replies and support" : {
+
+    },
+    "Incomplete sources" : {
 
     },
     "Increase privacy" : {
@@ -20147,9 +20196,6 @@
         }
       }
     },
-    "No highlights to show yet. Try gathering more history or adjusting your selection in settings." : {
-
-    },
     "No internet connection" : {
       "comment" : "Relay no internet status",
       "localizations" : {
@@ -21359,6 +21405,9 @@
         }
       }
     },
+    "One failed request can pause a relay for the rest of this run. Other months may be skipped without being attempted. Other relays can still finish." : {
+
+    },
     "One or more relays could not finish. Retry incomplete sources to gather more history." : {
 
     },
@@ -21901,6 +21950,9 @@
       }
     },
     "People in your report" : {
+
+    },
+    "People rankings cover the report period with your trust filters applied. Most-loved post totals include all available positive reactions to posts from that year and update when more reactions are found." : {
 
     },
     "People you reply or react to will appear here automatically." : {
@@ -24519,9 +24571,6 @@
         }
       }
     },
-    "Reactions and reposts count each person once per post. Supporters combine reactions, reposts and validated zaps." : {
-
-    },
     "Reactions could not finish loading. Try again." : {
 
     },
@@ -25263,6 +25312,9 @@
         }
       }
     },
+    "References to your posts" : {
+
+    },
     "Refresh" : {
       "comment" : "Toolbar action to refresh the emoji feed\nToolbar action to refresh the gallery feed\nToolbar action to refresh the hot feed\nToolbar action to refresh the zapped feed",
       "localizations" : {
@@ -25313,6 +25365,9 @@
           }
         }
       }
+    },
+    "Relay authentication" : {
+
     },
     "Relay Autopilot" : {
       "localizations" : {
@@ -26975,6 +27030,9 @@
         }
       }
     },
+    "Request that stopped this source" : {
+
+    },
     "Requests" : {
       "comment" : "Tab title for DM (Direct Message) requests",
       "localizations" : {
@@ -27583,6 +27641,9 @@
           }
         }
       }
+    },
+    "Saved history is kept" : {
+
     },
     "Saved history only · partial history" : {
 
@@ -29224,6 +29285,9 @@
         }
       }
     },
+    "Show %@ in your report" : {
+
+    },
     "Show %@'s feed" : {
       "comment" : "Menu button to show someone's feed",
       "localizations" : {
@@ -29292,6 +29356,9 @@
       }
     },
     "Show %lld reactions outside your Web of Trust" : {
+
+    },
+    "Show a section to include it in your shared report, or gather more history." : {
 
     },
     "Show again" : {
@@ -31806,6 +31873,9 @@
         }
       }
     },
+    "The history request did not complete with EOSE within %lld seconds, including connection setup and response processing." : {
+
+    },
     "The Hot feed shows posts from anyone which are most liked or reposted by people you follow in the last %lld hours" : {
       "localizations" : {
         "es" : {
@@ -31966,6 +32036,18 @@
           }
         }
       }
+    },
+    "The relay capped a one-second history window. Splitting it further cannot safely recover the remaining items." : {
+
+    },
+    "The relay rejected authentication for your account. %@" : {
+
+    },
+    "The relay returned an EVENT response without an event payload." : {
+
+    },
+    "The relay still requires authentication after an authenticated retry. Check relay access for your account." : {
+
     },
     "The report does not identify its target." : {
       "localizations" : {
@@ -32630,6 +32712,9 @@
     "This relay does not allow historical queries." : {
 
     },
+    "This relay is cooling down after an earlier failure. Retry later." : {
+
+    },
     "This relay is disabled in your relay settings. Enable it there first." : {
 
     },
@@ -32654,6 +32739,9 @@
           }
         }
       }
+    },
+    "This saved run did not record a failure reason. Retry this source for updated details." : {
+
     },
     "This will **delete** your:\n - Account from Nostur\n - Private key (nsec) from Apple Keychain" : {
       "comment" : "Confirmation text when you want to delete your account",
@@ -34555,6 +34643,12 @@
         }
       }
     },
+    "Use app authentication defaults" : {
+
+    },
+    "Use Continue gathering on the report screen to resume remaining checks and retry incomplete sources. Successful saved batches are kept. Items buffered in a failed request may need to be downloaded again." : {
+
+    },
     "Use Edit to reorder the badges shown on your profile." : {
       "localizations" : {
         "es" : {
@@ -34806,7 +34900,10 @@
         }
       }
     },
-    "Validating zap receipts…" : {
+    "Verified receipts stay cached even if a Lightning address changes. Unresolved provider checks are normally retried after 24 hours; a changed address or a new signer can trigger an earlier check." : {
+
+    },
+    "Verified receipts stay cached even if a Lightning address changes. Unresolved provider checks are normally retried after 24 hours; a changed address or a new signer can trigger an earlier check." : {
 
     },
     "Verify again" : {
@@ -36006,10 +36103,10 @@
         }
       }
     },
-    "You can browse Nostur while collection runs. Keep the app on screen; if you close it, continue later from saved progress." : {
+    "You can select up to 20 relays. Deselect one before adding another." : {
 
     },
-    "You can select up to 20 relays. Deselect one before adding another." : {
+    "You can use Nostur while collection runs. Keep the app on screen; or, if you close it, continue later from saved progress." : {
 
     },
     "You couldn't help reacting" : {
@@ -36185,9 +36282,6 @@
     "Your conversations. Your people. Your year." : {
 
     },
-    "Your downloaded items are saved. These relays did not finish every request for this month. Retry incomplete sources to gather more history.\n\n%@" : {
-
-    },
     "Your existing Nostur blocks will not be removed." : {
       "localizations" : {
         "es" : {
@@ -36231,6 +36325,9 @@
     "Your most-loved post" : {
 
     },
+    "Your most-loved post counts positive reaction events, like post details. People rankings count each person once per post. Supporters combine reactions, reposts and validated zaps." : {
+
+    },
     "Your most-zapped post" : {
 
     },
@@ -36266,6 +36363,9 @@
     "Your posting rhythm" : {
 
     },
+    "Your posts and interactions" : {
+
+    },
     "Your posts, your people, your standout moments." : {
 
     },
@@ -36295,6 +36395,9 @@
       }
     },
     "Your public conversations" : {
+
+    },
+    "Your reactions and reposts" : {
 
     },
     "Your report is public, other users can use your report to improve the network" : {
@@ -36677,6 +36780,9 @@
           }
         }
       }
+    },
+    "Zaps you sent" : {
+
     }
   },
   "version" : "1.1"

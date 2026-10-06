@@ -2,6 +2,7 @@ import XCTest
 import NostrEssentials
 import CryptoKit
 import CoreData
+import SQLite3
 @testable import Nostur
 
 final class YearReviewTests: XCTestCase {
@@ -61,14 +62,16 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(report.ownPostCount, 4)
     }
 
-    func testReportReactionsCountDistinctTrustedPeopleWithinPeriod() {
+    func testPostReactionTotalsMatchDetailWhilePeopleRankingsStayTrustedAndYearly() {
         let events = [note("mine", by: owner),
             note("like-a", by: alice, content: "+", tags: [["e", "mine"]], kind: 7),
             note("like-a-again", by: alice, content: "❤️", tags: [["e", "mine"]], kind: 7),
             note("like-untrusted", by: bob, content: "+", tags: [["e", "mine"]], kind: 7),
             note("like-later", by: bob, content: "+", tags: [["e", "mine"]], timestamp: period.end, kind: 7)]
-        XCTAssertEqual(analyze(events, trusted: [alice]).mostReacted?.reactions, 1)
-        XCTAssertEqual(analyze(events, trusted: [alice, bob]).mostReacted?.reactions, 2)
+        XCTAssertEqual(analyze(events, trusted: [alice]).mostReacted?.reactions, 4)
+        XCTAssertEqual(analyze(events, trusted: [alice, bob]).mostReacted?.reactions, 4)
+        XCTAssertEqual(analyze(events, trusted: [alice]).reactedBy.map(\.pubkey), [alice])
+        XCTAssertEqual(analyze(events, trusted: [alice, bob]).reactedBy.first { $0.pubkey == alice }?.reactions, 1)
     }
 
     func testReactionsNeverFallBackToAnInheritedKnownPost() {
@@ -352,6 +355,66 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(job.monthProgress(active: [])[currentMonth - 1].others.failedRelays, [other.relay])
     }
 
+    func testRelayFailureRecordsActualRequestAndSkippedMonthsAndSurvivesCheckpoint() throws {
+        let bad = "wss://bad.example.com"
+        let good = "wss://good.example.com"
+        var job = YearReviewCollection(owner: owner, period: period,
+            relays: [.new(url: bad, read: true), .new(url: good, read: true)], trusted: [])
+        let trigger = try XCTUnwrap(job.pending.first { $0.relay == bad })
+        job.markRelayUnavailable(bad, reason: "EOSE timeout", trigger: trigger, received: 37)
+        XCTAssertTrue(job.pending.allSatisfy { $0.relay == good })
+        XCTAssertTrue(job.failed.allSatisfy { $0.relay == bad })
+        let details = try XCTUnwrap(job.sourceFailures)
+        XCTAssertEqual(details.filter { $0.status == .failed }.count, 1)
+        XCTAssertEqual(details.first { $0.status == .failed }?.received, 37)
+        XCTAssertTrue(details.filter { $0.work != trigger }.allSatisfy {
+            $0.status == .skipped && $0.trigger == trigger && $0.reason == "EOSE timeout"
+        })
+        let restored = try JSONDecoder().decode(YearReviewCollection.self, from: JSONEncoder().encode(job))
+        XCTAssertEqual(restored.sourceFailures, details)
+        XCTAssertEqual(restored.monthProgress(active: []).flatMap(\.failures).count, details.count)
+    }
+
+    func testCooldownAndLegacyCheckpointsDoNotClaimEveryMonthFailed() throws {
+        var job = YearReviewCollection(owner: owner, period: period,
+            relays: [.new(url: "wss://relay.example.com", read: true)], trusted: [])
+        job.markRelayUnavailable(job.relays[0].url, reason: "Cooling down")
+        XCTAssertTrue(try XCTUnwrap(job.sourceFailures).allSatisfy { $0.status == .coolingDown && $0.trigger == nil })
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(job)) as? [String: Any])
+        legacy.removeValue(forKey: "sourceFailures")
+        let restored = try JSONDecoder().decode(YearReviewCollection.self, from: JSONSerialization.data(withJSONObject: legacy))
+        XCTAssertNil(restored.sourceFailures)
+        XCTAssertTrue(restored.monthProgress(active: []).flatMap(\.failures).allSatisfy { $0.status == .unknown })
+    }
+
+    func testHistoryAuthInheritsCurrentAppSettingInsteadOfOldSnapshot() {
+        let url = "wss://relay.example.com"
+        let oldSnapshot = RelayData.new(url: url, read: true, auth: false)
+        let appOn = RelayData.new(url: url, read: true, auth: true)
+        XCTAssertTrue(YearReviewPreferences.applyingAuth(to: [oldSnapshot], configured: [appOn], overrides: [:])[0].auth)
+        let appOff = RelayData.new(url: url, read: true, auth: false)
+        XCTAssertFalse(YearReviewPreferences.applyingAuth(to: [appOn], configured: [appOff], overrides: [:])[0].auth)
+        let reportOnly = RelayData.new(url: "wss://report-only.example.com", read: true)
+        XCTAssertFalse(YearReviewPreferences.applyingAuth(to: [reportOnly], configured: [appOn], overrides: [:])[0].auth)
+    }
+
+    func testExplicitHistoryAuthOverridesAppDefaultAndResetRestoresInheritance() throws {
+        let url = "wss://relay.example.com"
+        let app = RelayData.new(url: url, read: true, auth: true)
+        let overrides = [url: false]
+        XCTAssertFalse(YearReviewPreferences.applyingAuth(to: [app], configured: [app], overrides: overrides)[0].auth)
+        XCTAssertTrue(YearReviewPreferences.applyingAuth(to: [app], configured: [app], overrides: [:])[0].auth)
+        let prefs = YearReviewPreferences(cards: [], hiddenPeople: [], shareFormat: .report,
+            selectedRelays: [url], relays: [.init(url: url, auth: false)], relayAuthOverrides: overrides)
+        let saved = try JSONDecoder().decode(YearReviewPreferences.self, from: JSONEncoder().encode(prefs))
+        XCTAssertEqual(saved.relayAuthOverrides, overrides)
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(prefs)) as? [String: Any])
+        legacy.removeValue(forKey: "relayAuthOverrides")
+        let old = try JSONDecoder().decode(YearReviewPreferences.self, from: JSONSerialization.data(withJSONObject: legacy))
+        XCTAssertNil(old.relayAuthOverrides)
+        XCTAssertTrue(YearReviewPreferences.applyingAuth(to: old.relays.map(\.relayData), configured: [app], overrides: old.relayAuthOverrides ?? [:])[0].auth)
+    }
+
     func testReportPreferencesPersistEmptySelectionsAndStayScopedToAccount() throws {
         let suite = "year-review-preferences-test-" + UUID().uuidString
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
@@ -544,7 +607,7 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(result.amplifiedBy.first?.reposts, 1)
         XCTAssertEqual(result.liked.first?.reactions, 1)
         XCTAssertEqual(result.mostInteracted.first?.interactions, 4)
-        XCTAssertNil(analyze(events, trusted: [alice], blocked: [alice]).mostReacted)
+        XCTAssertEqual(analyze(events, trusted: [alice], blocked: [alice]).mostReacted?.reactions, 2)
     }
 
     func testCommentsCountExplicitMentionsWithoutCountingThreadingTags() throws {
@@ -951,6 +1014,72 @@ final class YearReviewTests: XCTestCase {
         cache.perform { entered.fulfill(); _ = gate.wait(timeout: .now() + 5) }
     }
 
+    func testMostLovedUsesAllThirtyThreeCachedReactionsBeforeChoosingWinner() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let ownKeys = try Keys.newKeys()
+        let root = try signedEvent(keys: ownKeys)
+        let other = try signedEvent(content: "runner up", keys: ownKeys)
+        let trustedKeys = try (0..<10).map { _ in try Keys.newKeys() }
+        var reactions = try trustedKeys.map { try signedEvent(content: "+", kind: 7, keys: $0, tags: [["e", root.id]]) }
+        for i in 0..<23 {
+            reactions.append(try signedEvent(content: "❤️ \(i)", kind: 7, tags: [["e", root.id]], timestamp: period.end + Int64(i)))
+        }
+        let runnerUp = try (0..<20).map { i in try signedEvent(content: "+ \(i)", kind: 7, tags: [["e", other.id]]) }
+        let archive = YearReviewArchive(owner: root.pubkey, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        _ = try await archive.ingest([root, other] + Array(reactions.prefix(10)) + runnerUp, source: "relay")
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: DataProvider.shared().container.managedObjectModel)
+        try coordinator.addPersistentStore(ofType: NSInMemoryStoreType, configurationName: nil, at: nil)
+        let cache = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        cache.persistentStoreCoordinator = coordinator
+        try await cache.perform {
+            let originalPost = try JSONDecoder().decode(NEvent.self, from: JSONEncoder().encode(root))
+            let cachedPost = Event.fromNEvent(nEvent: originalPost, context: cache)
+            cachedPost.likesCount = 33
+            // Ten reactions were pruned from the main cache but remain archived.
+            for reaction in reactions.dropFirst(10) {
+                let original = try JSONDecoder().decode(NEvent.self, from: JSONEncoder().encode(reaction))
+                let row = Event.fromNEvent(nEvent: original, context: cache)
+                row.reactionToId = root.id
+            }
+            try cache.save()
+        }
+        let before = try await archive.report(owner: root.pubkey, period: period, trusted: Set(trustedKeys.map(\.publicKeyHex)), blocked: [])
+        XCTAssertEqual(before.mostReacted?.id, other.id)
+        let seed = try await YearReviewLocalSeed.postReactions(ids: [root.id, other.id], after: "", context: cache)
+        XCTAssertEqual(seed.events.count, 23)
+        _ = try await archive.ingest(seed.events, source: "local-post-reactions")
+        let report = try await archive.report(owner: root.pubkey, period: period, trusted: Set(trustedKeys.map(\.publicKeyHex)), blocked: [])
+        XCTAssertEqual(report.mostReacted?.id, root.id)
+        XCTAssertEqual(report.mostReacted?.reactions, 33)
+        let count = try await archive.reactionCount(to: root.id, blocked: [])
+        XCTAssertEqual(count, 33)
+        XCTAssertEqual(report.reactedBy.count, 3)
+        XCTAssertTrue(report.reactedBy.allSatisfy { Set(trustedKeys.map(\.publicKeyHex)).contains($0.pubkey) && $0.reactions == 1 })
+        try await YearReviewDetailHydrator.restore(post: try XCTUnwrap(report.mostReacted), archive: archive, blocked: [], context: cache)
+        let detail = try await cache.perform { () -> (Int64, Int) in
+            let target = try XCTUnwrap(Event.fetchEvent(id: root.id, context: cache))
+            let query = Event.fetchRequest()
+            query.predicate = NSPredicate(format: "kind == 7 AND reactionToId == %@", root.id)
+            return (target.likesCount, Set(try cache.fetch(query).map(\.id)).count)
+        }
+        XCTAssertEqual(detail.0, 33) // Ten restored rows must not inflate 33 to 43.
+        XCTAssertEqual(detail.1, 33)
+    }
+
+    func testMostLovedExcludesBlockedPrivateDownvotesAndInheritedTargetsButCountsRepeatEmojiAndSelf() {
+        let events = [note("mine", by: owner),
+            note("like", by: alice, content: "+", tags: [["e", "mine"]], kind: 7),
+            note("like", by: alice, content: "+", tags: [["e", "mine"]], kind: 7),
+            note("emoji", by: alice, content: "❤️", tags: [["e", "mine"]], kind: 7),
+            note("self", by: owner, content: "+", tags: [["e", "mine"]], kind: 7),
+            note("blocked", by: bob, content: "+", tags: [["e", "mine"]], kind: 7),
+            note("downvote", by: alice, content: "-", tags: [["e", "mine"]], kind: 7),
+            note("private", by: alice, content: "+", tags: [["e", "mine"], ["k", "14"]], kind: 7),
+            note("inherited", by: alice, content: "+", tags: [["e", "mine"], ["e", "other"]], kind: 7)]
+        XCTAssertEqual(analyze(events, trusted: [alice], blocked: [bob]).mostReacted?.reactions, 3)
+    }
+
     private func signedEvent(content: String = "original", kind: Int = 1, keys: Keys? = nil,
                              tags: [[String]] = [], timestamp: Int64? = nil) throws -> YearReviewEvent {
         let signingKeys = try keys ?? Keys.newKeys()
@@ -1267,6 +1396,79 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(report.ownPostCount, 0)
     }
 
+    func testVerifiedZapCacheSurvivesReopenAndSkipsProviderDiscoveryButHonorsBlocksAndDeletes() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("archive.sqlite")
+        let payer = try Keys.newKeys()
+        let recipient = try Keys.newKeys()
+        let provider = try Keys.newKeys()
+        let post = try signedEvent(keys: recipient)
+        let request = try signedEvent(content: "", kind: 9734, keys: payer,
+            tags: [["p", recipient.publicKeyHex], ["e", post.id], ["amount", "21000"]])
+        let description = String(decoding: try JSONEncoder().encode(request), as: UTF8.self)
+        let receipt = try signedEvent(content: "", kind: 9735, keys: provider,
+            tags: [["p", recipient.publicKeyHex], ["e", post.id], ["P", payer.publicKeyHex],
+                   ["description", description], ["bolt11", invoice(description: description, millisats: 21000)]])
+        let archive = YearReviewArchive(owner: recipient.publicKeyHex, fileURL: file)
+        _ = try await archive.ingest([post, receipt], source: "test")
+        let before = try await archive.zapSigners(period: period)
+        XCTAssertEqual(before[recipient.publicKeyHex], [provider.publicKeyHex])
+        let first = try await archive.report(owner: recipient.publicKeyHex, period: period, trusted: [], blocked: [],
+            zapperKeys: [recipient.publicKeyHex: [provider.publicKeyHex]])
+        XCTAssertEqual(first.mostZapped?.zaps, 1)
+        let reopened = YearReviewArchive(owner: recipient.publicKeyHex, fileURL: file)
+        let remaining = try await reopened.zapSigners(period: period)
+        XCTAssertTrue(remaining.isEmpty)
+        // No authorization keys supplied: only a persisted, previously validated
+        // receipt can produce this result without repeating its validation.
+        let cached = try await reopened.report(owner: recipient.publicKeyHex, period: period, trusted: [], blocked: [])
+        XCTAssertEqual(cached.mostZapped?.millisats, 21000)
+        let changedProvider = try Keys.newKeys()
+        let afterAddressChange = try await reopened.report(owner: recipient.publicKeyHex, period: period, trusted: [], blocked: [],
+            zapperKeys: [recipient.publicKeyHex: [changedProvider.publicKeyHex]])
+        XCTAssertEqual(afterAddressChange.mostZapped?.millisats, 21000)
+        // An unreadable derived entry must remain eligible for provider discovery.
+        var database: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(file.path, &database), SQLITE_OK)
+        let cacheDatabase = try XCTUnwrap(database)
+        defer { sqlite3_close(cacheDatabase) }
+        XCTAssertEqual(sqlite3_exec(cacheDatabase, "UPDATE verified_zaps SET json = 'broken'", nil, nil, nil), SQLITE_OK)
+        let corruptSigners = try await reopened.zapSigners(period: period)
+        XCTAssertEqual(corruptSigners[recipient.publicKeyHex], [provider.publicKeyHex])
+        let recovered = try await reopened.report(owner: recipient.publicKeyHex, period: period, trusted: [], blocked: [],
+            zapperKeys: [recipient.publicKeyHex: [provider.publicKeyHex]])
+        XCTAssertEqual(recovered.mostZapped?.zaps, 1)
+        // A future validator revision must recheck old derived results.
+        XCTAssertEqual(sqlite3_exec(cacheDatabase, "UPDATE verified_zaps SET version = 0", nil, nil, nil), SQLITE_OK)
+        let oldVersionSigners = try await reopened.zapSigners(period: period)
+        XCTAssertEqual(oldVersionSigners[recipient.publicKeyHex], [provider.publicKeyHex])
+        let revalidated = try await reopened.report(owner: recipient.publicKeyHex, period: period, trusted: [], blocked: [],
+            zapperKeys: [recipient.publicKeyHex: [provider.publicKeyHex]])
+        XCTAssertEqual(revalidated.mostZapped?.zaps, 1)
+        let blocked = try await reopened.report(owner: recipient.publicKeyHex, period: period, trusted: [], blocked: [payer.publicKeyHex])
+        XCTAssertNil(blocked.mostZapped)
+        try await reopened.recordLocalDeletions([receipt.id])
+        let deleted = try await reopened.report(owner: recipient.publicKeyHex, period: period, trusted: [], blocked: [])
+        XCTAssertNil(deleted.mostZapped)
+        let newReceipt = try signedEvent(content: "", kind: 9735, keys: provider, tags: receipt.tags, timestamp: period.start + 2)
+        _ = try await reopened.ingest([newReceipt], source: "test")
+        let newSigners = try await reopened.zapSigners(period: period)
+        XCTAssertEqual(newSigners[recipient.publicKeyHex], [provider.publicKeyHex])
+    }
+
+    func testProviderCheckCooldownPersistsAndRetriesChangedEndpointOrNewSigner() throws {
+        let now = Date.now
+        let check = YearReviewZapProviderCheck(checkedAt: now, endpoint: "https://old.example.com", signers: [alice])
+        let saved = try JSONDecoder().decode(YearReviewZapProviderCheck.self, from: JSONEncoder().encode(check))
+        XCTAssertFalse(saved.shouldRetry(endpoint: saved.endpoint, signers: [alice], now: now.addingTimeInterval(3600)))
+        XCTAssertFalse(saved.shouldRetry(endpoint: nil, signers: [alice], now: now.addingTimeInterval(3600)))
+        XCTAssertFalse(saved.shouldRetry(endpoint: saved.endpoint, signers: [bob], now: now.addingTimeInterval(60)))
+        XCTAssertTrue(saved.shouldRetry(endpoint: saved.endpoint, signers: [bob], now: now.addingTimeInterval(301)))
+        XCTAssertTrue(saved.shouldRetry(endpoint: "https://new.example.com", signers: [alice], now: now))
+        XCTAssertTrue(saved.shouldRetry(endpoint: saved.endpoint, signers: [alice], now: now.addingTimeInterval(86400)))
+    }
+
     func testProviderMetadataUsesOnlyVerifiedLatestRequestedProfiles() async throws {
         let keys = try Keys.newKeys()
         let old = try signedEvent(content: "{\"lud16\":\"old@example.com\"}", kind: 0, keys: keys)
@@ -1319,6 +1521,95 @@ final class YearReviewTests: XCTestCase {
             XCTAssertTrue(inbox.route(text: response, relay: "wss://relay.example.com"))
             await fulfillment(of: [done], timeout: 1)
         }
+    }
+
+    func testHistoryAuthRetriesOnlyAfterMatchingRelayAcceptsAndOnlyOnce() async {
+        let inbox = YearReviewRelayInbox()
+        let retried = expectation(description: "authenticated retry")
+        retried.assertForOverFulfill = true
+        let rejected = expectation(description: "second auth-required is terminal")
+        inbox.register(id: "year-a", relay: "wss://relay.example.com", authenticate: { _, submitted in
+            submitted("signed-auth")
+        }, retry: { retried.fulfill() }) { result in
+            if case .failure(let error) = result {
+                XCTAssertTrue(error.localizedDescription.contains("authenticated retry"))
+            } else { XCTFail("Repeated auth-required must not loop") }
+            rejected.fulfill()
+        }
+        XCTAssertTrue(inbox.route(text: "[\"AUTH\",\"challenge\"]", relay: "wss://relay.example.com"))
+        XCTAssertFalse(inbox.route(text: "[\"OK\",\"signed-auth\",true,\"\"]", relay: "wss://other.example.com"))
+        // ACK can precede CLOSED when the original REQ raced with authentication.
+        XCTAssertTrue(inbox.route(text: "[\"OK\",\"signed-auth\",true,\"\"]", relay: "wss://relay.example.com"))
+        XCTAssertTrue(inbox.route(text: "[\"CLOSED\",\"year-a\",\"auth-required: aggregator\"]", relay: "wss://relay.example.com"))
+        await fulfillment(of: [retried], timeout: 1)
+        XCTAssertTrue(inbox.route(text: "[\"CLOSED\",\"year-a\",\"auth-required: aggregator\"]", relay: "wss://relay.example.com"))
+        await fulfillment(of: [rejected], timeout: 1)
+    }
+
+    func testHistoryClosedBeforeChallengeWaitsForAuthThenCompletesPage() async {
+        let inbox = YearReviewRelayInbox()
+        let waiting = expectation(description: "try stored challenge")
+        let retried = expectation(description: "retry after ACK")
+        let completed = expectation(description: "EOSE after retry")
+        inbox.register(id: "year-b", relay: "wss://relay.example.com", authenticate: { challenge, submitted in
+            if challenge.isEmpty { waiting.fulfill() }
+            else { submitted("signed-auth") }
+        }, retry: { retried.fulfill() }) { result in
+            if case .success = result {} else { XCTFail("Authenticated history should finish") }
+            completed.fulfill()
+        }
+        inbox.route(text: "[\"CLOSED\",\"year-b\",\"auth-required: aggregator\"]", relay: "wss://relay.example.com")
+        await fulfillment(of: [waiting], timeout: 1)
+        XCTAssertNotNil(inbox.receivedCount("year-b"))
+        inbox.route(text: "[\"AUTH\",\"challenge\"]", relay: "wss://relay.example.com")
+        inbox.route(text: "[\"OK\",\"signed-auth\",true,\"\"]", relay: "wss://relay.example.com")
+        await fulfillment(of: [retried], timeout: 1)
+        inbox.route(text: "[\"EOSE\",\"year-b\"]", relay: "wss://relay.example.com")
+        await fulfillment(of: [completed], timeout: 1)
+    }
+
+    func testRejectedHistoryAuthenticationDoesNotRetry() async {
+        let inbox = YearReviewRelayInbox()
+        let rejected = expectation(description: "auth rejected")
+        inbox.register(id: "year-c", relay: "wss://relay.example.com", authenticate: { _, submitted in
+            submitted("signed-auth")
+        }, retry: { XCTFail("Rejected AUTH must not retry") }) { result in
+            if case .failure(let error) = result { XCTAssertTrue(error.localizedDescription.contains("not allowed")) }
+            else { XCTFail("Rejected AUTH must fail") }
+            rejected.fulfill()
+        }
+        inbox.route(text: "[\"AUTH\",\"challenge\"]", relay: "wss://relay.example.com")
+        inbox.route(text: "[\"OK\",\"signed-auth\",false,\"not allowed\"]", relay: "wss://relay.example.com")
+        await fulfillment(of: [rejected], timeout: 1)
+    }
+
+    @MainActor
+    func testHistoryAuthenticationStaysResponsiveWhileImporterAndDecoderAreHeld() async {
+        let entered = expectation(description: "importer held")
+        let gate = DispatchSemaphore(value: 0)
+        holdImporter(entered: entered, gate: gate)
+        defer { gate.signal() }
+        await fulfillment(of: [entered], timeout: 1)
+        let worker = DispatchQueue(label: "held-history-decoder")
+        let decoderEntered = expectation(description: "decoder held")
+        let decoderGate = DispatchSemaphore(value: 0)
+        worker.async { decoderEntered.fulfill(); _ = decoderGate.wait(timeout: .now() + 5) }
+        defer { decoderGate.signal() }
+        await fulfillment(of: [decoderEntered], timeout: 1)
+        let inbox = YearReviewRelayInbox(worker: worker)
+        let signed = expectation(description: "sign promptly")
+        let cancelled = expectation(description: "cancel promptly")
+        inbox.register(id: "year-d", relay: "wss://relay.example.com", authenticate: { _, submitted in
+            submitted("signed-auth"); signed.fulfill()
+        }, retry: { XCTFail("Cancelled request must not retry") }) { _ in cancelled.fulfill() }
+        let started = Date.now
+        XCTAssertTrue(inbox.route(text: "[\"AUTH\",\"challenge\"]", relay: "wss://relay.example.com"))
+        await fulfillment(of: [signed], timeout: 0.5)
+        XCTAssertTrue(inbox.route(text: "[\"OK\",\"signed-auth\",true,\"\"]", relay: "wss://relay.example.com"))
+        inbox.cancel("year-d")
+        await fulfillment(of: [cancelled], timeout: 0.5)
+        XCTAssertLessThan(Date.now.timeIntervalSince(started), 0.5)
+        XCTAssertFalse(inbox.route(text: "[\"OK\",\"signed-auth\",true,\"\"]", relay: "wss://relay.example.com"))
     }
 
     func testRelayInboxHonorsCompletionHintsAndIgnoresOtherSubscriptions() async throws {

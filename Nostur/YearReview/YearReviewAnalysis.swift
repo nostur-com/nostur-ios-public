@@ -247,7 +247,8 @@ enum YearReviewAnalyzer {
     /// Two streaming passes retain compact content references, never full archive JSON.
     static func analyze(scan: (_ visit: (YearReviewEvent) -> Void) throws -> Void,
                         owner: String, period: YearReviewPeriod, trusted: Set<String>, blocked: Set<String>,
-                        locallyDeleted: Set<String>, zapperKeys: [String: Set<String>]) throws -> YearReviewReport {
+                        locallyDeleted: Set<String>, zapperKeys: [String: Set<String>],
+                        verifiedZap: ((YearReviewEvent) -> YearReviewZap?)? = nil) throws -> YearReviewReport {
         var index: [String: ContentIndex] = [:]
         var latest: [String: String] = [:]
         var versions: [String: Set<String>] = [:]
@@ -299,6 +300,7 @@ enum YearReviewAnalyzer {
         var replies: [String: Set<String>] = [:]
         var days: [String: Set<Int64>] = [:]
         var reactions = Set<String>()
+        var postReactions = Set<String>()
         var reposts = Set<String>()
         var payments = Set<String>()
         var excluded = Set<String>()
@@ -306,12 +308,25 @@ enum YearReviewAnalyzer {
         var unverifiedZaps = 0
         var anonymousZaps = 0
         try scan { event in
-            guard period.contains(event.createdAt), !deleted.contains(event.id) else { return }
+            guard !deleted.contains(event.id) else { return }
+            // Post highlights use the same positive reaction-event total as detail.
+            // Trust, unique people and the year boundary remain relationship rules.
+            let reactionTarget = event.tagValues("e").last ?? event.tagValues("a").last.flatMap(canonical)
+            if event.kind == 7, event.content != "-", !blocked.contains(event.pubkey),
+               !event.tagValues("k").contains(where: { ["4", "14", "15"].contains($0) }),
+               let reactionTarget, posts[reactionTarget] != nil,
+               postReactions.insert(event.id).inserted {
+                posts[reactionTarget]!.reactions += 1
+            }
+            guard period.contains(event.createdAt) else { return }
             // The last e-tag is the actual target; earlier tags may only be
             // inherited thread references. Never fall back to an earlier known post.
             let target = (event.tagValues("e").last ?? event.tagValues("a").last).flatMap(canonical)
             if event.kind == 9735 {
-                guard let zap = YearReviewZap.validate(event, authorized: zapperKeys) else { unverifiedZaps += 1; return }
+                let checkedZap: YearReviewZap?
+                if let verifiedZap { checkedZap = verifiedZap(event) }
+                else { checkedZap = YearReviewZap.validate(event, authorized: zapperKeys) }
+                guard let zap = checkedZap else { unverifiedZaps += 1; return }
                 guard payments.insert(zap.paymentHash).inserted, !blocked.contains(zap.recipient) else { return }
                 if let sender = zap.sender, blocked.contains(sender) { return }
                 let postId = zap.target.flatMap(canonical)
@@ -375,7 +390,6 @@ enum YearReviewAnalyzer {
                 guard reactions.insert(event.pubkey + ":" + target).inserted else { return }
                 if post.pubkey == owner {
                     people[event.pubkey, default: YearReviewPerson(pubkey: event.pubkey)].reactions += 1
-                    if posts[target] != nil { posts[target]!.reactions += 1 }
                 } else if event.pubkey == owner && !blocked.contains(post.pubkey) {
                     liked[post.pubkey, default: YearReviewPerson(pubkey: post.pubkey)].reactions += 1
                 }

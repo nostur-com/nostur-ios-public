@@ -84,6 +84,7 @@ actor YearReviewArchive {
         try execute(database, "CREATE INDEX IF NOT EXISTS events_author ON events(pubkey, kind)")
         try execute(database, "CREATE TABLE IF NOT EXISTS sources (event_id TEXT NOT NULL, relay TEXT NOT NULL, PRIMARY KEY(event_id, relay))")
         try execute(database, "CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, json TEXT NOT NULL)")
+        try execute(database, "CREATE TABLE IF NOT EXISTS verified_zaps (receipt_id TEXT PRIMARY KEY, version INTEGER NOT NULL, json TEXT NOT NULL)")
         try execute(database, "CREATE TABLE IF NOT EXISTS sync_outbox (sequence INTEGER PRIMARY KEY AUTOINCREMENT, event_id TEXT UNIQUE NOT NULL)")
         // Migrate existing archives once, including history captured before sync existed.
         try execute(database, "INSERT OR IGNORE INTO sync_outbox(event_id) SELECT id FROM events WHERE NOT EXISTS (SELECT 1 FROM metadata WHERE key = 'sync-outbox-v1')")
@@ -350,6 +351,30 @@ actor YearReviewArchive {
         }
     }
 
+    /// All verified positive reaction events currently known for this exact post.
+    func reactionCount(to id: String, blocked: Set<String>) async throws -> Int {
+        try await ensureThreadIndex()
+        let deleted = try deletionIds()
+        let coordinate = try event(id: id)?.coordinate
+        return try withDatabase { database in
+            let query = try statement(database, "SELECT DISTINCT e.json FROM events e JOIN detail_refs r ON r.event_id = e.id WHERE e.kind = 7 AND (r.target = ? OR r.target = ?)")
+            defer { sqlite3_finalize(query) }
+            bind(id, at: 1, to: query)
+            bind(coordinate ?? "", at: 2, to: query)
+            var count = 0
+            var status = sqlite3_step(query)
+            while status == SQLITE_ROW {
+                let event = try JSONDecoder().decode(YearReviewEvent.self, from: Data(text(query, 0).utf8))
+                if event.content != "-", (event.tagValues("e").last == id || event.tagValues("e").isEmpty && coordinate != nil && event.tagValues("a").last == coordinate),
+                   !blocked.contains(event.pubkey), !deleted.contains(event.id),
+                   !event.tagValues("k").contains(where: { ["4", "14", "15"].contains($0) }) { count += 1 }
+                status = sqlite3_step(query)
+            }
+            guard status == SQLITE_DONE else { throw YearReviewError.database("reaction count") }
+            return count
+        }
+    }
+
     /// Retrieve only support for the opened post, never hydrate the whole archive.
     func reactions(to id: String, limit: Int = 500) throws -> [YearReviewEvent] {
         try withDatabase { database in
@@ -391,39 +416,82 @@ actor YearReviewArchive {
     }
 
     private func scan(before end: Int64, visit: (YearReviewEvent) -> Void) throws {
-        try withDatabase { database in
-            let query = try statement(database, "SELECT json FROM events WHERE created_at < ? ORDER BY created_at, id")
-            defer { sqlite3_finalize(query) }
-            sqlite3_bind_int64(query, 1, end)
-            var status = sqlite3_step(query)
-            while status == SQLITE_ROW {
-                try Task.checkCancellation()
-                try autoreleasepool {
-                    visit(try JSONDecoder().decode(YearReviewEvent.self, from: Data(text(query, 0).utf8)))
-                }
-                status = sqlite3_step(query)
+        try withDatabase { database in try scan(database: database, before: end, visit: visit) }
+    }
+
+    private func scan(database: OpaquePointer, before end: Int64, visit: (YearReviewEvent) -> Void) throws {
+        let query = try statement(database, "SELECT json FROM events WHERE created_at < ? ORDER BY created_at, id")
+        defer { sqlite3_finalize(query) }
+        sqlite3_bind_int64(query, 1, end)
+        var status = sqlite3_step(query)
+        while status == SQLITE_ROW {
+            try Task.checkCancellation()
+            try autoreleasepool {
+                visit(try JSONDecoder().decode(YearReviewEvent.self, from: Data(text(query, 0).utf8)))
             }
-            guard status == SQLITE_DONE else { throw YearReviewError.database("scan") }
+            status = sqlite3_step(query)
         }
+        guard status == SQLITE_DONE else { throw YearReviewError.database("scan") }
     }
 
     func report(owner: String, period: YearReviewPeriod, trusted: Set<String>, blocked: Set<String>,
                 zapperKeys: [String: Set<String>] = [:]) throws -> YearReviewReport {
         let deleted = try deletionIds()
-        return try YearReviewAnalyzer.analyze(scan: { try scan(before: period.end, visit: $0) },
-            owner: owner, period: period, trusted: trusted, blocked: blocked, locallyDeleted: deleted, zapperKeys: zapperKeys)
+        return try withDatabase { database in
+            try execute(database, "BEGIN")
+            do {
+                let report = try YearReviewAnalyzer.analyze(scan: { try scan(database: database, before: Int64.max, visit: $0) },
+                    owner: owner, period: period, trusted: trusted, blocked: blocked, locallyDeleted: deleted, zapperKeys: zapperKeys,
+                    verifiedZap: { receipt in
+                        // A derived cache failure must never change receipt eligibility.
+                        do { return try self.verifiedZap(receipt, authorized: zapperKeys, database: database) }
+                        catch { return YearReviewZap.validate(receipt, authorized: zapperKeys) }
+                    })
+                try execute(database, "COMMIT")
+                return report
+            } catch {
+                try? execute(database, "ROLLBACK")
+                throw error
+            }
+        }
+    }
+
+    private func verifiedZap(_ receipt: YearReviewEvent, authorized: [String: Set<String>], database: OpaquePointer) throws -> YearReviewZap? {
+        let query = try statement(database, "SELECT json FROM verified_zaps WHERE receipt_id = ? AND version = ?")
+        defer { sqlite3_finalize(query) }
+        bind(receipt.id, at: 1, to: query)
+        sqlite3_bind_int(query, 2, Int32(YearReviewZap.validationVersion))
+        let status = sqlite3_step(query)
+        if status == SQLITE_ROW,
+           let cached = try? JSONDecoder().decode(YearReviewZap.self, from: Data(text(query, 0).utf8)) { return cached }
+        guard status == SQLITE_ROW || status == SQLITE_DONE else { throw YearReviewError.database("zap cache") }
+        guard let validated = YearReviewZap.validate(receipt, authorized: authorized) else { return nil }
+        let insert = try statement(database, "INSERT OR REPLACE INTO verified_zaps(receipt_id, version, json) VALUES (?, ?, ?)")
+        defer { sqlite3_finalize(insert) }
+        bind(receipt.id, at: 1, to: insert)
+        sqlite3_bind_int(insert, 2, Int32(YearReviewZap.validationVersion))
+        bind(String(decoding: try JSONEncoder().encode(validated), as: UTF8.self), at: 3, to: insert)
+        guard sqlite3_step(insert) == SQLITE_DONE else { throw YearReviewError.database("zap cache save") }
+        return validated
     }
 
     func zapSigners(period: YearReviewPeriod) throws -> [String: Set<String>] {
-        try withDatabase { database in
-            let query = try statement(database, "SELECT json FROM events WHERE kind = 9735 AND created_at >= ? AND created_at < ?")
+        let deleted = try deletionIds()
+        return try withDatabase { database in
+            let query = try statement(database, "SELECT e.json, z.json FROM events e LEFT JOIN verified_zaps z ON z.receipt_id = e.id AND z.version = ? WHERE e.kind = 9735 AND e.created_at >= ? AND e.created_at < ?")
             defer { sqlite3_finalize(query) }
-            sqlite3_bind_int64(query, 1, period.start); sqlite3_bind_int64(query, 2, period.end)
+            sqlite3_bind_int(query, 1, Int32(YearReviewZap.validationVersion))
+            sqlite3_bind_int64(query, 2, period.start); sqlite3_bind_int64(query, 3, period.end)
             var result: [String: Set<String>] = [:]
             var status = sqlite3_step(query)
             while status == SQLITE_ROW {
                 try Task.checkCancellation()
+                if (try? JSONDecoder().decode(YearReviewZap.self, from: Data(text(query, 1).utf8))) != nil {
+                    status = sqlite3_step(query)
+                    continue
+                }
                 let event = try JSONDecoder().decode(YearReviewEvent.self, from: Data(text(query, 0).utf8))
+                if deleted.contains(event.id) { status = sqlite3_step(query); continue }
                 if let recipient = event.tagValues("p").first, YearReviewEvent.isHex(recipient, length: 64) { result[recipient, default: []].insert(event.pubkey) }
                 status = sqlite3_step(query)
             }

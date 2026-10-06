@@ -128,6 +128,16 @@ struct YearReviewActivity: Equatable, Sendable {
     }
 }
 
+struct YearReviewSourceFailure: Codable, Equatable, Sendable {
+    enum Status: String, Codable, Sendable { case failed, skipped, coolingDown, capped, unknown }
+    let work: YearReviewWork
+    let status: Status
+    let reason: String
+    let trigger: YearReviewWork?
+    let received: Int
+    let date: Date
+}
+
 struct YearReviewMonthProgress: Identifiable, Equatable, Sendable {
     struct Pass: Equatable, Sendable {
         var completed = 0
@@ -145,6 +155,7 @@ struct YearReviewMonthProgress: Identifiable, Equatable, Sendable {
     var received = 0
     var own: Pass
     var others: Pass
+    var failures: [YearReviewSourceFailure] = []
     var id: Int { month }
 }
 
@@ -153,10 +164,12 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
     let schemaVersion: Int
     let owner: String
     let period: YearReviewPeriod
-    let relays: [RelayDataSnapshot]
+    var relays: [RelayDataSnapshot]
     let trusted: Set<String>
     var pending: [YearReviewWork]
     var failed: [YearReviewWork] = []
+    // Optional for checkpoints written before detailed failure reporting.
+    var sourceFailures: [YearReviewSourceFailure]? = nil
     var phase: Phase = .primary
     var requestsChecked = 0
     var referenceQueriesChecked: Int? = nil
@@ -319,7 +332,29 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
                 }
             }
         }
+        for work in failed where Self.isPrimary(work.category) {
+            let index = calendar.component(.month, from: Date(timeIntervalSince1970: Double(work.until))) - 1
+            guard months.indices.contains(index) else { continue }
+            let detail = sourceFailures?.last(where: { $0.work == work })
+                ?? YearReviewSourceFailure(work: work, status: .unknown,
+                    reason: String(localized: "This saved run did not record a failure reason. Retry this source for updated details."),
+                    trigger: nil, received: 0, date: .distantPast)
+            months[index].failures.append(detail)
+        }
         return months
+    }
+
+    mutating func markRelayUnavailable(_ relay: String, reason: String, trigger: YearReviewWork? = nil, received: Int = 0, now: Date = .now) {
+        let remaining = pending.filter { $0.relay == relay }
+        var details = sourceFailures ?? []
+        for work in remaining {
+            let status: YearReviewSourceFailure.Status = work == trigger ? .failed : trigger == nil ? .coolingDown : .skipped
+            details.append(.init(work: work, status: status, reason: reason, trigger: trigger,
+                                 received: work == trigger ? received : 0, date: now))
+        }
+        sourceFailures = details
+        failed.append(contentsOf: remaining)
+        pending.removeAll { $0.relay == relay }
     }
 
     func readyWorkIndex(excluding unavailable: Set<String>, now: Date = .now) -> Int? {
@@ -344,6 +379,7 @@ enum YearReviewLocalSeed {
         let events: [YearReviewEvent]
         let deletedIds: Set<String>
         let fetchedCount: Int
+        var lastId: String? { (events.map(\.id) + deletedIds).max() }
     }
 
     static func batch(owner: String, period: YearReviewPeriod, offset: Int,
@@ -374,6 +410,19 @@ enum YearReviewLocalSeed {
                                deletedIds: Set(fetched.filter { $0.deletedById != nil }.map(\.id)), fetchedCount: fetched.count)
             context.reset()
             return values
+        }
+    }
+
+    /// Unlike general yearly seeding, post totals include all cached public reactions.
+    static func postReactions(ids: [String], after cursor: String, context: NSManagedObjectContext) async throws -> Batch {
+        try await context.perform {
+            let request = Event.fetchRequest()
+            request.predicate = NSPredicate(format: "kind == 7 AND reactionToId IN %@ AND id > %@ AND sig != nil AND otherId == nil AND groupId == nil AND NOT kTag IN {4,14,15}", ids, cursor)
+            request.sortDescriptors = [NSSortDescriptor(key: "id", ascending: true)]
+            request.fetchLimit = 200
+            let fetched = try context.fetch(request)
+            return Batch(events: fetched.filter { $0.deletedById == nil }.map(snapshot),
+                         deletedIds: Set(fetched.filter { $0.deletedById != nil }.map(\.id)), fetchedCount: fetched.count)
         }
     }
 

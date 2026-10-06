@@ -166,7 +166,7 @@ Reports include mutual gang, top replied-to/reacted-to/zapped posts and zap valu
 most interactions, public conversations, top reply guy, top three supporters,
 reaction givers/recipients, zap givers/recipients, repost/quote leaders and explicit
 mentions above ten. Seven highlight cards are selected by default; additional
-rankings are selectable in Year settings. Reactions/reposts deduplicate per author
+rankings are selectable in Year settings. People rankings deduplicate reactions/reposts per author
 and logical post. Negative reactions, blocks and untrusted incoming activity do
 not inflate support, except cryptographically verified paid zaps from nonblocked senders count regardless of WoT membership. Supporters rank by reactions + reposts + validated zap count.
 
@@ -279,3 +279,77 @@ restoration does not increment counts again. Legacy descendants without root tag
 receive a derived cache root only after archive ancestry establishes their membership.
 Signed original events remain unchanged in the archive. No wholesale archive import
 or new relay requests are introduced by detail preparation.
+
+Most-loved post totals use distinct positive reaction event IDs, matching post
+details, including repeat emoji reactions and self-reactions from nonblocked
+authors. They include all available reactions to posts from the report period;
+the reaction itself need not fall within that period or the people-ranking trust
+filter. Before choosing the winning post, matching cached reactions are merged
+into the archive in bounded asynchronous pages. New detail reaction updates refresh
+the displayed report total from the archive rather than copying a cached footer
+counter. People rankings retain their yearly trust and per-person rules.
+
+Restoring archived reactions suppresses import-time counter increments, since
+the retained footer may already include those pruned rows. Available rows then
+reconcile the footer without adding them twice. Regression coverage reproduces
+10 archived reactions plus 23 cached reactions, checks the winning post has 33,
+and verifies restoring its missing rows leaves the retained footer at 33.
+
+Incomplete-month details retain the actual relay error, triggering request/date
+range, timestamp and sampled received count in the collection checkpoint. The
+month sheet distinguishes the request that failed from requests skipped after
+that failure, cooldown deferrals and unsplittable capped windows. Checkpoints
+without these diagnostics show an explicit unknown-reason message. Retrying
+failed work clears its previous diagnostics; successfully archived batches remain.
+The EOSE watchdog is 18 seconds including connection setup and response processing.
+
+The zap-provider phase shows profile-discovery or recipient progress. It reuses
+saved/contact authorization keys, requests missing profiles from up to three
+relays, and resolves unknown Lightning providers sequentially (six-second HTTPS
+timeout and a one-second pacing pause). The actual signed receipt and invoice
+checks run during report analysis; provider discovery can dominate the wait.
+
+History requests now handle NIP-42 authentication on their own response path.
+Previously their CLOSED auth-required messages bypassed the normal parser's
+authentication handling and were marked failed immediately. With source Auth
+enabled and a signing account available, history signs the connection challenge,
+matches the relay's OK to that signed AUTH ID, and retries the original REQ once.
+It also tries the stored challenge on reused connections. Rejected AUTH and a
+second auth-required closure remain terminal; cancellation drops late retries.
+Small AUTH/OK envelopes bypass the event decoder and Core Data importer queues.
+Tests hold both queues to verify this control path remains responsive.
+
+History sources has a collapsed Relay authentication section. Its per-relay
+choices persist with report preferences and update resumed checkpoints. Signing
+uses the logged-in account rather than the report subject; disabled authentication
+or a read-only account does not silently identify a user to a relay.
+
+Auth settings for app relays are refreshed from current CloudRelay configuration
+when reopening or starting a report. Explicit report changes are stored separately
+from copied relay snapshots, so an old default-off snapshot does not override
+app Auth-on. Report-only sources default to off; Use app authentication defaults
+clears explicit overrides. Legacy preferences lack overrides and inherit current
+app settings. Tests cover app changes in both directions and explicit off values.
+
+Report highlights can be hidden directly using an eye-slash header action. Hidden
+highlights stay in their original position as a compact title/eye row that restores
+them. These controls update the existing persisted card selection, so hidden cards
+are excluded from shared images; share rendering has no editing controls or collapsed
+placeholder rows. The gang-only share format also respects a hidden gang card.
+
+Successfully validated zap receipts are stored in the archive's verified_zaps table,
+keyed by immutable receipt ID and validator version. Reports reuse their sender,
+recipient, target, amount and payment hash without repeating signature/invoice or
+provider checks. Provider discovery scans only receipts without a current verified
+cache entry. A Lightning address change does not invalidate previously verified
+receipts. Current report period, blocks, deletions and payment-hash deduplication
+still apply. Derived cache writes share the report transaction rather than committing
+once per receipt; deleting the archive removes the cache too.
+
+Discovered provider profiles and unsuccessful provider checks also persist locally.
+Identical unresolved checks have a 24-hour cooldown. A changed known endpoint can
+be checked immediately; newly seen signer keys can trigger another check after
+five minutes. Existing authorized keys are accumulated to preserve historical
+providers. Receipt validation version must be bumped when its acceptance rules
+change. Regression coverage reopens the archive, changes current provider keys,
+and verifies cached counts remain while blocks and deletions still suppress them.

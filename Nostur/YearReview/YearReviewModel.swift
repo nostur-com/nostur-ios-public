@@ -12,6 +12,18 @@ struct YearReviewPreferences: Codable, Equatable {
     let shareFormat: YearReviewShareFormat
     let selectedRelays: Set<String>
     let relays: [YearReviewCollection.RelayDataSnapshot]
+    var relayAuthOverrides: [String: Bool]? = nil
+
+    static func applyingAuth(to relays: [RelayData], configured: [RelayData], overrides: [String: Bool]) -> [RelayData] {
+        var defaults: [String: Bool] = [:]
+        for relay in configured { defaults[normalizeRelayUrl(relay.url)] = relay.auth }
+        return relays.map { relay in
+            var value = relay
+            let url = normalizeRelayUrl(relay.url)
+            value.auth = overrides[url] ?? defaults[url] ?? relay.auth
+            return value
+        }
+    }
 
     func save(owner: String, defaults: UserDefaults = .standard) {
         guard let data = try? JSONEncoder().encode(self) else { return }
@@ -71,7 +83,7 @@ final class YearReviewModel {
             case .interactions: "Gathering replies and support…"
             case .references: "Finding missed interactions…"
             case .parents: "Filling in conversations…"
-            case .zaps: "Validating zap receipts…"
+            case .zaps: "Checking zap providers…"
             case .analyzing: "Finding your highlights…"
             case .paused: "History collection paused"
             case .finished: "Your preview is ready"
@@ -85,13 +97,14 @@ final class YearReviewModel {
     var enabledCards = YearReviewCard.defaultSelection { didSet { savePreferences() } }
     var hiddenPeople: Set<String> = [] { didSet { savePreferences() } }
     var selectedShareFormat = YearReviewShareFormat.report { didSet { savePreferences() } }
+    var relayAuthOverrides: [String: Bool] = [:]
     @ObservationIgnored private var restoringPreferences = false
 
     private func savePreferences() {
         guard !owner.isEmpty, !restoringPreferences else { return }
         YearReviewPreferences(cards: enabledCards, hiddenPeople: hiddenPeople,
             shareFormat: selectedShareFormat, selectedRelays: selectedRelays,
-            relays: relays.map { .init(url: $0.url, auth: $0.auth) }).save(owner: owner)
+            relays: relays.map { .init(url: $0.url, auth: $0.auth) }, relayAuthOverrides: relayAuthOverrides).save(owner: owner)
     }
     var postPreviews: [String: YearReviewPostPreview] = [:]
     var report: YearReviewReport?
@@ -105,6 +118,8 @@ final class YearReviewModel {
     }
     var lastResponse: (received: Int, added: Int)?
     var stage: Stage = .ready
+    var zapStatus: LocalizedStringResource?
+    var progressLabel: LocalizedStringResource { stage == .zaps ? zapStatus ?? stage.label : stage.label }
     var isRunning = false
     var archivedCounts = YearReviewArchivedCounts()
     var relayAdditionError: YearReviewRelayAdditionError?
@@ -153,6 +168,8 @@ final class YearReviewModel {
 
     @ObservationIgnored private var profileTask: Task<Void, Never>?
     @ObservationIgnored private var profileUpdates: AnyCancellable?
+    @ObservationIgnored private var reactionUpdates: AnyCancellable?
+    @ObservationIgnored private var reactionRefresh: Task<Void, Never>?
 
     private init() {
         profileUpdates = ViewUpdates.shared.profileUpdates.sink { [weak self] info in
@@ -167,6 +184,11 @@ final class YearReviewModel {
                 if let picture = info.pfpUrl { self.pictures[info.pubkey] = picture }
             }
         }
+        reactionUpdates = ViewUpdates.shared.eventStatChanged
+            .receive(on: RunLoop.main)
+            .filter { [weak self] change in change.likes != nil && change.id == self?.report?.mostReacted?.id }
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .sink { [weak self] _ in self?.refreshMostLovedCount() }
     }
 
     @ObservationIgnored private var livePacing = YearReviewRelayPacing()
@@ -191,7 +213,10 @@ final class YearReviewModel {
         let selectedProvider = YearReviewZapProvider(pubkey: selectedOwner, keys: [],
             lud16: contact?.lud16 ?? (contact == nil ? account.account.lud16 : nil),
             lud06: contact?.lud06 ?? (contact == nil ? account.account.lud06 : nil))
-        guard owner != selectedOwner || viewer != account.pubkey else { return }
+        guard owner != selectedOwner || viewer != account.pubkey else {
+            refreshHistoryRelayAuth()
+            return
+        }
         pause()
         profileTask?.cancel()
         await task?.value
@@ -286,6 +311,7 @@ final class YearReviewModel {
         } catch { if generation == token { errorMessage = error.localizedDescription } }
         guard generation == token else { return }
         let preferences = YearReviewPreferences.load(owner: owner)
+        relayAuthOverrides = preferences?.relayAuthOverrides ?? [:]
         enabledCards = preferences.map {
             ($0.cardSelectionVersion ?? 0) < 2 ? YearReviewCard.defaultSelection : $0.cards
         } ?? YearReviewCard.defaultSelection
@@ -300,6 +326,7 @@ final class YearReviewModel {
         } else {
             selectedRelays.formUnion(receiveRelays)
         }
+        refreshHistoryRelayAuth()
     }
 
     func addRelay(_ value: String) -> Bool {
@@ -316,12 +343,39 @@ final class YearReviewModel {
         }
     }
 
+    func setHistoryRelayAuth(_ url: String, enabled: Bool) {
+        guard !isRunning, let index = relays.firstIndex(where: { $0.url == url }) else { return }
+        relayAuthOverrides[normalizeRelayUrl(url)] = enabled
+        relays[index].auth = enabled
+        savePreferences()
+    }
+
+    func refreshHistoryRelayAuth() {
+        guard !isRunning, !relays.isEmpty else { return }
+        relays = YearReviewPreferences.applyingAuth(to: relays,
+            configured: CloudRelay.fetchAll().map { $0.toStruct() }, overrides: relayAuthOverrides)
+    }
+
+    func resetHistoryRelayAuth() {
+        guard !isRunning else { return }
+        relayAuthOverrides = [:]
+        // Report-only sources have no app default: reset those to off too.
+        relays = relays.map { relay in
+            var value = relay
+            value.auth = false
+            return value
+        }
+        refreshHistoryRelayAuth()
+        savePreferences()
+    }
+
     private func recordArchived(_ result: YearReviewImportResult) {
         archivedCounts.fromYou += result.addedFromYou
         archivedCounts.fromOthers += result.addedFromOthers
     }
 
     func start(download: Bool, resume: Bool = false) {
+        refreshHistoryRelayAuth()
         guard !isRunning, !isDeleting, let archive, !owner.isEmpty else { return }
         if download && selectedRelays.isEmpty {
             errorMessage = String(localized: "Choose at least one relay, or preview your saved history.")
@@ -384,11 +438,17 @@ final class YearReviewModel {
                 }
                 if download {
                     var job = previous ?? YearReviewCollection(owner: owner, period: period, relays: sources, trusted: trust)
+                    // Authentication preferences can change before retrying a
+                    // checkpoint that previously failed with auth-required.
+                    job.relays = job.relays.map { saved in
+                        .init(url: saved.url, auth: relays.first(where: { $0.url == saved.url })?.auth ?? saved.auth)
+                    }
                     job.invalidEvents += invalidSeedEvents
                     if resume && job.pending.isEmpty && !job.failed.isEmpty {
                         let retryCategories = Set(job.failed.map(\.category))
                         job.pending = job.failed
                         job.failed = []
+                        job.sourceFailures = nil
                         // Newly recovered posts can reveal new target IDs and parents.
                         if !retryCategories.isDisjoint(with: [.authored, .incoming, .supportIncoming, .rootIncoming, .outgoing, .outgoingZaps]) { job.phase = .primary }
                         else if !retryCategories.isDisjoint(with: [.references, .quoteReferences, .addressReferences]) { job.phase = .references }
@@ -420,6 +480,8 @@ final class YearReviewModel {
                 stage = .analyzing
                 let reportTrust = download ? collection?.trusted ?? trust : trust
                 let revision = previewRevision
+                let ownPosts = try await archive.inventory(owner: owner, period: period).ownPostIds
+                try await seedCachedPostReactions(ids: ownPosts, archive: archive)
                 let report = try await archive.report(owner: owner, period: period, trusted: reportTrust,
                                                      blocked: CloudBlocked.blockedPubkeys(), zapperKeys: zapperKeys)
                 guard generation == token else { return }
@@ -480,6 +542,8 @@ final class YearReviewModel {
                                      sources: [RelayData], context: NSManagedObjectContext) async throws -> [String: Set<String>] {
         let signers = try await archive.zapSigners(period: period)
         let recipients = Set(signers.keys)
+        zapStatus = "Checking zap providers: 0 of \(recipients.count)…"
+        defer { zapStatus = nil }
         guard !recipients.isEmpty else { return [:] }
         var keys = try await archive.load([String: Set<String>].self, key: "zap-providers") ?? [:]
         let contacts: [YearReviewZapProvider] = try await context.perform {
@@ -487,12 +551,24 @@ final class YearReviewModel {
             query.predicate = NSPredicate(format: "pubkey IN %@", Array(recipients))
             return try context.fetch(query).map { YearReviewZapProvider(pubkey: $0.pubkey, keys: $0.zapperPubkeys, lud16: $0.lud16, lud06: $0.lud06) }
         }
-        var providers = Dictionary(contacts.map { ($0.pubkey, $0) }, uniquingKeysWith: { first, _ in first })
+        var providers = try await archive.load([String: YearReviewZapProvider].self, key: "zap-provider-profiles") ?? [:]
+        var checks = try await archive.load([String: YearReviewZapProviderCheck].self, key: "zap-provider-checks") ?? [:]
+        for contact in contacts {
+            if contact.endpoint == nil, let cached = providers[contact.pubkey] {
+                providers[contact.pubkey] = YearReviewZapProvider(pubkey: contact.pubkey,
+                    keys: contact.keys.union(cached.keys), lud16: cached.lud16, lud06: cached.lud06)
+            } else { providers[contact.pubkey] = contact }
+        }
         if let ownerProvider, providers[owner]?.endpoint == nil, ownerProvider.endpoint != nil {
             providers[owner] = YearReviewZapProvider(pubkey: owner, keys: providers[owner]?.keys ?? [],
                 lud16: ownerProvider.lud16, lud06: ownerProvider.lud06)
         }
-        var unknown = recipients.filter { providers[$0]?.endpoint == nil && keys[$0] == nil }
+        var unknown = recipients.filter {
+            providers[$0]?.endpoint == nil
+                && !signers[$0, default: []].isSubset(of: keys[$0, default: []].union(providers[$0]?.keys ?? []))
+                && (checks[$0]?.shouldRetry(endpoint: nil, signers: signers[$0, default: []]) ?? true)
+        }
+        if !unknown.isEmpty { zapStatus = "Finding Lightning profiles for \(unknown.count) people…" }
         for relay in sources.prefix(3) where !unknown.isEmpty && (collection?.pacing?.delay(for: relay.url) ?? 0) <= 3 {
             let limit = await YearReviewRelayLimits.shared.pageSize(for: relay.url)
             guard limit > 0 else { continue }
@@ -509,15 +585,28 @@ final class YearReviewModel {
                 }
             }
         }
+        try await archive.save(providers, key: "zap-provider-profiles")
+        var checked = 0
         for recipient in recipients.sorted() {
             try Task.checkCancellation()
-            guard let provider = providers[recipient] else { continue }
-            keys[recipient, default: []].formUnion(provider.keys)
+            zapStatus = "Checking zap providers: \(checked + 1) of \(recipients.count)…"
+            defer { checked += 1 }
+            let provider = providers[recipient]
+            keys[recipient, default: []].formUnion(provider?.keys ?? [])
             if signers[recipient, default: []].isSubset(of: keys[recipient, default: []]) { continue }
-            let resolved = await provider.resolve()
-            if !resolved.isEmpty { keys[recipient] = resolved; try await archive.save(keys, key: "zap-providers") }
-            try await Task.sleep(for: .seconds(1))
+            let endpoint = provider?.endpoint?.absoluteString
+            guard checks[recipient]?.shouldRetry(endpoint: endpoint, signers: signers[recipient, default: []]) ?? true else { continue }
+            if let provider {
+                let resolved = await provider.resolve()
+                try Task.checkCancellation()
+                keys[recipient, default: []].formUnion(resolved)
+                try await archive.save(keys, key: "zap-providers")
+            }
+            checks[recipient] = .init(checkedAt: .now, endpoint: endpoint, signers: signers[recipient, default: []])
+            try await archive.save(checks, key: "zap-provider-checks")
+            if provider?.endpoint != nil { try await Task.sleep(for: .seconds(1)) }
         }
+        try await archive.save(keys, key: "zap-providers")
         return keys
     }
 
@@ -528,6 +617,7 @@ final class YearReviewModel {
         let timeLimitMessage = String(localized: "Your month scans are saved. Some extra checks remain; resume later to improve the report.")
         job.issues.removeAll { $0 == timeLimitMessage }
         var unavailableThisRun = Set<String>()
+        var failuresThisRun: [String: YearReviewSourceFailure] = [:]
         if let previous = try await archive.load(YearReviewRelayPacing.self, key: "relay-pacing") {
             var pacing = job.pacing ?? YearReviewRelayPacing()
             for (relay, date) in previous.nextRequest { pacing.nextRequest[relay] = max(date, pacing.nextRequest[relay, default: .distantPast]) }
@@ -611,9 +701,12 @@ final class YearReviewModel {
             let cooled = job.pending.filter { (job.pacing ?? YearReviewRelayPacing()).delay(for: $0.relay) > 3 }.map(\.relay)
             unavailableThisRun.formUnion(cooled)
             if !cooled.isEmpty { job.recordIssue(String(localized: "A relay is cooling down. Resume later to collect its remaining history.")) }
-            let unavailable = job.pending.filter { unavailableThisRun.contains($0.relay) }
-            job.failed.append(contentsOf: unavailable)
-            job.pending.removeAll { unavailableThisRun.contains($0.relay) }
+            for relay in Set(job.pending.filter { unavailableThisRun.contains($0.relay) }.map(\.relay)) {
+                let cause = failuresThisRun[relay]
+                job.markRelayUnavailable(relay,
+                    reason: cause?.reason ?? String(localized: "This relay is cooling down after an earlier failure. Retry later."),
+                    trigger: cause?.work)
+            }
             if job.pending.isEmpty { continue }
             let batch = Array(job.nextBatch(excluding: unavailableThisRun).prefix(1_200 - requestsThisRun))
             guard !batch.isEmpty else { continue }
@@ -669,6 +762,10 @@ final class YearReviewModel {
                                 let parts = work.adaptiveSubdivisions(timeZoneIdentifier: zone)
                                 if parts.isEmpty {
                                     job.failed.append(work)
+                                    job.sourceFailures = job.sourceFailures ?? []
+                                    job.sourceFailures?.append(.init(work: work, status: .capped,
+                                        reason: String(localized: "The relay capped a one-second history window. Splitting it further cannot safely recover the remaining items."),
+                                        trigger: work, received: page.events.count, date: .now))
                                     job.recordIssue(String(localized: "A source capped one timestamp. Some history remains unresolved."))
                                 } else { job.pending.insert(contentsOf: parts, at: 0) }
                             } else if !page.events.isEmpty {
@@ -679,12 +776,14 @@ final class YearReviewModel {
                         job.requestsChecked += 1
                         if job.phase == .references { job.referenceQueriesChecked = (job.referenceQueriesChecked ?? 0) + 1 }
                         job.recordMonthlyQuery(work)
-                    case .failure:
+                    case .failure(let error):
                         livePacing.failed(work.relay)
                         job.pacing = livePacing
                         unavailableThisRun.insert(work.relay)
-                        job.failed.append(contentsOf: job.pending.filter { $0.relay == work.relay })
-                        job.pending.removeAll { $0.relay == work.relay }
+                        let received = activities[work.relay]?.received ?? 0
+                        failuresThisRun[work.relay] = .init(work: work, status: .failed,
+                            reason: error.localizedDescription, trigger: work, received: received, date: .now)
+                        job.markRelayUnavailable(work.relay, reason: error.localizedDescription, trigger: work, received: received)
                         job.recordIssue(String(localized: "One or more relays could not finish. Retry incomplete sources to gather more history."))
                     }
                     requestsThisRun += 1
@@ -773,6 +872,37 @@ final class YearReviewModel {
         }
     }
 
+    private func seedCachedPostReactions(ids: [String], archive: YearReviewArchive) async throws {
+        let cache = DataProvider.shared().newTaskContext()
+        for targets in ids.chunks(of: 128) {
+            var cursor = ""
+            while true {
+                try Task.checkCancellation()
+                let page = try await YearReviewLocalSeed.postReactions(ids: targets, after: cursor, context: cache)
+                guard let last = page.lastId, last != cursor else { break }
+                cursor = last
+                _ = try await archive.ingest(page.events, source: "local-post-reactions")
+                try await archive.recordLocalDeletions(page.deletedIds)
+                await cache.perform { cache.reset() }
+            }
+        }
+    }
+
+    private func refreshMostLovedCount() {
+        guard let post = report?.mostReacted, let archive else { return }
+        reactionRefresh?.cancel()
+        let token = generation
+        reactionRefresh = Task {
+            do {
+                try await seedCachedPostReactions(ids: [post.id], archive: archive)
+                let count = try await archive.reactionCount(to: post.id, blocked: CloudBlocked.blockedPubkeys())
+                guard !Task.isCancelled, generation == token, report?.mostReacted?.id == post.id else { return }
+                report?.mostReacted?.reactions = count
+            } catch is CancellationError { }
+            catch { if generation == token { errorMessage = error.localizedDescription } }
+        }
+    }
+
     private func prepareHighlightedDetails(report: YearReviewReport, archive: YearReviewArchive) {
         detailTask?.cancel()
         let posts = enabledCards.compactMap { $0.post(in: report) }.uniqued(on: { $0.id })
@@ -795,9 +925,10 @@ final class YearReviewModel {
         let blocked = AppState.shared.bgAppState.blockedPubkeys
         try await YearReviewDetailHydrator.restore(post: post, archive: archive, blocked: blocked, context: bg())
         displayedPost?.loadGroupedReplies()
+        refreshMostLovedCount()
     }
 
-    func pause() { task?.cancel(); detailTask?.cancel() }
+    func pause() { task?.cancel(); detailTask?.cancel(); reactionRefresh?.cancel() }
 
     func invalidatePreview() {
         profileTask?.cancel()
@@ -864,6 +995,7 @@ final class YearReviewModel {
             pause()
             await task?.value
             await detailTask?.value
+            await reactionRefresh?.value
         }
         // Finish pending capture first so old queued events cannot immediately
         // recreate an archive that the user just cleared. A failing archive can

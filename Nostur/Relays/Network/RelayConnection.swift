@@ -972,7 +972,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     private var didAuth: Bool = false
     private var didWaitCount: Int = 0 // relayData.auth == true. Waiting 0.25 sec (if this happens too much, we don't wait anymore)
     
-    public func handleAuth(_ message: String) {
+    public func handleAuth(_ message: String, accountPubkey: String? = nil, whenSubmitted: ((String) -> Void)? = nil) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
             guard let messageData = message.data(using: .utf8) else { return }
@@ -984,13 +984,22 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             else { return }
 
             self.lastAuthChallenge = authMessage[1]
-            self.authSubject.send()
+            if let whenSubmitted {
+                self.sendAuthResponse(accountPubkey: accountPubkey, whenSubmitted: whenSubmitted)
+            } else {
+                self.authSubject.send()
+            }
         }
     }
 
-    public func sendAuthResponse(usingAccount: CloudAccount? = nil, force: Bool = false) {
+    public func sendAuthResponse(usingAccount: CloudAccount? = nil, force: Bool = false, accountPubkey: String? = nil, whenSubmitted: ((String) -> Void)? = nil) {
         DispatchQueue.main.async { [weak self] in
-            guard let self, let authAccount = resolveAuthAccount(relayData, usingAccount: usingAccount) else { return }
+            guard let self else { return }
+            let requestedAccount = accountPubkey.flatMap { pubkey in
+                AccountsState.shared.accounts.first { $0.publicKey == pubkey && $0.isFullAccount }
+            }
+            guard accountPubkey == nil || requestedAccount != nil,
+                  let authAccount = resolveAuthAccount(relayData, usingAccount: requestedAccount ?? usingAccount) else { return }
             guard !self.relayData.excludedPubkeys.contains(authAccount.publicKey) else { return }
             
 #if DEBUG
@@ -1012,6 +1021,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     if authAccount.isNC {
                         authResponse = authResponse.withId()
                         RemoteSignerManager.shared.requestSignature(forEvent: authResponse, usingAccount: authAccount, whenSigned: { signedAuthResponse in
+                            whenSubmitted?(signedAuthResponse.id)
                             self.sendMessage(ClientMessage.auth(event: signedAuthResponse), bypassQueue: true)
                             self.queue.async(flags: .barrier) { [weak self] in
                                 guard let self else { return }
@@ -1021,6 +1031,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                         })
                     }
                     else if let signedAuthResponse = try? authAccount.signEvent(authResponse) {
+                        whenSubmitted?(signedAuthResponse.id)
                         self.sendMessage(ClientMessage.auth(event: signedAuthResponse), bypassQueue: true)
                         self.queue.async(flags: .barrier) { [weak self] in
                             guard let self else { return }

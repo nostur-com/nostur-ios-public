@@ -55,7 +55,7 @@ struct YearReviewView: View {
                             }
                             .buttonStyle(.borderless)
                             ProgressView().controlSize(.small)
-                            Text(model.stage.label).font(.subheadline.weight(.semibold))
+                            Text(model.progressLabel).font(.subheadline.weight(.semibold))
                         }
                         YearReviewMonthCalendarView(collection: model.collection, period: model.currentPeriod, active: model.calendarActivity, activities: model.activeActivities)
                         if model.stage == .references, let collection = model.collection, collection.phase == .references {
@@ -68,7 +68,7 @@ struct YearReviewView: View {
                         }.font(.caption).monospacedDigit().foregroundStyle(.secondary)
                     }
                     .yearReviewCard()
-                    Label("You can browse Nostur while collection runs. Keep the app on screen; if you close it, continue later from saved progress.", systemImage: "iphone")
+                    Label("You can use Nostur while collection runs. Keep the app on screen; or, if you close it, continue later from saved progress.", systemImage: "iphone")
                         .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, 4)
                 } else if model.report == nil {
@@ -87,9 +87,13 @@ struct YearReviewView: View {
                 }
                 if let report = model.report {
                     YearReviewHighlightsView(report: report, names: model.names, pictures: model.pictures,
-                        enabledCards: model.enabledCards, hiddenPeople: model.hiddenPeople, previews: model.postPreviews, openPost: openPost, openProfile: openProfile)
+                        enabledCards: model.enabledCards, hiddenPeople: model.hiddenPeople, previews: model.postPreviews, openPost: openPost, openProfile: openProfile,
+                        toggleCard: { card in
+                            if model.enabledCards.contains(card) { model.enabledCards.remove(card) }
+                            else { model.enabledCards.insert(card) }
+                        })
                     if !hasShareableCard {
-                        Text("No highlights to show yet. Try gathering more history or adjusting your selection in settings.")
+                        Text("Show a section to include it in your shared report, or gather more history.")
                             .foregroundStyle(.secondary).yearReviewCard()
                     }
                 }
@@ -121,6 +125,7 @@ struct YearReviewView: View {
             }
         }
         .task(id: account.pubkey) {
+            model.refreshHistoryRelayAuth()
             guard openedAccount != account.pubkey else { return }
             if model.viewer != account.pubkey || model.owner != account.pubkey { await model.configure(account: account) }
             if !model.isRunning, let initialYear, model.year != initialYear { model.year = initialYear }
@@ -268,7 +273,7 @@ struct YearReviewView: View {
 
     private var hasShareableCard: Bool {
         guard let report = model.report else { return false }
-        let cards: Set<YearReviewCard> = model.selectedShareFormat == .gang ? [.gang] : model.enabledCards
+        let cards: Set<YearReviewCard> = model.selectedShareFormat == .gang ? model.enabledCards.intersection([.gang]) : model.enabledCards
         return cards.contains { card in
             card.hasHighlight(in: report) || card.people(in: report).contains { !model.hiddenPeople.contains($0.pubkey) }
         }
@@ -309,7 +314,7 @@ struct YearReviewView: View {
     private func renderShare() {
         guard let report = model.report, hasShareableCard else { return }
         isRendering = true
-        let cards: Set<YearReviewCard> = model.selectedShareFormat == .gang ? [.gang] : model.enabledCards
+        let cards: Set<YearReviewCard> = model.selectedShareFormat == .gang ? model.enabledCards.intersection([.gang]) : model.enabledCards
         let hidden = model.hiddenPeople
         let names = model.names
         let pictures = model.pictures
@@ -490,6 +495,23 @@ private struct YearReviewSourcesView: View {
                 }
                 if invalidRelay { Text(model.relayAdditionError?.label ?? "Enter a valid ws:// or wss:// relay URL.").foregroundStyle(.secondary) }
             }
+            Section {
+                DisclosureGroup("Relay authentication") {
+                    ForEach(model.relays) { relay in
+                        Toggle(relay.url, isOn: Binding(
+                            get: { model.relays.first(where: { $0.url == relay.url })?.auth ?? false },
+                            set: { model.setHistoryRelayAuth(relay.url, enabled: $0) }
+                        ))
+                    }
+                    if !model.relayAuthOverrides.isEmpty {
+                        Button("Use app authentication defaults") { model.resetHistoryRelayAuth() }
+                    }
+                    Text("App relays inherit their Auth setting unless you change it here. Report-only relays start with Auth off.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                    Text("Authenticate with your logged-in signing account. This identifies your public key to the relay, including when gathering a report for someone else.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+            }
         }
         .disabled(model.isRunning)
         .navigationTitle("History sources")
@@ -524,7 +546,7 @@ private struct YearReviewAboutView: View {
                 .yearReviewCard()
 
                 YearReviewAboutRow(title: "While gathering history", icon: "iphone",
-                    detail: "You can browse Nostur while collection runs. Keep the app on screen; if you close it, continue later from saved progress.")
+                    detail: "You can use Nostur while collection runs. Keep the app on screen; or, if you close it, continue later from saved progress.")
                     .yearReviewCard()
 
                 if let report {
@@ -542,9 +564,9 @@ private struct YearReviewAboutView: View {
 
                 VStack(alignment: .leading, spacing: 14) {
                     YearReviewAboutDetail(title: "How highlights are counted", icon: "trophy") {
-                        Text("Reactions and reposts count each person once per post. Supporters combine reactions, reposts and validated zaps.")
+                        Text("Your most-loved post counts positive reaction events, like post details. People rankings count each person once per post. Supporters combine reactions, reposts and validated zaps.")
                         Text("You got people talking includes direct replies, sub-replies and your own replies in the collected conversation. People are counted once per thread. Relationship highlights count direct exchanges.")
-                        Text("Counts cover the report period and collected history, with your trust filters applied. Post details can include more recent reactions, people outside those filters, or multiple reactions from the same person.")
+                        Text("People rankings cover the report period with your trust filters applied. Most-loved post totals include all available positive reactions to posts from that year and update when more reactions are found.")
                         Text("Your most active day counts public posts, including replies, pictures, videos, voice messages and articles. Reactions, reposts and zaps are not posts. Edited articles count once on their original publication day. The daily average includes every calendar day covered by the report, including days without posts.")
                         Text("The mentions highlight needs more than ten explicit mentions in public posts or comments. Threading tags alone do not count.")
                     }
@@ -555,6 +577,8 @@ private struct YearReviewAboutView: View {
                     Divider()
                     YearReviewAboutDetail(title: "Zap validation", icon: "bolt") {
                         Text("Lightning totals use provider-authorized receipts. Anonymous zaps contribute to post totals without identifying a sender.")
+                        Text("Checking zap providers may fetch missing profiles from relays and contact Lightning services to verify who signed the receipts. Slow services and missing provider information can make this step take longer. Saved provider keys are reused.")
+                        Text("Verified receipts stay cached even if a Lightning address changes. Unresolved provider checks are normally retried after 24 hours; a changed address or a new signer can trigger an earlier check.")
                         Text("Older outgoing receipts without a sender tag can be included when known locally, but may not be discoverable on relays. Receipts from historical providers we cannot authorize are excluded.")
                     }
                 }
@@ -666,10 +690,11 @@ private struct YearReviewHighlightsView: View {
     var openPost: ((YearReviewPost) -> Void)? = nil
     var openProfile: ((String) -> Void)? = nil
     var hidePerson: ((String) -> Void)? = nil
+    var toggleCard: ((YearReviewCard) -> Void)? = nil
 
     private var visibleCards: [YearReviewCard] {
         YearReviewCard.allCases.filter { card in
-            enabledCards.contains(card) && (card.hasHighlight(in: report)
+            (enabledCards.contains(card) || toggleCard != nil) && (card.hasHighlight(in: report)
                 || card.people(in: report).contains { !hiddenPeople.contains($0.pubkey) })
         }
     }
@@ -677,12 +702,40 @@ private struct YearReviewHighlightsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             ForEach(visibleCards) { card in
-                YearReviewHighlightCard(card: card, post: card.post(in: report), activeDay: card == .activeDay ? report.mostActiveDay : nil, averagePostsPerDay: report.averagePostsPerDay, dateFormat: report.period.dateFormat,
-                    people: card.people(in: report).filter { !hiddenPeople.contains($0.pubkey) },
-                    names: names, pictures: pictures, preview: card.post(in: report).flatMap { previews[$0.id] }, openPost: openPost, openProfile: openProfile, hidePerson: hidePerson)
-                    .yearReviewCard()
+                if !enabledCards.contains(card), let toggleCard {
+                    YearReviewCollapsedCard(card: card, show: { toggleCard(card) })
+                } else {
+                    YearReviewHighlightCard(card: card, post: card.post(in: report), activeDay: card == .activeDay ? report.mostActiveDay : nil, averagePostsPerDay: report.averagePostsPerDay, dateFormat: report.period.dateFormat,
+                        people: card.people(in: report).filter { !hiddenPeople.contains($0.pubkey) },
+                        names: names, pictures: pictures, preview: card.post(in: report).flatMap { previews[$0.id] }, openPost: openPost, openProfile: openProfile, hidePerson: hidePerson,
+                        hide: toggleCard.map { toggle in { toggle(card) } })
+                        .yearReviewCard()
+                }
             }
         }
+    }
+}
+
+private struct YearReviewCollapsedCard: View {
+    @Environment(\.theme) private var theme
+    let card: YearReviewCard
+    let show: () -> Void
+
+    var body: some View {
+        Button(action: show) {
+            HStack(spacing: 12) {
+                Text(card.title).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                Spacer(minLength: 0)
+                Image(systemName: "eye").foregroundStyle(theme.accent)
+                    .frame(width: 32, height: 32)
+            }
+            .padding(.horizontal, 18).padding(.vertical, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(theme.background, in: RoundedRectangle(cornerRadius: 12))
+            .contentShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Show \(Text(card.title)) in your report"))
     }
 }
 
@@ -700,11 +753,23 @@ private struct YearReviewHighlightCard: View {
     let openPost: ((YearReviewPost) -> Void)?
     let openProfile: ((String) -> Void)?
     let hidePerson: ((String) -> Void)?
+    var hide: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Label { Text(card.title).font(.title3.bold()) } icon: {
-                Image(systemName: card.icon).foregroundStyle(theme.accent)
+            HStack(alignment: .top, spacing: 12) {
+                Label { Text(card.title).font(.title3.bold()) } icon: {
+                    Image(systemName: card.icon).foregroundStyle(theme.accent)
+                }
+                if let hide {
+                    Spacer(minLength: 0)
+                    Button(action: hide) {
+                        Image(systemName: "eye.slash").foregroundStyle(.secondary)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("Hide \(Text(card.title)) from your report"))
+                }
             }
             if let activeDay {
                 YearReviewActiveDayContent(day: activeDay, average: averagePostsPerDay, dateFormat: dateFormat)
@@ -722,7 +787,7 @@ private struct YearReviewHighlightCard: View {
                 } else { postPreview(post) }
                 switch card {
                 case .conversation: Text("\(post.replies) replies · \(post.respondents) people").font(.headline)
-                case .mostReacted: Text("\(post.reactions) people reacted").font(.headline)
+                case .mostReacted: Text("\(post.reactions) reactions").font(.headline)
                 case .mostZapped: Text("\(post.zaps) zaps").font(.headline)
                 case .mostZapValue: Text("\((post.millisats / 1000).formatted()) sats · \(post.zaps) zaps").font(.headline)
                 default: EmptyView()
@@ -1005,10 +1070,10 @@ private struct YearReviewMonthCell: View {
         .onTapGesture {
             if incomplete { showingIncompleteSources = true }
         }
-        .alert("Incomplete month sources", isPresented: $showingIncompleteSources) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text("Your downloaded items are saved. These relays did not finish every request for this month. Retry incomplete sources to gather more history.\n\n\(Set(month.own.failedRelays + month.others.failedRelays).sorted().joined(separator: "\n"))")
+        .sheet(isPresented: $showingIncompleteSources) {
+            NavigationStack {
+                YearReviewIncompleteSourcesView(month: month)
+            }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(month.date, format: monthStyle))
@@ -1022,5 +1087,105 @@ private struct YearReviewMonthCell: View {
         if bothFinished { return Text("Both month passes checked") }
         if month.own.finished { return Text("Your content checked; interactions queued") }
         return Text("Queued")
+    }
+}
+
+@available(iOS 17.0, *)
+private struct YearReviewIncompleteSourcesView: View {
+    @Environment(\.dismiss) private var dismiss
+    let month: YearReviewMonthProgress
+    private let relays: [String]
+
+    init(month: YearReviewMonthProgress) {
+        self.month = month
+        relays = Set(month.failures.map { $0.work.relay }).sorted()
+    }
+
+    var body: some View {
+        List {
+            Section {
+                Label("Saved history is kept", systemImage: "checkmark.shield")
+                Text("One failed request can pause a relay for the rest of this run. Other months may be skipped without being attempted. Other relays can still finish.")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            ForEach(relays, id: \.self) { relay in
+                YearReviewSourceFailureSection(relay: relay,
+                    failures: month.failures.filter { $0.work.relay == relay },
+                    timeZoneIdentifier: month.timeZoneIdentifier)
+            }
+            Section {
+                Text("Use Continue gathering on the report screen to resume remaining checks and retry incomplete sources. Successful saved batches are kept. Items buffered in a failed request may need to be downloaded again.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+        .navigationTitle("Incomplete sources")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button { dismiss() } label: {
+                    Label("Done", systemImage: "checkmark").labelStyle(.iconOnly)
+                }
+            }
+        }
+    }
+}
+
+@available(iOS 17.0, *)
+private struct YearReviewSourceFailureSection: View {
+    let relay: String
+    let timeZoneIdentifier: String
+    private let failure: YearReviewSourceFailure?
+    private let failed: Int
+    private let skipped: Int
+    private let cooling: Int
+
+    init(relay: String, failures: [YearReviewSourceFailure], timeZoneIdentifier: String) {
+        self.relay = relay
+        self.timeZoneIdentifier = timeZoneIdentifier
+        failure = failures.first { $0.status == .failed || $0.status == .capped } ?? failures.first
+        failed = failures.filter { $0.status == .failed || $0.status == .capped }.count
+        skipped = failures.filter { $0.status == .skipped }.count
+        cooling = failures.filter { $0.status == .coolingDown }.count
+    }
+
+    var body: some View {
+        Section {
+            if failed > 0 { Label("\(failed) requests failed in this month", systemImage: "exclamationmark.triangle") }
+            if skipped > 0 { Label("\(skipped) requests skipped in this month", systemImage: "forward.end") }
+            if cooling > 0 { Label("\(cooling) requests deferred for cooldown", systemImage: "clock") }
+            if let failure {
+                Text(failure.reason).font(.subheadline).textSelection(.enabled)
+                if let trigger = failure.trigger {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Request that stopped this source").font(.caption).foregroundStyle(.secondary)
+                        Text(YearReviewActivity(work: trigger, timeZoneIdentifier: timeZoneIdentifier, step: .fetching).dateRange)
+                            .font(.subheadline.weight(.medium))
+                        Text(requestLabel(trigger.category)).font(.subheadline)
+                        if failure.status == .failed, failure.received > 0 {
+                            Text("At least \(failure.received) items received before the request stopped")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                if failure.date != .distantPast {
+                    Text(failure.date, format: .dateTime.month().day().hour().minute())
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Text(relay).textCase(nil)
+        }
+    }
+
+    private func requestLabel(_ category: YearReviewWork.Category) -> LocalizedStringResource {
+        switch category {
+        case .authored: "Your posts and interactions"
+        case .incoming, .supportIncoming: "Incoming replies and support"
+        case .rootIncoming: "Comments on your posts"
+        case .outgoingZaps: "Zaps you sent"
+        case .outgoing: "Your reactions and reposts"
+        case .references, .quoteReferences, .addressReferences: "References to your posts"
+        case .parents: "Conversation parents"
+        }
     }
 }

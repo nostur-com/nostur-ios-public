@@ -34,7 +34,12 @@ enum YearReviewDetailHydrator {
                         if let existing = Event.fetchEvent(id: snapshot.id, context: context) { event = existing }
                         else {
                             let original = try JSONDecoder().decode(NEvent.self, from: JSONEncoder().encode(snapshot))
-                            event = Event.saveEvent(event: original, context: context)
+                            event = Event.saveEvent(event: original, context: context, countReaction: false)
+                        }
+                        if snapshot.kind == 7, snapshot.tagValues("e").isEmpty,
+                           let coordinate = post.coordinate, snapshot.tagValues("a").last == coordinate {
+                            event.reactionToId = post.id
+                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Reactions, eventId: post.id))
                         }
                         // Legacy replies may name only their immediate parent. We have
                         // verified their ancestor chain in the archive's thread index;
@@ -48,6 +53,21 @@ enum YearReviewDetailHydrator {
                 }
                 await Task.yield()
             }
+        }
+        // Restored reactions may already be represented by the retained footer
+        // counter. Reconcile with actual rows instead of incrementing it again.
+        try await context.perform {
+            let query = Event.fetchRequest()
+            query.predicate = NSPredicate(format: "kind == 7 AND reactionToId == %@ AND deletedById == nil AND groupId == nil AND otherId == nil AND content != %@ AND NOT pubkey IN %@ AND NOT kTag IN {4,14,15}", post.id, "-", blocked)
+            let available = Set(try context.fetch(query).map(\.id)).count
+            if let target = Event.fetchEvent(id: post.id, context: context) {
+                let count = max(target.likesCount, Int64(available))
+                if count != target.likesCount {
+                    target.likesCount = count
+                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: post.id, likes: count))
+                }
+            }
+            if context.hasChanges { try context.save() }
         }
     }
 }
