@@ -226,55 +226,30 @@ struct Maintenance {
         //        }
     }
     
-    static func audioDownloadCacheCleanUp() {
-        let tmpPath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let ownRecordingsPath = tmpPath.appendingPathComponent("a0-own-recordings")
-        let otherAudioFilesPath = tmpPath.appendingPathComponent("a0")
-        
-        // Define 8-hour threshold
-        let eightHoursAgo = Date().addingTimeInterval(-2 * 60 * 60)
-        
-        // Clean up ownRecordingsPath
-        if FileManager.default.fileExists(atPath: ownRecordingsPath.path) {
-            do {
-                let fileURLs = try FileManager.default.contentsOfDirectory(
-                    at: ownRecordingsPath,
-                    includingPropertiesForKeys: [.creationDateKey],
-                    options: [.skipsHiddenFiles]
-                )
-                for fileURL in fileURLs {
-                    let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
-                    if let creationDate = attributes[.creationDate] as? Date,
-                       creationDate < eightHoursAgo {
-                        try FileManager.default.removeItem(at: fileURL)
+    @MainActor
+    static func cleanUpInactiveWoTFiles() async {
+        do {
+            let accounts = try viewContext().fetch(CloudAccount.fetchRequest())
+            let pubkeys = Set(accounts.map { $0.publicKey })
+            await Task.detached(priority: .utility) {
+                do {
+                    let removed = try WebOfTrustSnapshotStore().removeInactiveSnapshots(activeAccountPubkeys: pubkeys)
+                    if removed > 0 {
+                        L.maintenance.info("Removed \(removed) inactive account WoT files")
                     }
+                } catch {
+                    L.maintenance.error("Could not clean up inactive WoT files: \(error.localizedDescription)")
                 }
-            } catch {
-                L.maintenance.error("🧹🧹 🔴🔴 Error cleaning own recordings cache: \(error)")
-            }
-        }
-        
-        // Clean up otherAudioFilesPath
-        if FileManager.default.fileExists(atPath: otherAudioFilesPath.path) {
-            do {
-                let fileURLs = try FileManager.default.contentsOfDirectory(
-                    at: otherAudioFilesPath,
-                    includingPropertiesForKeys: [.creationDateKey],
-                    options: [.skipsHiddenFiles]
-                )
-                for fileURL in fileURLs {
-                    let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
-                    if let creationDate = attributes[.creationDate] as? Date,
-                       creationDate < eightHoursAgo {
-                        try FileManager.default.removeItem(at: fileURL)
-                    }
-                }
-            } catch {
-                L.maintenance.error("🧹🧹 🔴🔴 Error cleaning other audio files cache: \(error)")
-            }
+            }.value
+        } catch {
+            L.maintenance.error("Could not fetch accounts for WoT file cleanup: \(error.localizedDescription)")
         }
     }
-    
+
+    static func audioDownloadCacheCleanUp() {
+        TemporaryMediaFiles.shared.cleanUpAbandonedFiles()
+    }
+
     // NIP-40: delete DM events (NIP-04 kind 4, NIP-17 kind 14/15) whose expiration timestamp has passed.
     // Disappearing messages is opt-in per conversation: only conversations whose CloudDMState has it
     // enabled are purged (any local account opting in counts). Deletion is permanent: turning the

@@ -424,7 +424,7 @@ struct DMConversationView: View {
     }
 
     private func pendingAttachmentDirectory() throws -> URL {
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("dm-attachments", isDirectory: true)
+        let directory = TemporaryMediaFiles.shared.directory(named: "dm-attachments")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: nil)
         return directory
     }

@@ -61,8 +61,7 @@ class AudioRecorder: ObservableObject {
             return
         }
         
-        let tmpPath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let audioFilename = tmpPath.appendingPathComponent("a0-own-recordings").appendingPathComponent("\(UUID().uuidString).m4a")
+        let audioFilename = TemporaryMediaFiles.shared.makeURL(extension: "m4a")
         try? FileManager.default.createDirectory(at: audioFilename.deletingLastPathComponent(), withIntermediateDirectories: true)
         recordingURL = audioFilename
         
@@ -107,6 +106,7 @@ class AudioRecorder: ObservableObject {
                 isPreparingRecording = false
                 isRecording = false
                 recordingTask = nil
+                try? FileManager.default.removeItem(at: audioFilename)
                 recordingURL = nil
                 try? await AudioSessionController.shared.deactivate(owner: request)
                 if !(error is CancellationError) {
@@ -153,23 +153,23 @@ class AudioRecorder: ObservableObject {
         }
     }
 
+    @MainActor
     func resetRecording() {
-        Task { @MainActor in
-            recordingURL = nil
-            waitingForSamples = false
-            recordingSince = nil
-            duration = 0
-            samplesFromMic = []
-            samples = []
-        }
-        
-        // Clean up downloaded file
-        guard let recordingURL else { return }
-        Task.detached(priority: .medium) {
-            try? FileManager.default.removeItem(at: recordingURL)
+        let fileToDelete = recordingURL
+        recordingURL = nil
+        waitingForSamples = false
+        recordingSince = nil
+        duration = 0
+        samplesFromMic = []
+        samples = []
+
+        if let fileToDelete {
+            Task.detached(priority: .utility) {
+                try? FileManager.default.removeItem(at: fileToDelete)
+            }
         }
     }
-    
+
     @Published var waveformData: [CGFloat] = []
     @Published var bars: [CGFloat] = []
     

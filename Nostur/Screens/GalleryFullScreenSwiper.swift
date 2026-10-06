@@ -335,8 +335,7 @@ struct GalleryFullScreenSwiper: View {
     }
     
     private func shareGif(_ gifData: Data) {
-        let temporaryDirectory = FileManager.default.temporaryDirectory
-        let gifFileURL = temporaryDirectory.appendingPathComponent("nostur_shared_\(UUID().uuidString).gif")
+        let gifFileURL = TemporaryMediaFiles.shared.makeURL(extension: "gif")
         
         do {
             try gifData.write(to: gifFileURL)
@@ -521,8 +520,7 @@ struct GalleryFullScreenSwiper: View {
     }
     
     private func writeGifAndSave(_ gifData: Data) {
-        let temporaryDirectory = FileManager.default.temporaryDirectory
-        let gifFileURL = temporaryDirectory.appendingPathComponent("temp_gif.gif")
+        let gifFileURL = TemporaryMediaFiles.shared.makeURL(extension: "gif")
         
         do {
             try gifData.write(to: gifFileURL)

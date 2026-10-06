@@ -82,6 +82,17 @@ struct iOSApp: App {
     
     private let themes: Themes = .default
     
+    init() {
+        let temporaryMedia = TemporaryMediaFiles.shared
+        Task.detached(priority: .utility) {
+            temporaryMedia.cleanUpAbandonedFiles()
+        }
+        // Also sweep when no account is logged in (the onboarding screen).
+        Task { @MainActor in
+            await Maintenance.cleanUpInactiveWoTFiles()
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             AppView()

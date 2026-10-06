@@ -249,12 +249,15 @@ class AccountsState: ObservableObject {
         DataProvider.shared().viewContext.delete(account)
         DataProvider.shared().saveToDiskNow(.viewContext)
         
-        guard logoutAccountPubkey == self.activeAccountPublicKey else { return }
+        AccountManager.shared.cleanUp(for: logoutAccountPubkey)
+        guard logoutAccountPubkey == self.activeAccountPublicKey else {
+            self.loadAccountsState()
+            return
+        }
         
         self.activeAccountPublicKey = ""
         mirrorShareExtensionAccountState(account: nil)
         self.loadAccountsState(loadAnyAccount: true)
-        AccountManager.shared.cleanUp(for: logoutAccountPubkey)
     }
 
     @MainActor // changeAccount changes th .account in LoggedInAccount, so cannot be nil. For nil, set loggedInAccount to nil instead

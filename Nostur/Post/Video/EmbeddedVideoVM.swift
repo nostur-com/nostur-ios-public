@@ -429,9 +429,7 @@ class EmbeddedVideoVM: ObservableObject {
     
     private func tryExtractFirstFrameDetails(from data: Data, pathExtension: String) async throws -> (UIImage, CMTime?, CGSize?)? {
         return try await Task.detached(priority: .utility) {
-            let tempURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent(UUID().uuidString)
-                .appendingPathExtension(pathExtension)
+            let tempURL = TemporaryMediaFiles.shared.makeURL(extension: pathExtension)
             
             defer { try? FileManager.default.removeItem(at: tempURL) }
             
@@ -460,9 +458,7 @@ class EmbeddedVideoVM: ObservableObject {
         pathExtension: String
     ) async throws -> (UIImage, CMTime?, CGSize?)? {
         return try await Task.detached(priority: .utility) {
-            let tempURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent(UUID().uuidString)
-                .appendingPathExtension(pathExtension)
+            let tempURL = TemporaryMediaFiles.shared.makeURL(extension: pathExtension)
             
             defer { try? FileManager.default.removeItem(at: tempURL) }
             

@@ -272,7 +272,7 @@ struct VideoTrimmerView: View {
             return
         }
         
-        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mp4")
+        let outputURL = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
         
         exportSession.outputURL = outputURL
         exportSession.outputFileType = .mp4

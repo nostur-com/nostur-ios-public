@@ -1578,8 +1578,7 @@ func exportAsset(_ asset: AVAsset, completion: @escaping (URL?) -> Void) {
         return
     }
 
-    let exportDirectory = FileManager.default.temporaryDirectory
-    let exportURL = exportDirectory.appendingPathComponent("nostur_shared_\(UUID().uuidString).mp4")
+    let exportURL = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
 
     exportSession.outputURL = exportURL
     exportSession.outputFileType = .mp4

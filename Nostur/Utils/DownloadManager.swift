@@ -108,8 +108,8 @@ class DownloadManager: ObservableObject {
     
     func localFileURL(for url: URL, folder: String = "tmp") -> URL {
         let filename = url.lastPathComponent
-        let dir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        return dir.appendingPathComponent(folder).appendingPathComponent(filename)
+        let dir = TemporaryMediaFiles.shared.directory(named: "downloads-" + folder)
+        return dir.appendingPathComponent(filename)
     }
 }
 

@@ -116,6 +116,33 @@ struct WebOfTrustSnapshotStore {
             try fileManager.removeItem(at: url)
         }
     }
+
+    /// Preserve all saved accounts, not just the account selected in the UI.
+    /// Learned WoT is shared across accounts and is deliberately not eligible.
+    @discardableResult
+    func removeInactiveSnapshots(activeAccountPubkeys: Set<String>) throws -> Int {
+        let directories = [applicationSupportDirectory.appendingPathComponent("Nostur", isDirectory: true), cachesDirectory]
+        var removed = 0
+        for directory in directories {
+            guard fileManager.fileExists(atPath: directory.path) else { continue }
+            let files = try fileManager.contentsOfDirectory(at: directory,
+                includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey], options: [.skipsHiddenFiles])
+            for file in files {
+                let name = file.deletingPathExtension().lastPathComponent
+                let prefix = "web-of-trust-"
+                guard name.hasPrefix(prefix), ["bin", "txt"].contains(file.pathExtension) else { continue }
+                let pubkey = String(name.dropFirst(prefix.count))
+                guard pubkey.count == 64, pubkey.allSatisfy({ "0123456789abcdefABCDEF".contains($0) }),
+                      !activeAccountPubkeys.contains(pubkey) else { continue }
+                let values = try file.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+                guard values.isRegularFile == true, values.isSymbolicLink != true else { continue }
+                try fileManager.removeItem(at: file)
+                removed += 1
+            }
+        }
+        return removed
+    }
+
 }
 
 class WebOfTrust: ObservableObject {

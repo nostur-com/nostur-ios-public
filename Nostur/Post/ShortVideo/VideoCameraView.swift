@@ -216,7 +216,7 @@ class VideoRecorderModel: NSObject, ObservableObject {
     }
     
     func startRecording(maxDuration: Double) {
-        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
+        let outputURL = TemporaryMediaFiles.shared.makeURL(extension: "mov")
         
         movieOutput.maxRecordedDuration = CMTime(seconds: maxDuration, preferredTimescale: 600)
         movieOutput.startRecording(to: outputURL, recordingDelegate: self)

@@ -57,9 +57,7 @@ struct VineVideoPicker: UIViewControllerRepresentable {
                 }
                 
                 // Copy to temp location since the provided URL is temporary
-                let tempURL = FileManager.default.temporaryDirectory
-                    .appendingPathComponent(UUID().uuidString)
-                    .appendingPathExtension(url.pathExtension)
+                let tempURL = TemporaryMediaFiles.shared.makeURL(extension: url.pathExtension)
                 
                 do {
                     try FileManager.default.copyItem(at: url, to: tempURL)

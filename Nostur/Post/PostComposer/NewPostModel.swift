@@ -2676,7 +2676,7 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
                 })
             
             for videoMeta in videos {
-                let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
+                let compressedURL = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
                 typingTextModel.compressedVideoFiles.append(compressedURL)
                 if let url = await compressVideoAsync(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
 
@@ -2756,7 +2756,7 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
                 }
             
             for videoMeta in videos {
-                let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
+                let compressedURL = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
                 //                typingTextModel.compressedVideoFiles.append(compressedURL)
                 if let url = await compressVideoAsync(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
 

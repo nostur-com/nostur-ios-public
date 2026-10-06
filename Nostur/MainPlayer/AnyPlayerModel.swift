@@ -25,6 +25,8 @@ class AnyPlayerModel: ObservableObject {
     @Published private(set) var playbackSessionReady = false
     private var playbackTask: Task<Void, Never>?
     private var playbackRequest: UUID?
+    private var mediaLoadRequest: UUID?
+    private var temporaryPlaybackFile: URL?
     @Published var didFinishPlaying = false // to show Like/Zap
     @Published var showsPlaybackControls = false
     @Published var timeControlStatus: AVPlayer.TimeControlStatus = .paused
@@ -170,6 +172,8 @@ class AnyPlayerModel: ObservableObject {
         playbackDebugLog("loadLiveEvent mode=\(availableViewModes.first ?? .detailstream) ended=\(nrLiveEvent.streamHasEnded)")
 #endif
         
+        let loadRequest = UUID()
+        mediaLoadRequest = loadRequest
         pauseVideo()
         // View updates
         sendNotification(.stopPlayingVideo)
@@ -193,7 +197,8 @@ class AnyPlayerModel: ObservableObject {
                 let playerItem = AVPlayerItem(url: url)
                 Task { @MainActor in
                     // Mount the view first so AVPC exists, then play (device needs the layer attached).
-                    self.player.replaceCurrentItem(with: playerItem)
+                    guard self.mediaLoadRequest == loadRequest, self.isShown else { return }
+                    self.replacePlayerItem(with: playerItem)
                     self.setupRemoteControl()
                     self.isLoading = false
                     self.playVideo()
@@ -210,7 +215,8 @@ class AnyPlayerModel: ObservableObject {
                     self.makePlayerItem(for: url)
                 }
                 Task { @MainActor in
-                    self.player.replaceCurrentItem(with: playerItem)
+                    guard self.mediaLoadRequest == loadRequest, self.isShown else { return }
+                    self.replacePlayerItem(with: playerItem)
                     self.setupRemoteControl()
                     self.isLoading = false
                     self.playVideo()
@@ -228,6 +234,8 @@ class AnyPlayerModel: ObservableObject {
     public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay, .audioOnlyBar], nrPost: NRPost? = nil, cachedFirstFrame: CachedFirstFrame? = nil) async {
         guard let url = URL(string: url) else { return }
         
+        let loadRequest = UUID()
+        mediaLoadRequest = loadRequest
         pauseVideo()
         // View updates
         sendNotification(.stopPlayingVideo)
@@ -253,7 +261,8 @@ class AnyPlayerModel: ObservableObject {
                     self.makePlayerItem(for: url)
                 }
                 Task { @MainActor in
-                    self.player.replaceCurrentItem(with: playerItem)
+                    guard self.mediaLoadRequest == loadRequest, self.isShown else { return }
+                    self.replacePlayerItem(with: playerItem)
                     self.setupRemoteControl()
                     self.isLoading = false
                     self.playVideo()
@@ -290,41 +299,41 @@ class AnyPlayerModel: ObservableObject {
                         }
                         
                         // Create a temporary file to store the video data
-                        let tempDir = FileManager.default.temporaryDirectory
-                        let tempFile = tempDir.appendingPathComponent(UUID().uuidString + ".mp4")
+                        let tempFile = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
                         try data.write(to: tempFile)
                         
                         // Create AVPlayerItem from the local file
                         let playerItem = AVPlayerItem(url: tempFile)
                         
-                        // Clean up the temporary file when the player item is done
-                        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { _ in
-                            try? FileManager.default.removeItem(at: tempFile)
-                        }
-                        
-                        // TODO: maybe clean up all .mp4 if observer didn't catch it or others
-                        
                         if cachedFirstFrame == nil {
                             let asset = AVAsset(url: tempFile)
-                            guard let track = asset.tracks(withMediaType: .video).first else { return }
-                            let size = track.naturalSize.applying(track.preferredTransform)
-                            let dimensions = CGSize(width: abs(size.width), height: abs(size.height))
-                            Task { @MainActor in
-                                self.aspect = dimensions.width / dimensions.height
+                            if let track = asset.tracks(withMediaType: .video).first {
+                                let size = track.naturalSize.applying(track.preferredTransform)
+                                let dimensions = CGSize(width: abs(size.width), height: abs(size.height))
+                                await MainActor.run {
+                                    guard self.mediaLoadRequest == loadRequest else { return }
+                                    self.aspect = dimensions.width / dimensions.height
+                                }
                             }
                         }
                         
-                        Task { @MainActor in
-                            self.player.replaceCurrentItem(with: playerItem)
+                        let adopted = await MainActor.run {
+                            guard self.mediaLoadRequest == loadRequest, self.isShown else { return false }
+                            self.replacePlayerItem(with: playerItem, temporaryFile: tempFile)
                             self.setupRemoteControl()
                             self.isLoading = false
                             self.playVideo()
+                            return true
+                        }
+                        if !adopted {
+                            try? FileManager.default.removeItem(at: tempFile)
                         }
                     } catch {
 #if DEBUG
                         L.og.debug("Error loading video: \(error)")
 #endif
                         Task { @MainActor in
+                            guard self.mediaLoadRequest == loadRequest else { return }
                             self.isLoading = false
                         }
                     }
@@ -341,7 +350,8 @@ class AnyPlayerModel: ObservableObject {
                     }
                     let playerItem = await AVPlayerItem(asset: asset)
                     Task { @MainActor in
-                        self.player.replaceCurrentItem(with: playerItem)
+                        guard self.mediaLoadRequest == loadRequest, self.isShown else { return }
+                        self.replacePlayerItem(with: playerItem)
                         self.setupRemoteControl()
                         self.isLoading = false
                         self.playVideo()
@@ -593,6 +603,7 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     public func close() {
+        mediaLoadRequest = nil
         cancelPendingPlayback()
 #if DEBUG
         playbackDebugLog("close()")
@@ -625,7 +636,7 @@ class AnyPlayerModel: ObservableObject {
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             await MainActor.run {
                 guard !self.isShown else { return }
-                self.player.replaceCurrentItem(with: nil)
+                self.replacePlayerItem(with: nil)
             }
         }
         
@@ -783,7 +794,24 @@ class AnyPlayerModel: ObservableObject {
         return nil
     }
     
+    @MainActor
+    private func replacePlayerItem(with item: AVPlayerItem?, temporaryFile: URL? = nil) {
+        let previousFile = temporaryPlaybackFile
+        player.replaceCurrentItem(with: item)
+        temporaryPlaybackFile = temporaryFile
+        if let previousFile, previousFile != temporaryFile {
+            Task.detached(priority: .utility) {
+                try? FileManager.default.removeItem(at: previousFile)
+            }
+        }
+    }
+
     deinit {
+        if let file = temporaryPlaybackFile {
+            Task.detached(priority: .utility) {
+                try? FileManager.default.removeItem(at: file)
+            }
+        }
         // Cancel all Combine cancellables first
         cancellables.forEach { $0.cancel() }
         cancellables.removeAll()
