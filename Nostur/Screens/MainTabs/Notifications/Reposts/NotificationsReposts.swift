@@ -139,7 +139,7 @@ struct NotificationsReposts: View {
                 bg().perform {
                     req(RM.getMentions(
                         pubkeys: [pubkey],
-                        kinds: [6],
+                        kinds: [6,16],
                         limit: 500,
                         subscriptionId: taskId,
                         since: NTimestamp(timestamp: Int(model.mostRecentRepostCreatedAt))

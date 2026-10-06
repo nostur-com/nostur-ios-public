@@ -106,6 +106,7 @@ public enum NEventKind: Codable, Equatable, Hashable {
     case fileMessage
     case delete
     case repost
+    case genericRepost
     case chatMessage
     case reaction
     case giftWrap
@@ -151,6 +152,7 @@ public enum NEventKind: Codable, Equatable, Hashable {
         case    15: self = .fileMessage
         case     5: self = .delete
         case     6: self = .repost
+        case    16: self = .genericRepost
         case     7: self = .reaction
         case    20: self = .picture
         case  1059: self = .giftWrap
@@ -191,6 +193,10 @@ public enum NEventKind: Codable, Equatable, Hashable {
         self.init(id: Int(id))
     }
 
+    var isRepost: Bool {
+        self == .repost || self == .genericRepost
+    }
+
     var id: Int {
         switch self {
         case .setMetadata:              return 0
@@ -202,6 +208,7 @@ public enum NEventKind: Codable, Equatable, Hashable {
         case .fileMessage:              return 15
         case .delete:                   return 5
         case .repost:                   return 6
+        case .genericRepost:            return 16
         case .chatMessage:              return 1311
         case .reaction:                 return 7
         case .picture:                  return 20

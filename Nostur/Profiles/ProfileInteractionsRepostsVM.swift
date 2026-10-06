@@ -54,7 +54,7 @@ class ProfileInteractionsRepostsVM: ObservableObject {
                                            filters: [
                                             Filters(
                                                 authors: [self.pubkey],
-                                                kinds: Set([6]),
+                                                kinds: Set([6,16]),
                                                 tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
                                                 limit: 2500
                                             )
@@ -86,7 +86,7 @@ class ProfileInteractionsRepostsVM: ObservableObject {
     private func fetchRepostsFromDB(_ onComplete: (() -> ())? = nil) {
         guard let accountPubkey = self.accountPubkey else { return }
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 6 AND pubkey == %@ AND otherPubkey = %@", self.pubkey, accountPubkey)
+        fr.predicate = NSPredicate(format: "kind IN {6,16} AND pubkey == %@ AND otherPubkey = %@", self.pubkey, accountPubkey)
         bg().perform { [weak self] in
             guard let self else { return }
             guard let reposts = try? bg().fetch(fr) else { return }

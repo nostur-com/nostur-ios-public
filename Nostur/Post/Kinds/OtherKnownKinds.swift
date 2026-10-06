@@ -93,7 +93,7 @@ func fallbackDescription(for nrPost: NRPost) -> String {
         "A Direct Message"
     case 5:
         "A deletion request"
-    case 6:
+    case 6, 16:
         "A repost"
     case 7:
         "A reaction"

@@ -45,7 +45,7 @@ struct Box<Content: View>: View {
     }
 
     var body: some View {
-        let backgroundColor = (nrPost?.kind == 30023 || ((nrPost?.kind ?? 0) == 6 && (nrPost?.firstQuote?.kind ?? 0) == 30023))
+        let backgroundColor = (nrPost?.kind == 30023 || ([6,16].contains(nrPost?.kind ?? 0) && (nrPost?.firstQuote?.kind ?? 0) == 30023))
             ? theme.secondaryBackground
             : theme.listBackground
         

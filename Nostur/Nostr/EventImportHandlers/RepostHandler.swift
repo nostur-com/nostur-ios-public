@@ -11,10 +11,13 @@ import CoreData
 // Returns inner reposted Event or nil`
 // This is Before .saveEvent()
 func handleRepost(_ event: NEvent, relays: String, bgContext: NSManagedObjectContext) throws -> Event? {
-    if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
+    if event.kind.isRepost && (event.content.prefix(2) == #"{""# || event.content == "") {
         if event.content == "" {
             if let firstE = event.firstE() {
                 return Event.fetchEvent(id: firstE, context: bgContext)
+            }
+            if event.kind == .genericRepost, let aTag = event.firstA() {
+                return Event.fetchReplacableEvent(aTag: aTag, context: bgContext)
             }
             return nil
         }
@@ -32,9 +35,11 @@ func handleRepost(_ event: NEvent, relays: String, bgContext: NSManagedObjectCon
                 FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
                     NeedsUpdateInfo(event: kind6firstQuote)
                 )
+                return kind6firstQuote
             }
             else {
                 Event.updateRelays(noteInNote.id, relays: relays, context: bgContext)
+                return Event.fetchEvent(id: noteInNote.id, context: bgContext)
             }
         }
     }
@@ -44,7 +49,7 @@ func handleRepost(_ event: NEvent, relays: String, bgContext: NSManagedObjectCon
 // This is in .saveEvent()
 // // kind6 - repost, the reposted post is put in as .firstQuote
 func handleRepost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = nil, context: NSManagedObjectContext) {
-    guard nEvent.kind == .repost else { return }
+    guard nEvent.kind.isRepost else { return }
     
     savedEvent.firstQuoteId = kind6firstQuote?.id ?? nEvent.firstE()
     
@@ -61,7 +66,7 @@ func handleRepost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = n
         savedEvent.otherPubkey = kind6firstQuote.pubkey
         
         // We need to get firstQuote from db or cache
-        if let firstE = nEvent.firstE() {
+        if let firstE = savedEvent.firstQuoteId {
             if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE, context: context) {
                 repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))

@@ -234,7 +234,7 @@ struct KindResolver: View {
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
 
-        case 6:
+        case 6, 16:
             Repost(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, isEmbedded: isEmbedded)
             
         default:

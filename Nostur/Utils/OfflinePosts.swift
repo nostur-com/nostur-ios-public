@@ -24,7 +24,7 @@ class OfflinePosts {
                 r1.predicate = NSPredicate(format:
                                             "created_at > %i " +
                                             "AND pubkey = %@ " +
-                                            "AND kind IN {0,1,1111,1222,1244,3,4,5,6,7,20,9802,34235} " +
+                                            "AND kind IN {0,1,1111,1222,1244,3,4,5,6,16,7,20,9802,34235} " +
                                             "AND groupId == nil " +
                                             "AND (relays = \"\" OR relays = nil)" +
                                             "AND NOT flags IN {\"nsecbunker_unsigned\",\"awaiting_send\",\"draft\"}" +

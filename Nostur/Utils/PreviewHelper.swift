@@ -53,7 +53,7 @@ public class PreviewEnvironment {
                 guard var event = message.event else { continue }
                 
                 // FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
-                if event.kind == .repost && event.content.prefix(2) == #"{""# {
+                if event.kind.isRepost && event.content.prefix(2) == #"{""# {
                     if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
                         _ = Event.saveEvent(event: noteInNote, context: context)
                         event.content = "#[0]"

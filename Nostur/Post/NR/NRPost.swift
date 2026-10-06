@@ -463,7 +463,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
         
         // Fallback for alt
-        if ![1,6,1063,9802,30023,99999].contains(event.kind) {
+        if ![1,6,16,1063,9802,30023,99999].contains(event.kind) {
             if self.alt == nil, let content = event.content, content.prefix(1) != "{" {
                 self.alt = String(content.prefix(255))
             }
@@ -497,7 +497,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         self._repliesToRoot = []
         self.threadPostsCount = 1 + event.parentEvents.count
-        self.isRepost = event.kind == 6 || (event.kind == 1 && event.content == "#[0]" && event.firstE() != nil)
+        self.isRepost = (event.kind == 6 || event.kind == 16) || (event.kind == 1 && event.content == "#[0]" && event.firstE() != nil)
         self.isRumor = event.otherId != nil && (event.sig == nil || event.sig == "")
         
         self.firstQuoteId = event.firstQuoteId
@@ -508,7 +508,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     event: firstQuote,
                     parentId: event.id,
                     source: "firstQuote",
-                    withFooter: withFooter && event.kind == 6,
+                    withFooter: withFooter && (event.kind == 6 || event.kind == 16),
                     withReplies: withReplies,
                     withRepliesCount: withRepliesCount,
                     isPreview: isPreview,
@@ -596,7 +596,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         // Some clients put P in kind 6. Ignore that because the contacts are in the reposted post, not in the kind 6.
         // TODO: Should only fetch if the Ps are going to be on screen. Could be just for notifications.
-        if kind != 6 {
+        if (kind != 6 && kind != 16) {
             event.fastPs.prefix(SPAM_LIMIT_P).forEach { fastTag in
                 if !eventContactPs.contains(fastTag.1) {
                     missingPs.insert(fastTag.1)
@@ -966,7 +966,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 guard let self = self else { return }
                 self.missingPs.remove(profileInfo.pubkey)
                 
-                if self.kind != 6 {
+                if (self.kind != 6 && self.kind != 16) {
                     if self.replyToPostOrZapId != nil {
                         self.rerenderReplyingToFragment()
                     }

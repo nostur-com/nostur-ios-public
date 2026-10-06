@@ -277,7 +277,7 @@ class AccountCache {
     
     private func initReposted(_ pubkey: String) {
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 6 AND pubkey == %@", pubkey)
+        fr.predicate = NSPredicate(format: "kind IN {6,16} AND pubkey == %@", pubkey)
         let allRepostedIds = Set(((try? bg().fetch(fr)) ?? []).compactMap { $0.firstQuoteId })
     
         Task { @MainActor in

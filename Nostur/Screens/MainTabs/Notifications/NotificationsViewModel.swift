@@ -241,7 +241,7 @@ class NotificationsViewModel: ObservableObject {
             if decision.shouldCheckNow {
                 self.checkForUnreadMentions(accountData: accountData)
             }
-        case 6:
+        case 6, 16:
             // TODO: Should ignore blocked or muted
             let decision = Self.mergeNeedsUpdate(current: needsUpdate, eventIsNotification: event.otherPubkey == pubkey)
             needsUpdate = decision.needsUpdate
@@ -509,7 +509,7 @@ class NotificationsViewModel: ObservableObject {
         let sinceNTimestamp = NTimestamp(date: ago)
         
         // Public req for notifications
-        req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235,1311],
+        req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,16,7,20,9735,9802,30023,34235,1311],
                            subscriptionId: "-OPEN-Notifications-\(self.id)", since: sinceNTimestamp),
             activeSubscriptionId: "-OPEN-Notifications-\(self.id)")
         
@@ -552,7 +552,7 @@ class NotificationsViewModel: ObservableObject {
             self.needsUpdate = true
             
             DispatchQueue.main.async {
-                req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235,1311], subscriptionId: "Notifications-CATCHUP-\(self.id)", since: since))
+                req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,16,7,20,9735,9802,30023,34235,1311], subscriptionId: "Notifications-CATCHUP-\(self.id)", since: since))
                 
                 // Separate req for kind 4, because possibly needs auth
                 // 2 days ago to deal with NIP-17 randomized created_at
@@ -1196,7 +1196,7 @@ class NotificationFetchRequests {
         r.predicate = NSPredicate(format:
                                     "created_at > %i " +
                                     "AND otherPubkey == %@ " +
-                                    "AND kind == 6 " +
+                                    "AND kind IN {6,16} " +
                                     "AND NOT pubkey IN %@ " +
                                     "AND NOT id IN %@ ",
                                     accountData.lastSeenRepostCreatedAt,

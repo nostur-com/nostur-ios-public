@@ -68,7 +68,7 @@ class RepostsFeedModel: ObservableObject {
             guard let self else { return }
             let r1 = Event.fetchRequest()
             r1.predicate = NSPredicate(
-                format: "otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
+                format: "otherPubkey == %@ AND kind IN {6,16} AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
                 pubkey,
                 (AppState.shared.bgAppState.blockedPubkeys + [pubkey]),
                 AppState.shared.bgAppState.mutedRootIds,
@@ -106,13 +106,13 @@ class RepostsFeedModel: ObservableObject {
             if let until = allRepostEvents.last?.created_at {
                 req(RM.getMentions(
                     pubkeys: [pubkey],
-                    kinds: [6],
+                    kinds: [6,16],
                     limit: 500,
                     until: NTimestamp(timestamp: Int(until))
                 ))
             }
             else {
-                req(RM.getMentions(pubkeys: [pubkey], kinds: [6], limit: 500))
+                req(RM.getMentions(pubkeys: [pubkey], kinds: [6,16], limit: 500))
             }
             
             self.load(limit: 500)

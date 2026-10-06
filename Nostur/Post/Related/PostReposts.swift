@@ -156,7 +156,7 @@ struct PostReposts: View {
         guard !Task.isCancelled else { isRefreshing = false; return }
         let task = ReqTask(timeout: 5.5,
             reqCommand: { taskId in
-                nxReq(Filters(kinds: [6], tagFilter: TagFilter(tag: "e", values: [id]), limit: 500), subscriptionId: taskId)
+                nxReq(Filters(kinds: [6,16], tagFilter: TagFilter(tag: "e", values: [id]), limit: 500), subscriptionId: taskId)
             },
             processResponseCommand: { _, _, _ in
                 DataProvider.shared().saveToDiskNow(.bgContext) {

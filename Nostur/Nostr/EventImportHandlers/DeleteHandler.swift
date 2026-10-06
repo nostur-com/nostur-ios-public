@@ -17,7 +17,7 @@ func handleDelete(nEvent: NEvent, context: NSManagedObjectContext) {
     let eventIdsToDeleteReq = NSFetchRequest<Event>(entityName: "Event")
     
     // Only same author (pubkey) can delete // TODO: Should just allow all kinds?
-    eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,6,20,9802,10001,10601,30023,34235} AND pubkey = %@ AND id IN %@ AND deletedById = nil", nEvent.publicKey, eventIdsToDelete)
+    eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,6,16,20,9802,10001,10601,30023,34235} AND pubkey = %@ AND id IN %@ AND deletedById = nil", nEvent.publicKey, eventIdsToDelete)
     eventIdsToDeleteReq.sortDescriptors = []
     if let eventsToDelete = try? context.fetch(eventIdsToDeleteReq) {
         for eventToDelete in eventsToDelete {

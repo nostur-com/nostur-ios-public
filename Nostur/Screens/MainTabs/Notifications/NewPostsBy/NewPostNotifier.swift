@@ -72,7 +72,7 @@ class NewPostNotifier: ObservableObject {
                         filters: [
                             Filters(
                                 authors: self.enabledPubkeys,
-                                kinds: PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([6,5])), // not reposts or deletes (too many deletes???)
+                                kinds: PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([6,16,5])), // not reposts or deletes (too many deletes???)
                                 since: Int(since),
                                 limit: 458
                             )
@@ -88,7 +88,7 @@ class NewPostNotifier: ObservableObject {
                     guard let self else { return }
                     let fr = Event.fetchRequest()
                     fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([5,6]))) // not reposts or delete requests
+                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([5,6,16]))) // not reposts or delete requests
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {
                         self.createNewPostsNotification(newPosts)
                     }
@@ -103,7 +103,7 @@ class NewPostNotifier: ObservableObject {
                 bg().perform { [weak self] in
                     guard let self else { return }
                     let fr = Event.fetchRequest()
-                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([5,6]))) // not reposts or delete requests
+                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([5,6,16]))) // not reposts or delete requests
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {
                         self.createNewPostsNotification(newPosts)
                     }

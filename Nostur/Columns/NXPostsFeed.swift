@@ -1922,7 +1922,7 @@ private struct MacColumnScrollEdgeEffectModifier: ViewModifier {
 
 func performIDCollectionUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
     if nrPost.postOrThreadAttributes.parentPosts.isEmpty {
-        if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
+        if (nrPost.kind == 6 || nrPost.kind == 16), let firstQuoteId = nrPost.firstQuoteId {
             vm.markShortIdsSeen([nrPost.shortId, String(firstQuoteId.prefix(8))])
         }
         else {
@@ -1963,7 +1963,7 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
         notificationPairs.append((nrPost.id, vm.columnVMid))
 
         // Quote posts
-        if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
+        if (nrPost.kind == 6 || nrPost.kind == 16), let firstQuoteId = nrPost.firstQuoteId {
             let shortQuoteId = String(firstQuoteId.prefix(8))
             idsToMarkAsRead.append(shortQuoteId)
             notificationPairs.append((firstQuoteId, vm.columnVMid))

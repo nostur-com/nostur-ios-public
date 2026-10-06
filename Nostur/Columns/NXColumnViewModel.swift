@@ -4491,7 +4491,7 @@ class NXColumnViewModel: ObservableObject {
             let after = min(index + 2, nrPosts.count - 1)
 
             let rangeOfPostsIds = Array(nrPosts[before...after]).compactMap { post in
-                if post.kind == 6 {
+                if (post.kind == 6 || post.kind == 16) {
                     return post.firstQuoteId
                 }
                 return post.id
@@ -4718,7 +4718,7 @@ extension NXColumnViewModel {
         }
         let isSeen: (Event) -> Bool = {
             if allShortIdsSeen.contains($0.shortId) { return true }
-            if $0.kind == 6,
+            if ($0.kind == 6 || $0.kind == 16),
                let firstQuoteId = $0.firstQuoteId,
                allShortIdsSeen.contains(String(firstQuoteId.prefix(8))) {
                 return true
@@ -5000,7 +5000,7 @@ extension NXColumnViewModel {
             let onlyNewAddedPosts = addedPosts
                 .filter {
                     // if it is a repost, check reposted-id also
-                    if $0.kind == 6, let firstQuoteId = $0.firstQuoteId, currentIdsOnScreen.contains(firstQuoteId) {
+                    if ($0.kind == 6 || $0.kind == 16), let firstQuoteId = $0.firstQuoteId, currentIdsOnScreen.contains(firstQuoteId) {
                         return false
                     }
                     // else just check the normal id
@@ -5268,7 +5268,7 @@ extension NXColumnViewModel {
     
     private func getAllEventIds(_ events: [Event]) -> Set<String> {
         return events.reduce(Set<String>()) { partialResult, event in
-            if event.kind == 6, let firstQuoteId = event.firstQuoteId {
+            if (event.kind == 6 || event.kind == 16), let firstQuoteId = event.firstQuoteId {
                 // for repost add post + reposted post
                 return partialResult.union(Set([event.id, firstQuoteId]))
             }
@@ -5878,19 +5878,19 @@ func makeHashtagRegex(_ hashtags: Set<String>) -> String? {
 
 typealias CM = NostrEssentials.ClientMessage
 
-let FETCH_GLOBAL_KINDS: Set<Int> = [1,1222,6,20,9802,30023,34235,34236] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
+let FETCH_GLOBAL_KINDS: Set<Int> = [1,1222,6,16,20,9802,30023,34235,34236] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
 
-let FETCH_GLOBAL_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,20,9802,30023,34235,34236] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
+let FETCH_GLOBAL_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,16,20,9802,30023,34235,34236] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
 
-let FETCH_FOLLOWING_FEED_KINDS: Set<Int> = [1,1222,5,6,20,9802,30023,34235,34236,30311]
+let FETCH_FOLLOWING_FEED_KINDS: Set<Int> = [1,1222,5,6,16,20,9802,30023,34235,34236,30311]
 
-let FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,5,6,20,9802,30023,34235,34236,30311]
+let FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,5,6,16,20,9802,30023,34235,34236,30311]
 
 let FETCH_FOLLOWING_PROFILE_KINDS: Set<Int> = [0,10002,10050,10063]
 
-let QUERY_FOLLOWING_KINDS: Set<Int> = [1,1222,6,20,9802,30023,34235,34236]
+let QUERY_FOLLOWING_KINDS: Set<Int> = [1,1222,6,16,20,9802,30023,34235,34236]
 
-let QUERY_FOLLOWING_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,20,9802,30023,34235,34236]
+let QUERY_FOLLOWING_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,16,20,9802,30023,34235,34236]
 
 let REPLY_KINDS: Set<Int> = [1111,1244] // substract these is replies toggle is off
 

@@ -166,7 +166,7 @@ class DiscoverViewModel: ObservableObject {
                                            filters: [
                                             Filters(
                                                 authors: follows,
-                                                kinds: Set([6,7]),
+                                                kinds: Set([6,16,7]),
                                                 since: self.agoFetchTimestamp,
                                                 limit: 9999
                                             )
@@ -206,7 +206,7 @@ class DiscoverViewModel: ObservableObject {
         }
         
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@ AND groupId == nil", agoTimestamp, follows)
+        fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,16,7} AND pubkey IN %@ AND groupId == nil", agoTimestamp, follows)
         bg().perform { [weak self] in
             guard let self else { return }
             guard let likesOrReposts = try? bg().fetch(fr) else {
@@ -215,7 +215,7 @@ class DiscoverViewModel: ObservableObject {
             }
             for item in likesOrReposts {
                 switch item.kind {
-                case 6:
+                case 6, 16:
                     guard let firstQuoteId = item.firstQuoteId else { continue }
                     if self.posts[firstQuoteId] != nil {
                         self.posts[firstQuoteId]!.insert(item.pubkey)

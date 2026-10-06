@@ -691,7 +691,7 @@ extension Event {
     
     static func fetchReposts(id: String, context: NSManagedObjectContext = bg()) -> [Event] {
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind = 6 AND firstQuoteId == %@", id)
+        fr.predicate = NSPredicate(format: "kind IN {6,16} AND firstQuoteId == %@", id)
         return (try? context.fetch(fr)) ?? []
     }
     

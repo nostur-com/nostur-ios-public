@@ -180,7 +180,7 @@ func fetchStuffForLastAddedNotes(ids: [String]) {
                     type: .REQ,
                     subscriptionId: sub,
                     filters: [
-                        Filters(kinds: [1,1244,1111,6,7,9735], tagFilter: TagFilter(tag: "e", values: Set(ids)), limit: 5000),
+                        Filters(kinds: [1,1244,1111,6,16,7,9735], tagFilter: TagFilter(tag: "e", values: Set(ids)), limit: 5000),
                         Filters(kinds: [1,1111,30023], tagFilter: TagFilter(tag: "q", values: Set(ids)), limit: 5000)
                     ]
                 ),
