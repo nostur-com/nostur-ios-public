@@ -926,6 +926,7 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private func currentVisiblePostIds() -> Set<String> {
         guard case .posts(let posts) = viewState else { return [] }
+        guard let scrollView: UIScrollView = collectionView ?? tableView else { return [] }
 
         let indexPaths: [IndexPath]
         let sectionCounts: [Int]
@@ -940,6 +941,22 @@ class NXColumnViewModel: ObservableObject {
         }
 
         return Set(indexPaths.compactMap { indexPath in
+            let frame: CGRect?
+            if let collectionView {
+                frame = collectionView.layoutAttributesForItem(at: indexPath)?.frame
+            } else if let tableView {
+                frame = tableView.rectForRow(at: indexPath)
+            } else {
+                frame = nil
+            }
+            guard let frame,
+                  NXFeedViewport.isPostVisible(
+                    frame: frame,
+                    contentOffsetY: scrollView.contentOffset.y,
+                    viewportHeight: scrollView.bounds.height,
+                    insetTop: scrollView.adjustedContentInset.top,
+                    insetBottom: scrollView.adjustedContentInset.bottom
+                  ) else { return nil }
             guard let itemIndex = NXFeedIndexMapping.itemIndex(
                 for: indexPath,
                 sectionCounts: sectionCounts,

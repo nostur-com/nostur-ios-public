@@ -24,6 +24,41 @@ private actor NXFeedTestGate {
 
 final class NXFeedViewportTests: XCTestCase {
 
+    func testLastUnreadLeafBehindToolbarIsRemovedWhenReadElsewhere() {
+        let isVisible = NXFeedViewport.isPostVisible(
+            frame: CGRect(x: 0, y: 100, width: 300, height: 60),
+            contentOffsetY: 100,
+            viewportHeight: 600,
+            insetTop: 60,
+            insetBottom: 0
+        )
+        XCTAssertFalse(isVisible)
+        XCTAssertTrue(NXUnreadSeenReconciliation.shouldRemoveSeenLeafRow(
+            isVisible: isVisible,
+            removeEvenIfVisible: false
+        ))
+    }
+
+    func testPartiallyReadableLeafBelowToolbarStaysStable() {
+        XCTAssertTrue(NXFeedViewport.isPostVisible(
+            frame: CGRect(x: 0, y: 100, width: 300, height: 61),
+            contentOffsetY: 100,
+            viewportHeight: 600,
+            insetTop: 60,
+            insetBottom: 0
+        ))
+    }
+
+    func testLeafBehindBottomBarIsNotReadable() {
+        XCTAssertFalse(NXFeedViewport.isPostVisible(
+            frame: CGRect(x: 0, y: 650, width: 300, height: 60),
+            contentOffsetY: 100,
+            viewportHeight: 600,
+            insetTop: 60,
+            insetBottom: 50
+        ))
+    }
+
     func testSeenParentDoesNotConsumeUnreadLeaf() {
         let seenShortIds: Set<String> = ["parent01", "root0001"]
 

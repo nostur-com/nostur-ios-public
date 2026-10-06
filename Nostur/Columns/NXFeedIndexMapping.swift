@@ -167,6 +167,20 @@ struct NXFeedSettleProgress {
 /// Visible-top relative feed coordinates. Safe-area / live-banner inset changes
 /// must not be baked into the stored reading position.
 enum NXFeedViewport {
+    /// UIKit's visible-item APIs also include rows underneath translucent bars.
+    /// Only protect rows that intersect the readable area inside the insets.
+    static func isPostVisible(
+        frame: CGRect,
+        contentOffsetY: CGFloat,
+        viewportHeight: CGFloat,
+        insetTop: CGFloat,
+        insetBottom: CGFloat
+    ) -> Bool {
+        let top = contentOffsetY + insetTop
+        let bottom = contentOffsetY + viewportHeight - insetBottom
+        return bottom > top && frame.maxY > top && frame.minY < bottom
+    }
+
     /// `performAnchored` reason for a mid-feed newer-post insert. Used to cover
     /// the viewport before the unanimated prepend paints.
     static let prependCoverReason = "newer posts"
