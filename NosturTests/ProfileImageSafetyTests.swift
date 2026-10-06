@@ -9,6 +9,20 @@ final class ProfileImageSafetyTests: XCTestCase {
         XCTAssertFalse(ProfileImageSafety.isSafeAnimatedImage(Data("not an image".utf8), policy: .profilePicture))
     }
 
+    @MainActor
+    func testUnreadableDataIsNotReportedAsOversized() {
+        let data = Data("not an image".utf8)
+        let decoder = LimitedImageDecoder(underlying: ImageDecoders.Default(), policy: .post)
+        XCTAssertThrowsError(try decoder.decode(data)) { error in
+            guard case .unreadableImage? = error as? LimitedImageDecoder.Error else {
+                return XCTFail("Unreadable image metadata must not be classified as oversized")
+            }
+            guard case .error? = MediaViewVM.sizeFailureState(for: error, loadAnyway: false) else {
+                return XCTFail("Unreadable data should show a read error instead of a size error")
+            }
+        }
+    }
+
     func testAcceptsSmallGIF() throws {
         let data = try makeGIF(width: 2, height: 2)
         XCTAssertTrue(ProfileImageSafety.isSafeAnimatedImage(data, policy: .profilePicture))

@@ -662,7 +662,7 @@ struct MediaPlaceholder: View {
         case .imageTooLarge:
             failedImageView {
                 VStack {
-                    Label("This image is large and may use a lot of mobile data.", systemImage: "exclamationmark.triangle.fill")
+                    Label("Image too large, not loaded.", systemImage: "exclamationmark.triangle.fill")
                         .frame(maxWidth: .infinity, alignment: .center)
                     Button("Load anyway") {
                         load(forceLoad: true, loadAnyway: true)
@@ -672,7 +672,7 @@ struct MediaPlaceholder: View {
         case .animationTooLarge:
             failedImageView {
                 VStack {
-                    Label("This animation is large and may slow down your device.", systemImage: "exclamationmark.triangle.fill")
+                    Label("Animation too large, not loaded.", systemImage: "exclamationmark.triangle.fill")
                         .frame(maxWidth: .infinity, alignment: .center)
                     Button("Load anyway") {
                         load(forceLoad: true, loadAnyway: true)
@@ -684,7 +684,7 @@ struct MediaPlaceholder: View {
             }
         case .mediaExceedsSafetyLimit:
             failedImageView {
-                Label("This image is too large to load safely on your device.", systemImage: "exclamationmark.triangle.fill")
+                Label("Image too large, not loaded.", systemImage: "exclamationmark.triangle.fill")
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(10)
             }

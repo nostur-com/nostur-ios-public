@@ -3,6 +3,44 @@ import Testing
 @testable import Nostur
 
 struct IMetaContentElementTests {
+    @Test(arguments: [
+        "https://gifs.nostr.build/mp4/orig/304a45b9e7525b07af121dc30c84076d9107335eb1f061de5425fb8a389af151.gif.mp4",
+        "https://cdn.example.com/animation.GIF.MP4?poster=preview.jpg",
+        "https://cdn.example.com/folder.gif/clip.mp4"
+    ])
+    func finalVideoExtensionTakesPrecedenceOverImageSuffix(url: String) {
+        for isPreviewContext in [false, true] {
+            let (elements, linkPreviewURLs, galleryItems) = NRContentElementBuilder.shared.buildElements(
+                input: "Test if this works\n\n\n\(url)",
+                fastTags: [],
+                isPreviewContext: isPreviewContext
+            )
+            guard case .video(let video) = elements.last else {
+                Issue.record("Expected the complete MP4 URL to be rendered as a video")
+                return
+            }
+            #expect(video.url.absoluteString == url)
+            #expect(linkPreviewURLs.isEmpty)
+            #expect(galleryItems.isEmpty)
+        }
+    }
+
+    @Test(arguments: [
+        "https://cdn.example.com/animation.mp4.gif",
+        "https://cdn.example.com/animation.gif?download=clip.mp4",
+        "https://cdn.example.com/photo.JPG#preview.mp4"
+    ])
+    func finalImageExtensionTakesPrecedenceOverVideoSuffix(url: String) {
+        let (elements, linkPreviewURLs, galleryItems) = NRContentElementBuilder.shared.buildElements(input: url, fastTags: [])
+        guard case .image(let image) = elements.first else {
+            Issue.record("Expected the final image extension to determine the media type")
+            return
+        }
+        #expect(image.url.absoluteString == url)
+        #expect(linkPreviewURLs.isEmpty)
+        #expect(galleryItems.map(\.url.absoluteString) == [url])
+    }
+
     @Test func extensionlessImageURLUsesIMetaMimeType() {
         let url = "https://cdn.example.com/media/0123456789abcdef"
         let tag: FastTag = (

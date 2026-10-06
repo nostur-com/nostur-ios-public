@@ -224,8 +224,8 @@ class MediaViewVM: ObservableObject {
         catch {
             guard !preserveCurrentImage else { return false }
 
-            // Another server cannot fix a local size limit. Explain it immediately
-            // instead of turning it into a misleading mirror/network failure.
+            // Explain local decoding and size errors directly instead of
+            // presenting them as failed mirror searches.
             if let failureState = Self.sizeFailureState(for: error, loadAnyway: loadAnyway, usePFPpipeline: usePFPpipeline) {
                 if reportFailure, case .loading = state {
                     state = failureState
@@ -305,6 +305,8 @@ class MediaViewVM: ObservableObject {
                 return loadAnyway || usePFPpipeline ? .mediaExceedsSafetyLimit : .animationTooLarge
             case .unsafeImageDimensions:
                 return .mediaExceedsSafetyLimit
+            case .unreadableImage:
+                return .error(String(localized: "Could not read image."))
             }
         }
         return nil

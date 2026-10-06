@@ -150,6 +150,7 @@ struct LimitedImageDecoder: ImageDecoding {
     enum Error: Swift.Error {
         case unsafeImageDimensions
         case animationTooLarge
+        case unreadableImage
     }
 
     let underlying: any ImageDecoding
@@ -158,8 +159,13 @@ struct LimitedImageDecoder: ImageDecoding {
     var isAsynchronous: Bool { underlying.isAsynchronous }
 
     func decode(_ data: Data) throws -> ImageContainer {
-        guard ProfileImageSafety.isSafeImageDimensions(data, policy: policy) else {
+        switch ProfileImageSafety.imageDimensionStatus(data, policy: policy) {
+        case .valid:
+            break
+        case .tooLarge:
             throw Error.unsafeImageDimensions
+        case .unreadable:
+            throw Error.unreadableImage
         }
         guard ProfileImageSafety.isSafeAnimatedImage(data, policy: policy) else {
             throw Error.animationTooLarge

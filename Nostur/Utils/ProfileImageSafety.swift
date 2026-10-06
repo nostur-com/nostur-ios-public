@@ -7,6 +7,11 @@ import Foundation
 import ImageIO
 
 enum ProfileImageSafety {
+    enum DimensionStatus {
+        case valid
+        case tooLarge
+        case unreadable
+    }
     struct Policy {
         let maximumDimension: Int
         let maximumPixelCount: Int64
@@ -79,16 +84,23 @@ enum ProfileImageSafety {
     }
 
     static func isSafeImageDimensions(_ data: Data, policy: Policy) -> Bool {
+        imageDimensionStatus(data, policy: policy) == .valid
+    }
+
+    static func imageDimensionStatus(_ data: Data, policy: Policy) -> DimensionStatus {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
               let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
               let width = integerValue(properties[kCGImagePropertyPixelWidth]),
               let height = integerValue(properties[kCGImagePropertyPixelHeight]),
-              width > 0, height > 0,
-              width <= policy.maximumDimension, height <= policy.maximumDimension else {
-            return false
+              width > 0, height > 0 else {
+            return .unreadable
         }
         let (pixels, overflow) = Int64(width).multipliedReportingOverflow(by: Int64(height))
-        return !overflow && pixels <= policy.maximumPixelCount
+        guard !overflow, pixels <= policy.maximumPixelCount,
+              width <= policy.maximumDimension, height <= policy.maximumDimension else {
+            return .tooLarge
+        }
+        return .valid
     }
 
     private static func integerValue(_ value: Any?) -> Int? {

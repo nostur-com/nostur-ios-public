@@ -40,12 +40,15 @@ class NRContentElementBuilder {
                     elements: result
                 )
                 let matchString = (input as NSString).substring(with: matchRange)
+                let pathExtension = URL(string: matchString)?.pathExtension.lowercased() ?? ""
                 
                 if !nonMatch.isEmpty {
                     result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:nonMatch, primaryColor: primaryColor)))
                 }
                 
-                if !matchString.matchingStrings(regex: Self.imageUrlPattern).isEmpty {
+                // Use the final extension, not a suffix earlier in the filename
+                // or query (for example, an MP4 named .gif.mp4).
+                if Self.imageFileExtensions.contains(pathExtension) {
                     if let url = URL(string: matchString) {
                         let iMeta: iMetaInfo? = findImeta(fastTags, url: matchString)
                         let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile)
@@ -56,7 +59,7 @@ class NRContentElementBuilder {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
-                else if !matchString.matchingStrings(regex: Self.videoUrlPattern).isEmpty {
+                else if Self.videoFileExtensions.contains(pathExtension) {
                     if let url = URL(string: matchString) {
                         let iMeta: iMetaInfo? = findImeta(fastTags, url: matchString)
                         result.append(ContentElement.video(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile)))
@@ -287,6 +290,8 @@ class NRContentElementBuilder {
     
     static let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png#?|jpe?g#?|heic#?|gif#?|webp#?|avif#?)(\??\S+){0,1}\b"###
     static let previewImagePlaceholder = ###"--@!\^@(\d+)@\^!@--"###
+    private static let imageFileExtensions: Set<String> = ["png", "jpg", "jpeg", "heic", "gif", "webp", "avif"]
+    private static let videoFileExtensions: Set<String> = ["mp4", "mov", "m3u8", "m4v", "mp3", "m4a"]
     static let previewVideoPlaceholder = ###"-V-@!\^@(\d+)@\^!@-V-"###
     static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4#?|mov#?|m3u8#?|m4v#?|mp3#?|m4a#?)(\??\S+){0,1}\b"###
     static let lightningInvoicePattern = ###"(?i)\blnbc(?:[0-9]+[munp]?)?1[023456789ac-hj-np-z]{20,}\b"###
