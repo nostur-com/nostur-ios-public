@@ -141,6 +141,29 @@ enum NXFeedPark {
     }
 }
 
+/// A missing frame is not a stable layout sample. Require unchanged geometry
+/// across frames before lifting a viewport cover after List invalidates estimates.
+struct NXFeedSettleProgress {
+    struct Geometry: Equatable {
+        let contentHeight: CGFloat
+        let offsetY: CGFloat
+        let insetTop: CGFloat
+        let anchorFrame: CGRect
+    }
+
+    private var previous: Geometry?
+    private(set) var stableSamples = 0
+
+    mutating func observe(geometry: Geometry?, corrected: Bool) {
+        if let geometry, !corrected, geometry == previous {
+            stableSamples += 1
+        } else {
+            stableSamples = 0
+        }
+        previous = geometry
+    }
+}
+
 /// Visible-top relative feed coordinates. Safe-area / live-banner inset changes
 /// must not be baked into the stored reading position.
 enum NXFeedViewport {
@@ -166,7 +189,10 @@ enum NXFeedViewport {
         pinByIdentity: Bool,
         anchorIndexShifted: Bool
     ) -> Bool {
-        pinByIdentity
+        // Appends can encounter an older ID snapshot after an explicit reveal.
+        // That apparent index shift must never restore a pre-reveal post.
+        if !updateReasons.isEmpty, updateReasons.allSatisfy({ $0 == "older posts append" }) { return false }
+        return pinByIdentity
             || anchorIndexShifted
             || shouldCoverViewport(updateReasons: updateReasons)
     }

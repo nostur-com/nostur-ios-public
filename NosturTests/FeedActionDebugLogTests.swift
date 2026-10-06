@@ -77,6 +77,44 @@ struct FeedActionDebugLogTests {
         #expect(log.entries.last?.message == "event 44")
     }
 
+    @Test("Jump reports keep only the preceding ten seconds and include diagnostic context")
+    func jumpReportWindow() {
+        let log = FeedActionDebugLog()
+        let now = Date(timeIntervalSince1970: 100)
+        log.recordSynchronouslyForTesting("stale event", at: now.addingTimeInterval(-11))
+        log.recordSynchronouslyForTesting("boundary event", at: now.addingTimeInterval(-10))
+        log.recordSynchronouslyForTesting("prepend before jump", at: now.addingTimeInterval(-1))
+        let report = log.jumpReport(feedName: "Following", currentState: "anchor abc · y 123", at: now)
+        #expect(!report.contains("stale event"))
+        #expect(report.contains("boundary event"))
+        #expect(report.contains("prepend before jump"))
+        #expect(report.contains("Following"))
+        #expect(report.contains("anchor abc · y 123"))
+        #expect(report.contains("TEST_BUILD_ID"))
+        #expect(report.contains("Platform:"))
+        #expect(!log.jumpReport(feedName: "Following", currentState: "idle", at: now.addingTimeInterval(20)).contains("prepend before jump"))
+        log.clear()
+        #expect(!log.jumpReport(feedName: "Following", currentState: "idle", at: now).contains("boundary event"))
+    }
+
+    @Test("Jump capture includes deferred actions and bounds a busy feed burst")
+    func jumpReportBurst() {
+        let log = FeedActionDebugLog()
+        let now = Date(timeIntervalSince1970: 100)
+        for index in 0..<350 {
+            log.recordSynchronouslyForTesting("burst-\(index) end", at: now)
+        }
+        // Production events are deferred for the overlay but available immediately to capture.
+        log.record("just before capture", at: now)
+        let report = log.jumpReport(feedName: "Following", currentState: "idle", at: now)
+        #expect(report.contains("300 actions"))
+        #expect(!report.contains("burst-50 end"))
+        #expect(report.contains("burst-51 end"))
+        #expect(report.contains("burst-349 end"))
+        #expect(report.contains("just before capture"))
+        #expect(log.entries.count == 60)
+    }
+
     @Test("Uses strict two- and four-second performance thresholds")
     func ratesPerformance() {
         #expect(FeedActionDebugLog.FirstRenderMetric(duration: 1.99, postCount: 1).rating == .fast)

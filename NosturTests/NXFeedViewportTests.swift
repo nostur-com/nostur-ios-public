@@ -4,6 +4,7 @@
 //
 
 import XCTest
+import UIKit
 @testable import Nostur
 
 private actor NXFeedTestGate {
@@ -617,6 +618,69 @@ final class NXFeedViewportTests: XCTestCase {
         )
     }
 
+    func testOlderAppendDoesNotSettleStaleAnchorAfterTopReveal() {
+        for reasons in [["older posts append"], ["older posts append", "older posts append"]] {
+            XCTAssertFalse(NXFeedViewport.shouldSettleAnchoredUpdate(
+                updateReasons: reasons,
+                pinByIdentity: false,
+                anchorIndexShifted: true
+            ))
+        }
+        XCTAssertTrue(NXFeedViewport.shouldSettleAnchoredUpdate(
+            updateReasons: ["older posts append", NXFeedViewport.unreadRemovalCoverReason],
+            pinByIdentity: false,
+            anchorIndexShifted: true
+        ))
+    }
+
+    func testSettleDoesNotCountMissingFramesOrChangingEstimatesAsStable() {
+        var progress = NXFeedSettleProgress()
+        for _ in 0..<5 { progress.observe(geometry: nil, corrected: false) }
+        XCTAssertEqual(progress.stableSamples, 0)
+        let frame = CGRect(x: 0, y: 300, width: 440, height: 200)
+        let estimated = NXFeedSettleProgress.Geometry(contentHeight: 4680, offsetY: 1282, insetTop: 118, anchorFrame: frame)
+        let resolved = NXFeedSettleProgress.Geometry(contentHeight: 7544, offsetY: 1282, insetTop: 118, anchorFrame: frame)
+        progress.observe(geometry: estimated, corrected: false)
+        progress.observe(geometry: estimated, corrected: false)
+        XCTAssertEqual(progress.stableSamples, 1)
+        progress.observe(geometry: resolved, corrected: false)
+        XCTAssertEqual(progress.stableSamples, 0)
+        for _ in 0..<3 { progress.observe(geometry: resolved, corrected: false) }
+        XCTAssertEqual(progress.stableSamples, 3)
+        progress.observe(geometry: resolved, corrected: true)
+        XCTAssertEqual(progress.stableSamples, 0)
+    }
+
+    @MainActor
+    func testActualAppendAfterTopRevealDoesNotScrollToStaleFirstPost() async {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 100)
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 320, height: 300), collectionViewLayout: layout)
+        let source = NXFeedAppendTestSource()
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let window = UIWindow(frame: collection.bounds)
+        window.addSubview(collection)
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        // UIKit has already painted the explicitly revealed snapshot, while the
+        // List onChange callback has not yet replaced the old lookup IDs.
+        stabilizer.updateItemIDs(["old-first", "a", "b", "c", "d", "e"])
+        stabilizer.rememberAnchor(id: "old-first")
+        stabilizer.performAnchored(reason: "older posts append") {
+            source.count = 5
+            collection.reloadData()
+            collection.layoutIfNeeded()
+            stabilizer.updateItemIDs(["revealed", "old-first", "a", "b", "older"])
+        }
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        XCTAssertEqual(collection.contentOffset.y, 0, accuracy: 0.5)
+        stabilizer.suspendPositionTracking()
+    }
+
     func testPureOffscreenRemovalUsesListAnimationWithoutViewportSettle() {
         XCTAssertTrue(
             NXFeedViewport.shouldAnimateOffscreenRemoval(
@@ -695,5 +759,16 @@ final class NXFeedViewportTests: XCTestCase {
                 isAtTop: true
             )
         )
+    }
+}
+
+@MainActor
+private final class NXFeedAppendTestSource: NSObject, UICollectionViewDataSource {
+    var count = 4
+
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int { count }
+
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        collectionView.dequeueReusableCell(withReuseIdentifier: "post", for: indexPath)
     }
 }

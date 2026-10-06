@@ -156,6 +156,7 @@ class NXColumnViewModel: ObservableObject {
     public let columnVMid = UUID()
 #if DEBUG
     var feedActionDebugRecord: ((String) -> Void)?
+    var feedLayoutDebugState: (@MainActor () -> String)?
 #endif
     /// Hides the List while a remember-on restore jumps from offset 0 to the saved post.
     @Published var isHidingFeedForRestore = false
@@ -215,6 +216,16 @@ class NXColumnViewModel: ObservableObject {
         let first = posts.first.map { shortDebugID($0.id) } ?? "none"
         let last = posts.last.map { shortDebugID($0.id) } ?? "none"
         return "\(posts.count) posts · y \(offset) · \(motion) · top \(vmInner.isAtTop) · anchor \(reading) · ids \(first)…\(last) · \(feedActionDebugViewport())"
+    }
+
+    @MainActor
+    func feedActionDebugJumpState() -> String {
+        let scrollView: UIScrollView? = collectionView ?? tableView
+        let feed = config.map { "feed ID \($0.id) · auto-scroll \(SettingsStore.shared.autoScroll) · remember \($0.continue) · replies \($0.repliesEnabled) · WoT \($0.wotEnabled)" } ?? "feed unavailable"
+        let geometry = scrollView.map {
+            "renderer \(type(of: $0)) · bounds \($0.bounds) · inset \($0.adjustedContentInset) · window \($0.window.map { String(describing: $0.bounds) } ?? "none") · scale \($0.window?.screen.scale ?? 0)"
+        } ?? "renderer unavailable"
+        return "\(feed)\n\(geometry)\nrestore \(vmInner.isPreparingForScrollRestore) · programmatic \(vmInner.isPerformingScroll) · unread-scroll \(vmInner.isPerformingScrollToFirstUnread) · hidden \(isHidingFeedForRestore)\n\(feedLayoutDebugState?() ?? "stabilizer unavailable")\n\(feedActionDebugState())"
     }
 
     @MainActor

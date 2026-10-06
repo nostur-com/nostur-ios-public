@@ -626,7 +626,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         // Prepends need a few frames for estimated rows to self-size. Ordinary
         // image/repost height changes only need one or two offset corrections.
         // Never run this loop during a user drag: it would fight the scroller.
-        let maxSteps = extended ? 8 : 2
+        let maxSteps = extended ? 30 : 8
+        let startingOffset = scrollView?.contentOffset.y
 #if DEBUG
         onDebugAction?(
             "SETTLE start · extended \(extended) · bringOnScreen \(bringOnScreen) · \(viewportDebugSummary()) · anchor \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset))"
@@ -636,9 +637,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         settleTask = Task { @MainActor [weak self] in
             guard let self else { return }
             var didBringOnScreen = false
-            var stableSamples = 0
+            var progress = NXFeedSettleProgress()
 #if DEBUG
-            let startingOffset = self.scrollView?.contentOffset.y
             var offsetAfterYield: CGFloat?
             var correctionCount = 0
 #endif
@@ -685,7 +685,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 }
 
                 let shouldBringOnScreen = bringOnScreen && !didBringOnScreen
-                let didCorrect = self.restore(
+                let result = self.restore(
                     anchor: anchor,
                     in: scrollView,
                     bringOnScreen: shouldBringOnScreen
@@ -694,25 +694,24 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     didBringOnScreen = true
                 }
 
-                if didCorrect {
-                    stableSamples = 0
+                let geometry = result == .unavailable ? nil : self.settleGeometry(anchorID: anchor.id, in: scrollView)
+                progress.observe(geometry: geometry, corrected: result == .corrected)
 #if DEBUG
-                    correctionCount += 1
+                if result == .corrected { correctionCount += 1 }
 #endif
-                } else {
-                    stableSamples += 1
-                    if stableSamples >= 2 {
+                // A covered List mutation needs time to replace its estimated heights;
+                // two no-op restores immediately after yield do not prove it has settled.
+                if progress.stableSamples >= 3, !extended || step >= 7 {
 #if DEBUG
-                        self.recordSettlingResult(
-                            anchor: anchor,
-                            correctionCount: correctionCount,
-                            startingOffset: startingOffset,
-                            offsetAfterYield: offsetAfterYield
-                        )
+                    self.recordSettlingResult(
+                        anchor: anchor,
+                        correctionCount: correctionCount,
+                        startingOffset: startingOffset,
+                        offsetAfterYield: offsetAfterYield
+                    )
 #endif
-                        self.endPrependSettle(generation: generation)
-                        return
-                    }
+                    self.endPrependSettle(generation: generation)
+                    return
                 }
             }
 
@@ -743,6 +742,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         onDebugAction?(
             "SETTLE done · \(correctionCount)× · y \(start)→\(end) · afterYield \(afterYield) · anchor \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset)) · \(viewportDebugSummary())"
         )
+    }
+
+    func debugCaptureSummary() -> String {
+        let live = scrollView.flatMap { visibleAnchor(in: $0) }
+        let liveText = live.map { "\(shortID($0.id)) @ \(String(format: "%.1f", $0.visibleTopOffset))" } ?? "none"
+        let parkedText = parked.map { "\(shortID($0.id)) @ \(String(format: "%.1f", $0.visibleTopOffset))" } ?? "none"
+        return "live \(liveText) · parked \(parkedText) · lookup \(itemIDs.count) posts · leading rows \(leadingNonPostRowCount) · pending \(pendingUpdates.count) · settling \(settleTask != nil) · cover \(prependSnapshot != nil) · suspended \(isSuspended)"
     }
 
     private func viewportDebugSummary() -> String {
@@ -781,33 +787,57 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 #endif
 
+    private enum RestoreResult: Equatable {
+        case unavailable
+        case aligned
+        case corrected
+    }
+
+    private func settleGeometry(anchorID: String, in scrollView: UIScrollView) -> NXFeedSettleProgress.Geometry? {
+        guard let index = itemIDs.firstIndex(of: anchorID),
+              let path = NXFeedIndexMapping.indexPath(
+                forItemIndex: index,
+                sectionCounts: sectionCounts(in: scrollView),
+                itemCount: itemIDs.count,
+                leadingNonPostRows: leadingNonPostRowCount
+              ),
+              let frame = itemFrame(at: path, in: scrollView)
+        else { return nil }
+        return .init(
+            contentHeight: scrollView.contentSize.height,
+            offsetY: scrollView.contentOffset.y,
+            insetTop: scrollView.adjustedContentInset.top,
+            anchorFrame: frame
+        )
+    }
+
     @discardableResult
     private func restore(
         anchor: (id: String, visibleTopOffset: CGFloat),
         in scrollView: UIScrollView,
         bringOnScreen: Bool = false
-    ) -> Bool {
-        guard let itemIndex = itemIDs.firstIndex(of: anchor.id) else { return false }
+    ) -> RestoreResult {
+        guard let itemIndex = itemIDs.firstIndex(of: anchor.id) else { return .unavailable }
         let sectionCounts = sectionCounts(in: scrollView)
         guard let indexPath = NXFeedIndexMapping.indexPath(
             forItemIndex: itemIndex,
             sectionCounts: sectionCounts,
             itemCount: itemIDs.count,
             leadingNonPostRows: leadingNonPostRowCount
-        ) else { return false }
+        ) else { return .unavailable }
 
         if bringOnScreen {
             scrollToItem(at: indexPath, in: scrollView)
         }
 
-        guard let newMinY = itemMinY(at: indexPath, in: scrollView) else { return bringOnScreen }
+        guard let newMinY = itemMinY(at: indexPath, in: scrollView) else { return .unavailable }
         let currentVisibleTopOffset = NXFeedViewport.offsetFromVisibleTop(
             itemMinY: newMinY,
             contentOffsetY: scrollView.contentOffset.y,
             insetTop: scrollView.adjustedContentInset.top
         )
         let correction = currentVisibleTopOffset - anchor.visibleTopOffset
-        guard abs(correction) > 0.5 else { return bringOnScreen }
+        guard abs(correction) > 0.5 else { return bringOnScreen ? .corrected : .aligned }
 
         var offset = scrollView.contentOffset
         offset.y += correction
@@ -834,7 +864,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 #endif
         lastContentOffsetY = scrollView.contentOffset.y
         lastInsetTop = scrollView.adjustedContentInset.top
-        return true
+        return .corrected
     }
 
     private func visibleAnchor(in scrollView: UIScrollView) -> (id: String, visibleTopOffset: CGFloat)? {
@@ -1354,6 +1384,9 @@ struct NXPostsFeed: View {
             layoutStabilizer.onDebugAction = { [weak vm] message in
                 vm?.feedActionDebugRecord?(message)
             }
+            vm.feedLayoutDebugState = { [weak layoutStabilizer] in
+                layoutStabilizer?.debugCaptureSummary() ?? "stabilizer unavailable"
+            }
 #endif
             vmInner.cancelPendingFeedSettle = { [weak layoutStabilizer] in
                 layoutStabilizer?.cancelPendingSettle()
@@ -1440,6 +1473,7 @@ struct NXPostsFeed: View {
             layoutStabilizer.onPrependCoverEnded = nil
 #if DEBUG
             layoutStabilizer.onDebugAction = nil
+            vm.feedLayoutDebugState = nil
 #endif
             vm.pauseViewUpdates()
             vmInner.performAnchoredFeedUpdate = nil

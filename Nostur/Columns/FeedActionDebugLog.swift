@@ -74,6 +74,8 @@ final class FeedActionDebugLog: ObservableObject {
 
     private static let visibilityKey = "feed_action_debug_overlay"
     private static let maximumEntries = 60
+    private static let maximumJumpEntries = 300
+    static let jumpHistoryDuration: TimeInterval = 10
     private static let maximumFirstRenderEntries = 24
 
     @Published private(set) var entries: [Entry] = []
@@ -81,6 +83,7 @@ final class FeedActionDebugLog: ObservableObject {
     @Published private(set) var isVisible: Bool
     @Published private(set) var firstRenderMetric: FirstRenderMetric?
     @Published private(set) var isMeasuringFirstRender = false
+    private var jumpEntries: [Entry] = []
     private var firstRenderStartedAt: Date?
     private var measurementKind: MeasurementKind = .firstPosts
     private var restoredPostsDuringMeasurement = false
@@ -113,13 +116,24 @@ final class FeedActionDebugLog: ObservableObject {
     }
 
     func record(_ message: String, at date: Date = Date()) {
+        // Keep the non-published capture buffer current even before SwiftUI can update.
+        recordJumpHistory(message, at: date)
         Task { @MainActor [weak self] in
             await Task.yield()
-            self?.recordNow(message, at: date)
+            self?.recordNow(message, at: date, includeJumpHistory: false)
         }
     }
 
-    private func recordNow(_ message: String, at date: Date) {
+    private func recordJumpHistory(_ message: String, at date: Date) {
+        jumpEntries.removeAll { $0.date < date.addingTimeInterval(-Self.jumpHistoryDuration) }
+        jumpEntries.append(Entry(date: date, message: message))
+        if jumpEntries.count > Self.maximumJumpEntries {
+            jumpEntries.removeFirst(jumpEntries.count - Self.maximumJumpEntries)
+        }
+    }
+
+    private func recordNow(_ message: String, at date: Date, includeJumpHistory: Bool = true) {
+        if includeJumpHistory { recordJumpHistory(message, at: date) }
         let entry = Entry(date: date, message: message)
         entries.append(entry)
         if entries.count > Self.maximumEntries {
@@ -149,12 +163,55 @@ final class FeedActionDebugLog: ObservableObject {
     }
 
     func clear() {
+        jumpEntries.removeAll(keepingCapacity: true)
         entries.removeAll(keepingCapacity: true)
         firstRenderEntries.removeAll(keepingCapacity: true)
         firstRenderStartedAt = nil
         isMeasuringFirstRender = false
         firstRenderMetric = nil
         restoredPostsDuringMeasurement = false
+    }
+
+    /// Capture immediately after a visible jump, without clearing the live trace.
+    /// Filter by time again here: the feed may have been idle since its last action.
+    func jumpReport(feedName: String, currentState: String, at date: Date = Date()) -> String {
+        let recent = jumpEntries.filter {
+            $0.date >= date.addingTimeInterval(-Self.jumpHistoryDuration) && $0.date <= date
+        }
+        let lines = recent.isEmpty ? "(no actions in the preceding 10 seconds)" : recent.map(\.line).joined(separator: "\n")
+        return """
+        FEED JUMP · user-reported
+        Captured: \(date.ISO8601Format())
+        Feed: \(feedName)
+        \(Self.environmentReport)
+        Current: \(currentState)
+        \(measurementTitle): \(firstRenderReport)
+        Preceding 10 seconds · \(recent.count) actions (maximum \(Self.maximumJumpEntries)):
+        \(lines)
+        """
+    }
+
+    private static var environmentReport: String {
+        let device = UIDevice.current
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+#if targetEnvironment(macCatalyst)
+        let platform = "Mac Catalyst"
+#elseif targetEnvironment(simulator)
+        let platform = "Simulator"
+#else
+        let platform = "Device"
+#endif
+        let model = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? hardwareModel
+        return "Nostur \(version) (\(build)) · TEST_BUILD_ID \(TEST_BUILD_ID)\nPlatform: \(platform) · \(device.systemName) \(device.systemVersion) · \(model) · idiom \(device.userInterfaceIdiom.rawValue)\nProcess: \(ProcessInfo.processInfo.operatingSystemVersionString) · low power \(ProcessInfo.processInfo.isLowPowerModeEnabled) · thermal \(ProcessInfo.processInfo.thermalState.rawValue)"
+    }
+
+    private static var hardwareModel: String {
+        var system = utsname()
+        uname(&system)
+        return withUnsafeBytes(of: &system.machine) { bytes in
+            String(decoding: bytes.prefix(while: { $0 != 0 }), as: UTF8.self)
+        }
     }
 
     func report(feedName: String, currentState: String) -> String {
@@ -166,6 +223,7 @@ final class FeedActionDebugLog: ObservableObject {
             : firstRenderEntries.map(\.line).joined(separator: "\n")
         return """
         Feed action log: \(feedName)
+        \(Self.environmentReport)
         \(measurementTitle.capitalized): \(firstRenderReport)
         First-render trace:
         \(firstRenderLines)
@@ -269,10 +327,38 @@ final class FeedActionDebugLog: ObservableObject {
     }
 }
 
+struct FeedJumpCopyButton: View {
+    @ObservedObject var log: FeedActionDebugLog
+    let feedName: String
+    let currentState: () -> String
+    @State private var copied = false
+    @State private var feedbackTask: Task<Void, Never>?
+
+    var body: some View {
+        Button {
+            UIPasteboard.general.string = log.jumpReport(feedName: feedName, currentState: currentState())
+            copied = true
+            feedbackTask?.cancel()
+            feedbackTask = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 1_600_000_000)
+                guard !Task.isCancelled else { return }
+                copied = false
+            }
+        } label: {
+            Text(copied ? "COPIED" : "COPY JUMP")
+                .frame(width: 72)
+        }
+        .accessibilityLabel("Copy feed jump report")
+        .accessibilityHint("Tap immediately after a feed jump to copy the preceding ten seconds and current feed state")
+        .onDisappear { feedbackTask?.cancel(); copied = false }
+    }
+}
+
 struct FeedActionDebugOverlay: View {
     @ObservedObject var log: FeedActionDebugLog
     let feedName: String
     let currentState: () -> String
+    let jumpState: () -> String
     @State private var copied = false
 
     var body: some View {
@@ -282,6 +368,7 @@ struct FeedActionDebugOverlay: View {
                     .fontWeight(.semibold)
                     .lineLimit(1)
                 Spacer(minLength: 4)
+                FeedJumpCopyButton(log: log, feedName: feedName, currentState: jumpState)
                 Button(copied ? "Copied" : "Copy", action: copyReport)
                 Button("Clear", action: log.clear)
                 Button("Hide", action: log.hide)

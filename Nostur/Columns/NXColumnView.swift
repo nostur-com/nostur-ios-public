@@ -251,21 +251,27 @@ struct NXColumnView<HeaderContent: View>: View {
 #if DEBUG
         .overlay(alignment: .bottomTrailing) {
             if !feedActionDebugLog.isVisible {
-                Button {
-                    feedActionDebugLog.show()
-                } label: {
-                    Text("FEED LOG")
-                        .font(.caption2.weight(.bold).monospaced())
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3)
-                        .background(Color.black.opacity(0.55))
-                        .foregroundStyle(.white)
-                        .clipShape(Capsule())
+                HStack(spacing: 6) {
+                    FeedJumpCopyButton(
+                        log: feedActionDebugLog,
+                        feedName: config.name,
+                        currentState: { viewModel.feedActionDebugJumpState() }
+                    )
+                    Button {
+                        feedActionDebugLog.show()
+                    } label: {
+                        Text("FEED LOG")
+                    }
+                    .accessibilityLabel("Show feed action log")
                 }
+                .font(.caption2.weight(.bold).monospaced())
                 .buttonStyle(.plain)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(Color.black.opacity(0.55), in: Capsule())
                 .padding(.trailing, 8)
                 .padding(.bottom, 10)
-                .accessibilityLabel("Show feed action log")
             }
         }
         .overlay(alignment: .bottom) {
@@ -273,7 +279,8 @@ struct NXColumnView<HeaderContent: View>: View {
                 FeedActionDebugOverlay(
                     log: feedActionDebugLog,
                     feedName: config.name,
-                    currentState: { viewModel.feedActionDebugState() }
+                    currentState: { viewModel.feedActionDebugState() },
+                    jumpState: { viewModel.feedActionDebugJumpState() }
                 )
             }
         }
