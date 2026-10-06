@@ -30,6 +30,71 @@ final class ProfileImageSafetyTests: XCTestCase {
         XCTAssertFalse(ProfileImageSafety.isSafeAnimatedImage(data, policy: oneFramePolicy))
     }
 
+    func testPostPipelineAcceptsGIFWithReportedDimensions() async throws {
+        // Regression: the Hivetalk GIF has 340 frames at 850 x 1080, exceeding
+        // both the old 300-frame cap and the old 250-million-pixel cap.
+        let data = try makeGIF(width: 850, height: 1080, frameCount: 340)
+        XCTAssertTrue(ProfileImageSafety.isSafeAnimatedImage(data, policy: .post))
+        XCTAssertTrue(ProfileImageSafety.isSafeAnimatedImage(data, policy: .postLoadAnyway))
+        XCTAssertFalse(ProfileImageSafety.isSafeAnimatedImage(data, policy: .profilePicture))
+
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).gif")
+        try data.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let response = try await ImageProcessing.shared.content.imageTask(with: ImageRequest(url: url)).response
+        XCTAssertEqual(response.container.type, .gif)
+        XCTAssertEqual(response.container.data, data)
+        XCTAssertEqual(response.image.size.width, 850)
+        XCTAssertEqual(response.image.size.height, 1080)
+    }
+
+    func testLargerAnimationOffersWorkingOverride() async throws {
+        let data = try makeGIF(width: 2, height: 2, frameCount: 401)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).gif")
+        try data.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        do {
+            _ = try await ImageProcessing.shared.content.imageTask(with: ImageRequest(url: url)).response
+            XCTFail("Automatic loading must explain the animation limit")
+        }
+        catch {
+            let state = await MediaViewVM.sizeFailureState(for: error, loadAnyway: false)
+            XCTAssertEqual(state, .animationTooLarge)
+        }
+
+        let response = try await ImageProcessing.shared.contentLoadAnyway.imageTask(with: ImageRequest(url: url)).response
+        XCTAssertEqual(response.container.type, .gif)
+        XCTAssertEqual(response.container.data, data)
+    }
+
+    func testPostStillRejectsExcessiveFrameCount() throws {
+        let data = try makeGIF(width: 2, height: 2, frameCount: 601)
+        XCTAssertFalse(ProfileImageSafety.isSafeAnimatedImage(data, policy: .post))
+        XCTAssertFalse(ProfileImageSafety.isSafeAnimatedImage(data, policy: .postLoadAnyway))
+    }
+
+    @MainActor
+    func testSizeFailuresOfferOverrideOnlyBelowHardLimits() {
+        XCTAssertEqual(MediaViewVM.sizeFailureState(for: LimitedImageDecoder.Error.animationTooLarge, loadAnyway: false), .animationTooLarge)
+        XCTAssertEqual(MediaViewVM.sizeFailureState(for: LimitedImageDecoder.Error.animationTooLarge, loadAnyway: true), .mediaExceedsSafetyLimit)
+        XCTAssertEqual(MediaViewVM.sizeFailureState(for: LimitedImageDecoder.Error.unsafeImageDimensions, loadAnyway: false), .mediaExceedsSafetyLimit)
+        let downloadError = LimitedDataLoader.Error.responseTooLarge(limit: 50 * 1_048_576)
+        XCTAssertEqual(MediaViewVM.sizeFailureState(for: downloadError, loadAnyway: false), .imageTooLarge)
+        XCTAssertEqual(MediaViewVM.sizeFailureState(for: downloadError, loadAnyway: true), .mediaExceedsSafetyLimit)
+    }
+
+    func testRejectsExcessiveTotalAnimationPixels() throws {
+        let data = try makeGIF(width: 10, height: 10, frameCount: 3)
+        let policy = ProfileImageSafety.Policy(
+            maximumDimension: 100,
+            maximumPixelCount: 10_000,
+            maximumAnimatedFrameCount: 10,
+            maximumAnimatedPixelCount: 250
+        )
+        XCTAssertFalse(ProfileImageSafety.isSafeAnimatedImage(data, policy: policy))
+    }
+
     func testLimitedDataLoaderRejectsDeclaredSize() {
         let response = URLResponse(
             url: URL(string: "https://example.com/image.gif")!,

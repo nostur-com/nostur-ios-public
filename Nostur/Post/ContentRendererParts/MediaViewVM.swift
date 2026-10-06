@@ -160,6 +160,7 @@ class MediaViewVM: ObservableObject {
     
         do {
             let response = try await task.response
+            let animationPolicy: ProfileImageSafety.Policy = loadAnyway && !usePFPpipeline ? .postLoadAnyway : .post
             // WebP: After the resize processor runs, Nuke reports type as PNG, not WebP.
             // Detect WebP by URL extension instead, then fetch raw bytes from the data cache.
             if loadURL.pathExtension.lowercased() == "webp" {
@@ -169,7 +170,7 @@ class MediaViewVM: ObservableObject {
                     ?? response.container.data
                 if let rawData,
                    isAnimatedWebPData(rawData),
-                   ProfileImageSafety.isSafeAnimatedImage(rawData, policy: .post) {
+                   ProfileImageSafety.isSafeAnimatedImage(rawData, policy: animationPolicy) {
                     Task { @MainActor in
                         state = .gif(GifInfo(gifData: rawData, realDimensions: response.container.image.size))
                         if generateIMeta {
@@ -186,7 +187,7 @@ class MediaViewVM: ObservableObject {
             }
             if response.container.type == .gif,
                let gifData = response.container.data,
-               ProfileImageSafety.isSafeAnimatedImage(gifData, policy: .post) {
+               ProfileImageSafety.isSafeAnimatedImage(gifData, policy: animationPolicy) {
                 Task { @MainActor in
                     // Can't use withAnimation. Bug keeps sometimes stuck at loading %0
 //                    withAnimation(.smooth(duration: 0.15)) {
@@ -223,6 +224,15 @@ class MediaViewVM: ObservableObject {
         catch {
             guard !preserveCurrentImage else { return false }
 
+            // Another server cannot fix a local size limit. Explain it immediately
+            // instead of turning it into a misleading mirror/network failure.
+            if let failureState = Self.sizeFailureState(for: error, loadAnyway: loadAnyway, usePFPpipeline: usePFPpipeline) {
+                if reportFailure, case .loading = state {
+                    state = failureState
+                }
+                return false
+            }
+
             if let blossomCandidatesTask {
                 for candidateURL in await blossomCandidatesTask.value {
                     if await load(
@@ -244,10 +254,7 @@ class MediaViewVM: ObservableObject {
             guard reportFailure else { return false }
 
             let finalFailureState: MediaViewState
-            if Self.isDownloadSizeLimitError(error) {
-                finalFailureState = .imageTooLarge
-            }
-            else if let blossomCandidatesTask {
+            if let blossomCandidatesTask {
                 let mirrorCount = Self.mirrorCount(in: await blossomCandidatesTask.value)
                 if mirrorCount == 0 {
                     finalFailureState = .error("Failed to load image (no mirrors found)")
@@ -280,15 +287,27 @@ class MediaViewVM: ObservableObject {
         }).count
     }
 
-    private static func isDownloadSizeLimitError(_ error: Swift.Error) -> Bool {
+    static func sizeFailureState(for error: Swift.Error, loadAnyway: Bool, usePFPpipeline: Bool = false) -> MediaViewState? {
         if error is LimitedDataLoader.Error {
-            return true
+            return loadAnyway || usePFPpipeline ? .mediaExceedsSafetyLimit : .imageTooLarge
         }
-        if let pipelineError = error as? ImagePipeline.Error,
-           pipelineError.dataLoadingError is LimitedDataLoader.Error {
-            return true
+        if let pipelineError = error as? ImagePipeline.Error {
+            if let loadingError = pipelineError.dataLoadingError {
+                return sizeFailureState(for: loadingError, loadAnyway: loadAnyway, usePFPpipeline: usePFPpipeline)
+            }
+            if case .decodingFailed(_, _, let decodingError) = pipelineError {
+                return sizeFailureState(for: decodingError, loadAnyway: loadAnyway, usePFPpipeline: usePFPpipeline)
+            }
         }
-        return false
+        if let decodingError = error as? LimitedImageDecoder.Error {
+            switch decodingError {
+            case .animationTooLarge:
+                return loadAnyway || usePFPpipeline ? .mediaExceedsSafetyLimit : .animationTooLarge
+            case .unsafeImageDimensions:
+                return .mediaExceedsSafetyLimit
+            }
+        }
+        return nil
     }
     
     @MainActor
@@ -315,6 +334,8 @@ enum MediaViewState: Equatable {
     case image(ImageInfo)
     case gif(GifInfo) // TODO: handle  if !dim.isScreenshot
     case imageTooLarge
+    case animationTooLarge
+    case mediaExceedsSafetyLimit
     case error(String) // error message
 }
 

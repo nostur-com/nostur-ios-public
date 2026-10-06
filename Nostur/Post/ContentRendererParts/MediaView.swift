@@ -662,12 +662,31 @@ struct MediaPlaceholder: View {
         case .imageTooLarge:
             failedImageView {
                 VStack {
-                    Label("Image is larger than 50 MB, not loaded.", systemImage: "exclamationmark.triangle.fill")
+                    Label("This image is large and may use a lot of mobile data.", systemImage: "exclamationmark.triangle.fill")
                         .frame(maxWidth: .infinity, alignment: .center)
                     Button("Load anyway") {
                         load(forceLoad: true, loadAnyway: true)
                     }
                 }
+            }
+        case .animationTooLarge:
+            failedImageView {
+                VStack {
+                    Label("This animation is large and may slow down your device.", systemImage: "exclamationmark.triangle.fill")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Button("Load anyway") {
+                        load(forceLoad: true, loadAnyway: true)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(theme.accent)
+                }
+                .padding(10)
+            }
+        case .mediaExceedsSafetyLimit:
+            failedImageView {
+                Label("This image is too large to load safely on your device.", systemImage: "exclamationmark.triangle.fill")
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(10)
             }
         case .error(let errorMessage):
             failedImageView {

@@ -78,6 +78,8 @@ public struct GIFImage: View {
 
      func makeUIView(context: Context) -> GIFImageView {
          let imageView = GIFImageView()
+         // Keep long post GIFs from retaining Gifu's default 50 decoded frames.
+         imageView.setFrameBufferSize(10)
          imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
          imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
          imageView.isUserInteractionEnabled = false // Disable user interaction at UIKit level

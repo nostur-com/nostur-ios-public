@@ -146,9 +146,10 @@ private final class LimitedDataLoadCancellable: Cancellable, @unchecked Sendable
     }
 }
 
-private struct LimitedImageDecoder: ImageDecoding {
+struct LimitedImageDecoder: ImageDecoding {
     enum Error: Swift.Error {
         case unsafeImageDimensions
+        case animationTooLarge
     }
 
     let underlying: any ImageDecoding
@@ -157,8 +158,11 @@ private struct LimitedImageDecoder: ImageDecoding {
     var isAsynchronous: Bool { underlying.isAsynchronous }
 
     func decode(_ data: Data) throws -> ImageContainer {
-        guard ProfileImageSafety.isSafeAnimatedImage(data, policy: policy) else {
+        guard ProfileImageSafety.isSafeImageDimensions(data, policy: policy) else {
             throw Error.unsafeImageDimensions
+        }
+        guard ProfileImageSafety.isSafeAnimatedImage(data, policy: policy) else {
+            throw Error.animationTooLarge
         }
         return try underlying.decode(data)
     }
@@ -259,7 +263,7 @@ class ImageProcessing {
             $0.dataLoader = Self.makeLimitedDataLoader(
                 byteLimit: Self.CONTENT_LOAD_ANYWAY_SIZE_LIMIT
             )
-            $0.makeImageDecoder = Self.makeLimitedImageDecoder(policy: .post)
+            $0.makeImageDecoder = Self.makeLimitedImageDecoder(policy: .postLoadAnyway)
             $0.imageCache = ImageCache(costLimit: 104_857_600, countLimit: 1000)
             let dataCache = try! DataCache(name: "com.nostur.image.content")
             dataCache.sizeLimit = 1_048_576 * Self.CONTENT_SIZE_MB

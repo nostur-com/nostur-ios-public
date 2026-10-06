@@ -34,8 +34,16 @@ enum ProfileImageSafety {
         static let post = Policy(
             maximumDimension: 12_000,
             maximumPixelCount: 100_000_000,
-            maximumAnimatedFrameCount: 300,
-            maximumAnimatedPixelCount: 250_000_000
+            maximumAnimatedFrameCount: 400,
+            maximumAnimatedPixelCount: 350_000_000
+        )
+        static let postLoadAnyway = Policy(
+            maximumDimension: 12_000,
+            maximumPixelCount: 100_000_000,
+            // User-requested playback can exceed automatic limits. Rolling
+            // buffers bound memory; retain a cap on total animation work.
+            maximumAnimatedFrameCount: 600,
+            maximumAnimatedPixelCount: 500_000_000
         )
         static let emoji = Policy(
             maximumDimension: 1_024,
@@ -68,6 +76,19 @@ enum ProfileImageSafety {
             && pixelsPerFrame <= policy.maximumPixelCount
             && !totalOverflow
             && totalPixels <= policy.maximumAnimatedPixelCount
+    }
+
+    static func isSafeImageDimensions(_ data: Data, policy: Policy) -> Bool {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = integerValue(properties[kCGImagePropertyPixelWidth]),
+              let height = integerValue(properties[kCGImagePropertyPixelHeight]),
+              width > 0, height > 0,
+              width <= policy.maximumDimension, height <= policy.maximumDimension else {
+            return false
+        }
+        let (pixels, overflow) = Int64(width).multipliedReportingOverflow(by: Int64(height))
+        return !overflow && pixels <= policy.maximumPixelCount
     }
 
     private static func integerValue(_ value: Any?) -> Int? {
