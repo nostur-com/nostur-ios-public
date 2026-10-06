@@ -1,3 +1,4 @@
+import CoreData
 import Testing
 @testable import Nostur
 
@@ -189,5 +190,60 @@ struct BadgeTests {
         )
 
         #expect(wearers == [recipient])
+    }
+
+    @MainActor
+    @Test func profileBadgesResolveWithDuplicateFetchedAwardIds() throws {
+        let model = DataProvider.shared().container.managedObjectModel
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+        try coordinator.addPersistentStore(ofType: NSInMemoryStoreType, configurationName: nil, at: nil)
+        let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        context.persistentStoreCoordinator = coordinator
+
+        let address = "30009:\(issuer):bravery"
+        let profile = NEvent(
+            publicKey: recipient,
+            kind: .profileBadges,
+            tags: [NostrTag(["a", address]), NostrTag(["e", awardId])]
+        )
+        let award = NEvent(
+            id: awardId,
+            publicKey: issuer,
+            kind: .badgeAward,
+            tags: [NostrTag(["a", address]), NostrTag(["p", recipient])]
+        )
+        let definition = Event.fromNEvent(nEvent: NEvent(
+            id: String(repeating: "e", count: 64),
+            publicKey: issuer,
+            kind: .badgeDefinition,
+            tags: [NostrTag(["d", "bravery"])]
+        ), context: context)
+        _ = Event.fromNEvent(nEvent: award, context: context)
+        _ = Event.fromNEvent(nEvent: award, context: context)
+        // Fetches include pending inserts, even before the ID constraint is merged on save.
+
+        let request = Event.fetchRequest()
+        request.predicate = NSPredicate(format: "kind == %d AND id == %@", BadgeKinds.award, awardId)
+        let awards = try context.fetch(request)
+        #expect(awards.count == 2)
+        #expect(awards[0].objectID != awards[1].objectID)
+
+        let references = badgeReferences(from: profile)
+        let resolved = resolveProfileBadges(
+            references: references, profilePubkey: recipient,
+            awards: awards, definitions: [definition]
+        )
+        #expect(resolved.count == 1)
+        #expect(resolved.first?.reference == references.first)
+        #expect(resolved.first?.badge === definition)
+        #expect(resolved.first?.badgeAward === awards.first)
+        #expect(resolveProfileBadges(
+            references: references, profilePubkey: otherRecipient,
+            awards: awards, definitions: [definition]
+        ).isEmpty)
+        #expect(resolveProfileBadges(
+            references: references, profilePubkey: recipient,
+            awards: awards, definitions: []
+        ).isEmpty)
     }
 }

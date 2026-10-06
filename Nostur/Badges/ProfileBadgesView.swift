@@ -98,24 +98,12 @@ private struct ResolvedProfileBadgesView: View {
     }
 
     private var resolvedBadges: [ProfileBadge] {
-        let awardsById = Dictionary(uniqueKeysWithValues: awards.map { ($0.id, $0) })
-        let definitionsByAddress = Dictionary(
-            definitions.compactMap { definition in
-                definition.badgeAddress.map { ($0, definition) }
-            },
-            uniquingKeysWith: { first, _ in first }
+        resolveProfileBadges(
+            references: references,
+            profilePubkey: profile.pubkey,
+            awards: Array(awards),
+            definitions: Array(definitions)
         )
-        return references.compactMap { reference in
-            guard let award = awardsById[reference.awardEventId],
-                  let definition = definitionsByAddress[reference.address],
-                  isValidBadge(
-                    reference: reference,
-                    profilePubkey: profile.pubkey,
-                    award: award.toNEvent(),
-                    definition: definition.toNEvent()
-                  ) else { return nil }
-            return ProfileBadge(reference: reference, badge: definition, badgeAward: award)
-        }
     }
 
     var body: some View {

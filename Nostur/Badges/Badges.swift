@@ -66,6 +66,37 @@ struct ProfileBadge: Identifiable {
     let badgeAward: Event
 }
 
+// Call on the owning managed object context. Definitions are ordered newest first.
+func resolveProfileBadges(
+    references: [BadgeReference],
+    profilePubkey: String,
+    awards: [Event],
+    definitions: [Event]
+) -> [ProfileBadge] {
+    // Fetches can include duplicate IDs, including pending inserts before a save merges them.
+    let awardsById = Dictionary(
+        awards.map { ($0.id, $0) },
+        uniquingKeysWith: { first, _ in first }
+    )
+    let definitionsByAddress = Dictionary(
+        definitions.compactMap { definition in
+            definition.badgeAddress.map { ($0, definition) }
+        },
+        uniquingKeysWith: { first, _ in first }
+    )
+    return references.compactMap { reference in
+        guard let award = awardsById[reference.awardEventId],
+              let definition = definitionsByAddress[reference.address],
+              isValidBadge(
+                reference: reference,
+                profilePubkey: profilePubkey,
+                award: award.toNEvent(),
+                definition: definition.toNEvent()
+              ) else { return nil }
+        return ProfileBadge(reference: reference, badge: definition, badgeAward: award)
+    }
+}
+
 func badgeReferences(from profile: NEvent) -> [BadgeReference] {
     let isModern = profile.kind.id == BadgeKinds.profile
     let isLegacy = profile.kind.id == BadgeKinds.legacyProfile
