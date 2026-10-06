@@ -8,6 +8,36 @@
 import Foundation
 import CoreData
 
+// Older stored reposts can predate kind 16 support. Restore their target without
+// importing the outer event again or incrementing the original's repost count.
+// Call on the stored event's managed object context.
+@discardableResult
+func restoreRepostTarget(_ event: Event, context: NSManagedObjectContext) -> Bool {
+    guard (event.kind == 6 || event.kind == 16), event.firstQuoteId == nil else { return false }
+
+    let repost = event.toNEvent()
+    if let targetId = repost.firstE() {
+        event.firstQuoteId = targetId
+        event.otherPubkey = event.otherPubkey ?? repost.firstP()
+        return true
+    }
+
+    if let embedded = try? JSONDecoder().decode(NEvent.self, from: Data(repost.content.utf8)),
+       (try? embedded.verified()) == true {
+        event.firstQuoteId = embedded.id
+        event.otherPubkey = embedded.publicKey
+        return true
+    }
+
+    if event.kind == 16, let aTag = repost.firstA(),
+       let target = Event.fetchReplacableEvent(aTag: aTag, context: context) {
+        event.firstQuoteId = target.id
+        event.otherPubkey = target.pubkey
+        return true
+    }
+    return false
+}
+
 // Returns inner reposted Event or nil`
 // This is Before .saveEvent()
 func handleRepost(_ event: NEvent, relays: String, bgContext: NSManagedObjectContext) throws -> Event? {

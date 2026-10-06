@@ -500,6 +500,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.isRepost = (event.kind == 6 || event.kind == 16) || (event.kind == 1 && event.content == "#[0]" && event.firstE() != nil)
         self.isRumor = event.otherId != nil && (event.sig == nil || event.sig == "")
         
+        if restoreRepostTarget(event, context: bgContext), bgContext === bg() {
+            DataProvider.shared().saveToDisk(.bgContext)
+        }
         self.firstQuoteId = event.firstQuoteId
 
         if let firstQuoteId = event.firstQuoteId, let firstQuote = Event.fetchEvent(id: firstQuoteId, context: bgContext) {

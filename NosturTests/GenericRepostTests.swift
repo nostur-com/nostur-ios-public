@@ -87,6 +87,59 @@ final class GenericRepostTests: XCTestCase {
         }
     }
 
+    func testPreviouslyStoredRepostTargetSurvivesReopeningWithoutRecounting() async throws {
+        let original = try signedEvent(kind: 20)
+        for tags in [[["e", original.id], ["p", original.publicKey]], [["p", original.publicKey]]] {
+            let repost = try signedEvent(kind: 16, content: original.eventJson(), tags: tags)
+            let context = DataProvider.shared().newTaskContext()
+            let objectID = try await context.perform {
+                let row = Event.fromNEvent(nEvent: repost, context: context)
+                let target = Event.fromNEvent(nEvent: original, context: context)
+                target.repostsCount = 12
+                row.relays = ""
+                target.relays = ""
+                try context.save()
+                XCTAssertNil(row.firstQuoteId) // Stored before kind 16 was understood.
+                XCTAssertTrue(restoreRepostTarget(row, context: context))
+                XCTAssertEqual(row.firstQuoteId, original.id)
+                XCTAssertEqual(row.otherPubkey, original.publicKey)
+                XCTAssertEqual(target.repostsCount, 12)
+                try context.save()
+                return row.objectID
+            }
+            let reopened = DataProvider.shared().newTaskContext()
+            try await reopened.perform {
+                let row = try XCTUnwrap(reopened.existingObject(with: objectID) as? Nostur.Event)
+                XCTAssertEqual(row.firstQuoteId, original.id)
+                XCTAssertFalse(restoreRepostTarget(row, context: reopened))
+                let request = Event.fetchRequest()
+                request.predicate = NSPredicate(format: "id == %@", original.id)
+                let target = try XCTUnwrap(reopened.fetch(request).first)
+                XCTAssertEqual(target.repostsCount, 12)
+                reopened.delete(row)
+                reopened.delete(target)
+                try reopened.save()
+            }
+        }
+    }
+
+    func testRepairDoesNotUseUnverifiedEmbeddedContentOrChangeNonReposts() async throws {
+        var original = try signedEvent(kind: 20)
+        original.content = "tampered"
+        let repost = try signedEvent(kind: 16, content: original.eventJson())
+        let note = try signedEvent(kind: 1, tags: [["e", original.id]])
+        let context = DataProvider.shared().newTaskContext()
+        await context.perform {
+            let row = Event.fromNEvent(nEvent: repost, context: context)
+            let noteRow = Event.fromNEvent(nEvent: note, context: context)
+            defer { context.delete(row); context.delete(noteRow) }
+            XCTAssertFalse(restoreRepostTarget(row, context: context))
+            XCTAssertNil(row.firstQuoteId)
+            XCTAssertFalse(restoreRepostTarget(noteRow, context: context))
+            XCTAssertNil(noteRow.firstQuoteId)
+        }
+    }
+
     private func signedEvent(kind: Int, content: String = "", tags: [[String]] = []) throws -> NEvent {
         let keys = try Keys.newKeys()
         var event = NEvent(publicKey: keys.publicKeyHex, createdAt: NTimestamp(timestamp: 1_790_000_000),
