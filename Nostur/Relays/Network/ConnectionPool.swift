@@ -1175,7 +1175,7 @@ public class ConnectionPool: ObservableObject {
                     conn.relayData.setRead(true)
                 }
                 if !conn.isConnected {
-                    conn.connect()
+                    conn.connect(reason: "outbox REQ \(subscriptionId ?? "unknown")")
                 }
                 if shouldSkipDuplicateReq(subscriptionId), conn.nreqSubscriptions.contains(subscriptionId!) { continue }
                 if (subscriptionId != nil) {
@@ -1188,14 +1188,14 @@ public class ConnectionPool: ObservableObject {
                 ).json()
                 else { return }
 #if DEBUG
-            L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
+            L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) conn=\(conn.diagnosticID) reused=true -[LOG]-")
 #endif
                 conn.sendMessage(message, subscriptionId: subscriptionId)
             }
             else {
                 ConnectionPool.shared.addOutboxConnection(RelayData(read: true, write: false, search: false, auth: false, url: req.key, excludedPubkeys: [])) { connection in
                     if !connection.isConnected {
-                        connection.connect()
+                        connection.connect(reason: "outbox REQ \(subscriptionId ?? "unknown")")
                     }
                     
                     guard let message = NostrEssentials.ClientMessage(
@@ -1205,7 +1205,7 @@ public class ConnectionPool: ObservableObject {
                     ).json()
                     else { return }
 #if DEBUG
-            L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
+            L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) conn=\(connection.diagnosticID) reused=false -[LOG]-")
 #endif
                     connection.sendMessage(message, subscriptionId: subscriptionId)
                 }

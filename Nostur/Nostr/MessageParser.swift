@@ -81,12 +81,12 @@ class MessageParser {
                 switch message.type {
                 case .AUTH:
 #if DEBUG
-                    L.sockets.debug("🟢🟢 \(relayUrl): \(message.message) (AUTH)")
+                    L.sockets.debug("🟢🟢 \(relayUrl): \(message.message) (AUTH) conn=\(client.diagnosticID)")
 #endif
                     client.handleAuth(message.message)
                 case .OK:
 #if DEBUG
-                    L.sockets.debug("\(relayUrl): \(message.message) (OK)")
+                    L.sockets.debug("\(relayUrl): \(message.message) (OK) conn=\(client.diagnosticID)")
 #endif
                     if let id = message.id, let success = message.success {
                         commandResultSub.send((
@@ -144,7 +144,7 @@ class MessageParser {
 #endif
                     if message.message.prefix(14) == "auth-required:" {
 #if DEBUG
-                        L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED) (auth-required)")
+                        L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED) (auth-required) conn=\(client.diagnosticID) outbox=\(client.isOutbox)")
 #endif
                         // Send auth response, but check first if its outbox relay, then remove from outbox relays
                         guard !client.isOutbox else {
