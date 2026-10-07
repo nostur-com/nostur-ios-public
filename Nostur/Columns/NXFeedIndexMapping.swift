@@ -181,6 +181,14 @@ enum NXFeedViewport {
         return bottom > top && frame.maxY > top && frame.minY < bottom
     }
 
+    /// SwiftUI can expose non-finite estimated frames during List reconciliation.
+    /// Those cannot identify a visible row or drive an offset correction.
+    static func isUsableRowFrame(_ frame: CGRect) -> Bool {
+        frame.origin.x.isFinite && frame.origin.y.isFinite
+            && frame.width.isFinite && frame.height.isFinite
+            && frame.width > 0 && frame.height > 0
+    }
+
     /// `performAnchored` reason for a mid-feed newer-post insert. Used to cover
     /// the viewport before the unanimated prepend paints.
     static let prependCoverReason = "newer posts"

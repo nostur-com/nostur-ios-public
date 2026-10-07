@@ -47,7 +47,7 @@ enum NXUnreadNavigation {
         rowHeight: CGFloat? = nil,
         frozeSelfSizing: Bool = false
     ) -> Bool {
-        if abs(misalignment) > pinTolerance { return true }
+        if !misalignment.isFinite || abs(misalignment) > pinTolerance { return true }
         if frozeSelfSizing, let rowHeight, rowHeight < estimatedRowHeightThreshold {
             return true
         }
@@ -409,21 +409,18 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             scrollView.layoutIfNeeded()
         }
         if shouldCover {
-            var coveredStableSamples = 0
-            for _ in 0..<6 {
+            var progress = NXFeedSettleProgress()
+            for _ in 0..<30 {
                 if scrollView.isDragging || scrollView.isTracking { break }
                 try? await Task.sleep(nanoseconds: 16_000_000)
-                let before = scrollView.contentOffset.y
+                var result = RestoreResult.unavailable
                 UIView.performWithoutAnimation {
-                    restore(anchor: (id, 0), in: scrollView, bringOnScreen: false)
+                    result = restore(anchor: (id, 0), in: scrollView, bringOnScreen: false)
                     scrollView.layoutIfNeeded()
                 }
-                if abs(scrollView.contentOffset.y - before) > 0.5 {
-                    coveredStableSamples = 0
-                } else {
-                    coveredStableSamples += 1
-                    if coveredStableSamples >= 2 { break }
-                }
+                let geometry = result == .unavailable ? nil : settleGeometry(anchorID: id, in: scrollView)
+                progress.observe(geometry: geometry, corrected: result == .corrected)
+                if progress.stableSamples >= 3, isItemAtVisibleTop(id: id) { break }
             }
             await Task.yield()
             removePrependSnapshot()
@@ -431,6 +428,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
         isProgrammaticScrollInProgress = false
         scheduleFlush()
+    }
+
+    func isItemAtVisibleTop(id: String) -> Bool {
+        guard let scrollView, scrollView.window != nil,
+              liveVisiblePostID() == id,
+              let misalignment = visibleTopMisalignment(for: id, in: scrollView) else { return false }
+        return misalignment.isFinite && abs(misalignment) <= NXUnreadNavigation.pinTolerance
     }
 
     private func visibleTopMisalignment(for id: String, in scrollView: UIScrollView) -> CGFloat? {
@@ -875,6 +879,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             leadingNonPostRows: leadingNonPostRowCount
         ) else { return .unavailable }
 
+        // Never ask UIKit to position a row whose estimated frame is non-finite.
+        guard itemMinY(at: indexPath, in: scrollView) != nil else { return .unavailable }
         if bringOnScreen {
             scrollToItem(at: indexPath, in: scrollView)
         }
@@ -886,6 +892,9 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             insetTop: scrollView.adjustedContentInset.top
         )
         let correction = currentVisibleTopOffset - anchor.visibleTopOffset
+        guard correction.isFinite,
+              scrollView.contentOffset.y.isFinite,
+              scrollView.contentSize.height.isFinite else { return .unavailable }
         guard abs(correction) > 0.5 else { return bringOnScreen ? .corrected : .aligned }
 
         var offset = scrollView.contentOffset
@@ -962,15 +971,18 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 
     private func itemFrame(at indexPath: IndexPath, in scrollView: UIScrollView) -> CGRect? {
+        let frame: CGRect?
         if let collectionView = scrollView as? UICollectionView {
-            return collectionView.layoutAttributesForItem(at: indexPath)?.frame
+            frame = collectionView.layoutAttributesForItem(at: indexPath)?.frame
+        } else if let tableView = scrollView as? UITableView,
+                  tableView.numberOfSections > indexPath.section,
+                  tableView.numberOfRows(inSection: indexPath.section) > indexPath.row {
+            frame = tableView.rectForRow(at: indexPath)
+        } else {
+            frame = nil
         }
-        if let tableView = scrollView as? UITableView,
-           tableView.numberOfSections > indexPath.section,
-           tableView.numberOfRows(inSection: indexPath.section) > indexPath.row {
-            return tableView.rectForRow(at: indexPath)
-        }
-        return nil
+        guard let frame, NXFeedViewport.isUsableRowFrame(frame) else { return nil }
+        return frame
     }
 
     private func sectionCounts(in scrollView: UIScrollView) -> [Int] {
@@ -1346,6 +1358,7 @@ struct NXPostsFeed: View {
         .introspect(.list, on: .iOS(.v15)) { [weak vm] view in
             guard let vm else { return }
             vm.tableView = view
+            syncLayoutPostIDs()
             layoutStabilizer.attach(to: view)
             restorePreparedScrollPositionIfNeeded(in: view)
             DispatchQueue.main.async {
@@ -1362,6 +1375,7 @@ struct NXPostsFeed: View {
         .introspect(.list, on: .iOS(.v16...)) { [weak vm] view in
             guard let vm else { return }
             vm.collectionView = view
+            syncLayoutPostIDs()
             layoutStabilizer.attach(to: view)
             restorePreparedScrollPositionIfNeeded(in: view)
             DispatchQueue.main.async {
@@ -1401,10 +1415,7 @@ struct NXPostsFeed: View {
             vmInner.isFeedViewportMovingOrRecently = { [weak layoutStabilizer] in
                 layoutStabilizer?.isViewportMovingOrRecently ?? false
             }
-            layoutStabilizer.updateItemIDs(
-                posts.map(\.id),
-                leadingNonPostRowCount: vm.feedLeadingNonPostRowCount
-            )
+            syncLayoutPostIDs()
             layoutStabilizer.onViewportChange = { [weak vmInner] in
                 vmInner?.updateIsAtTopSubject.send()
             }
@@ -1451,20 +1462,14 @@ struct NXPostsFeed: View {
             }
             layoutStabilizer.resumePositionTracking()
         }
-        .onChange(of: posts.map(\.id)) { itemIDs in
+        .onChange(of: posts.map(\.id)) { _ in
             // The stabilizer must resolve anchors by post identity after insertions/removals.
             // Index paths are not stable when unread posts are inserted above the viewport.
-            layoutStabilizer.updateItemIDs(
-                itemIDs,
-                leadingNonPostRowCount: vm.feedLeadingNonPostRowCount
-            )
+            syncLayoutPostIDs()
             attemptPendingRequestedScroll()
         }
         .onChange(of: vm.alreadySeenNewerCount) { _ in
-            layoutStabilizer.updateItemIDs(
-                posts.map(\.id),
-                leadingNonPostRowCount: vm.feedLeadingNonPostRowCount
-            )
+            syncLayoutPostIDs()
         }
         .onChange(of: feedImageTargetSize) { newTargetSize in
             updatePrefetchImageTargetSize(newTargetSize)
@@ -1540,6 +1545,13 @@ struct NXPostsFeed: View {
         }
     }
 
+    private func syncLayoutPostIDs() {
+        layoutStabilizer.updateItemIDs(
+            vm.currentNRPostsOnScreen.map(\.id),
+            leadingNonPostRowCount: vm.feedLeadingNonPostRowCount
+        )
+    }
+
     private func updatePrefetchImageTargetSize(_ targetSize: CGSize) {
         vm.tablePrefetcher?.imageRequestTargetSize = targetSize
         vm.collectionPrefetcher?.imageRequestTargetSize = targetSize
@@ -1557,6 +1569,8 @@ struct NXPostsFeed: View {
     }
     
     private func scrollToFirstUnread() {
+        syncLayoutPostIDs()
+        let posts = vm.currentNRPostsOnScreen
         guard !vmInner.isPerformingScrollToFirstUnread else {
 #if DEBUG
             vm.recordFeedAction("UNREAD tap · ignored while previous unread scroll is active")
@@ -1791,6 +1805,8 @@ struct NXPostsFeed: View {
     }
 
     private func scrollToIndex(_ scrollToIndex: Int) {
+        syncLayoutPostIDs()
+        let posts = vm.currentNRPostsOnScreen
         vmInner.isPerformingScrollToFirstUnread = true
         let targetPost = posts[safe: scrollToIndex]
         if let targetPost {
@@ -1800,15 +1816,27 @@ struct NXPostsFeed: View {
         vmInner.isAtTop = scrollToIndex == 0
 
         let scrollView: UIScrollView? = vm.collectionView ?? vm.tableView
-        let indexPath = scrollView.flatMap { feedIndexPath(for: scrollToIndex, in: $0) }
-
-        guard let scrollView, let indexPath, let targetPost else {
+        guard let scrollView, let targetPost else {
             vmInner.isPerformingScrollToFirstUnread = false
             layoutStabilizer.cancelProgrammaticScroll()
             return
         }
 
         Task { @MainActor in
+            // An insertion/banner update and a tap can arrive in one render pass.
+            // Resolve the command by identity after List has received that snapshot.
+            await Task.yield()
+            syncLayoutPostIDs()
+            scrollView.layoutIfNeeded()
+            guard let currentIndex = vm.currentNRPostsOnScreen.firstIndex(where: { $0.id == targetPost.id }),
+                  let indexPath = feedIndexPath(for: currentIndex, in: scrollView) else {
+                vmInner.isPerformingScrollToFirstUnread = false
+                layoutStabilizer.cancelProgrammaticScroll()
+#if DEBUG
+                vm.recordFeedAction("UNREAD aborted · target \(targetPost.shortId) not in rendered snapshot · kept unread")
+#endif
+                return
+            }
             await layoutStabilizer.animateItemToVisibleTop(
                 id: targetPost.id,
                 indexPath: indexPath,
@@ -1832,23 +1860,41 @@ struct NXPostsFeed: View {
     }
 
     private func feedIndexPath(for itemIndex: Int, in scrollView: UIScrollView) -> IndexPath? {
-        NXFeedIndexMapping.indexPath(
+        let counts: [Int]
+        if let collectionView = scrollView as? UICollectionView {
+            counts = (0..<collectionView.numberOfSections).map { collectionView.numberOfItems(inSection: $0) }
+        } else if let tableView = scrollView as? UITableView {
+            counts = (0..<tableView.numberOfSections).map { tableView.numberOfRows(inSection: $0) }
+        } else {
+            return nil
+        }
+        let postCount = vm.currentNRPostsOnScreen.count
+        // A still-rendered older snapshot must not redirect a command to a different row.
+        guard NXFeedIndexMapping.indexPath(
+            forItemIndex: postCount - 1,
+            sectionCounts: counts,
+            itemCount: postCount,
+            leadingNonPostRows: vm.feedLeadingNonPostRowCount
+        ) != nil else { return nil }
+        return NXFeedIndexMapping.indexPath(
             forItemIndex: itemIndex,
-            sectionCounts: {
-                if let collectionView = scrollView as? UICollectionView {
-                    return (0..<collectionView.numberOfSections).map { collectionView.numberOfItems(inSection: $0) }
-                }
-                if let tableView = scrollView as? UITableView {
-                    return (0..<tableView.numberOfSections).map { tableView.numberOfRows(inSection: $0) }
-                }
-                return []
-            }(),
-            itemCount: posts.count,
+            sectionCounts: counts,
+            itemCount: postCount,
             leadingNonPostRows: vm.feedLeadingNonPostRowCount
         )
     }
 
     private func finishUnreadScroll(targetPost: NRPost?) {
+        syncLayoutPostIDs()
+        if let targetPost, !layoutStabilizer.isItemAtVisibleTop(id: targetPost.id) {
+#if DEBUG
+            vm.recordFeedAction("UNREAD aborted · target \(targetPost.shortId) not at visible top · kept unread")
+#endif
+            vmInner.readingPostID = layoutStabilizer.liveVisiblePostID()
+            vmInner.isPerformingScrollToFirstUnread = false
+            vmInner.updateIsAtTopSubject.send()
+            return
+        }
         if let targetPost {
 #if DEBUG
             let landedID = layoutStabilizer.visiblePostID()

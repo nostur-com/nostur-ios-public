@@ -754,6 +754,50 @@ final class NXFeedViewportTests: XCTestCase {
         )
     }
 
+    func testUnreadCorrectionRejectsNonFiniteEstimatedGeometry() {
+        XCTAssertTrue(NXUnreadNavigation.shouldCoverPostAnimationCorrection(misalignment: .nan))
+        XCTAssertTrue(NXUnreadNavigation.shouldCoverPostAnimationCorrection(misalignment: .infinity))
+        XCTAssertFalse(NXFeedViewport.isUsableRowFrame(CGRect(x: 0, y: CGFloat.nan, width: 406, height: 200)))
+        XCTAssertFalse(NXFeedViewport.isUsableRowFrame(.null))
+        XCTAssertFalse(NXFeedViewport.isUsableRowFrame(.zero))
+        XCTAssertTrue(NXFeedViewport.isUsableRowFrame(CGRect(x: 0, y: 97, width: 406, height: 200)))
+    }
+
+    @MainActor
+    func testUnreadLandingRequiresRealTargetFrameAndRefreshedBannerLookup() {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 200)
+        layout.minimumLineSpacing = 0
+        let collection = NXFeedMissingGeometryCollection(frame: CGRect(x: 0, y: 0, width: 320, height: 600), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        collection.contentInset.top = 97
+        let source = NXFeedAppendTestSource()
+        source.count = 16 // banner + 15 posts
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let window = UIWindow(frame: collection.bounds)
+        window.addSubview(collection)
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 4 * 200 - 97
+        collection.layoutIfNeeded()
+        let ids = (0..<15).map { "post-\($0)" }
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        // Reproduce the report's 12-ID lookup against a 15-post snapshot and banner.
+        stabilizer.updateItemIDs(Array(ids.dropFirst(3)), leadingNonPostRowCount: 1)
+        XCTAssertFalse(stabilizer.isItemAtVisibleTop(id: "post-3"))
+        stabilizer.updateItemIDs(ids, leadingNonPostRowCount: 1)
+        XCTAssertTrue(stabilizer.isItemAtVisibleTop(id: "post-3"))
+        collection.invalidItem = 4
+        XCTAssertFalse(stabilizer.isItemAtVisibleTop(id: "post-3"))
+        stabilizer.pinItemToVisibleTop(id: "post-3")
+        XCTAssertTrue(collection.contentOffset.y.isFinite)
+        collection.invalidItem = nil
+        XCTAssertTrue(stabilizer.isItemAtVisibleTop(id: "post-3"))
+        stabilizer.suspendPositionTracking()
+    }
+
     @MainActor
     func testPrependPreservesLiveAnchorAcrossCollapsedHeightEstimates() async throws {
         let layout = UICollectionViewFlowLayout()
@@ -835,5 +879,15 @@ private final class NXFeedAppendTestSource: NSObject, UICollectionViewDataSource
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         collectionView.dequeueReusableCell(withReuseIdentifier: "post", for: indexPath)
+    }
+}
+
+@MainActor
+private final class NXFeedMissingGeometryCollection: UICollectionView {
+    var invalidItem: Int?
+
+    override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+        guard indexPath.item != invalidItem else { return nil }
+        return super.layoutAttributesForItem(at: indexPath)
     }
 }
