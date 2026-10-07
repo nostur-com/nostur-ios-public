@@ -3,6 +3,27 @@ import Testing
 @testable import Nostur
 
 struct IMetaContentElementTests {
+    @Test func sentenceAfterLinkPreviewHasNoLeadingSpace() {
+        let sentence = "now shows notes as open graph images when linked"
+        for isPreviewContext in [false, true] {
+            let (elements, _, _) = NRContentElementBuilder.shared.buildElements(
+                input: "https://haloapp.fyi/ " + sentence,
+                fastTags: [],
+                isPreviewContext: isPreviewContext
+            )
+            #expect(elements.count == 2)
+            guard case .linkPreview(let url, _) = elements.first,
+                  case .text(let text) = elements.last else {
+                Issue.record("Expected a URL preview followed by the sentence")
+                return
+            }
+            #expect(url.absoluteString == "https://haloapp.fyi/")
+            #expect(text.input == sentence)
+            #expect(text.output?.string == sentence + " ")
+            #expect(text.nxOutput.map { String($0.characters) } == sentence + " ")
+        }
+    }
+
     @Test(arguments: [
         "https://gifs.nostr.build/mp4/orig/304a45b9e7525b07af121dc30c84076d9107335eb1f061de5425fb8a389af151.gif.mp4",
         "https://cdn.example.com/animation.GIF.MP4?poster=preview.jpg",

@@ -355,14 +355,14 @@ enum ContentElement: Hashable, Identifiable {
     case naddr1(ShareableIdentifier)
 }
 
-/// Media URLs and their surrounding text are rendered as separate elements.
-/// Whitespace immediately after extracted media only separated the URL from the
+/// Media URLs, link previews, and their surrounding text are rendered as separate elements.
+/// Whitespace immediately after an extracted URL only separated the URL from the
 /// following content and should not become leading whitespace in the text view.
 private func textAfterExtractedMedia(_ text: String, elements: [ContentElement]) -> String {
     guard let previousElement = elements.last else { return text }
 
     switch previousElement {
-    case .image, .video, .postPreviewImage, .postPreviewVideo:
+    case .image, .video, .postPreviewImage, .postPreviewVideo, .linkPreview:
         return String(text.drop(while: { $0.isWhitespace }))
     default:
         return text
