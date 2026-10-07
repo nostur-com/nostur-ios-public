@@ -754,46 +754,76 @@ final class NXFeedViewportTests: XCTestCase {
         )
     }
 
-    func testPureOffscreenInsertionUsesListAnimationWithoutViewportSettle() {
-        XCTAssertTrue(
-            NXFeedViewport.shouldAnimateOffscreenInsertion(
-                insertedPostIDs: ["new-above"],
-                removedPostIDs: [],
-                visiblePostIDs: ["reading", "below"],
-                isPreparingRestore: false,
-                isAtTop: false
-            )
-        )
-    }
-
-    func testMixedInsertionOrRestoreStillUsesAnchoredUpdate() {
-        XCTAssertFalse(
-            NXFeedViewport.shouldAnimateOffscreenInsertion(
-                insertedPostIDs: ["new-above"],
-                removedPostIDs: ["old-tail"],
-                visiblePostIDs: ["reading", "below"],
-                isPreparingRestore: false,
-                isAtTop: false
-            )
-        )
-        XCTAssertFalse(
-            NXFeedViewport.shouldAnimateOffscreenInsertion(
-                insertedPostIDs: ["new-above"],
-                removedPostIDs: [],
-                visiblePostIDs: ["reading", "below"],
-                isPreparingRestore: true,
-                isAtTop: false
-            )
-        )
-        XCTAssertFalse(
-            NXFeedViewport.shouldAnimateOffscreenInsertion(
-                insertedPostIDs: ["new-above"],
-                removedPostIDs: [],
-                visiblePostIDs: ["reading", "below"],
-                isPreparingRestore: false,
-                isAtTop: true
-            )
-        )
+    @MainActor
+    func testPrependPreservesLiveAnchorAcrossCollapsedHeightEstimates() async throws {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 338)
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 320, height: 1282), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        collection.contentInset.top = 97
+        let source = NXFeedAppendTestSource()
+        source.count = 37
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 7 * 338 - 97
+        collection.layoutIfNeeded()
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        let oldIDs = (0..<37).map { "post-\($0)" }
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        stabilizer.updateItemIDs(oldIDs)
+        // The live row must win over an older remembered unread landing.
+        let unreadControl = UIView(frame: CGRect(x: 240, y: 130, width: 61, height: 36))
+        window.addSubview(unreadControl)
+        let snapshotHost = NXFeedSnapshotHostView(frame: collection.bounds)
+        snapshotHost.stabilizer = stabilizer
+        window.insertSubview(snapshotHost, belowSubview: unreadControl)
+        // Native navigation chrome and a dragged unread control stay above
+        // the frozen feed, with no uncovered holes in their glass backdrops.
+        unreadControl.frame.origin = CGPoint(x: 170, y: 500)
+        stabilizer.rememberAnchor(id: "post-6")
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), "post-7")
+        stabilizer.performAnchored(reason: NXFeedViewport.prependCoverReason) {
+            source.count = 38
+            layout.itemSize.height = 75
+            collection.reloadData()
+            collection.layoutIfNeeded()
+            collection.contentOffset.y = 183.5
+            stabilizer.updateItemIDs(["new"] + oldIDs)
+        }
+        XCTAssertTrue(stabilizer.hasActivePrependCover)
+        let cover = try XCTUnwrap(snapshotHost.subviews.first)
+        XCTAssertEqual(cover.frame, snapshotHost.bounds)
+        XCTAssertNil(cover.layer.mask)
+        XCTAssertEqual(window.subviews.last, unreadControl)
+        // Simulate the overlay being recreated while the List is settling.
+        let replacementHost = NXFeedSnapshotHostView(frame: snapshotHost.frame)
+        replacementHost.stabilizer = stabilizer
+        window.insertSubview(replacementHost, belowSubview: unreadControl)
+        snapshotHost.removeFromSuperview()
+        XCTAssertTrue(cover.superview === replacementHost)
+        XCTAssertEqual(cover.frame, replacementHost.bounds)
+        XCTAssertEqual(window.subviews.last, unreadControl)
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(collection.contentOffset.y, 8 * 75 - 97, accuracy: 0.5)
+        // The real heights resolve while the covered correction is still active.
+        layout.itemSize.height = 338
+        layout.invalidateLayout()
+        collection.layoutIfNeeded()
+        try? await Task.sleep(nanoseconds: 250_000_000)
+        XCTAssertEqual(collection.contentOffset.y, 8 * 338 - 97, accuracy: 0.5)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), "post-7")
+        XCTAssertFalse(stabilizer.hasActivePrependCover)
+        stabilizer.suspendPositionTracking()
     }
 }
 

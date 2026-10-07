@@ -66,6 +66,37 @@ extension EnvironmentValues {
     }
 }
 
+/// A stable feed overlay below the live unread control and native navigation bars.
+struct NXFeedSnapshotHost: UIViewRepresentable {
+    let stabilizer: NXFeedLayoutStabilizer
+
+    func makeUIView(context: Context) -> NXFeedSnapshotHostView {
+        let view = NXFeedSnapshotHostView()
+        view.stabilizer = stabilizer
+        view.isUserInteractionEnabled = false
+        return view
+    }
+
+    func updateUIView(_ view: NXFeedSnapshotHostView, context: Context) {
+        view.stabilizer = stabilizer
+        stabilizer.attachSnapshotHost(view)
+    }
+}
+
+final class NXFeedSnapshotHostView: UIView {
+    weak var stabilizer: NXFeedLayoutStabilizer?
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        stabilizer?.attachSnapshotHost(self)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        stabilizer?.attachSnapshotHost(self)
+    }
+}
+
 /// Applies asynchronous row-height changes without moving the post the user is reading.
 /// Updates are deferred during drag/deceleration, then the first visible row is restored to
 /// the same viewport position after self-sizing layout completes.
@@ -76,6 +107,9 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         let apply: () -> Void
     }
 
+    private weak var snapshotHostView: UIView?
+    private weak var snapshotWindow: UIWindow?
+    private var snapshotFrameInWindow: CGRect?
     private weak var scrollView: UIScrollView?
     private var itemIDs: [String] = []
     private var leadingNonPostRowCount = 0
@@ -122,6 +156,24 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     var isViewportMovingOrRecently: Bool {
         guard let scrollView else { return false }
         return isUserScrollingOrRecently(in: scrollView)
+    }
+
+    func attachSnapshotHost(_ host: UIView) {
+        guard let window = host.window else { return }
+        snapshotHostView = host
+        guard let snapshot = prependSnapshot,
+              window === snapshotWindow,
+              let frame = snapshotFrameInWindow else { return }
+        // A recreated feed overlay adopts the existing cover before revealing
+        // the new List. Keep its pre-mutation viewport coordinates across remounts.
+        let localFrame = host.convert(frame, from: window)
+        if snapshot.superview !== host {
+            snapshot.removeFromSuperview()
+            snapshot.frame = localFrame
+            host.addSubview(snapshot)
+        } else if snapshot.frame != localFrame {
+            snapshot.frame = localFrame
+        }
     }
 
     func attach(to scrollView: UIScrollView) {
@@ -349,7 +401,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 #endif
 
         if shouldCover {
-            coverViewport(in: scrollView, hostedInWindow: false)
+            coverViewport(in: scrollView)
         }
         restoredSelfSizing?()
         UIView.performWithoutAnimation {
@@ -540,10 +592,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         if NXFeedViewport.shouldCoverViewport(updateReasons: updateReasons),
            shouldSkipPrependSnapshot?() != true,
            let scrollView {
-            coverViewport(
-                in: scrollView,
-                hostedInWindow: NXFeedViewport.shouldCoverPrepend(updateReasons: updateReasons)
-            )
+            coverViewport(in: scrollView)
         }
 
         updates.forEach { $0.apply() }
@@ -955,17 +1004,18 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         removePrependSnapshot()
     }
 
-    private func coverViewport(in scrollView: UIScrollView, hostedInWindow: Bool) {
-        guard prependSnapshot == nil else { return }
-        guard let snapshot = scrollView.snapshotView(afterScreenUpdates: false) else { return }
+    private func coverViewport(in scrollView: UIScrollView) {
+        guard prependSnapshot == nil,
+              let host = snapshotHostView,
+              let window = scrollView.window,
+              host.window === window,
+              let snapshot = scrollView.snapshotView(afterScreenUpdates: false) else { return }
 
-        // True prepends can remount the SwiftUI List, so their cover must survive
-        // at window level. Ordinary row removals and unread corrections stay in
-        // the List hierarchy so they never flash over toolbar/tab-bar chrome.
-        let host = hostedInWindow
-            ? (scrollView.window ?? scrollView.superview)
-            : (scrollView.superview ?? scrollView.window)
-        guard let host else { return }
+        // Photograph only the feed. Its overlay host sits below the unread
+        // button and navigation chrome, including content behind translucent
+        // glass. No holes: the live controls see the same stable backdrop.
+        snapshotFrameInWindow = scrollView.convert(scrollView.bounds, to: window)
+        snapshotWindow = window
         snapshot.frame = scrollView.convert(scrollView.bounds, to: host)
         snapshot.isUserInteractionEnabled = false
         host.addSubview(snapshot)
@@ -973,7 +1023,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         prependSnapshotGeneration += 1
         let generation = prependSnapshotGeneration
 #if DEBUG
-        onDebugAction?("SNAPSHOT cover · \(hostedInWindow ? "window" : "local")")
+        onDebugAction?("SNAPSHOT cover · feed overlay below controls")
 #endif
 
         Task { @MainActor [weak self] in
@@ -1003,6 +1053,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard prependSnapshot != nil else { return }
         prependSnapshot?.removeFromSuperview()
         prependSnapshot = nil
+        snapshotFrameInWindow = nil
+        snapshotWindow = nil
         prependSnapshotGeneration += 1
 #if DEBUG
         onDebugAction?("SNAPSHOT remove")
@@ -1430,6 +1482,11 @@ struct NXPostsFeed: View {
             attemptRequestedScroll(to: scrollToIndex)
         }
         .overlay {
+            NXFeedSnapshotHost(stabilizer: layoutStabilizer)
+                .ignoresSafeArea(.container, edges: [.top, .bottom])
+                .allowsHitTesting(false)
+        }
+        .overlay {
             if vm.isHidingFeedForRestore {
                 theme.listBackground
                     .allowsHitTesting(false)
@@ -1500,8 +1557,16 @@ struct NXPostsFeed: View {
     }
     
     private func scrollToFirstUnread() {
-        guard !vmInner.isPerformingScrollToFirstUnread else { return }
+        guard !vmInner.isPerformingScrollToFirstUnread else {
+#if DEBUG
+            vm.recordFeedAction("UNREAD tap · ignored while previous unread scroll is active")
+#endif
+            return
+        }
         if vmInner.unreadCount == 0 {
+#if DEBUG
+            vm.recordFeedAction("UNREAD tap · counter 0 · scroll to top")
+#endif
             scrollToTop()
             return
         }

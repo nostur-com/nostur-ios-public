@@ -225,7 +225,7 @@ class NXColumnViewModel: ObservableObject {
         let geometry = scrollView.map {
             "renderer \(type(of: $0)) · bounds \($0.bounds) · inset \($0.adjustedContentInset) · window \($0.window.map { String(describing: $0.bounds) } ?? "none") · scale \($0.window?.screen.scale ?? 0)"
         } ?? "renderer unavailable"
-        return "\(feed)\n\(geometry)\nrestore \(vmInner.isPreparingForScrollRestore) · programmatic \(vmInner.isPerformingScroll) · unread-scroll \(vmInner.isPerformingScrollToFirstUnread) · hidden \(isHidingFeedForRestore)\n\(feedLayoutDebugState?() ?? "stabilizer unavailable")\n\(feedActionDebugState())"
+        return "\(feed)\n\(geometry)\nrestore \(vmInner.isPreparingForScrollRestore) · programmatic \(vmInner.isPerformingScroll) · unread-scroll \(vmInner.isPerformingScrollToFirstUnread) · unread \(vmInner.unreadCount) · hidden \(isHidingFeedForRestore)\n\(feedLayoutDebugState?() ?? "stabilizer unavailable")\n\(feedActionDebugState())"
     }
 
     @MainActor
@@ -325,23 +325,15 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private func setPosts(_ posts: [NRPost], animated: Bool = true) {
         let oldIDs = Set(currentNRPostsOnScreen.map(\.id))
-        let newIDs = Set(posts.map(\.id))
-        let insertedPostIDs = newIDs.subtracting(oldIDs)
-        let removedPostIDs = oldIDs.subtracting(newIDs)
-        let shouldAnimateOffscreenInsertion = !isFeedActivelyScrolling && NXFeedViewport.shouldAnimateOffscreenInsertion(
-            insertedPostIDs: insertedPostIDs,
-            removedPostIDs: removedPostIDs,
-            visiblePostIDs: currentVisiblePostIds(),
-            isPreparingRestore: vmInner.isPreparingForScrollRestore,
-            isAtTop: isFeedActuallyAtTop
-        )
         // Pin whenever newer rows land above the reading post. That includes
         // autoScroll-off at the visual top: keep the current first post instead
-        // of a hide-and-scrollTo restore. Auto-scroll at top still lets SwiftUI
+        // of a hide-and-scrollTo restore. Even a pure offscreen prepend can
+        // invalidate List height estimates and reset its offset on Catalyst, so
+        // it must use the covered anchor path. Auto-scroll at top still lets SwiftUI
         // move to the newest post.
         let pinInsertAbove = shouldPinFeedUpdate(to: posts)
             && (!isFeedActuallyAtTop || !SettingsStore.shared.autoScroll)
-        if pinInsertAbove && !shouldAnimateOffscreenInsertion,
+        if pinInsertAbove,
            let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
             let oldPosts = currentNRPostsOnScreen
             let requestedNewCount = posts.count { !oldIDs.contains($0.id) }
@@ -374,7 +366,7 @@ class NXColumnViewModel: ObservableObject {
             return
         }
 
-        if (animated || shouldAnimateOffscreenInsertion) && !isFeedActivelyScrolling {
+        if animated && !isFeedActivelyScrolling {
             withAnimation {
                 viewState = .posts(posts)
             }
