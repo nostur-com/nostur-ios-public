@@ -115,6 +115,16 @@ enum NXIncomingFeedPosts {
         }
         return merged
     }
+
+    /// Reaching the top of the posts already on screen inserts held posts above
+    /// that row. Those posts have not been read, so they keep their unread count.
+    static func unreadIDsAfterReachingTop(
+        unreadIDs: [String: Int],
+        preservedIDs: Set<String>
+    ) -> [String: Int] {
+        guard !preservedIDs.isEmpty else { return [:] }
+        return unreadIDs.filter { preservedIDs.contains($0.key) && $0.value > 0 }
+    }
 }
 
 enum NXFeedStructuralUpdate {
@@ -350,16 +360,19 @@ class NXColumnViewModel: ObservableObject {
     /// During an active drag/deceleration UIKit also owns the scroll position, so updates are
     /// deferred by the anchor coordinator until scrolling finishes.
     @MainActor
-    private func setPosts(_ posts: [NRPost], animated: Bool = true) {
+    private func setPosts(_ posts: [NRPost], animated: Bool = true, forcePin: Bool = false) {
         let oldIDs = Set(currentNRPostsOnScreen.map(\.id))
         // Pin whenever newer rows land above the reading post. That includes
         // autoScroll-off at the visual top: keep the current first post instead
         // of a hide-and-scrollTo restore. Even a pure offscreen prepend can
         // invalidate List height estimates and reset its offset on Catalyst, so
         // it must use the covered anchor path. Auto-scroll at top still lets SwiftUI
-        // move to the newest post.
-        let pinInsertAbove = shouldPinFeedUpdate(to: posts)
+        // move to the newest post, unless the caller is revealing posts the user
+        // has not read yet.
+        let pinInsertAbove = forcePin || (
+            shouldPinFeedUpdate(to: posts)
             && (!isFeedActuallyAtTop || !SettingsStore.shared.autoScroll)
+        )
         if pinInsertAbove,
            let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
             let oldPosts = currentNRPostsOnScreen
@@ -1133,26 +1146,29 @@ class NXColumnViewModel: ObservableObject {
         return fresh.count
     }
 
-    /// The user reached the top. Let the normal at-top prepend path show what was held.
+    /// The user reached the top of the posts already on screen. Insert what was
+    /// held above that row and keep the row they reached in place. Returns the
+    /// ids that are still unread.
     @MainActor
-    func flushHeldNewerPostsIfAtTop() {
-        guard !heldNewerPosts.isEmpty, isFeedActuallyAtTop else { return }
-        guard case .posts(let existing) = viewState else { return }
+    @discardableResult
+    func flushHeldNewerPostsIfAtTop() -> Set<String> {
+        guard !heldNewerPosts.isEmpty, isFeedActuallyAtTop else { return [] }
+        guard case .posts(let existing) = viewState else { return [] }
         let fresh = mergedNewerPosts(held: drainHeldNewerPosts(), incoming: [], onScreen: existing)
-        guard !fresh.isEmpty else { return }
-        if vmInner.readingPostID == nil {
-            vmInner.readingPostID = existing.first?.id
+        guard !fresh.isEmpty else { return [] }
+        let anchorID = existing.first?.id
+        vmInner.readingPostID = anchorID
+        if let anchorID {
+            vmInner.rememberFeedAnchor?(anchorID)
         }
-        if !SettingsStore.shared.autoScroll, let firstID = existing.first?.id {
-            vmInner.rememberFeedAnchor?(firstID)
-            vmInner.holdUnreadAboveReadingPost = true
-        }
-        setPosts(fresh + existing)
+        vmInner.holdUnreadAboveReadingPost = true
+        setPosts(fresh + existing, forcePin: true)
 #if DEBUG
         recordFeedAction(
-            "RELEASED \(fresh.count) held newer at top · \(existing.count)→\(fresh.count + existing.count) · auto-scroll \(SettingsStore.shared.autoScroll)"
+            "RELEASED \(fresh.count) held newer above the reached row · unread kept · \(existing.count)→\(fresh.count + existing.count)"
         )
 #endif
+        return Set(fresh.map(\.id))
     }
 
     @MainActor

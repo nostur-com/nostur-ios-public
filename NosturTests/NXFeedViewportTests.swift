@@ -894,6 +894,21 @@ final class NXFeedViewportTests: XCTestCase {
         )
     }
 
+    func testReachingTheTopKeepsHeldPostsUnread() {
+        let remaining = NXIncomingFeedPosts.unreadIDsAfterReachingTop(
+            unreadIDs: ["held-1": 1, "held-2": 2, "already-on-screen": 1, "read": 0],
+            preservedIDs: ["held-1", "held-2"]
+        )
+        XCTAssertEqual(remaining, ["held-1": 1, "held-2": 2])
+        XCTAssertEqual(
+            NXIncomingFeedPosts.unreadIDsAfterReachingTop(
+                unreadIDs: ["old": 1],
+                preservedIDs: []
+            ),
+            [:]
+        )
+    }
+
     func testReadRowRemovalWaitsUntilTheFeedIsAtTop() {
         XCTAssertFalse(NXFeedStructuralUpdate.shouldMutateRows(isVisuallyAtTop: false))
         XCTAssertTrue(NXFeedStructuralUpdate.shouldMutateRows(isVisuallyAtTop: true))

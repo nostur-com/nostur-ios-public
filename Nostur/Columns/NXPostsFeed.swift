@@ -1998,10 +1998,16 @@ struct NXPostsFeed: View {
         // Status-bar tap-to-top never goes through scrollToTop(). Detect it from
         // the live offset and clear unread even if isAtTop was already true.
         if isAtTopNow && !vmInner.isPreparingForScrollRestore {
-            vm.flushHeldNewerPostsIfAtTop()
-            vmInner.readingPostID = nil
-            vmInner.holdUnreadAboveReadingPost = false
-            markAllAsRead(reason: "live at-top detection")
+            let preservedUnreadIDs = vm.flushHeldNewerPostsIfAtTop()
+            if !preservedUnreadIDs.isEmpty {
+                // The user reached the previous top. Posts inserted above that
+                // row are not read yet, so the counter keeps them.
+                markAllAsRead(reason: "live at-top, kept held newer", preserving: preservedUnreadIDs)
+            } else if !vmInner.holdUnreadAboveReadingPost {
+                vmInner.readingPostID = nil
+                vmInner.holdUnreadAboveReadingPost = false
+                markAllAsRead(reason: "live at-top detection")
+            }
         }
 
         guard !vmInner.isPreparingForScrollRestore else { return }
@@ -2026,20 +2032,23 @@ struct NXPostsFeed: View {
         vmInner.updateIsAtTopSubject.send()
     }
     
-    private func markAllAsRead(reason: String) {
-        if !vmInner.unreadIds.isEmpty {
+    private func markAllAsRead(reason: String, preserving preservedIDs: Set<String> = []) {
+        let remaining = NXIncomingFeedPosts.unreadIDsAfterReachingTop(
+            unreadIDs: vmInner.unreadIds,
+            preservedIDs: preservedIDs
+        )
+        guard remaining != vmInner.unreadIds else { return }
 #if DEBUG
-            let unreadRowIDs = vmInner.unreadIds.compactMap { id, unreadCount in
-                unreadCount > 0 ? id : nil
-            }
-            vm.recordFeedAction(
-                "UNREAD clear all · \(reason) · \(unreadRowIDs.count) rows · restore \(vmInner.isPreparingForScrollRestore) · scroll \(vmInner.isPerformingScroll) · unread-scroll \(vmInner.isPerformingScrollToFirstUnread) · pending-layout \(layoutStabilizer.isProgrammaticScrollPending) · \(vm.feedActionDebugViewport())"
-            )
-            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.markAllAsRead() · \(reason) · \(unreadRowIDs.count) rows -[LOG]-")
-            vmInner.recordUnreadReadReasons(ids: unreadRowIDs, reason: reason)
-#endif
-            vmInner.unreadIds = [:]
+        let unreadRowIDs = vmInner.unreadIds.compactMap { id, unreadCount in
+            unreadCount > 0 ? id : nil
         }
+        vm.recordFeedAction(
+            "UNREAD clear all · \(reason) · \(unreadRowIDs.count) rows · kept \(remaining.count) · restore \(vmInner.isPreparingForScrollRestore) · scroll \(vmInner.isPerformingScroll) · unread-scroll \(vmInner.isPerformingScrollToFirstUnread) · pending-layout \(layoutStabilizer.isProgrammaticScrollPending) · \(vm.feedActionDebugViewport())"
+        )
+        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.markAllAsRead() · \(reason) · \(unreadRowIDs.count) rows -[LOG]-")
+        vmInner.recordUnreadReadReasons(ids: unreadRowIDs.filter { remaining[$0] == nil }, reason: reason)
+#endif
+        vmInner.unreadIds = remaining
     }
 }
 
