@@ -63,6 +63,48 @@ final class ProfileImageSafetyTests: XCTestCase {
         XCTAssertEqual(response.image.size.height, 1080)
     }
 
+    @MainActor
+    func testGIFLayoutKeepsSourceDimensionsAfterResize() async throws {
+        let data = try makeGIF(width: 1000, height: 2999, frameCount: 2)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).gif")
+        try data.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        // Reproduce the rounding that used to cross the feed's 1200-point limit.
+        let request = ImageRequest(url: url, processors: [
+            ImageProcessors.Resize(size: CGSize(width: 800, height: 1300), unit: .pixels, contentMode: .aspectFit)
+        ])
+        let response = try await ImageProcessing.shared.content.imageTask(with: request).response
+        XCTAssertEqual(response.image.cgImage?.width, 433)
+        XCTAssertEqual(response.image.cgImage?.height, 1300)
+        XCTAssertEqual(response.container.sourceDimensions, CGSize(width: 1000, height: 2999))
+        let aspect = try XCTUnwrap(MediaFrameLayout.aspect(for: response.container.sourceDimensions))
+        let layout = MediaFrameLayout(availableWidth: 400, aspect: aspect, placeholderAspect: 4 / 3, maxHeight: 1200, contentMode: .fit)
+        XCTAssertEqual(layout.height, 1199.6, accuracy: 0.001)
+        XCTAssertEqual(layout.contentMode, .fit)
+    }
+
+    @MainActor
+    func testStillImageLayoutKeepsOrientedSourceDimensionsAfterResize() async throws {
+        let gif = try makeGIF(width: 1000, height: 2999)
+        let source = try XCTUnwrap(CGImageSourceCreateWithData(gif as CFData, nil))
+        let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        let jpeg = NSMutableData()
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(jpeg, UTType.jpeg.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, image, [kCGImagePropertyOrientation: 6] as CFDictionary)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).jpg")
+        try (jpeg as Data).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let request = ImageRequest(url: url, processors: [
+            ImageProcessors.Resize(size: CGSize(width: 800, height: 1300), unit: .pixels, contentMode: .aspectFit)
+        ])
+        let response = try await ImageProcessing.shared.content.imageTask(with: request).response
+        XCTAssertEqual(response.container.sourceDimensions, CGSize(width: 2999, height: 1000))
+        XCTAssertLessThan(response.image.size.width * response.image.scale, 2999)
+    }
+
     func testLargerAnimationOffersWorkingOverride() async throws {
         let data = try makeGIF(width: 2, height: 2, frameCount: 401)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).gif")

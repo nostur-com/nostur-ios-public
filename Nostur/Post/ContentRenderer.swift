@@ -207,6 +207,7 @@ struct ContentRenderer: View { // VIEW things
                                     url: mediaContent.url,
                                     pubkey: nrPost.pubkey,
                                     nrPost: nrPost,
+                                    metaDimension: mediaContent.dimensions,
                                     autoload: shouldAutoload
                                 )
                             }

@@ -9,6 +9,34 @@ import SwiftUI
 import NukeUI
 import Nuke
 
+/// The requested mode determines row height; clipping tall fit-mode media must not
+/// replace its aspect-derived height with the generic placeholder's aspect.
+struct MediaFrameLayout {
+    let height: CGFloat
+    let contentMode: ContentMode
+
+    init(availableWidth: CGFloat, aspect: CGFloat, placeholderAspect: CGFloat?, maxHeight: CGFloat, contentMode: ContentMode, fullScreen: Bool = false) {
+        let aspect = aspect.isFinite && aspect > 0 ? aspect : 4 / 3
+        if contentMode == .fill {
+            let fillAspect = placeholderAspect.flatMap { $0.isFinite && $0 > 0 ? $0 : nil }
+            height = min(maxHeight, fillAspect.map { availableWidth / $0 } ?? maxHeight)
+            self.contentMode = .fill
+        } else {
+            let naturalHeight = availableWidth / aspect
+            height = min(naturalHeight, maxHeight)
+            self.contentMode = !fullScreen && naturalHeight > maxHeight ? .fill : .fit
+        }
+    }
+
+    static func aspect(for dimensions: CGSize?) -> CGFloat? {
+        guard let dimensions,
+              dimensions.width.isFinite, dimensions.height.isFinite,
+              dimensions.width > 0, dimensions.height > 0 else { return nil }
+        let aspect = dimensions.width / dimensions.height
+        return aspect.isFinite && aspect > 0 ? aspect : nil
+    }
+}
+
 struct MediaContentView: View {
     public var galleryItem: GalleryItem
     public var availableWidth: CGFloat
@@ -31,30 +59,8 @@ struct MediaContentView: View {
     
     public var zoomableId: String = "Default"
     
-    // The actual dimensions, once the image is actually processed and loaded, should be set after download/processing
+    // Source canvas dimensions become available after decoding, before resize/crop processing.
     @State private var realDimensions: CGSize?
-    
-    // Force fill and clip if image is too long
-    private var shouldForceToFill: Bool {
-        if fullScreen { return false }
-        if let realDimensions { // use aspect from actual dimensions from real image
-            let aspect = realDimensions.width / realDimensions.height
-            if availableWidth > (maxHeight * aspect) {
-                return true
-            }
-        }
-        else if let metaAspect = galleryItem.aspect { // use aspect from imeta
-            if availableWidth > (maxHeight * metaAspect) {
-                return true
-            }
-        }
-        else if let placeholderAspect { // use aspect from placeholder
-            if availableWidth > (maxHeight * placeholderAspect) {
-                return true
-            }
-        }
-        return false
-    }
     
     var body: some View {
         MediaPlaceholder(
@@ -63,7 +69,7 @@ struct MediaContentView: View {
             availableWidth: availableWidth,
             placeholderAspect: placeholderAspect,
             maxHeight: maxHeight,
-            contentMode: shouldForceToFill ? .fill : contentMode,
+            contentMode: contentMode,
             fullScreen: fullScreen,
             galleryItems: galleryItems,
             realDimensions: $realDimensions,
@@ -110,35 +116,20 @@ struct MediaPlaceholder: View {
     
     @State private var blurImage: UIImage?
     
-    private var aspect: CGFloat {
-        if let realDimensions { // real aspect
-            return realDimensions.width / realDimensions.height
-        }
-        
-        if let metaAspect = galleryItem.aspect { // aspect from imeta
-            return metaAspect
-        }
-        
-        // Aspect from placeholder param, else just guess 4:3
-        return placeholderAspect ?? 4/3
+    private var layout: MediaFrameLayout {
+        MediaFrameLayout(
+            availableWidth: availableWidth,
+            aspect: MediaFrameLayout.aspect(for: realDimensions)
+                ?? MediaFrameLayout.aspect(for: galleryItem.dimensions)
+                ?? placeholderAspect ?? 4 / 3,
+            placeholderAspect: placeholderAspect,
+            maxHeight: maxHeight,
+            contentMode: contentMode,
+            fullScreen: fullScreen
+        )
     }
-    
-    private var height: CGFloat {
-        // if .fill, we fill to placeholder height (derived from placeholder aspect)
-        
-        if contentMode == .fill {
-            let fillHeight: CGFloat? = if let placeholderAspect {
-                availableWidth / placeholderAspect
-            }
-            else { nil }
-            
-            // but not bigger than maxHeight
-            return min(maxHeight, fillHeight ?? maxHeight)
-        }
 
-        // if .fit scale up height, but not bigger than maxHeight
-        return min(availableWidth / aspect, maxHeight)
-    }
+    private var height: CGFloat { layout.height }
 
     private var imageRequestTargetSize: CGSize? {
         if fullScreen {
@@ -151,7 +142,7 @@ struct MediaPlaceholder: View {
     }
     
     var body: some View {
-        if contentMode == .fit {
+        if layout.contentMode == .fit {
             mediaPlaceholder
                 .frame(
                     width: availableWidth,
@@ -184,7 +175,7 @@ struct MediaPlaceholder: View {
     }
 
     private func updateRealDimensions(_ dimensions: CGSize) {
-        guard dimensions.width > 0, dimensions.height > 0,
+        guard let resolvedAspect = MediaFrameLayout.aspect(for: dimensions),
               realDimensions != dimensions else { return }
 
         let update = {
@@ -198,11 +189,10 @@ struct MediaPlaceholder: View {
             return
         }
 
-        let previousAspect = realDimensions.map { $0.width / $0.height }
-            ?? galleryItem.aspect
+        let previousAspect = MediaFrameLayout.aspect(for: realDimensions)
+            ?? MediaFrameLayout.aspect(for: galleryItem.dimensions)
             ?? placeholderAspect
             ?? 4 / 3
-        let resolvedAspect = dimensions.width / dimensions.height
         let previousHeight = min(availableWidth / previousAspect, maxHeight)
         let resolvedHeight = min(availableWidth / resolvedAspect, maxHeight)
 
@@ -223,10 +213,9 @@ struct MediaPlaceholder: View {
     /// before that update makes portrait media appear narrow and then snap to full width.
     private func needsResolvedLayout(for dimensions: CGSize) -> Bool {
         guard contentMode == .fit, !fullScreen, realDimensions == nil,
-              dimensions.width > 0, dimensions.height > 0 else { return false }
+              let resolvedAspect = MediaFrameLayout.aspect(for: dimensions) else { return false }
 
-        let placeholderAspect = galleryItem.aspect ?? self.placeholderAspect ?? 4 / 3
-        let resolvedAspect = dimensions.width / dimensions.height
+        let placeholderAspect = MediaFrameLayout.aspect(for: galleryItem.dimensions) ?? self.placeholderAspect ?? 4 / 3
         let placeholderHeight = min(availableWidth / placeholderAspect, maxHeight)
         let resolvedHeight = min(availableWidth / resolvedAspect, maxHeight)
         return abs(placeholderHeight - resolvedHeight) > 1
@@ -419,7 +408,7 @@ struct MediaPlaceholder: View {
                     }
 //                    .debugDimensions(".image fullscreen", alignment: .top)
             }
-            else if contentMode == .fit {
+            else if layout.contentMode == .fit {
                 ZoomableItem(id: zoomableId) {
                     Image(uiImage: imageInfo.uiImage)
                         .resizable()
@@ -535,7 +524,7 @@ struct MediaPlaceholder: View {
                     gifIsPlaying = false
                 }
             }
-            else if contentMode == .fit {
+            else if layout.contentMode == .fit {
                 ZoomableItem(id: zoomableId) {
                     if nxViewingContext.contains(.screenshot), let flatGif = UIImage(data: gifInfo.gifData) {
                         Image(uiImage: flatGif)

@@ -22,11 +22,16 @@ struct EmbeddedVideoView: View {
     public let autoload: Bool
     public var thumbnail: URL?
     
+    private var mediaHeight: CGFloat {
+        let aspect = MediaFrameLayout.aspect(for: metaDimension) ?? vm.aspect
+        return availableHeight ?? min(availableWidth / aspect, DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+    }
+
     var body: some View {
         switch vm.viewState {
         case .initial:
             theme.background.opacity(0.7)
-                .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: mediaHeight)
                 .overlay {
                     if let thumbnail {
                         MediaContentView(
@@ -48,7 +53,7 @@ struct EmbeddedVideoView: View {
                 }
         case .loading(let percentage), .paused(let percentage):
             theme.background.opacity(0.7)
-                .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: mediaHeight)
                 .overlay {
                     if let thumbnail {
                         MediaContentView(
@@ -136,12 +141,12 @@ struct EmbeddedVideoView: View {
                 
         case .loadedFirstFrame(let firstFrame):
             theme.background.opacity(0.7)
-                .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: mediaHeight)
                 .overlay {
                     Image(uiImage: firstFrame.uiImage)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                        .frame(width: availableWidth, height: mediaHeight)
                         .overlay(alignment: .bottomLeading) {
                             if let durationString = firstFrame.durationString {
                                 Text(durationString)
@@ -180,7 +185,7 @@ struct EmbeddedVideoView: View {
                 }
         case .playingInPIP:
             Color.black
-                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : mediaHeight)
                 .overlay {
                     Image(systemName: "pip")
                         .resizable()
@@ -196,7 +201,7 @@ struct EmbeddedVideoView: View {
                 }
         case .noPreviewFound(let videoUrlString):
             theme.background.opacity(0.7)
-                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : mediaHeight)
                 .overlay {
                     if SettingsStore.shared.lowDataMode {
                         Text(videoUrlString)

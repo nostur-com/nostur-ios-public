@@ -172,10 +172,10 @@ class MediaViewVM: ObservableObject {
                    isAnimatedWebPData(rawData),
                    ProfileImageSafety.isSafeAnimatedImage(rawData, policy: animationPolicy) {
                     Task { @MainActor in
-                        state = .gif(GifInfo(gifData: rawData, realDimensions: response.container.image.size))
+                        state = .gif(GifInfo(gifData: rawData, realDimensions: response.container.sourceDimensions))
                         if generateIMeta {
                             let blurhash: String? = response.container.image.blurHash(numberOfComponents: (4, 3))
-                            let pixelSize = CGSize(width: response.container.image.size.width * UIScreen.main.scale, height: response.container.image.size.height * UIScreen.main.scale)
+                            let pixelSize = response.container.sourceDimensions
                             let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
                             Task { @MainActor in
                                 sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
@@ -191,11 +191,11 @@ class MediaViewVM: ObservableObject {
                 Task { @MainActor in
                     // Can't use withAnimation. Bug keeps sometimes stuck at loading %0
 //                    withAnimation(.smooth(duration: 0.15)) {
-                      state = .gif(GifInfo(gifData: gifData, realDimensions: response.container.image.size))
+                      state = .gif(GifInfo(gifData: gifData, realDimensions: response.container.sourceDimensions))
 //                    }
                     if generateIMeta {
                         let blurhash: String? = response.container.image.blurHash(numberOfComponents: (4, 3))
-                        let pixelSize = CGSize(width: response.container.image.size.width * UIScreen.main.scale, height: response.container.image.size.height * UIScreen.main.scale)
+                        let pixelSize = response.container.sourceDimensions
                         let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
                         Task { @MainActor in
                             sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
@@ -207,12 +207,12 @@ class MediaViewVM: ObservableObject {
                 Task { @MainActor in
                     // Can't use withAnimation. Bug keeps sometimes stuck at loading %0
 //                    withAnimation(.smooth(duration: 0.15)) {
-                        state = .image(ImageInfo(uiImage: response.image, realDimensions: response.image.size))
+                        state = .image(ImageInfo(uiImage: response.image, realDimensions: response.container.sourceDimensions))
 //                    }
                 }
                 if generateIMeta {
                     let blurhash: String? = response.image.blurHash(numberOfComponents: (4, 3))
-                    let pixelSize = await CGSize(width: response.image.size.width * UIScreen.main.scale, height: response.image.size.height * UIScreen.main.scale)
+                    let pixelSize = response.container.sourceDimensions
                     let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
                     Task { @MainActor in
                         sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))

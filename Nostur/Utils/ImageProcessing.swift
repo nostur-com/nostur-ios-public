@@ -170,13 +170,34 @@ struct LimitedImageDecoder: ImageDecoding {
         guard ProfileImageSafety.isSafeAnimatedImage(data, policy: policy) else {
             throw Error.animationTooLarge
         }
-        return try underlying.decode(data)
+        var container = try underlying.decode(data)
+        // Preserve the rendered source canvas before resize/crop processors round its pixels.
+        let image = container.image
+        let pixelSize = image.cgImage.map { CGSize(width: $0.width, height: $0.height) }
+            ?? CGSize(width: image.size.width * image.scale, height: image.size.height * image.scale)
+        switch image.imageOrientation {
+        case .left, .leftMirrored, .right, .rightMirrored:
+            container.userInfo[.sourceDimensions] = CGSize(width: pixelSize.height, height: pixelSize.width)
+        default:
+            container.userInfo[.sourceDimensions] = pixelSize
+        }
+        return container
     }
 
     // Do not progressively decode untrusted image data before complete
     // dimensions and frame counts can be validated.
     func decodePartiallyDownloadedData(_ data: Data) -> ImageContainer? {
         nil
+    }
+}
+
+extension ImageContainer.UserInfoKey {
+    static let sourceDimensions: Self = "com.nostur.source-dimensions"
+}
+
+extension ImageContainer {
+    var sourceDimensions: CGSize {
+        userInfo[.sourceDimensions] as? CGSize ?? image.size
     }
 }
 
