@@ -98,6 +98,33 @@ enum NXUnreadSeenReconciliation {
     }
 }
 
+enum NXIncomingFeedPosts {
+    /// Newer rows above a self-sizing list move the viewport. Keep them off the
+    /// list until the user is at the top or asks to navigate.
+    static func shouldHoldOffscreen(isVisuallyAtTop: Bool) -> Bool {
+        !isVisuallyAtTop
+    }
+
+    /// Held posts are already counted unread, so a later prepend must not drop
+    /// them for being "known" and must not duplicate rows already on screen.
+    static func mergedIDs(held: [String], incoming: [String], onScreen: [String]) -> [String] {
+        var seen = Set(onScreen)
+        var merged: [String] = []
+        for id in held + incoming where seen.insert(id).inserted {
+            merged.append(id)
+        }
+        return merged
+    }
+}
+
+enum NXFeedStructuralUpdate {
+    /// Removing rows or trimming thread parents changes list geometry. While the
+    /// user is reading below the top, update unread counts and leave the rows put.
+    static func shouldMutateRows(isVisuallyAtTop: Bool) -> Bool {
+        isVisuallyAtTop
+    }
+}
+
 enum NXUnreadRegion {
     /// Already-read rows above the parked post that are not on screen. Removing
     /// them keeps unread navigation on the previous unread row instead of skipping.
@@ -411,6 +438,11 @@ class NXColumnViewModel: ObservableObject {
     
     private var didLoadFirstLocalState = false
     private var pendingRestorePrepend: (posts: [NRPost], config: NXColumnConfig, completions: [() -> Void])?
+    /// Newer posts kept out of the list while the user is reading below the top.
+    /// Their unread counts are already in `vmInner.unreadIds`.
+    private var heldNewerPosts: [NRPost] = []
+    /// Parent-thread trims deferred so a visible row does not change height mid-read.
+    private var deferredParentTrims: [(PostOrThreadAttributes, [NRPost])] = []
 
     @MainActor
     var feedLeadingNonPostRowCount: Int {
@@ -844,6 +876,21 @@ class NXColumnViewModel: ObservableObject {
             )
         )
 
+        if !NXFeedStructuralUpdate.shouldMutateRows(isVisuallyAtTop: isFeedActuallyAtTop) {
+            if !parentUpdates.isEmpty {
+                deferParentTrims(parentUpdates)
+                parentUpdates = []
+            }
+            if !postIdsToRemove.isEmpty {
+#if DEBUG
+                recordFeedAction(
+                    "STRUCTURAL cleanup deferred · \(postIdsToRemove.count) rows stay on screen"
+                )
+#endif
+                postIdsToRemove = []
+            }
+        }
+
         guard !postIdsMarkedRead.isEmpty
                 || !unreadCountUpdates.isEmpty
                 || !parentUpdates.isEmpty
@@ -960,10 +1007,12 @@ class NXColumnViewModel: ObservableObject {
     }
 
     @MainActor
-    private func currentTopEdgePostID() -> String? {
+    private func currentTopEdgePostID(allowReadingFallback: Bool = true) -> String? {
         guard case .posts(let posts) = viewState else { return nil }
         let scrollView: UIScrollView? = collectionView ?? tableView
-        guard let scrollView, scrollView.window != nil else { return vmInner.readingPostID }
+        guard let scrollView, scrollView.window != nil else {
+            return allowReadingFallback ? vmInner.readingPostID : nil
+        }
 
         let indexPaths: [IndexPath]
         let sectionCounts: [Int]
@@ -997,7 +1046,7 @@ class NXColumnViewModel: ObservableObject {
             visibleTopY: top
         ),
               let anchor = candidates[safe: anchorIndex] else {
-            return vmInner.readingPostID
+            return allowReadingFallback ? vmInner.readingPostID : nil
         }
         guard let itemIndex = NXFeedIndexMapping.itemIndex(
             for: anchor.0,
@@ -1006,43 +1055,126 @@ class NXColumnViewModel: ObservableObject {
             leadingNonPostRows: feedLeadingNonPostRowCount
         ),
               posts.indices.contains(itemIndex) else {
-            return vmInner.readingPostID
+            return allowReadingFallback ? vmInner.readingPostID : nil
         }
         return posts[itemIndex].id
     }
 
+    /// Drops already-read rows above the visible post only while the feed is
+    /// off screen. Doing it on screen moves a self-sizing list under the reader.
     @MainActor
-    func compactReadRowsAboveReadingPosition() {
-        guard !vmInner.isPreparingForScrollRestore,
-              !vmInner.isPerformingScroll,
-              !vmInner.isPerformingScrollToFirstUnread else { return }
+    private func compactReadRowsAboveVisiblePostWhileHidden() {
+        guard isViewPaused else { return }
         guard case .posts(let posts) = viewState else { return }
+        let floorID = currentTopEdgePostID(allowReadingFallback: false)
         let idsToRemove = NXUnreadRegion.postIDsToRemove(
             postIDs: posts.map(\.id),
             unreadCount: { vmInner.unreadIds[$0, default: 0] },
-            readingPostID: vmInner.readingPostID,
+            readingPostID: floorID,
             visiblePostIDs: currentVisiblePostIds()
         )
         guard !idsToRemove.isEmpty else { return }
         let idSet = Set(idsToRemove)
-        let applyUpdates = { [weak self] () -> [String] in
-            guard let self else { return [] }
-            let resultingPosts = self.currentNRPostsOnScreen.filter { !idSet.contains($0.id) }
-            withTransaction(Transaction(animation: nil)) {
-                self.viewState = .posts(resultingPosts)
-            }
+        let resultingPosts = posts.filter { !idSet.contains($0.id) }
+        withTransaction(Transaction(animation: nil)) {
+            viewState = .posts(resultingPosts)
+        }
 #if DEBUG
-            self.recordFeedAction(
-                "unread region compact · removed \(idSet.count) read rows · kept \(resultingPosts.count) posts"
-            )
+        recordFeedAction(
+            "unread region compact · hidden · removed \(idSet.count) read rows · kept \(resultingPosts.count) posts"
+        )
 #endif
-            return resultingPosts.map(\.id)
+    }
+
+    @MainActor
+    private func holdNewerPosts(_ posts: [NRPost]) {
+        let existingIDs = Set(heldNewerPosts.map(\.id))
+        let fresh = posts.filter { !existingIDs.contains($0.id) }
+        guard !fresh.isEmpty else { return }
+        heldNewerPosts = (fresh + heldNewerPosts).sorted { $0.created_at > $1.created_at }
+    }
+
+    @MainActor
+    private func drainHeldNewerPosts() -> [NRPost] {
+        let posts = heldNewerPosts
+        heldNewerPosts = []
+        return posts
+    }
+
+    @MainActor
+    private func mergedNewerPosts(held: [NRPost], incoming: [NRPost], onScreen: [NRPost]) -> [NRPost] {
+        let byID = Dictionary((held + incoming).map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let ids = NXIncomingFeedPosts.mergedIDs(
+            held: held.map(\.id),
+            incoming: incoming.map(\.id),
+            onScreen: onScreen.map(\.id)
+        )
+        return ids.compactMap { byID[$0] }
+    }
+
+    var hasHeldNewerPosts: Bool { !heldNewerPosts.isEmpty }
+
+    /// Inserts posts that were held while reading. Unread counts were set when they arrived.
+    @MainActor
+    @discardableResult
+    func releaseHeldNewerPostsForNavigation() -> Int {
+        guard !heldNewerPosts.isEmpty else { return 0 }
+        guard case .posts(let existing) = viewState else { return 0 }
+        let fresh = mergedNewerPosts(held: drainHeldNewerPosts(), incoming: [], onScreen: existing)
+        guard !fresh.isEmpty else { return 0 }
+        withTransaction(Transaction(animation: nil)) {
+            viewState = .posts(fresh + existing)
         }
-        if let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
-            performAnchoredFeedUpdate(NXFeedViewport.unreadRemovalCoverReason, applyUpdates)
-        } else {
-            _ = applyUpdates()
+#if DEBUG
+        recordFeedAction(
+            "RELEASED \(fresh.count) held newer for navigation · \(existing.count)→\(fresh.count + existing.count)"
+        )
+#endif
+        return fresh.count
+    }
+
+    /// The user reached the top. Let the normal at-top prepend path show what was held.
+    @MainActor
+    func flushHeldNewerPostsIfAtTop() {
+        guard !heldNewerPosts.isEmpty, isFeedActuallyAtTop else { return }
+        guard case .posts(let existing) = viewState else { return }
+        let fresh = mergedNewerPosts(held: drainHeldNewerPosts(), incoming: [], onScreen: existing)
+        guard !fresh.isEmpty else { return }
+        if vmInner.readingPostID == nil {
+            vmInner.readingPostID = existing.first?.id
         }
+        if !SettingsStore.shared.autoScroll, let firstID = existing.first?.id {
+            vmInner.rememberFeedAnchor?(firstID)
+            vmInner.holdUnreadAboveReadingPost = true
+        }
+        setPosts(fresh + existing)
+#if DEBUG
+        recordFeedAction(
+            "RELEASED \(fresh.count) held newer at top · \(existing.count)→\(fresh.count + existing.count) · auto-scroll \(SettingsStore.shared.autoScroll)"
+        )
+#endif
+    }
+
+    @MainActor
+    private func deferParentTrims(_ trims: [(PostOrThreadAttributes, [NRPost])]) {
+        var byIdentity: [ObjectIdentifier: (PostOrThreadAttributes, [NRPost])] = [:]
+        for trim in deferredParentTrims + trims {
+            byIdentity[ObjectIdentifier(trim.0)] = trim
+        }
+        deferredParentTrims = Array(byIdentity.values)
+    }
+
+    @MainActor
+    private func applyDeferredParentTrims() {
+        guard !deferredParentTrims.isEmpty else { return }
+        let trims = deferredParentTrims
+        deferredParentTrims.removeAll(keepingCapacity: true)
+        for (attributes, parents) in trims {
+            attributes.parentPosts = parents
+        }
+#if DEBUG
+        recordFeedAction("deferred parent trim · \(trims.count) threads · feed hidden")
+#endif
     }
 
     private var syncFeedSubject = PassthroughSubject<Void, Never>()
@@ -2119,6 +2251,9 @@ class NXColumnViewModel: ObservableObject {
         // the List disappears and mistakes every row for offscreen.
         seenReconciliationScheduler.cancel()
         pendingSyncedSeenIds.removeAll(keepingCapacity: true)
+        // The list is leaving the screen. Structural cleanup here cannot jump.
+        applyDeferredParentTrims()
+        compactReadRowsAboveVisiblePostWhileHidden()
     }
     
     @MainActor
@@ -5048,17 +5183,52 @@ extension NXColumnViewModel {
                     "PREPEND decide · visualTop \(isAtTop) · added \(onlyNewAddedPosts.count) · existing \(existingPosts.count) · reading \((vmInner.readingPostID ?? vmInner.pendingScrollToPostID).map(shortDebugID) ?? "none") · \(feedActionDebugViewport())"
                 )
 #endif
-   
-                let addedAndExistingPosts = onlyNewAddedPosts + existingPosts
+
+                if NXIncomingFeedPosts.shouldHoldOffscreen(isVisuallyAtTop: isAtTop) && !revealAtTop {
+                    vmInner.updateUnreadIds { unreadIds in
+                        for post in onlyNewAddedPosts {
+                            if unreadIds[post.id] == nil {
+                                unreadIds[post.id] = 1 + post.parentPosts.count
+                            }
+                        }
+                    }
+                    if !onlyNewAddedPosts.isEmpty {
+                        holdNewerPosts(onlyNewAddedPosts)
+#if DEBUG
+                        recordFeedAction(
+                            "HELD \(onlyNewAddedPosts.count) newer off the list · pending \(heldNewerPosts.count) · \(feedActionDebugViewport())"
+                        )
+#endif
+                    }
+                    if vmInner.readingPostID == nil {
+                        vmInner.readingPostID = vmInner.pendingScrollToPostID ?? currentTopEdgePostID()
+                    }
+                    completion?()
+                    didFinish()
+                    return
+                }
+
+                let postsToPrepend = mergedNewerPosts(
+                    held: isAtTop ? drainHeldNewerPosts() : [],
+                    incoming: onlyNewAddedPosts,
+                    onScreen: existingPosts
+                )
+                guard !postsToPrepend.isEmpty else {
+                    completion?()
+                    didFinish()
+                    return
+                }
+
+                let addedAndExistingPosts = postsToPrepend + existingPosts
                 
-                // Truncate if needed (only if posts are inerted at the top)
+                // Truncate if needed (only if posts are inserted at the top)
                 let dropCount = max(0, addedAndExistingPosts.count - FEED_MAX_VISIBLE) // Drop any above FEED_MAX_VISIBLE
                 // But never drop the current first 10 so we can
                 // - Add new at top, but keep scroll position by staying on current first (can't do that if its removed, we end up  scrolled to top bug)
                 // - Also still make possible to scroll down a bit
                 
                 // So we need to keep: onlyNew+10, make sure when we .dropLast() it does not become less than that
-                let notTooMuch = (addedAndExistingPosts.count - dropCount) > (onlyNewAddedPosts.count + 10)
+                let notTooMuch = (addedAndExistingPosts.count - dropCount) > (postsToPrepend.count + 10)
                 
                 // also don't drop too little for performance
                 let notTooLittle = dropCount > 5
@@ -5071,9 +5241,9 @@ extension NXColumnViewModel {
                     addedAndExistingPosts
                 }
                 
-                // Update unread count
+                // Update unread count. Held posts were counted when they arrived.
                 vmInner.updateUnreadIds { unreadIds in
-                    for post in onlyNewAddedPosts {
+                    for post in postsToPrepend {
                         if unreadIds[post.id] == nil {
                             unreadIds[post.id] = 1 + post.parentPosts.count
                         }
@@ -5116,7 +5286,7 @@ extension NXColumnViewModel {
                         setPosts(addedAndExistingPostsTruncated)
 #if DEBUG
                         recordFeedAction(
-                            "inserted \(onlyNewAddedPosts.count) newer at top · \(existingPosts.count)→\(addedAndExistingPostsTruncated.count) · auto-scroll · \(feedActionDebugViewport())"
+                            "inserted \(postsToPrepend.count) newer at top · \(existingPosts.count)→\(addedAndExistingPostsTruncated.count) · auto-scroll · \(feedActionDebugViewport())"
                         )
 #endif
                     }
@@ -5133,17 +5303,6 @@ extension NXColumnViewModel {
                         vmInner.holdUnreadAboveReadingPost = true
                         setPosts(addedAndExistingPostsTruncated)
                     }
-                }
-                else {
-#if DEBUG
-                    L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) pin visible post + not at top, to keep scroll pos -[LOG]-")
-#endif
-                    // Keep the reading identity so a remounted List or a delayed restore
-                    // scroll can still find the same post after rows are inserted above it.
-                    if vmInner.readingPostID == nil {
-                        vmInner.readingPostID = vmInner.pendingScrollToPostID
-                    }
-                    setPosts(addedAndExistingPostsTruncated)
                 }
             }
             else { // add below

@@ -869,6 +869,35 @@ final class NXFeedViewportTests: XCTestCase {
         XCTAssertFalse(stabilizer.hasActivePrependCover)
         stabilizer.suspendPositionTracking()
     }
+
+    func testNewerPostsStayOffscreenUntilTheFeedIsAtTop() {
+        XCTAssertTrue(NXIncomingFeedPosts.shouldHoldOffscreen(isVisuallyAtTop: false))
+        XCTAssertFalse(NXIncomingFeedPosts.shouldHoldOffscreen(isVisuallyAtTop: true))
+    }
+
+    func testHeldPostsMergeAheadOfIncomingWithoutDuplicatingTheScreen() {
+        XCTAssertEqual(
+            NXIncomingFeedPosts.mergedIDs(
+                held: ["new-2", "new-1"],
+                incoming: ["new-1", "new-0"],
+                onScreen: ["visible"]
+            ),
+            ["new-2", "new-1", "new-0"]
+        )
+        XCTAssertEqual(
+            NXIncomingFeedPosts.mergedIDs(
+                held: ["visible"],
+                incoming: ["fresh"],
+                onScreen: ["visible"]
+            ),
+            ["fresh"]
+        )
+    }
+
+    func testReadRowRemovalWaitsUntilTheFeedIsAtTop() {
+        XCTAssertFalse(NXFeedStructuralUpdate.shouldMutateRows(isVisuallyAtTop: false))
+        XCTAssertTrue(NXFeedStructuralUpdate.shouldMutateRows(isVisuallyAtTop: true))
+    }
 }
 
 @MainActor
