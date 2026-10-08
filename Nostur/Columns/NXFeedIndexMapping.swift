@@ -219,6 +219,32 @@ enum NXFeedViewport {
             || shouldCoverViewport(updateReasons: updateReasons)
     }
 
+    /// Cell count that includes every post inserted above the parked row.
+    /// `nil` when this update did not add rows, so settle must not wait.
+    static func prependMinimumCellCount(cellsBefore: Int, insertedCount: Int) -> Int? {
+        // A zero count means the scroll view has not reported its rows yet.
+        // Treating that as "one more cell" would finish before the real insert.
+        guard cellsBefore > 0, insertedCount > 0 else { return nil }
+        return cellsBefore + insertedCount
+    }
+
+    /// The pre-insert list looks aligned for several frames after an unread landing,
+    /// while SwiftUI is still applying the new row. Finishing then lifts the cover
+    /// and the row paints at the top, pushing the feed down.
+    static func shouldFinishAnchoredSettle(
+        stableSamples: Int,
+        step: Int,
+        extended: Bool,
+        renderedCellCount: Int,
+        prependMinimumCellCount: Int?
+    ) -> Bool {
+        guard stableSamples >= 3 else { return false }
+        if let prependMinimumCellCount, renderedCellCount < prependMinimumCellCount {
+            return false
+        }
+        return !extended || step >= 7
+    }
+
     /// Let SwiftUI/List animate a pure offscreen deletion. List already keeps the
     /// visible rows stable for this case, while an identity settle can fight its
     /// transient self-sizing layout and visibly correct a viewport that never moved.

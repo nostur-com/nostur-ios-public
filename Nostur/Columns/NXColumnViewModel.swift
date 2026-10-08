@@ -5271,6 +5271,8 @@ extension NXColumnViewModel {
                     else {
                         // Same snapshot pin as a mid-feed prepend. hide+scrollTo
                         // "restore first post" flashed a second restore cover.
+                        // forcePin keeps this off the animated insert path, which
+                        // paints the new row at the top and pushes the feed down.
                         if vmInner.readingPostID == nil {
                             vmInner.readingPostID = previousFirstPostId
                                 ?? vmInner.pendingScrollToPostID
@@ -5279,7 +5281,7 @@ extension NXColumnViewModel {
                             vmInner.rememberFeedAnchor?(previousFirstPostId)
                         }
                         vmInner.holdUnreadAboveReadingPost = true
-                        setPosts(addedAndExistingPostsTruncated)
+                        setPosts(addedAndExistingPostsTruncated, animated: false, forcePin: true)
                     }
                 }
                 else {

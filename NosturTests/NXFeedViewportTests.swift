@@ -668,6 +668,52 @@ final class NXFeedViewportTests: XCTestCase {
         ))
     }
 
+    func testPrependSettleWaitsUntilTheNewCellsExist() {
+        XCTAssertNil(NXFeedViewport.prependMinimumCellCount(cellsBefore: 21, insertedCount: 0))
+        XCTAssertNil(NXFeedViewport.prependMinimumCellCount(cellsBefore: 0, insertedCount: 1))
+        XCTAssertEqual(NXFeedViewport.prependMinimumCellCount(cellsBefore: 21, insertedCount: 1), 22)
+
+        // Right after an unread landing the old list is already aligned. Finishing
+        // there lifts the cover before the new row exists, and it pushes the feed down.
+        XCTAssertFalse(
+            NXFeedViewport.shouldFinishAnchoredSettle(
+                stableSamples: 3,
+                step: 7,
+                extended: true,
+                renderedCellCount: 21,
+                prependMinimumCellCount: 22
+            )
+        )
+        XCTAssertTrue(
+            NXFeedViewport.shouldFinishAnchoredSettle(
+                stableSamples: 3,
+                step: 7,
+                extended: true,
+                renderedCellCount: 22,
+                prependMinimumCellCount: 22
+            )
+        )
+        // Estimated heights still need the extended settle's minimum frames.
+        XCTAssertFalse(
+            NXFeedViewport.shouldFinishAnchoredSettle(
+                stableSamples: 3,
+                step: 6,
+                extended: true,
+                renderedCellCount: 22,
+                prependMinimumCellCount: 22
+            )
+        )
+        XCTAssertTrue(
+            NXFeedViewport.shouldFinishAnchoredSettle(
+                stableSamples: 3,
+                step: 2,
+                extended: false,
+                renderedCellCount: 21,
+                prependMinimumCellCount: nil
+            )
+        )
+    }
+
     func testSettleDoesNotCountMissingFramesOrChangingEstimatesAsStable() {
         var progress = NXFeedSettleProgress()
         for _ in 0..<5 { progress.observe(geometry: nil, corrected: false) }

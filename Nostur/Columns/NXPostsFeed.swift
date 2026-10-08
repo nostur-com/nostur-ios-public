@@ -587,6 +587,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard !updates.isEmpty else { return }
 
         let oldIDs = itemIDs
+        let cellsBefore = scrollView.map { renderedCellCount(in: $0) }
         // A queued update can flush after finger-up deceleration has moved several rows
         // beyond `parked` (which is intentionally only updated while the finger is down).
         // Capture the real top edge immediately before mutating the List so a deferred
@@ -612,8 +613,14 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
         updates.forEach { $0.apply() }
 
-#if DEBUG
         let addedCount = itemIDs.count { !oldIDs.contains($0) }
+        // The pre-insert list is already aligned. Wait until UIKit has a cell
+        // for every added post before that alignment is allowed to lift the cover.
+        let prependMinimumCellCount = NXFeedViewport.shouldCoverPrepend(updateReasons: updateReasons)
+            ? cellsBefore.flatMap { NXFeedViewport.prependMinimumCellCount(cellsBefore: $0, insertedCount: addedCount) }
+            : nil
+
+#if DEBUG
         let removedCount = oldIDs.count { !itemIDs.contains($0) }
         if addedCount > 0 || removedCount > 0 {
             onDebugAction?(
@@ -659,7 +666,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             startSettling(
                 anchor: (post.id, post.visibleTopOffset),
                 extended: needsExtendedSettling,
-                bringOnScreen: pinByIdentity
+                bringOnScreen: pinByIdentity,
+                prependMinimumCellCount: prependMinimumCellCount
             )
         case .retarget(let livePost):
             parked = livePost
@@ -680,7 +688,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private func startSettling(
         anchor: (id: String, visibleTopOffset: CGFloat),
         extended: Bool,
-        bringOnScreen: Bool
+        bringOnScreen: Bool,
+        prependMinimumCellCount: Int? = nil
     ) {
         anchorGeneration += 1
         let generation = anchorGeneration
@@ -705,6 +714,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 #if DEBUG
             var offsetAfterYield: CGFloat?
             var correctionCount = 0
+            var didLogPrependWait = false
 #endif
 
             for step in 0..<maxSteps {
@@ -748,6 +758,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     return
                 }
 
+                if let prependMinimumCellCount,
+                   self.renderedCellCount(in: scrollView) < prependMinimumCellCount {
+                    // The List update is often committed but not laid out yet, especially
+                    // while the unread jump is still resolving row heights.
+                    scrollView.layoutIfNeeded()
+                }
+
                 let shouldBringOnScreen = bringOnScreen && !didBringOnScreen
                 let result = self.restore(
                     anchor: anchor,
@@ -760,12 +777,29 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
                 let geometry = result == .unavailable ? nil : self.settleGeometry(anchorID: anchor.id, in: scrollView)
                 progress.observe(geometry: geometry, corrected: result == .corrected)
+                let renderedCellCount = self.renderedCellCount(in: scrollView)
 #if DEBUG
                 if result == .corrected { correctionCount += 1 }
+                if let prependMinimumCellCount,
+                   renderedCellCount < prependMinimumCellCount,
+                   !didLogPrependWait {
+                    didLogPrependWait = true
+                    self.onDebugAction?(
+                        "SETTLE waiting · rendered cells \(renderedCellCount)/\(prependMinimumCellCount) · \(self.viewportDebugSummary())"
+                    )
+                }
 #endif
                 // A covered List mutation needs time to replace its estimated heights;
                 // two no-op restores immediately after yield do not prove it has settled.
-                if progress.stableSamples >= 3, !extended || step >= 7 {
+                // A prepend also has to be in UIKit first. The pre-insert list is already
+                // aligned, and finishing on it lets the new row push the feed down.
+                if NXFeedViewport.shouldFinishAnchoredSettle(
+                    stableSamples: progress.stableSamples,
+                    step: step,
+                    extended: extended,
+                    renderedCellCount: renderedCellCount,
+                    prependMinimumCellCount: prependMinimumCellCount
+                ) {
 #if DEBUG
                     self.recordSettlingResult(
                         anchor: anchor,
@@ -996,6 +1030,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         return frame
     }
 
+    private func renderedCellCount(in scrollView: UIScrollView) -> Int {
+        sectionCounts(in: scrollView).reduce(0, +)
+    }
+
     private func sectionCounts(in scrollView: UIScrollView) -> [Int] {
         if let collectionView = scrollView as? UICollectionView {
             return (0..<collectionView.numberOfSections).map { collectionView.numberOfItems(inSection: $0) }
@@ -1052,6 +1090,9 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 500_000_000)
             guard let self, self.prependSnapshotGeneration == generation else { return }
+            // The prepend settle removes its own cover. A slow List update can
+            // still be pinning the previous first row when this timer fires.
+            guard self.settleTask == nil else { return }
 #if DEBUG
             self.onDebugAction?("SNAPSHOT timeout · removed leftover cover")
 #endif
