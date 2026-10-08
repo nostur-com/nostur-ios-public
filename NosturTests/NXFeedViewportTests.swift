@@ -870,11 +870,6 @@ final class NXFeedViewportTests: XCTestCase {
         stabilizer.suspendPositionTracking()
     }
 
-    func testNewerPostsStayOffscreenUntilTheFeedIsAtTop() {
-        XCTAssertTrue(NXIncomingFeedPosts.shouldHoldOffscreen(isVisuallyAtTop: false))
-        XCTAssertFalse(NXIncomingFeedPosts.shouldHoldOffscreen(isVisuallyAtTop: true))
-    }
-
     func testHeldPostsMergeAheadOfIncomingWithoutDuplicatingTheScreen() {
         XCTAssertEqual(
             NXIncomingFeedPosts.mergedIDs(

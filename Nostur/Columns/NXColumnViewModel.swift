@@ -99,12 +99,6 @@ enum NXUnreadSeenReconciliation {
 }
 
 enum NXIncomingFeedPosts {
-    /// Newer rows above a self-sizing list move the viewport. Keep them off the
-    /// list until the user is at the top or asks to navigate.
-    static func shouldHoldOffscreen(isVisuallyAtTop: Bool) -> Bool {
-        !isVisuallyAtTop
-    }
-
     /// Held posts are already counted unread, so a later prepend must not drop
     /// them for being "known" and must not duplicate rows already on screen.
     static func mergedIDs(held: [String], incoming: [String], onScreen: [String]) -> [String] {
@@ -1097,14 +1091,6 @@ class NXColumnViewModel: ObservableObject {
             "unread region compact · hidden · removed \(idSet.count) read rows · kept \(resultingPosts.count) posts"
         )
 #endif
-    }
-
-    @MainActor
-    private func holdNewerPosts(_ posts: [NRPost]) {
-        let existingIDs = Set(heldNewerPosts.map(\.id))
-        let fresh = posts.filter { !existingIDs.contains($0.id) }
-        guard !fresh.isEmpty else { return }
-        heldNewerPosts = (fresh + heldNewerPosts).sorted { $0.created_at > $1.created_at }
     }
 
     @MainActor
@@ -5200,32 +5186,8 @@ extension NXColumnViewModel {
                 )
 #endif
 
-                if NXIncomingFeedPosts.shouldHoldOffscreen(isVisuallyAtTop: isAtTop) && !revealAtTop {
-                    vmInner.updateUnreadIds { unreadIds in
-                        for post in onlyNewAddedPosts {
-                            if unreadIds[post.id] == nil {
-                                unreadIds[post.id] = 1 + post.parentPosts.count
-                            }
-                        }
-                    }
-                    if !onlyNewAddedPosts.isEmpty {
-                        holdNewerPosts(onlyNewAddedPosts)
-#if DEBUG
-                        recordFeedAction(
-                            "HELD \(onlyNewAddedPosts.count) newer off the list · pending \(heldNewerPosts.count) · \(feedActionDebugViewport())"
-                        )
-#endif
-                    }
-                    if vmInner.readingPostID == nil {
-                        vmInner.readingPostID = vmInner.pendingScrollToPostID ?? currentTopEdgePostID()
-                    }
-                    completion?()
-                    didFinish()
-                    return
-                }
-
                 let postsToPrepend = mergedNewerPosts(
-                    held: isAtTop ? drainHeldNewerPosts() : [],
+                    held: drainHeldNewerPosts(),
                     incoming: onlyNewAddedPosts,
                     onScreen: existingPosts
                 )
@@ -5319,6 +5281,24 @@ extension NXColumnViewModel {
                         vmInner.holdUnreadAboveReadingPost = true
                         setPosts(addedAndExistingPostsTruncated)
                     }
+                }
+                else {
+                    // The new posts go into the list above the row on screen, and
+                    // that row stays put. The user can scroll up through them;
+                    // each one leaves the unread count as it appears.
+                    if vmInner.readingPostID == nil {
+                        vmInner.readingPostID = vmInner.pendingScrollToPostID ?? currentTopEdgePostID()
+                    }
+                    if let anchorID = vmInner.readingPostID {
+                        vmInner.rememberFeedAnchor?(anchorID)
+                    }
+                    vmInner.holdUnreadAboveReadingPost = true
+                    setPosts(addedAndExistingPostsTruncated)
+#if DEBUG
+                    recordFeedAction(
+                        "inserted \(postsToPrepend.count) newer above the reading row · \(existingPosts.count)→\(addedAndExistingPostsTruncated.count) · \(feedActionDebugViewport())"
+                    )
+#endif
                 }
             }
             else { // add below
