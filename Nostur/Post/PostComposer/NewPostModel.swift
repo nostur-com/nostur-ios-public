@@ -518,7 +518,6 @@ public final class NewPostModel: ObservableObject {
                     return
                 }
 
-                let blossomUploader = BlossomUploader(blossomServerURL)
                 var uploadItemById: [String: BlossomUploadItem] = [:]
                 for (imageId, tuple) in uploadTuples {
                     guard let signedEvent = signedEventsDict[tuple.4.id], let authHeader = toHttpAuthHeader(signedEvent) else {
@@ -546,7 +545,7 @@ public final class NewPostModel: ObservableObject {
                             case .uploading(let percentage), .processing(let percentage):
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .uploading(percentage: percentage)
                             case .success:
-                                self.typingTextModel.pastedImageUploadStates[imageId] = .uploaded
+                                break // The completed publisher stores metadata before marking the image uploaded.
                             case .error(let message):
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .failed(message)
                             }
@@ -554,7 +553,7 @@ public final class NewPostModel: ObservableObject {
 
                     self.subscriptions.insert(stateCancellable)
 
-                    let uploadCancellable = blossomUploader.uploadingPublisher(for: uploadItem)
+                    let uploadCancellable = uploadBlossomPostPublisher(for: uploadItem, server: blossomServerURL)
                         .receive(on: RunLoop.main)
                         .sink(receiveCompletion: { [weak self] result in
                             guard let self else { return }
@@ -575,7 +574,6 @@ public final class NewPostModel: ObservableObject {
                             }
                         }, receiveValue: { [weak self] uploadItem in
                             guard let self else { return }
-                            blossomUploader.processResponse(uploadItem: uploadItem)
                             guard let url = uploadItem.downloadUrl else { return }
                             self.uploadedImageImetasById[imageId] = Imeta(
                                 url: url,
@@ -987,7 +985,12 @@ public final class NewPostModel: ObservableObject {
                                 }
                             }
                             
-                            blossomUploader.onFinish = {
+                            guard !blossomUploader.queued.isEmpty else {
+                                self.uploadError = "Problem with remote signer"
+                                return
+                            }
+
+                            let finishBlossomUploads = {
                                 let imetas: [Nostur.Imeta] = blossomUploader.queued
                                     .compactMap {
                                         guard let url = $0.downloadUrl else { return nil }
@@ -1034,7 +1037,8 @@ public final class NewPostModel: ObservableObject {
                                 }
                             }
                             
-                            blossomUploader.uploadingPublishers(for: blossomUploader.queued)
+                            Publishers.MergeMany(blossomUploader.queued.map { uploadBlossomPostPublisher(for: $0, server: blossomServerURL) })
+                                .collect()
                                 .receive(on: RunLoop.main)
                                 .sink(receiveCompletion: { result in
                                     switch result {
@@ -1056,10 +1060,8 @@ public final class NewPostModel: ObservableObject {
         #endif
                                         break
                                     }
-                                }, receiveValue: { uploadItems in
-                                    for uploadItem in uploadItems {
-                                        blossomUploader.processResponse(uploadItem: uploadItem)
-                                    }
+                                }, receiveValue: { _ in
+                                    finishBlossomUploads()
                                 })
                                 .store(in: &self.subscriptions)
                         }
