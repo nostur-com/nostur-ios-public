@@ -32,6 +32,7 @@ struct NEventView: View {
                     Text("Trying more relays...")
                 }
             }
+            .modifier(QuotedPostPlaceholderFrame())
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .center)
             .task { [weak vm] in

@@ -23,7 +23,7 @@ struct EmbedById: View {
         switch vm.state {
         case .initializing, .loading, .altLoading:
             CenteredProgressView()
-                .frame(height: 250)
+                .modifier(QuotedPostPlaceholderFrame())
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .task {
