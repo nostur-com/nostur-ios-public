@@ -7,17 +7,25 @@ import Nuke
 @MainActor
 final class MediaPlaceholderLayoutTests: XCTestCase {
     func testIntegerPortraitMetadataKeepsRenderedHeightAfterLoading() async throws {
-        try await verifyIntegerPortraitHeight(inList: false)
+        try await verifyMediaHeight(inList: false)
     }
 
     func testIntegerPortraitMetadataKeepsListHeightAfterLoading() async throws {
-        try await verifyIntegerPortraitHeight(inList: true)
+        try await verifyMediaHeight(inList: true)
     }
 
-    private func verifyIntegerPortraitHeight(inList: Bool) async throws {
+    func testMissingDimensionsKeepsPlaceholderHeightForPortrait() async throws {
+        try await verifyMediaHeight(inList: false, hasMetadata: false)
+    }
+
+    func testMissingDimensionsKeepsListPlaceholderHeightForLandscape() async throws {
+        try await verifyMediaHeight(inList: true, hasMetadata: false, sourceSize: CGSize(width: 2404, height: 1080))
+    }
+
+    private func verifyMediaHeight(inList: Bool, hasMetadata: Bool = true, sourceSize: CGSize = CGSize(width: 1080, height: 2404)) async throws {
         let url = URL(string: "https://nostr-relay.derekross.me/a51e1379aa8ecba0b4b43845271042193633158a69dfae366b6f16ee811b0f93.png")!
         let tags = [["imeta", "url \(url.absoluteString)", "x a51e1379aa8ecba0b4b43845271042193633158a69dfae366b6f16ee811b0f93", "size 266151", "m image/png", "dim 1080x2404", "blurhash [E8zH7-tEeNF?1%5NXWTR%R#s;j?5MND$,s=53Il%3s=NDRhs;oN$,s=R%WV-Ys=SdWT-Yt9NFWU", "ox a51e1379aa8ecba0b4b43845271042193633158a69dfae366b6f16ee811b0f93"]]
-        let serialized = String(decoding: try JSONSerialization.data(withJSONObject: tags), as: UTF8.self)
+        let serialized = String(decoding: try JSONSerialization.data(withJSONObject: hasMetadata ? tags : []), as: UTF8.self)
         let item = try await bg().perform {
             let event = Event(context: bg())
             event.tagsSerialized = serialized
@@ -25,7 +33,8 @@ final class MediaPlaceholderLayoutTests: XCTestCase {
             let (_, _, items) = NRContentElementBuilder.shared.buildElements(input: url.absoluteString, fastTags: event.fastTags)
             return try XCTUnwrap(items.first)
         }
-        XCTAssertEqual(item.dimensions, CGSize(width: 1080, height: 2404))
+        XCTAssertEqual(item.dimensions, hasMetadata ? CGSize(width: 1080, height: 2404) : nil)
+        let expectedHeight: CGFloat = hasMetadata ? 400 * 2404.0 / 1080.0 : 300
 
         let lowDataMode = SettingsStore.shared.lowDataMode
         SettingsStore.shared.lowDataMode = false
@@ -72,23 +81,23 @@ final class MediaPlaceholderLayoutTests: XCTestCase {
         defer { window.isHidden = true }
         await fulfillment(of: [requested], timeout: 5)
         try await Task.sleep(for: .milliseconds(100))
-        XCTAssertEqual(try XCTUnwrap(probe.heights.last), 400 * 2404.0 / 1080.0, accuracy: 0.1)
+        XCTAssertEqual(try XCTUnwrap(probe.heights.last), expectedHeight, accuracy: 0.1)
 
-        // Pixel content does not affect sizing; reproduce the supplied PNG's canvas locally.
+        // Generate the source canvas locally so the test does not depend on the network.
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
-        let image = UIGraphicsImageRenderer(size: CGSize(width: 1080, height: 2404), format: format).image { context in
+        let image = UIGraphicsImageRenderer(size: sourceSize, format: format).image { context in
             UIColor.blue.setFill()
-            context.fill(CGRect(x: 0, y: 0, width: 1080, height: 2404))
+            context.fill(CGRect(origin: .zero, size: sourceSize))
         }
         loader.deliver(try XCTUnwrap(image.pngData()), url: url)
         await fulfillment(of: [decoded], timeout: 5)
         try await Task.sleep(for: .milliseconds(200))
         XCTAssertFalse(probe.heights.isEmpty)
         for height in probe.heights {
-            XCTAssertEqual(height, 400 * 2404.0 / 1080.0, accuracy: 0.1)
+            XCTAssertEqual(height, expectedHeight, accuracy: 0.1)
         }
-        print("INTEGER_PORTRAIT_MEDIA_HEIGHTS: \(probe.heights)")
+        print("MEDIA_HEIGHTS (metadata: \(hasMetadata)): \(probe.heights)")
     }
 }
 

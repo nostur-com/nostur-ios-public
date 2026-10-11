@@ -115,6 +115,11 @@ struct MediaPlaceholder: View {
     public var zoomableId: String = "Default"
     
     @State private var blurImage: UIImage?
+
+    private var keepsPlaceholderHeight: Bool {
+        // Missing dimensions reserve the same frame before and after decoding.
+        !fullScreen && contentMode == .fit && MediaFrameLayout.aspect(for: galleryItem.dimensions) == nil
+    }
     
     private var layout: MediaFrameLayout {
         MediaFrameLayout(
@@ -122,9 +127,9 @@ struct MediaPlaceholder: View {
             aspect: MediaFrameLayout.aspect(for: realDimensions)
                 ?? MediaFrameLayout.aspect(for: galleryItem.dimensions)
                 ?? placeholderAspect ?? 4 / 3,
-            placeholderAspect: placeholderAspect,
+            placeholderAspect: keepsPlaceholderHeight ? (placeholderAspect ?? 4 / 3) : placeholderAspect,
             maxHeight: maxHeight,
-            contentMode: contentMode,
+            contentMode: keepsPlaceholderHeight ? .fill : contentMode,
             fullScreen: fullScreen
         )
     }
@@ -182,9 +187,9 @@ struct MediaPlaceholder: View {
             realDimensions = dimensions
         }
 
-        // Fill-mode media keeps the placeholder's fixed frame, and fullscreen media is not a
-        // self-sizing feed row. Only fit-mode discoveries can change the feed row's height.
-        guard contentMode == .fit, !fullScreen else {
+        // Media without metadata and fill-mode media keep the placeholder's fixed frame.
+        // Fullscreen media is not a self-sizing feed row.
+        guard contentMode == .fit, !fullScreen, !keepsPlaceholderHeight else {
             update()
             return
         }
@@ -212,7 +217,7 @@ struct MediaPlaceholder: View {
     /// During scrolling, the feed stabilizer can defer the row-height update; showing the image
     /// before that update makes portrait media appear narrow and then snap to full width.
     private func needsResolvedLayout(for dimensions: CGSize) -> Bool {
-        guard contentMode == .fit, !fullScreen, realDimensions == nil,
+        guard contentMode == .fit, !fullScreen, !keepsPlaceholderHeight, realDimensions == nil,
               let resolvedAspect = MediaFrameLayout.aspect(for: dimensions) else { return false }
 
         let placeholderAspect = MediaFrameLayout.aspect(for: galleryItem.dimensions) ?? self.placeholderAspect ?? 4 / 3
