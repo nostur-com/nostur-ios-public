@@ -3,6 +3,25 @@ import Testing
 @testable import Nostur
 
 struct IMetaContentElementTests {
+    @Test(arguments: ["2268.0x4032.0", "2268x4032"])
+    func primalDimensionsReservePortraitHeight(dim: String) {
+        let url = "https://blossom.primal.net/d16ab2ef0201236e96106696bf06d8a0bcbc1884f8628993a7a1ad9debac8005.jpg"
+        let tag: FastTag = ("imeta", "url \(url)", "m jpeg", "dim \(dim)", nil, nil, nil, nil, nil, nil)
+        let (elements, _, _) = NRContentElementBuilder.shared.buildElements(input: url, fastTags: [tag])
+        guard case .image(let image) = elements.first else {
+            Issue.record("Expected the Primal post's JPEG to render as an image")
+            return
+        }
+        #expect(image.dimensions == CGSize(width: 2268, height: 4032))
+        #expect(image.aspect == CGFloat(0.5625))
+    }
+
+    @Test(arguments: ["0x4032", "-2268x4032", "nanx4032", "infx4032", "2268x0"])
+    func invalidDimensionsAreIgnored(dim: String) {
+        let tag: FastTag = ("imeta", "url https://example.com/image.jpg", "dim \(dim)", nil, nil, nil, nil, nil, nil, nil)
+        #expect(iMetaFromFastTag(tag)?.size == nil)
+    }
+
     @Test func sentenceAfterLinkPreviewHasNoLeadingSpace() {
         let sentence = "now shows notes as open graph images when linked"
         for isPreviewContext in [false, true] {

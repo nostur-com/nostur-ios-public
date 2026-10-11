@@ -556,7 +556,9 @@ func iMetaFromFastTag(_ fastTag: FastTag) -> iMetaInfo? {
         }
         else if parts[0] == "dim" {
             let dim = parts[1].split(separator: "x", maxSplits: 1)
-            if dim.count == 2, let width = Int(dim[0]), let height = Int(dim[1]) {
+            if dim.count == 2,
+               let width = Double(dim[0]), let height = Double(dim[1]),
+               width.isFinite, height.isFinite, width > 0, height > 0 {
                 size = CGSize(width: width, height: height)
             }
         }
