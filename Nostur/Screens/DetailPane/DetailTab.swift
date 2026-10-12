@@ -10,6 +10,12 @@ import NavigationBackport
 
 struct DetailTab: View {
     @Environment(\.theme) private var theme
+    @Environment(\.nativeNavigationEnabled) private var nativeNavigationEnabled
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var hidesRootTitle: Bool {
+        !nativeNavigationEnabled || horizontalSizeClass == .regular
+    }
     @State private var navPath = NBNavigationPath()
     @EnvironmentObject private var tm: DetailTabsModel
     @ObservedObject public var tab: TabModel
@@ -23,10 +29,10 @@ struct DetailTab: View {
                         .ignoresSafeArea()
                     Group {
                         if nrPost.kind == 22 || nrPost.kind == 34236 {
-                            ShortVideoDetailView(nrPost: nrPost, navTitleHidden: true)
+                            ShortVideoDetailView(nrPost: nrPost, navTitleHidden: hidesRootTitle)
                         }
                         else {
-                            PostDetailView(nrPost: nrPost, navTitleHidden: true)
+                            PostDetailView(nrPost: nrPost, navTitleHidden: hidesRootTitle)
                         }
                     }
 //                        .debugDimensions("DetailTab.PostDetailView", alignment: .topLeading)
@@ -56,7 +62,7 @@ struct DetailTab: View {
                 ZStack {
                     theme.listBackground
                         .ignoresSafeArea()
-                    NoteById(id: notePathId, navTitleHidden: true)//.opacity(tm.selected == tab ? 1 : 0)
+                    NoteById(id: notePathId, navTitleHidden: hidesRootTitle)//.opacity(tm.selected == tab ? 1 : 0)
                         .withNavigationDestinations(navPath: $navPath)
                         .environment(\.containerID, containerID)
                 }
@@ -68,15 +74,15 @@ struct DetailTab: View {
                         .ignoresSafeArea()
                     switch naddr1.kind {
                     case 30311:
-                        LiveEventByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
+                        LiveEventByNaddr(naddr1: naddr1.naddr1, navTitleHidden: hidesRootTitle)
                             .withNavigationDestinations(navPath: $navPath)
                             .environment(\.containerID, containerID)
                     case 30009:
-                        BadgeByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
+                        BadgeByNaddr(naddr1: naddr1.naddr1, navTitleHidden: hidesRootTitle)
                             .withNavigationDestinations(navPath: $navPath)
                             .environment(\.containerID, containerID)
                     default:
-                        ArticleByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
+                        ArticleByNaddr(naddr1: naddr1.naddr1, navTitleHidden: hidesRootTitle)
                             .withNavigationDestinations(navPath: $navPath)
                             .environment(\.containerID, containerID)
                     }
@@ -87,7 +93,7 @@ struct DetailTab: View {
                 ZStack {
                     theme.listBackground
                         .ignoresSafeArea()
-                    ArticleById(id: articleId, navTitleHidden: true)
+                    ArticleById(id: articleId, navTitleHidden: hidesRootTitle)
                         .withNavigationDestinations(navPath: $navPath)
                         .environment(\.containerID, containerID)
                 }
@@ -126,7 +132,7 @@ struct DetailTab: View {
                 EmptyView()
             }
         }
-        .nbUseNavigationStack(.never)
+        .nosturNavigationStackCompat()
         .onReceive(receiveNotification(.navigateTo)) { notification in
             guard tm.selected == tab else { return } // Only navigate in active tab
             let destination = notification.object as! NavigationDestination

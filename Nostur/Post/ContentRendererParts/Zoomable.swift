@@ -66,7 +66,7 @@ struct Zoomable<Content: View>: View {
     @State private var animationProgress: CGFloat = 0
     @State private var startingSize = CGSize(width: 100, height: 100)
     @State private var screenSize: CGSize = .zero
-    @State private var fullScreenSize: CGSize = UIScreen.main.bounds.size
+    @State private var fullScreenSize: CGSize = .zero
     
     init(id: String = "Default", @ViewBuilder _ content: () -> Content) {
         self.id = id
@@ -106,17 +106,17 @@ struct Zoomable<Content: View>: View {
             .coordinateSpace(name: "zoomable-\(id)") // ZoomableItem measures thumbnail frames in this space
             .onAppear {
                 screenSize = geometry.size
+                fullScreenSize = geometry.size
                 if id == "Default" {
                     // Need to set because on Desktop full screen size should be just the window size
-                    fullScreenSize = geometry.size
                     ScreenSpace.shared.screenSize = geometry.size
                 }
             }
             .onChange(of: geometry.size) { newSize in
                 screenSize = newSize
+                fullScreenSize = newSize
                 if id == "Default" {
                     // Need to set because on Desktop full screen size should be just the window size
-                    fullScreenSize = newSize
                     ScreenSpace.shared.screenSize = newSize
                 }
             }

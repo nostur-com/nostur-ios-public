@@ -12,6 +12,7 @@ import NavigationBackport
 struct NosturTabsView: View {
     @Environment(\.theme) private var theme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @StateObject private var detailTabs = DetailTabsModel()
 
     var body: some View {
 #if DEBUG
@@ -34,7 +35,7 @@ struct NosturTabsView: View {
                 .frame(maxWidth: 600)
                 if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                     AvailableWidthContainer {
-                        DetailPane()
+                        DetailPane(tm: detailTabs)
                             .environment(\.containerID, "DetailPane")
                             .background(theme.listBackground)
                             .environmentObject(VideoPostPlaybackCoordinator())

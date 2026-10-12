@@ -11,6 +11,7 @@ import NavigationBackport
 let NOSTUR_SIDEBAR_WIDTH = 310.0
 
 struct SideBar: View {
+    @Environment(\.nativeNavigationEnabled) private var nativeNavigationEnabled
     @Environment(\.theme) private var theme
     @EnvironmentObject private var loggedInAccount: LoggedInAccount
     @EnvironmentObject private var dm: DMsVM
@@ -348,7 +349,7 @@ struct SideBar: View {
             }
             .padding(10)
         }
-        .edgesIgnoringSafeArea(.all)
+        .ignoresSafeArea(edges: nativeNavigationEnabled ? [] : .all)
         .sheet(isPresented: $showProfileShare) {
             ProfileShareSheet(pubkey: account.publicKey, name: account.anyName, pictureUrl: account.pictureUrl)
         }
@@ -408,6 +409,7 @@ struct SideBarOverlay: View {
 }
 
 struct WithSidebar<Content: View>: View {
+    @Environment(\.nativeNavigationEnabled) private var nativeNavigationEnabled
     @State private var showSidebar: Bool = false
     
     @ViewBuilder
@@ -419,12 +421,17 @@ struct WithSidebar<Content: View>: View {
             .overlay {
                 SideBarOverlay(showSidebar: $showSidebar)
                     .opacity(showSidebar ? 1.0 : 0.0)
+                    .allowsHitTesting(showSidebar)
             }
             .overlay(alignment: .topLeading) {
-                SideBar(showSidebar: $showSidebar)
-                    .frame(width: NOSTUR_SIDEBAR_WIDTH)
-                    .edgesIgnoringSafeArea(.all)
-                    .opacity(showSidebar ? 1.0 : 0.0)
+                GeometryReader { geometry in
+                    SideBar(showSidebar: $showSidebar)
+                        .frame(width: nativeNavigationEnabled ? min(NOSTUR_SIDEBAR_WIDTH, geometry.size.width) : NOSTUR_SIDEBAR_WIDTH)
+                        .ignoresSafeArea(edges: nativeNavigationEnabled ? [] : .all)
+                        .opacity(showSidebar ? 1.0 : 0.0)
+                        .allowsHitTesting(showSidebar)
+                }
+                .allowsHitTesting(showSidebar)
             }
     }
 }

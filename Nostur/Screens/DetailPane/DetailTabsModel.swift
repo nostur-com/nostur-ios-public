@@ -121,6 +121,7 @@ class DetailTabsModel: ObservableObject {
     }
     
     @AppStorage("saved_tabs") private var savedTabs = "[]"
+    private var didRestoreTabs = false
     
     public func saveTabs() {
         let saveableTabs:[SavedTab] = tabs.compactMap { tab in
@@ -164,6 +165,8 @@ class DetailTabsModel: ObservableObject {
     }
     
     public func restoreTabs() {
+        guard !didRestoreTabs else { return }
+        didRestoreTabs = true
         signpost(self, "Remember tabs", .begin, "Restoring tabs")
         guard let savedTabsData = savedTabs.data(using: .utf8),
               let restorableTabs = try? JSONDecoder().decode([SavedTab].self, from: savedTabsData)

@@ -487,7 +487,7 @@ struct OverlayPlayer: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, max(geometry.safeAreaInsets.leading, geometry.safeAreaInsets.trailing, 12))
+        .padding(.horizontal, 12)
         .padding(.top, topControlsTopPadding(geometry: geometry, isLandscape: isLandscape))
         .padding(.bottom, 28)
         .background(
@@ -543,7 +543,7 @@ struct OverlayPlayer: View {
             }
         }
         .frame(width: geometry.size.width, height: geometry.size.height)
-        .ignoresSafeArea()
+        .ignoresSafeArea(.container, edges: [.top, .bottom])
     }
     
     private func controlButton(systemName: String, label: String, size: CGFloat = 32, iconFont: Font = .title3, action: @escaping () -> Void) -> some View {

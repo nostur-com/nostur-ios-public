@@ -124,187 +124,32 @@ enum ViewPath: IdentifiableDestination {
 struct NavigationDestinationsModifier: ViewModifier {
     @Environment(\.containerID) var containerID
     @Binding var navPath: NBNavigationPath
-    
-    @ViewBuilder
+
     func body(content: Content) -> some View {
-        content
-            .nbNavigationDestination(for: YearReviewPath.self) { path in
-                if #available(iOS 17.0, *), YearReviewFeature.isEnabled {
-                    YearReviewView(initialYear: path.year).environment(\.containerID, self.containerID)
-                }
-            }
-            .nbNavigationDestination(for: NewDMConversation.self) { newDMConversation in
-                DMConversationView(participants: newDMConversation.participants, ourAccountPubkey: newDMConversation.accountPubkey, parentDMsVM: newDMConversation.parentDMsVM)
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
-            }
-            .nbNavigationDestination(for: DMConversation.self) { dmConversation in
-                if let accountPubkey = dmConversation.dmState.accountPubkey_ {
-                    DMConversationView(participants: dmConversation.dmState.participantPubkeys, ourAccountPubkey: accountPubkey, parentDMsVM: dmConversation.parentDMsVM)
-                        .environment(\.containerID, self.containerID)
-                        .environmentObject(VideoPostPlaybackCoordinator())
-                }
-                else {
-                    Text("Unavailable: accountPubkey missing")
-                }
-            }
-            .nbNavigationDestination(for: NRPost.self) { nrPost in
-                switch nrPost.kind {
-                case 30023:
-                    ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
-                        .environment(\.containerID, self.containerID)
-                        .environmentObject(VideoPostPlaybackCoordinator())
-                case 30009:
-                    BadgeDetailFromNRPost(nrPost: nrPost)
-                        .environment(\.containerID, self.containerID)
-                        .environmentObject(VideoPostPlaybackCoordinator())
-                case 30311:
-                    if let nrLiveEvent = nrPost.nrLiveEvent {
-                        LiveEventDetail(liveEvent: nrLiveEvent)
-                            .environment(\.containerID, self.containerID)
-                            .environmentObject(VideoPostPlaybackCoordinator())
-                    }
-                    else {
-                        Text("Missing nrLiveEvent")
-                    }
-                case 22, 34236: // Short videos (Vine / Divine)
-                    ShortVideoDetailView(nrPost: nrPost)
-                        .environment(\.containerID, self.containerID)
-                        .environmentObject(VideoPostPlaybackCoordinator())
-                default:
-                    PostDetailView(nrPost: nrPost)
-                        .environment(\.containerID, self.containerID)
-                        .environmentObject(VideoPostPlaybackCoordinator())
-//                        .equatable()
-//                        .debugDimensions("nbNavigationDestination.PostDetailView", alignment: .topLeading)
-                }
-            }
-            .nbNavigationDestination(for: Naddr1Path.self) { path in
-                switch path.kind {
-                case 30311:
-                    LiveEventByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
-                        .environment(\.containerID, self.containerID)
-                        .environmentObject(VideoPostPlaybackCoordinator())
-                case 30009:
-                    BadgeByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
-                        .environment(\.containerID, self.containerID)
-                        .environmentObject(VideoPostPlaybackCoordinator())
-                default:
-                    ArticleByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
-                        .environment(\.containerID, self.containerID)
-                        .environmentObject(VideoPostPlaybackCoordinator())
-                }
-            }
-            .nbNavigationDestination(for: NRLiveEvent.self) { nrLiveEvent in
-                LiveEventDetail(liveEvent: nrLiveEvent)
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
-            }
-            .nbNavigationDestination(for: ArticlePath.self) { path in
-                ArticleById(id: path.id, navigationTitle: path.navigationTitle)
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
-            }
-            .nbNavigationDestination(for: ArticleCommentsPath.self) { articleCommentsPath in
-                ArticleCommentsView(article: articleCommentsPath.article)
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
-            }
-            .nbNavigationDestination(for: NotePath.self) { path in
-                NoteById(id: path.id)
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
-            }
-            .nbNavigationDestination(for: ContactPath.self) { path in
-                ProfileByPubkey(pubkey: path.key, tab: path.tab)
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
-            }
-            .nbNavigationDestination(for: NRContactPath.self) { path in
-                ProfileView(nrContact: path.nrContact, tab: path.tab)
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
-            }
-            .nbNavigationDestination(for: NRContact.self) { nrContact in
-                ProfileView(nrContact: nrContact)
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
-            }
-            .nbNavigationDestination(for: Badge.self) { badge in
-                BadgeDetailView(badge: badge.badge)
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
-            }
-            .nbNavigationDestination(for: CloudFeed.self) { feed in
-                FeedSettingsSheet(feed: feed)
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
-            }
-            .nbNavigationDestination(for: ViewPath.self) { path in
-                switch (path) {
-                    case .Post(let post):
-                        Group {
-                            if post.kind == 22 || post.kind == 34236 {
-                                ShortVideoDetailView(nrPost: post)
-                            }
-                            else {
-                                PostDetailView(nrPost: post)
-                            }
-                        }
-                        .environment(\.containerID, self.containerID)
-                        .environmentObject(VideoPostPlaybackCoordinator())
-                    case .Blocklist:
-                        BlockListScreen()
-                            .tabBarSpaceCompat()
-                            .environment(\.containerID, self.containerID)
-                    case .PostReactions(let eventId):
-                        PostReactions(eventId: eventId)
-                            .environment(\.containerID, self.containerID)
-                    case .PostReposts(let id):
-                        PostReposts(id: id)
-                            .environment(\.containerID, self.containerID)
-                    case .PostMentions(let id):
-                        PostMentions(id: id)
-                        .environment(\.containerID, self.containerID)
-                    case .PostZaps(let nrPost):
-                        PostZaps(nrPost: nrPost)
-                            .environment(\.containerID, self.containerID)
-                    case .Wallet:
-                        WalletView()
-                            .tabBarSpaceCompat()
-                            .environment(\.containerID, self.containerID)
-                    case .Settings:
-                        Settings()
-                            .tabBarSpaceCompat()
-                            .environment(\.containerID, self.containerID)
-                    case .Lists:
-                        ListsAndFeedsScreen()
-                            .tabBarSpaceCompat()
-                            .environment(\.containerID, self.containerID)
-                    case .Relays:
-                        RelaysView()
-                            .environment(\.containerID, self.containerID)
-                    case .Badges:
-                        BadgesView()
-                            .tabBarSpaceCompat()
-                            .environment(\.containerID, self.containerID)
-                    case .DMs:
-                        MainDMs(navPath: $navPath)
-                            .environment(\.containerID, self.containerID)
-                    case .ProfileReactionList(let pubkey):
-                        ProfileReactionList(pubkey: pubkey)
-                            .tabBarSpaceCompat()
-                            .environment(\.containerID, self.containerID)
-                    default:
-                        EmptyView()
-                }
-            }
+        content.backportStackDestinations(navPath: $navPath, containerID: containerID)
+    }
+}
+
+@available(iOS 16.0, *)
+struct NativeNavigationDestinationsModifier: ViewModifier {
+    @Environment(\.containerID) var containerID
+    /// Only used when a destination still appends to an NB path. The iOS 27 shell
+    /// sets `nosturAppend` so those pushes land on the native NavigationPath instead.
+    @State private var unusedPath = NBNavigationPath()
+
+    func body(content: Content) -> some View {
+        content.nativeStackDestinations(navPath: $unusedPath, containerID: containerID)
     }
 }
 
 extension View {
     func withNavigationDestinations(navPath: Binding<NBNavigationPath>) -> some View {
         modifier(NavigationDestinationsModifier(navPath: navPath))
+    }
+
+    @available(iOS 16.0, *)
+    func withNativeNavigationDestinations() -> some View {
+        modifier(NativeNavigationDestinationsModifier())
     }
 }
 

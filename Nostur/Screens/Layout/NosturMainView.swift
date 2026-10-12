@@ -26,8 +26,11 @@ struct NosturMainView: View {
                     MacMainWindow()
                 }
             }
-            else if #available(iOS 26, *) { // iPhone Duo using layout overhaul and more native components
-                EmptyView()
+            else if #available(iOS 27.1, *), !IS_IPAD && !IS_CATALYST { // Adaptive phone shell; preserve the existing iPad and Mac layouts.
+                WithSidebar {
+                    MainTabs27()
+                }
+                .environment(\.nativeNavigationEnabled, true)
             }
             else {
                 WithSidebar { // Old layout iPhone / iPad / classic macOS Desktop (with detail pane)

@@ -101,6 +101,8 @@ struct GalleryFullScreenSwiper: View {
         .scrollTargetBehavior(.paging)
         .scrollPosition(id: $activeItemId)
         .frame(width: fullScreenSize.width, height: fullScreenSize.height)
+        // Keep adjacent pages out of asymmetric system-bar safe areas.
+        .clipped()
         .scrollDisabled(items.count == 1 || scale > 1.0 || isDraggingToDismiss)
         .background(Color.black.opacity(isDismissing ? 0 : 1 - (0.5 * dismissProgress)))
         .overlay(alignment: .leading) { navigationLeftButton }
@@ -189,6 +191,7 @@ struct GalleryFullScreenSwiper: View {
         .simultaneousGesture(zoomGesture)
         .scrollDisabledCompat(items.count == 1 || scale > 1.0)
         .frame(width: fullScreenSize.width, height: fullScreenSize.height)
+        .clipped()
         .background(Color.black.opacity(1 - dismissProgress))
         .overlay(alignment: .leading) { navigationLeftButton }
         .overlay(alignment: .trailing) { navigationRightButton }

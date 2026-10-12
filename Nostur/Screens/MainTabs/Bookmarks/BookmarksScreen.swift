@@ -8,7 +8,6 @@
 import SwiftUI
 import Combine
 import CoreData
-import NavigationBackport
 
 struct BookmarksScreen: View {
     @ObservedObject var vm: BookmarksFeedModel
@@ -19,7 +18,7 @@ struct BookmarksScreen: View {
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_bookmarkssubtab") }
     }
     
-    @Binding public var navPath: NBNavigationPath
+    var isAtRoot: Bool
     
     @ObservedObject private var settings: SettingsStore = .shared
 
@@ -67,7 +66,7 @@ struct BookmarksScreen: View {
                 .onReceive(receiveNotification(.didTapTab)) { notification in
                     guard selectedSubTab == "Bookmarks"  && vm.nrLazyBookmarks.first != nil else { return }
                     if !vm.nrLazyBookmarks.isEmpty {
-                        if navPath.count == 0 {
+                        if isAtRoot {
                             withAnimation {
                                 proxy.scrollTo("top")
                             }
@@ -77,7 +76,7 @@ struct BookmarksScreen: View {
                 .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
                     guard selectedSubTab == "Bookmarks" && vm.nrLazyBookmarks.first != nil else { return }
                     if !vm.nrLazyBookmarks.isEmpty {
-                        if navPath.count == 0 {
+                        if isAtRoot {
                             withAnimation {
                                 proxy.scrollTo("top")
                             }
@@ -87,7 +86,7 @@ struct BookmarksScreen: View {
                 .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
                     guard selectedSubTab == "Bookmarks" && vm.nrLazyBookmarks.first != nil else { return }
                     if !vm.nrLazyBookmarks.isEmpty {
-                        if navPath.count == 0 {
+                        if isAtRoot {
                             withAnimation {
                                 proxy.scrollTo("top")
                             }
@@ -165,7 +164,7 @@ struct BookmarksScreen: View {
         pe.loadBookmarks()
     }) {
         VStack {
-            BookmarksScreen(vm: BookmarksFeedModel(), navPath: .constant(NBNavigationPath()))
+            BookmarksScreen(vm: BookmarksFeedModel(), isAtRoot: true)
         }
     }
 }

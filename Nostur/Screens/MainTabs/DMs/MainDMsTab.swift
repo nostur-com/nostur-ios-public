@@ -13,6 +13,7 @@ struct MainDMsTab: View {
     @Environment(\.theme) private var theme
     @State private var navPath = NBNavigationPath()
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.nativeSplitActive) private var nativeSplitActive
     @ObservedObject private var vm: DMsVM = .shared
     @State private var showSettingsSheet = false
     @State private var showNewDMSheet = false
@@ -56,7 +57,7 @@ struct MainDMsTab: View {
                             .nosturNavBgCompat(theme: theme)
                             .environment(\.theme, theme)
                         }
-                        .nbUseNavigationStack(.never)
+                        .nosturNavigationStackCompat()
                         .presentationBackgroundCompat(theme.listBackground)
                     }
                     .onReceive(receiveNotification(.triggerDM)) { notification in
@@ -79,7 +80,7 @@ struct MainDMsTab: View {
             }))
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
-                guard !IS_IPAD || horizontalSizeClass == .compact else { return }
+                guard tabStackShouldPush(nativeSplitActive: nativeSplitActive, horizontalSizeClass: horizontalSizeClass) else { return }
                 guard destination.context == "Messages" else { return }
                 navPath.append(destination.destination)
             }
@@ -88,7 +89,7 @@ struct MainDMsTab: View {
             }
             .tabBarSpaceCompat()
         }
-        .nbUseNavigationStack(.never)
+        .nosturNavigationStackCompat()
     }
     
     @ToolbarContentBuilder

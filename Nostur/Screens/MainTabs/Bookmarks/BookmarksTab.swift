@@ -19,6 +19,7 @@ struct BookmarksTab: View {
 
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.nativeSplitActive) private var nativeSplitActive
     @State private var bookmarksCount: String?
     @State private var privateNotesCount: String?
     @State private var showBookmarkFilterOptions = false
@@ -55,9 +56,9 @@ struct BookmarksTab: View {
                     AvailableWidthContainer {
                         switch selectedSubTab {
                             case "Bookmarks":
-                                BookmarksScreen(vm: bookmarksVM, navPath: $navPath)
+                                BookmarksScreen(vm: bookmarksVM, isAtRoot: navPath.count == 0)
                             case "Private Notes":
-                                PrivateNotesScreen(navPath: $navPath)
+                                PrivateNotesScreen(isAtRoot: navPath.count == 0)
                             default:
                                 Text("🥪")
                         }
@@ -79,7 +80,7 @@ struct BookmarksTab: View {
             }))
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
-                guard !IS_IPAD || horizontalSizeClass == .compact else { return }
+                guard tabStackShouldPush(nativeSplitActive: nativeSplitActive, horizontalSizeClass: horizontalSizeClass) else { return }
                 guard destination.context == "Bookmarks" else { return }
                 navPath.append(destination.destination)
             }
@@ -99,14 +100,14 @@ struct BookmarksTab: View {
                     BookmarkFilters(onlyShow: $bookmarksVM.bookmarkFilters)
                         .environment(\.theme, theme)
                 }
-                .nbUseNavigationStack(.never)
+                .nosturNavigationStackCompat()
                 .presentationBackgroundCompat(theme.background)
                 .presentationDetents200()
             })
             
             .tabBarSpaceCompat()
         }
-        .nbUseNavigationStack(.never)
+        .nosturNavigationStackCompat()
     }
 }
 

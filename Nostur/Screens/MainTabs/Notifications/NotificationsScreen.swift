@@ -16,6 +16,7 @@ struct NotificationsContainer: View {
     @State private var navPath = NBNavigationPath()
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.nativeSplitActive) private var nativeSplitActive
     
     var body: some View {
 #if DEBUG
@@ -33,7 +34,7 @@ struct NotificationsContainer: View {
                 .environment(\.containerID, "Notifications")
                 .onReceive(receiveNotification(.navigateTo)) { notification in
                     let destination = notification.object as! NavigationDestination
-                    guard !IS_IPAD || horizontalSizeClass == .compact else { return }
+                    guard tabStackShouldPush(nativeSplitActive: nativeSplitActive, horizontalSizeClass: horizontalSizeClass) else { return }
                     guard destination.context == "Notifications" else { return }
                     navPath.append(destination.destination)
                 }
@@ -43,7 +44,7 @@ struct NotificationsContainer: View {
             
                 .tabBarSpaceCompat()
         }
-        .nbUseNavigationStack(.never)
+        .nosturNavigationStackCompat()
     }
 }
 
@@ -183,7 +184,7 @@ struct NotificationsScreen: View {
                 NotificationSettings()
                     .environment(\.theme, theme)
             }
-            .nbUseNavigationStack(.never)
+            .nosturNavigationStackCompat()
         })
     }
     

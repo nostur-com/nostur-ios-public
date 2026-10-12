@@ -8,7 +8,6 @@
 import SwiftUI
 import Combine
 import CoreData
-import NavigationBackport
 
 struct PrivateNotesScreen: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -19,7 +18,7 @@ struct PrivateNotesScreen: View {
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_bookmarkssubtab") }
     }
     
-    @Binding var navPath: NBNavigationPath
+    var isAtRoot: Bool
     @ObservedObject private var settings:SettingsStore = .shared
     @Namespace private var top
     
@@ -80,7 +79,7 @@ struct PrivateNotesScreen: View {
                 .preference(key: PrivateNotesCountPreferenceKey.self, value: privateNotes.count.description)
                 .onReceive(receiveNotification(.didTapTab)) { notification in
                     guard selectedSubTab == "Private Notes", let first = privateNotes.first else { return }
-                    if navPath.count == 0 {
+                    if isAtRoot {
                         withAnimation {
                             proxy.scrollTo(first.objectID)
                         }
@@ -88,7 +87,7 @@ struct PrivateNotesScreen: View {
                 }
                 .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
                     guard selectedSubTab == "Private Notes", let first = privateNotes.first else { return }
-                    if navPath.count == 0 {
+                    if isAtRoot {
                         withAnimation {
                             proxy.scrollTo(first.objectID)
                         }
@@ -96,7 +95,7 @@ struct PrivateNotesScreen: View {
                 }
                 .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
                     guard selectedSubTab == "Private Notes", let first = privateNotes.first else { return }
-                    if navPath.count == 0 {
+                    if isAtRoot {
                         withAnimation {
                             proxy.scrollTo(first.objectID)
                         }
@@ -179,15 +178,13 @@ struct PrivateNotesScreen: View {
     }
 }
 
-import NavigationBackport
-
 #Preview("Private Notes") {
     PreviewContainer({ pe in
         pe.loadPosts()
         pe.loadPrivateNotes()
     }) {
         VStack {
-            BookmarksScreen(vm: BookmarksFeedModel(), navPath: .constant(NBNavigationPath()))
+            BookmarksScreen(vm: BookmarksFeedModel(), isAtRoot: true)
         }
     }
 }

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AvailableWidthContainer<Content: View>: View {
     
-    @State private var availableWidth: CGFloat = UIScreen.main.bounds.width
+    @State private var availableWidth: CGFloat = .zero
     
     // Need this or .availableWidth won't be set until next resize
     @State private var ready = false

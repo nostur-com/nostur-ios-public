@@ -205,7 +205,9 @@ struct MainTabs26: View {
             .tabBarMinimizeBehavior(.onScrollDown)
             .environment(\.horizontalSizeClass, .compact)
             .withSheets() // Move .sheets to each (NB)NavigationStack?
-            .edgesIgnoringSafeArea(.all)
+            // Don't ignore leading/trailing: on iPhone Duo that covers the
+            // vertical toolbar/tab bar and eats taps.
+            .ignoresSafeArea(.container, edges: [.bottom])
             .toolbarBackground(.hidden, for: .bottomBar)
         }
         
@@ -247,6 +249,171 @@ struct MainTabs26: View {
         }
     }
     
+    private func tabTapped(_ tabName: String, oldTab: String) {
+        if tabName == "New Post" {
+            // No need to revert selectedTab - binding already prevents the switch
+            guard isFullAccount() else { showReadOnlyMessage(); return }
+
+            if oldTab == "Main" && selectedSubTab == "Picture" {
+                AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .picture)
+            }
+            else if oldTab == "Main" && selectedSubTab == "Yak" {
+                AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .shortVoiceMessage)
+            }
+            else if oldTab == "Main" && selectedSubTab == "Vine" {
+                AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .shortVideos)
+            }
+            else {
+                if selectedSubTab != "Following" {  selectedSubTab = "Following" }
+                AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .textNote)
+            }
+            return // Don't process double-tap logic for "New Post"
+        }
+
+        // Only do something if we are already on same the tab
+        guard oldTab == tabName else { return }
+
+        // For main, we scroll to first unread
+        // but depends on condition with values only known in FollowingAndExplore
+        sendNotification(.didTapTab, tabName)
+
+        // pop navigation stack back to root
+        sendNotification(.clearNavigation, tabName)
+    }
+}
+
+@available(iOS 27.1, *)
+struct MainTabs27: View {
+    @Environment(\.tabViewBottomAccessoryPlacement) var placement
+    @Environment(\.theme) private var theme
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("selected_subtab") private var selectedSubTab = "Following"
+    @State private var unread: Int = 0
+    @StateObject private var detailTabs = DetailTabsModel()
+    
+    var body: some View {
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
+        Zoomable {
+            NativePhoneSplit(detailTabs: detailTabs) {
+                tabsContent
+            }
+                .withLightningEffect()
+                .overlay(alignment: .center) {
+                    OverlayPlayer()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea()
+                }
+        }
+    }
+
+    private var tabsContent: some View {
+        VStack {
+            NoInternetConnectionBanner()
+            TabView(selection: Binding(
+                get: { selectedTab },
+                set: { newValue in
+                    let oldTab = selectedTab
+                    if newValue == "New Post" {
+                        // Always switch to "Main" for the New Post
+                        selectedTab = "Main"
+                        
+                        // Keeping note for old behavior where we didn't switch tabs here:
+                        // Don't actually switch to the "New Post" tab. The brief tab switch
+                        // deactivates the NavigationStack, corrupting its safe area state
+                        // for all subsequently pushed views. See: nostur-com/nostur-ios-public#48
+                    } else {
+                        selectedTab = newValue
+                    }
+                    tabTapped(newValue, oldTab: oldTab)
+                }
+            )) {
+                Tab(value: "Main") {
+                    HomeTabNative()
+                } label: {
+                    Label("Home", systemImage: "house")
+                        .labelStyle(.iconOnly)
+                }
+                
+                Tab(value: "Bookmarks") {
+                    BookmarksTab()
+                } label: {
+                    Label("Bookmarks", systemImage: "bookmark")
+                        .labelStyle(.iconOnly)
+                        .controlSize(.small)
+                }
+                
+                Tab(value: "Search") {
+                    Search()
+                } label: {
+                    Label("Search", systemImage: "magnifyingglass")
+                        .labelStyle(.iconOnly)
+                }
+                Tab(value: "Notifications") {
+                    NotificationsContainer()
+                } label: {
+                    Label("Notifications", systemImage: "bell.fill")
+                        .labelStyle(.iconOnly)
+                }
+                .badge(unread)
+                
+                Tab(value: "New Post", role: .search) {
+                    Spacer()
+                } label: {
+                    Label(String(localized:"New post", comment: "Button to create a new post"), systemImage: "plus")
+                        .fontWeightBold()
+                        .labelStyle(.iconOnly)
+                        .foregroundStyle(theme.accent)
+                        .tint(theme.accent)
+                }
+            }
+            .tabBarMinimizeBehavior(.onScrollDown)
+            .withSheets()
+            .tabViewStyle(.sidebarAdaptable)
+            .environment(\.nativeSplitActive, horizontalSizeClass == .regular)
+            .environment(\.nativeNavigationEnabled, true)
+        }
+        
+        .onChange(of: selectedTab) { newValue in
+            if newValue == "Notifications" {
+                
+                // If there is only one tab with unread notifications, go to that tab
+                if NotificationsViewModel.shared.unread > 0 {
+                    if NotificationsViewModel.shared.unreadMentions > 0 {
+                        UserDefaults.standard.setValue("Mentions", forKey: "selected_notifications_tab")
+                    }
+                    else if NotificationsViewModel.shared.unreadNewPosts > 0 {
+                        UserDefaults.standard.setValue("New Posts", forKey: "selected_notifications_tab")
+                    }
+                    else if NotificationsViewModel.shared.unreadReactions > 0 {
+                        UserDefaults.standard.setValue("Reactions", forKey: "selected_notifications_tab")
+                    }
+                    else if NotificationsViewModel.shared.unreadZaps > 0 {
+                        UserDefaults.standard.setValue("Zaps", forKey: "selected_notifications_tab")
+                    }
+                    else if NotificationsViewModel.shared.unreadReposts > 0 {
+                        UserDefaults.standard.setValue("Reposts", forKey: "selected_notifications_tab")
+                    }
+                    else if NotificationsViewModel.shared.unreadNewFollowers > 0 {
+                        UserDefaults.standard.setValue("Followers", forKey: "selected_notifications_tab")
+                    }
+                }
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    sendNotification(.notificationsTabAppeared) // use for resetting unread count
+                }
+            }
+        }
+        
+        .onReceive(NotificationsViewModel.shared.unreadPublisher) { unread in
+            if unread != self.unread {
+                self.unread = unread
+            }
+        }
+    }
+
     private func tabTapped(_ tabName: String, oldTab: String) {
         if tabName == "New Post" {
             // No need to revert selectedTab - binding already prevents the switch

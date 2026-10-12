@@ -12,12 +12,12 @@ import NostrEssentials
 
 struct DetailPane: View {
     @Environment(\.theme) private var theme
-    @StateObject private var tm = DetailTabsModel()
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @ObservedObject var tm: DetailTabsModel
+    var embeddedInNativeSplit: Bool = false
+    /// When set, only the split column for this tab handles `.navigateTo`.
+    var ownerTab: String? = nil
     @State private var offsetX = 200.0
-
-    init() {
-//        UIScrollView.appearance().bounces = false
-    }
     
     var body: some View {
         
@@ -360,6 +360,11 @@ struct DetailPane: View {
                 .onReceive(receiveNotification(.navigateTo)) { notification in
                     // This does similar as .withNavigationDestinations() but for DetailPane, should refactor / clean up
                     let destination = notification.object as! NavigationDestination
+
+                    if embeddedInNativeSplit {
+                        guard horizontalSizeClass == .regular else { return }
+                        if let ownerTab, selectedTab() != ownerTab { return }
+                    }
                     
                     // DetailTab should navigate inside a DetailTab, not open a new DetailTab in DetailPane
                     guard destination.context != "DetailTab" else { return }
@@ -538,7 +543,9 @@ struct DetailPane: View {
             tm.saveTabs()
         }
         .onAppear {
-            tm.restoreTabs()
+            if tm.tabs.isEmpty {
+                tm.restoreTabs()
+            }
         }
         .onReceive(receiveNotification(.unpublishedNRPost)) { notification in
             
@@ -592,13 +599,21 @@ struct DetailPane: View {
     }
 }
 
+private struct DetailPanePreviewHost: View {
+    @StateObject private var tm = DetailTabsModel()
+
+    var body: some View {
+        DetailPane(tm: tm)
+    }
+}
+
 struct DetailPane_Previews: PreviewProvider {
     
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadPosts()
         }, previewDevice: PreviewDevice(rawValue: "iPad Air (5th generation)")) {
-            DetailPane()
+            DetailPanePreviewHost()
                 .onAppear {
 
                     if let event0 = PreviewFetcher.fetchNRPost() {

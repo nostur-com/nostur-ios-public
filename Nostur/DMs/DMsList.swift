@@ -14,9 +14,19 @@ struct DMsInnerList: View {
     
     public let pubkey: String
     @Binding var navPath: NBNavigationPath
+    @Environment(\.nosturAppend) private var nosturAppend
     @ObservedObject var vm: DMsVM
     
     @State private var showUpgradeDMsSheet = false
+
+    private func push<V: IdentifiableDestination>(_ destination: V) {
+        if let nosturAppend {
+            nosturAppend(destination)
+        }
+        else {
+            navPath.append(destination)
+        }
+    }
     
     var body: some View {
 #if DEBUG
@@ -51,7 +61,7 @@ struct DMsInnerList: View {
                                     .contentShape(Rectangle())
                                     .onTapGesture {
                                         // mark as read
-                                        navPath.append(DMConversation(dmState: dmState, parentDMsVM: vm))
+                                        push(DMConversation(dmState: dmState, parentDMsVM: vm))
                                         dmState.markedReadAt_ = .now
                                         vm.updateUnreadsCount()
                                     }
@@ -71,7 +81,7 @@ struct DMsInnerList: View {
                                     }
                                     .contentShape(Rectangle())
                                     .onTapGesture {
-                                        navPath.append(DMConversation(dmState: dmState, parentDMsVM: vm))
+                                        push(DMConversation(dmState: dmState, parentDMsVM: vm))
                                         dmState.markedReadAt_ = .now
                                         vm.updateUnreadsCount()
                                     }

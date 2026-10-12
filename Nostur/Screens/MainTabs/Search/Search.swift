@@ -43,6 +43,7 @@ struct Search: View {
     @ObservedObject private var searchNavigation = SearchNavigationModel.shared
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.nativeSplitActive) private var nativeSplitActive
     let containerID: String
     private let showsNavigationTitle: Bool
 
@@ -291,7 +292,7 @@ struct Search: View {
             }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
-                guard !IS_IPAD || horizontalSizeClass == .compact else { return }
+                guard tabStackShouldPush(nativeSplitActive: nativeSplitActive, horizontalSizeClass: horizontalSizeClass) else { return }
                 guard destination.context == containerID else { return }
 
                 if (type(of: destination.destination) == HashtagPath.self) {
@@ -319,7 +320,7 @@ struct Search: View {
             }
             .tabBarSpaceCompat()
         }
-        .nbUseNavigationStack(.never)
+        .nosturNavigationStackCompat()
     }
 
     private func receiveProfileScan(_ value: String) {

@@ -15,6 +15,7 @@ struct MainDMs: View {
     @EnvironmentObject var la: LoggedInAccount
     
     @Binding var navPath: NBNavigationPath
+    @Environment(\.nosturAppend) private var nosturAppend
     @ObservedObject private var vm: DMsVM = .shared
     @State private var showSettingsSheet = false
     @State private var showNewDMSheet = false
@@ -35,7 +36,7 @@ struct MainDMs: View {
                 .sheet(isPresented: $showNewDMSheet) {
                     NBNavigationStack {
                         SelectDMRecipientSheet(accountPubkey: la.pubkey, onSelect: { selectedContactPubkeys in
-                            navPath.append(NewDMConversation(accountPubkey: la.pubkey, participants: selectedContactPubkeys.union([la.pubkey]), parentDMsVM: vm))
+                            push(NewDMConversation(accountPubkey: la.pubkey, participants: selectedContactPubkeys.union([la.pubkey]), parentDMsVM: vm))
                         })
                         .nosturNavBgCompat(theme: theme)
                         .environment(\.theme, theme)
@@ -45,7 +46,7 @@ struct MainDMs: View {
                 }
                 .onReceive(receiveNotification(.triggerDM)) { notification in
                     let newDMConversation = notification.object as! NewDMConversation
-                    navPath.append(newDMConversation)
+                    push(newDMConversation)
                 }
                 .environmentObject(VideoPostPlaybackCoordinator())
             
@@ -71,6 +72,15 @@ struct MainDMs: View {
             AudioOnlyBarSpace()
         }
         .environment(\.containerID, "Messages")
+    }
+
+    private func push<V: IdentifiableDestination>(_ destination: V) {
+        if let nosturAppend {
+            nosturAppend(destination)
+        }
+        else {
+            navPath.append(destination)
+        }
     }
     
     @ToolbarContentBuilder
