@@ -7,6 +7,8 @@
 
 
 import SwiftUI
+import UniformTypeIdentifiers
+import QuickLook
 
 struct ChatInputField: View {
     @Environment(\.theme) private var theme
@@ -148,20 +150,27 @@ struct ChatInputField: View {
     }
 }
 
-private struct MentionHighlightingTextView: UIViewRepresentable {
+struct MentionHighlightingTextView: UIViewRepresentable {
     @Binding var text: String
     let attributedText: Binding<NSAttributedString>?
     @Binding var height: CGFloat
     let accentColor: UIColor
     let onSubmit: (() -> Void)?
+    var onPasteMedia: ((NSItemProvider, UTType) -> Void)? = nil
+    var isFocused: Binding<Bool>? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
     }
 
     func makeUIView(context: Context) -> UITextView {
-        let textView = UITextView()
+        let textView = MediaPasteTextView()
         textView.delegate = context.coordinator
+        textView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        textView.onWidthChange = { [weak coordinator = context.coordinator] textView in
+            coordinator?.updateHeight(of: textView)
+        }
         textView.backgroundColor = .clear
         textView.font = .nosturBody()
         textView.adjustsFontForContentSizeCategory = true
@@ -180,9 +189,27 @@ private struct MentionHighlightingTextView: UIViewRepresentable {
 
     func updateUIView(_ textView: UITextView, context: Context) {
         context.coordinator.parent = self
+        (textView as? MediaPasteTextView)?.onPasteMedia = onPasteMedia
+        if let isFocused {
+            DispatchQueue.main.async {
+                if isFocused.wrappedValue && !textView.isFirstResponder {
+                    textView.becomeFirstResponder()
+                } else if !isFocused.wrappedValue && textView.isFirstResponder {
+                    textView.resignFirstResponder()
+                }
+            }
+        }
         context.coordinator.applyExternalTextIfNeeded(to: textView)
         context.coordinator.styleSemanticMentions(in: textView)
         context.coordinator.updateHeight(of: textView)
+    }
+
+    @available(iOS 16.0, *)
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
+        guard let width = proposal.width, width.isFinite, width > 0 else { return nil }
+        let height = context.coordinator.updateHeight(of: uiView, width: width)
+        // Accept the available width, regardless of the text's intrinsic width.
+        return CGSize(width: width, height: min(height, 120))
     }
 
     final class Coordinator: NSObject, UITextViewDelegate {
@@ -191,6 +218,14 @@ private struct MentionHighlightingTextView: UIViewRepresentable {
 
         init(parent: MentionHighlightingTextView) {
             self.parent = parent
+        }
+
+        func textViewDidBeginEditing(_ textView: UITextView) {
+            parent.isFocused?.wrappedValue = true
+        }
+
+        func textViewDidEndEditing(_ textView: UITextView) {
+            parent.isFocused?.wrappedValue = false
         }
 
         func textViewDidChange(_ textView: UITextView) {
@@ -314,8 +349,11 @@ private struct MentionHighlightingTextView: UIViewRepresentable {
             }
         }
 
-        func updateHeight(of textView: UITextView) {
-            let fittingSize = CGSize(width: textView.bounds.width, height: .greatestFiniteMagnitude)
+        @discardableResult
+        func updateHeight(of textView: UITextView, width: CGFloat? = nil) -> CGFloat {
+            let width = width ?? textView.bounds.width
+            guard width.isFinite, width > 0 else { return 36 }
+            let fittingSize = CGSize(width: width, height: .greatestFiniteMagnitude)
             let newHeight = max(36, textView.sizeThatFits(fittingSize).height)
             textView.isScrollEnabled = newHeight > 120
             if abs(parent.height - newHeight) > 0.5 {
@@ -323,7 +361,68 @@ private struct MentionHighlightingTextView: UIViewRepresentable {
                     self.parent.height = newHeight
                 }
             }
+            return newHeight
         }
+    }
+}
+
+// Intercept only media; UIKit keeps its normal text paste and selection behavior.
+final class MediaPasteTextView: UITextView {
+    var onPasteMedia: ((NSItemProvider, UTType) -> Void)?
+    var onWidthChange: ((UITextView) -> Void)?
+    private var lastLayoutWidth: CGFloat = 0
+
+    override var intrinsicContentSize: CGSize {
+        // A non-scrolling UITextView otherwise asks SwiftUI for a single line's
+        // full width, which can expand the entire conversation off screen.
+        CGSize(width: UIView.noIntrinsicMetric, height: super.intrinsicContentSize.height)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if bounds.width != lastLayoutWidth {
+            lastLayoutWidth = bounds.width
+            onWidthChange?(self)
+        }
+    }
+
+    static func mediaType(for provider: NSItemProvider) -> UTType? {
+        let types = provider.registeredTypeIdentifiers.compactMap { UTType($0) }.filter {
+            $0.conforms(to: .image) || $0.conforms(to: .movie) || $0.conforms(to: .audio)
+        }
+        return types.first(where: { $0.preferredMIMEType != nil }) ?? types.first
+    }
+
+    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        if action == #selector(paste(_:)), onPasteMedia != nil,
+           UIPasteboard.general.types.compactMap({ UTType($0) }).contains(where: {
+               $0.conforms(to: .image) || $0.conforms(to: .movie) || $0.conforms(to: .audio)
+           }) {
+            return true
+        }
+        return super.canPerformAction(action, withSender: sender)
+    }
+
+    override func paste(_ sender: Any?) {
+        if onPasteMedia != nil, pasteMedia(from: UIPasteboard.general.itemProviders) { return }
+        super.paste(sender)
+    }
+
+    override func paste(itemProviders: [NSItemProvider]) {
+        if pasteMedia(from: itemProviders) { return }
+        super.paste(itemProviders: itemProviders)
+    }
+
+    private func pasteMedia(from providers: [NSItemProvider]) -> Bool {
+        guard let onPasteMedia else { return false }
+        // DMs currently support one pending attachment per message.
+        for provider in providers {
+            if let type = Self.mediaType(for: provider) {
+                onPasteMedia(provider, type)
+                return true
+            }
+        }
+        return false
     }
 }
 
@@ -374,9 +473,13 @@ struct DMChatInputField: View {
     @Binding var message: String
     @ObservedObject var vm: ConversionVM
     var startWithFocus: Bool = true
+    var isLoadingMedia: Bool = false
     var onSubmit: (() -> Void)?
     var onPickPhotos: (() -> Void)?
     var onPickFiles: (() -> Void)?
+    var onPasteMedia: ((NSItemProvider, UTType) -> Void)?
+    @State private var editorHeight: CGFloat = 36
+    @State private var attachmentPreviewURL: URL? = nil
 
     enum FocusedField {
         case message
@@ -389,7 +492,7 @@ struct DMChatInputField: View {
     }
     
     private var canSend: Bool {
-        !message.isEmpty || vm.pendingFileAttachment != nil
+        !isLoadingMedia && (!message.isEmpty || vm.pendingFileAttachment != nil)
     }
 
     private var plusButtonIcon: some View {
@@ -454,6 +557,11 @@ struct DMChatInputField: View {
                         .padding(.top, 10)
                 }
                 
+                if isLoadingMedia {
+                    ProgressView()
+                        .padding(.top, 10)
+                }
+
                 // File attachment preview
                 if let pending = vm.pendingFileAttachment {
                     filePreview(pending)
@@ -526,6 +634,7 @@ struct DMChatInputField: View {
         .background(theme.lineColor)
         .containerShape(.rect(cornerRadius: 14))
         .padding([.leading, .trailing], 10)
+        .quickLookPreview($attachmentPreviewURL)
         .onAppear {
             if startWithFocus {
                 focusedField = .message
@@ -547,11 +656,18 @@ struct DMChatInputField: View {
     private func filePreview(_ pending: PendingFileAttachment) -> some View {
         HStack(spacing: 8) {
             if pending.isImage, let thumb = pending.thumbnailImage {
-                Image(uiImage: thumb)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 60, height: 60)
-                    .clipShape(.rect(cornerRadius: 8))
+                Button {
+                    focusedField = nil
+                    attachmentPreviewURL = pending.fileURL
+                } label: {
+                    Image(uiImage: thumb)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 60, height: 60)
+                        .clipShape(.rect(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Preview image", comment: "Opens a larger preview of the image attached to a direct message."))
             } else {
                 Image(systemName: iconForMimeType(pending.mimeType))
                     .font(.title)
@@ -605,13 +721,31 @@ struct DMChatInputField: View {
         }
     }
     
-    @ViewBuilder
     private var textField: some View {
-        if #available(iOS 16.0, *) {
-            TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message, axis: .vertical)
-        } else {
-            TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message)
+        ZStack(alignment: .topLeading) {
+            if message.isEmpty {
+                Text(String(localized: "Type your message...", comment: "Placeholder for input field for new direct message"))
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 8)
+                    .padding(.leading, 5)
+                    .allowsHitTesting(false)
+            }
+            MentionHighlightingTextView(
+                text: $message,
+                attributedText: nil,
+                height: $editorHeight,
+                accentColor: UIColor(theme.accent),
+                onSubmit: onSubmit,
+                onPasteMedia: showAttachmentButton && vm.pendingFileAttachment == nil ? onPasteMedia : nil,
+                isFocused: Binding(
+                    get: { focusedField == .message },
+                    set: { focusedField = $0 ? .message : nil }
+                )
+            )
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: min(editorHeight, 120))
+        .clipped()
     }
 }
 

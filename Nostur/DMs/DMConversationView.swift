@@ -27,6 +27,7 @@ struct DMConversationView: View {
 
     // File attachment state
     @State private var showFileImporter = false
+    @State private var isLoadingPastedMedia = false
     @State private var showPhotosPicker = false
     
     @Namespace private var bottomAnchor
@@ -164,12 +165,14 @@ struct DMConversationView: View {
                         Group {
                             if vm.isAccepted {
                                 VStack {
-                                    DMChatInputField(message: $text, vm: vm, startWithFocus: false) {
+                                    DMChatInputField(message: $text, vm: vm, startWithFocus: false, isLoadingMedia: isLoadingPastedMedia) {
                                         self.sendMessage()
                                     } onPickPhotos: {
                                         showPhotosPicker = true
                                     } onPickFiles: {
                                         showFileImporter = true
+                                    } onPasteMedia: { provider, type in
+                                        handlePastedMedia(provider, type: type)
                                     }
                                     .overlay(alignment: .topTrailing) {
                                         if showThereIsMore {
@@ -324,6 +327,7 @@ struct DMConversationView: View {
     }
     
     private func sendMessage() {
+        guard !isLoadingPastedMedia else { return }
         Task { @MainActor in
             // If there's a pending file attachment, send that first
             if let pending = vm.pendingFileAttachment {
@@ -372,6 +376,39 @@ struct DMConversationView: View {
         }
     }
     
+    private func handlePastedMedia(_ provider: NSItemProvider, type: UTType) {
+        guard vm.conversationVersion == 17,
+              SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL,
+              vm.pendingFileAttachment == nil, !isLoadingPastedMedia else { return }
+        isLoadingPastedMedia = true
+        errorText = nil
+        let mimeType = type.preferredMIMEType ?? "application/octet-stream"
+
+        provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { url, error in
+            // Provider URLs expire when this callback returns. Copy and inspect the
+            // file here, off the main thread, before publishing the preview.
+            let result: Result<PendingFileAttachment, Error>
+            if let url {
+                result = Result { try buildPendingAttachment(fromFileAt: url, mimeType: mimeType) }
+            } else {
+                result = .failure(error ?? CocoaError(.fileReadUnknown))
+            }
+            Task { @MainActor in
+                isLoadingPastedMedia = false
+                switch result {
+                case .success(let pending):
+                    guard vm.conversationVersion == 17, vm.pendingFileAttachment == nil else {
+                        removePendingAttachmentFile(at: pending.fileURL)
+                        return
+                    }
+                    vm.pendingFileAttachment = pending
+                case .failure(let error):
+                    errorText = error.localizedDescription
+                }
+            }
+        }
+    }
+
     private func handleSelectedFile(_ url: URL) {
         let accessing = url.startAccessingSecurityScopedResource()
         defer {
