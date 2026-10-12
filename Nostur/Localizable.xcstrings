@@ -23436,6 +23436,9 @@
       },
       "shouldTranslate" : false
     },
+    "Preview image" : {
+      "comment" : "Opens a larger preview of the image attached to a direct message."
+    },
     "Previously known as: %@" : {
       "localizations" : {
         "es" : {
@@ -34909,9 +34912,6 @@
           }
         }
       }
-    },
-    "Verified receipts stay cached even if a Lightning address changes. Unresolved provider checks are normally retried after 24 hours; a changed address or a new signer can trigger an earlier check." : {
-
     },
     "Verified receipts stay cached even if a Lightning address changes. Unresolved provider checks are normally retried after 24 hours; a changed address or a new signer can trigger an earlier check." : {
 
