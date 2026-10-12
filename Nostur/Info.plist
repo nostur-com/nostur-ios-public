@@ -44,6 +44,8 @@
 	<string>$(CI_BUILD_NUMBER)</string>
 	<key>IMGUR_CLIENT_ID</key>
 	<string>$(IMGUR_CLIENT_ID)</string>
+	<key>KLIPY_API_KEY</key>
+	<string>$(KLIPY_API_KEY)</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>12.4</string>
 	<key>NIP89_APP_NAME</key>
@@ -63,8 +65,6 @@
 	<string>$(TENOR_API_KEY)</string>
 	<key>TENOR_CLIENT_KEY</key>
 	<string>$(TENOR_CLIENT_KEY)</string>
-	<key>KLIPY_API_KEY</key>
-	<string>$(KLIPY_API_KEY)</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -5361,6 +5361,9 @@
     "And who you want to include. Nothing is posted automatically." : {
 
     },
+    "Animation too large, not loaded." : {
+
+    },
     "Announce your relays..." : {
       "localizations" : {
         "es" : {
@@ -10177,6 +10180,9 @@
           }
         }
       }
+    },
+    "Could not read image." : {
+
     },
     "Could not send NWC request" : {
       "comment" : "Error message",
@@ -15542,6 +15548,7 @@
       }
     },
     "Image is larger than 50 MB, not loaded." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -15562,6 +15569,9 @@
           }
         }
       }
+    },
+    "Image too large, not loaded." : {
+
     },
     "Image uploading" : {
       "comment" : "Setting heading on settings screen",
