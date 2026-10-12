@@ -211,7 +211,7 @@ struct Entry: View {
                         }
                     }
             }
-            .frame(minHeight: 100)
+            .frame(minHeight: 100, maxHeight: .infinity, alignment: .topLeading)
             .sheet(isPresented: $gifSheetShown) {
                 NBNavigationStack {
                     GifSearcher { gifUrl in

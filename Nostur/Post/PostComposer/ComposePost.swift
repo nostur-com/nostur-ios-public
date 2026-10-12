@@ -68,6 +68,27 @@ struct ComposePost: View {
     }
     
     @State private var didLoad = false
+
+    private var startsAtReplyEditor: Bool {
+        replyTo != nil && horizontalSizeClass == .compact
+    }
+
+    private static let replyContextPeekHeight: CGFloat = 24
+
+    private func textEntryHeight(in viewportHeight: CGFloat) -> CGFloat {
+        if startsAtReplyEditor {
+            // Include the bottom scroll padding when reserving the parent strip.
+            let padding: CGFloat
+            if #available(iOS 17.0, *) {
+                padding = 30
+            }
+            else {
+                padding = 20
+            }
+            return max(100, viewportHeight - padding - Self.replyContextPeekHeight)
+        }
+        return quotePost == nil ? max(50, viewportHeight - 90) : max(50, (viewportHeight - 90) * 0.5)
+    }
     
     var body: some View {
 #if DEBUG
@@ -456,7 +477,7 @@ struct ComposePost: View {
                                             }
                                             
                                             textEntry
-                                                .frame(height: replyTo == nil && quotePost == nil ? max(50, (geo.size.height - 90)) : max(50, ((geo.size.height - 90) * 0.5 )) )
+                                                .frame(height: textEntryHeight(in: geo.size.height))
                                                 .id(textfield)
                                         }
                                         .padding(.top, replyToNRPost != nil ? Self.composerThreadBridgeHeight : 10)
@@ -480,14 +501,31 @@ struct ComposePost: View {
                                     }
                                     .padding(10)
                                     .onAppear {
+                                        if #available(iOS 17.0, *), startsAtReplyEditor {
+                                            return
+                                        }
                                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                            withAnimation {
-                                                proxy.scrollTo(textfield)
+                                            if startsAtReplyEditor {
+                                                proxy.scrollTo(textfield, anchor: .bottom)
+                                            }
+                                            else {
+                                                withAnimation {
+                                                    proxy.scrollTo(textfield)
+                                                }
                                             }
                                         }
                                     }
+                                    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                                        guard startsAtReplyEditor else { return }
+                                        if #available(iOS 17.0, *) {
+                                            return
+                                        }
+                                        // Re-align after the keyboard has reduced the viewport.
+                                        proxy.scrollTo(textfield, anchor: .bottom)
+                                    }
                                 }
                             }
+                            .modifier(ReplyComposerScrollAnchor(enabled: startsAtReplyEditor))
                         }
                         .offset(y: (vm.showMentioning || vm.showCustomEmojiPicker) && (replyTo != nil) ? -150 : 0)
                         .overlay(alignment: .bottom) {
@@ -694,6 +732,19 @@ struct ComposePost: View {
     @ViewBuilder
     var textEntry: some View {
         Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: kind, showAudioRecorder: $showAudioRecorder)
+    }
+}
+
+private struct ReplyComposerScrollAnchor: ViewModifier {
+    let enabled: Bool
+
+    func body(content: Content) -> some View {
+        if #available(iOS 17.0, *) {
+            content.defaultScrollAnchor(enabled ? .bottom : nil)
+        }
+        else {
+            content
+        }
     }
 }
 
