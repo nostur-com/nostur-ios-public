@@ -129,7 +129,7 @@ struct NavigationDestinationsModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .nbNavigationDestination(for: YearReviewPath.self) { path in
-                if #available(iOS 17.0, *) {
+                if #available(iOS 17.0, *), YearReviewFeature.isEnabled {
                     YearReviewView(initialYear: path.year).environment(\.containerID, self.containerID)
                 }
             }

@@ -160,7 +160,7 @@ struct NXColumnView<HeaderContent: View>: View {
             case .posts(let nrPosts):
                 VStack(spacing: 0) {
                     header
-                    if #available(iOS 17.0, *), case .following(_) = config.columnType,
+                    if #available(iOS 17.0, *), YearReviewFeature.isEnabled, case .following(_) = config.columnType,
                        config.accountPubkey == la.pubkey {
                         YearReviewSeasonalPrompt(owner: la.pubkey, containerID: containerID)
                     }

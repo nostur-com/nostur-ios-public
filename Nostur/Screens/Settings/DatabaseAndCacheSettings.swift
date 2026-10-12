@@ -124,7 +124,9 @@ struct DatabaseAndCacheSettings: View {
 
             }
             
-            HistoryArchiveStorageSection(isOptimizingDatabase: isOptimizing)
+            if YearReviewFeature.isEnabled {
+                HistoryArchiveStorageSection(isOptimizingDatabase: isOptimizing)
+            }
 
             Section(header: Text("Database status", comment: "Settings heading")) {
                 HStack {

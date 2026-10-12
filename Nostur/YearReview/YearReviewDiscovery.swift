@@ -1,6 +1,15 @@
 import SwiftUI
 import Combine
 
+enum YearReviewFeature {
+    // Enable in release builds when Year in Review is ready for users.
+    #if DEBUG
+    static let isEnabled = true
+    #else
+    static let isEnabled = false
+    #endif
+}
+
 enum YearReviewDiscovery {
     static func seasonalYear(now: Date = .now, timeZone: TimeZone = .current) -> Int? {
         var calendar = Calendar(identifier: .gregorian)

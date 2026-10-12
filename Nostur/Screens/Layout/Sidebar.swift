@@ -124,7 +124,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                     }
-                    if #available(iOS 17.0, *) {
+                    if #available(iOS 17.0, *), YearReviewFeature.isEnabled {
                         Button {
                             if selectedTab() != "Main" { setSelectedTab("Main") }
                             navigateToOnMain(YearReviewPath(year: YearReviewPeriod.defaultYear()))
