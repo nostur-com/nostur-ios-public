@@ -660,7 +660,25 @@ final class NXFeedViewportTests: XCTestCase {
                 pinByIdentity: false,
                 anchorIndexShifted: true
             ))
+            XCTAssertFalse(NXFeedViewport.shouldPinTailAppend(
+                updateReasons: reasons,
+                oldIDs: ["old-first", "visible"],
+                newIDs: ["revealed", "old-first", "visible", "older"],
+                anchorID: "old-first"
+            ))
         }
+        XCTAssertTrue(NXFeedViewport.shouldPinTailAppend(
+            updateReasons: ["older posts append"],
+            oldIDs: ["newer", "visible", "tail"],
+            newIDs: ["newer", "visible", "tail", "older-1", "older-2"],
+            anchorID: "visible"
+        ))
+        XCTAssertFalse(NXFeedViewport.shouldPinTailAppend(
+            updateReasons: ["older posts append"],
+            oldIDs: ["newer", "tail"],
+            newIDs: ["newer", "visible", "tail", "older"],
+            anchorID: "visible"
+        ))
         XCTAssertTrue(NXFeedViewport.shouldSettleAnchoredUpdate(
             updateReasons: ["older posts append", NXFeedViewport.unreadRemovalCoverReason],
             pinByIdentity: false,
@@ -668,10 +686,102 @@ final class NXFeedViewportTests: XCTestCase {
         ))
     }
 
+    func testPrependSettleDoesNotFlingPastTheHeightActuallyAdded() {
+        // The nos.lol trace scrolled from 2269 to 3933 while the list had not
+        // grown, then a collapsed height of 1872 looked like the end of the feed.
+        XCTAssertFalse(
+            NXFeedViewport.shouldApplyPrependOffset(
+                offsetAtStart: 782,
+                currentOffset: 2269,
+                correction: 1664,
+                contentHeight: 4715,
+                contentHeightAtStart: 4715
+            )
+        )
+        XCTAssertTrue(
+            NXFeedViewport.shouldApplyPrependOffset(
+                offsetAtStart: 782,
+                currentOffset: 3933,
+                correction: -2882,
+                contentHeight: 1872,
+                contentHeightAtStart: 4715
+            )
+        )
+        // Three new posts grew the list by 1181 and the anchor moved by the same amount.
+        XCTAssertTrue(
+            NXFeedViewport.shouldApplyPrependOffset(
+                offsetAtStart: 1045.3,
+                currentOffset: 1045.3,
+                correction: 1181.3,
+                contentHeight: 6528,
+                contentHeightAtStart: 5347
+            )
+        )
+        // UIKit already flung during the first yield. Step back to the start
+        // plus slack while the list has not grown. A recovery and a matched
+        // pin are not clamped.
+        XCTAssertEqual(
+            NXFeedViewport.prependOffsetClamp(
+                offsetAtStart: 782,
+                currentOffset: 2269,
+                correction: 1664,
+                contentHeight: 4715,
+                contentHeightAtStart: 4715
+            ),
+            CGFloat?(862)
+        )
+        XCTAssertNil(
+            NXFeedViewport.prependOffsetClamp(
+                offsetAtStart: 782,
+                currentOffset: 3933,
+                correction: -2882,
+                contentHeight: 1872,
+                contentHeightAtStart: 4715
+            )
+        )
+        XCTAssertNil(
+            NXFeedViewport.prependOffsetClamp(
+                offsetAtStart: 1045.3,
+                currentOffset: 1045.3,
+                correction: 1181.3,
+                contentHeight: 6528,
+                contentHeightAtStart: 5347
+            )
+        )
+        // At the top the list shrank (6688→6090) while two new posts needed a
+        // pin larger than the 80pt slack. That pin stays near the start.
+        XCTAssertTrue(
+            NXFeedViewport.shouldApplyPrependOffset(
+                offsetAtStart: -118,
+                currentOffset: -118,
+                correction: 420,
+                contentHeight: 6090,
+                contentHeightAtStart: 6688,
+                viewportHeight: 956
+            )
+        )
+        XCTAssertNil(
+            NXFeedViewport.prependOffsetClamp(
+                offsetAtStart: -118,
+                currentOffset: -118,
+                correction: 420,
+                contentHeight: 6090,
+                contentHeightAtStart: 6688,
+                viewportHeight: 956
+            )
+        )
+    }
+
     func testPrependSettleWaitsUntilTheNewCellsExist() {
         XCTAssertNil(NXFeedViewport.prependMinimumCellCount(cellsBefore: 21, insertedCount: 0))
         XCTAssertNil(NXFeedViewport.prependMinimumCellCount(cellsBefore: 0, insertedCount: 1))
         XCTAssertEqual(NXFeedViewport.prependMinimumCellCount(cellsBefore: 21, insertedCount: 1), 22)
+        // At-top truncation dropped 43 posts while inserting 1. Waiting for
+        // the old cell total (64) never returns, so the pin never runs.
+        XCTAssertEqual(
+            NXFeedViewport.prependMinimumCellCount(cellsBefore: 63, insertedCount: 1, removedCount: 43),
+            21
+        )
 
         // Right after an unread landing the old list is already aligned. Finishing
         // there lifts the cover before the new row exists, and it pushes the feed down.

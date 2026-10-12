@@ -131,6 +131,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private var lastApproachingBottomSignalAt: CFTimeInterval = 0
     private var prependSnapshot: UIView?
     private var prependSnapshotGeneration = 0
+    private var didLogPrependHold = false
     /// Fired on content-offset changes (status-bar tap-to-top, fling, etc.).
     var onViewportChange: (() -> Void)?
     /// Fired at a low frequency when less than a few screens of content remain.
@@ -614,14 +615,22 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         updates.forEach { $0.apply() }
 
         let addedCount = itemIDs.count { !oldIDs.contains($0) }
+        let removedCount = oldIDs.count { !itemIDs.contains($0) }
         // The pre-insert list is already aligned. Wait until UIKit has a cell
         // for every added post before that alignment is allowed to lift the cover.
+        // Count removals as well: at-top truncation deletes more rows than this
+        // prepend adds, and the old total is then impossible.
         let prependMinimumCellCount = NXFeedViewport.shouldCoverPrepend(updateReasons: updateReasons)
-            ? cellsBefore.flatMap { NXFeedViewport.prependMinimumCellCount(cellsBefore: $0, insertedCount: addedCount) }
+            ? cellsBefore.flatMap {
+                NXFeedViewport.prependMinimumCellCount(
+                    cellsBefore: $0,
+                    insertedCount: addedCount,
+                    removedCount: removedCount
+                )
+            }
             : nil
 
 #if DEBUG
-        let removedCount = oldIDs.count { !itemIDs.contains($0) }
         if addedCount > 0 || removedCount > 0 {
             onDebugAction?(
                 "feed IDs changed · \(oldIDs.count)→\(itemIDs.count) · +\(addedCount)/−\(removedCount) · \(anchorSummary(in: scrollView))"
@@ -644,12 +653,18 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             let shifted = parkedBefore.map {
                 NXFeedIndexMapping.anchorIndexShifted(oldIDs: oldIDs, newIDs: itemIDs, anchorID: $0.id)
             } ?? false
-            let needsExtendedSettling = NXFeedViewport.shouldSettleAnchoredUpdate(
+            let pinTailAppend = NXFeedViewport.shouldPinTailAppend(
+                updateReasons: updateReasons,
+                oldIDs: oldIDs,
+                newIDs: itemIDs,
+                anchorID: parkedBefore?.id
+            )
+            let needsSettling = pinTailAppend || NXFeedViewport.shouldSettleAnchoredUpdate(
                 updateReasons: updateReasons,
                 pinByIdentity: pinByIdentity,
                 anchorIndexShifted: shifted
             )
-            guard needsExtendedSettling else {
+            guard needsSettling else {
                 removePrependSnapshot()
 #if DEBUG
                 let reasons = updates.map(\.reason).uniqued().joined(separator: ", ")
@@ -663,9 +678,14 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 removePrependSnapshot()
                 return
             }
+            // The bad offset is already applied. Correct it before the next frame,
+            // then keep it through the short settle while estimates finish.
+            if pinTailAppend {
+                restore(anchor: (post.id, post.visibleTopOffset), in: scrollView)
+            }
             startSettling(
                 anchor: (post.id, post.visibleTopOffset),
-                extended: needsExtendedSettling,
+                extended: needsSettling && !pinTailAppend,
                 bringOnScreen: pinByIdentity,
                 prependMinimumCellCount: prependMinimumCellCount
             )
@@ -700,7 +720,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         // image/repost height changes only need one or two offset corrections.
         // Never run this loop during a user drag: it would fight the scroller.
         let maxSteps = extended ? 30 : 8
+        didLogPrependHold = false
         let startingOffset = scrollView?.contentOffset.y
+        let prependContentHeightAtStart = prependMinimumCellCount == nil
+            ? nil
+            : scrollView?.contentSize.height
 #if DEBUG
         onDebugAction?(
             "SETTLE start · extended \(extended) · bringOnScreen \(bringOnScreen) · \(viewportDebugSummary()) · anchor \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset))"
@@ -758,19 +782,29 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     return
                 }
 
-                if let prependMinimumCellCount,
-                   self.renderedCellCount(in: scrollView) < prependMinimumCellCount {
+                let cellsLanded = prependMinimumCellCount.map {
+                    self.renderedCellCount(in: scrollView) >= $0
+                } ?? true
+                if let prependMinimumCellCount, !cellsLanded {
                     // The List update is often committed but not laid out yet, especially
                     // while the unread jump is still resolving row heights.
                     scrollView.layoutIfNeeded()
                 }
 
                 let shouldBringOnScreen = bringOnScreen && !didBringOnScreen
-                let result = self.restore(
-                    anchor: anchor,
-                    in: scrollView,
-                    bringOnScreen: shouldBringOnScreen
-                )
+                let result: RestoreResult
+                if cellsLanded {
+                    result = self.restore(
+                        anchor: anchor,
+                        in: scrollView,
+                        bringOnScreen: shouldBringOnScreen,
+                        prependTravel: prependContentHeightAtStart.map {
+                            (offsetAtStart: startingOffset ?? scrollView.contentOffset.y, contentHeightAtStart: $0)
+                        }
+                    )
+                } else {
+                    result = .unavailable
+                }
                 if shouldBringOnScreen {
                     didBringOnScreen = true
                 }
@@ -913,7 +947,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private func restore(
         anchor: (id: String, visibleTopOffset: CGFloat),
         in scrollView: UIScrollView,
-        bringOnScreen: Bool = false
+        bringOnScreen: Bool = false,
+        prependTravel: (offsetAtStart: CGFloat, contentHeightAtStart: CGFloat)? = nil
     ) -> RestoreResult {
         guard let itemIndex = itemIDs.firstIndex(of: anchor.id) else { return .unavailable }
         let sectionCounts = sectionCounts(in: scrollView)
@@ -940,16 +975,64 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard correction.isFinite,
               scrollView.contentOffset.y.isFinite,
               scrollView.contentSize.height.isFinite else { return .unavailable }
+        if let prependTravel,
+           !NXFeedViewport.shouldApplyPrependOffset(
+            offsetAtStart: prependTravel.offsetAtStart,
+            currentOffset: scrollView.contentOffset.y,
+            correction: correction,
+            contentHeight: scrollView.contentSize.height,
+            contentHeightAtStart: prependTravel.contentHeightAtStart,
+            viewportHeight: scrollView.bounds.height
+           ) {
+            guard let clamped = NXFeedViewport.prependOffsetClamp(
+                offsetAtStart: prependTravel.offsetAtStart,
+                currentOffset: scrollView.contentOffset.y,
+                correction: correction,
+                contentHeight: scrollView.contentSize.height,
+                contentHeightAtStart: prependTravel.contentHeightAtStart,
+                viewportHeight: scrollView.bounds.height
+            ) else {
+#if DEBUG
+                if !didLogPrependHold {
+                    didLogPrependHold = true
+                    onDebugAction?(
+                        String(
+                            format: "SETTLE hold · %+.1f would pass the inserted height · y %.1f",
+                            correction,
+                            scrollView.contentOffset.y
+                        )
+                    )
+                }
+#endif
+                return .unavailable
+            }
+            return applyOffset(clamped, in: scrollView, anchorID: anchor.id, debugLabel: "clamp")
+        }
         guard abs(correction) > 0.5 else { return bringOnScreen ? .corrected : .aligned }
 
-        var offset = scrollView.contentOffset
-        offset.y += correction
+        return applyOffset(
+            scrollView.contentOffset.y + correction,
+            in: scrollView,
+            anchorID: anchor.id,
+            debugLabel: String(format: "%+.1f", correction)
+        )
+    }
+
+    private func applyOffset(
+        _ proposedY: CGFloat,
+        in scrollView: UIScrollView,
+        anchorID: String,
+        debugLabel: String
+    ) -> RestoreResult {
         let minOffsetY = -scrollView.adjustedContentInset.top
         let maxOffsetY = max(
             minOffsetY,
             scrollView.contentSize.height - scrollView.bounds.height + scrollView.adjustedContentInset.bottom
         )
-        offset.y = min(max(offset.y, minOffsetY), maxOffsetY)
+        let clampedY = min(max(proposedY, minOffsetY), maxOffsetY)
+        guard abs(clampedY - scrollView.contentOffset.y) > 0.5 else { return .aligned }
+        var offset = scrollView.contentOffset
+        offset.y = clampedY
 #if DEBUG
         let beforeY = scrollView.contentOffset.y
 #endif
@@ -957,11 +1040,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 #if DEBUG
         onDebugAction?(
             String(
-                format: "SETTLE %+.1f · y %.1f→%.1f · %@",
-                correction,
+                format: "SETTLE %@ · y %.1f→%.1f · %@",
+                debugLabel,
                 beforeY,
                 scrollView.contentOffset.y,
-                shortID(anchor.id)
+                shortID(anchorID)
             )
         )
 #endif
@@ -1167,6 +1250,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 
     private func evaluateApproachingBottom(in scrollView: UIScrollView) {
         guard scrollView.window != nil, scrollView.bounds.height > 0 else { return }
+        // A prepend settle can park the offset past a collapsed content size.
+        // That is not the end of the feed, and it must not request another page.
+        guard settleTask == nil, prependSnapshot == nil else { return }
+        guard scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+                < scrollView.contentSize.height else { return }
         let visibleBottom = scrollView.contentOffset.y
             + scrollView.bounds.height
             - scrollView.adjustedContentInset.bottom

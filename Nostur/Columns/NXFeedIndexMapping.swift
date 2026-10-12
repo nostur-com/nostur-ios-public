@@ -219,13 +219,109 @@ enum NXFeedViewport {
             || shouldCoverViewport(updateReasons: updateReasons)
     }
 
+    /// A tail append does not move the visible row. List still rewrites
+    /// `contentOffset` from the new estimated heights and the feed jumps toward
+    /// newer posts. Pin that row. A shifted index is a stale reveal snapshot.
+    static func shouldPinTailAppend(
+        updateReasons: [String],
+        oldIDs: [String],
+        newIDs: [String],
+        anchorID: String?
+    ) -> Bool {
+        guard !updateReasons.isEmpty,
+              updateReasons.allSatisfy({ $0 == "older posts append" }),
+              let anchorID,
+              let oldIndex = oldIDs.firstIndex(of: anchorID),
+              let newIndex = newIDs.firstIndex(of: anchorID) else { return false }
+        return oldIndex == newIndex
+    }
+
     /// Cell count that includes every post inserted above the parked row.
     /// `nil` when this update did not add rows, so settle must not wait.
-    static func prependMinimumCellCount(cellsBefore: Int, insertedCount: Int) -> Int? {
+    /// Removals count too: an at-top truncation can drop more rows than the
+    /// prepend adds, and the collection view never grows to the old total.
+    static func prependMinimumCellCount(cellsBefore: Int, insertedCount: Int, removedCount: Int = 0) -> Int? {
         // A zero count means the scroll view has not reported its rows yet.
         // Treating that as "one more cell" would finish before the real insert.
         guard cellsBefore > 0, insertedCount > 0 else { return nil }
-        return cellsBefore + insertedCount
+        let expected = cellsBefore + insertedCount - max(0, removedCount)
+        guard expected > 0 else { return nil }
+        return expected
+    }
+
+    /// Furthest `contentOffset.y` a prepend may use: where it started, plus the
+    /// height the list has actually gained, plus a small estimate slack.
+    static func prependOffsetLimit(
+        offsetAtStart: CGFloat,
+        contentHeight: CGFloat,
+        contentHeightAtStart: CGFloat,
+        slack: CGFloat = 80
+    ) -> CGFloat {
+        let heightAdded = contentHeight - contentHeightAtStart
+        return offsetAtStart + max(0, heightAdded) + slack
+    }
+
+    /// A prepend may scroll down by the height the list gained, or by a pin that
+    /// is still near the start and clear of the tail.
+    /// Content height often lags the new rows, and an at-top truncation shrinks
+    /// it. Refusing every correction then leaves the offset at the top, so the
+    /// new posts push the feed when the cover lifts.
+    /// A stale frame that flings toward the end is still refused. That collapsed
+    /// height looks like the end of the feed and requests another page.
+    static func shouldApplyPrependOffset(
+        offsetAtStart: CGFloat,
+        currentOffset: CGFloat,
+        correction: CGFloat,
+        contentHeight: CGFloat,
+        contentHeightAtStart: CGFloat,
+        slack: CGFloat = 80,
+        viewportHeight: CGFloat = 956
+    ) -> Bool {
+        let allowedOffset = prependOffsetLimit(
+            offsetAtStart: offsetAtStart,
+            contentHeight: contentHeight,
+            contentHeightAtStart: contentHeightAtStart,
+            slack: slack
+        )
+        let projected = currentOffset + correction
+        if projected <= allowedOffset + 0.5 { return true }
+        // Already past the inserted height. Allow a correction that comes back.
+        if projected < currentOffset - 0.5 { return true }
+        let viewport = max(viewportHeight, 1)
+        let stillNearStart = currentOffset <= offsetAtStart + viewport + slack
+        let clearOfTail = projected <= contentHeight - viewport * 1.5
+        return stillNearStart && clearOfTail
+    }
+
+    /// UIKit can move past the inserted height before the first settle sample,
+    /// while the anchor frame still points further down. Step back to the limit.
+    /// A correction that is already coming back is left to `shouldApplyPrependOffset`.
+    static func prependOffsetClamp(
+        offsetAtStart: CGFloat,
+        currentOffset: CGFloat,
+        correction: CGFloat,
+        contentHeight: CGFloat,
+        contentHeightAtStart: CGFloat,
+        slack: CGFloat = 80,
+        viewportHeight: CGFloat = 956
+    ) -> CGFloat? {
+        guard !shouldApplyPrependOffset(
+            offsetAtStart: offsetAtStart,
+            currentOffset: currentOffset,
+            correction: correction,
+            contentHeight: contentHeight,
+            contentHeightAtStart: contentHeightAtStart,
+            slack: slack,
+            viewportHeight: viewportHeight
+        ) else { return nil }
+        let allowedOffset = prependOffsetLimit(
+            offsetAtStart: offsetAtStart,
+            contentHeight: contentHeight,
+            contentHeightAtStart: contentHeightAtStart,
+            slack: slack
+        )
+        guard currentOffset > allowedOffset + 0.5 else { return nil }
+        return allowedOffset
     }
 
     /// The pre-insert list looks aligned for several frames after an unread landing,

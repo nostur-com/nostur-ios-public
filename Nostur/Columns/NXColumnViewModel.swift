@@ -5319,7 +5319,9 @@ extension NXColumnViewModel {
                 }
                 // SwiftUI List can reconcile self-sizing rows against estimated heights
                 // when its identity changes during drag/deceleration, moving the viewport
-                // backward. Queue the append until idle, but do not manually correct it.
+                // backward. Queue the append until idle. A tail append whose visible
+                // row kept its index is then pinned. A shifted index is left alone:
+                // that snapshot is a reveal that inserted rows above the old anchor.
 #if DEBUG
                 recordFeedAction(
                     "APPEND decide · +\(postsToAppend.count) · will cancel settle · \(feedActionDebugViewport())"
