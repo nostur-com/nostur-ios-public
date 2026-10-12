@@ -119,8 +119,12 @@ func blossomUpload(authHeader: String, blossomFile: BlossomUploadFile, contentTy
                 
                 var cancellable: AnyCancellable?
                 cancellable = uploader.uploadingPublisher(for: uploadItem)
-                    .sink(receiveCompletion: { _ in
+                    .sink(receiveCompletion: { completion in
                         defer { _ = cancellable } // Keep cancellable alive until completion
+                        if case .failure(let error) = completion {
+                            continuation.resume(throwing: error)
+                            return
+                        }
                         
                         if uploader.finished, let downloadUrl = uploader.queued.first?.downloadUrl {
                             continuation.resume(returning: downloadUrl)
@@ -152,9 +156,18 @@ func blossomUpload(authHeader: String, blossomFile: BlossomUploadFile, contentTy
     }
 }
 
-enum BlossomUploadError: Error {
+enum BlossomUploadError: Error, LocalizedError {
     case error(String) // error message
     case timeout
+
+    var errorDescription: String? {
+        switch self {
+        case .error(let message):
+            return String(localized: "Blossom upload failed: \(message)", comment: "Upload failure followed by the Blossom server's error")
+        case .timeout:
+            return String(localized: "The Blossom upload timed out. Check your connection or try another Blossom server.")
+        }
+    }
 }
 
 func blossomMirror(authHeader: String, url: String, hash: String, contentType: String, blossomServer: URL, timeout: TimeInterval = 10.0) async throws -> String {

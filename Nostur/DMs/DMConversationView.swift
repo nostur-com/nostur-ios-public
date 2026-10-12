@@ -22,6 +22,8 @@ struct DMConversationView: View {
     @StateObject private var vm: ConversionVM
     @State private var text = ""
     @State private var errorText: String? = nil
+    @State private var sendFailed = false
+    @State private var isSending = false
     @State private var didLoad = false
     @State private var showConversationInfoSheet = false
 
@@ -194,7 +196,7 @@ struct DMConversationView: View {
                                                 .offset(x: -20, y: -50)
                                         }
                                     }
-                                    .disabled(vm.isUploadingFile)
+                                    .disabled(isSending)
                                     if vm.isUploadingFile {
                                         HStack(spacing: 8) {
                                             ProgressView()
@@ -203,6 +205,12 @@ struct DMConversationView: View {
                                                 .foregroundStyle(.secondary)
                                         }
                                         .padding(.bottom, 4)
+                                    }
+                                    if let errorText {
+                                        DMComposerErrorView(errorText: errorText, sendFailed: sendFailed,
+                                                            canRetry: sendFailed && (vm.pendingFileAttachment != nil || !text.isEmpty),
+                                                            onRetry: sendMessage)
+                                            .disabled(isSending || isLoadingPastedMedia)
                                     }
                                     if vm.conversationVersion == 4 {
                                         if #available(iOS 16.0, *) {
@@ -308,6 +316,8 @@ struct DMConversationView: View {
                     do {
                         let pending = try buildPendingAttachment(from: data, mimeType: mimeType, imageDimensions: dimensions)
                         vm.pendingFileAttachment = pending
+                        errorText = nil
+                        sendFailed = false
                     }
                     catch {
                         errorText = error.localizedDescription
@@ -327,8 +337,12 @@ struct DMConversationView: View {
     }
     
     private func sendMessage() {
-        guard !isLoadingPastedMedia else { return }
+        guard !isLoadingPastedMedia, !isSending else { return }
+        isSending = true
+        errorText = nil
+        sendFailed = false
         Task { @MainActor in
+            defer { isSending = false }
             // If there's a pending file attachment, send that first
             if let pending = vm.pendingFileAttachment {
                 vm.pendingFileAttachment = nil
@@ -344,6 +358,7 @@ struct DMConversationView: View {
                 }
                 catch {
                     errorText = error.localizedDescription
+                    sendFailed = true
                     vm.pendingFileAttachment = pending
                     return
                 }
@@ -368,7 +383,8 @@ struct DMConversationView: View {
                 vm.quotingNow = quotingNow
             }
             catch {
-                errorText = "Could not send message"
+                errorText = error.localizedDescription
+                sendFailed = true
                 text = textToSend
                 vm.replyingNow = replyingNow
                 vm.quotingNow = quotingNow
@@ -382,6 +398,7 @@ struct DMConversationView: View {
               vm.pendingFileAttachment == nil, !isLoadingPastedMedia else { return }
         isLoadingPastedMedia = true
         errorText = nil
+        sendFailed = false
         let mimeType = type.preferredMIMEType ?? "application/octet-stream"
 
         provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { url, error in
@@ -424,6 +441,8 @@ struct DMConversationView: View {
 
         do {
             vm.pendingFileAttachment = try buildPendingAttachment(fromFileAt: url, mimeType: mimeType)
+            errorText = nil
+            sendFailed = false
         }
         catch {
             errorText = "Could not read file"
@@ -537,6 +556,40 @@ struct DMConversationView: View {
         }
 
         return UIImage(cgImage: cgImage)
+    }
+}
+
+private struct DMComposerErrorView: View {
+    let errorText: String
+    let sendFailed: Bool
+    let canRetry: Bool
+    let onRetry: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.circle.fill")
+                .foregroundStyle(.red)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                if sendFailed {
+                    Text("Not sent", comment: "DM composer status after sending a message or attachment fails")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.red)
+                }
+                Text(verbatim: errorText)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if canRetry {
+                    Button(action: onRetry) {
+                        Label("Retry", systemImage: "arrow.clockwise")
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .font(.footnote)
+        .padding(.horizontal)
+        .padding(.bottom, 4)
     }
 }
 
