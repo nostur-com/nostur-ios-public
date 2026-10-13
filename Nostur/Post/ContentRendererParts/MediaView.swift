@@ -676,6 +676,12 @@ struct MediaPlaceholder: View {
                 }
                 .padding(10)
             }
+        case .animationExceedsSafetyLimit:
+            failedImageView {
+                Label("Animation exceeds the playback safety limit.", systemImage: "exclamationmark.triangle.fill")
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(10)
+            }
         case .mediaExceedsSafetyLimit:
             failedImageView {
                 Label("Image too large, not loaded.", systemImage: "exclamationmark.triangle.fill")

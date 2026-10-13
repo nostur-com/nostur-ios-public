@@ -47,7 +47,7 @@ enum ProfileImageSafety {
             maximumPixelCount: 100_000_000,
             // User-requested playback can exceed automatic limits. Rolling
             // buffers bound memory; retain a cap on total animation work.
-            maximumAnimatedFrameCount: 600,
+            maximumAnimatedFrameCount: 1_200,
             maximumAnimatedPixelCount: 500_000_000
         )
         static let emoji = Policy(

@@ -302,7 +302,7 @@ class MediaViewVM: ObservableObject {
         if let decodingError = error as? LimitedImageDecoder.Error {
             switch decodingError {
             case .animationTooLarge:
-                return loadAnyway || usePFPpipeline ? .mediaExceedsSafetyLimit : .animationTooLarge
+                return loadAnyway || usePFPpipeline ? .animationExceedsSafetyLimit : .animationTooLarge
             case .unsafeImageDimensions:
                 return .mediaExceedsSafetyLimit
             case .unreadableImage:
@@ -337,6 +337,7 @@ enum MediaViewState: Equatable {
     case gif(GifInfo) // TODO: handle  if !dim.isScreenshot
     case imageTooLarge
     case animationTooLarge
+    case animationExceedsSafetyLimit
     case mediaExceedsSafetyLimit
     case error(String) // error message
 }

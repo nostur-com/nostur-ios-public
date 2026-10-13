@@ -265,17 +265,16 @@ class ImageProcessing {
             $0.dataCachePolicy = .automatic
         }
         
+        let contentDataCache = try! DataCache(name: "com.nostur.image.content")
+        contentDataCache.sizeLimit = 1_048_576 * Self.CONTENT_SIZE_MB
         content = ImagePipeline {
 //            $0.isUsingPrepareForDisplay = true
             $0.isProgressiveDecodingEnabled = false
             $0.dataLoader = Self.makeLimitedDataLoader(byteLimit: Self.CONTENT_DOWNLOAD_SIZE_LIMIT)
             $0.makeImageDecoder = Self.makeLimitedImageDecoder(policy: .post)
             
-            let dataCache = try! DataCache(name: "com.nostur.image.content")
-            dataCache.sizeLimit = 1_048_576 * Self.CONTENT_SIZE_MB
-            
             $0.imageCache = ImageCache(costLimit: 104_857_600, countLimit: 1000)
-            $0.dataCache = dataCache
+            $0.dataCache = contentDataCache
             // storeOriginalData ensures raw bytes are always preserved in the data cache,
             // even when processors (e.g. resize) run. This is required so animated WebP
             // detection can read the original bytes via the data cache.
@@ -292,9 +291,9 @@ class ImageProcessing {
             )
             $0.makeImageDecoder = Self.makeLimitedImageDecoder(policy: .postLoadAnyway)
             $0.imageCache = ImageCache(costLimit: 104_857_600, countLimit: 1000)
-            let dataCache = try! DataCache(name: "com.nostur.image.content")
-            dataCache.sizeLimit = 1_048_576 * Self.CONTENT_SIZE_MB
-            $0.dataCache = dataCache
+            // Share the instance, including its pending writes, so an override
+            // can reuse bytes immediately after automatic decoding rejects them.
+            $0.dataCache = contentDataCache
             $0.dataCachePolicy = .storeOriginalData
         }
         

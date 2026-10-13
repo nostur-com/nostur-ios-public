@@ -125,15 +125,52 @@ final class ProfileImageSafetyTests: XCTestCase {
     }
 
     func testPostStillRejectsExcessiveFrameCount() throws {
-        let data = try makeGIF(width: 2, height: 2, frameCount: 601)
+        let data = try makeGIF(width: 2, height: 2, frameCount: 1_201)
         XCTAssertFalse(ProfileImageSafety.isSafeAnimatedImage(data, policy: .post))
         XCTAssertFalse(ProfileImageSafety.isSafeAnimatedImage(data, policy: .postLoadAnyway))
     }
 
     @MainActor
+    func testBirthdayGIFOverrideReusesDownloadedBytes() async throws {
+        // Same canvas and frame count as bab-lit-done-rainbow-small.gif.
+        let data = try makeGIF(width: 500, height: 500, frameCount: 901)
+        let url = URL(string: "https://example.com/\(UUID()).gif")!
+        let source = StubDataLoader(
+            response: URLResponse(url: url, mimeType: "image/gif", expectedContentLength: data.count, textEncodingName: nil),
+            chunks: [data]
+        )
+        let automaticConfiguration = ImageProcessing.shared.content.configuration
+        let overrideConfiguration = ImageProcessing.shared.contentLoadAnyway.configuration
+        let automaticCache = try XCTUnwrap(automaticConfiguration.dataCache as? DataCache)
+        let overrideCache = try XCTUnwrap(overrideConfiguration.dataCache as? DataCache)
+        XCTAssertTrue(automaticCache === overrideCache)
+        var automatic = automaticConfiguration
+        automatic.dataLoader = source
+        var override = overrideConfiguration
+        override.dataLoader = source
+        let automaticPipeline = ImagePipeline(configuration: automatic)
+        let overridePipeline = ImagePipeline(configuration: override)
+        let request = ImageRequest(url: url, processors: [
+            ImageProcessors.Resize(size: CGSize(width: 200, height: 200), unit: .pixels)
+        ])
+        do {
+            _ = try await automaticPipeline.imageTask(with: request).response
+            XCTFail("Automatic playback should require confirmation")
+        }
+        catch {
+            XCTAssertEqual(MediaViewVM.sizeFailureState(for: error, loadAnyway: false), .animationTooLarge)
+        }
+        let response = try await overridePipeline.imageTask(with: request).response
+        XCTAssertEqual(response.container.type, .gif)
+        XCTAssertEqual(response.container.data, data)
+        XCTAssertEqual(response.container.sourceDimensions, CGSize(width: 500, height: 500))
+        XCTAssertEqual(source.loadCount, 1, "Load anyway must not download the GIF again")
+    }
+
+    @MainActor
     func testSizeFailuresOfferOverrideOnlyBelowHardLimits() {
         XCTAssertEqual(MediaViewVM.sizeFailureState(for: LimitedImageDecoder.Error.animationTooLarge, loadAnyway: false), .animationTooLarge)
-        XCTAssertEqual(MediaViewVM.sizeFailureState(for: LimitedImageDecoder.Error.animationTooLarge, loadAnyway: true), .mediaExceedsSafetyLimit)
+        XCTAssertEqual(MediaViewVM.sizeFailureState(for: LimitedImageDecoder.Error.animationTooLarge, loadAnyway: true), .animationExceedsSafetyLimit)
         XCTAssertEqual(MediaViewVM.sizeFailureState(for: LimitedImageDecoder.Error.unsafeImageDimensions, loadAnyway: false), .mediaExceedsSafetyLimit)
         let downloadError = LimitedDataLoader.Error.responseTooLarge(limit: 50 * 1_048_576)
         XCTAssertEqual(MediaViewVM.sizeFailureState(for: downloadError, loadAnyway: false), .imageTooLarge)
@@ -248,6 +285,7 @@ private final class StubDataLoader: DataLoading, @unchecked Sendable {
     let response: URLResponse
     let chunks: [Data]
     let cancellable = StubCancellable()
+    var loadCount = 0
 
     init(response: URLResponse, chunks: [Data]) {
         self.response = response
@@ -259,6 +297,7 @@ private final class StubDataLoader: DataLoading, @unchecked Sendable {
         didReceiveData: @escaping (Data, URLResponse) -> Void,
         completion: @escaping (Swift.Error?) -> Void
     ) -> any Cancellable {
+        loadCount += 1
         for chunk in chunks {
             didReceiveData(chunk, response)
         }
