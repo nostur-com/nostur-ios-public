@@ -385,7 +385,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 }
 
                 let dmRelayData: Set<RelayData> = Set(dmRelays.map {
-                    RelayData.new(url: $0, read: false, write: false, search: false, auth: false)
+                    RelayData.new(url: $0, read: false, write: false, search: false, auth: true)
                 })
 
                 // Ensure explicit relay-limited REQs can use DM relays even if they are not global read relays.
