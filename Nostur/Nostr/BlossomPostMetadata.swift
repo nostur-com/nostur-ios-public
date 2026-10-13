@@ -5,6 +5,44 @@ import ImageIO
 import NostrEssentials
 import UIKit
 
+/// BUD-01 addresses are known before BUD-04 mirroring finishes. Publishing
+/// these NIP-92 candidates never waits for mirror network requests.
+struct BlossomPostMirrorPlan: Sendable {
+    let sourceURL: URL
+    let hash: String
+    let servers: [URL]
+    let fallbackURLs: [String]
+
+    init?(sourceURL: String, hash: String?, serverStrings: [String]) {
+        guard let source = URL(string: sourceURL),
+              let hash, hash.count == 64, hash.allSatisfy({ $0.isHexDigit })
+        else { return nil }
+        self.sourceURL = source
+        self.hash = hash.lowercased()
+        var seen = Set<String>()
+        let roots = serverStrings.compactMap { value -> URL? in
+            guard var components = URLComponents(string: value),
+                  components.scheme?.lowercased() == "https",
+                  let host = components.host, !host.isEmpty,
+                  components.user == nil, components.password == nil
+            else { return nil }
+            components.scheme = "https"
+            components.host = host.lowercased()
+            components.path = ""
+            components.query = nil
+            components.fragment = nil
+            guard let root = components.url, seen.insert(root.absoluteString).inserted else { return nil }
+            return root
+        }
+        // The first configured server is the primary; do not mirror to it again.
+        self.servers = Array(roots.dropFirst())
+        let suffix = source.pathExtension
+        let filename = suffix.isEmpty ? self.hash : "\(self.hash).\(suffix)"
+        self.fallbackURLs = servers.map { $0.appendingPathComponent(filename).absoluteString }
+            .filter { $0 != sourceURL }
+    }
+}
+
 /// Metadata for the file served by Blossom, which can differ from the uploaded file.
 struct BlossomPostMetadata: Sendable {
     var hash: String?

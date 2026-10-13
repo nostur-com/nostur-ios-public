@@ -8,6 +8,43 @@ import UIKit
 @testable import Nostur
 
 struct BlossomPostMetadataTests {
+    @Test func plannedMirrorsUseProcessedHashAndCanonicalServerURLs() throws {
+        let processedHash = String(repeating: "ab", count: 32)
+        let primary = "https://cdn.primary.example/processed.jpg"
+        let plan = try #require(BlossomPostMirrorPlan(sourceURL: primary, hash: processedHash, serverStrings: [
+            "https://primary.example", "https://primary.example/", "https://mirror.example/",
+            "https://mirror.example", "http://insecure.example", "not a server",
+            "https://second.example/path?query=1#fragment"
+        ]))
+        #expect(plan.sourceURL.absoluteString == primary)
+        #expect(plan.hash == processedHash)
+        #expect(plan.servers.map(\.absoluteString) == ["https://mirror.example", "https://second.example"])
+        #expect(plan.fallbackURLs == [
+            "https://mirror.example/\(processedHash).jpg", "https://second.example/\(processedHash).jpg"
+        ])
+
+        let imeta = Imeta(url: primary, hash: processedHash, fallbackURLs: plan.fallbackURLs)
+        var tag = ["imeta", "url \(primary)", "sha256 \(processedHash)"]
+        appendFallbackIMetaFields(for: imeta, to: &tag)
+        #expect(Array(tag.suffix(2)) == plan.fallbackURLs.map { "fallback \($0)" })
+    }
+
+    @Test func missingProcessedHashCannotAdvertiseOriginalFileMirrors() {
+        #expect(BlossomPostMirrorPlan(sourceURL: "https://primary.example/processed.jpg", hash: nil, serverStrings: ["https://primary.example", "https://mirror.example"]) == nil)
+        #expect(BlossomPostMirrorPlan(sourceURL: "https://primary.example/processed.jpg", hash: "invalid", serverStrings: ["https://primary.example", "https://mirror.example"]) == nil)
+    }
+
+    @Test func singleServerDoesNotAddFallbacksAndDuplicateURLsAreSkipped() throws {
+        let hash = String(repeating: "ab", count: 32)
+        let primary = "https://primary.example/\(hash).png"
+        let plan = try #require(BlossomPostMirrorPlan(sourceURL: primary, hash: hash, serverStrings: ["https://primary.example"]))
+        #expect(plan.servers.isEmpty)
+        #expect(plan.fallbackURLs.isEmpty)
+        var tag = ["imeta", "url \(primary)"]
+        appendFallbackIMetaFields(for: Imeta(url: primary, fallbackURLs: [primary, "https://mirror.example/file.png", "https://mirror.example/file.png"]), to: &tag)
+        #expect(tag == ["imeta", "url \(primary)", "fallback https://mirror.example/file.png"])
+    }
+
     @Test @MainActor func uploadWithoutHashWaitsForReturnedFileMetadata() async throws {
         let original = try imageData(width: 80, height: 40, type: .png)
         let processed = try imageData(width: 37, height: 61, type: .png)

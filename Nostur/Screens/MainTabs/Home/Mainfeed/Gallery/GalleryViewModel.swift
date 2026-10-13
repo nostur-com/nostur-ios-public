@@ -357,7 +357,7 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                     
                     for url in urls.prefix(Self.MAX_IMAGES_PER_POST) {
                         let iMeta: iMetaInfo? = findImeta(event.fastTags, url: url.absoluteString)
-                        items.append(GalleryItem(url: url, pubkey: event.pubkey, eventId: event.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash))
+                        items.append(GalleryItem(url: url, pubkey: event.pubkey, eventId: event.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, fallbackURLs: iMeta?.fallbackURLs ?? []))
                     }
                 }
             }
@@ -482,9 +482,10 @@ struct GalleryItem: Identifiable, Equatable, Hashable {
     var blurhash: String?
     var imageInfo: ImageInfo?
     var gifInfo: GifInfo?
+    var fallbackURLs: [URL]
     var encryptedFile: FileMessageInfo?
         
-    init(url: URL, pubkey: String? = nil, eventId: String? = nil, dimensions: CGSize? = nil, blurhash: String? = nil, imageInfo: ImageInfo? = nil, gifInfo: GifInfo? = nil, encryptedFile: FileMessageInfo? = nil) {
+    init(url: URL, pubkey: String? = nil, eventId: String? = nil, dimensions: CGSize? = nil, blurhash: String? = nil, imageInfo: ImageInfo? = nil, gifInfo: GifInfo? = nil, encryptedFile: FileMessageInfo? = nil, fallbackURLs: [URL] = []) {
         self.url = url
         self.eventId = eventId
         self.id = Self.stableId(eventId: eventId, url: url)
@@ -492,6 +493,7 @@ struct GalleryItem: Identifiable, Equatable, Hashable {
         self.imageInfo = imageInfo
         self.gifInfo = gifInfo
         self.encryptedFile = encryptedFile
+        self.fallbackURLs = fallbackURLs
         self.blurhash = blurhash
         self.dimensions = dimensions
         if let pubkey {

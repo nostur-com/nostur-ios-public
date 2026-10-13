@@ -28,6 +28,7 @@ class MediaViewVM: ObservableObject {
         cropToTarget: Bool = false,
         preserveCurrentImage: Bool = false,
         blossomAuthorPubkey: String? = nil,
+        fallbackURLs: [URL] = [],
         encryptedFile: FileMessageInfo? = nil,
         encryptedFileCacheId: String? = nil,
         reportFailure: Bool = true
@@ -90,16 +91,17 @@ class MediaViewVM: ObservableObject {
             contentMode: cropToTarget ? .aspectFill : .aspectFit,
             crop: cropToTarget
         )
-        self.task = if usePFPpipeline {
-            ImageProcessing.shared.pfp.imageTask(with: pfpImageRequestFor(loadURL))
+        let pipeline = if usePFPpipeline {
+            ImageProcessing.shared.pfp
         }
         else if loadAnyway {
-            ImageProcessing.shared.contentLoadAnyway.imageTask(with: request)
+            ImageProcessing.shared.contentLoadAnyway
         }
         else {
-            ImageProcessing.shared.content.imageTask(with: request)
+            ImageProcessing.shared.content
         }
-        
+        self.task = pipeline.imageTask(with: usePFPpipeline ? pfpImageRequestFor(loadURL) : request)
+
         guard let task = self.task else {
             guard !preserveCurrentImage else { return false }
             if reportFailure {
@@ -160,6 +162,12 @@ class MediaViewVM: ObservableObject {
     
         do {
             let response = try await task.response
+            if generateIMeta, encryptedFile == nil {
+                Task { @MainActor in
+                    let metadata = await PreviewMediaMetadata.image(url: loadURL, response: response, pipeline: pipeline)
+                    sendNotification(.iMetaInfoForUrl, (url.absoluteString, metadata))
+                }
+            }
             let animationPolicy: ProfileImageSafety.Policy = loadAnyway && !usePFPpipeline ? .postLoadAnyway : .post
             // WebP: After the resize processor runs, Nuke reports type as PNG, not WebP.
             // Detect WebP by URL extension instead, then fetch raw bytes from the data cache.
@@ -173,14 +181,6 @@ class MediaViewVM: ObservableObject {
                    ProfileImageSafety.isSafeAnimatedImage(rawData, policy: animationPolicy) {
                     Task { @MainActor in
                         state = .gif(GifInfo(gifData: rawData, realDimensions: response.container.sourceDimensions))
-                        if generateIMeta {
-                            let blurhash: String? = response.container.image.blurHash(numberOfComponents: (4, 3))
-                            let pixelSize = response.container.sourceDimensions
-                            let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
-                            Task { @MainActor in
-                                sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
-                            }
-                        }
                     }
                     return true
                 }
@@ -193,14 +193,6 @@ class MediaViewVM: ObservableObject {
 //                    withAnimation(.smooth(duration: 0.15)) {
                       state = .gif(GifInfo(gifData: gifData, realDimensions: response.container.sourceDimensions))
 //                    }
-                    if generateIMeta {
-                        let blurhash: String? = response.container.image.blurHash(numberOfComponents: (4, 3))
-                        let pixelSize = response.container.sourceDimensions
-                        let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
-                        Task { @MainActor in
-                            sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
-                        }
-                    }
                 }
             }
             else {
@@ -209,14 +201,6 @@ class MediaViewVM: ObservableObject {
 //                    withAnimation(.smooth(duration: 0.15)) {
                         state = .image(ImageInfo(uiImage: response.image, realDimensions: response.container.sourceDimensions))
 //                    }
-                }
-                if generateIMeta {
-                    let blurhash: String? = response.image.blurHash(numberOfComponents: (4, 3))
-                    let pixelSize = response.container.sourceDimensions
-                    let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
-                    Task { @MainActor in
-                        sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
-                    }
                 }
             }
             return true
@@ -233,11 +217,28 @@ class MediaViewVM: ObservableObject {
                 return false
             }
 
-            if let blossomCandidatesTask {
-                for candidateURL in await blossomCandidatesTask.value {
+            guard !Task.isCancelled else { return false }
+            if case .paused = state { return false }
+
+            var attemptedURLs: Set<URL> = [url]
+            var triedCandidates: [URL] = []
+            // NIP-92 fallbacks are complete file URLs and do not require a
+            // Blossom filename hash or an author's server list.
+            let declaredCandidates = encryptedFile == nil ? fallbackURLs : []
+            for candidateSource in 0..<2 {
+                let candidates = candidateSource == 0 ? declaredCandidates : await blossomCandidatesTask?.value ?? []
+                for candidateURL in candidates {
+                    guard !Task.isCancelled else { return false }
+                    if case .paused = state { return false }
+                    guard ["https", "http"].contains(candidateURL.scheme?.lowercased() ?? ""),
+                          let host = candidateURL.host, !host.isEmpty,
+                          candidateURL.scheme?.lowercased() != "http" || forceLoad,
+                          attemptedURLs.insert(candidateURL).inserted
+                    else { continue }
+                    triedCandidates.append(candidateURL)
                     if await load(
                         candidateURL,
-                        forceLoad: true,
+                        forceLoad: forceLoad,
                         loadAnyway: loadAnyway,
                         generateIMeta: generateIMeta,
                         usePFPpipeline: usePFPpipeline,
@@ -254,8 +255,8 @@ class MediaViewVM: ObservableObject {
             guard reportFailure else { return false }
 
             let finalFailureState: MediaViewState
-            if let blossomCandidatesTask {
-                let mirrorCount = Self.mirrorCount(in: await blossomCandidatesTask.value)
+            if blossomCandidatesTask != nil || !declaredCandidates.isEmpty {
+                let mirrorCount = Self.mirrorCount(in: triedCandidates)
                 if mirrorCount == 0 {
                     finalFailureState = .error("Failed to load image (no mirrors found)")
                 }

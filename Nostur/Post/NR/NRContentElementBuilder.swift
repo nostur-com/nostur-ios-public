@@ -51,7 +51,7 @@ class NRContentElementBuilder {
                 if Self.imageFileExtensions.contains(pathExtension) {
                     if let url = URL(string: matchString) {
                         let iMeta: iMetaInfo? = findImeta(fastTags, url: matchString)
-                        let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile)
+                        let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile, fallbackURLs: iMeta?.fallbackURLs ?? [])
                         result.append(ContentElement.image(galleryItem))
                         galleryItems.append(galleryItem)
                     }
@@ -72,7 +72,7 @@ class NRContentElementBuilder {
                     if let url = URL(string: matchString) {
                         let iMeta = findImeta(fastTags, url: matchString)
                         if iMeta?.mimeType?.hasPrefix("image/") == true {
-                            let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile)
+                            let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile, fallbackURLs: iMeta?.fallbackURLs ?? [])
                             result.append(ContentElement.image(galleryItem))
                             galleryItems.append(galleryItem)
                         }
@@ -492,11 +492,14 @@ private func getTagValues(_ tag: FastTag) -> [String?] {
     return [tag.1, tag.2, tag.3, tag.4, tag.5, tag.6, tag.7, tag.8, tag.9]
 }
 
-struct iMetaInfo {
+struct iMetaInfo: Sendable {
     var size: CGSize?
     var blurHash: String?
     var mimeType: String? = nil
     var encryptedFile: FileMessageInfo? = nil
+    var fallbackURLs: [URL] = []
+    var hash: String? = nil
+    var fileSize: Int? = nil
     
     var aspect: CGFloat? {
         if let size {
@@ -545,6 +548,7 @@ func iMetaFromFastTag(_ fastTag: FastTag) -> iMetaInfo? {
     var originalHash: String?
     var encryptedHash: String?
     var fileSize: Int?
+    var fallbackURLs: [URL] = []
 
     for value in getTagValues(fastTag) {
         guard let value = value else { continue }
@@ -553,6 +557,13 @@ func iMetaFromFastTag(_ fastTag: FastTag) -> iMetaInfo? {
 
         if parts[0] == "url" {
             url = String(parts[1])
+        }
+        else if parts[0] == "fallback",
+                let fallback = URL(string: String(parts[1])),
+                ["https", "http"].contains(fallback.scheme?.lowercased() ?? ""),
+                let host = fallback.host, !host.isEmpty,
+                !fallbackURLs.contains(fallback) {
+            fallbackURLs.append(fallback)
         }
         else if parts[0] == "dim" {
             let dim = parts[1].split(separator: "x", maxSplits: 1)
@@ -605,8 +616,8 @@ func iMetaFromFastTag(_ fastTag: FastTag) -> iMetaInfo? {
         nil
     }
     
-    if blurHash != nil || size != nil || mimeType != nil || encryptedFile != nil {
-        return iMetaInfo(size: size, blurHash: blurHash, mimeType: mimeType, encryptedFile: encryptedFile)
+    if blurHash != nil || size != nil || mimeType != nil || encryptedFile != nil || !fallbackURLs.isEmpty {
+        return iMetaInfo(size: size, blurHash: blurHash, mimeType: mimeType, encryptedFile: encryptedFile, fallbackURLs: fallbackURLs, hash: encryptedHash, fileSize: fileSize)
     }
     
     return nil
@@ -668,5 +679,5 @@ func imageUrlFromIMetaFastTag(_ tag: FastTag) -> URL? {
 func galleryItemFromIMetaFastTag(_ tag: FastTag, pubkey: String? = nil, eventId: String? = nil) -> GalleryItem? {
     guard let url = imageUrlFromIMetaFastTag(tag) else { return nil }
     let iMeta: iMetaInfo? = iMetaFromFastTag(tag)
-    return GalleryItem(url: url, pubkey: pubkey, eventId: eventId, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile)
+    return GalleryItem(url: url, pubkey: pubkey, eventId: eventId, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile, fallbackURLs: iMeta?.fallbackURLs ?? [])
 }

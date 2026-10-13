@@ -803,6 +803,7 @@ struct MediaPlaceholder: View {
                 cropToTarget: cropImageRequestToTarget && !fullScreen,
                 preserveCurrentImage: preserveCurrentImage,
                 blossomAuthorPubkey: recoverFromBlossom ? galleryItem.pubkey : nil,
+                fallbackURLs: galleryItem.fallbackURLs,
                 encryptedFile: galleryItem.encryptedFile,
                 encryptedFileCacheId: galleryItem.eventId
             )

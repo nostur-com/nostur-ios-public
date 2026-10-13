@@ -62,12 +62,12 @@ struct PostPreview: View {
                     .environment(\.nxViewingContext, [.preview, .postDetail])
                     .padding(10)
                     .disabled(true)
-                    .onReceive(receiveNotification(.iMetaInfoForUrl)) { notification in
-                        let (urlString, iMeta) = notification.object as! (String, iMetaInfo)
-                        vm.remoteIMetas[urlString] = iMeta
-                    }
             }
             Spacer()
+        }
+        .onReceive(receiveNotification(.iMetaInfoForUrl)) { notification in
+            guard let (url, metadata) = notification.object as? (String, iMetaInfo) else { return }
+            vm.remoteIMetas[url] = metadata
         }
         .overlay(alignment: .bottom) {
             MediaUploadProgress(uploader: vm.uploader) // @TODO: Make progress independent of Uploader type (NIP96 / Blossom)

@@ -3,6 +3,30 @@ import Testing
 @testable import Nostur
 
 struct IMetaContentElementTests {
+    @Test func nip92FallbacksReachImageAndGallery() {
+        let hash = "abe36d1c95c7782006b05623d133f2adea49f34fbbf71636e4a9f775b57bb0ec"
+        let primary = "https://24242.io/\(hash).png"
+        let fallback = "https://blossom.primal.net/\(hash).png"
+        let tag: FastTag = ("imeta", "url \(primary)", "m image/png", "x \(hash)", "size 177655", "dim 1170x2532", "fallback \(fallback)", nil, nil, nil)
+        let (elements, _, gallery) = NRContentElementBuilder.shared.buildElements(input: primary, fastTags: [tag])
+        guard case .image(let image) = elements.first else {
+            Issue.record("Expected image")
+            return
+        }
+        #expect(image.fallbackURLs.map(\.absoluteString) == [fallback])
+        #expect(gallery.first?.fallbackURLs == image.fallbackURLs)
+        #expect(image.dimensions == CGSize(width: 1170, height: 2532))
+        #expect(galleryItemFromIMetaFastTag(tag)?.fallbackURLs == image.fallbackURLs)
+        #expect(findImeta([tag], url: "https://other.example/image.png") == nil)
+    }
+
+    @Test func fallbackOnlyMetadataPreservesRepeatedValidURLs() {
+        let tag: FastTag = ("imeta", "url https://example.com/image.jpg", "fallback https://mirror.example/first", "fallback https://mirror.example/second?token=123", "fallback https://mirror.example/first", "fallback file:///tmp/image.jpg", "fallback relative.jpg", "fallback https:///", nil, nil)
+        #expect(iMetaFromFastTag(tag)?.fallbackURLs.map(\.absoluteString) == [
+            "https://mirror.example/first", "https://mirror.example/second?token=123"
+        ])
+    }
+
     @Test(arguments: ["2268.0x4032.0", "2268x4032"])
     func primalDimensionsReservePortraitHeight(dim: String) {
         let url = "https://blossom.primal.net/d16ab2ef0201236e96106696bf06d8a0bcbc1884f8628993a7a1ad9debac8005.jpg"

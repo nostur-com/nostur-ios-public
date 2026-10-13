@@ -486,6 +486,7 @@ public final class NewPostModel: ObservableObject {
         }
 
         let unsignedAuthHeaderEvents = uploadTuples.map { $0.1.4 }
+        let mirrorServerStrings = SettingsStore.shared.blossomServerList
 
         batchSignEvents(unsignedAuthHeaderEvents, account: account) { [weak self] signedEventsDict in
             Task { @MainActor in
@@ -580,7 +581,8 @@ public final class NewPostModel: ObservableObject {
                                 dim: uploadItem.dim,
                                 hash: uploadItem.sha256processed,
                                 blurhash: uploadItem.blurhash,
-                                alt: self.typingTextModel.pastedImages.first(where: { $0.uniqueId == imageId })?.altText
+                                alt: self.typingTextModel.pastedImages.first(where: { $0.uniqueId == imageId })?.altText,
+                                fallbackURLs: BlossomPostMirrorPlan(sourceURL: url, hash: uploadItem.sha256processed, serverStrings: mirrorServerStrings)?.fallbackURLs ?? []
                             )
                             self.typingTextModel.pastedImageUploadStates[imageId] = .uploaded
                             if self.sendWithUploadedImagesIfComplete(replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss) {
@@ -589,9 +591,35 @@ public final class NewPostModel: ObservableObject {
                             else {
                                 self.finishImageUploadAttempt()
                             }
+                            self.mirrorBlossomUploads([uploadItem], account: account, serverStrings: mirrorServerStrings)
                         })
 
                     self.imageUploadCancellablesById[imageId] = uploadCancellable
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func mirrorBlossomUploads(_ items: [BlossomUploadItem], account: CloudAccount, serverStrings: [String]) {
+        let plans = items.compactMap { item -> BlossomPostMirrorPlan? in
+            guard let url = item.downloadUrl else { return nil }
+            return BlossomPostMirrorPlan(sourceURL: url, hash: item.sha256processed, serverStrings: serverStrings)
+        }.filter { !$0.servers.isEmpty }
+        guard !plans.isEmpty else { return }
+        let events = plans.map { getUnsignedAuthorizationHeaderEvent(pubkey: account.publicKey, sha256hex: $0.hash) }
+        batchSignEvents(events, account: account) { signedEvents in
+            for (plan, event) in zip(plans, events) {
+                guard let signed = signedEvents[event.id], let authHeader = toHttpAuthHeader(signed) else { continue }
+                for server in plan.servers {
+                    Task {
+                        do {
+                            _ = try await blossomMirror(authHeader: authHeader, url: plan.sourceURL.absoluteString, hash: plan.hash, contentType: "application/octet-stream", blossomServer: server)
+                        }
+                        catch {
+                            L.og.error("Blossom mirror failed for \(server.host ?? "unknown server"): \(error.localizedDescription)")
+                        }
+                    }
                 }
             }
         }
@@ -990,47 +1018,22 @@ public final class NewPostModel: ObservableObject {
                                 return
                             }
 
+                            let mirrorServerStrings = SettingsStore.shared.blossomServerList
                             let finishBlossomUploads = {
                                 let imetas: [Nostur.Imeta] = blossomUploader.queued
                                     .compactMap {
                                         guard let url = $0.downloadUrl else { return nil }
-                                        return Imeta(url: url, dim: $0.dim, hash: $0.sha256processed, blurhash: $0.blurhash)
+                                        return Imeta(url: url, dim: $0.dim, hash: $0.sha256processed, blurhash: $0.blurhash, fallbackURLs: BlossomPostMirrorPlan(sourceURL: url, hash: $0.sha256processed, serverStrings: mirrorServerStrings)?.fallbackURLs ?? [])
                                     }
                                 
                                 Task { @MainActor in
                                     self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
                                 }
                                 
-                                if SettingsStore.shared.blossomServerList.count > 1 { // Mirror uploads to other blossom servers
-                                    
-                                    // Need new auth header because the file we mirror has a different hash after processing
-                                    let unsignedAuthHeaderEventsTuple: [(NEvent, BlossomUploadItem)] = blossomUploader.queued.compactMap { uploadItem in
-                                        guard let sha256processed = uploadItem.sha256processed else { return nil }
-                                        return (getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: sha256processed), uploadItem)
-                                    }
-                                    
-                                    let unsignedAuthHeaderEvents: [NEvent] = unsignedAuthHeaderEventsTuple.map { $0.0 }
-                                    
-                                    batchSignEvents(unsignedAuthHeaderEvents, account: account) { signedEventsDict in
-                                        // For every mirror server, upload each file again
-                                        
-                                        for server in SettingsStore.shared.blossomServerList.dropFirst(1) {
-                                            guard let blossomServer = URL(string: server) else { continue }
-                                            let mirrorUploader = BlossomUploader(blossomServer)
-                                            for tuple in unsignedAuthHeaderEventsTuple {
-                                                
-                                                if let signedEvent = signedEventsDict[tuple.0.id], let authHeader = toHttpAuthHeader(signedEvent) {
-                                                    let uploadItem: BlossomUploadItem = tuple.1
-                                                    uploadItem.authorizationHeader = authHeader
-                                                    Task {
-                                                        try await mirrorUploader.mirrorUpload(uploadItem: uploadItem, authorizationHeader: authHeader)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                Task { @MainActor in
+                                    self.mirrorBlossomUploads(blossomUploader.queued, account: account, serverStrings: mirrorServerStrings)
                                 }
-                                
+
                                 // clean up video tmp files (compressed videos)
                                 for videoURL in self.typingTextModel.compressedVideoFiles {
                                     try? FileManager.default.removeItem(at: videoURL)
@@ -1194,6 +1197,8 @@ public final class NewPostModel: ObservableObject {
             }
         }
         else {
+            // Link-only posts use metadata already collected by image previews.
+            // Never wait for preview downloads or metadata generation here.
             Task { @MainActor in
                 self._sendNow(imetas: [], replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
             }
@@ -1524,6 +1529,7 @@ public final class NewPostModel: ObservableObject {
             
             var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
             appendEncryptedIMetaFields(for: imeta, to: &imetaParts)
+            appendFallbackIMetaFields(for: imeta, to: &imetaParts)
             if let duration = typingTextModel.voiceRecording?.duration {
                 imetaParts.append("duration \(duration)")
             }
@@ -1568,6 +1574,7 @@ public final class NewPostModel: ObservableObject {
             // imeta tag
             var imetaParts: [String] = ["imeta", "url \(videoImeta.url)"]
             appendEncryptedIMetaFields(for: videoImeta, defaultMimeType: "video/mp4", to: &imetaParts)
+            appendFallbackIMetaFields(for: videoImeta, to: &imetaParts)
             if let thumbnailURL = imetas.first(where: { !isLikelyVideoURL($0.url) })?.url, !thumbnailURL.isEmpty {
                 imetaParts.append("image \(thumbnailURL)")
             }
@@ -1605,6 +1612,7 @@ public final class NewPostModel: ObservableObject {
                 
                 var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
                 appendEncryptedIMetaFields(for: imeta, to: &imetaParts)
+                appendFallbackIMetaFields(for: imeta, to: &imetaParts)
                 if let dim = imeta.dim, !dim.isEmpty {
                     imetaParts.append("dim \(dim)")
                 }
@@ -1629,14 +1637,7 @@ public final class NewPostModel: ObservableObject {
             for (key: imageUrl, value: imeta) in remoteIMetas {
                 if content.contains(imageUrl) {
                     
-                    var imetaParts: [String] = ["imeta", "url \(imageUrl)"]
-                    if let size = imeta.size {
-                        imetaParts.append("dim \(Int(size.width.rounded(.up)))x\(Int(size.height.rounded(.up)))")
-                    }
-                    if let blurHash = imeta.blurHash, !blurHash.isEmpty {
-                        imetaParts.append("blurhash \(blurHash)")
-                    }
-                    
+                    let imetaParts = PreviewMediaMetadata.tag(url: imageUrl, metadata: imeta)
                     nEvent.tags.append(NostrTag(imetaParts))
                     
                 }
@@ -2547,6 +2548,15 @@ struct Imeta {
     var alt: String?
     var mimeType: String? = nil
     var encryptedFile: EncryptedFileResult? = nil
+    var fallbackURLs: [String] = []
+}
+
+func appendFallbackIMetaFields(for imeta: Imeta, to parts: inout [String]) {
+    guard imeta.encryptedFile == nil else { return }
+    var seen: Set<String> = [imeta.url]
+    for fallback in imeta.fallbackURLs where seen.insert(fallback).inserted {
+        parts.append("fallback \(fallback)")
+    }
 }
 
 func appendEncryptedIMetaFields(
