@@ -2592,6 +2592,8 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private func advanceFeedSession() {
         feedSessionGeneration &+= 1
+        // The previous session's reveal completion will be ignored.
+        isShowingAlreadySeenNewerPosts = false
         localLoadCoordinator.cancelAll()
         resetPaginationState()
     }
@@ -4743,7 +4745,9 @@ extension NXColumnViewModel {
         // Turn loose NRPost replies into partial threads / leafs
         let partialThreads: [NRPost] = self.transformToPartialThreads(nrPosts, currentIdsOnScreen: currentIdsOnScreen)
         
-        let (danglers, partialThreadsWithParent) = extractDanglingReplies(partialThreads)
+        // Explicitly revealing cached posts must not depend on relay availability.
+        // Keep replies with unavailable parents as standalone rows for this action.
+        let (danglers, partialThreadsWithParent) = extractDanglingReplies(partialThreads, revealAtTop: revealAtTop)
         
 #if DEBUG
         let threadsAt = Date()
@@ -4791,9 +4795,7 @@ extension NXColumnViewModel {
                         speedTest.loadingBarViewState = .finalLoad
                     }
                 }
-                if !revealAtTop || newDanglers.isEmpty {
-                    completion?()
-                }
+                completion?()
                 if !older {
                     self.recoverSparseRememberOnFeedIfNeeded(config)
                 }
@@ -6015,8 +6017,11 @@ func globalFeedReqFilters(kinds: Set<Int>, since: Int? = nil, until: Int? = nil,
 }
 
 // Return replies without parents seperataly
-func extractDanglingReplies(_ nrPosts: [NRPost]) -> (danglers: [NRPost], threads: [NRPost]) {
+func extractDanglingReplies(_ nrPosts: [NRPost], revealAtTop: Bool = false) -> (danglers: [NRPost], threads: [NRPost]) {
     shouldBeBg()
+    if revealAtTop {
+        return ([], nrPosts)
+    }
     var danglers: [NRPost] = []
     var threads: [NRPost] = []
     nrPosts.forEach { nrPost in

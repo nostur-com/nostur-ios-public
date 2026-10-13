@@ -46,7 +46,7 @@ xcrun simctl list devices available
 ./scripts/run-sim.sh "iPhone Duo"
 
 # iOS Simulator (omit -derivedDataPath to share Xcode's default DerivedData/cache)
-xcodebuild -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+xcodebuild -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 18 Pro' build
 
 # Physical device
 xcodebuild -scheme Nostur -destination 'platform=iOS,id=<device_id>' build
@@ -78,11 +78,32 @@ When creating a new worktree, copy the Config.xcconfig from our existing folder.
 ### Tests
 
 - Run tests:
-  `xcodebuild test -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 17 Pro'`
+  `xcodebuild test -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -parallel-testing-enabled NO`
 - Test files: `NosturTests/`
 - Test plans: `Nostur.xctestplan`, `NostrEssentials.xctestplan`
 - Current automated coverage is limited; previews and manual verification are common.
 - Mac Catalyst note: avoid `ExecuteSnippet` while Catalyst is selected; switch to an iPhone simulator for snippet runs because generated snippet code imports `Playgrounds`.
+
+### Test simulator disk usage
+
+- Disable parallel testing with `-parallel-testing-enabled NO` for local
+  `test` and `test-without-building` runs. Reuse the existing simulator; do not
+  create a fresh device or a separate DerivedData directory for each run.
+- Before and after simulator tests, inspect the dedicated test device set with
+  `xcrun simctl --set ~/Library/Developer/XCTestDevices list devices` and record
+  its device UUIDs. If the directory does not exist yet, treat the initial set
+  as empty. Disabling parallel testing reduces cloning but is not a guarantee
+  that Xcode will leave no temporary devices behind.
+- After the test process exits (including failures), clean up only test clones
+  newly created by that run, after verifying they are shut down and no other
+  test run is using them. Use
+  `xcrun simctl --set ~/Library/Developer/XCTestDevices delete <UUID>` for each
+  identified clone. Never delete pre-existing devices, the normal simulator
+  device set, or the entire XCTestDevices directory as routine cleanup.
+- Check `du -sh ~/Library/Developer/XCTestDevices` after tests when the directory
+  exists. Report leftover clones or failed cleanup instead of silently allowing
+  them to accumulate. Avoid unnecessary repeated full-suite runs; run tests
+  appropriate to the change.
 
 ## Architecture
 

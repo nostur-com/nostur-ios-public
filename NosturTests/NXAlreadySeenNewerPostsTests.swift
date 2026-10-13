@@ -2,6 +2,35 @@ import XCTest
 @testable import Nostur
 
 final class NXAlreadySeenNewerPostsTests: XCTestCase {
+    @MainActor
+    func testShowAgainKeepsRepliesWithMissingParentsWithoutStartingParentFetches() async {
+        // Match app startup: these singletons initialize main-context state.
+        _ = AppState.shared
+        _ = AccountsState.shared
+        await bg().perform {
+            var event = NEvent(content: "Already seen reply")
+            event.id = String(repeating: "d", count: 64)
+            let preview = createPreviewEvent(event)
+            defer { bg().delete(preview) }
+            preview.replyToId = String(repeating: "e", count: 64)
+            preview.replyToRootId = String(repeating: "f", count: 64)
+
+            // Exercise both feed settings: neither may strand the reveal waiting
+            // for a parent that this relay does not have.
+            for repliesEnabled in [false, true] {
+                let post = NRPost(event: preview, withFooter: false, withParents: repliesEnabled)
+                XCTAssertTrue(post.parentPosts.isEmpty)
+                let normal = extractDanglingReplies([post])
+                XCTAssertEqual(normal.danglers.map(\.id), [post.id])
+                XCTAssertTrue(normal.threads.isEmpty)
+
+                let revealed = extractDanglingReplies([post], revealAtTop: true)
+                XCTAssertTrue(revealed.danglers.isEmpty)
+                XCTAssertEqual(revealed.threads.map(\.id), [post.id])
+            }
+        }
+    }
+
     func testReturnsOnlyCandidatesNewerThanStaleVisiblePost() {
         let now = Date(timeIntervalSince1970: 10_000)
         let candidates = [
