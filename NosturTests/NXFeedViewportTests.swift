@@ -93,6 +93,26 @@ final class NXFeedViewportTests: XCTestCase {
         )
     }
 
+    func testMidFeedSeenReconciliationKeepsUnreadOnRowsThatStay() {
+        // The Following trace skipped aba490e2 because it was app-wide seen
+        // while structural cleanup left the row on screen.
+        let kept = NXUnreadSeenReconciliation.unreadBookkeeping(
+            markedReadIDs: ["aba490e2"],
+            unreadCountUpdates: ["thread": 0],
+            allowsRowMutation: false
+        )
+        XCTAssertTrue(kept.markedReadIDs.isEmpty)
+        XCTAssertTrue(kept.unreadCountUpdates.isEmpty)
+
+        let applied = NXUnreadSeenReconciliation.unreadBookkeeping(
+            markedReadIDs: ["aba490e2"],
+            unreadCountUpdates: ["thread": 2],
+            allowsRowMutation: true
+        )
+        XCTAssertEqual(applied.markedReadIDs, ["aba490e2"])
+        XCTAssertEqual(applied.unreadCountUpdates, ["thread": 2])
+    }
+
     func testSyncedSeenLeafRowCanBeRemovedWhileVisible() {
         XCTAssertTrue(
             NXUnreadSeenReconciliation.shouldRemoveSeenLeafRow(

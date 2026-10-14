@@ -67,6 +67,19 @@ enum NXUnreadSeenReconciliation {
         removeEvenIfVisible || !isVisible
     }
 
+    /// The unread button stops on the next row that still has a count. Clearing
+    /// that count without removing the row skips a post the user can still see.
+    /// Mid-feed the list keeps its rows, so it keeps their counts too. Counts
+    /// drop when the row is actually removed, or when the user scrolls onto it.
+    static func unreadBookkeeping(
+        markedReadIDs: Set<String>,
+        unreadCountUpdates: [String: Int],
+        allowsRowMutation: Bool
+    ) -> (markedReadIDs: Set<String>, unreadCountUpdates: [String: Int]) {
+        guard allowsRowMutation else { return ([], [:]) }
+        return (markedReadIDs, unreadCountUpdates)
+    }
+
     /// Keeps the contiguous unread context nearest the leaf. The direct parent
     /// is always retained, even when already read, but read ancestors above it
     /// terminate the visible chain. Retained read context is not counted unread.
@@ -883,7 +896,8 @@ class NXColumnViewModel: ObservableObject {
             )
         )
 
-        if !NXFeedStructuralUpdate.shouldMutateRows(isVisuallyAtTop: isFeedActuallyAtTop) {
+        let allowsRowMutation = NXFeedStructuralUpdate.shouldMutateRows(isVisuallyAtTop: isFeedActuallyAtTop)
+        if !allowsRowMutation {
             if !parentUpdates.isEmpty {
                 deferParentTrims(parentUpdates)
                 parentUpdates = []
@@ -896,6 +910,15 @@ class NXColumnViewModel: ObservableObject {
 #endif
                 postIdsToRemove = []
             }
+            // The rows stayed. Dropping their unread count is what makes the
+            // next unread tap jump over posts that are still in the list.
+            let kept = NXUnreadSeenReconciliation.unreadBookkeeping(
+                markedReadIDs: postIdsMarkedRead,
+                unreadCountUpdates: unreadCountUpdates,
+                allowsRowMutation: false
+            )
+            postIdsMarkedRead = kept.markedReadIDs
+            unreadCountUpdates = kept.unreadCountUpdates
         }
 
         guard !postIdsMarkedRead.isEmpty
@@ -904,7 +927,8 @@ class NXColumnViewModel: ObservableObject {
                 || !postIdsToRemove.isEmpty else { return }
 
 #if DEBUG
-        for (postId, reason) in postReadReasons {
+        for postId in postIdsMarkedRead {
+            guard let reason = postReadReasons[postId] else { continue }
             vmInner.recordUnreadReadReason(id: postId, reason: reason)
         }
 #endif
