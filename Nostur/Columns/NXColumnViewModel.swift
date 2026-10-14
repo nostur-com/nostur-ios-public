@@ -69,15 +69,20 @@ enum NXUnreadSeenReconciliation {
 
     /// The unread button stops on the next row that still has a count. Clearing
     /// that count without removing the row skips a post the user can still see.
-    /// Mid-feed the list keeps its rows, so it keeps their counts too. Counts
-    /// drop when the row is actually removed, or when the user scrolls onto it.
+    /// Mid-feed, only a row that is actually leaving the list drops its count.
+    /// The rest stay until the row is removed, or until the user scrolls onto it.
     static func unreadBookkeeping(
         markedReadIDs: Set<String>,
         unreadCountUpdates: [String: Int],
-        allowsRowMutation: Bool
+        allowsRowMutation: Bool,
+        removedIDs: Set<String> = []
     ) -> (markedReadIDs: Set<String>, unreadCountUpdates: [String: Int]) {
-        guard allowsRowMutation else { return ([], [:]) }
-        return (markedReadIDs, unreadCountUpdates)
+        if allowsRowMutation {
+            return (markedReadIDs, unreadCountUpdates)
+        }
+        let clearing = markedReadIDs.intersection(removedIDs)
+        let counts = unreadCountUpdates.filter { removedIDs.contains($0.key) }
+        return (clearing, counts)
     }
 
     /// Keeps the contiguous unread context nearest the leaf. The direct parent
@@ -135,8 +140,9 @@ enum NXIncomingFeedPosts {
 }
 
 enum NXFeedStructuralUpdate {
-    /// Removing rows or trimming thread parents changes list geometry. While the
-    /// user is reading below the top, update unread counts and leave the rows put.
+    /// Full structural edits wait until the top: parent trims and deletion of a
+    /// row the user can see. A pure offscreen deletion is separate and still
+    /// uses List's own animation.
     static func shouldMutateRows(isVisuallyAtTop: Bool) -> Bool {
         isVisuallyAtTop
     }
@@ -843,6 +849,7 @@ class NXColumnViewModel: ObservableObject {
 #endif
         var unreadCountUpdates: [String: Int] = [:]
         var parentUpdates: [(PostOrThreadAttributes, [NRPost])] = []
+        var parentTrimPostIDs = Set<String>()
         let visiblePostIds = currentVisiblePostIds()
 
         for post in existingPosts where vmInner.unreadIds[post.id, default: 0] > 0 {
@@ -880,6 +887,7 @@ class NXColumnViewModel: ObservableObject {
             }
             if visibleParents.map(\.id) != displayedParents.map(\.id) {
                 parentUpdates.append((post.postOrThreadAttributes, visibleParents))
+                parentTrimPostIDs.insert(post.id)
             }
         }
 
@@ -901,21 +909,33 @@ class NXColumnViewModel: ObservableObject {
             if !parentUpdates.isEmpty {
                 deferParentTrims(parentUpdates)
                 parentUpdates = []
+                for id in parentTrimPostIDs {
+                    unreadCountUpdates[id] = nil
+                }
             }
-            if !postIdsToRemove.isEmpty {
+            // Another column can mark the same post read while it is above or
+            // below this viewport. List animates that deletion without moving
+            // the rows on screen. A visible row stays until the top.
+            let moving = vmInner.isFeedViewportMovingOrRecently?() == true
+            let removableNow = NXFeedViewport.rowIDsToRemoveWhileReading(
+                candidateIDs: postIdsToRemove,
+                visiblePostIDs: visiblePostIds,
+                isViewportMovingOrRecently: moving
+            )
+            let deferred = postIdsToRemove.subtracting(removableNow)
+            if !deferred.isEmpty {
 #if DEBUG
                 recordFeedAction(
-                    "STRUCTURAL cleanup deferred · \(postIdsToRemove.count) rows stay on screen"
+                    "STRUCTURAL cleanup deferred · \(deferred.count) rows stay on screen"
                 )
 #endif
-                postIdsToRemove = []
             }
-            // The rows stayed. Dropping their unread count is what makes the
-            // next unread tap jump over posts that are still in the list.
+            postIdsToRemove = removableNow
             let kept = NXUnreadSeenReconciliation.unreadBookkeeping(
                 markedReadIDs: postIdsMarkedRead,
                 unreadCountUpdates: unreadCountUpdates,
-                allowsRowMutation: false
+                allowsRowMutation: false,
+                removedIDs: removableNow
             )
             postIdsMarkedRead = kept.markedReadIDs
             unreadCountUpdates = kept.unreadCountUpdates

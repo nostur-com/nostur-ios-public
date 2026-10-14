@@ -111,6 +111,32 @@ final class NXFeedViewportTests: XCTestCase {
         )
         XCTAssertEqual(applied.markedReadIDs, ["aba490e2"])
         XCTAssertEqual(applied.unreadCountUpdates, ["thread": 2])
+
+        // Read in the other column, and off screen here: the row leaves, and
+        // its unread count leaves with it. The visible row stays unread.
+        let removed = NXUnreadSeenReconciliation.unreadBookkeeping(
+            markedReadIDs: ["offscreen", "visible"],
+            unreadCountUpdates: ["thread": 0],
+            allowsRowMutation: false,
+            removedIDs: ["offscreen"]
+        )
+        XCTAssertEqual(removed.markedReadIDs, ["offscreen"])
+        XCTAssertTrue(removed.unreadCountUpdates.isEmpty)
+        XCTAssertEqual(
+            NXFeedViewport.rowIDsToRemoveWhileReading(
+                candidateIDs: ["offscreen", "visible"],
+                visiblePostIDs: ["visible"],
+                isViewportMovingOrRecently: false
+            ),
+            ["offscreen"]
+        )
+        XCTAssertTrue(
+            NXFeedViewport.rowIDsToRemoveWhileReading(
+                candidateIDs: ["offscreen"],
+                visiblePostIDs: [],
+                isViewportMovingOrRecently: true
+            ).isEmpty
+        )
     }
 
     func testSyncedSeenLeafRowCanBeRemovedWhileVisible() {

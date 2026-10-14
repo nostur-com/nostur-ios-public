@@ -341,6 +341,18 @@ enum NXFeedViewport {
         return !extended || step >= 7
     }
 
+    /// Rows that can leave the list while the user is reading below the top.
+    /// Visible rows wait. A moving viewport waits too, because the deletion
+    /// would land in the middle of a scroll.
+    static func rowIDsToRemoveWhileReading(
+        candidateIDs: Set<String>,
+        visiblePostIDs: Set<String>,
+        isViewportMovingOrRecently: Bool
+    ) -> Set<String> {
+        guard !isViewportMovingOrRecently else { return [] }
+        return candidateIDs.subtracting(visiblePostIDs)
+    }
+
     /// Let SwiftUI/List animate a pure offscreen deletion. List already keeps the
     /// visible rows stable for this case, while an identity settle can fight its
     /// transient self-sizing layout and visibly correct a viewport that never moved.
