@@ -766,14 +766,19 @@ class WebOfTrust: ObservableObject {
             guard let self = self else { return }
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "kind == 3 AND pubkey IN %@", followingPubkeys)
-            var followFollows = Set<String>()
+            var lists = WoTBackgroundRefresh.completedLists(account: mainAccountWoTpubkey)
             if let contactLists = try? bg().fetch(fr) {
-                for list in contactLists {
-                    let pubkeys = Set(list.fastPs.map { $0.1 })
-                    if wotDunbarNumber == 0 || pubkeys.count <= wotDunbarNumber {
-                        followFollows = followFollows.union(pubkeys)
+                for event in contactLists {
+                    let list = WoTRefreshContactList(createdAt: Int(event.created_at), follows: Set(event.fastPs.map { $0.1 }))
+                    if lists[event.pubkey].map({ $0.createdAt < list.createdAt }) ?? true {
+                        lists[event.pubkey] = list
                     }
                 }
+            }
+            var followFollows = Set<String>()
+            for author in followingPubkeys {
+                guard let list = lists[author], wotDunbarNumber == 0 || list.follows.count <= wotDunbarNumber else { continue }
+                followFollows.formUnion(list.follows)
             }
             self.followingFollowingPubkeys = followFollows
             self.addOwnFollowsIfNeeded()
@@ -869,6 +874,18 @@ class WebOfTrust: ObservableObject {
                 self?.lastUpdated = date
             }
         }
+    }
+
+    /// Automatic refresh builds separately, keeping the current filter usable.
+    @MainActor
+    func installAutomaticRefresh(_ pubkeys: Set<String>, account: String, date: Date) async {
+        guard mainAccountWoTpubkey == account,
+              SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
+        await bg().perform {
+            self.followingFollowingPubkeys = pubkeys
+            self.updateViewData(localSnapshotLoaded: true)
+        }
+        lastUpdated = date
     }
     
     private func lastUpdatedDate(_ pubkey: String) -> Date? {

@@ -144,6 +144,7 @@ extension AppView {
             if !IS_CATALYST {
                 FeedsCoordinator.shared.pauseFeeds()
                 scheduleDatabaseCleaningIfNeeded()
+                WoTBackgroundRefresh.schedule()
             }
             if SettingsStore.shared.receiveLocalNotifications {
                 guard let account = account() else { return }

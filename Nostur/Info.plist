@@ -6,6 +6,7 @@
 	<array>
 		<string>com.nostur.app-refresh</string>
 		<string>com.nostur.db-cleanup</string>
+		<string>com.nostur.wot-refresh</string>
 	</array>
 	<key>CFBundleURLTypes</key>
 	<array>

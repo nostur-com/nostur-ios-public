@@ -22,6 +22,15 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         // Wire notification delegate
         UNUserNotificationCenter.current().delegate = self
+
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: WoTBackgroundRefresh.identifier, using: nil) { task in
+            let work = Task { @MainActor in
+                let success = await WoTBackgroundRefresh.run()
+                WoTBackgroundRefresh.schedule()
+                task.setTaskCompleted(success: success && !Task.isCancelled)
+            }
+            task.expirationHandler = { work.cancel() }
+        }
         
         // Register background processing task here (SwiftUI doesn't support PROCESSING tasks yet, only REFRESH tasks)
         BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.nostur.db-cleanup", using: nil) { task in

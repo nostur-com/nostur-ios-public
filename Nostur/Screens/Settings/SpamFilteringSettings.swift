@@ -97,6 +97,11 @@ struct SpamFilteringSettings: View {
                     }
                 }
 
+                if settings.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue, !mainAccountWoTpubkey.isEmpty {
+                    AutomaticWoTRefreshStatus(account: mainAccountWoTpubkey)
+                        .id(mainAccountWoTpubkey)
+                }
+
                 if wot.rebuildQueued {
                     Text("Web of Trust rebuild queued — filtering temporarily allows everyone")
                         .font(.caption)
@@ -178,5 +183,31 @@ struct SpamFilteringSettings: View {
 #Preview {
     NBNavigationStack {
         SpamFilteringSettings()
+    }
+}
+
+private struct AutomaticWoTRefreshStatus: View {
+    @AppStorage private var lastSuccess: Double
+    @AppStorage private var pending: Int
+
+    init(account: String) {
+        _lastSuccess = AppStorage(wrappedValue: 0, WoTBackgroundRefresh.successKey(account))
+        _pending = AppStorage(wrappedValue: 0, WoTBackgroundRefresh.pendingKey(account))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Automatically refreshes while charging on an unmetered connection, when iOS allows.", comment: "Explanation of automatic Web of Trust maintenance")
+            if lastSuccess > 0 {
+                Text("Last automatic update: \(Date(timeIntervalSince1970: lastSuccess), format: .dateTime)", comment: "Date of the last completed automatic spam filter refresh")
+            } else {
+                Text("Last automatic update: Never", comment: "No automatic spam filter refresh has completed yet")
+            }
+            if pending > 0 {
+                Text("Automatic refresh pending: \(pending) follow lists", comment: "Number of follow lists left in a resumable automatic spam filter refresh")
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 }

@@ -69,6 +69,7 @@ class MessageParser {
     }
     
     func socketReceivedMessage(text: String, relayUrl: String, client: RelayConnection) {
+        if WoTRefreshRelayInbox.shared.route(text: text, relay: relayUrl) { return }
         // Annual history has its own bounded utility sink. Capture original signed
         // payloads before duplicate detection or Core Data import transforms them.
         if YearReviewRelayInbox.shared.route(text: text, relay: relayUrl) { return }
