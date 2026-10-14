@@ -49,6 +49,7 @@ class GiftWrapsManager: ObservableObject {
         self.fetchGiftWraps()
     }
     
+    @MainActor
     private func fetchGiftWraps() {
         DMsVM.shared.fetchGiftWraps()
     }

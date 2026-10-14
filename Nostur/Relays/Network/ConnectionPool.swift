@@ -838,14 +838,16 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
-    // TODO: NEED TO CHECK HOW WE HANDLE CLOSE PER CONNECTION WITH THE PREFERRED RELAYS....
+    // Preserve subscriptions on retained relays when reconciling the DM relay list.
     @MainActor
-    func closeSubscription(_ subscriptionId: String) {
+    func closeSubscription(_ subscriptionId: String, exceptRelays: Set<String> = [], exceptReadRelays: Bool = false) {
         queue.async(flags: .barrier) { [unowned self] in
-            for (_, connection) in self.connections {
+            for (_, connection) in self.connections where !exceptRelays.contains(connection.url) {
+                if exceptReadRelays && connection.relayData.read { continue }
                 connection.closeAndDropSubscription(subscriptionId)
             }
-            for (_, connection) in self.outboxConnections {
+            for (_, connection) in self.outboxConnections where !exceptRelays.contains(connection.url) {
+                if exceptReadRelays && connection.relayData.read { continue }
                 connection.closeAndDropSubscription(subscriptionId)
             }
         }

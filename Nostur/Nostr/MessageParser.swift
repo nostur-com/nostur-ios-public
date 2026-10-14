@@ -215,7 +215,7 @@ class MessageParser {
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
-                    client.completeReqSubscription(subscriptionId)
+                    client.completeReqSubscription(subscriptionId, keepActive: subscriptionId.hasPrefix("-OPEN-59-"))
                     requestTerminalSub.send((subscriptionId: subscriptionId, relay: normalizeRelayUrl(relayUrl)))
                     // TODO: Make generic -OPEN-, instead of "Following-" and "List-" etc..
                     if !Self.ACTIVE_SUBSCRIPTIONS

@@ -135,7 +135,7 @@ func nxParseRelayMessage(text: String, relay: String) throws -> NXRelayMessage {
         guard let result = try? d.decode(ClosedMessage.self, from: dataFromString) else {
             throw NXRelayMessageError.FAILED_TO_PARSE
         }
-        return NXRelayMessage(relays: relay, type: .CLOSED, message: result.message ?? "", id: result.id)
+        return NXRelayMessage(relays: relay, type: .CLOSED, message: result.message ?? "", subscriptionId: result.id, id: result.id)
     }
 
     guard matchesPrefix(utf8, "[\"EVENT\"") else {

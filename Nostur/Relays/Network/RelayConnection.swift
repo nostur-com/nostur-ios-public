@@ -409,10 +409,13 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
 
-    public func completeReqSubscription(_ subscriptionId: String) {
+    public func completeReqSubscription(_ subscriptionId: String, keepActive: Bool = false) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
-            self.nreqSubscriptions.remove(subscriptionId)
+            // EOSE ends the history query, not an OPEN-59 live subscription.
+            if !keepActive {
+                self.nreqSubscriptions.remove(subscriptionId)
+            }
             guard let webSocketTask = self.webSocketTask, self.isSocketConnected else { return }
             self.flushOutQueue(using: webSocketTask)
         }

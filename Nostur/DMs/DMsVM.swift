@@ -287,7 +287,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         guard !Task.isCancelled else { return }
         self.fetchNip04DMs()
         self.fetchGiftWraps()
-        self.startGiftWrapsTimer()
+        self.startGiftWrapSubscriptionCheck()
     }
 
     private func fetchDMrelays() {
@@ -307,7 +307,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     // so to avoid missing messages we look back 2 days before our newest known NIP-17 message
     // instead of re-fetching a fixed 6-day window every session/refresh. The lookback is clamped
     // to at most 6 days so a stale inbox (newest message is weeks old) doesn't re-pull a huge
-    // range on every 60s timer refresh.
+    // range when restoring a lost subscription.
     private static let nip17RandomizationWindow: TimeInterval = 2 * 24 * 60 * 60 // 48 hours
     private static let maxGiftWrapLookback: TimeInterval = 6 * 24 * 60 * 60 // 6 days
 
@@ -337,14 +337,20 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         "-OPEN-DM-R-" + self.id
     }
 
-    private var giftWrapsTimer: Timer? = nil
-    private func startGiftWrapsTimer() {
-        guard giftWrapsTimer == nil else { return }
-        self.giftWrapsTimer?.invalidate()
-        self.giftWrapsTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
-            self?.fetchGiftWraps(forceRefresh: true)
+    private var giftWrapSubscriptionCheck: Timer?
+    private var giftWrapRequestGeneration = 0
+
+    @MainActor
+    private func startGiftWrapSubscriptionCheck() {
+        guard giftWrapSubscriptionCheck == nil else { return }
+        // Recovery only: per-relay subscription tracking skips healthy subscriptions.
+        // Also picks up CLOSED subscriptions and changes to the configured DM relays.
+        giftWrapSubscriptionCheck = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.fetchGiftWraps()
+            }
         }
-        self.giftWrapsTimer?.tolerance = 15.0
+        giftWrapSubscriptionCheck?.tolerance = 15.0
     }
 
     @MainActor
@@ -355,10 +361,14 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         ConnectionPool.shared.closeSubscription(sentDMSubscriptionId)
         ConnectionPool.shared.closeSubscription(receivedDMSubscriptionId)
         fetchNip04DMs()
-        fetchGiftWraps(forceRefresh: true)
+        fetchGiftWraps()
     }
 
-    public func fetchGiftWraps(forceRefresh: Bool = false) {
+    @MainActor
+    public func fetchGiftWraps() {
+        guard !accountPubkey.isEmpty, !ncNotSupported else { return }
+        giftWrapRequestGeneration += 1
+        let generation = giftWrapRequestGeneration
         let accountPubkey = self.accountPubkey
         let reqFilters = Filters(
             kinds: [1059],
@@ -370,11 +380,11 @@ class DMsVM: ObservableObject, Equatable, Hashable {
             guard let self else { return }
             let dmRelays = await self.giftWrapReadRelays(accountPubkey: accountPubkey)
             await MainActor.run {
-                if forceRefresh {
-                    ConnectionPool.shared.closeSubscription(subscriptionId)
-                }
+                guard generation == self.giftWrapRequestGeneration,
+                      accountPubkey == self.accountPubkey else { return }
 
                 guard !dmRelays.isEmpty else {
+                    ConnectionPool.shared.closeSubscription(subscriptionId, exceptReadRelays: true)
                     nxReq(
                         reqFilters,
                         subscriptionId: subscriptionId,
@@ -387,6 +397,8 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 let dmRelayData: Set<RelayData> = Set(dmRelays.map {
                     RelayData.new(url: $0, read: false, write: false, search: false, auth: true)
                 })
+
+                ConnectionPool.shared.closeSubscription(subscriptionId, exceptRelays: dmRelays)
 
                 // Ensure explicit relay-limited REQs can use DM relays even if they are not global read relays.
                 dmRelayData.forEach { relay in
@@ -465,6 +477,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         let receivedDMSubscriptionId = self.receivedDMSubscriptionId
         let giftWrapSubscriptionId = self.giftWrapSubscriptionId
         let instanceId = ObjectIdentifier(self)
+        giftWrapSubscriptionCheck?.invalidate()
         Task { @MainActor in
             Self.unregister(instanceId)
             ConnectionPool.shared.closeSubscription(sentDMSubscriptionId)
@@ -614,6 +627,10 @@ class DMsVM: ObservableObject, Equatable, Hashable {
 
     @MainActor
     public func reload(accountPubkey: String) async {
+        giftWrapRequestGeneration += 1
+        ConnectionPool.shared.closeSubscription(giftWrapSubscriptionId)
+        ConnectionPool.shared.closeSubscription(sentDMSubscriptionId)
+        ConnectionPool.shared.closeSubscription(receivedDMSubscriptionId)
         self.accountPubkey = accountPubkey
         await self.load(force: true)
     }
