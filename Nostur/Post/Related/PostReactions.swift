@@ -77,7 +77,7 @@ struct PostReactions: View {
                             model.load(limit: 500, includeSpam: model.includeSpam)
                                 
                         } label: {
-                           Text("Show \(model.hiddenReactionCount) reactions outside your Web of Trust")
+                           Text("Show \(model.hiddenReactionCount) more")
                                 .padding(10)
                                 .contentShape(Rectangle())
                         }

@@ -5361,6 +5361,9 @@
     "And who you want to include. Nothing is posted automatically." : {
 
     },
+    "Animation exceeds the playback safety limit." : {
+
+    },
     "Animation too large, not loaded." : {
 
     },
@@ -6784,6 +6787,9 @@
           }
         }
       }
+    },
+    "Blossom upload failed: %@" : {
+      "comment" : "Upload failure followed by the Blossom server's error"
     },
     "Blue" : {
       "localizations" : {
@@ -20840,6 +20846,9 @@
         }
       }
     },
+    "Not sent" : {
+      "comment" : "DM composer status after sending a message or attachment fails"
+    },
     "Not yet" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -29368,7 +29377,7 @@
         }
       }
     },
-    "Show %lld reactions outside your Web of Trust" : {
+    "Show %lld more" : {
 
     },
     "Show a section to include it in your shared report, or gather more history." : {
@@ -31734,6 +31743,9 @@
           }
         }
       }
+    },
+    "The Blossom upload timed out. Check your connection or try another Blossom server." : {
+
     },
     "The database could not be loaded." : {
       "localizations" : {
