@@ -109,50 +109,50 @@ class BlossomUploadFile {
 
 // Returns final url
 func blossomUpload(authHeader: String, blossomFile: BlossomUploadFile, contentType: String, blossomServer: URL, timeout: TimeInterval = 10.0) async throws -> String {
-    return try await withThrowingTaskGroup(of: String.self) { group in
-        // Upload task
-        group.addTask {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
-                let uploadItem = BlossomUploadItem(data: blossomFile.data, contentType: contentType, authorizationHeader: authHeader, verb: .upload)
-                let uploader = BlossomUploader(blossomServer)
-                uploader.queued = [uploadItem]
-                
-                var cancellable: AnyCancellable?
-                cancellable = uploader.uploadingPublisher(for: uploadItem)
-                    .sink(receiveCompletion: { completion in
-                        defer { _ = cancellable } // Keep cancellable alive until completion
-                        if case .failure(let error) = completion {
-                            continuation.resume(throwing: error)
-                            return
-                        }
-                        
-                        if uploader.finished, let downloadUrl = uploader.queued.first?.downloadUrl {
-                            continuation.resume(returning: downloadUrl)
-                        }
-                        else {
-                            if let uploadState = uploader.queued.first?.state, case .error(let errorMessage) = uploadState {
-                                continuation.resume(throwing: BlossomUploadError.error(errorMessage))
-                            }
-                            else {
-                                continuation.resume(throwing: BlossomUploadError.error("Unknown error"))
-                            }
-                        }
-                    }, receiveValue: { uploadItem in
-                        uploader.processResponse(uploadItem: uploadItem)
-                    })
-            }
-        }
-        
-        // Timeout task
-        group.addTask {
-            try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-            throw BlossomUploadError.timeout
-        }
-        
-        // Return the first result (either success or timeout)
-        let result = try await group.next()!
-        group.cancelAll()
-        return result
+    var request = URLRequest(url: blossomServer.appendingPathComponent("upload"))
+    request.httpMethod = "PUT"
+    request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+    request.setValue(authHeader, forHTTPHeaderField: "Authorization")
+    request.setValue(blossomFile.sha256, forHTTPHeaderField: "X-SHA-256")
+    request.httpBody = blossomFile.data
+    request.timeoutInterval = timeout
+
+    let configuration = URLSessionConfiguration.default
+    configuration.timeoutIntervalForResource = timeout
+    let session = URLSession(configuration: configuration)
+    defer { session.finishTasksAndInvalidate() }
+
+    do {
+        let (data, response) = try await session.data(for: request)
+        return try blossomUploadURL(data: data, response: response)
+    }
+    catch let error as URLError where error.code == .timedOut {
+        throw BlossomUploadError.timeout
+    }
+}
+
+// Keep the HTTP response details before converting a failed upload into a UI error.
+func blossomUploadURL(data: Data, response: URLResponse) throws -> String {
+    guard let response = response as? HTTPURLResponse else {
+        throw BlossomUploadError.error(String(localized: "The server returned an invalid response."))
+    }
+    guard [200, 201, 202].contains(response.statusCode) else {
+        // Blossom uses X-Reason; some servers return a JSON error instead.
+        let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        let reason = [response.value(forHTTPHeaderField: "X-Reason"),
+                      json?["message"] as? String, json?["error"] as? String]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first { !$0.isEmpty }
+            ?? HTTPURLResponse.localizedString(forStatusCode: response.statusCode)
+        throw BlossomUploadError.error("HTTP \(response.statusCode) — \(reason)")
+    }
+    do {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try decoder.decode(BlossomUploadResponse.self, from: data).url
+    }
+    catch {
+        throw BlossomUploadError.error(String(localized: "The server returned an invalid upload response."))
     }
 }
 
