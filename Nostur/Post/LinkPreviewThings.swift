@@ -8,69 +8,101 @@
 import SwiftUI
 import Foundation
 
-// Fetch and parse meta og tags
+// Fetch and parse meta og tags. Never download file bodies to make link previews.
 func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Error>) -> Void) {
-    // if youtube, use https://youtube.com/oembed?url= to fetch metadata (less than 1 KB, vs ~800 KB regular youtube page)
-    if let host = url.host, (host.contains("youtube.com") || host.contains("youtu.be")) {
-        guard let urlAsQueryString = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else { return }
-        guard let url = URL(string: String(format:"https://youtube.com/oembed?url=%@", urlAsQueryString)) else { return }
-        let request = URLRequest(url: url)
-    
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error {
-                completion(.failure(error))
-                return
-            }
-            guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
-                completion(.failure(NSError(domain: "Invalid HTTP response", code: (response as? HTTPURLResponse)?.statusCode ?? 0, userInfo: nil)))
-                return
-            }
-            guard let data else {
-                completion(.failure(NSError(domain: "Missing data", code: 0, userInfo: nil)))
-                return
-            }
-            guard let json = String(data: data, encoding: .utf8) else {
-                completion(.failure(NSError(domain: "Invalid JSON", code: 0, userInfo: nil)))
-                return
-            }
-            DispatchQueue.global().async {
-                let metaTags = parseYoutube(json: json)
-                completion(.success(metaTags))
-            }
-        }
-        task.resume()
-        
-        
+    fetchMetaTags(url: url, configuration: .ephemeral, completion: completion)
+}
+
+func fetchMetaTags(url: URL, configuration: URLSessionConfiguration, completion: @escaping (Result<[String: String], Error>) -> Void) {
+    guard !LinkPreviewResponseLoader.isFileDownload(url) else {
+        completion(.success([:]))
         return
     }
-    
-    var request = URLRequest(url: url)
-    request.setValue("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", forHTTPHeaderField: "Accept")
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        if let error {
-            completion(.failure(error))
+    let youtube = url.host.map { $0 == "youtube.com" || $0.hasSuffix(".youtube.com") || $0 == "youtu.be" } ?? false
+    var requestURL = url
+    if youtube {
+        var components = URLComponents(string: "https://youtube.com/oembed")!
+        components.queryItems = [URLQueryItem(name: "url", value: url.absoluteString), URLQueryItem(name: "format", value: "json")]
+        guard let oembed = components.url else { return }
+        requestURL = oembed
+    }
+    LinkPreviewResponseLoader(url: url, youtube: youtube, completion: completion)
+        .start(requestURL: requestURL, configuration: configuration)
+}
+
+/// Delegate delivery and parsing share one background executor per request.
+/// Reject binary responses at headers and retain only a bounded HTML prefix.
+final class LinkPreviewResponseLoader: NSObject, URLSessionDataDelegate, @unchecked Sendable {
+    static let maximumBytes = 512 * 1024
+    private let url: URL
+    private let youtube: Bool
+    private var completion: ((Result<[String: String], Error>) -> Void)?
+    private var session: URLSession?
+    private var bytes = Data()
+
+    init(url: URL, youtube: Bool, completion: @escaping (Result<[String: String], Error>) -> Void) {
+        self.url = url
+        self.youtube = youtube
+        self.completion = completion
+    }
+
+    static func isFileDownload(_ url: URL) -> Bool {
+        ["dmg", "pkg", "zip", "exe", "msi", "deb", "rpm", "tar", "gz", "7z", "pdf"].contains(url.pathExtension.lowercased())
+    }
+
+    func start(requestURL: URL, configuration: URLSessionConfiguration) {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        queue.qualityOfService = .utility
+        configuration.urlCache = nil
+        configuration.timeoutIntervalForRequest = 5
+        configuration.timeoutIntervalForResource = 8
+        let session = URLSession(configuration: configuration, delegate: self, delegateQueue: queue)
+        self.session = session
+        var request = URLRequest(url: requestURL)
+        request.setValue(youtube ? "application/json" : "text/html,application/xhtml+xml", forHTTPHeaderField: "Accept")
+        session.dataTask(with: request).resume()
+    }
+
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+        guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode),
+              let mime = response.mimeType?.lowercased(),
+              youtube ? (mime == "application/json" || mime.hasSuffix("+json")) : (mime == "text/html" || mime == "application/xhtml+xml") else {
+            completionHandler(.cancel)
+            finish(.success([:]))
             return
         }
-        guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
-            completion(.failure(NSError(domain: "Invalid HTTP response", code: (response as? HTTPURLResponse)?.statusCode ?? 0, userInfo: nil)))
-            return
-        }
-        guard let data else {
-            completion(.failure(NSError(domain: "Missing data", code: 0, userInfo: nil)))
-            return
-        }
-        guard let html = String(data: data, encoding: .utf8) else {
-            completion(.failure(NSError(domain: "Invalid HTML", code: 0, userInfo: nil)))
-            return
-        }
-        
-        // dataTask callback seems main??? don't understand
-        DispatchQueue.global().async {
-            let metaTags = parseMetaTags(html: html, url: url)
-            completion(.success(metaTags))
+        completionHandler(.allow)
+    }
+
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        guard completion != nil else { return }
+        bytes.append(data.prefix(Self.maximumBytes - bytes.count))
+        if bytes.count == Self.maximumBytes {
+            dataTask.cancel()
+            finishParsedBody()
         }
     }
-    task.resume()
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        guard completion != nil else { return }
+        if let error { finish(.failure(error)) }
+        else { finishParsedBody() }
+    }
+
+    private func finishParsedBody() {
+        let body = String(decoding: bytes, as: UTF8.self)
+        finish(.success(youtube ? parseYoutube(json: body) : parseMetaTags(html: body, url: url)))
+    }
+
+    private func finish(_ result: Result<[String: String], Error>) {
+        guard let completion else { return }
+        self.completion = nil
+        bytes = Data()
+        session?.invalidateAndCancel()
+        session = nil
+        completion(result)
+    }
 }
 
 struct YouTubeOembedJson: Codable {

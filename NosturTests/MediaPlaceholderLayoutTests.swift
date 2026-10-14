@@ -267,3 +267,29 @@ final class PreviewMediaDownloadReuseTests: XCTestCase {
         XCTAssertEqual(loader.requestedURLs, [url])
     }
 }
+
+@MainActor
+final class PreviewMetadataResponsivenessTests: XCTestCase {
+    func testHeldMetadataWorkerDoesNotBlockMainActor() async {
+        let entered = expectation(description: "Metadata worker entered cache read")
+        let responsive = expectation(description: "UI task runs while metadata is held")
+        let release = DispatchSemaphore(value: 0)
+        defer { release.signal() }
+
+        let metadataTask = Task { @MainActor in
+            await PreviewMediaMetadata.generate(dimensions: CGSize(width: 100, height: 200)) {
+                XCTAssertFalse(Thread.isMainThread)
+                entered.fulfill()
+                release.wait()
+                return nil
+            }
+        }
+        await fulfillment(of: [entered], timeout: 2)
+        Task { @MainActor in responsive.fulfill() }
+        await fulfillment(of: [responsive], timeout: 0.3)
+        release.signal()
+        let metadata = await metadataTask.value
+        XCTAssertEqual(metadata.size, CGSize(width: 100, height: 200))
+        XCTAssertNil(metadata.hash)
+    }
+}
