@@ -49,8 +49,12 @@ public struct RequestMessage {
     // TODO: make proper request filter class
     
     static func getArticle(pubkey: String, kind:Int, definition:String, subscriptionId:String? = nil) -> String {
+        // Regular replaceable events (including profile updates) have no d-tag.
+        let definitionFilter = (kind == 0 || kind == 3 || (10000..<20000).contains(kind))
+            ? ""
+            : "\"#d\": [\"\(definition)\"], "
         return """
-["REQ", "\(subscriptionId ?? ("ARTICLE-"+UUID().uuidString))", {"#d": ["\(definition)"], "authors": ["\(pubkey)"], "kinds": [\(kind)], "limit": 11}]
+["REQ", "\(subscriptionId ?? ("ARTICLE-"+UUID().uuidString))", {\(definitionFilter)"authors": ["\(pubkey)"], "kinds": [\(kind)], "limit": 11}]
 """
     }
     
