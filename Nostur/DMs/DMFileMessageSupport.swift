@@ -9,6 +9,33 @@ import Foundation
 import CryptoKit
 import CryptoSwift
 
+// Try configured servers in order, reusing the same encrypted bytes and authorization.
+@MainActor
+func uploadDMFile(serverStrings: [String], upload: (URL) async throws -> String) async throws -> String {
+    var attemptedServers = Set<String>()
+    var failures: [String] = []
+    for serverString in serverStrings {
+        try Task.checkCancellation()
+        guard let server = URL(string: serverString.trimmingCharacters(in: .whitespacesAndNewlines)),
+              ["https", "http"].contains(server.scheme?.lowercased() ?? ""),
+              let host = server.host else { continue }
+        let serverKey = server.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard attemptedServers.insert(serverKey).inserted else { continue }
+        do {
+            return try await upload(server)
+        }
+        catch {
+            if error is CancellationError || (error as? URLError)?.code == .cancelled {
+                throw CancellationError()
+            }
+            try Task.checkCancellation()
+            failures.append("\(host): \(error.localizedDescription)")
+        }
+    }
+    guard !failures.isEmpty else { throw DMFileError.blossomNotConfigured }
+    throw DMFileError.uploadFailed(failures.joined(separator: "\n"))
+}
+
 // MARK: - File Message Info (parsed from kind 15 event tags)
 
 struct FileMessageInfo: Hashable, Sendable {

@@ -948,7 +948,8 @@ class ConversionVM: ObservableObject {
             throw DMFileError.blossomNotConfigured
         }
         guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: ourAccountPubkey), let ourkeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { throw DMError.PrivateKeyMissing }
-        guard let blossomServerUrl = SettingsStore.shared.blossomServerList.first, let blossomServer = URL(string: blossomServerUrl) else {
+        let blossomServers = SettingsStore.shared.blossomServerList
+        guard !blossomServers.isEmpty else {
             throw DMFileError.blossomNotConfigured
         }
         
@@ -964,7 +965,9 @@ class ConversionVM: ObservableObject {
         // 2. Upload encrypted data to Blossom
         let blossomFile = BlossomUploadFile(data: encrypted.encryptedData, contentType: "application/octet-stream")
         let authHeader = try await getBlossomAuthHeader(keys: Keys(privateKeyHex: privKey), blossomFile: blossomFile)
-        let downloadUrl = try await blossomUpload(authHeader: authHeader, blossomFile: blossomFile, contentType: "application/octet-stream", blossomServer: blossomServer, timeout: 60.0)
+        let downloadUrl = try await uploadDMFile(serverStrings: blossomServers) { server in
+            try await blossomUpload(authHeader: authHeader, blossomFile: blossomFile, contentType: "application/octet-stream", blossomServer: server, timeout: 60.0)
+        }
         
         // 3. Build kind 15 rumor tags
         var tags: [Tag] = participants.map { Tag(["p", $0]) }
