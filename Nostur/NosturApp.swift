@@ -135,7 +135,12 @@ func hideTitleBarOnCatalyst() {
 #endif
 }
 
+@MainActor
 struct TestApp: App {
+    // Match iOSApp startup before tests or previews create posts on a background
+    // context. AppState's initial preference fetches use the main context.
+    private let appState = AppState.shared
+
     var body: some Scene {
         WindowGroup { }
     }
