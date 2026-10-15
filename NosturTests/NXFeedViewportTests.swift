@@ -816,6 +816,73 @@ final class NXFeedViewportTests: XCTestCase {
                 viewportHeight: 956
             )
         )
+        // Following trace: one new post moved the reading row by 2051 while the
+        // estimated list was already taller than the real one. The pin lands
+        // past the slack limit. The next sample is on that row and must stay
+        // there. Pulling back to start+80 makes the following sample reapply
+        // the same pin, 503↔2474, for the whole extended settle.
+        XCTAssertTrue(
+            NXFeedViewport.shouldApplyPrependOffset(
+                offsetAtStart: 423.5,
+                currentOffset: 423.5,
+                correction: 2051,
+                contentHeight: 10506,
+                contentHeightAtStart: 10506,
+                viewportHeight: 1280
+            )
+        )
+        XCTAssertNil(
+            NXFeedViewport.prependOffsetClamp(
+                offsetAtStart: 423.5,
+                currentOffset: 2474.5,
+                correction: 0,
+                contentHeight: 10506,
+                contentHeightAtStart: 10506,
+                viewportHeight: 1280
+            )
+        )
+        XCTAssertTrue(
+            NXFeedViewport.shouldApplyPrependOffset(
+                offsetAtStart: 423.5,
+                currentOffset: 2474.5,
+                correction: 12,
+                contentHeight: 5870,
+                contentHeightAtStart: 10506,
+                viewportHeight: 1280
+            )
+        )
+        XCTAssertNil(
+            NXFeedViewport.prependOffsetClamp(
+                offsetAtStart: 423.5,
+                currentOffset: 2474.5,
+                correction: 12,
+                contentHeight: 5870,
+                contentHeightAtStart: 10506,
+                viewportHeight: 1280
+            )
+        )
+        // Already on the pin, another full screen of travel is a stale frame.
+        XCTAssertFalse(
+            NXFeedViewport.shouldApplyPrependOffset(
+                offsetAtStart: 423.5,
+                currentOffset: 2474.5,
+                correction: 1971,
+                contentHeight: 10506,
+                contentHeightAtStart: 10506,
+                viewportHeight: 1280
+            )
+        )
+        XCTAssertEqual(
+            NXFeedViewport.prependOffsetClamp(
+                offsetAtStart: 423.5,
+                currentOffset: 2474.5,
+                correction: 1971,
+                contentHeight: 10506,
+                contentHeightAtStart: 10506,
+                viewportHeight: 1280
+            ),
+            CGFloat?(503.5)
+        )
     }
 
     func testPrependSettleWaitsUntilTheNewCellsExist() {
@@ -1103,6 +1170,44 @@ final class NXFeedViewportTests: XCTestCase {
                 preservedIDs: []
             ),
             [:]
+        )
+    }
+
+    func testDetailReturnDoesNotReplayAnOffsetPastTheRow() {
+        // Explore trace: the saved row was 1404pt above the viewport. After a
+        // hidden parent trim that row can be shorter. Replaying -1404 scrolls
+        // onto the next post.
+        XCTAssertEqual(
+            NXFeedViewport.visibleTopOffsetInsideRow(saved: -1404, rowHeight: 2200),
+            -1404
+        )
+        XCTAssertEqual(
+            NXFeedViewport.visibleTopOffsetInsideRow(saved: -1404, rowHeight: 400),
+            -399
+        )
+        XCTAssertEqual(
+            NXFeedViewport.visibleTopOffsetInsideRow(saved: -43.5, rowHeight: 180),
+            -43.5
+        )
+        XCTAssertEqual(
+            NXFeedViewport.visibleTopOffsetInsideRow(saved: 12, rowHeight: 180),
+            12
+        )
+        XCTAssertFalse(
+            NXFeedViewport.shouldTreatOffsetAsUserAtTop(
+                hasWindow: false,
+                contentOffsetY: 0,
+                insetTop: 0,
+                isPreparingRestore: false
+            )
+        )
+        XCTAssertTrue(
+            NXFeedViewport.shouldTreatOffsetAsUserAtTop(
+                hasWindow: true,
+                contentOffsetY: -97,
+                insetTop: 97,
+                isPreparingRestore: false
+            )
         )
     }
 

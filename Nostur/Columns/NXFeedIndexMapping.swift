@@ -262,7 +262,8 @@ enum NXFeedViewport {
     }
 
     /// A prepend may scroll down by the height the list gained, or by a pin that
-    /// is still near the start and clear of the tail.
+    /// is still near the start and clear of the tail. After that pin lands, a
+    /// short correction may keep tracking the anchor.
     /// Content height often lags the new rows, and an at-top truncation shrinks
     /// it. Refusing every correction then leaves the offset at the top, so the
     /// new posts push the feed when the cover lifts.
@@ -288,9 +289,14 @@ enum NXFeedViewport {
         // Already past the inserted height. Allow a correction that comes back.
         if projected < currentOffset - 0.5 { return true }
         let viewport = max(viewportHeight, 1)
-        let stillNearStart = currentOffset <= offsetAtStart + viewport + slack
         let clearOfTail = projected <= contentHeight - viewport * 1.5
-        return stillNearStart && clearOfTail
+        guard clearOfTail else { return false }
+        // The first sample is still at the pre-insert offset, so a pin taller
+        // than the screen is allowed. Once that pin has moved us, only a short
+        // correction may continue. Another full screen is a stale frame.
+        let stillNearStart = currentOffset <= offsetAtStart + viewport + slack
+        if stillNearStart { return true }
+        return correction <= viewport + slack
     }
 
     /// UIKit can move past the inserted height before the first settle sample,
@@ -314,6 +320,11 @@ enum NXFeedViewport {
             slack: slack,
             viewportHeight: viewportHeight
         ) else { return nil }
+        let viewport = max(viewportHeight, 1)
+        // The anchor is already here, or only a short self-size away. Pulling
+        // back to the slack limit undoes a pin taller than the viewport, and
+        // the next sample applies that same pin again.
+        guard correction > viewport + slack else { return nil }
         let allowedOffset = prependOffsetLimit(
             offsetAtStart: offsetAtStart,
             contentHeight: contentHeight,
@@ -408,6 +419,26 @@ enum NXFeedViewport {
     /// Zero means the row is flush with whatever is currently inset at the top.
     static func offsetFromVisibleTop(itemMinY: CGFloat, contentOffsetY: CGFloat, insetTop: CGFloat) -> CGFloat {
         itemMinY - (contentOffsetY + insetTop)
+    }
+
+    /// Keep a saved in-row offset inside the row's current height. A parent trim
+    /// while detail is open can shrink the row. Replaying the old offset then
+    /// scrolls past it onto the next post.
+    static func visibleTopOffsetInsideRow(saved: CGFloat, rowHeight: CGFloat) -> CGFloat {
+        guard saved < 0, rowHeight > 1, saved.isFinite, rowHeight.isFinite else { return saved }
+        return max(saved, 1 - rowHeight)
+    }
+
+    /// A list that has left the window reports offset 0 and a zero inset. That
+    /// is not the user reaching the top.
+    static func shouldTreatOffsetAsUserAtTop(
+        hasWindow: Bool,
+        contentOffsetY: CGFloat,
+        insetTop: CGFloat,
+        isPreparingRestore: Bool
+    ) -> Bool {
+        guard hasWindow, !isPreparingRestore else { return false }
+        return isOffsetAtTop(contentOffsetY: contentOffsetY, insetTop: insetTop)
     }
 
     /// Content offset that keeps the same content under the visible top after an inset change.

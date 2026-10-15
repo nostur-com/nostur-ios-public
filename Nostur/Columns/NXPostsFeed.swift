@@ -257,7 +257,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 #endif
         guard let anchor else { return }
         parked = anchor
-        startSettling(anchor: (anchor.id, anchor.visibleTopOffset), extended: true, bringOnScreen: true)
+        // The row is still in this list. scrollToItem would first pin its top
+        // to the screen, then the saved in-row offset would scroll on from
+        // there. That is the jump after detail.
+        startSettling(anchor: (anchor.id, anchor.visibleTopOffset), extended: true, bringOnScreen: false)
     }
 
     func beginProgrammaticScroll() {
@@ -965,16 +968,24 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             scrollToItem(at: indexPath, in: scrollView)
         }
 
-        guard let newMinY = itemMinY(at: indexPath, in: scrollView) else { return .unavailable }
+        guard let frame = itemFrame(at: indexPath, in: scrollView) else { return .unavailable }
+        let savedOffset = NXFeedViewport.visibleTopOffsetInsideRow(
+            saved: anchor.visibleTopOffset,
+            rowHeight: frame.height
+        )
         let currentVisibleTopOffset = NXFeedViewport.offsetFromVisibleTop(
-            itemMinY: newMinY,
+            itemMinY: frame.minY,
             contentOffsetY: scrollView.contentOffset.y,
             insetTop: scrollView.adjustedContentInset.top
         )
-        let correction = currentVisibleTopOffset - anchor.visibleTopOffset
+        let correction = currentVisibleTopOffset - savedOffset
         guard correction.isFinite,
               scrollView.contentOffset.y.isFinite,
               scrollView.contentSize.height.isFinite else { return .unavailable }
+        // A tall pin lands past the slack limit. The next sample is on the
+        // anchor. Clamping first would pull that pin back and the sample
+        // after would apply it again.
+        guard abs(correction) > 0.5 else { return bringOnScreen ? .corrected : .aligned }
         if let prependTravel,
            !NXFeedViewport.shouldApplyPrependOffset(
             offsetAtStart: prependTravel.offsetAtStart,
@@ -1008,7 +1019,6 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             }
             return applyOffset(clamped, in: scrollView, anchorID: anchor.id, debugLabel: "clamp")
         }
-        guard abs(correction) > 0.5 else { return bringOnScreen ? .corrected : .aligned }
 
         return applyOffset(
             scrollView.contentOffset.y + correction,
@@ -2119,9 +2129,11 @@ struct NXPostsFeed: View {
         let scrollView: UIScrollView? = vm.collectionView ?? vm.tableView
         guard let scrollView else { return }
 
-        let isAtTopNow = NXFeedViewport.isOffsetAtTop(
+        let isAtTopNow = NXFeedViewport.shouldTreatOffsetAsUserAtTop(
+            hasWindow: scrollView.window != nil,
             contentOffsetY: scrollView.contentOffset.y,
-            insetTop: scrollView.adjustedContentInset.top
+            insetTop: scrollView.adjustedContentInset.top,
+            isPreparingRestore: vmInner.isPreparingForScrollRestore
         )
 
         // Status-bar tap-to-top never goes through scrollToTop(). Detect it from

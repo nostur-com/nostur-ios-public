@@ -14,10 +14,17 @@ let TEST_BUILD_ID = BuildIdentity.current
 private enum BuildIdentity {
     static let current: String = {
         let bundle = Bundle.main
-        let debugDylib = bundle.bundleURL.appendingPathComponent("Nostur.debug.dylib")
-        let binaryURL = FileManager.default.fileExists(atPath: debugDylib.path)
-            ? debugDylib
-            : bundle.executableURL
+        // iOS puts the debug dylib next to the bundle root. Mac Catalyst puts
+        // it next to the executable. The Catalyst stub executable keeps a
+        // stable UUID, so reading it made every Mac test build look the same.
+        let debugDylibCandidates = [
+            bundle.bundleURL.appendingPathComponent("Nostur.debug.dylib"),
+            bundle.executableURL?.deletingLastPathComponent().appendingPathComponent("Nostur.debug.dylib")
+        ]
+        let binaryURL = debugDylibCandidates
+            .compactMap { $0 }
+            .first { FileManager.default.fileExists(atPath: $0.path) }
+            ?? bundle.executableURL
 
         guard let binaryURL else { return "unknown" }
         if let uuid = machOUUID(at: binaryURL) {
