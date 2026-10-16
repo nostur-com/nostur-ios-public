@@ -5859,6 +5859,9 @@
         }
       }
     },
+    "Automatic refresh pending: %lld follow lists" : {
+      "comment" : "Number of follow lists left in a resumable automatic spam filter refresh"
+    },
     "Automatically connect to additional relays from people you follow to reduce missing content that can't be found on your own relay set" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -5881,6 +5884,9 @@
           }
         }
       }
+    },
+    "Automatically refreshes while charging on an unmetered connection, when iOS allows." : {
+      "comment" : "Explanation of automatic Web of Trust maintenance"
     },
     "Autopilot" : {
       "comment" : "Setting on settings screen",
@@ -5928,7 +5934,14 @@
       }
     },
     "Available features" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Functies beschikbaar"
+          }
+        }
+      }
     },
     "Award badge" : {
       "localizations" : {
@@ -6403,10 +6416,24 @@
       }
     },
     "Balance is not available for this connection." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saldo niet beschikbaar voor deze verbinding"
+          }
+        }
+      }
     },
     "Balance unavailable" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kan saldo niet opvragen"
+          }
+        }
+      }
     },
     "Based on your selection, the following relay set will be published so others can reach account: %@." : {
       "localizations" : {
@@ -7044,7 +7071,14 @@
       }
     },
     "Calculating archive storage…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archiefopslag berekenen..."
+          }
+        }
+      }
     },
     "Calculating..." : {
       "comment" : "Shown when calculating disk space",
@@ -7070,7 +7104,15 @@
       }
     },
     "Camera access is needed to scan a QR code" : {
-      "comment" : "Explanation shown when camera permission is denied for the NWC QR scanner"
+      "comment" : "Explanation shown when camera permission is denied for the NWC QR scanner",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cameratoegang nodig om QR codes te scannen"
+          }
+        }
+      }
     },
     "Camera access is needed to scan an NWC QR code" : {
       "comment" : "Explanation shown when camera permission is denied for the NWC QR scanner",
@@ -14711,7 +14753,8 @@
             "value" : "Gift-wrap"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "gmmm broken %@" : {
       "localizations" : {
@@ -14961,7 +15004,14 @@
 
     },
     "Hide balance" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verberg saldo"
+          }
+        }
+      }
     },
     "Hide keyboard" : {
       "localizations" : {
@@ -16608,6 +16658,28 @@
         }
       }
     },
+    "Last automatic update: %@" : {
+      "comment" : "Date of the last completed automatic spam filter refresh",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatste automatische update: %@"
+          }
+        }
+      }
+    },
+    "Last automatic update: Never" : {
+      "comment" : "No automatic spam filter refresh has completed yet",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatste automatische update: nooit"
+          }
+        }
+      }
+    },
     "Last awarded" : {
       "localizations" : {
         "es" : {
@@ -16766,6 +16838,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dipelajari melalui interaksi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aangeleerd via interacties"
           }
         }
       }
@@ -17387,11 +17465,24 @@
             "state" : "translated",
             "value" : "Muat media terenkripsi"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versleutelde media laden"
+          }
         }
       }
     },
     "Load more" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laad meer"
+          }
+        }
+      }
     },
     "Load preset 1" : {
       "localizations" : {
@@ -18538,6 +18629,12 @@
             "state" : "translated",
             "value" : "Sumber pesan"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichtbron"
+          }
         }
       }
     },
@@ -18772,6 +18869,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Balasan tidak ada."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht niet gevonden."
           }
         }
       }
@@ -20847,7 +20950,15 @@
       }
     },
     "Not sent" : {
-      "comment" : "DM composer status after sending a message or attachment fails"
+      "comment" : "DM composer status after sending a message or attachment fails",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet verzonden"
+          }
+        }
+      }
     },
     "Not yet" : {
       "extractionState" : "stale",
@@ -21231,13 +21342,20 @@
       }
     },
     "nprofile" : {
-
+      "shouldTranslate" : false
     },
     "npub" : {
-
+      "shouldTranslate" : false
     },
     "npub shares just your Nostr ID.\n\nnprofile shares your Nostr ID plus up to two relays where your profile can be found, when available. This helps other apps find you." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "npub deelt alleen je Nostr ID\n\nnprofile deelt je Nostr ID en tot 2 relays waarmee je profiel gevonden kan worden, indien beschikbaar. Zo kunnen anderen je makkelijker vinden."
+          }
+        }
+      }
     },
     "nsecBunker appears offline, post will be saved but not published" : {
       "extractionState" : "stale",
@@ -22643,7 +22761,14 @@
       }
     },
     "Point your camera at a Nostr profile QR code" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richt je camera op een Nostr profiel QR code"
+          }
+        }
+      }
     },
     "Point your camera at your wallet's NWC QR code" : {
       "comment" : "Instruction shown while scanning a Nostr Wallet Connect QR code",
@@ -22767,6 +22892,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Posting ${postText} ke Nostr"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur ${postText} naar Nostr"
           }
         }
       }
@@ -22920,6 +23051,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Posting Teks"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur Tekst"
           }
         }
       }
@@ -23446,7 +23583,15 @@
       "shouldTranslate" : false
     },
     "Preview image" : {
-      "comment" : "Opens a larger preview of the image attached to a direct message."
+      "comment" : "Opens a larger preview of the image attached to a direct message.",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voorbeeld"
+          }
+        }
+      }
     },
     "Previously known as: %@" : {
       "localizations" : {
@@ -23862,7 +24007,14 @@
       }
     },
     "Profile QR code" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiel QR code"
+          }
+        }
+      }
     },
     "pubkey: %@" : {
       "localizations" : {
@@ -27696,13 +27848,34 @@
 
     },
     "Scan a Nostr npub or nprofile QR code." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan een Nostr npub of nprofile QR code."
+          }
+        }
+      }
     },
     "Scan from photo" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan van foto"
+          }
+        }
+      }
     },
     "Scan profile QR code" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan profiel QR code"
+          }
+        }
+      }
     },
     "Scan QR" : {
       "comment" : "Button to scan a QR code for Nostr Wallet Connect setup\nNavigation title for the Nostr Wallet Connect QR scanner",
@@ -27855,7 +28028,8 @@
             "value" : "Segel"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Search" : {
       "comment" : "Navigation title for Search screen",
@@ -28507,7 +28681,14 @@
       }
     },
     "Sent" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzonden"
+          }
+        }
+      }
     },
     "Sent %@ sats" : {
       "comment" : "Sent X sats (Replying to text)",
@@ -32149,6 +32330,12 @@
           }
         }
       }
+    },
+    "The server returned an invalid response." : {
+
+    },
+    "The server returned an invalid upload response." : {
+
     },
     "The share image could not be created. Please try again." : {
 
