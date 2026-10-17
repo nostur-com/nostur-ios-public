@@ -112,29 +112,49 @@ final class NXFeedViewportTests: XCTestCase {
         XCTAssertEqual(applied.markedReadIDs, ["aba490e2"])
         XCTAssertEqual(applied.unreadCountUpdates, ["thread": 2])
 
-        // Read in the other column, and off screen here: the row leaves, and
-        // its unread count leaves with it. The visible row stays unread.
+        // Read in the other column. A row below the viewport leaves, and its
+        // unread count leaves with it. A row above the viewport stays: that
+        // deletion is the Explore shift (parked anchor left 2206pt above).
         let removed = NXUnreadSeenReconciliation.unreadBookkeeping(
-            markedReadIDs: ["offscreen", "visible"],
+            markedReadIDs: ["below", "visible"],
             unreadCountUpdates: ["thread": 0],
             allowsRowMutation: false,
-            removedIDs: ["offscreen"]
+            removedIDs: ["below"]
         )
-        XCTAssertEqual(removed.markedReadIDs, ["offscreen"])
+        XCTAssertEqual(removed.markedReadIDs, ["below"])
         XCTAssertTrue(removed.unreadCountUpdates.isEmpty)
+        let ordered = ["above", "visible", "below"]
         XCTAssertEqual(
             NXFeedViewport.rowIDsToRemoveWhileReading(
-                candidateIDs: ["offscreen", "visible"],
+                candidateIDs: ["above", "visible", "below"],
+                orderedPostIDs: ordered,
                 visiblePostIDs: ["visible"],
                 isViewportMovingOrRecently: false
             ),
-            ["offscreen"]
+            ["below"]
+        )
+        XCTAssertEqual(
+            NXFeedViewport.rowIDsAboveViewport(
+                candidateIDs: ["above", "visible", "below"],
+                orderedPostIDs: ordered,
+                visiblePostIDs: ["visible"]
+            ),
+            ["above"]
         )
         XCTAssertTrue(
             NXFeedViewport.rowIDsToRemoveWhileReading(
-                candidateIDs: ["offscreen"],
-                visiblePostIDs: [],
+                candidateIDs: ["below"],
+                orderedPostIDs: ordered,
+                visiblePostIDs: ["visible"],
                 isViewportMovingOrRecently: true
+            ).isEmpty
+        )
+        XCTAssertTrue(
+            NXFeedViewport.rowIDsToRemoveWhileReading(
+                candidateIDs: ["above", "below"],
+                orderedPostIDs: ordered,
+                visiblePostIDs: [],
+                isViewportMovingOrRecently: false
             ).isEmpty
         )
     }
@@ -894,6 +914,17 @@ final class NXFeedViewportTests: XCTestCase {
         XCTAssertEqual(
             NXFeedViewport.prependMinimumCellCount(cellsBefore: 63, insertedCount: 1, removedCount: 43),
             21
+        )
+        // Following trace: 91 posts, the collection view already had 93 cells,
+        // 6 posts were added, and it settled at 98. Waiting for 99 never
+        // restored the anchor, and the cover lifted on the jumped offset.
+        XCTAssertEqual(
+            NXFeedViewport.prependMinimumCellCount(
+                cellsBefore: 93,
+                insertedCount: 6,
+                itemCount: 97
+            ),
+            97
         )
 
         // Right after an unread landing the old list is already aligned. Finishing

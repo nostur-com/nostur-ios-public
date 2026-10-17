@@ -326,6 +326,21 @@ class NXColumnViewModel: ObservableObject {
     private func shortDebugID(_ id: String) -> String {
         String(id.prefix(8))
     }
+
+    private func debugIDList(_ ids: Set<String>, ordered: [String]) -> String {
+        guard !ids.isEmpty else { return "none" }
+        let shown = ordered.filter { ids.contains($0) }.prefix(8).map(shortDebugID)
+        let extra = ids.count - shown.count
+        let text = shown.joined(separator: ",")
+        return extra > 0 ? "\(text)+\(extra)" : text
+    }
+
+    /// Offset, live row, and parked anchor at the moment rows are kept or removed.
+    @MainActor
+    private func removalGeometry() -> String {
+        let layout = feedLayoutDebugState?() ?? "stabilizer none"
+        return "\(feedActionDebugViewport()) · \(layout)"
+    }
 #endif
 
     @MainActor
@@ -913,20 +928,34 @@ class NXColumnViewModel: ObservableObject {
                     unreadCountUpdates[id] = nil
                 }
             }
-            // Another column can mark the same post read while it is above or
-            // below this viewport. List animates that deletion without moving
-            // the rows on screen. A visible row stays until the top.
+            // Rows below the viewport can leave. Rows above it stay: deleting
+            // them moves every visible row, which is the tap that hits the
+            // wrong post. A visible row stays until the top.
             let moving = vmInner.isFeedViewportMovingOrRecently?() == true
+            let orderedIDs = existingPosts.map(\.id)
             let removableNow = NXFeedViewport.rowIDsToRemoveWhileReading(
                 candidateIDs: postIdsToRemove,
+                orderedPostIDs: orderedIDs,
                 visiblePostIDs: visiblePostIds,
                 isViewportMovingOrRecently: moving
             )
-            let deferred = postIdsToRemove.subtracting(removableNow)
-            if !deferred.isEmpty {
+            let keptAbove = NXFeedViewport.rowIDsAboveViewport(
+                candidateIDs: postIdsToRemove,
+                orderedPostIDs: orderedIDs,
+                visiblePostIDs: visiblePostIds
+            )
+            if moving || visiblePostIds.isEmpty || !keptAbove.isEmpty {
 #if DEBUG
+                let reason: String
+                if moving {
+                    reason = "viewport moving · \(postIdsToRemove.count) stay"
+                } else if visiblePostIds.isEmpty {
+                    reason = "no visible rows · \(postIdsToRemove.count) stay [\(debugIDList(postIdsToRemove, ordered: orderedIDs))]"
+                } else {
+                    reason = "\(keptAbove.count) above [\(debugIDList(keptAbove, ordered: orderedIDs))]"
+                }
                 recordFeedAction(
-                    "STRUCTURAL cleanup deferred · \(deferred.count) rows stay on screen"
+                    "STRUCTURAL cleanup deferred · \(reason) · \(removalGeometry())"
                 )
 #endif
             }
@@ -982,8 +1011,8 @@ class NXColumnViewModel: ObservableObject {
                     !postIdsToRemove.contains($0.id)
                 }
                 if shouldAnimateOffscreenRemoval {
-                    // List natively preserves the viewport when rows outside it
-                    // disappear. Avoid covering and re-pinning an already-stable view.
+                    // These rows are below the viewport. List can drop them
+                    // without moving the rows on screen.
                     withAnimation {
                         self.viewState = .posts(resultingPosts)
                     }
@@ -995,8 +1024,9 @@ class NXColumnViewModel: ObservableObject {
             }
             self.vmInner.updateIsAtTopSubject.send()
 #if DEBUG
+            let removedList = self.debugIDList(postIdsToRemove, ordered: existingPosts.map(\.id))
             self.recordFeedAction(
-                "seen reconciliation · marked \(postIdsMarkedRead.count) rows read · removed \(postIdsToRemove.count) rows · trimmed \(parentUpdates.count) threads · kept \(resultingPosts.count) posts"
+                "seen reconciliation · marked \(postIdsMarkedRead.count) · removed \(postIdsToRemove.count) below [\(removedList)] · trimmed \(parentUpdates.count) · kept \(resultingPosts.count) · \(self.removalGeometry())"
             )
 #endif
             return resultingPosts.map(\.id)

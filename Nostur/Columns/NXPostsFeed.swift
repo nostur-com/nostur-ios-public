@@ -628,7 +628,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 NXFeedViewport.prependMinimumCellCount(
                     cellsBefore: $0,
                     insertedCount: addedCount,
-                    removedCount: removedCount
+                    removedCount: removedCount,
+                    itemCount: itemIDs.count + leadingNonPostRowCount
                 )
             }
             : nil
@@ -742,6 +743,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             var offsetAfterYield: CGFloat?
             var correctionCount = 0
             var didLogPrependWait = false
+            var didLogMissingWindow = false
 #endif
 
             for step in 0..<maxSteps {
@@ -757,11 +759,6 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     return
                 }
 
-                if self.scrollView == nil || self.scrollView?.window == nil {
-                    self.endPrependSettle(generation: generation)
-                    return
-                }
-
                 if step == 0 {
                     await Task.yield()
 #if DEBUG
@@ -772,15 +769,24 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 }
                 guard !Task.isCancelled,
                       !self.isSuspended,
-                      self.anchorGeneration == generation,
-                      let scrollView = self.scrollView,
-                      scrollView.window != nil,
-                      !scrollView.isDragging,
+                      self.anchorGeneration == generation else {
+                    return
+                }
+                guard let scrollView = self.scrollView, scrollView.window != nil else {
+                    // Applying the new rows can detach the collection view for
+                    // a frame. Ending here lifts the cover on the jumped offset.
+#if DEBUG
+                    if !didLogMissingWindow {
+                        didLogMissingWindow = true
+                        self.onDebugAction?("SETTLE window missing · cover stays")
+                    }
+#endif
+                    continue
+                }
+                guard !scrollView.isDragging,
                       !scrollView.isDecelerating,
                       !scrollView.isTracking else {
-                    if Task.isCancelled || self.anchorGeneration != generation {
-                        return
-                    }
+                    self.lastUserScrollAt = CACurrentMediaTime()
                     self.endPrependSettle(generation: generation)
                     return
                 }

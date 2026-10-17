@@ -240,11 +240,22 @@ enum NXFeedViewport {
     /// `nil` when this update did not add rows, so settle must not wait.
     /// Removals count too: an at-top truncation can drop more rows than the
     /// prepend adds, and the collection view never grows to the old total.
-    static func prependMinimumCellCount(cellsBefore: Int, insertedCount: Int, removedCount: Int = 0) -> Int? {
+    static func prependMinimumCellCount(
+        cellsBefore: Int,
+        insertedCount: Int,
+        removedCount: Int = 0,
+        itemCount: Int? = nil
+    ) -> Int? {
         // A zero count means the scroll view has not reported its rows yet.
         // Treating that as "one more cell" would finish before the real insert.
         guard cellsBefore > 0, insertedCount > 0 else { return nil }
-        let expected = cellsBefore + insertedCount - max(0, removedCount)
+        var expected = cellsBefore + insertedCount - max(0, removedCount)
+        // The collection view can already contain a cell the post list does not.
+        // Waiting for that stale extra cell keeps the cover up, then the settle
+        // gives up and the jumped offset is what the user sees.
+        if let itemCount, itemCount > 0 {
+            expected = min(expected, itemCount)
+        }
         guard expected > 0 else { return nil }
         return expected
     }
@@ -353,15 +364,40 @@ enum NXFeedViewport {
     }
 
     /// Rows that can leave the list while the user is reading below the top.
-    /// Visible rows wait. A moving viewport waits too, because the deletion
-    /// would land in the middle of a scroll.
+    /// Only rows older than the viewport. Deleting a row above the visible
+    /// posts shifts every row under the finger. Visible rows wait. A moving
+    /// viewport waits too. An empty visible set waits, because the list may
+    /// be detached and every row would look off screen.
     static func rowIDsToRemoveWhileReading(
         candidateIDs: Set<String>,
+        orderedPostIDs: [String],
         visiblePostIDs: Set<String>,
         isViewportMovingOrRecently: Bool
     ) -> Set<String> {
-        guard !isViewportMovingOrRecently else { return [] }
-        return candidateIDs.subtracting(visiblePostIDs)
+        guard !isViewportMovingOrRecently, !visiblePostIDs.isEmpty else { return [] }
+        let visibleIndices = orderedPostIDs.indices.filter { visiblePostIDs.contains(orderedPostIDs[$0]) }
+        guard let lowestVisible = visibleIndices.max() else { return [] }
+        return Set(candidateIDs.filter { id in
+            guard let index = orderedPostIDs.firstIndex(of: id) else { return false }
+            return index > lowestVisible
+        })
+    }
+
+    /// Already-read or seen rows newer than the viewport. They stay until the
+    /// feed is back at the top. Removing them is the shift that lands a tap
+    /// on the wrong post.
+    static func rowIDsAboveViewport(
+        candidateIDs: Set<String>,
+        orderedPostIDs: [String],
+        visiblePostIDs: Set<String>
+    ) -> Set<String> {
+        guard !visiblePostIDs.isEmpty else { return candidateIDs }
+        let visibleIndices = orderedPostIDs.indices.filter { visiblePostIDs.contains(orderedPostIDs[$0]) }
+        guard let highestVisible = visibleIndices.min() else { return candidateIDs }
+        return Set(candidateIDs.filter { id in
+            guard let index = orderedPostIDs.firstIndex(of: id) else { return true }
+            return index < highestVisible
+        })
     }
 
     /// Let SwiftUI/List animate a pure offscreen deletion. List already keeps the
