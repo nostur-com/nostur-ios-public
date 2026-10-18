@@ -591,6 +591,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard !updates.isEmpty else { return }
 
         let oldIDs = itemIDs
+        let leadingRowsBefore = leadingNonPostRowCount
         let cellsBefore = scrollView.map { renderedCellCount(in: $0) }
         // A queued update can flush after finger-up deceleration has moved several rows
         // beyond `parked` (which is intentionally only updated while the finger is down).
@@ -623,12 +624,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         // for every added post before that alignment is allowed to lift the cover.
         // Count removals as well: at-top truncation deletes more rows than this
         // prepend adds, and the old total is then impossible.
-        let prependMinimumCellCount = NXFeedViewport.shouldCoverPrepend(updateReasons: updateReasons)
+        let prependMinimumCellCount = (NXFeedViewport.shouldCoverPrepend(updateReasons: updateReasons)
+            || updateReasons.contains(NXFeedViewport.bannerUpdateCoverReason))
             ? cellsBefore.flatMap {
                 NXFeedViewport.prependMinimumCellCount(
                     cellsBefore: $0,
-                    insertedCount: addedCount,
-                    removedCount: removedCount,
+                    insertedCount: addedCount + max(0, leadingNonPostRowCount - leadingRowsBefore),
+                    removedCount: removedCount + max(0, leadingRowsBefore - leadingNonPostRowCount),
                     itemCount: itemIDs.count + leadingNonPostRowCount
                 )
             }
@@ -691,7 +693,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 anchor: (post.id, post.visibleTopOffset),
                 extended: needsSettling && !pinTailAppend,
                 bringOnScreen: pinByIdentity,
-                prependMinimumCellCount: prependMinimumCellCount
+                prependMinimumCellCount: prependMinimumCellCount,
+                expectedBannerCellCount: leadingRowsBefore != leadingNonPostRowCount
+                    ? cellsBefore.map { $0 + addedCount - removedCount + leadingNonPostRowCount - leadingRowsBefore }
+                    : nil
             )
         case .retarget(let livePost):
             parked = livePost
@@ -713,7 +718,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         anchor: (id: String, visibleTopOffset: CGFloat),
         extended: Bool,
         bringOnScreen: Bool,
-        prependMinimumCellCount: Int? = nil
+        prependMinimumCellCount: Int? = nil,
+        expectedBannerCellCount: Int? = nil
     ) {
         anchorGeneration += 1
         let generation = anchorGeneration
@@ -791,10 +797,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     return
                 }
 
-                let cellsLanded = prependMinimumCellCount.map {
-                    self.renderedCellCount(in: scrollView) >= $0
-                } ?? true
-                if let prependMinimumCellCount, !cellsLanded {
+                let renderedCount = self.renderedCellCount(in: scrollView)
+                let cellsLanded = (prependMinimumCellCount.map { renderedCount >= $0 } ?? true)
+                    && (expectedBannerCellCount.map { renderedCount == $0 } ?? true)
+                if !cellsLanded {
                     // The List update is often committed but not laid out yet, especially
                     // while the unread jump is still resolving row heights.
                     scrollView.layoutIfNeeded()

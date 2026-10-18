@@ -194,13 +194,16 @@ enum NXFeedViewport {
     static let prependCoverReason = "newer posts"
     /// `performAnchored` reason for removing already-read rows above the reading post.
     static let unreadRemovalCoverReason = "read leaf rows removed"
+    static let bannerUpdateCoverReason = "already seen banner changed"
 
     static func shouldCoverPrepend(updateReasons: [String]) -> Bool {
         updateReasons.contains(prependCoverReason)
     }
 
     static func shouldCoverViewport(updateReasons: [String]) -> Bool {
-        shouldCoverPrepend(updateReasons: updateReasons) || updateReasons.contains(unreadRemovalCoverReason)
+        shouldCoverPrepend(updateReasons: updateReasons)
+            || updateReasons.contains(unreadRemovalCoverReason)
+            || updateReasons.contains(bannerUpdateCoverReason)
     }
 
     /// A covered mutation must keep its pre-mutation post pinned until List finishes
@@ -361,58 +364,6 @@ enum NXFeedViewport {
             return false
         }
         return !extended || step >= 7
-    }
-
-    /// Rows that can leave the list while the user is reading below the top.
-    /// Only rows older than the viewport. Deleting a row above the visible
-    /// posts shifts every row under the finger. Visible rows wait. A moving
-    /// viewport waits too. An empty visible set waits, because the list may
-    /// be detached and every row would look off screen.
-    static func rowIDsToRemoveWhileReading(
-        candidateIDs: Set<String>,
-        orderedPostIDs: [String],
-        visiblePostIDs: Set<String>,
-        isViewportMovingOrRecently: Bool
-    ) -> Set<String> {
-        guard !isViewportMovingOrRecently, !visiblePostIDs.isEmpty else { return [] }
-        let visibleIndices = orderedPostIDs.indices.filter { visiblePostIDs.contains(orderedPostIDs[$0]) }
-        guard let lowestVisible = visibleIndices.max() else { return [] }
-        return Set(candidateIDs.filter { id in
-            guard let index = orderedPostIDs.firstIndex(of: id) else { return false }
-            return index > lowestVisible
-        })
-    }
-
-    /// Already-read or seen rows newer than the viewport. They stay until the
-    /// feed is back at the top. Removing them is the shift that lands a tap
-    /// on the wrong post.
-    static func rowIDsAboveViewport(
-        candidateIDs: Set<String>,
-        orderedPostIDs: [String],
-        visiblePostIDs: Set<String>
-    ) -> Set<String> {
-        guard !visiblePostIDs.isEmpty else { return candidateIDs }
-        let visibleIndices = orderedPostIDs.indices.filter { visiblePostIDs.contains(orderedPostIDs[$0]) }
-        guard let highestVisible = visibleIndices.min() else { return candidateIDs }
-        return Set(candidateIDs.filter { id in
-            guard let index = orderedPostIDs.firstIndex(of: id) else { return true }
-            return index < highestVisible
-        })
-    }
-
-    /// Let SwiftUI/List animate a pure offscreen deletion. List already keeps the
-    /// visible rows stable for this case, while an identity settle can fight its
-    /// transient self-sizing layout and visibly correct a viewport that never moved.
-    static func shouldAnimateOffscreenRemoval(
-        removedPostIDs: Set<String>,
-        visiblePostIDs: Set<String>,
-        hasParentUpdates: Bool,
-        isViewportMovingOrRecently: Bool = false
-    ) -> Bool {
-        !isViewportMovingOrRecently
-            && !removedPostIDs.isEmpty
-            && removedPostIDs.isDisjoint(with: visiblePostIDs)
-            && !hasParentUpdates
     }
 
     /// Remember-on restores already-seen posts. Older pages are for scrolling

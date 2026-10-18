@@ -140,9 +140,8 @@ enum NXIncomingFeedPosts {
 }
 
 enum NXFeedStructuralUpdate {
-    /// Full structural edits wait until the top: parent trims and deletion of a
-    /// row the user can see. A pure offscreen deletion is separate and still
-    /// uses List's own animation.
+    /// All seen cleanup waits until the top. Even deleting rows below the viewport
+    /// invalidates List's self-sizing estimates and can move the reading row.
     static func shouldMutateRows(isVisuallyAtTop: Bool) -> Bool {
         isVisuallyAtTop
     }
@@ -213,6 +212,8 @@ class NXColumnViewModel: ObservableObject {
     /// Prepend landed while the restore cover was up; lift the cover after settle.
     var delayRestoreRevealUntilPrependSettles = false
     @Published private(set) var alreadySeenNewerCount = 0
+    private var requestedAlreadySeenNewerCount = 0
+    private var alreadySeenBannerGeneration = 0
     @Published private(set) var isShowingAlreadySeenNewerPosts = false
     private var alreadySeenNewerCandidates: [String: NXAlreadySeenNewerPostCandidate] = [:]
     private var alreadySeenNewerDisplayTask: Task<Void, Never>?
@@ -751,9 +752,8 @@ class NXColumnViewModel: ObservableObject {
                     Task { @MainActor [weak self] in
                         guard let self else { return }
                         // A row may represent a whole reply chain, so reconcile the
-                        // exact component seen in the other column. Offscreen leaf rows
-                        // are removed; a currently visible row stays stable until a
-                        // later feed refresh.
+                        // exact component seen in the other column. Structural cleanup
+                        // waits until top, including leaf rows outside the viewport.
                         let otherColumnShortId = String(postId.prefix(8))
                         var seenShortIds = Deduplicator.shared.onScreenSeen
                         seenShortIds.insert(otherColumnShortId)
@@ -845,7 +845,7 @@ class NXColumnViewModel: ObservableObject {
     }
 
     @MainActor
-    private func removeUnreadPostsAlreadyMarkedRead(
+    func removeUnreadPostsAlreadyMarkedRead(
         _ seenShortIds: Set<String>,
         otherColumnSeenShortIds: Set<String> = [],
         syncedOrFeedSeenShortIds: Set<String> = []
@@ -928,43 +928,21 @@ class NXColumnViewModel: ObservableObject {
                     unreadCountUpdates[id] = nil
                 }
             }
-            // Rows below the viewport can leave. Rows above it stay: deleting
-            // them moves every visible row, which is the tap that hits the
-            // wrong post. A visible row stays until the top.
-            let moving = vmInner.isFeedViewportMovingOrRecently?() == true
-            let orderedIDs = existingPosts.map(\.id)
-            let removableNow = NXFeedViewport.rowIDsToRemoveWhileReading(
-                candidateIDs: postIdsToRemove,
-                orderedPostIDs: orderedIDs,
-                visiblePostIDs: visiblePostIds,
-                isViewportMovingOrRecently: moving
-            )
-            let keptAbove = NXFeedViewport.rowIDsAboveViewport(
-                candidateIDs: postIdsToRemove,
-                orderedPostIDs: orderedIDs,
-                visiblePostIDs: visiblePostIds
-            )
-            if moving || visiblePostIds.isEmpty || !keptAbove.isEmpty {
+            // Idle does not mean safe to delete: List re-estimates the entire
+            // self-sizing layout even for rows below the viewport. Keep the rendered
+            // snapshot and its unread bookkeeping intact until the user reaches top.
 #if DEBUG
-                let reason: String
-                if moving {
-                    reason = "viewport moving · \(postIdsToRemove.count) stay"
-                } else if visiblePostIds.isEmpty {
-                    reason = "no visible rows · \(postIdsToRemove.count) stay [\(debugIDList(postIdsToRemove, ordered: orderedIDs))]"
-                } else {
-                    reason = "\(keptAbove.count) above [\(debugIDList(keptAbove, ordered: orderedIDs))]"
-                }
+            if !postIdsToRemove.isEmpty {
                 recordFeedAction(
-                    "STRUCTURAL cleanup deferred · \(reason) · \(removalGeometry())"
+                    "STRUCTURAL cleanup deferred · reading · \(postIdsToRemove.count) rows stay [\(debugIDList(postIdsToRemove, ordered: existingPosts.map(\.id)))] · \(removalGeometry())"
                 )
-#endif
             }
-            postIdsToRemove = removableNow
+#endif
+            postIdsToRemove = []
             let kept = NXUnreadSeenReconciliation.unreadBookkeeping(
                 markedReadIDs: postIdsMarkedRead,
                 unreadCountUpdates: unreadCountUpdates,
-                allowsRowMutation: false,
-                removedIDs: removableNow
+                allowsRowMutation: false
             )
             postIdsMarkedRead = kept.markedReadIDs
             unreadCountUpdates = kept.unreadCountUpdates
@@ -982,15 +960,13 @@ class NXColumnViewModel: ObservableObject {
         }
 #endif
 
-        let shouldAnimateOffscreenRemoval = NXFeedViewport.shouldAnimateOffscreenRemoval(
-            removedPostIDs: postIdsToRemove,
-            visiblePostIDs: visiblePostIds,
-            hasParentUpdates: !parentUpdates.isEmpty,
-            isViewportMovingOrRecently: vmInner.isFeedViewportMovingOrRecently?() == true
-        )
-
         let applyUpdates = { [weak self] () -> [String] in
             guard let self else { return [] }
+            // The anchor coordinator may have queued this at top during a drag
+            // or restore. Recheck at execution time: the reader may now be elsewhere.
+            guard !self.isViewPaused, self.isFeedActuallyAtTop else {
+                return self.currentNRPostsOnScreen.map(\.id)
+            }
             self.vmInner.updateUnreadIds { unreadIds in
                 for postId in postIdsMarkedRead {
                     unreadIds[postId] = nil
@@ -1010,29 +986,21 @@ class NXColumnViewModel: ObservableObject {
                 resultingPosts = self.currentNRPostsOnScreen.filter {
                     !postIdsToRemove.contains($0.id)
                 }
-                if shouldAnimateOffscreenRemoval {
-                    // These rows are below the viewport. List can drop them
-                    // without moving the rows on screen.
-                    withAnimation {
-                        self.viewState = .posts(resultingPosts)
-                    }
-                } else {
-                    withTransaction(Transaction(animation: nil)) {
-                        self.viewState = .posts(resultingPosts)
-                    }
+                withTransaction(Transaction(animation: nil)) {
+                    self.viewState = .posts(resultingPosts)
                 }
             }
             self.vmInner.updateIsAtTopSubject.send()
 #if DEBUG
             let removedList = self.debugIDList(postIdsToRemove, ordered: existingPosts.map(\.id))
             self.recordFeedAction(
-                "seen reconciliation · marked \(postIdsMarkedRead.count) · removed \(postIdsToRemove.count) below [\(removedList)] · trimmed \(parentUpdates.count) · kept \(resultingPosts.count) · \(self.removalGeometry())"
+                "seen reconciliation · marked \(postIdsMarkedRead.count) · removed \(postIdsToRemove.count) [\(removedList)] · trimmed \(parentUpdates.count) · kept \(resultingPosts.count) · \(self.removalGeometry())"
             )
 #endif
             return resultingPosts.map(\.id)
         }
 
-        if ((!shouldAnimateOffscreenRemoval && !postIdsToRemove.isEmpty) || !parentUpdates.isEmpty),
+        if (!postIdsToRemove.isEmpty || !parentUpdates.isEmpty),
            let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
             let reason = !postIdsToRemove.isEmpty
                 ? NXFeedViewport.unreadRemovalCoverReason
@@ -4246,9 +4214,34 @@ class NXColumnViewModel: ObservableObject {
             alreadySeenNewerDisplayTask?.cancel()
             alreadySeenNewerDisplayTask = nil
         }
-        if (publishWhenPending || alreadySeenNewerCount > 0),
-           alreadySeenNewerCount != candidateIDs.count {
-            alreadySeenNewerCount = candidateIDs.count
+        if (publishWhenPending || requestedAlreadySeenNewerCount > 0),
+           requestedAlreadySeenNewerCount != candidateIDs.count {
+            setAlreadySeenNewerCount(candidateIDs.count)
+        }
+    }
+
+    /// The delayed banner is a real List row. Publish it inside the same anchored
+    /// transaction as a prepend, never directly from the timer or a posts didSet.
+    /// Recheck the generation after queued scrolling/restoration work finishes.
+    private func setAlreadySeenNewerCount(_ count: Int) {
+        requestedAlreadySeenNewerCount = count
+        alreadySeenBannerGeneration += 1
+        let generation = alreadySeenBannerGeneration
+        Task { @MainActor [weak self] in
+            guard let self, self.alreadySeenBannerGeneration == generation else { return }
+            let apply = { [weak self] () -> [String] in
+                guard let self else { return [] }
+                if self.alreadySeenBannerGeneration == generation {
+                    self.alreadySeenNewerCount = count
+                }
+                return self.currentNRPostsOnScreen.map(\.id)
+            }
+            if self.alreadySeenNewerCount != count,
+               let performUpdate = self.vmInner.performAnchoredFeedUpdate {
+                performUpdate(NXFeedViewport.bannerUpdateCoverReason, apply)
+            } else {
+                _ = apply()
+            }
         }
     }
 
@@ -4257,7 +4250,7 @@ class NXColumnViewModel: ObservableObject {
         alreadySeenNewerDisplayTask?.cancel()
         alreadySeenNewerDisplayTask = nil
         alreadySeenNewerCandidates = [:]
-        alreadySeenNewerCount = 0
+        setAlreadySeenNewerCount(0)
         isShowingAlreadySeenNewerPosts = false
     }
 

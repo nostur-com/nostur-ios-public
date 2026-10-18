@@ -24,6 +24,139 @@ private actor NXFeedTestGate {
 
 final class NXFeedViewportTests: XCTestCase {
 
+    @MainActor
+    func testIdleSeenCleanupKeepsRenderedRowsAndUnreadUntilTop() async throws {
+        _ = AppState.shared
+        _ = AccountsState.shared
+        let wasEnabled = SettingsStore.shared.appWideSeenTracker
+        SettingsStore.shared.appWideSeenTracker = true
+        defer { SettingsStore.shared.appWideSeenTracker = wasEnabled }
+        let posts = await bg().perform {
+            (1...12).map { index in
+                var event = NEvent(content: "Reading regression \(index)")
+                event.id = String(format: "%08x", index) + String(repeating: "0", count: 56)
+                let preview = createPreviewEvent(event)
+                defer { bg().delete(preview) }
+                return NRPost(event: preview, withFooter: false, withParents: false)
+            }
+        }
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 300)
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 300, height: 600), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        let source = NXFeedAppendTestSource()
+        source.count = posts.count
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 900
+        collection.layoutIfNeeded()
+        let vm = NXColumnViewModel()
+        vm.collectionView = collection
+        vm.viewState = .posts(posts)
+        vm.vmInner.unreadIds = Dictionary(uniqueKeysWithValues: posts.map { ($0.id, 1) })
+        vm.vmInner.isFeedViewportMovingOrRecently = { false }
+        let beforeIDs = posts.map(\.id)
+        let beforeUnread = vm.vmInner.unreadIds
+        var structuralUpdates = 0
+        vm.vmInner.performAnchoredFeedUpdate = { _, update in
+            structuralUpdates += 1
+            _ = update()
+        }
+        // Exactly the idle reconciliation in the reports: no finger down, seen
+        // rows below the viewport, with the reading post still in the list.
+        let seen = Set(posts.suffix(4).map(\.shortId))
+        vm.removeUnreadPostsAlreadyMarkedRead(seen)
+        XCTAssertEqual(vm.currentNRPostsOnScreen.map(\.id), beforeIDs)
+        XCTAssertEqual(vm.vmInner.unreadIds, beforeUnread)
+        XCTAssertEqual(structuralUpdates, 0)
+        XCTAssertEqual(collection.contentOffset.y, 900, accuracy: 0.5)
+        // A cleanup queued at top must recheck when it executes after scrolling.
+        var queued: (() -> [String])?
+        vm.vmInner.performAnchoredFeedUpdate = { _, update in queued = update }
+        collection.contentOffset.y = 0
+        collection.layoutIfNeeded()
+        vm.removeUnreadPostsAlreadyMarkedRead(seen)
+        XCTAssertNotNil(queued)
+        collection.contentOffset.y = 900
+        collection.layoutIfNeeded()
+        _ = queued?()
+        XCTAssertEqual(vm.currentNRPostsOnScreen.map(\.id), beforeIDs)
+        XCTAssertEqual(vm.vmInner.unreadIds, beforeUnread)
+        vm.vmInner.performAnchoredFeedUpdate = { _, update in
+            structuralUpdates += 1
+            _ = update()
+        }
+        collection.contentOffset.y = 0
+        collection.layoutIfNeeded()
+        vm.removeUnreadPostsAlreadyMarkedRead(seen)
+        XCTAssertLessThan(vm.currentNRPostsOnScreen.count, posts.count)
+        XCTAssertEqual(structuralUpdates, 1)
+    }
+
+    @MainActor
+    func testDelayedBannerInsertionPinsReadingRowWithoutChangingPostIDs() async throws {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 200)
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 300, height: 600), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        let source = NXFeedAppendTestSource()
+        source.count = 15
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 650
+        collection.layoutIfNeeded()
+        let ids = (0..<15).map { "post-\($0)" }
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        stabilizer.updateItemIDs(ids)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), "post-3")
+        stabilizer.performAnchored(reason: NXFeedViewport.bannerUpdateCoverReason) {
+            stabilizer.updateItemIDs(ids, leadingNonPostRowCount: 1)
+        }
+        // SwiftUI has not inserted the banner cell yet. The old layout must
+        // not be used with the new leading-row mapping or finish the settle.
+        try? await Task.sleep(nanoseconds: 160_000_000)
+        XCTAssertTrue(stabilizer.hasActivePrependCover)
+        XCTAssertEqual(collection.contentOffset.y, 650, accuracy: 0.5)
+        source.count += 1
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        try? await Task.sleep(nanoseconds: 250_000_000)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), "post-3")
+        XCTAssertEqual(collection.contentOffset.y, 850, accuracy: 0.5)
+        stabilizer.performAnchored(reason: NXFeedViewport.bannerUpdateCoverReason) {
+            stabilizer.updateItemIDs(ids, leadingNonPostRowCount: 0)
+        }
+        try? await Task.sleep(nanoseconds: 160_000_000)
+        XCTAssertTrue(stabilizer.hasActivePrependCover)
+        XCTAssertEqual(collection.contentOffset.y, 850, accuracy: 0.5)
+        source.count -= 1
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        try? await Task.sleep(nanoseconds: 250_000_000)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), "post-3")
+        XCTAssertEqual(collection.contentOffset.y, 650, accuracy: 0.5)
+        stabilizer.suspendPositionTracking()
+    }
+
     func testLastUnreadLeafBehindToolbarIsRemovedWhenReadElsewhere() {
         let isVisible = NXFeedViewport.isPostVisible(
             frame: CGRect(x: 0, y: 100, width: 300, height: 60),
@@ -112,51 +245,15 @@ final class NXFeedViewportTests: XCTestCase {
         XCTAssertEqual(applied.markedReadIDs, ["aba490e2"])
         XCTAssertEqual(applied.unreadCountUpdates, ["thread": 2])
 
-        // Read in the other column. A row below the viewport leaves, and its
-        // unread count leaves with it. A row above the viewport stays: that
-        // deletion is the Explore shift (parked anchor left 2206pt above).
-        let removed = NXUnreadSeenReconciliation.unreadBookkeeping(
-            markedReadIDs: ["below", "visible"],
+        // Cross-column seen state must not remove below-viewport rows or consume
+        // their unread counts merely because the scrolling cooldown expired.
+        let deferred = NXUnreadSeenReconciliation.unreadBookkeeping(
+            markedReadIDs: ["above", "visible", "below"],
             unreadCountUpdates: ["thread": 0],
-            allowsRowMutation: false,
-            removedIDs: ["below"]
+            allowsRowMutation: NXFeedStructuralUpdate.shouldMutateRows(isVisuallyAtTop: false)
         )
-        XCTAssertEqual(removed.markedReadIDs, ["below"])
-        XCTAssertTrue(removed.unreadCountUpdates.isEmpty)
-        let ordered = ["above", "visible", "below"]
-        XCTAssertEqual(
-            NXFeedViewport.rowIDsToRemoveWhileReading(
-                candidateIDs: ["above", "visible", "below"],
-                orderedPostIDs: ordered,
-                visiblePostIDs: ["visible"],
-                isViewportMovingOrRecently: false
-            ),
-            ["below"]
-        )
-        XCTAssertEqual(
-            NXFeedViewport.rowIDsAboveViewport(
-                candidateIDs: ["above", "visible", "below"],
-                orderedPostIDs: ordered,
-                visiblePostIDs: ["visible"]
-            ),
-            ["above"]
-        )
-        XCTAssertTrue(
-            NXFeedViewport.rowIDsToRemoveWhileReading(
-                candidateIDs: ["below"],
-                orderedPostIDs: ordered,
-                visiblePostIDs: ["visible"],
-                isViewportMovingOrRecently: true
-            ).isEmpty
-        )
-        XCTAssertTrue(
-            NXFeedViewport.rowIDsToRemoveWhileReading(
-                candidateIDs: ["above", "below"],
-                orderedPostIDs: ordered,
-                visiblePostIDs: [],
-                isViewportMovingOrRecently: false
-            ).isEmpty
-        )
+        XCTAssertTrue(deferred.markedReadIDs.isEmpty)
+        XCTAssertTrue(deferred.unreadCountUpdates.isEmpty)
     }
 
     func testSyncedSeenLeafRowCanBeRemovedWhileVisible() {
@@ -1016,44 +1113,6 @@ final class NXFeedViewportTests: XCTestCase {
         stabilizer.suspendPositionTracking()
     }
 
-    func testPureOffscreenRemovalUsesListAnimationWithoutViewportSettle() {
-        XCTAssertTrue(
-            NXFeedViewport.shouldAnimateOffscreenRemoval(
-                removedPostIDs: ["read-above"],
-                visiblePostIDs: ["reading", "below"],
-                hasParentUpdates: false
-            )
-        )
-    }
-
-    func testOffscreenRemovalDuringPostScrollCooldownUsesAnchoredQueue() {
-        XCTAssertFalse(
-            NXFeedViewport.shouldAnimateOffscreenRemoval(
-                removedPostIDs: ["read-above"],
-                visiblePostIDs: ["reading", "below"],
-                hasParentUpdates: false,
-                isViewportMovingOrRecently: true
-            )
-        )
-    }
-
-    func testVisibleRemovalOrRowResizeStillUsesAnchoredUpdate() {
-        XCTAssertFalse(
-            NXFeedViewport.shouldAnimateOffscreenRemoval(
-                removedPostIDs: ["reading"],
-                visiblePostIDs: ["reading", "below"],
-                hasParentUpdates: false
-            )
-        )
-        XCTAssertFalse(
-            NXFeedViewport.shouldAnimateOffscreenRemoval(
-                removedPostIDs: ["read-above"],
-                visiblePostIDs: ["reading", "below"],
-                hasParentUpdates: true
-            )
-        )
-    }
-
     func testUnreadCorrectionRejectsNonFiniteEstimatedGeometry() {
         XCTAssertTrue(NXUnreadNavigation.shouldCoverPostAnimationCorrection(misalignment: .nan))
         XCTAssertTrue(NXUnreadNavigation.shouldCoverPostAnimationCorrection(misalignment: .infinity))
@@ -1128,7 +1187,9 @@ final class NXFeedViewportTests: XCTestCase {
         // The live row must win over an older remembered unread landing.
         let unreadControl = UIView(frame: CGRect(x: 240, y: 130, width: 61, height: 36))
         window.addSubview(unreadControl)
-        let snapshotHost = NXFeedSnapshotHostView(frame: collection.bounds)
+        // A scroll view's bounds origin is its content offset. The overlay is
+        // a window sibling, so it needs the viewport rect in window coordinates.
+        let snapshotHost = NXFeedSnapshotHostView(frame: collection.convert(collection.bounds, to: window))
         snapshotHost.stabilizer = stabilizer
         window.insertSubview(snapshotHost, belowSubview: unreadControl)
         // Native navigation chrome and a dragged unread control stay above
