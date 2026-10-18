@@ -3,6 +3,45 @@ import XCTest
 
 final class NXAlreadySeenNewerPostsTests: XCTestCase {
     @MainActor
+    func testExplicitRevealInsertsUnreadPostWhileLatestPrependIsSuppressed() async {
+        _ = AppState.shared
+        _ = AccountsState.shared
+        let posts = await bg().perform {
+            ["a", "b"].map { character in
+                var event = NEvent(content: "Show again regression \(character)")
+                event.id = String(repeating: character, count: 64)
+                let preview = createPreviewEvent(event)
+                defer { bg().delete(preview) }
+                return NRPost(event: preview, withFooter: false)
+            }
+        }
+        let config = NXColumnConfig(id: "show-again-test", name: "Show again test")
+
+        // Exercise each independent gate, as well as both together.
+        for (hasUnreadEntry, suppressPrepend) in [(true, false), (false, true), (true, true)] {
+            let vm = NXColumnViewModel()
+            vm.viewState = .posts([posts[0]])
+            vm.latestSuppressPrepend = suppressPrepend
+            if hasUnreadEntry {
+                vm.vmInner.unreadIds = [posts[1].id: 1]
+            }
+            var completed = false
+            vm.putOnScreen([posts[1]], config: config, revealAtTop: true) {
+                completed = true
+            }
+
+            guard case .posts(let revealed) = vm.viewState else {
+                XCTFail("Reveal must keep the feed visible")
+                continue
+            }
+            XCTAssertEqual(revealed.map(\.id), [posts[1].id, posts[0].id])
+            XCTAssertEqual(vm.vmInner.scrollToIndexSubject.value, 0)
+            XCTAssertTrue(vm.vmInner.unreadIds.isEmpty)
+            XCTAssertTrue(completed)
+        }
+    }
+
+    @MainActor
     func testShowAgainKeepsRepliesWithMissingParentsWithoutStartingParentFetches() async {
         // Match app startup: these singletons initialize main-context state.
         _ = AppState.shared
@@ -85,6 +124,21 @@ final class NXAlreadySeenNewerPostsTests: XCTestCase {
                 now: now
             ),
             ["actually-hidden"]
+        )
+    }
+
+    func testExcludesRepostWhenItsTargetIsAlreadyInTheFeed() {
+        XCTAssertEqual(
+            NXAlreadySeenNewerPosts.candidateIDs(
+                from: [
+                    NXAlreadySeenNewerPostCandidate(id: "repost", createdAt: 9_900, repostedID: "visible"),
+                    NXAlreadySeenNewerPostCandidate(id: "hidden", createdAt: 9_800, repostedID: "unseen-target"),
+                ],
+                visibleCreatedAt: [7_000],
+                excludingIDs: ["visible"],
+                now: Date(timeIntervalSince1970: 10_000)
+            ),
+            ["hidden"]
         )
     }
 }

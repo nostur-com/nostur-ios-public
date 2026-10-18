@@ -4964,9 +4964,18 @@ extension NXColumnViewModel {
         let wotFilteredEvents: [Event] = ((wotEnabled || isMediaFeed)
             ? applyWoT(timeFilteredEvents, config: config)
             : timeFilteredEvents)
+        // The banner must only offer posts that the rendering pipeline can
+        // actually reveal. Muted posts remain hidden even after Show again.
         let alreadySeenCandidates = older ? [] : wotFilteredEvents
             .filter(isSeen)
-            .map { NXAlreadySeenNewerPostCandidate(id: $0.id, createdAt: $0.created_at) }
+            .filter { !$0.isMutedByWords }
+            .map {
+                NXAlreadySeenNewerPostCandidate(
+                    id: $0.id,
+                    createdAt: $0.created_at,
+                    repostedID: ($0.kind == 6 || $0.kind == 16) ? $0.firstQuoteId : nil
+                )
+            }
         let unseenEvents = wotFilteredEvents.filter { !isSeen($0) }
         let isHeldFirstPaint = !older
             && latestFirstPaintMinimum != nil
@@ -5216,7 +5225,10 @@ extension NXColumnViewModel {
             )
             
             // Somehow we still have duplicates here that should have been filtered in prev steps (bug?) so filter duplicates again here
-            let currentIdsOnScreen = Set(existingPosts.map { $0.id }).union(currentUnreadIdsOnScreen)
+            // Held newer posts already have unread entries without being in
+            // the List. An explicit reveal must still be allowed to insert them.
+            let currentIdsOnScreen = Set(existingPosts.map { $0.id })
+                .union(revealAtTop ? [] : currentUnreadIdsOnScreen)
             
             
             let onlyNewAddedPosts = addedPosts
@@ -5233,7 +5245,7 @@ extension NXColumnViewModel {
             FeedFetchDebug.shared.noteAccepted(speedTest, count: onlyNewAddedPosts.count)
 #endif
             
-            if !insertAtEnd && latestSuppressPrepend {
+            if !insertAtEnd && !revealAtTop && latestSuppressPrepend {
 #if DEBUG
                 L.og.debug("☘️☘️ \(config.name) putOnScreen skip prepend until latest fill finishes -[LOG]-")
 #endif

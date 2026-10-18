@@ -8,6 +8,7 @@ import Foundation
 struct NXAlreadySeenNewerPostCandidate: Hashable, Sendable {
     let id: String
     let createdAt: Int64
+    var repostedID: String? = nil
 }
 
 enum NXAlreadySeenNewerPosts {
@@ -30,6 +31,7 @@ enum NXAlreadySeenNewerPosts {
             .filter {
                 $0.createdAt > newestVisibleCreatedAt
                     && !excludingIDs.contains($0.id)
+                    && !($0.repostedID.map { excludingIDs.contains($0) } ?? false)
             }
             .sorted { $0.createdAt > $1.createdAt }
             .map(\.id)
