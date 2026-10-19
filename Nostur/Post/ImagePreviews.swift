@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import ImageIO
 
 struct ImagePreviews: View {
     @Binding var pastedImages: [PostedImageMeta]
@@ -79,10 +80,8 @@ struct ImagePreviews: View {
                     removeButton(for: pastedImage)
                 }
         }
-        else if let imageData = pastedImage.uiImage {
-            Image(uiImage: imageData)
-                .resizable()
-                .scaledToFit()
+        else {
+            ComposerPhotoPreview(image: pastedImage)
                 .overlay(alignment: .center) {
                     if pastedImage.isGifPlaceholder {
                         ProgressView()
@@ -163,6 +162,47 @@ struct ImagePreviews: View {
         .background(.black.opacity(0.65), in: RoundedRectangle(cornerRadius: 8))
         .padding(8)
     }
+}
+
+/// Upload progress changes only the overlays; photo decoding runs once per attachment.
+private struct ComposerPhotoPreview: View {
+    let image: PostedImageMeta
+    @State private var decodedImage: UIImage?
+
+    var body: some View {
+        Group {
+            if let decodedImage {
+                Image(uiImage: decodedImage)
+                    .resizable()
+                    .scaledToFit()
+            }
+            else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, minHeight: 100)
+            }
+        }
+        .task(id: image.uniqueId) {
+            let data = image.data
+            let result = await prepareComposerPhotoPreview(data: data)
+            guard !Task.isCancelled else { return }
+            decodedImage = result
+        }
+    }
+}
+
+/// Bound preview memory and decode pixels before handing the image to SwiftUI.
+func prepareComposerPhotoPreview(data: Data) async -> UIImage? {
+    await Task.detached(priority: .userInitiated) {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceThumbnailMaxPixelSize: 1600
+        ]
+        guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        return UIImage(cgImage: thumbnail)
+    }.value
 }
 
 struct ImagePreviews_Previews: PreviewProvider {

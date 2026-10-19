@@ -2613,6 +2613,7 @@ public func getUnsignedAuthorizationHeaderEvent96(pubkey: String, sha256hex: Str
 }
 
 
+@MainActor
 public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], videos: [PostedVideoMeta] = [], voiceMessage: VoiceRecording? = nil, typingTextModel: TypingTextModel, isVineVideoPost: Bool = false, uploadMethod: UploadMethod) async -> [(Data, String, String?, Int, NEvent)] {
     if let voiceMessage = voiceMessage {
         guard let recordingData = try? Data(contentsOf: voiceMessage.localFileURL) else { return [] }
@@ -2636,56 +2637,59 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
             
             let boundary = UUID().uuidString
             
-            var result: [(Data, String, String?, Int, NEvent)] = images
-                .compactMap({ (imageMeta: PostedImageMeta) -> (Data, String, String?, Int, NEvent)? in // Resize images
+            var result: [(Data, String, String?, Int, NEvent)] = await Task.detached(priority: .userInitiated) {
+                images.compactMap({ (imageMeta: PostedImageMeta) -> (Data, String, String?, Int, NEvent)? in // Resize images
+                    autoreleasepool {
                     
-                    // .GIF
-                    if imageMeta.type == .gif {
+                        // .GIF
+                        if imageMeta.type == .gif {
                         
-                        let filename = "media.gif"
-                        let contentType = contentType(for: filename)
-                        let httpBody = makeHttpBody(mediaData: imageMeta.data, contentType: contentType, boundary: boundary)
-                        let sha256hex = httpBody.sha256().hexEncodedString()
-                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
+                            let filename = "media.gif"
+                            let contentType = contentType(for: filename)
+                            let httpBody = makeHttpBody(mediaData: imageMeta.data, contentType: contentType, boundary: boundary)
+                            let sha256hex = httpBody.sha256().hexEncodedString()
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
                         
-                        // Resize first for faster blurhash
-                        if let scaledImage = UIImage(data: imageMeta.data) {
+                            // Resize first for faster blurhash
+                            if let scaledImage = UIImage(data: imageMeta.data) {
+                                let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
+                                let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
+
+                                return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
+                            }
+                        
+                            return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, unsignedAuthHeaderEvent)
+                        }
+                    
+                        // NOT .GIF
+                        guard let imageData = imageMeta.uiImage else { return nil }
+                        let scale = imageData.size.width > maxWidth ? imageData.size.width / maxWidth : 1
+                        let size = CGSize(width: imageData.size.width / scale, height: imageData.size.height / scale)
+                    
+                        let format = UIGraphicsImageRendererFormat()
+                        format.scale = 1 // 1x scale, for 2x use 2, and so on
+                        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+                        let scaledImage = renderer.image { _ in
+                            imageData.draw(in: CGRect(origin: .zero, size: size))
+                        }
+                    
+                        if let scaledData = scaledImage.jpegData(compressionQuality: 0.85) {
+                            // Resize first for faster blurhash
                             let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
                             let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-
-                            return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
+                        
+                            let filename = "media.jpg"
+                            let contentType = contentType(for: filename)
+                            let httpBody = makeHttpBody(mediaData: scaledData, contentType: contentType, boundary: boundary)
+                            let sha256hex = httpBody.sha256().hexEncodedString()
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
+                        
+                            return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
                         }
-                        
-                        return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, unsignedAuthHeaderEvent)
+                        return nil
                     }
-                    
-                    // NOT .GIF
-                    guard let imageData = imageMeta.uiImage else { return nil }
-                    let scale = imageData.size.width > maxWidth ? imageData.size.width / maxWidth : 1
-                    let size = CGSize(width: imageData.size.width / scale, height: imageData.size.height / scale)
-                    
-                    let format = UIGraphicsImageRendererFormat()
-                    format.scale = 1 // 1x scale, for 2x use 2, and so on
-                    let renderer = UIGraphicsImageRenderer(size: size, format: format)
-                    let scaledImage = renderer.image { _ in
-                        imageData.draw(in: CGRect(origin: .zero, size: size))
-                    }
-                    
-                    if let scaledData = scaledImage.jpegData(compressionQuality: 0.85) {
-                        // Resize first for faster blurhash
-                        let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
-                        let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-                        
-                        let filename = "media.jpg"
-                        let contentType = contentType(for: filename)
-                        let httpBody = makeHttpBody(mediaData: scaledData, contentType: contentType, boundary: boundary)
-                        let sha256hex = httpBody.sha256().hexEncodedString()
-                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
-                        
-                        return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
-                    }
-                    return nil
                 })
+            }.value
             
             for videoMeta in videos {
                 let compressedURL = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
@@ -2723,49 +2727,52 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
             return result
         }
         else { // case == .blossom
-            var result: [(Data, String, String?, Int, NEvent)] = images
-                .compactMap { imageMeta in // Resize images
+            var result: [(Data, String, String?, Int, NEvent)] = await Task.detached(priority: .userInitiated) {
+                images.compactMap { imageMeta -> (Data, String, String?, Int, NEvent)? in // Resize images
+                    autoreleasepool {
                     
-                    // .GIF
-                    if imageMeta.type == .gif {
-                        // Resize first for faster blurhash
-                        if let scaledImage = UIImage(data: imageMeta.data) {
+                        // .GIF
+                        if imageMeta.type == .gif {
+                            // Resize first for faster blurhash
+                            if let scaledImage = UIImage(data: imageMeta.data) {
+                                let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
+                                let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
+                            
+                                let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
+                            
+                                return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
+                            }
+                        
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
+                        
+                            return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, unsignedAuthHeaderEvent)
+                        }
+                    
+                        // NOT .GIF
+                        guard let imageData = imageMeta.uiImage else { return nil }
+                        let scale = imageData.size.width > maxWidth ? imageData.size.width / maxWidth : 1
+                        let size = CGSize(width: imageData.size.width / scale, height: imageData.size.height / scale)
+                    
+                        let format = UIGraphicsImageRendererFormat()
+                        format.scale = 1 // 1x scale, for 2x use 2, and so on
+                        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+                        let scaledImage = renderer.image { _ in
+                            imageData.draw(in: CGRect(origin: .zero, size: size))
+                        }
+                    
+                        if let scaledData = scaledImage.jpegData(compressionQuality: 0.85) {
+                            // Resize first for faster blurhash
                             let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
                             let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-                            
-                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
-                            
-                            return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
+                        
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: scaledData.sha256().hexEncodedString())
+                        
+                            return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
                         }
-                        
-                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
-                        
-                        return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, unsignedAuthHeaderEvent)
+                        return nil
                     }
-                    
-                    // NOT .GIF
-                    guard let imageData = imageMeta.uiImage else { return nil }
-                    let scale = imageData.size.width > maxWidth ? imageData.size.width / maxWidth : 1
-                    let size = CGSize(width: imageData.size.width / scale, height: imageData.size.height / scale)
-                    
-                    let format = UIGraphicsImageRendererFormat()
-                    format.scale = 1 // 1x scale, for 2x use 2, and so on
-                    let renderer = UIGraphicsImageRenderer(size: size, format: format)
-                    let scaledImage = renderer.image { _ in
-                        imageData.draw(in: CGRect(origin: .zero, size: size))
-                    }
-                    
-                    if let scaledData = scaledImage.jpegData(compressionQuality: 0.85) {
-                        // Resize first for faster blurhash
-                        let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
-                        let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-                        
-                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: scaledData.sha256().hexEncodedString())
-                        
-                        return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
-                    }
-                    return nil
                 }
+            }.value
             
             for videoMeta in videos {
                 let compressedURL = TemporaryMediaFiles.shared.makeURL(extension: "mp4")

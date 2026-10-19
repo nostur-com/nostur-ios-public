@@ -89,7 +89,18 @@ func uploadImages(images: [PostedImageMeta]) -> AnyPublisher<[String], Error> {
         .eraseToAnyPublisher()
 }
 
+// Prepare one legacy upload at a time to bound full-resolution image memory.
+private let imageUploadPreparationQueue = DispatchQueue(label: "com.nostur.image-upload-preparation", qos: .userInitiated)
+
 func uploadImage(image: PostedImageMeta, maxWidth:CGFloat = 2800.0) -> AnyPublisher<String, Error> {
+    Deferred {
+        preparedImageUpload(image: image, maxWidth: maxWidth)
+    }
+    .subscribe(on: imageUploadPreparationQueue)
+    .eraseToAnyPublisher()
+}
+
+private func preparedImageUpload(image: PostedImageMeta, maxWidth: CGFloat) -> AnyPublisher<String, Error> {
     
     if image.type == .gif {
         let request = SettingsStore.shared.defaultMediaUploadService.request(image.data, false)
