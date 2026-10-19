@@ -104,6 +104,7 @@ struct PostPreview: View {
         }
         .navigationTitle(String(localized: "Preview", comment: "Navigation title for Post Preview screen"))
         .navigationBarTitleDisplayMode(.inline)
+        .interactiveDismissDisabled()
         .background(theme.listBackground)
         .frame(width: availableWidth)
         .fixedSize(horizontal: true, vertical: false)

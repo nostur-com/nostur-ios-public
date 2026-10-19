@@ -187,7 +187,7 @@ func completeBlossomPostUpload(
     let contentType = ["image/", "video/", "audio/"].contains(where: { serverType.hasPrefix($0) })
         ? serverType : (item.contentType ?? "application/octet-stream")
     if response.metadata.needsDownload(contentType: contentType) {
-        item.state = .processing(percentage: 0)
+        item.state = .processing(percentage: nil)
     }
     let completed = try await response.metadata.completing(from: url, contentType: contentType, download: download)
     try Task.checkCancellation()
@@ -211,10 +211,10 @@ func uploadBlossomPostPublisher(for item: BlossomUploadItem, server: URL) -> Any
                     request.setValue(item.contentType, forHTTPHeaderField: "Content-Type")
                     request.setValue(item.authorizationHeader, forHTTPHeaderField: "Authorization")
                     request.setValue(item.sha256, forHTTPHeaderField: "X-SHA-256")
-                    request.httpBody = item.mediaData
-                    let session = URLSession(configuration: .default, delegate: item, delegateQueue: nil)
+                    let progressDelegate = PostMediaUploadProgressDelegate(item: item)
+                    let session = URLSession(configuration: .default)
                     defer { session.finishTasksAndInvalidate() }
-                    let (data, response) = try await session.data(for: request)
+                    let (data, response) = try await session.upload(for: request, from: item.mediaData, delegate: progressDelegate)
                     guard let response = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
                     switch response.statusCode {
                     case 200, 201, 202: break

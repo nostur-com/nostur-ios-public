@@ -21,7 +21,7 @@ struct ComposerImageUploadProgress: View {
         let failedCount = currentStates.filter { $0.isFailed }.count
         let progress = currentStates.reduce(0.0) { total, state in
             switch state {
-            case .uploaded: return total + 1
+            case .uploaded, .processing: return total + 1
             case .uploading(let percentage): return total + Double(percentage ?? 0) / 100
             default: return total
             }
@@ -33,6 +33,13 @@ struct ComposerImageUploadProgress: View {
                      comment: "Photo upload progress: completed photos followed by total photos.")
                     .font(.subheadline)
                 ProgressView(value: progress, total: Double(images.count))
+                if currentStates.contains(where: { if case .processing = $0 { return true }; return false }) {
+                    HStack {
+                        ProgressView()
+                        Text("Processing uploaded photos…", comment: "Upload status while checking the server's processed photos.")
+                            .font(.caption)
+                    }
+                }
                 if failedCount > 0 {
                     Text("\(failedCount) photos failed to upload",
                          comment: "Number of photos that need another upload attempt.")

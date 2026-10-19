@@ -537,14 +537,16 @@ public final class NewPostModel: ObservableObject {
 
                 for (imageId, uploadItem) in uploadItemById {
                     let stateCancellable = uploadItem.$state
-                        .receive(on: RunLoop.main)
+                        .receive(on: DispatchQueue.main)
                         .sink { [weak self] state in
                             guard let self else { return }
                             switch state {
                             case .initializing:
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .preparing
-                            case .uploading(let percentage), .processing(let percentage):
+                            case .uploading(let percentage):
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .uploading(percentage: percentage)
+                            case .processing(let percentage):
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .processing(percentage: percentage)
                             case .success:
                                 break // The completed publisher stores metadata before marking the image uploaded.
                             case .error(let message):
@@ -555,7 +557,7 @@ public final class NewPostModel: ObservableObject {
                     self.subscriptions.insert(stateCancellable)
 
                     let uploadCancellable = uploadBlossomPostPublisher(for: uploadItem, server: blossomServerURL)
-                        .receive(on: RunLoop.main)
+                        .receive(on: DispatchQueue.main)
                         .sink(receiveCompletion: { [weak self] result in
                             guard let self else { return }
                             self.imageUploadCancellablesById[imageId] = nil
@@ -801,14 +803,16 @@ public final class NewPostModel: ObservableObject {
 
                 for (imageId, mediaRequestBag) in mediaRequestBagsById {
                     let stateCancellable = mediaRequestBag.$state
-                        .receive(on: RunLoop.main)
+                        .receive(on: DispatchQueue.main)
                         .sink { [weak self] state in
                             guard let self else { return }
                             switch state {
                             case .initializing:
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .preparing
-                            case .uploading(let percentage), .processing(let percentage):
+                            case .uploading(let percentage):
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .uploading(percentage: percentage)
+                            case .processing(let percentage):
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .processing(percentage: percentage)
                             case .success:
                                 guard let url = mediaRequestBag.downloadUrl else { return }
                                 self.uploadedImageImetasById[imageId] = Imeta(
@@ -833,8 +837,8 @@ public final class NewPostModel: ObservableObject {
                         }
                     self.subscriptions.insert(stateCancellable)
 
-                    let uploadCancellable = self.uploader.uploadingPublisher(for: mediaRequestBag)
-                        .receive(on: RunLoop.main)
+                    let uploadCancellable = uploadNip96PostPublisher(for: mediaRequestBag)
+                        .receive(on: DispatchQueue.main)
                         .sink(receiveCompletion: { [weak self] result in
                             guard let self else { return }
                             self.imageUploadCancellablesById[imageId] = nil
@@ -885,7 +889,7 @@ public final class NewPostModel: ObservableObject {
             typingTextModel.pastedImageUploadStates[image.uniqueId] = .uploading(percentage: nil)
 
             let uploadCancellable = uploadImage(image: image)
-                .receive(on: RunLoop.main)
+                .receive(on: DispatchQueue.main)
                 .sink(receiveCompletion: { [weak self] result in
                     guard let self else { return }
                     self.imageUploadCancellablesById[image.uniqueId] = nil

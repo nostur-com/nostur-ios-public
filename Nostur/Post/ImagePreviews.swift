@@ -129,6 +129,8 @@ struct ImagePreviews: View {
                 uploadBadge(title: "Preparing", systemImage: nil, progress: nil)
             case .uploading(let percentage):
                 uploadBadge(title: percentage.map { "\($0)%" } ?? "Uploading", systemImage: nil, progress: percentage)
+            case .processing(let percentage):
+                uploadBadge(title: String(localized: "Processing"), systemImage: nil, progress: percentage)
             case .uploaded:
                 uploadBadge(title: "Uploaded", systemImage: "checkmark.circle.fill", progress: 100)
             case .failed(let message):

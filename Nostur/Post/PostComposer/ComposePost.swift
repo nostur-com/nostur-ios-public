@@ -655,6 +655,7 @@ struct ComposePost: View {
                 ProgressView()
             }
         }
+        .interactiveDismissDisabled()
         .onAppear {
             Importer.shared.delayProcessing()
             guard !didLoad else { return }
