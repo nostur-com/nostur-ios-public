@@ -544,9 +544,9 @@ public final class NewPostModel: ObservableObject {
                             case .initializing:
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .preparing
                             case .uploading(let percentage):
-                                self.typingTextModel.pastedImageUploadStates[imageId] = .uploading(percentage: percentage)
-                            case .processing(let percentage):
-                                self.typingTextModel.pastedImageUploadStates[imageId] = .processing(percentage: percentage)
+                                self.typingTextModel.pastedImageUploadStates[imageId] = percentage == 100 ? .waitingForServer : .uploading(percentage: percentage)
+                            case .processing:
+                                self.typingTextModel.pastedImageUploadStates[imageId] = .readingDimensions
                             case .success:
                                 break // The completed publisher stores metadata before marking the image uploaded.
                             case .error(let message):
@@ -810,7 +810,7 @@ public final class NewPostModel: ObservableObject {
                             case .initializing:
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .preparing
                             case .uploading(let percentage):
-                                self.typingTextModel.pastedImageUploadStates[imageId] = .uploading(percentage: percentage)
+                                self.typingTextModel.pastedImageUploadStates[imageId] = percentage == 100 ? .waitingForServer : .uploading(percentage: percentage)
                             case .processing(let percentage):
                                 self.typingTextModel.pastedImageUploadStates[imageId] = .processing(percentage: percentage)
                             case .success:

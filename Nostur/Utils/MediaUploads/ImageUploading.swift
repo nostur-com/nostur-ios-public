@@ -15,6 +15,8 @@ public enum ComposerMediaUploadState: Equatable, Hashable {
     case idle
     case preparing
     case uploading(percentage: Int?)
+    case waitingForServer
+    case readingDimensions
     case processing(percentage: Int?)
     case uploaded
     case failed(String)
@@ -26,7 +28,7 @@ public enum ComposerMediaUploadState: Equatable, Hashable {
 
     var isActive: Bool {
         switch self {
-        case .preparing, .uploading, .processing:
+        case .preparing, .uploading, .waitingForServer, .readingDimensions, .processing:
             return true
         default:
             return false

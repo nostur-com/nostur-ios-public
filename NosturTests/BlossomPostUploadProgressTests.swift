@@ -32,20 +32,20 @@ final class BlossomPostUploadProgressTests: XCTestCase {
         let serverURL = URL(string: "http://127.0.0.1:\(port.rawValue)")!
         bag?.apiUrl = serverURL.appendingPathComponent("upload")
         let intermediate = expectation(description: "Progress between 0 and 100")
-        let processing = expectation(description: "Transfer complete while server is still processing")
+        let responseWait = expectation(description: "Transfer complete before the HTTP response")
         let completed = expectation(description: "Upload completed")
         var sawIntermediate = false
-        var sawProcessing = false
+        var sawResponseWait = false
         let states = bag.map { $0.$state.eraseToAnyPublisher() } ?? item.$state.eraseToAnyPublisher()
         let observation = states.sink { state in
             if case .uploading(let percentage) = state, let percentage, (1..<100).contains(percentage), !sawIntermediate {
                 sawIntermediate = true
                 intermediate.fulfill()
             }
-            if case .processing = state, !sawProcessing {
-                sawProcessing = true
+            if case .uploading(percentage: 100) = state, !sawResponseWait {
+                sawResponseWait = true
                 XCTAssertNil(bag?.downloadUrl ?? item.downloadUrl)
-                processing.fulfill()
+                responseWait.fulfill()
             }
         }
         let publisher = bag.map { uploadNip96PostPublisher(for: $0).map(\.downloadUrl).eraseToAnyPublisher() }
@@ -57,7 +57,7 @@ final class BlossomPostUploadProgressTests: XCTestCase {
             }, receiveValue: { result in
                 XCTAssertEqual(result, "https://media.example/photo.jpg")
             })
-        await fulfillment(of: [intermediate, processing, completed], timeout: 15)
+        await fulfillment(of: [intermediate, responseWait, completed], timeout: 15)
         withExtendedLifetime((observation, upload)) {}
         XCTAssertTrue(bag?.finished ?? item.finished)
         if omitMetadata {
@@ -65,22 +65,41 @@ final class BlossomPostUploadProgressTests: XCTestCase {
         }
     }
 
-    func testSmallUploadDoesNotDiscardTheOnlyProgressCallback() async {
+    func testSmallUploadWaitsForResponseAfterOnlyProgressCallback() async {
         let item = BlossomUploadItem(data: Data(repeating: 42, count: 100), authorizationHeader: "")
         item.state = .uploading(percentage: 0)
         let delegate = PostMediaUploadProgressDelegate(item: item)
-        let processing = expectation(description: "Single-chunk upload enters processing")
+        let responseWait = expectation(description: "Single-chunk upload waits for server response")
         let observation = item.$state.sink { state in
-            if case .processing = state { processing.fulfill() }
+            if case .uploading(percentage: 100) = state { responseWait.fulfill() }
+            if case .processing = state { XCTFail("Body completion must not claim server processing") }
         }
         let session = URLSession(configuration: .ephemeral)
         defer { session.invalidateAndCancel() }
         let task = session.dataTask(with: URL(string: "https://example.com/upload")!)
         delegate.urlSession(session, task: task, didSendBodyData: 100, totalBytesSent: 100, totalBytesExpectedToSend: 100)
-        await fulfillment(of: [processing], timeout: 2)
+        await fulfillment(of: [responseWait], timeout: 2)
         withExtendedLifetime(observation) {}
         XCTAssertFalse(item.finished)
-        XCTAssertTrue(ComposerMediaUploadState.processing(percentage: nil).isActive)
+        XCTAssertTrue(ComposerMediaUploadState.waitingForServer.isActive)
+        XCTAssertTrue(ComposerMediaUploadState.readingDimensions.isActive)
+    }
+
+    func testAlmostCompleteBodyDoesNotClaimAllBytesWereSent() async {
+        let item = BlossomUploadItem(data: Data(repeating: 42, count: 1000), authorizationHeader: "")
+        item.state = .uploading(percentage: 0)
+        let delegate = PostMediaUploadProgressDelegate(item: item)
+        let progress = expectation(description: "Last incomplete chunk stays below 100 percent")
+        let observation = item.$state.sink { state in
+            if case .uploading(percentage: 99) = state { progress.fulfill() }
+            if case .uploading(percentage: 100) = state { XCTFail("One byte still needs sending") }
+        }
+        let session = URLSession(configuration: .ephemeral)
+        defer { session.invalidateAndCancel() }
+        let task = session.dataTask(with: URL(string: "https://example.com/upload")!)
+        delegate.urlSession(session, task: task, didSendBodyData: 999, totalBytesSent: 999, totalBytesExpectedToSend: 1000)
+        await fulfillment(of: [progress], timeout: 2)
+        withExtendedLifetime(observation) {}
     }
 
     func testLateProgressCannotOverwriteProcessedResult() async {

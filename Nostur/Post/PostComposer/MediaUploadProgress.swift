@@ -17,16 +17,16 @@ struct ComposerImageUploadProgress: View {
 
     var body: some View {
         let currentStates = images.compactMap { states[$0.uniqueId] }
-        let uploadedCount = currentStates.filter {
+        let sentCount = currentStates.filter {
             switch $0 {
-            case .processing, .uploaded: return true
+            case .waitingForServer, .readingDimensions, .processing, .uploaded: return true
             default: return false
             }
         }.count
         let failedCount = currentStates.filter { $0.isFailed }.count
         let progress = currentStates.reduce(0.0) { total, state in
             switch state {
-            case .uploaded, .processing: return total + 1
+            case .uploaded, .waitingForServer, .readingDimensions, .processing: return total + 1
             case .uploading(let percentage): return total + Double(percentage ?? 0) / 100
             default: return total
             }
@@ -34,14 +34,28 @@ struct ComposerImageUploadProgress: View {
 
         if !images.isEmpty && !currentStates.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Uploaded \(uploadedCount) of \(images.count) photos",
-                     comment: "Photo upload progress: transferred photos followed by total photos, including photos still being finalized.")
+                Text("Sent \(sentCount) of \(images.count) photos",
+                     comment: "Photo upload progress: photos whose bytes have been sent, followed by the total. The server may not have replied yet.")
                     .font(.subheadline)
                 ProgressView(value: progress, total: Double(images.count))
+                if currentStates.contains(.waitingForServer) {
+                    HStack {
+                        ProgressView()
+                        Text("Waiting for photo server response…", comment: "Photo bytes have been sent; the upload server has not replied yet.")
+                            .font(.caption)
+                    }
+                }
+                if currentStates.contains(.readingDimensions) {
+                    HStack {
+                        ProgressView()
+                        Text("Downloading resized photos to read dimensions…", comment: "Blossom /media omitted output dimensions, so the processed file is being downloaded.")
+                            .font(.caption)
+                    }
+                }
                 if currentStates.contains(where: { if case .processing = $0 { return true }; return false }) {
                     HStack {
                         ProgressView()
-                        Text("Processing uploaded photos…", comment: "Upload status while checking the server's processed photos.")
+                        Text("Photo server is processing uploads…", comment: "The NIP-96 server explicitly reported that it is still processing uploaded files.")
                             .font(.caption)
                     }
                 }

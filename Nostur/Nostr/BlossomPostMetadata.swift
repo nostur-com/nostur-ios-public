@@ -190,6 +190,7 @@ struct BlossomPostUploadResponse: Decodable {
 func completeBlossomPostUpload(
     _ item: BlossomUploadItem,
     response: BlossomPostUploadResponse,
+    trace: PostMediaUploadTrace? = nil,
     download: @escaping @Sendable (URLRequest) async throws -> (URL, URLResponse) = { try await URLSession.shared.download(for: $0) }
 ) async throws {
     guard let url = URL(string: response.downloadURL), ["https", "http"].contains(url.scheme?.lowercased() ?? "") else {
@@ -204,7 +205,9 @@ func completeBlossomPostUpload(
         || servedType.hasPrefix("image/") || servedType.hasPrefix("video/")
     if item.verb == .media && metadata.dim == nil && isVisual {
         item.state = .processing(percentage: nil)
+        trace?.record("/media response omitted dimensions; output download started")
         metadata.dim = try await BlossomPostMetadata.processedDimensions(from: url, contentType: servedType, download: download)
+        trace?.record("output download and dimension reading finished")
     }
     else if item.verb != .media {
         metadata.dim = metadata.dim ?? item.dim
@@ -212,17 +215,20 @@ func completeBlossomPostUpload(
     let completed = try await metadata.completing(
         fromLocalData: item.mediaData, contentType: localType
     )
+    trace?.record("local preview metadata finished")
     try Task.checkCancellation()
     item.sha256processed = completed.hash
     item.dim = completed.dim
     item.blurhash = completed.blurhash
     item.downloadUrl = response.downloadURL
     item.state = .success(response.downloadURL)
+    trace?.record("photo ready to publish")
 }
 
 /// Finish the upload using server metadata and optional local preview metadata.
 func uploadBlossomPostPublisher(for item: BlossomUploadItem, server: URL) -> AnyPublisher<BlossomUploadItem, Error> {
     Deferred {
+        let trace = PostMediaUploadTrace()
         var task: Task<Void, Never>?
         let future = Future<BlossomUploadItem, Error> { promise in
             task = Task { @MainActor in
@@ -233,21 +239,25 @@ func uploadBlossomPostPublisher(for item: BlossomUploadItem, server: URL) -> Any
                     request.setValue(item.contentType, forHTTPHeaderField: "Content-Type")
                     request.setValue(item.authorizationHeader, forHTTPHeaderField: "Authorization")
                     request.setValue(item.sha256, forHTTPHeaderField: "X-SHA-256")
-                    let progressDelegate = PostMediaUploadProgressDelegate(item: item)
+                    let progressDelegate = PostMediaUploadProgressDelegate(item: item, trace: trace)
                     let session = URLSession(configuration: .default)
                     defer { session.finishTasksAndInvalidate() }
+                    trace.record("Blossom /\(item.verb == .media ? "media" : "upload") request started")
                     let (data, response) = try await session.upload(for: request, from: item.mediaData, delegate: progressDelegate)
                     guard let response = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+                    trace.record("HTTP response \(response.statusCode) received")
                     switch response.statusCode {
                     case 200, 201, 202: break
                     case 401, 403: throw URLError(.userAuthenticationRequired)
                     default: throw URLError(.badServerResponse)
                     }
                     let result = try JSONDecoder().decode(BlossomPostUploadResponse.self, from: data)
-                    try await completeBlossomPostUpload(item, response: result)
+                    trace.record("reply decoded: dimensions=\(result.metadata.dim != nil), sha256=\(result.metadata.hash != nil), blurhash=\(result.metadata.blurhash != nil)")
+                    try await completeBlossomPostUpload(item, response: result, trace: trace)
                     promise(.success(item))
                 }
                 catch {
+                    trace.record("failed, code \((error as NSError).code)")
                     item.state = .error(message: error.localizedDescription)
                     promise(.failure(error))
                 }
