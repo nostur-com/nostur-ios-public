@@ -104,7 +104,10 @@ struct GalleryFullScreenSwiper: View {
         // Keep adjacent pages out of asymmetric system-bar safe areas.
         .clipped()
         .scrollDisabled(items.count == 1 || scale > 1.0 || isDraggingToDismiss)
-        .background(Color.black.opacity(isDismissing ? 0 : 1 - (0.5 * dismissProgress)))
+        .background {
+            Color.black.opacity(isDismissing ? 0 : 1 - (0.5 * dismissProgress))
+                .ignoresSafeArea()
+        }
         .overlay(alignment: .leading) { navigationLeftButton }
         .overlay(alignment: .trailing) { navigationRightButton }
         .overlay(alignment: .topTrailing) { saveButton }
@@ -192,7 +195,10 @@ struct GalleryFullScreenSwiper: View {
         .scrollDisabledCompat(items.count == 1 || scale > 1.0)
         .frame(width: fullScreenSize.width, height: fullScreenSize.height)
         .clipped()
-        .background(Color.black.opacity(1 - dismissProgress))
+        .background {
+            Color.black.opacity(1 - dismissProgress)
+                .ignoresSafeArea()
+        }
         .overlay(alignment: .leading) { navigationLeftButton }
         .overlay(alignment: .trailing) { navigationRightButton }
         .overlay(alignment: .topTrailing) { saveButton }
