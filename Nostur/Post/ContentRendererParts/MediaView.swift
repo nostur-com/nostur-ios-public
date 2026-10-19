@@ -15,9 +15,14 @@ struct MediaFrameLayout {
     let height: CGFloat
     let contentMode: ContentMode
 
-    init(availableWidth: CGFloat, aspect: CGFloat, placeholderAspect: CGFloat?, maxHeight: CGFloat, contentMode: ContentMode, fullScreen: Bool = false) {
+    init(availableWidth: CGFloat, aspect: CGFloat, placeholderAspect: CGFloat?, maxHeight: CGFloat, contentMode: ContentMode, fullScreen: Bool = false, keepsPlaceholderHeight: Bool = false) {
         let aspect = aspect.isFinite && aspect > 0 ? aspect : 4 / 3
-        if contentMode == .fill {
+        if keepsPlaceholderHeight {
+            // Reserve the loading frame, but show the entire decoded image inside it.
+            let fixedAspect = placeholderAspect.flatMap { $0.isFinite && $0 > 0 ? $0 : nil } ?? 4 / 3
+            height = min(maxHeight, availableWidth / fixedAspect)
+            self.contentMode = .fit
+        } else if contentMode == .fill {
             let fillAspect = placeholderAspect.flatMap { $0.isFinite && $0 > 0 ? $0 : nil }
             height = min(maxHeight, fillAspect.map { availableWidth / $0 } ?? maxHeight)
             self.contentMode = .fill
@@ -127,10 +132,11 @@ struct MediaPlaceholder: View {
             aspect: MediaFrameLayout.aspect(for: realDimensions)
                 ?? MediaFrameLayout.aspect(for: galleryItem.dimensions)
                 ?? placeholderAspect ?? 4 / 3,
-            placeholderAspect: keepsPlaceholderHeight ? (placeholderAspect ?? 4 / 3) : placeholderAspect,
+            placeholderAspect: placeholderAspect,
             maxHeight: maxHeight,
-            contentMode: keepsPlaceholderHeight ? .fill : contentMode,
-            fullScreen: fullScreen
+            contentMode: contentMode,
+            fullScreen: fullScreen,
+            keepsPlaceholderHeight: keepsPlaceholderHeight
         )
     }
 
