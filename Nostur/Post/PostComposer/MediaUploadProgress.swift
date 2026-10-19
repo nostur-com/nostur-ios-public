@@ -8,6 +8,48 @@
 import SwiftUI
 import NostrEssentials
 
+/// Shared photo upload feedback for the composer and its post preview.
+struct ComposerImageUploadProgress: View {
+    let images: [PostedImageMeta]
+    let states: [String: ComposerMediaUploadState]
+    let isBusy: Bool
+    let onRetry: () -> Void
+
+    var body: some View {
+        let currentStates = images.compactMap { states[$0.uniqueId] }
+        let uploadedCount = currentStates.filter { $0 == .uploaded }.count
+        let failedCount = currentStates.filter { $0.isFailed }.count
+        let progress = currentStates.reduce(0.0) { total, state in
+            switch state {
+            case .uploaded: return total + 1
+            case .uploading(let percentage): return total + Double(percentage ?? 0) / 100
+            default: return total
+            }
+        }
+
+        if !images.isEmpty && !currentStates.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Uploaded \(uploadedCount) of \(images.count) photos",
+                     comment: "Photo upload progress: completed photos followed by total photos.")
+                    .font(.subheadline)
+                ProgressView(value: progress, total: Double(images.count))
+                if failedCount > 0 {
+                    Text("\(failedCount) photos failed to upload",
+                         comment: "Number of photos that need another upload attempt.")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                    Button(action: onRetry) {
+                        Label("Retry failed uploads", systemImage: "arrow.clockwise")
+                    }
+                    .accessibilityHint("Resumes posting after uploading the remaining photos")
+                    .disabled(isBusy)
+                }
+            }
+            .padding(10)
+        }
+    }
+}
+
 struct MediaUploadProgress: View {
     @ObservedObject public var uploader: Nip96Uploader
     

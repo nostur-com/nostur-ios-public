@@ -273,6 +273,12 @@ struct Entry: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 6)
             }
+            ComposerImageUploadProgress(
+                images: typingTextModel.pastedImages,
+                states: typingTextModel.pastedImageUploadStates,
+                isBusy: typingTextModel.uploading || typingTextModel.sending,
+                onRetry: dispatchSend
+            )
         }
         .modifier {
             if #available(iOS 26.0, *) {

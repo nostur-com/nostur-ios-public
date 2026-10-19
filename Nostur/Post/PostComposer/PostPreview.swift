@@ -69,10 +69,20 @@ struct PostPreview: View {
             guard let (url, metadata) = notification.object as? (String, iMetaInfo) else { return }
             vm.remoteIMetas[url] = metadata
         }
-        .overlay(alignment: .bottom) {
-            MediaUploadProgress(uploader: vm.uploader) // @TODO: Make progress independent of Uploader type (NIP96 / Blossom)
-                .frame(height: Double(vm.uploader.queued.count * 38))
-                .background(theme.listBackground)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                ComposerImageUploadProgress(
+                    images: typingTextModel.pastedImages,
+                    states: typingTextModel.pastedImageUploadStates,
+                    isBusy: typingTextModel.uploading || typingTextModel.sending,
+                    onRetry: dispatchSend
+                )
+                if typingTextModel.pastedImageUploadStates.isEmpty {
+                    MediaUploadProgress(uploader: vm.uploader)
+                        .frame(height: Double(vm.uploader.queued.count * 38))
+                }
+            }
+            .background(theme.listBackground)
         }
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
