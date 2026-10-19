@@ -17,7 +17,12 @@ struct ComposerImageUploadProgress: View {
 
     var body: some View {
         let currentStates = images.compactMap { states[$0.uniqueId] }
-        let uploadedCount = currentStates.filter { $0 == .uploaded }.count
+        let uploadedCount = currentStates.filter {
+            switch $0 {
+            case .processing, .uploaded: return true
+            default: return false
+            }
+        }.count
         let failedCount = currentStates.filter { $0.isFailed }.count
         let progress = currentStates.reduce(0.0) { total, state in
             switch state {
@@ -30,7 +35,7 @@ struct ComposerImageUploadProgress: View {
         if !images.isEmpty && !currentStates.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Uploaded \(uploadedCount) of \(images.count) photos",
-                     comment: "Photo upload progress: completed photos followed by total photos.")
+                     comment: "Photo upload progress: transferred photos followed by total photos, including photos still being finalized.")
                     .font(.subheadline)
                 ProgressView(value: progress, total: Double(images.count))
                 if currentStates.contains(where: { if case .processing = $0 { return true }; return false }) {

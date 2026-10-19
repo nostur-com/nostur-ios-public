@@ -15,11 +15,15 @@ final class BlossomPostUploadProgressTests: XCTestCase {
         try await verifyIntermediateProgress(useNip96: true)
     }
 
-    private func verifyIntermediateProgress(useNip96: Bool) async throws {
+    func testUploadEndpointMissingMetadataDoesNotBlockCompletedUpload() async throws {
+        try await verifyIntermediateProgress(useNip96: false, omitMetadata: true)
+    }
+
+    private func verifyIntermediateProgress(useNip96: Bool, omitMetadata: Bool = false) async throws {
         let body = Data(repeating: 42, count: 8 * 1024 * 1024)
-        let item = BlossomUploadItem(data: body, contentType: "image/jpeg", authorizationHeader: "test-auth")
+        let item = BlossomUploadItem(data: body, contentType: "image/jpeg", authorizationHeader: "test-auth", verb: omitMetadata ? .upload : nil)
         let bag = useNip96 ? MediaRequestBag(apiUrl: URL(string: "http://127.0.0.1")!, mediaData: body, authorizationHeader: "test-auth", boundary: "test-boundary") : nil
-        let server = try SlowPhotoUploadServer(bodySize: bag?.httpBody.count ?? body.count)
+        let server = try SlowPhotoUploadServer(bodySize: bag?.httpBody.count ?? body.count, omitMetadata: omitMetadata)
         let ready = expectation(description: "Local upload server ready")
         server.start { ready.fulfill() }
         defer { server.stop() }
@@ -56,6 +60,9 @@ final class BlossomPostUploadProgressTests: XCTestCase {
         await fulfillment(of: [intermediate, processing, completed], timeout: 15)
         withExtendedLifetime((observation, upload)) {}
         XCTAssertTrue(bag?.finished ?? item.finished)
+        if omitMetadata {
+            XCTAssertNil(item.sha256processed)
+        }
     }
 
     func testSmallUploadDoesNotDiscardTheOnlyProgressCallback() async {
@@ -101,12 +108,14 @@ private final class SlowPhotoUploadServer: @unchecked Sendable {
     let listener: NWListener
     private let queue = DispatchQueue(label: "com.nostur.tests.photo-upload")
     private let bodySize: Int
+    private let omitMetadata: Bool
     private var connection: NWConnection?
     private var header = Data()
     private var receivedBodyBytes: Int?
 
-    init(bodySize: Int) throws {
+    init(bodySize: Int, omitMetadata: Bool = false) throws {
         self.bodySize = bodySize
+        self.omitMetadata = omitMetadata
         listener = try NWListener(using: .tcp, on: .any)
     }
 
@@ -153,7 +162,9 @@ private final class SlowPhotoUploadServer: @unchecked Sendable {
     }
 
     private func respond() {
-        let json = #"{"url":"https://media.example/photo.jpg","sha256":"server-hash","type":"image/jpeg","nip94":[["dim","32x32"],["blurhash","server-blurhash"]],"status":"success","nip94_event":{"tags":[["url","https://media.example/photo.jpg"],["ox","original-hash"]]}}"#
+        let json = omitMetadata
+            ? #"{"url":"https://media.example/photo.jpg","type":"image/jpeg"}"#
+            : #"{"url":"https://media.example/photo.jpg","sha256":"server-hash","type":"image/jpeg","nip94":[["dim","32x32"],["blurhash","server-blurhash"]],"status":"success","nip94_event":{"tags":[["url","https://media.example/photo.jpg"],["ox","original-hash"]]}}"#
         let response = Data("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: \(json.utf8.count)\r\nConnection: close\r\n\r\n\(json)".utf8)
         connection?.send(content: response, completion: .contentProcessed { [weak self] _ in self?.connection?.cancel() })
     }

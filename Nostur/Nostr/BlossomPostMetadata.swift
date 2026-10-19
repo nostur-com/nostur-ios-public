@@ -1,6 +1,5 @@
 import AVFoundation
 import Combine
-import CryptoKit
 import ImageIO
 import NostrEssentials
 import UIKit
@@ -55,31 +54,17 @@ struct BlossomPostMetadata: Sendable {
         self.blurhash = blurhash?.isEmpty == false ? blurhash : nil
     }
 
-    func needsDownload(contentType: String) -> Bool {
-        hash == nil || (isVisual(contentType) && (dim == nil || blurhash == nil))
+    private func needsVisualMetadata(contentType: String) -> Bool {
+        (contentType.hasPrefix("image/") || contentType.hasPrefix("video/")) && (dim == nil || blurhash == nil)
     }
 
-    private func isVisual(_ contentType: String) -> Bool {
-        contentType.hasPrefix("image/") || contentType.hasPrefix("video/")
-    }
-
-    /// Keep I/O, hashing, and thumbnail decoding off the main actor.
-    func completing(
-        from url: URL,
-        contentType: String,
-        download: @escaping @Sendable (URLRequest) async throws -> (URL, URLResponse) = { try await URLSession.shared.download(for: $0) }
-    ) async throws -> Self {
-        guard needsDownload(contentType: contentType) else { return self }
+    /// Fill local preview metadata without calculating a missing server hash.
+    func completing(fromLocalData data: Data, contentType: String) async throws -> Self {
+        try Task.checkCancellation()
+        guard needsVisualMetadata(contentType: contentType) else { return self }
         let task = Task.detached(priority: .utility) {
-            var request = URLRequest(url: url)
-            request.timeoutInterval = 60
-            let (file, response) = try await download(request)
-            defer { try? FileManager.default.removeItem(at: file) }
-            guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
-                throw URLError(.badServerResponse)
-            }
             try Task.checkCancellation()
-            return try await fillingMissingFields(from: file, contentType: contentType)
+            return await fillingMissingVisualFields(from: data, contentType: contentType)
         }
         return try await withTaskCancellationHandler {
             try await task.value
@@ -88,30 +73,54 @@ struct BlossomPostMetadata: Sendable {
         }
     }
 
-    func fillingMissingFields(from file: URL, contentType: String) async throws -> Self {
-        var result = self
-        if result.hash == nil {
-            let handle = try FileHandle(forReadingFrom: file)
-            defer { try? handle.close() }
-            var hash = SHA256()
-            while let chunk = try handle.read(upToCount: 64 * 1024), !chunk.isEmpty {
-                try Task.checkCancellation()
-                hash.update(data: chunk)
+    /// `/media` can resize the original. Download only when the server omitted
+    /// its output dimensions; this never computes a hash or a remote BlurHash.
+    static func processedDimensions(
+        from url: URL,
+        contentType: String,
+        download: @escaping @Sendable (URLRequest) async throws -> (URL, URLResponse)
+    ) async throws -> String {
+        let task = Task.detached(priority: .utility) {
+            try Task.checkCancellation()
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 60
+            let (file, response) = try await download(request)
+            defer { try? FileManager.default.removeItem(at: file) }
+            guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
+                throw URLError(.badServerResponse)
             }
-            result.hash = Data(hash.finalize()).hexEncodedString()
+            try Task.checkCancellation()
+            if let source = CGImageSourceCreateWithURL(file as CFURL, nil), let dim = dimensions(of: source) {
+                return dim
+            }
+            if contentType.hasPrefix("video/"),
+               let size = await getVideoDimensions(asset: AVURLAsset(url: file)), size.width > 0, size.height > 0 {
+                return "\(Int(size.width.rounded()))x\(Int(size.height.rounded()))"
+            }
+            throw URLError(.cannotDecodeContentData)
         }
-        guard isVisual(contentType), result.dim == nil || result.blurhash == nil else { return result }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
 
-        if let source = CGImageSourceCreateWithURL(file as CFURL, nil),
-           let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] {
-            if result.dim == nil,
-               let width = properties[kCGImagePropertyPixelWidth] as? NSNumber,
-               let height = properties[kCGImagePropertyPixelHeight] as? NSNumber,
-               width.intValue > 0, height.intValue > 0 {
-                let orientation = (properties[kCGImagePropertyOrientation] as? NSNumber)?.intValue ?? 1
-                result.dim = (5...8).contains(orientation)
-                    ? "\(height.intValue)x\(width.intValue)"
-                    : "\(width.intValue)x\(height.intValue)"
+    private static func dimensions(of source: CGImageSource) -> String? {
+        guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? NSNumber,
+              let height = properties[kCGImagePropertyPixelHeight] as? NSNumber,
+              width.intValue > 0, height.intValue > 0 else { return nil }
+        let orientation = (properties[kCGImagePropertyOrientation] as? NSNumber)?.intValue ?? 1
+        return (5...8).contains(orientation)
+            ? "\(height.intValue)x\(width.intValue)" : "\(width.intValue)x\(height.intValue)"
+    }
+
+    private func fillingMissingVisualFields(from data: Data, contentType: String) async -> Self {
+        var result = self
+        if let source = CGImageSourceCreateWithData(data as CFData, nil), CGImageSourceGetCount(source) > 0 {
+            if result.dim == nil {
+                result.dim = Self.dimensions(of: source)
             }
             if result.blurhash == nil {
                 let options: [CFString: Any] = [
@@ -125,6 +134,9 @@ struct BlossomPostMetadata: Sendable {
             }
         }
         else if contentType.hasPrefix("video/") {
+            let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mp4")
+            defer { try? FileManager.default.removeItem(at: file) }
+            guard (try? data.write(to: file)) != nil else { return result }
             let asset = AVURLAsset(url: file)
             if result.dim == nil, let size = await getVideoDimensions(asset: asset), size.width > 0, size.height > 0 {
                 result.dim = "\(Int(size.width.rounded()))x\(Int(size.height.rounded()))"
@@ -135,21 +147,21 @@ struct BlossomPostMetadata: Sendable {
                 generator.maximumSize = CGSize(width: 32, height: 32)
                 let thumbnail: CGImage
                 if #available(iOS 16.0, *) {
-                    thumbnail = try await generator.image(at: .zero).image
+                    guard let image = try? await generator.image(at: .zero).image else { return result }
+                    thumbnail = image
                 }
                 else {
-                    thumbnail = try generator.copyCGImage(at: .zero, actualTime: nil)
+                    guard let image = try? generator.copyCGImage(at: .zero, actualTime: nil) else { return result }
+                    thumbnail = image
                 }
                 result.blurhash = UIImage(cgImage: thumbnail).blurHash(numberOfComponents: (4, 3))
             }
         }
-        guard result.dim != nil, result.blurhash != nil else { throw URLError(.cannotDecodeContentData) }
         return result
     }
 }
 
-/// The library's upload decoder requires sha256; accept an omitted hash here so
-/// post metadata can instead be calculated from the returned file.
+/// Accept optional server hashes and preview metadata.
 struct BlossomPostUploadResponse: Decodable {
     let url: String
     var sha256: String?
@@ -183,13 +195,23 @@ func completeBlossomPostUpload(
     guard let url = URL(string: response.downloadURL), ["https", "http"].contains(url.scheme?.lowercased() ?? "") else {
         throw URLError(.badURL)
     }
+    var metadata = response.metadata
+    metadata.blurhash = metadata.blurhash ?? item.blurhash
+    let localType = item.contentType ?? response.type ?? "application/octet-stream"
     let serverType = response.type ?? ""
-    let contentType = ["image/", "video/", "audio/"].contains(where: { serverType.hasPrefix($0) })
-        ? serverType : (item.contentType ?? "application/octet-stream")
-    if response.metadata.needsDownload(contentType: contentType) {
+    let servedType = ["image/", "video/", "audio/"].contains(where: { serverType.hasPrefix($0) }) ? serverType : localType
+    let isVisual = localType.hasPrefix("image/") || localType.hasPrefix("video/")
+        || servedType.hasPrefix("image/") || servedType.hasPrefix("video/")
+    if item.verb == .media && metadata.dim == nil && isVisual {
         item.state = .processing(percentage: nil)
+        metadata.dim = try await BlossomPostMetadata.processedDimensions(from: url, contentType: servedType, download: download)
     }
-    let completed = try await response.metadata.completing(from: url, contentType: contentType, download: download)
+    else if item.verb != .media {
+        metadata.dim = metadata.dim ?? item.dim
+    }
+    let completed = try await metadata.completing(
+        fromLocalData: item.mediaData, contentType: localType
+    )
     try Task.checkCancellation()
     item.sha256processed = completed.hash
     item.dim = completed.dim
@@ -198,7 +220,7 @@ func completeBlossomPostUpload(
     item.state = .success(response.downloadURL)
 }
 
-/// Complete metadata before emitting a successful upload to the composer.
+/// Finish the upload using server metadata and optional local preview metadata.
 func uploadBlossomPostPublisher(for item: BlossomUploadItem, server: URL) -> AnyPublisher<BlossomUploadItem, Error> {
     Deferred {
         var task: Task<Void, Never>?
