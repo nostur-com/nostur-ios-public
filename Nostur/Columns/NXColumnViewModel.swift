@@ -5405,11 +5405,11 @@ extension NXColumnViewModel {
                 // that snapshot is a reveal that inserted rows above the old anchor.
 #if DEBUG
                 recordFeedAction(
-                    "APPEND decide · +\(postsToAppend.count) · will cancel settle · \(feedActionDebugViewport())"
+                    "APPEND decide · +\(postsToAppend.count) · queue until viewport stable · \(feedActionDebugViewport())"
                 )
 #endif
-                vmInner.abortPreparedScrollRestore()
-                vmInner.cancelPendingFeedSettle?()
+                // Do not cancel a restore/prepend already holding the reading row.
+                // The anchor coordinator queues this append until that work finishes.
                 let applyAppend = { [weak self] () -> [String] in
                     guard let self else {
                         completion?()

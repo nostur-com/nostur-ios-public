@@ -794,7 +794,7 @@ final class NXFeedViewportTests: XCTestCase {
                 updateReasons: [NXFeedViewport.prependCoverReason]
             )
         )
-        XCTAssertFalse(
+        XCTAssertTrue(
             NXFeedViewport.shouldCoverViewport(updateReasons: ["older posts append"])
         )
     }
@@ -1081,6 +1081,63 @@ final class NXFeedViewportTests: XCTestCase {
         XCTAssertEqual(progress.stableSamples, 3)
         progress.observe(geometry: resolved, corrected: true)
         XCTAssertEqual(progress.stableSamples, 0)
+    }
+
+    @MainActor
+    func testOlderAppendWaitsForRowsAndPreservesOffsetThroughHeightCollapse() async throws {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 500)
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 320, height: 700), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        let source = NXFeedAppendTestSource()
+        source.count = 20
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 4350
+        collection.layoutIfNeeded()
+        // snapshotView(afterScreenUpdates: false) needs a painted viewport.
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        let ids = (0..<34).map { "post-\($0)" }
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        stabilizer.updateItemIDs(Array(ids.prefix(20)))
+        let host = NXFeedSnapshotHostView(frame: collection.convert(collection.bounds, to: window))
+        host.stabilizer = stabilizer
+        window.addSubview(host)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), "post-8")
+        stabilizer.performAnchored(reason: "older posts append") {
+            stabilizer.updateItemIDs(ids)
+        }
+        // The old short settle ended before this delayed List commit.
+        try? await Task.sleep(nanoseconds: 180_000_000)
+        XCTAssertTrue(stabilizer.hasActivePrependCover)
+        XCTAssertFalse(host.subviews.isEmpty)
+        XCTAssertEqual(collection.contentOffset.y, 4350, accuracy: 0.5)
+        source.count = 34
+        layout.itemSize.height = 150
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 2625
+        try? await Task.sleep(nanoseconds: 32_000_000)
+        // Real self-sized heights arrive after the appended cells.
+        layout.itemSize.height = 500
+        layout.invalidateLayout()
+        collection.layoutIfNeeded()
+        try? await Task.sleep(nanoseconds: 250_000_000)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), "post-8")
+        XCTAssertEqual(collection.contentOffset.y, 4350, accuracy: 0.5)
+        XCTAssertFalse(stabilizer.hasActivePrependCover)
+        XCTAssertTrue(host.subviews.isEmpty)
+        stabilizer.suspendPositionTracking()
     }
 
     @MainActor

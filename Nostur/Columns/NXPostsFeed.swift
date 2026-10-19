@@ -625,7 +625,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         // Count removals as well: at-top truncation deletes more rows than this
         // prepend adds, and the old total is then impossible.
         let prependMinimumCellCount = (NXFeedViewport.shouldCoverPrepend(updateReasons: updateReasons)
-            || updateReasons.contains(NXFeedViewport.bannerUpdateCoverReason))
+            || updateReasons.contains(NXFeedViewport.bannerUpdateCoverReason)
+            || updateReasons.contains("older posts append"))
             ? cellsBefore.flatMap {
                 NXFeedViewport.prependMinimumCellCount(
                     cellsBefore: $0,
@@ -684,16 +685,15 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 removePrependSnapshot()
                 return
             }
-            // The bad offset is already applied. Correct it before the next frame,
-            // then keep it through the short settle while estimates finish.
-            if pinTailAppend {
-                restore(anchor: (post.id, post.visibleTopOffset), in: scrollView)
-            }
+            // Tail appends also invalidate estimated heights. Keep the captured
+            // viewport covered until UIKit has committed the new rows; correcting
+            // against the old layout can settle before the actual append arrives.
             startSettling(
                 anchor: (post.id, post.visibleTopOffset),
-                extended: needsSettling && !pinTailAppend,
+                extended: needsSettling,
                 bringOnScreen: pinByIdentity,
                 prependMinimumCellCount: prependMinimumCellCount,
+                limitsPrependTravel: !pinTailAppend,
                 expectedBannerCellCount: leadingRowsBefore != leadingNonPostRowCount
                     ? cellsBefore.map { $0 + addedCount - removedCount + leadingNonPostRowCount - leadingRowsBefore }
                     : nil
@@ -719,6 +719,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         extended: Bool,
         bringOnScreen: Bool,
         prependMinimumCellCount: Int? = nil,
+        limitsPrependTravel: Bool = true,
         expectedBannerCellCount: Int? = nil
     ) {
         anchorGeneration += 1
@@ -732,7 +733,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         let maxSteps = extended ? 30 : 8
         didLogPrependHold = false
         let startingOffset = scrollView?.contentOffset.y
-        let prependContentHeightAtStart = prependMinimumCellCount == nil
+        let prependContentHeightAtStart = !limitsPrependTravel || prependMinimumCellCount == nil
             ? nil
             : scrollView?.contentSize.height
 #if DEBUG
@@ -1498,18 +1499,21 @@ struct NXPostsFeed: View {
                     .listRowSeparator(.hidden)
                     .listRowInsets(.init())
 
-                if vm.isLoadingOlderPage {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
-                    .frame(minHeight: 44)
-                    .id("pagination-progress-\(oldestPost.id)")
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(.init())
-                    .accessibilityLabel("Loading older posts")
+                // Keep this row and its height stable during a drag. Inserting a
+                // spinner at page-request time invalidates List's height estimates
+                // before the deferred posts append has even started.
+                HStack {
+                    Spacer()
+                    ProgressView()
+                        .opacity(vm.isLoadingOlderPage ? 1 : 0)
+                    Spacer()
                 }
+                .frame(height: 44)
+                .id("pagination-progress")
+                .listRowSeparator(.hidden)
+                .listRowInsets(.init())
+                .accessibilityLabel("Loading older posts")
+                .accessibilityHidden(!vm.isLoadingOlderPage)
             }
         }
         .modifier(MacColumnScrollEdgeEffectModifier())

@@ -204,6 +204,7 @@ enum NXFeedViewport {
         shouldCoverPrepend(updateReasons: updateReasons)
             || updateReasons.contains(unreadRemovalCoverReason)
             || updateReasons.contains(bannerUpdateCoverReason)
+            || updateReasons.contains("older posts append")
     }
 
     /// A covered mutation must keep its pre-mutation post pinned until List finishes
