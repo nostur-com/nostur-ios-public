@@ -2548,6 +2548,9 @@
         }
       }
     },
+    "%lld photos failed to upload" : {
+      "comment" : "Number of photos that need another upload attempt."
+    },
     "%lld posts or interactions by you" : {
 
     },
@@ -27460,6 +27463,9 @@
         }
       }
     },
+    "Resumes posting after uploading the remaining photos" : {
+
+    },
     "Retake" : {
       "localizations" : {
         "es" : {
@@ -27505,6 +27511,9 @@
       }
     },
     "Retry activity" : {
+
+    },
+    "Retry failed uploads" : {
 
     },
     "Retry loading badge" : {
@@ -34763,6 +34772,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uploadmethode"
+          }
+        }
+      }
+    },
+    "Uploaded %lld of %lld photos" : {
+      "comment" : "Photo upload progress: completed photos followed by total photos.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Uploaded %1$lld of %2$lld photos"
           }
         }
       }
