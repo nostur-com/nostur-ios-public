@@ -84,7 +84,7 @@ struct SquarePhotoEditor: View {
                 if preview == nil { failed = true }
             }
         }
-        .interactiveDismissDisabled(saving)
+        .interactiveDismissDisabled()
     }
 
     private func save() {
@@ -166,7 +166,20 @@ private struct PhotoCropGestures: UIViewRepresentable {
         init(parent: PhotoCropGestures) { self.parent = parent }
 
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
-                               shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool { true }
+                               shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+            // Only the crop surface's pinch and pan may run together. Allowing
+            // the sheet's pan here also moves the sheet while repositioning a photo.
+            gestureRecognizer.view === otherGestureRecognizer.view
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                               shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+            // A drag starting on the photo belongs to the crop surface. Make
+            // ancestor pan gestures wait so the sheet cannot start following it.
+            gestureRecognizer is UIPanGestureRecognizer
+                && otherGestureRecognizer is UIPanGestureRecognizer
+                && gestureRecognizer.view !== otherGestureRecognizer.view
+        }
 
         @objc func pan(_ gesture: UIPanGestureRecognizer) {
             let translation = gesture.translation(in: gesture.view)
