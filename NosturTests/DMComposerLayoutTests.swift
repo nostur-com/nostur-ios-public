@@ -5,6 +5,48 @@ import UIKit
 
 @MainActor
 struct DMComposerLayoutTests {
+    @Test func dmReturnInsertsNewlineWithoutSending() async throws {
+        let scene = try #require(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        var submitCount = 0
+        let host = UIHostingController(rootView: EditorLayoutProbe(
+            submitsOnReturn: false,
+            onSubmit: { submitCount += 1 }
+        ))
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 390, height: 600)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        host.view.layoutIfNeeded()
+        let editor = try #require(findEditor(in: host.view))
+        #expect(editor.returnKeyType == .default)
+        editor.selectedRange = NSRange(location: 2, length: 0)
+        editor.insertText("\n")
+        editor.insertText("Second line")
+        try await Task.sleep(nanoseconds: 50_000_000)
+        #expect(editor.text == "Hi\nSecond line")
+        #expect(submitCount == 0)
+    }
+
+    @Test func liveChatReturnStillSends() {
+        var submitCount = 0
+        let editor = MentionHighlightingTextView(
+            text: .constant("Hi"),
+            attributedText: nil,
+            height: .constant(36),
+            accentColor: .systemBlue,
+            onSubmit: { submitCount += 1 }
+        )
+        let acceptsNewline = editor.makeCoordinator().textView(
+            UITextView(),
+            shouldChangeTextIn: NSRange(location: 2, length: 0),
+            replacementText: "\n"
+        )
+        #expect(!acceptsNewline)
+        #expect(submitCount == 1)
+    }
+
     @Test func typingLongMessagesKeepsEditorWithinAvailableWidth() async throws {
         let scene = try #require(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         for width: CGFloat in [320, 440, 768] {
@@ -48,6 +90,8 @@ struct DMComposerLayoutTests {
 }
 
 private struct EditorLayoutProbe: View {
+    var submitsOnReturn: Bool = true
+    var onSubmit: (() -> Void)? = nil
     @State private var text = "Hi"
     @State private var height: CGFloat = 36
 
@@ -60,7 +104,8 @@ private struct EditorLayoutProbe: View {
                 attributedText: nil,
                 height: $height,
                 accentColor: .systemBlue,
-                onSubmit: nil
+                onSubmit: onSubmit,
+                submitsOnReturn: submitsOnReturn
             )
             .frame(maxWidth: .infinity)
             .frame(height: min(height, 120))

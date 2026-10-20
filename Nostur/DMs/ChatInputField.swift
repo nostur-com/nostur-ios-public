@@ -156,6 +156,7 @@ struct MentionHighlightingTextView: UIViewRepresentable {
     @Binding var height: CGFloat
     let accentColor: UIColor
     let onSubmit: (() -> Void)?
+    var submitsOnReturn: Bool = true
     var onPasteMedia: ((NSItemProvider, UTType) -> Void)? = nil
     var isFocused: Binding<Bool>? = nil
 
@@ -179,7 +180,7 @@ struct MentionHighlightingTextView: UIViewRepresentable {
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
         textView.textContainer.lineFragmentPadding = 5
         textView.textContainer.widthTracksTextView = true
-        textView.returnKeyType = .send
+        textView.returnKeyType = submitsOnReturn ? .send : .default
         textView.tintColor = accentColor
         if #available(iOS 17.0, *) {
             textView.inlinePredictionType = .default
@@ -189,6 +190,7 @@ struct MentionHighlightingTextView: UIViewRepresentable {
 
     func updateUIView(_ textView: UITextView, context: Context) {
         context.coordinator.parent = self
+        textView.returnKeyType = submitsOnReturn ? .send : .default
         (textView as? MediaPasteTextView)?.onPasteMedia = onPasteMedia
         if let isFocused {
             DispatchQueue.main.async {
@@ -241,7 +243,7 @@ struct MentionHighlightingTextView: UIViewRepresentable {
             shouldChangeTextIn range: NSRange,
             replacementText replacement: String
         ) -> Bool {
-            if replacement == "\n" {
+            if replacement == "\n", parent.submitsOnReturn {
                 parent.onSubmit?()
                 return false
             }
@@ -575,15 +577,6 @@ struct DMChatInputField: View {
                     .padding(.trailing, 40)
                     .background(Color.clear)
                     .focused($focusedField, equals: .message)
-                    .submitLabel(.send)
-                    .onSubmit {
-                        if let onSubmit {
-                            onSubmit()
-                        }
-                        if IS_CATALYST {
-                            focusedField = .message
-                        }
-                    }
                 
                 if let quotingNow = vm.quotingNow {
                     EmbeddedChatMessage(nrChatMessage: quotingNow, isSentByCurrentUser: false)
@@ -613,16 +606,8 @@ struct DMChatInputField: View {
                 .labelStyle(.iconOnly)
                 .tint(theme.accent)
                 .fontWeightBold()
-                .keyboardShortcut(.defaultAction)
+                .keyboardShortcut(.return, modifiers: .command)
                 .disabled(!canSend)
-                .onSubmit {
-                    if let onSubmit {
-                        onSubmit()
-                    }
-                    if IS_CATALYST {
-                        focusedField = .message
-                    }
-                }
                 .opacity(canSend ? 1.0 : 0.5)
                 .padding(.trailing, 5)
                 .padding(.bottom, 5)
@@ -736,6 +721,7 @@ struct DMChatInputField: View {
                 height: $editorHeight,
                 accentColor: UIColor(theme.accent),
                 onSubmit: onSubmit,
+                submitsOnReturn: false,
                 onPasteMedia: showAttachmentButton && vm.pendingFileAttachment == nil ? onPasteMedia : nil,
                 isFocused: Binding(
                     get: { focusedField == .message },
