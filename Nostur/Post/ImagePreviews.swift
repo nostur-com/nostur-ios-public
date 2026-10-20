@@ -15,6 +15,7 @@ struct ImagePreviews: View {
     public var showButtons: Bool = true
     public var vertical: Bool = false
     public var onRemove: ((PostedImageMeta) -> Void)? = nil
+    @State private var editingImage: PostedImageMeta?
 
     init(
         pastedImages: Binding<[PostedImageMeta]>,
@@ -44,6 +45,13 @@ struct ImagePreviews: View {
                 VStack {
                     previewItems
                 }
+            }
+        }
+        .sheet(item: $editingImage) { attachment in
+            SquarePhotoEditor(attachment: attachment) { edited in
+                guard let index = pastedImages.firstIndex(where: { $0.uniqueId == attachment.uniqueId }) else { return }
+                pastedImages[index] = edited
+                uploadStates[attachment.uniqueId] = nil
             }
         }
     }
@@ -82,6 +90,15 @@ struct ImagePreviews: View {
         }
         else {
             ComposerPhotoPreview(image: pastedImage)
+                .overlay(alignment: .bottomLeading) {
+                    if showButtons && !pastedImage.isGifPlaceholder {
+                        ComposerPhotoCropButton {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            editingImage = pastedImage
+                        }
+                        .disabled(uploadStates.values.contains { $0.isActive })
+                    }
+                }
                 .overlay(alignment: .center) {
                     if pastedImage.isGifPlaceholder {
                         ProgressView()
@@ -167,6 +184,33 @@ struct ImagePreviews: View {
         .padding(8)
         .background(.black.opacity(0.65), in: RoundedRectangle(cornerRadius: 8))
         .padding(8)
+    }
+}
+
+/// Keep the action readable on a single photo and compact in multi-photo rows.
+private struct ComposerPhotoCropButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        GeometryReader { geometry in
+            Button(action: action) {
+                HStack(spacing: 4) {
+                    Image(systemName: "crop")
+                    if geometry.size.width >= 100 {
+                        Text("Crop")
+                    }
+                }
+                .font(.callout.weight(.semibold))
+                .padding(8)
+                .foregroundStyle(.white)
+                .background(.black.opacity(0.65), in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Crop photo")
+            .accessibilityHint("Opens the square crop editor")
+            .padding(5)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+        }
     }
 }
 

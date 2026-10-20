@@ -57,6 +57,8 @@ public struct PostedImageMeta: Hashable, Identifiable, Equatable {
     public let type: ImageType
     public let uniqueId: String
     public var altText: String? = nil
+    var cropSourceData: Data? = nil
+    var squareCrop: SquarePhotoCrop? = nil
     
     public var isGifPlaceholder = false // to show spinner why fetching actual GIF (Safari copy paste)
 
