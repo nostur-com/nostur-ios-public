@@ -367,7 +367,7 @@ public struct RequestMessage {
     
     static func getUserMetadataAndContactList(pubkey:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0,3,10002,10050,10063], "limit": 25}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0], "limit": 1}, {"authors": ["\(pubkey)"], "kinds": [3], "limit": 1}, {"authors": ["\(pubkey)"], "kinds": [10002], "limit": 1}, {"authors": ["\(pubkey)"], "kinds": [10050], "limit": 1}, {"authors": ["\(pubkey)"], "kinds": [10063], "limit": 1}]
 """
     }
     

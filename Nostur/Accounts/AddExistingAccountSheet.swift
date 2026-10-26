@@ -275,11 +275,13 @@ struct AddExistingAccountSheet: View {
                             loading = true
                             onDismiss?()
                             
-                            do {
-                                try NewOnboardingTracker.shared.start(pubkey: pubkey)
-                            }
-                            catch {
-                                L.og.error("🔴🔴 Failed to start onboarding")
+                            Task { @MainActor in
+                                do {
+                                    try await NewOnboardingTracker.shared.start(pubkey: pubkey)
+                                }
+                                catch {
+                                    L.og.error("🔴🔴 Failed to start onboarding")
+                                }
                             }
                         }
                     }
@@ -368,11 +370,13 @@ struct AddExistingAccountSheet: View {
                 loading = true
                 onDismiss?()
                 
-                do {
-                    try NewOnboardingTracker.shared.start(pubkey: pubkey)
-                }
-                catch {
-                    L.og.error("🔴🔴 Failed to start onboarding")
+                Task { @MainActor in
+                    do {
+                        try await NewOnboardingTracker.shared.start(pubkey: pubkey)
+                    }
+                    catch {
+                        L.og.error("🔴🔴 Failed to start onboarding")
+                    }
                 }
             }
         }
@@ -425,11 +429,13 @@ struct AddExistingAccountSheet: View {
                 loading = true
                 onDismiss?()
                 
-                do {
-                    try NewOnboardingTracker.shared.start(pubkey: pubkey)
-                }
-                catch {
-                    L.og.error("🔴🔴 Failed to start onboarding")
+                Task { @MainActor in
+                    do {
+                        try await NewOnboardingTracker.shared.start(pubkey: pubkey)
+                    }
+                    catch {
+                        L.og.error("🔴🔴 Failed to start onboarding")
+                    }
                 }
             }
         }

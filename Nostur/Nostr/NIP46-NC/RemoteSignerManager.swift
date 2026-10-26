@@ -274,11 +274,13 @@ class RemoteSignerManager: ObservableObject {
                             sendNotification(.revertToOwnFeed) // normally used for reverting from someone else's feed, but also does the job
                             
                             // Need to run onboarding again because changed pubkey
-                            do {
-                                try NewOnboardingTracker.shared.start(accountObjectID: account.objectID, pubkey: newAccountPubkey)
-                            }
-                            catch {
-                                L.og.error("🔴🔴 Failed to start onboarding")
+                            Task { @MainActor in
+                                do {
+                                    try await NewOnboardingTracker.shared.start(accountObjectID: account.objectID, pubkey: newAccountPubkey)
+                                }
+                                catch {
+                                    L.og.error("🔴🔴 Failed to start onboarding")
+                                }
                             }
                         }
                     }

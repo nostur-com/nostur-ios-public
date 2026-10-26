@@ -385,11 +385,13 @@ func initializeGuestAccount() async {
             bg().perform {
                 _ = GuestAccountManager.shared.createGuestAccount()
                 DataProvider.shared().saveToDiskNow()
-                do {
-                    try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
-                }
-                catch {
-                    L.og.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR")
+                Task { @MainActor in
+                    do {
+                        try await NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
+                    }
+                    catch {
+                        L.og.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR")
+                    }
                 }
             }
         }

@@ -51,12 +51,14 @@ struct TryGuestAccountSheet: View {
                     didCreate = true
                 }
             }
-            do {
-                try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
-                L.onboarding.info("✈️✈️✈️ ONBOARDING SPEED UP, FETCHING 0 + 3")
-            }
-            catch {
-                L.onboarding.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR \(error)")
+            Task { @MainActor in
+                do {
+                    try await NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
+                    L.onboarding.info("✈️✈️✈️ ONBOARDING SPEED UP, FETCHING 0 + 3")
+                }
+                catch {
+                    L.onboarding.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR \(error)")
+                }
             }
         }
         .onDisappear {
@@ -65,7 +67,7 @@ struct TryGuestAccountSheet: View {
             
             if let guestAccount, !letsGo && didCreate {
                 viewContext.delete(guestAccount)
-                NewOnboardingTracker.shared.abort()
+                NewOnboardingTracker.shared.abort(pubkey: GUEST_ACCOUNT_PUBKEY)
             }
         }
         .navigationTitle("")

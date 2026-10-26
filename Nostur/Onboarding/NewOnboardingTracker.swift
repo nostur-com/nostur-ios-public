@@ -18,6 +18,12 @@ class NewOnboardingTracker {
     
     // Who are we onboarding?
     private var pubkey: String?
+    private var sessionID = UUID()
+    private let sendRequest: (String) -> Void
+
+    init(sendRequest: @escaping (String) -> Void = { req($0) }) {
+        self.sendRequest = sendRequest
+    }
     
     // Tasks backlog
     private var backlog = Backlog(backlogDebugName: "NewOnboardingTracker")
@@ -51,34 +57,48 @@ class NewOnboardingTracker {
     }
     
     private var bg = DataProvider.shared().bg
-    private var account: CloudAccount?
+    private let onboardingStateLock = NSLock()
+    private var onboardingActive = false
+    private var account: CloudAccount? {
+        didSet {
+            let active = account != nil
+            onboardingStateLock.withLock { onboardingActive = active }
+        }
+    }
     
     public var isOnboarding: Bool {
-        account != nil
+        onboardingStateLock.withLock { onboardingActive }
     }
 
-    public func start(pubkey: String) throws {
-        try self.startInternal(pubkey: pubkey) {
-            if let account = try? CloudAccount.fetchAccount(publicKey: pubkey, context: self.bg) {
-                self.account = account
-            }
-            else {
-                throw "No account in database"
+    public func start(pubkey: String) async throws {
+        try await bg.perform {
+            try self.startInternal(pubkey: pubkey) {
+                if let account = try? CloudAccount.fetchAccount(publicKey: pubkey, context: self.bg) {
+                    self.account = account
+                }
+                else {
+                    throw "No account in database"
+                }
             }
         }
     }
 
-    public func start(accountObjectID: NSManagedObjectID, pubkey: String) throws {
-        try self.startInternal(pubkey: pubkey) {
-            guard let account = try? self.bg.existingObject(with: accountObjectID) as? CloudAccount else {
-                throw "No account in database"
+    public func start(accountObjectID: NSManagedObjectID, pubkey: String) async throws {
+        try await bg.perform {
+            try self.startInternal(pubkey: pubkey) {
+                guard let account = try? self.bg.existingObject(with: accountObjectID) as? CloudAccount else {
+                    throw "No account in database"
+                }
+                self.account = account
             }
-            self.account = account
         }
     }
 
     private func startInternal(pubkey: String, accountResolver: () throws -> Void) throws {
+        if self.pubkey == pubkey && self.account != nil { return }
         if pubkey == GUEST_ACCOUNT_PUBKEY {
+            // Delayed guest prefetch must not replace an existing-account login.
+            if let currentPubkey = self.pubkey, currentPubkey != GUEST_ACCOUNT_PUBKEY, self.account != nil { return }
             if guestAlreadyStarted { return }
             guestAlreadyStarted = true
         }
@@ -89,22 +109,24 @@ class NewOnboardingTracker {
         
         self.backlog = Backlog(backlogDebugName: "NewOnboardingTracker")
         self.pubkey = pubkey
+        self.sessionID = UUID()
+        let sessionID = self.sessionID
         
         Importer.shared.importedMessagesFromSubscriptionIds
             .sink { [weak self] subscriptionIds in
-            guard let self = self else { return }
-
-            let reqTasks = self.backlog.tasks(with: subscriptionIds)
-            reqTasks.forEach { task in
-                task.process()
+                self?.bg.perform {
+                    guard let self, self.sessionID == sessionID else { return }
+                    let reqTasks = self.backlog.tasks(with: subscriptionIds)
+                    reqTasks.forEach { task in task.process() }
+                    // ReqTask handles only the first response; kind 3 can arrive
+                    // after the profile, so consume subsequent matching imports too.
+                    if !reqTasks.isEmpty { self.processMissingAccountData() }
+                }
             }
-        }
         .store(in: &subscriptions)
         
         L.onboarding.info("✈️✈️ OnboardingTracker.start(\(pubkey.short))")
-        try self.bg.performAndWait {
-            try accountResolver()
-        }
+        try accountResolver()
         self.fetchedOwnProfileTask = false
         self.fetchedFollowsTask = false
         self.fetchedProfilesOfFollowsTask = false
@@ -113,19 +135,25 @@ class NewOnboardingTracker {
     }
     
     private func stopAfterDelay() {
+        let sessionID = self.sessionID
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) {
             if let account = Nostur.account(), !AccountsState.shared.activeAccountPublicKey.isEmpty && account.publicKey == AccountsState.shared.activeAccountPublicKey {
                 WebOfTrust.shared.loadWoT()
             }
             self.bg.perform { [weak self] in
-                self?.cancel()
+                guard let self, self.sessionID == sessionID else { return }
+                self.cancel()
             }
         }
     }
     
-    public func abort() {
-        self.backlog = Backlog(backlogDebugName: "NewOnboardingTracker")
-        self.account = nil
+    public func abort(pubkey: String) {
+        bg.perform {
+            guard self.pubkey == pubkey else { return }
+            self.sessionID = UUID()
+            self.backlog.clear()
+            self.account = nil
+        }
     }
     
     private func cancel() {
@@ -139,61 +167,43 @@ class NewOnboardingTracker {
 //        guard let account = self.account else { return }
         
         // We maybe already have kind 0
-        self.bg.performAndWait {
-            self.processKind0()
-        }
+        self.processKind0()
         
         // We maybe already have kind 3
-        self.bg.performAndWait {
-            self.processKind3()
-        }
+        self.processKind3()
         
         // We maybe already have kind 10002
-        self.bg.performAndWait {
-            self.processKind10002()
-        }
+        self.processKind10002()
+        let sessionID = self.sessionID
         
         let fetchProfileAndFollowsTask = ReqTask(
             prefix: "FPF-",
             reqCommand: { (taskId) in
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowsTask.reqCommand()")
-                guard self.fetchedOwnProfileTask == false && self.fetchedFollowsTask == false else {
+                guard self.fetchedOwnProfileTask == false || self.fetchedFollowsTask == false else {
                     L.onboarding.info("\(taskId) ✈️✈️ SKIPPED - ALREADY HAVE BOTH")
                     return
                 }
 
-                req(RM.getUserMetadataAndContactList(pubkey: pubkey, subscriptionId: taskId))
+                self.sendRequest(RM.getUserMetadataAndContactList(pubkey: pubkey, subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] (taskId, _, _) in
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowsTask.processResponseCommand()")
                 self?.bg.perform {
-                    guard let self = self else { return }
-                    if !self.fetchedOwnProfileTask {
-                        self.processKind0()
-                    }
-                }
-                
-                self?.bg.perform { 
-                    guard let self = self else { return }
-                    if !self.fetchedFollowsTask {
-                        self.processKind3()
-                    }
-                }
-                
-                self?.bg.perform {
-                    guard let self = self else { return }
-                    if !self.fetchedOutboxRelaysTask {
-                        self.processKind10002()
-                    }
+                    guard let self, self.sessionID == sessionID else { return }
+                    self.processMissingAccountData()
                 }
             })
 
-        guard self.fetchedOwnProfileTask == false && self.fetchedFollowsTask == false else {
-            self.account = nil
-            return
-        }
+        guard !self.fetchedOwnProfileTask || !self.fetchedFollowsTask else { return }
         backlog.add(fetchProfileAndFollowsTask)
         fetchProfileAndFollowsTask.fetch()
+    }
+
+    private func processMissingAccountData() {
+        if !fetchedOwnProfileTask { processKind0() }
+        if !fetchedFollowsTask { processKind3() }
+        if !fetchedOutboxRelaysTask { processKind10002() }
     }
     
     public var didFetchKind3 = PassthroughSubject<Event, Never>()
@@ -286,16 +296,19 @@ class NewOnboardingTracker {
     
     private func fetchProfilesOfFollows(_ pTags:[String]) {
         guard !self.fetchedProfilesOfFollowsTask else { return }
+        let sessionID = self.sessionID
         let fetchProfilesOfFollowsTask = ReqTask(
             prefix: "FPoF-",
             reqCommand: { (taskId) in
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowsTask.reqCommand()")
-                req(RM.getUserMetadata(pubkeys: pTags, subscriptionId: taskId))
+                self.sendRequest(RM.getUserMetadata(pubkeys: pTags, subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] (taskId, _, _) in
-                guard let self = self else { return }
-                L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowsTask.processResponseCommand()")
-                self.fetchedProfilesOfFollowsTask = true
+                self?.bg.perform {
+                    guard let self, self.sessionID == sessionID else { return }
+                    L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowsTask.processResponseCommand()")
+                    self.fetchedProfilesOfFollowsTask = true
+                }
             })
         backlog.add(fetchProfilesOfFollowsTask)
         fetchProfilesOfFollowsTask.fetch()

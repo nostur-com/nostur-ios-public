@@ -276,6 +276,16 @@ extension LoggedInAccount {
         self.followingPublicKeys = follows
         let accountObjectID = account.objectID
         let accountPubkey = account.publicKey
+        if follows.count <= 1 && !account.flagsSet.contains("nostur_created") {
+            Task { @MainActor in
+                do {
+                    try await NewOnboardingTracker.shared.start(pubkey: accountPubkey)
+                }
+                catch {
+                    L.onboarding.error("Failed to resume account onboarding: \(error)")
+                }
+            }
+        }
         
         // Remove currently active "Following" subscriptions from connected sockets
         ConnectionPool.shared.removeActiveAccountSubscriptions()
