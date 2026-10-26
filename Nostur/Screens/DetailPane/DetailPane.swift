@@ -18,6 +18,7 @@ struct DetailPane: View {
     /// When set, only the split column for this tab handles `.navigateTo`.
     var ownerTab: String? = nil
     @State private var offsetX = 200.0
+    @State private var showCloseAllConfirmation = false
     
     var body: some View {
         
@@ -344,11 +345,27 @@ struct DetailPane: View {
                                 .opacity(index == tm.tabs.count-1 ? 0 : 1)
                         }
                         
-//                        if tm.tabs.count > 8 {
-//                            Button("Close all tabs", systemImage: "rectangle.stack.badge.minus", action: closeAllTabs)
-//                                .labelStyle(.iconOnly)
-//                        }
                         Spacer()
+                    }
+                }
+                .safeAreaInset(edge: .trailing, spacing: 0) {
+                    if tm.tabs.count > 5 {
+                        Button {
+                            showCloseAllConfirmation = true
+                        } label: {
+                            Label("Close all tabs", systemImage: "rectangle.stack.badge.minus")
+                                .labelStyle(.iconOnly)
+                                .padding(12)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(theme.accent)
+                        .background(theme.background)
+                        .help("Close all tabs")
+                        .confirmationDialog("Close all tabs?", isPresented: $showCloseAllConfirmation, titleVisibility: .visible) {
+                            Button("Close all tabs", role: .destructive, action: closeAllTabs)
+                            Button("Cancel", role: .cancel) { }
+                        }
                     }
                 }
                 .onChange(of: tm.tabs) { newTabs in
@@ -595,7 +612,33 @@ struct DetailPane: View {
     }
     
     private func closeAllTabs() {
-        
+        let currentRoomATag = LiveKitVoiceSession.shared.currentRoomATag
+        let closesCurrentRoom = currentRoomATag.map { roomATag in
+            tm.tabs.contains { tab in
+                tab.navId == roomATag
+                    || tab.nrLiveEvent?.id == roomATag
+                    || (tab.nrPost?.kind == 30311 && tab.nrPost?.aTag == roomATag)
+                    || (tab.naddr1?.kind == 30311 && tab.naddr1?.navId == roomATag)
+            }
+        } ?? false
+
+        tm.selected = nil
+        tm.tabs.removeAll()
+
+        if closesCurrentRoom {
+            LiveKitVoiceSession.shared.disconnect()
+        }
+        for subscriptionId in ["REALTIME-DETAIL", "REALTIME-DETAIL-22"] {
+            ConnectionPool.shared.sendMessage(
+                NosturClientMessage(
+                    clientMessage: NostrEssentials.ClientMessage(
+                        type: .CLOSE,
+                        subscriptionId: subscriptionId
+                    ),
+                    relayType: .READ
+                )
+            )
+        }
     }
 }
 
