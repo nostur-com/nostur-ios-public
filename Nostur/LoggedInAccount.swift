@@ -273,20 +273,22 @@ extension LoggedInAccount {
         let follows = account.getFollowingPublicKeys(includeBlocked: true)
             .union(account.privateFollowingPubkeys) // if we do this in bg.perform it loads too late for other views
         self.viewFollowingPublicKeys = follows
+        self.followingPublicKeys = follows
+        let accountObjectID = account.objectID
+        let accountPubkey = account.publicKey
         
         // Remove currently active "Following" subscriptions from connected sockets
         ConnectionPool.shared.removeActiveAccountSubscriptions()
         
         self.bg.perform { [weak self] in
             guard let self = self else { return }
-            guard let bgAccount = try? self.bg.existingObject(with: self.account.objectID) as? CloudAccount else {
+            guard let bgAccount = try? self.bg.existingObject(with: accountObjectID) as? CloudAccount else {
                 L.og.notice("🔴🔴 Problem loading bgAccount")
                 return
             }
             self.bgAccount = bgAccount
-            self.accountCache = AccountCache(self.pubkey)
+            self.accountCache = AccountCache(accountPubkey)
             
-            self.followingPublicKeys = follows
             self.followingCache = bgAccount.loadFollowingCache()
             self.reprocessContactListIfNeeded(bgAccount)
             
@@ -352,21 +354,12 @@ extension LoggedInAccount {
         }
     }
     
+    @MainActor
     public func reloadFollows() {
-        self.bg.perform { [weak self] in
-            guard let self, let bgAccount = self.bgAccount else { return }
-            // CloudKit can replace the underlying strings without going through their setters.
-            bgAccount.invalidateFollowingCaches()
-            self.followingPublicKeys = bgAccount.getFollowingPublicKeys(includeBlocked: true)
-                .union(bgAccount.privateFollowingPubkeys)
-            self.followingCache = bgAccount.loadFollowingCache()
-        
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                self.viewFollowingPublicKeys = self.followingPublicKeys
-                sendNotification(.followsChanged, self.followingPublicKeys)
-            }
-        }
+        // The sidebar and feed must read the same account, including unsaved edits.
+        // A background refetch can lag behind a view-context merge and overwrite
+        // the new follow list with an empty snapshot during first login.
+        applyCloudAccountFeedChange()
     }
 
     /// Refreshes feed-driving follow state after an in-place Core Data/CloudKit merge. Reading
@@ -379,7 +372,9 @@ extension LoggedInAccount {
         viewFollowingPublicKeys = follows
         followingPublicKeys = follows
         bg.perform { [weak self] in
-            self?.bgAccount?.invalidateFollowingCaches()
+            guard let self, let bgAccount = self.bgAccount else { return }
+            bgAccount.invalidateFollowingCaches()
+            self.followingCache = bgAccount.loadFollowingCache()
         }
         sendNotification(.followsChanged, follows)
     }

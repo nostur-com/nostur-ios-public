@@ -1282,6 +1282,7 @@ class NXColumnViewModel: ObservableObject {
         mutedWordsChangedSub?.cancel()
         blockListUpdatedSub?.cancel()
         followsChangedSub?.cancel()
+        explorePubkeysChangedSub?.cancel()
         resumeFeedSub?.cancel()
         pauseFeedSub?.cancel()
         saveFeedStateSub?.cancel()
@@ -1317,6 +1318,7 @@ class NXColumnViewModel: ObservableObject {
         isViewPaused = false
         guard isVisible else { return }
         self.resetCancellables()
+        listenForExplorePubkeysChanged(config)
         paused = false
         FeedsCoordinator.shared.registerColumn(self)
         
@@ -1469,8 +1471,12 @@ class NXColumnViewModel: ObservableObject {
 #else
         speedTest?.start()
 #endif
-        scheduleInitialMediaTimeout(for: config)
+        scheduleInitialFeedTimeout(for: config)
         scheduleSelectedRelayRecovery(for: config)
+        if config.accountPubkey == EXPLORER_PUBKEY,
+           AppState.shared.rawExplorePubkeys.isEmpty {
+            req(RM.getAuthorContactsList(pubkey: EXPLORER_PUBKEY))
+        }
 #if DEBUG
         startFirstUnreadMeasurementIfNeeded(config, reason: "firstLoad")
 #endif
@@ -1650,6 +1656,21 @@ class NXColumnViewModel: ObservableObject {
     }
     
     private var followsChangedSub: AnyCancellable?
+    private var explorePubkeysChangedSub: AnyCancellable?
+
+    @MainActor
+    private func listenForExplorePubkeysChanged(_ config: NXColumnConfig) {
+        explorePubkeysChangedSub?.cancel()
+        explorePubkeysChangedSub = nil
+        guard config.accountPubkey == EXPLORER_PUBKEY else { return }
+        explorePubkeysChangedSub = receiveNotification(.explorePubkeysChanged)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self, self.isVisible,
+                      !AppState.shared.rawExplorePubkeys.isEmpty else { return }
+                self.reload(config, refreshRemote: true)
+            }
+    }
     
     @MainActor
     private func listenForFollowsChanged(_ config: NXColumnConfig) {
@@ -1818,7 +1839,7 @@ class NXColumnViewModel: ObservableObject {
             if !isExpandingMediaSource {
                 viewState = .loading
             }
-            scheduleInitialMediaTimeout(for: config)
+            scheduleInitialFeedTimeout(for: config)
             scheduleSelectedRelayRecovery(for: config)
             if SettingsStore.shared.appWideSeenTracker {
                 Deduplicator.shared.onScreenSeen = []
@@ -1904,17 +1925,18 @@ class NXColumnViewModel: ObservableObject {
     }
 
     @MainActor
-    private func scheduleInitialMediaTimeout(for config: NXColumnConfig) {
+    func scheduleInitialFeedTimeout(for config: NXColumnConfig, timeoutNanoseconds: UInt64 = 12_000_000_000) {
         initialMediaTimeoutTask?.cancel()
         switch config.columnType {
         case .picture, .vine, .yak:
+            break
+        case .following where config.accountPubkey == EXPLORER_PUBKEY:
             break
         default:
             return
         }
 
         let configId = config.id
-        let timeoutNanoseconds: UInt64 = 12_000_000_000
         initialMediaTimeoutTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: timeoutNanoseconds)
             guard !Task.isCancelled else { return }

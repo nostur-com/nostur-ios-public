@@ -207,7 +207,6 @@ class NewOnboardingTracker {
             let pTags = kind3.fastPs.map { $0.1 }
             let existingAndCreatedContacts = self.createContactsFromPs(pTags, isOwnAccount: account.isFullAccount)
             account.followingPubkeys.formUnion(Set(pTags))
-            let followingPublicKeys = account.getFollowingPublicKeys(includeBlocked: true)
             
             let tTags = kind3.fastTs.map { $0.1 }
             for tag in tTags {
@@ -215,12 +214,14 @@ class NewOnboardingTracker {
             }
             
             DataProvider.shared().saveToDiskNow(.bgContext)
-            AccountsState.shared.loggedInAccount?.reloadFollows()
             
             DispatchQueue.main.async {
-                if AccountsState.shared.activeAccountPublicKey == pubkey {
-                    sendNotification(.followsChanged, followingPublicKeys)
-                }
+                guard let loggedInAccount = AccountsState.shared.loggedInAccount,
+                      loggedInAccount.pubkey == pubkey else { return }
+                // The background save merges asynchronously. Apply the imported
+                // additions to the view account before refreshing feed state.
+                loggedInAccount.account.followingPubkeys.formUnion(Set(pTags))
+                loggedInAccount.reloadFollows()
             }
             self.fetchedFollowsTask = true
             

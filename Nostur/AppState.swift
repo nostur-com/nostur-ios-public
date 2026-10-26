@@ -42,7 +42,12 @@ class AppState: ObservableObject {
     public var appIsInBackground = false
     public var lastBackgroundedAt: Date?
     public var lastForegroundedAt: Date?
-    public var rawExplorePubkeys: Set<String> = []
+    public var rawExplorePubkeys: Set<String> = [] {
+        didSet {
+            guard rawExplorePubkeys != oldValue else { return }
+            sendNotification(.explorePubkeysChanged, rawExplorePubkeys)
+        }
+    }
 
     /// Seconds spent in the last real background, if we just returned to foreground.
     public func lastBackgroundDuration(now: Date = Date()) -> TimeInterval {

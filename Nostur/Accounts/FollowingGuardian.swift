@@ -165,6 +165,7 @@ class FollowingGuardian: ObservableObject {
         }
     }
     
+    @MainActor
     func removeFollowing(_ pubkeys:Set<String>) {
         guard let account = account() else { return }
         account.followingPubkeys.subtract(pubkeys)
