@@ -26,6 +26,10 @@ final class LoginFeedStateTests: XCTestCase {
 
         let loggedInAccount = LoggedInAccount(account)
         XCTAssertEqual(loggedInAccount.viewFollowingPublicKeys, [account.publicKey])
+        XCTAssertFalse(loggedInAccount.hasLoadedFollowingList)
+        // A store refresh before the relay response must not show the empty state.
+        loggedInAccount.reloadFollows()
+        XCTAssertFalse(loggedInAccount.hasLoadedFollowingList)
         let follows = Set((1...870).map { String(format: "%064x", $0) })
         let privateFollow = String(repeating: "b", count: 64)
         account.followingPubkeys = follows
@@ -37,6 +41,8 @@ final class LoginFeedStateTests: XCTestCase {
         let expected = follows.union([account.publicKey, privateFollow])
         XCTAssertEqual(loggedInAccount.viewFollowingPublicKeys, expected)
         XCTAssertEqual(loggedInAccount.followingPublicKeys, expected)
+        loggedInAccount.finishLoadingFollowingList()
+        XCTAssertTrue(loggedInAccount.hasLoadedFollowingList)
 
         // Simulate a Core Data merge bypassing the cached convenience setter.
         account.followingPubkeys_ = String(repeating: "c", count: 64)

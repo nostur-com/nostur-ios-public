@@ -54,6 +54,9 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
     
     @Published
     public var viewFollowingPublicKeys: Set<String> = []
+
+    @Published
+    public private(set) var hasLoadedFollowingList = false
     
     
     
@@ -274,6 +277,7 @@ extension LoggedInAccount {
             .union(account.privateFollowingPubkeys) // if we do this in bg.perform it loads too late for other views
         self.viewFollowingPublicKeys = follows
         self.followingPublicKeys = follows
+        self.hasLoadedFollowingList = follows.count > 1 || account.flagsSet.contains("nostur_created")
         let accountObjectID = account.objectID
         let accountPubkey = account.publicKey
         if follows.count <= 1 && !account.flagsSet.contains("nostur_created") {
@@ -370,6 +374,13 @@ extension LoggedInAccount {
         // A background refetch can lag behind a view-context merge and overwrite
         // the new follow list with an empty snapshot during first login.
         applyCloudAccountFeedChange()
+    }
+
+    @MainActor
+    public func finishLoadingFollowingList() {
+        reloadFollows()
+        // Publish completion only after the view's follow snapshot is current.
+        hasLoadedFollowingList = true
     }
 
     /// Refreshes feed-driving follow state after an in-place Core Data/CloudKit merge. Reading

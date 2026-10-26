@@ -62,7 +62,8 @@ class FollowingGuardian: ObservableObject {
                 let nEvent = notification.object as! NEvent
                 guard nEvent.kind == .contactList else { return }
                 guard nEvent.publicKey == AccountsState.shared.activeAccountPublicKey else { return }
-                guard let account = AccountsState.shared.loggedInAccount?.account else { return }
+                guard let loggedInAccount = AccountsState.shared.loggedInAccount else { return }
+                let account = loggedInAccount.account
                 
                 // TODO: Make this work for all accounts, not just active
                 let pubkeysOwn = account.followingPubkeys
@@ -75,6 +76,10 @@ class FollowingGuardian: ObservableObject {
                 self?.followNewContacts(added: added, account: account)
                 let tagsRelay = nEvent.tTags()
                 self?.followTags(tagsRelay, account: account)
+                Task { @MainActor in
+                    guard loggedInAccount.pubkey == nEvent.publicKey else { return }
+                    loggedInAccount.finishLoadingFollowingList()
+                }
                 
                 guard account.isFullAccount else { return }
                 

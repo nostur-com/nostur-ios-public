@@ -17743,6 +17743,9 @@
         }
       }
     },
+    "Loading your following list…" : {
+      "comment" : "Loading message while fetching an existing account's follows after login"
+    },
     "Loading..." : {
       "localizations" : {
         "es" : {

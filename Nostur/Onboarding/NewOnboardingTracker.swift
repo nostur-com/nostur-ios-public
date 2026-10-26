@@ -231,7 +231,7 @@ class NewOnboardingTracker {
                 // The background save merges asynchronously. Apply the imported
                 // additions to the view account before refreshing feed state.
                 loggedInAccount.account.followingPubkeys.formUnion(Set(pTags))
-                loggedInAccount.reloadFollows()
+                loggedInAccount.finishLoadingFollowingList()
             }
             self.fetchedFollowsTask = true
             

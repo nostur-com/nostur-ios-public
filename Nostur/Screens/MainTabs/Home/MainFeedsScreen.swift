@@ -293,17 +293,25 @@ struct MainFeedsScreen: View {
                 if (showingOtherContact == nil && la.viewFollowingPublicKeys.count <= 1 && !didSend) {
                     VStack {
                         Spacer()
-                        Text("You are not following anyone yet, visit the Explore tab and follow some people")
-                            .multilineTextAlignment(.center)
-                            .padding(.all, 30.0)
-                        
-                        Button {
-                            enableExploreFeed = true
-                            selectedSubTab = "Explore"
-                        } label: {
-                            Text("Explore", comment: "Button to go to the Explore tab")
+                        if !la.hasLoadedFollowingList {
+                            ProgressView {
+                                Text("Loading your following list…", comment: "Loading message while fetching an existing account's follows after login")
+                            }
+                            .padding(30)
                         }
-                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
+                        else {
+                            Text("You are not following anyone yet, visit the Explore tab and follow some people")
+                                .multilineTextAlignment(.center)
+                                .padding(.all, 30.0)
+
+                            Button {
+                                enableExploreFeed = true
+                                selectedSubTab = "Explore"
+                            } label: {
+                                Text("Explore", comment: "Button to go to the Explore tab")
+                            }
+                            .buttonStyle(NRButtonStyle(style: .borderedProminent))
+                        }
                         Spacer()
                     }
                     .onReceive(receiveNotification(.didSend)) { _ in
