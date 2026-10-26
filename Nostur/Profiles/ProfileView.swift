@@ -17,6 +17,7 @@ struct ProfileView: View {
     
     @ObservedObject public var nrContact: NRContact
     public var tab: String?
+    public var usesNativeNavigation = false
     
     
     @Environment(\.theme) private var theme
@@ -218,14 +219,14 @@ struct ProfileView: View {
         }
 
         
-        .nbNavigationDestination(isPresented: $showFollowing) {
+        .nosturNavigationDestination(isPresented: $showFollowing, usesNativeNavigation: usesNativeNavigation) {
             ProfileFollowingList(pubkey: nrContact.pubkey)
                 .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
                 .navigationTitle("Following")
                 .background(theme.listBackground)
                 .environment(\.containerID, containerID)
         }
-        .nbNavigationDestination(isPresented: $showFollowers) {
+        .nosturNavigationDestination(isPresented: $showFollowers, usesNativeNavigation: usesNativeNavigation) {
             NXList(plain: true) {
                 FollowersList(pubkey: nrContact.pubkey)
             }

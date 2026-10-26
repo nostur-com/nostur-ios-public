@@ -52,6 +52,34 @@ extension View {
     func nosturNavigationStackCompat() -> some View {
         modifier(NosturNavigationStackModifier())
     }
+
+    /// A local destination must use the API of its owning stack. A plain native
+    /// stack does not install NavigationBackport's destination/path holders.
+    func nosturNavigationDestination<Destination: View>(
+        isPresented: Binding<Bool>,
+        usesNativeNavigation: Bool,
+        @ViewBuilder destination: @escaping () -> Destination
+    ) -> some View {
+        modifier(NosturLocalDestinationModifier(
+            isPresented: isPresented,
+            usesNativeNavigation: usesNativeNavigation,
+            destination: destination
+        ))
+    }
+}
+
+private struct NosturLocalDestinationModifier<Destination: View>: ViewModifier {
+    @Binding var isPresented: Bool
+    let usesNativeNavigation: Bool
+    @ViewBuilder let destination: () -> Destination
+
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *), usesNativeNavigation {
+            content.navigationDestination(isPresented: $isPresented, destination: destination)
+        } else {
+            content.nbNavigationDestination(isPresented: $isPresented, destination: destination)
+        }
+    }
 }
 
 @available(iOS 27.1, *)

@@ -6,6 +6,19 @@
 //
 
 import SwiftUI
+import NavigationBackport
+
+extension View {
+    /// Composer toolbar overflow on iOS 27 needs the native navigation bar.
+    @ViewBuilder
+    func composerNavigationStackCompat() -> some View {
+        if #available(iOS 27.0, *) {
+            self.nbUseNavigationStack(.whenAvailable)
+        } else {
+            self.nbUseNavigationStack(.never)
+        }
+    }
+}
 
 struct ComposePostContainer: View {
     

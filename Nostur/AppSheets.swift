@@ -93,7 +93,7 @@ struct WithAppSheets: ViewModifier {
                             .presentationBackgroundCompat(theme.listBackground)
                     }
                 }
-                .nbUseNavigationStack(.never)
+                .composerNavigationStackCompat()
                 .presentationBackgroundCompat(theme.listBackground)
             })
         

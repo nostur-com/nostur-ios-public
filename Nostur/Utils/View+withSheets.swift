@@ -218,7 +218,7 @@ struct WithSheets: ViewModifier {
                         .environment(\.theme, theme)
                         .presentationBackgroundCompat(theme.listBackground)
                 }
-                .nbUseNavigationStack(.never)
+                .composerNavigationStackCompat()
             }
         
             .sheet(item: $quoteOrRepost) { quoteOrRepost in
@@ -239,7 +239,7 @@ struct WithSheets: ViewModifier {
                         .environment(\.theme, theme)
                         .presentationBackgroundCompat(theme.listBackground)
                 }
-                .nbUseNavigationStack(.never)
+                .composerNavigationStackCompat()
             }
         
             .onReceive(receiveNotification(.showZapSheet)) { notification in
@@ -288,7 +288,7 @@ struct WithSheets: ViewModifier {
                         .environment(\.managedObjectContext, viewContext())
                         .presentationBackgroundCompat(theme.listBackground)
                 }
-                .nbUseNavigationStack(.never)
+                .composerNavigationStackCompat()
             }
         
         // Zap customizer sheet

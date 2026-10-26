@@ -281,7 +281,10 @@ struct Entry: View {
             )
         }
         .modifier {
-            if #available(iOS 26.0, *) {
+            if #available(iOS 27.0, *) {
+                $0.toolbar(content: self.toolbar27)
+            }
+            else if #available(iOS 26.0, *) {
                 $0.toolbar(content: self.toolbar26)
             }
             else if #available(iOS 16.0, *) {
@@ -523,6 +526,64 @@ struct Entry: View {
             }
         }
     }
+
+    @available(iOS 27.0, *)
+    @ToolbarContentBuilder
+    func toolbar27() -> some ToolbarContent {
+        ToolbarItem(id: "composer.cancel", placement: .cancellationAction) {
+            Button("Cancel", systemImage: "xmark", role: .cancel) { onDismiss() }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+        }
+        .sharedBackgroundVisibility(.hidden)
+
+        if kind == .highlight {
+            ToolbarItem(id: "composer.author", placement: .primaryAction) {
+                self.highlightAddRemoveAuthorButton
+            }
+            .visibilityPriority(.high)
+        } else if kind != .shortVideos && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
+            ToolbarItem(id: "composer.options", placement: .primaryAction) {
+                Menu {
+                    self.privateReplyButton
+                    if showVoiceRecorderButton {
+                        self.voiceRecordingButton
+                    }
+                    if kind != .picture {
+                        self.startNestButton
+                    }
+                    self.takePhotoButton
+                    self.pickPhotoButton
+                    if kind != .picture {
+                        self.pickVideoButton
+                        self.gifButton
+                    }
+                    self.previewButton
+                } label: {
+                    Label("Post options", systemImage: "ellipsis")
+                }
+                .accessibilityIdentifier("composer.options")
+            }
+        } else if kind != .shortVideos {
+            ToolbarItem(id: "composer.preview", placement: .primaryAction) {
+                self.previewButton
+                    .accessibilityIdentifier("composer.preview")
+            }
+            .visibilityPriority(.high)
+        }
+
+        ToolbarItem(id: "composer.post", placement: .primaryAction) {
+            self.nativeSendButton
+                .accessibilityIdentifier("composer.post")
+        }
+        .visibilityPriority(.high)
+
+        if let uploadError = vm.uploadError {
+            ToolbarItem(placement: .principal) {
+                Text(uploadError).foregroundColor(.red)
+            }
+        }
+    }
     
     @ViewBuilder
     var highlightAddRemoveAuthorButton: some View {
@@ -646,6 +707,30 @@ struct Entry: View {
         .help("Show Preview of this post")
     }
     
+    @available(iOS 27.0, *)
+    @ViewBuilder
+    private var nativeSendButton: some View {
+        Button {
+            self.dispatchSend()
+        } label: {
+            Label(String(localized: "Post.verb", comment: "Button to post (publish) a post"), systemImage: "paperplane.fill")
+                .labelStyle(.iconOnly)
+                .opacity(typingTextModel.uploading || typingTextModel.sending ? 0 : 1)
+                .overlay {
+                    if typingTextModel.uploading || typingTextModel.sending {
+                        ProgressView()
+                    }
+                }
+                .frame(width: 22, height: 22)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderedProminent)
+        .buttonBorderShape(.circle)
+        .tint(theme.accent)
+        .disabled(shouldDisablePostButton)
+        .help("Send")
+    }
+
     @ViewBuilder
     private var sendButton: some View {
         Button {

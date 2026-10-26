@@ -143,14 +143,15 @@ struct Search: View {
                         .modifier {
                             if !IS_DESKTOP_COLUMNS() {
                                 $0.toolbar {
-                                    ToolbarItem(placement: .navigationBarLeading) {
-                                        Button {
-                                            showSidebar = true
-                                        } label: {
-                                            PFP(pubkey: la.account.publicKey, account: la.account, size:30)
+                                    if #available(iOS 26.0, *) {
+                                        ToolbarItem(placement: .navigationBarLeading) {
+                                            accountMenuAvatar
                                         }
-                                        .accessibilityLabel("Account menu")
-
+                                        .sharedBackgroundVisibility(.hidden)
+                                    } else {
+                                        ToolbarItem(placement: .navigationBarLeading) {
+                                            accountMenuAvatar
+                                        }
                                     }
                                 }
                                 .toolbarNavigationBackgroundVisible()
@@ -321,6 +322,14 @@ struct Search: View {
             .tabBarSpaceCompat()
         }
         .nosturNavigationStackCompat()
+    }
+
+    private var accountMenuAvatar: some View {
+        PFP(pubkey: la.account.publicKey, account: la.account, size: 30)
+            .onTapGesture { showSidebar = true }
+            .accessibilityLabel("Account menu")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { showSidebar = true }
     }
 
     private func receiveProfileScan(_ value: String) {

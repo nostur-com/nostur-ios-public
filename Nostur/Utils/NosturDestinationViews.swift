@@ -124,9 +124,10 @@ struct NotePathDestination: View {
 struct ContactPathDestination: View {
     let path: ContactPath
     let containerID: String
+    var usesNativeNavigation = false
 
     var body: some View {
-        ProfileByPubkey(pubkey: path.key, tab: path.tab)
+        ProfileByPubkey(pubkey: path.key, tab: path.tab, usesNativeNavigation: usesNativeNavigation)
             .environment(\.containerID, containerID)
             .environmentObject(VideoPostPlaybackCoordinator())
     }
@@ -135,9 +136,10 @@ struct ContactPathDestination: View {
 struct NRContactPathDestination: View {
     let path: NRContactPath
     let containerID: String
+    var usesNativeNavigation = false
 
     var body: some View {
-        ProfileView(nrContact: path.nrContact, tab: path.tab)
+        ProfileView(nrContact: path.nrContact, tab: path.tab, usesNativeNavigation: usesNativeNavigation)
             .environment(\.containerID, containerID)
             .environmentObject(VideoPostPlaybackCoordinator())
     }
@@ -146,9 +148,10 @@ struct NRContactPathDestination: View {
 struct NRContactDestination: View {
     let nrContact: NRContact
     let containerID: String
+    var usesNativeNavigation = false
 
     var body: some View {
-        ProfileView(nrContact: nrContact)
+        ProfileView(nrContact: nrContact, usesNativeNavigation: usesNativeNavigation)
             .environment(\.containerID, containerID)
             .environmentObject(VideoPostPlaybackCoordinator())
     }
@@ -284,9 +287,9 @@ extension View {
             .navigationDestination(for: ArticlePath.self) { ArticlePathDestination(path: $0, containerID: containerID) }
             .navigationDestination(for: ArticleCommentsPath.self) { ArticleCommentsDestination(path: $0, containerID: containerID) }
             .navigationDestination(for: NotePath.self) { NotePathDestination(path: $0, containerID: containerID) }
-            .navigationDestination(for: ContactPath.self) { ContactPathDestination(path: $0, containerID: containerID) }
-            .navigationDestination(for: NRContactPath.self) { NRContactPathDestination(path: $0, containerID: containerID) }
-            .navigationDestination(for: NRContact.self) { NRContactDestination(nrContact: $0, containerID: containerID) }
+            .navigationDestination(for: ContactPath.self) { ContactPathDestination(path: $0, containerID: containerID, usesNativeNavigation: true) }
+            .navigationDestination(for: NRContactPath.self) { NRContactPathDestination(path: $0, containerID: containerID, usesNativeNavigation: true) }
+            .navigationDestination(for: NRContact.self) { NRContactDestination(nrContact: $0, containerID: containerID, usesNativeNavigation: true) }
             .navigationDestination(for: Badge.self) { BadgeDestination(badge: $0, containerID: containerID) }
             .navigationDestination(for: CloudFeed.self) { CloudFeedDestination(feed: $0, containerID: containerID) }
             .navigationDestination(for: ViewPath.self) { ViewPathDestination(path: $0, navPath: navPath, containerID: containerID) }

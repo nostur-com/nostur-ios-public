@@ -14,6 +14,7 @@ struct ProfileByPubkey: View {
     
     public let pubkey: String
     public var tab: String?
+    public var usesNativeNavigation = false
         
     @State private var editingAccount: CloudAccount? = nil
     @StateObject private var vm = FetchVM<NRContact>(timeout: 1.5, debounceTime: 0.05)
@@ -65,7 +66,7 @@ struct ProfileByPubkey: View {
                     vm.fetch()
                 }
         case .ready(let nrContact):
-            ProfileView(nrContact: nrContact, tab:tab)
+            ProfileView(nrContact: nrContact, tab: tab, usesNativeNavigation: usesNativeNavigation)
                 .preference(key: TabTitlePreferenceKey.self, value: nrContact.anyName)
         case .timeout:
             VStack {
