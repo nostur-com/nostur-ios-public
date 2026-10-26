@@ -5500,6 +5500,9 @@
         }
       }
     },
+    "Apply crop" : {
+
+    },
     "Approve" : {
       "localizations" : {
         "es" : {
@@ -10307,6 +10310,9 @@
     "Couldn't confirm this profile on any relay. You can share the npub or try again." : {
 
     },
+    "Couldn’t edit photo" : {
+
+    },
     "Couldn't load this profile. Check your connection and try again." : {
 
     },
@@ -10565,6 +10571,12 @@
           }
         }
       }
+    },
+    "Crop" : {
+
+    },
+    "Crop photo" : {
+
     },
     "Currently allowed by the filter: %lld contacts" : {
       "localizations" : {
@@ -12221,6 +12233,9 @@
           }
         }
       }
+    },
+    "Downloading resized photos to read dimensions…" : {
+      "comment" : "Blossom /media omitted output dimensions, so the processed file is being downloaded."
     },
     "Downloading..." : {
       "localizations" : {
@@ -19024,6 +19039,18 @@
         }
       }
     },
+    "Move crop down" : {
+
+    },
+    "Move crop left" : {
+
+    },
+    "Move crop right" : {
+
+    },
+    "Move crop up" : {
+
+    },
     "Multi-columns and more" : {
       "localizations" : {
         "es" : {
@@ -21788,6 +21815,9 @@
     "Open zapped post" : {
 
     },
+    "Opens the square crop editor" : {
+
+    },
     "Optimize now" : {
       "comment" : "Button to run database clean up now",
       "localizations" : {
@@ -22152,6 +22182,12 @@
           }
         }
       }
+    },
+    "Photo crop preview" : {
+
+    },
+    "Photo server is processing uploads…" : {
+      "comment" : "The NIP-96 server explicitly reported that it is still processing uploaded files."
     },
     "Photos" : {
       "comment" : "Feed title\nTab title for photos feed of people you follow",
@@ -22611,6 +22647,9 @@
         }
       }
     },
+    "Pinch to zoom. Drag to position." : {
+
+    },
     "Pink" : {
       "localizations" : {
         "es" : {
@@ -22765,6 +22804,9 @@
           }
         }
       }
+    },
+    "Please try again. Your original photo has been kept." : {
+
     },
     "Point your camera at a Nostr profile QR code" : {
       "localizations" : {
@@ -23874,6 +23916,9 @@
         }
       }
     },
+    "Processing" : {
+
+    },
     "Profanity" : {
       "comment" : "Menu item in choice list",
       "localizations" : {
@@ -24904,6 +24949,9 @@
           }
         }
       }
+    },
+    "Reading dimensions" : {
+
     },
     "Reading photo…" : {
 
@@ -27280,6 +27328,9 @@
         }
       }
     },
+    "Reset" : {
+
+    },
     "Resolving conversation references" : {
 
     },
@@ -28808,6 +28859,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ sats verzonden naar %2$@ op [bericht](nostur:e:%3$@)"
+          }
+        }
+      }
+    },
+    "Sent %lld of %lld photos" : {
+      "comment" : "Photo upload progress: photos whose bytes have been sent, followed by the total. The server may not have replied yet.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sent %1$lld of %2$lld photos"
           }
         }
       }
@@ -30859,6 +30921,9 @@
         }
       }
     },
+    "Square crop" : {
+
+    },
     "Start Divine videos with sound" : {
       "localizations" : {
         "es" : {
@@ -31712,9 +31777,6 @@
           }
         }
       },
-      "shouldTranslate" : false
-    },
-    "Test build %@" : {
       "shouldTranslate" : false
     },
     "Test report: %@ – %@" : {
@@ -34779,17 +34841,6 @@
         }
       }
     },
-    "Uploaded %lld of %lld photos" : {
-      "comment" : "Photo upload progress: completed photos followed by total photos.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploaded %1$lld of %2$lld photos"
-          }
-        }
-      }
-    },
     "Uploading artwork…" : {
       "localizations" : {
         "es" : {
@@ -34973,6 +35024,9 @@
           }
         }
       }
+    },
+    "Use the zoom slider and position controls below to adjust the crop" : {
+
     },
     "Use Video" : {
       "localizations" : {
@@ -35513,7 +35567,13 @@
         }
       }
     },
+    "Waiting for photo server response…" : {
+      "comment" : "Photo bytes have been sent; the upload server has not replied yet."
+    },
     "Waiting for relay response" : {
+
+    },
+    "Waiting for server" : {
 
     },
     "Waiting for the relay pacing interval" : {
@@ -37014,6 +37074,9 @@
       }
     },
     "Zaps you sent" : {
+
+    },
+    "Zoom" : {
 
     }
   },
