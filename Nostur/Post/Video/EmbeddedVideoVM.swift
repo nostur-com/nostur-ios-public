@@ -99,6 +99,11 @@ class EmbeddedVideoVM: ObservableObject {
         else if !loadAnyway && SettingsStore.shared.lowDataMode {
             self.viewState = .lowDataMode(videoUrlString)
         }
+        else if isAudio && !loadAnyway {
+            // Audio has no video frame to preview. Live MP3 endpoints may also
+            // ignore byte ranges and never finish a preview download.
+            self.viewState = .noPreviewFound(videoUrlString)
+        }
         else if isStream { // For streams, try to get type of steam first
             firstFrameTask = Task { [weak self] in
                 guard let self else { return }
