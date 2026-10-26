@@ -69,6 +69,8 @@ class MessageParser {
     }
     
     func socketReceivedMessage(text: String, relayUrl: String, client: RelayConnection) {
+        // Count-prefetch terminal handling must not wait behind Core Data imports.
+        if ViewingSubscriptions.shared.receiveTerminal(text: text, relay: normalizeRelayUrl(relayUrl)) { return }
         if WoTRefreshRelayInbox.shared.route(text: text, relay: relayUrl) { return }
         // Annual history has its own bounded utility sink. Capture original signed
         // payloads before duplicate detection or Core Data import transforms them.

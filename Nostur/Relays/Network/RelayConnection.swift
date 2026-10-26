@@ -301,8 +301,18 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public var eventsThatMayNeedAuth: [String: String] = [:] // [ post id : event message text string ]
     
     public func sendMessage(_ text: String, subscriptionId: String? = nil, bypassQueue: Bool = false) {
+        enqueueMessage(text, subscriptionId: subscriptionId, bypassQueue: bypassQueue)
+    }
+
+    func sendViewingMessage(_ text: String, subscriptionId: String, expiresAt: TimeInterval) {
+        enqueueMessage(text, subscriptionId: subscriptionId, expiresAt: expiresAt)
+    }
+
+    private func enqueueMessage(_ text: String, subscriptionId: String? = nil,
+                                bypassQueue: Bool = false, expiresAt: TimeInterval? = nil) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
+            if let expiresAt, ProcessInfo.processInfo.systemUptime >= expiresAt { return }
             if !self.isDeviceConnected {
 #if DEBUG
                 L.sockets.debug("🔴🔴 No internet. Did not sendMessage \(self.url) -[LOG]-")
@@ -338,14 +348,14 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     }
                 }
                 else {
-                    let socketMessage = SocketMessage(text: text, subscriptionId: subscriptionId)
+                    let socketMessage = SocketMessage(expiresAt: expiresAt, text: text, subscriptionId: subscriptionId)
                     self.outQueue.insert(socketMessage, at: 0)
                 }
                 
                 return
             }
             
-            let socketMessage = SocketMessage(text: text, subscriptionId: subscriptionId)
+            let socketMessage = SocketMessage(expiresAt: expiresAt, text: text, subscriptionId: subscriptionId)
             if Self.isReqMessage(text), let subscriptionId {
                 self.outQueue.removeAll { $0.subscriptionId == subscriptionId && Self.isReqMessage($0.text) }
             }
@@ -433,6 +443,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
 
         while !outQueue.isEmpty {
+            // A delayed connect/auth or a saturated relay queue must not flush
+            // count-prefetch REQs whose scheduler deadline has already passed.
+            if let expiresAt = outQueue[0].expiresAt, ProcessInfo.processInfo.systemUptime >= expiresAt {
+                outQueue.removeFirst()
+                continue
+            }
             let now = Date()
             trimReqSendHistory(now: now)
 
@@ -732,6 +748,11 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             }
             if let subscriptionId = Self.subscriptionIdForLatencyResponse(from: string) {
                 self.stats.recordTrackedReqResponse(subscriptionId: subscriptionId)
+#if DEBUG
+                if Self.isEventMessage(string) {
+                    ViewingSubscriptions.shared.recordEvent(relay: self.url, subscriptionId: subscriptionId)
+                }
+#endif
             }
             
         }

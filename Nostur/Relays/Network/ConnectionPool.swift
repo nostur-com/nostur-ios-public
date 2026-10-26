@@ -870,6 +870,39 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    // These entry points are asynchronous and safe from UI/background callers.
+    // VIEWING is read-relay-only and must never expand into outbox fan-out.
+    func viewingRelayTargets(_ completion: @escaping ([String]) -> Void) {
+        queue.async(flags: .barrier) {
+            completion(self.connections.values.filter {
+                $0.relayData.read && !$0.isNWC && !$0.isNC && !self.isDisabledRelay($0.url)
+            }.map(\.url))
+        }
+    }
+
+    func sendViewingRequest(relay: String, subscriptionId: String, ids: [String], deadline: TimeInterval) {
+        queue.async(flags: .barrier) {
+            guard ProcessInfo.processInfo.systemUptime < deadline,
+                  let connection = self.connections[relay], connection.relayData.read,
+                  !self.isDisabledRelay(relay) else { return }
+            if !connection.isSocketConnected && !connection.isSocketConnecting {
+                connection.connect(reason: "VIEWING counts")
+            }
+            let message = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: [
+                Filters(kinds: [1,1244,1111,6,16,7,9735], tagFilter: TagFilter(tag: "e", values: Set(ids)), limit: 5000),
+                Filters(kinds: [1,1111,30023], tagFilter: TagFilter(tag: "q", values: Set(ids)), limit: 5000)
+            ])
+            guard let text = message.json() else { return }
+            connection.sendViewingMessage(text, subscriptionId: subscriptionId, expiresAt: deadline)
+        }
+    }
+
+    func closeViewingRequest(relay: String, subscriptionId: String) {
+        queue.async(flags: .barrier) {
+            self.connections[relay]?.closeAndDropSubscription(subscriptionId)
+        }
+    }
+
     // Can use from any context (will switch to connection queue)
     // will skip send if subscriptionId lready in connection?.nreqSubscriptions
     func sendMessage(_ message: NosturClientMessage, subscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil) {
@@ -1368,6 +1401,7 @@ public class ConnectionPool: ObservableObject {
 
 
 struct SocketMessage {
+    var expiresAt: TimeInterval? = nil
     let id = UUID()
     let text: String
     let subscriptionId: String?
