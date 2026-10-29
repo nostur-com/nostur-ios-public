@@ -5,6 +5,57 @@ import Nuke
 @testable import Nostur
 
 final class ProfileImageSafetyTests: XCTestCase {
+    @MainActor
+    func testHTMLBehindImageURLsIsRecognizedFromDownloadedResponse() async {
+        let cases: [(String, String?, String)] = [
+            ("https://commons.wikimedia.org/wiki/File:Internet_map_1024_-_transparent,_inverted.png", "text/html", "<!DOCTYPE html><html><body>File page</body></html>"),
+            ("https://example.com/photo.jpg", "text/html", "<body>A webpage</body>"),
+            ("https://another.example/download.png?token=123", "application/xhtml+xml", "<?xml version=\"1.0\"?><html/>"),
+            ("https://example.com/photo.gif", nil, "\u{feff} \n<!doctype HTML><html></html>"),
+            ("https://example.com/photo.webp", "image/webp", " \n<HTML lang=\"en\"></HTML>")
+        ]
+        for (urlString, mimeType, html) in cases {
+            let url = URL(string: urlString)!
+            let data = Data(html.utf8)
+            let response = URLResponse(url: url, mimeType: mimeType, expectedContentLength: data.count, textEncodingName: "utf-8")
+            let source = StubDataLoader(response: response, chunks: [data])
+            var configuration = ImagePipeline.Configuration()
+            configuration.dataLoader = source
+            configuration.imageCache = nil
+            configuration.dataCache = nil
+            configuration.makeImageDecoder = { _ in
+                LimitedImageDecoder(underlying: ImageDecoders.Default(), policy: .post)
+            }
+            let pipeline = ImagePipeline(configuration: configuration)
+            do {
+                _ = try await pipeline.imageTask(with: ImageRequest(url: url)).response
+                XCTFail("HTML must not decode as an image")
+            } catch {
+                XCTAssertTrue(MediaViewVM.isWebpageResponse(error), urlString)
+            }
+            XCTAssertEqual(source.loadCount, 1)
+        }
+    }
+
+    @MainActor
+    func testCorruptImageIsNotTreatedAsWebpage() {
+        let url = URL(string: "https://example.com/corrupt.png")!
+        let decoder = LimitedImageDecoder(underlying: ImageDecoders.Default(), policy: .post)
+        for mimeType in ["image/png", "application/octet-stream"] {
+            let context = ImageDecodingContext(
+                request: ImageRequest(url: url),
+                data: Data("not an image".utf8),
+                urlResponse: URLResponse(url: url, mimeType: mimeType, expectedContentLength: 12, textEncodingName: nil)
+            )
+            let error = ImagePipeline.Error.decodingFailed(decoder: decoder, context: context, error: LimitedImageDecoder.Error.unreadableImage)
+            XCTAssertFalse(MediaViewVM.isWebpageResponse(error))
+            guard case .error? = MediaViewVM.sizeFailureState(for: error, loadAnyway: false) else {
+                return XCTFail("Corrupt images should retain their read error")
+            }
+        }
+        XCTAssertFalse(MediaViewVM.isWebpageResponse(URLError(.notConnectedToInternet)))
+    }
+
     func testRejectsInvalidAnimatedImageData() {
         XCTAssertFalse(ProfileImageSafety.isSafeAnimatedImage(Data("not an image".utf8), policy: .profilePicture))
     }

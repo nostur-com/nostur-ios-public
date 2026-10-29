@@ -153,7 +153,11 @@ struct MediaPlaceholder: View {
     }
     
     var body: some View {
-        if layout.contentMode == .fit {
+        if case .webpage = vm.state {
+            mediaPlaceholder
+                .frame(width: availableWidth)
+        }
+        else if layout.contentMode == .fit {
             mediaPlaceholder
                 .frame(
                     width: availableWidth,
@@ -250,6 +254,8 @@ struct MediaPlaceholder: View {
     @ViewBuilder
     private var mediaPlaceholder: some View {
         switch vm.state {
+        case .webpage:
+            LinkPreviewView(url: galleryItem.url, autoload: autoload)
         case .loading(let percentage), .paused(let percentage):
             theme.background.opacity(0.7)
                 .overlay {

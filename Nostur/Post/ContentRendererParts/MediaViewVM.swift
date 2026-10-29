@@ -208,6 +208,15 @@ class MediaViewVM: ObservableObject {
         catch {
             guard !preserveCurrentImage else { return false }
 
+            // A filename extension is only a hint. Use the failed download's
+            // response to recognize webpages without another network request.
+            if encryptedFile == nil, !usePFPpipeline, Self.isWebpageResponse(error) {
+                guard !Task.isCancelled else { return false }
+                if case .paused = state { return false }
+                if reportFailure { state = .webpage }
+                return false
+            }
+
             // Explain local decoding and size errors directly instead of
             // presenting them as failed mirror searches.
             if let failureState = Self.sizeFailureState(for: error, loadAnyway: loadAnyway, usePFPpipeline: usePFPpipeline) {
@@ -288,6 +297,27 @@ class MediaViewVM: ObservableObject {
         }).count
     }
 
+    static func isWebpageResponse(_ error: Swift.Error) -> Bool {
+        guard let error = error as? ImagePipeline.Error else { return false }
+        let context: ImageDecodingContext
+        switch error {
+        case .decodingFailed(_, let failedContext, _), .decoderNotRegistered(let failedContext):
+            context = failedContext
+        default:
+            return false
+        }
+        let mimeType = context.urlResponse?.mimeType?.lowercased()
+        if mimeType == "text/html" || mimeType == "application/xhtml+xml" {
+            return true
+        }
+        // Some servers omit or mislabel Content-Type. Inspect only a small
+        // prefix, and require an HTML document marker rather than arbitrary text.
+        let prefix = String(decoding: context.data.prefix(1024), as: UTF8.self)
+            .trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "\u{feff}")))
+            .lowercased()
+        return prefix.hasPrefix("<!doctype html") || prefix.hasPrefix("<html")
+    }
+
     static func sizeFailureState(for error: Swift.Error, loadAnyway: Bool, usePFPpipeline: Bool = false) -> MediaViewState? {
         if error is LimitedDataLoader.Error {
             return loadAnyway || usePFPpipeline ? .mediaExceedsSafetyLimit : .imageTooLarge
@@ -328,6 +358,7 @@ class MediaViewVM: ObservableObject {
 }
 
 enum MediaViewState: Equatable {
+    case webpage
     case initial
     case lowDataMode
     case loading(Int) // Progress percentage
