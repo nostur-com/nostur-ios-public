@@ -26,6 +26,7 @@ class AnyPlayerModel: ObservableObject {
     private var playbackTask: Task<Void, Never>?
     private var playbackRequest: UUID?
     private var mediaLoadRequest: UUID?
+    @Published private(set) var mediaSessionID = UUID()
     private var temporaryPlaybackFile: URL?
     @Published var didFinishPlaying = false // to show Like/Zap
     @Published var showsPlaybackControls = false
@@ -174,6 +175,7 @@ class AnyPlayerModel: ObservableObject {
         
         let loadRequest = UUID()
         mediaLoadRequest = loadRequest
+        mediaSessionID = loadRequest
         pauseVideo()
         // View updates
         sendNotification(.stopPlayingVideo)
@@ -236,6 +238,7 @@ class AnyPlayerModel: ObservableObject {
         
         let loadRequest = UUID()
         mediaLoadRequest = loadRequest
+        mediaSessionID = loadRequest
         pauseVideo()
         // View updates
         sendNotification(.stopPlayingVideo)
@@ -604,6 +607,7 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     public func close() {
         mediaLoadRequest = nil
+        mediaSessionID = UUID()
         cancelPendingPlayback()
 #if DEBUG
         playbackDebugLog("close()")
@@ -767,14 +771,17 @@ class AnyPlayerModel: ObservableObject {
     @Published var downloadProgress: Int = 0
     
     // Needed for "Save to library"
+    @MainActor
     public func downloadVideo() async -> AVAsset? {
         guard let currentlyPlayingUrl, let videoUrl = URL(string: currentlyPlayingUrl) else { return nil }
+        let session = mediaSessionID
         self.downloadTask = ImageProcessing.shared.video.imageTask(with: videoUrl)
         
         guard let downloadTask = self.downloadTask else { return nil }
         
         for await progress in downloadTask.progress {
             Task { @MainActor in
+                guard self.mediaSessionID == session else { return }
                 let progress = Int(ceil(progress.fraction * 100))
                 if progress != 100 { // don't show 100, because at 100 still needs a few seconds to save to library
                     self.downloadProgress = progress

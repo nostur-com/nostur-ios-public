@@ -304,7 +304,6 @@ struct MainTabs27: View {
                 .overlay(alignment: .center) {
                     OverlayPlayer()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .ignoresSafeArea()
                 }
         }
     }

@@ -115,9 +115,13 @@ struct OverlayPlayer: View {
     }
         
     // State variables for saving video
-    @State private var isSaving = false
-    @State private var didSave = false
-    @State private var isSharing = false
+    @State private var savingSession: UUID?
+    @State private var savedSession: UUID?
+    @State private var sharingSession: UUID?
+
+    private var isSaving: Bool { savingSession == vm.mediaSessionID }
+    private var didSave: Bool { savedSession == vm.mediaSessionID }
+    private var isSharing: Bool { sharingSession == vm.mediaSessionID }
     @State private var shareableVideo: ShareableVideo?
     @State private var temporarySharedVideoURL: URL?
     @State private var bookmarkState = false
@@ -400,24 +404,7 @@ struct OverlayPlayer: View {
         )
     }
     
-    private func topControlsTopPadding(geometry: GeometryProxy, isLandscape: Bool) -> CGFloat {
-        let base: CGFloat
-        if isLandscape {
-            base = max(geometry.safeAreaInsets.top, 8)
-        }
-        else {
-            let windowTopInset = activeWindowScene()?.windows.first(where: { $0.isKeyWindow })?.safeAreaInsets.top ?? 0
-            base = max(geometry.safeAreaInsets.top, windowTopInset, 8)
-        }
-        // Mac Catalyst hides the title bar but keeps traffic lights over the top-left content area.
-        // Push fullscreen chrome down so Close (xmark) remains tappable.
-        if IS_CATALYST {
-            return base + 28
-        }
-        return base
-    }
-    
-    private func fullscreenTopControls(geometry: GeometryProxy, isLandscape: Bool) -> some View {
+    private var fullscreenTopControls: some View {
         HStack(spacing: 16) {
             controlButton(systemName: "xmark", label: "Close") {
                 rotateToPortrait()
@@ -488,7 +475,7 @@ struct OverlayPlayer: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.top, topControlsTopPadding(geometry: geometry, isLandscape: isLandscape))
+        .padding(.top, IS_CATALYST ? 36 : 8)
         .padding(.bottom, 28)
         .background(
             LinearGradient(
@@ -537,13 +524,12 @@ struct OverlayPlayer: View {
             
             if showTopChrome {
                 VStack(spacing: 0) {
-                    fullscreenTopControls(geometry: geometry, isLandscape: isLandscape)
+                    fullscreenTopControls
                     Spacer(minLength: 0)
                 }
             }
         }
         .frame(width: geometry.size.width, height: geometry.size.height)
-        .ignoresSafeArea(.container, edges: [.top, .bottom])
     }
     
     private func controlButton(systemName: String, label: String, size: CGFloat = 32, iconFont: Font = .title3, action: @escaping () -> Void) -> some View {
@@ -562,16 +548,10 @@ struct OverlayPlayer: View {
 #if DEBUG
         let _ = nxLogChanges(of: Self.self)
 #endif
-        GeometryReader { geometry in
+        GeometryReader { safeGeometry in
+            GeometryReader { geometry in
             if vm.isShown {
                 ZStack(alignment: videoAlignment) {
-                    // Fullscreen custom chrome sits above the single shared player (no second AVPC).
-                    // Hide when system PiP owns the picture (Mac) so chrome doesn't cover the app.
-                    if vm.viewMode == .fullscreen, !vm.isNativePictureInPictureActive {
-                        fullscreenChromeOverlays(geometry: geometry)
-                            .zIndex(1)
-                    }
-                    
                     VStack(spacing: 0) {
                         NRNavigationStack {
                             VStack(spacing: 0) {
@@ -1092,11 +1072,24 @@ struct OverlayPlayer: View {
                         bookmarkState = false
                     }
                 }
+                .onReceive(vm.$mediaSessionID) { _ in
+                    shareableVideo = nil
+                    cleanupSharedVideo()
+                }
                 .sheet(item: $shareableVideo, onDismiss: cleanupSharedVideo) { video in
                     ActivityView(activityItems: [video.url])
                 }
             }
         }
+            }
+            // Preserve the media/mini-player coordinate space while keeping
+            // fullscreen controls inside the independently measured safe region.
+            .ignoresSafeArea(.container, edges: IS_CATALYST ? .bottom : .all)
+            .overlay {
+                if vm.isShown, vm.viewMode == .fullscreen, !vm.isNativePictureInPictureActive {
+                    fullscreenChromeOverlays(geometry: safeGeometry)
+                }
+            }
     }
     }
     
@@ -1498,67 +1491,84 @@ struct OverlayPlayer: View {
     }
     
     func saveAVAssetToPhotos() {
-        guard !didSave else { return }
-        isSaving = true
+        guard !didSave, !isSaving, !isSharing else { return }
+        let session = vm.mediaSessionID
+        savingSession = session
         vm.downloadProgress = 0
-        
-        Task {
-            if let avAsset = await vm.downloadVideo() {
-                exportAsset(avAsset) { exportedURL in
+
+        Task { @MainActor in
+            guard vm.mediaSessionID == session else { return }
+            guard let avAsset = await vm.downloadVideo() else {
+                guard vm.mediaSessionID == session else { return }
+                sendNotification(.anyStatus, ("Failed to get video", "APP_NOTICE"))
+                savingSession = nil
+                return
+            }
+            exportAsset(avAsset) { exportedURL in
+                DispatchQueue.main.async {
                     guard let url = exportedURL else {
+                        guard vm.mediaSessionID == session else { return }
                         sendNotification(.anyStatus, ("Failed to export video", "APP_NOTICE"))
-                        isSaving = false
+                        savingSession = nil
                         return
                     }
 
+                    // Finish an already requested save even if the viewer has moved on.
                     requestPhotoLibraryAccess { granted in
                         if granted {
                             saveVideoToPhotoLibrary(videoURL: url) { success, error in
+                                guard vm.mediaSessionID == session else { return }
                                 if success {
-                                    didSave = true
+                                    savedSession = session
                                     sendNotification(.anyStatus, ("Saved to Photo Library", "APP_NOTICE"))
                                 } else {
                                     sendNotification(.anyStatus, ("Failed to save video: \(error?.localizedDescription ?? "Unknown error")", "APP_NOTICE"))
                                 }
-                                isSaving = false
+                                savingSession = nil
                             }
                         } else {
+                            try? FileManager.default.removeItem(at: url)
+                            guard vm.mediaSessionID == session else { return }
                             sendNotification(.anyStatus, ("Photo Library access was denied.", "APP_NOTICE"))
-                            isSaving = false
+                            savingSession = nil
                         }
                     }
                 }
-            }
-            else {
-                sendNotification(.anyStatus, ("Failed to get video", "APP_NOTICE"))
-                isSaving = false
-                return
             }
         }
     }
 
     private func shareVideo() {
         guard !isSaving, !isSharing else { return }
-        isSharing = true
+        let session = vm.mediaSessionID
+        sharingSession = session
         vm.downloadProgress = 0
 
-        Task {
+        Task { @MainActor in
+            guard vm.mediaSessionID == session else { return }
             guard let avAsset = await vm.downloadVideo() else {
+                guard vm.mediaSessionID == session else { return }
                 sendNotification(.anyStatus, ("Failed to get video", "APP_NOTICE"))
-                isSharing = false
+                sharingSession = nil
                 return
             }
 
             exportAsset(avAsset) { exportedURL in
                 DispatchQueue.main.async {
+                    guard vm.mediaSessionID == session else {
+                        if let exportedURL {
+                            try? FileManager.default.removeItem(at: exportedURL)
+                        }
+                        return
+                    }
                     guard let exportedURL else {
                         sendNotification(.anyStatus, ("Failed to export video", "APP_NOTICE"))
-                        isSharing = false
+                        sharingSession = nil
                         return
                     }
                     temporarySharedVideoURL = exportedURL
                     shareableVideo = ShareableVideo(url: exportedURL)
-                    isSharing = false
+                    sharingSession = nil
                 }
             }
         }
