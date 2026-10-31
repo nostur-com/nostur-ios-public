@@ -12,8 +12,8 @@ struct VideoPreviews: View {
     
     var body: some View {
         HStack {
-            ForEach(pastedVideos.indices, id:\.self) { index in
-                VideoPreviewThumnail(video: pastedVideos[index])
+            ForEach(pastedVideos) { video in
+                VideoPreviewThumnail(video: video)
                     .overlay(
                         Image(systemName: "xmark.circle.fill")
                             .resizable()
@@ -23,8 +23,8 @@ struct VideoPreviews: View {
                             .frame(width: 20, height: 20)
                             .padding(5)
                             .onTapGesture {
-                                _ = pastedVideos.remove(at: index)
-                                L.og.debug("remove: \(index)")
+                                guard !video.uploadState.isActive else { return }
+                                pastedVideos.removeAll { $0.id == video.id }
                             },
                         alignment: .topTrailing
                     )

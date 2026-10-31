@@ -45,6 +45,8 @@ public final class TypingTextModel: ObservableObject {
     func clearAnonState() { anonMode = false; savedRealDraft = "" }
     @Published var pastedImages: [PostedImageMeta] = []
     @Published var pastedImageUploadStates: [String: ComposerMediaUploadState] = [:]
+    @Published var isImportingSelectedVideo = false
+    @Published var videoImportError: String?
     @Published var isImportingSelectedImages = false
     @Published var importingSelectedImageCount = 0
     @Published var pastedVideos: [PostedVideoMeta] = []
@@ -189,6 +191,9 @@ public final class NewPostModel: ObservableObject {
     @Published var uploadError: String?
     private var uploadedImageImetasById: [String: Imeta] = [:]
     private var imageUploadCancellablesById: [String: AnyCancellable] = [:]
+    var videoPostTask: Task<Void, Never>?
+    var videoPostAttemptID = UUID()
+    var completedVideoPostUploads: [String: Imeta] = [:]
     private var draftSendState: DraftSendState = .idle
     var requiredP: String? = nil
     private var privateReplyRecipient: String? = nil
@@ -416,7 +421,7 @@ public final class NewPostModel: ObservableObject {
     }
 
     @MainActor
-    private func failImageUpload(_ message: String) {
+    func failImageUpload(_ message: String) {
         typingTextModel.uploading = false
         typingTextModel.sending = false
         uploadError = message
@@ -603,7 +608,7 @@ public final class NewPostModel: ObservableObject {
     }
 
     @MainActor
-    private func mirrorBlossomUploads(_ items: [BlossomUploadItem], account: CloudAccount, serverStrings: [String]) {
+    func mirrorBlossomUploads(_ items: [BlossomUploadItem], account: CloudAccount, serverStrings: [String]) {
         let plans = items.compactMap { item -> BlossomPostMirrorPlan? in
             guard let url = item.downloadUrl else { return nil }
             return BlossomPostMirrorPlan(sourceURL: url, hash: item.sha256processed, serverStrings: serverStrings)
@@ -628,7 +633,9 @@ public final class NewPostModel: ObservableObject {
     }
 
     @MainActor
-    private func uploadEncryptedPrivateReplyMedia(pubkey: String, replyTo: ReplyTo?, quotePost: QuotePost?, onDismiss: @escaping () -> Void) async {
+    private func uploadEncryptedPrivateReplyMedia(pubkey: String, replyTo: ReplyTo?, quotePost: QuotePost?, onDismiss: @escaping () -> Void, attempt: UUID) async {
+        let selectedVideoIDs = typingTextModel.pastedVideos.map(\.id)
+        let selectedImageIDs = typingTextModel.pastedImages.map(\.uniqueId)
         guard SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL,
               let serverString = SettingsStore.shared.blossomServerList.first,
               let blossomServer = URL(string: serverString) else {
@@ -650,6 +657,7 @@ public final class NewPostModel: ObservableObject {
             uploadMethod: .blossom
         )
 
+        guard !Task.isCancelled, videoPostAttemptID == attempt else { return }
         guard !preparedItems.isEmpty else {
             failImageUpload("Could not prepare media for encrypted upload")
             return
@@ -660,10 +668,13 @@ public final class NewPostModel: ObservableObject {
             imetas.reserveCapacity(preparedItems.count)
 
             for item in preparedItems {
+                try Task.checkCancellation()
+                guard videoPostAttemptID == attempt else { throw CancellationError() }
+                for video in typingTextModel.pastedVideos { video.uploadState = .uploading(percentage: nil) }
                 let originalData = item.0
-                let encrypted = try await Task.detached(priority: .userInitiated) {
+                let encrypted = try await videoFileWork {
                     try encryptFileForDM(data: originalData)
-                }.value
+                }
                 let blossomFile = BlossomUploadFile(
                     data: encrypted.encryptedData,
                     contentType: "application/octet-stream"
@@ -672,13 +683,13 @@ public final class NewPostModel: ObservableObject {
                     keys: Keys(privateKeyHex: privateKey),
                     blossomFile: blossomFile
                 )
-                let downloadURL = try await blossomUpload(
-                    authHeader: authHeader,
-                    blossomFile: blossomFile,
-                    contentType: "application/octet-stream",
-                    blossomServer: blossomServer,
-                    timeout: 60.0
-                )
+                let downloadURL = try await uploadEncryptedPostVideoFile(data: encrypted.encryptedData,
+                    authHeader: authHeader, server: blossomServer) { [weak self] percent in
+                        guard let self, videoPostAttemptID == attempt else { return }
+                        for video in typingTextModel.pastedVideos {
+                            video.uploadState = percent == 100 ? .waitingForServer : .uploading(percentage: percent)
+                        }
+                    }
 
                 let dimensions = UIImage(data: originalData).map {
                     "\(Int($0.size.width))x\(Int($0.size.height))"
@@ -693,12 +704,23 @@ public final class NewPostModel: ObservableObject {
                 ))
             }
 
+            try Task.checkCancellation()
+            guard videoPostAttemptID == attempt, isReplyInPrivate,
+                  activeAccount?.publicKey == pubkey,
+                  selectedVideoIDs == typingTextModel.pastedVideos.map(\.id),
+                  selectedImageIDs == typingTextModel.pastedImages.map(\.uniqueId) else { throw CancellationError() }
+            videoPostAttemptID = UUID()
+            for video in typingTextModel.pastedVideos { video.uploadState = .uploaded }
+            videoPostTask = nil
             _sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
             for videoURL in typingTextModel.compressedVideoFiles {
                 try? FileManager.default.removeItem(at: videoURL)
             }
         }
         catch {
+            guard videoPostAttemptID == attempt else { return }
+            for video in typingTextModel.pastedVideos { video.uploadState = .failed(error.localizedDescription) }
+            videoPostTask = nil
             failImageUpload("Encrypted media upload failed: \(error.localizedDescription)")
         }
     }
@@ -925,12 +947,13 @@ public final class NewPostModel: ObservableObject {
                 typingTextModel.uploading = true
 
                 if isReplyInPrivate {
-                    await uploadEncryptedPrivateReplyMedia(
-                        pubkey: pubkey,
-                        replyTo: replyTo,
-                        quotePost: quotePost,
-                        onDismiss: onDismiss
-                    )
+                    videoPostTask?.cancel()
+                    let attempt = UUID()
+                    videoPostAttemptID = attempt
+                    videoPostTask = Task { @MainActor in
+                        await uploadEncryptedPrivateReplyMedia(pubkey: pubkey, replyTo: replyTo,
+                            quotePost: quotePost, onDismiss: onDismiss, attempt: attempt)
+                    }
                     return
                 }
                 
@@ -953,6 +976,11 @@ public final class NewPostModel: ObservableObject {
                         return
                     }
 
+                    if !typingTextModel.pastedVideos.isEmpty {
+                        uploadPostWithVideos(pubkey: pubkey, account: account, method: .blossom,
+                                             server: blossomServerURL, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                        return
+                    }
                     if !typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty && typingTextModel.voiceRecording == nil {
                         await uploadBlossomImages(pubkey: pubkey, account: account, blossomServerURL: blossomServerURL, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
                         return
@@ -1082,6 +1110,11 @@ public final class NewPostModel: ObservableObject {
                         return
                     }
 
+                    if !typingTextModel.pastedVideos.isEmpty {
+                        uploadPostWithVideos(pubkey: pubkey, account: account, method: .nip96(nip96apiURL),
+                                             server: nip96apiURL, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                        return
+                    }
                     if !typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty && typingTextModel.voiceRecording == nil {
                         await uploadNip96Images(pubkey: pubkey, account: account, nip96apiURL: nip96apiURL, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
                         return
@@ -1210,7 +1243,7 @@ public final class NewPostModel: ObservableObject {
     }
     
     @MainActor
-    private func _sendNow(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
+    func _sendNow(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
         guard draftSendState == .idle else { return }
         Importer.shared.delayProcessing()
         guard let account = activeAccount else { return }
@@ -2696,9 +2729,7 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
             }.value
             
             for videoMeta in videos {
-                let compressedURL = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
-                typingTextModel.compressedVideoFiles.append(compressedURL)
-                if let url = await compressVideoAsync(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
+                if let (url, compressedVideoData) = await prepareComposerVideoData(videoMeta, shortVideo: isVineVideoPost) {
 
                     // Get video dimensions from compressed file for imeta
                     if let dimensions = await getVideoDimensions(asset: AVAsset(url: url)) {
@@ -2725,6 +2756,8 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
                         let thumbAuthEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: thumbSha256hex, method: "POST", apiUrl: nip96apiURL)
                         result.append((thumbnailData, PostedImageMeta.ImageType.jpeg.rawValue, thumbBlurhash, (typingTextModel.pastedImages.count + videoMeta.index + 10000), thumbAuthEvent))
                     }
+                } else {
+                    return []
                 }
             }
 
@@ -2779,9 +2812,7 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
             }.value
             
             for videoMeta in videos {
-                let compressedURL = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
-                //                typingTextModel.compressedVideoFiles.append(compressedURL)
-                if let url = await compressVideoAsync(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
+                if let (url, compressedVideoData) = await prepareComposerVideoData(videoMeta, shortVideo: isVineVideoPost) {
 
                     // Get video dimensions from compressed file for imeta
                     if let dimensions = await getVideoDimensions(asset: AVAsset(url: url)) {
@@ -2801,6 +2832,8 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
                         let thumbAuthEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: thumbnailData.sha256().hexEncodedString())
                         result.append((thumbnailData, PostedImageMeta.ImageType.jpeg.rawValue, thumbBlurhash, images.count + videoMeta.index + 10000, thumbAuthEvent))
                     }
+                } else {
+                    return []
                 }
             }
 

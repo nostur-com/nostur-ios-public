@@ -19,6 +19,63 @@ final class BlossomPostUploadProgressTests: XCTestCase {
         try await verifyIntermediateProgress(useNip96: false, omitMetadata: true)
     }
 
+    func testVideoFileUploadReportsProgressAndWaitsForServerResponse() async throws {
+        let body = Data(repeating: 42, count: 8 * 1024 * 1024)
+        let file = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
+        try body.write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let server = try SlowPhotoUploadServer(bodySize: body.count)
+        let ready = expectation(description: "Video upload server ready")
+        server.start { ready.fulfill() }
+        defer { server.stop() }
+        await fulfillment(of: [ready], timeout: 5)
+        let port = try XCTUnwrap(server.listener.port)
+        var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port.rawValue)/upload")!)
+        request.httpMethod = "PUT"
+        request.setValue("video/mp4", forHTTPHeaderField: "Content-Type")
+        let session = URLSession(configuration: .ephemeral)
+        defer { session.invalidateAndCancel() }
+        var intermediate = false
+        var allBytesSent = false
+        let delegate = VideoFileUploadProgress { percentage in
+            if (1..<100).contains(percentage) { intermediate = true }
+            if percentage == 100 { allBytesSent = true }
+        }
+        let result = try await PostVideoFileTransfer.upload(request: request, file: file, session: session, delegate: delegate)
+        XCTAssertFalse(result.isEmpty)
+        XCTAssertTrue(intermediate)
+        XCTAssertTrue(allBytesSent)
+        XCTAssertEqual(try Data(contentsOf: file), body)
+    }
+
+    func testVideoFileUploadCancellationRetainsPreparedFileForRetry() async throws {
+        let body = Data(repeating: 42, count: 8 * 1024 * 1024)
+        let file = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
+        try body.write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let server = try SlowPhotoUploadServer(bodySize: body.count)
+        let ready = expectation(description: "Video cancellation server ready")
+        server.start { ready.fulfill() }
+        defer { server.stop() }
+        await fulfillment(of: [ready], timeout: 5)
+        let port = try XCTUnwrap(server.listener.port)
+        var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port.rawValue)/upload")!)
+        request.httpMethod = "PUT"
+        let session = URLSession(configuration: .ephemeral)
+        defer { session.invalidateAndCancel() }
+        let started = expectation(description: "Some video bytes sent")
+        var reported = false
+        let delegate = VideoFileUploadProgress { percentage in
+            if percentage > 0 && !reported { reported = true; started.fulfill() }
+        }
+        let upload = Task { try await PostVideoFileTransfer.upload(request: request, file: file, session: session, delegate: delegate) }
+        await fulfillment(of: [started], timeout: 5)
+        upload.cancel()
+        do { _ = try await upload.value; XCTFail("Cancelled upload must fail") }
+        catch { XCTAssertTrue(error is CancellationError || (error as? URLError)?.code == .cancelled) }
+        XCTAssertEqual(try Data(contentsOf: file), body)
+    }
+
     private func verifyIntermediateProgress(useNip96: Bool, omitMetadata: Bool = false) async throws {
         let body = Data(repeating: 42, count: 8 * 1024 * 1024)
         let item = BlossomUploadItem(data: body, contentType: "image/jpeg", authorizationHeader: "test-auth", verb: omitMetadata ? .upload : nil)

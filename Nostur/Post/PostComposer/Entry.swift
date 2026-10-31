@@ -21,6 +21,7 @@ struct Entry: View {
     @Binding var showAudioRecorder: Bool
     
     @State private var showRemoveAuthor = false
+    @State private var postCameraShown = false
     
     private var replyTo: ReplyTo?
     private var quotePost: QuotePost?
@@ -49,7 +50,7 @@ struct Entry: View {
         
         if (kind == .shortVideos && typingTextModel.pastedVideos.isEmpty) { return true }
             
-        if (typingTextModel.sending || typingTextModel.uploading) { return true }
+        if (typingTextModel.sending || typingTextModel.uploading || typingTextModel.isImportingSelectedVideo) { return true }
         
         if kind == .highlight { return false }
         
@@ -167,10 +168,7 @@ struct Entry: View {
                     gifSheetShown = true
 //                    showVoiceRecorderButton = false
                 },
-                cameraTapped: {
-                    cameraSheetShown = true
-//                    showVoiceRecorderButton = false
-                },
+                cameraTapped: showCamera,
                 nestsTapped: {
                     onDismiss()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
@@ -221,6 +219,31 @@ struct Entry: View {
                 }
                 .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(theme.listBackground)
+            }
+            .fullScreenCover(isPresented: $postCameraShown) {
+                PostCameraView(
+                    isImporting: $typingTextModel.isImportingSelectedVideo,
+                    onPhoto: { data in
+                        typingTextModel.pastedImages.append(PostedImageMeta(
+                            index: typingTextModel.pastedImages.count, data: data,
+                            type: .png, uniqueId: UUID().uuidString
+                        ))
+                        postCameraShown = false
+                    },
+                    onRecorded: { url in
+                        typingTextModel.pastedVideos.append(PostedVideoMeta(
+                            index: typingTextModel.pastedVideos.count, videoURL: url
+                        ))
+                        postCameraShown = false
+                    },
+                    onCancel: { postCameraShown = false },
+                    onError: { message in
+                        typingTextModel.videoImportError = message
+                        postCameraShown = false
+                    }
+                )
+                .ignoresSafeArea()
+                .interactiveDismissDisabled(typingTextModel.isImportingSelectedVideo)
             }
             .sheet(isPresented: $cameraSheetShown) {
                 NBNavigationStack {
@@ -273,6 +296,19 @@ struct Entry: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 6)
             }
+            ComposerVideoUploadProgress(
+                videos: typingTextModel.pastedVideos,
+                isBusy: typingTextModel.uploading || typingTextModel.sending,
+                isShortVideo: kind == .shortVideos,
+                onRetry: dispatchSend,
+                onCancel: vm.cancelVideoPostUpload
+            )
+            if typingTextModel.isImportingSelectedVideo {
+                HStack { ProgressView(); Text("Importing video…") }
+            }
+            if let error = typingTextModel.videoImportError {
+                Text(error).font(.caption).foregroundStyle(.red)
+            }
             ComposerImageUploadProgress(
                 images: typingTextModel.pastedImages,
                 states: typingTextModel.pastedImageUploadStates,
@@ -318,6 +354,8 @@ struct Entry: View {
             .presentationBackgroundCompat(theme.listBackground)
         }
         
+        .interactiveDismissDisabled(typingTextModel.uploading)
+
         // Hide voice recording button if not supported
         .onAppear {
             if let replyTo, (replyTo.nrPost.kind != 1222 && replyTo.nrPost.kind != 1244) {
@@ -367,7 +405,10 @@ struct Entry: View {
     @ToolbarContentBuilder
     func toolbar15() -> some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark", role: .cancel) { onDismiss() }
+            Button("Cancel", systemImage: "xmark", role: .cancel) {
+                vm.cancelVideoPostUpload()
+                onDismiss()
+            }
         }
         
         ToolbarItem(placement: .primaryAction) {
@@ -421,7 +462,10 @@ struct Entry: View {
     @ToolbarContentBuilder
     func toolbar16() -> some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark", role: .cancel) { onDismiss() }
+            Button("Cancel", systemImage: "xmark", role: .cancel) {
+                vm.cancelVideoPostUpload()
+                onDismiss()
+            }
         }
         
         ToolbarItemGroup(placement: .primaryAction) {
@@ -472,7 +516,10 @@ struct Entry: View {
     @ToolbarContentBuilder
     func toolbar26() -> some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark", role: .cancel) { onDismiss() }
+            Button("Cancel", systemImage: "xmark", role: .cancel) {
+                vm.cancelVideoPostUpload()
+                onDismiss()
+            }
         }
         
         if kind != .shortVideos && kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
@@ -531,7 +578,10 @@ struct Entry: View {
     @ToolbarContentBuilder
     func toolbar27() -> some ToolbarContent {
         ToolbarItem(id: "composer.cancel", placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark", role: .cancel) { onDismiss() }
+            Button("Cancel", systemImage: "xmark", role: .cancel) {
+                vm.cancelVideoPostUpload()
+                onDismiss()
+            }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
         }
@@ -600,14 +650,29 @@ struct Entry: View {
         }
     }
     
+    private func showCamera() {
+        guard !typingTextModel.uploading, !typingTextModel.sending,
+              !typingTextModel.anonMode, !typingTextModel.isImportingSelectedVideo else { return }
+        if kind != .picture && kind != .shortVideos && PostCameraView.isAvailable {
+            typingTextModel.videoImportError = nil
+            postCameraShown = true
+        } else {
+            cameraSheetShown = true
+        }
+    }
+
     @ViewBuilder
     private var takePhotoButton: some View {
-        Button("Take Photo", systemImage: "camera") {
-            cameraSheetShown = true
+        Button(action: showCamera) {
+            if kind != .picture && PostCameraView.isAvailable {
+                Label("Camera", systemImage: "camera")
+            } else {
+                Label("Take Photo", systemImage: "camera")
+            }
         }
         .buttonStyle(.borderless)
         .disabled(typingTextModel.uploading || typingTextModel.anonMode)
-        .help("Take Photo")
+        .help("Camera")
     }
 
     @ViewBuilder

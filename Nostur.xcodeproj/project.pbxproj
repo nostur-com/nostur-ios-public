@@ -713,8 +713,8 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				INFOPLIST_KEY_NSAppDataUsageDescription = "Nostur needs this when you share photos, videos, or links from other apps (for example Preview or Safari) into the share sheet so it can post them to Nostr.";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Nostur uses the camera to scan QR codes and capture photos.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To use voice chats";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Nostur uses the camera to scan QR codes, take photos and record videos.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Nostur uses the microphone for voice chats, voice messages and video recordings.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "To save screenshots or videos to your Photo Library";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -774,8 +774,8 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				INFOPLIST_KEY_NSAppDataUsageDescription = "Nostur needs this when you share photos, videos, or links from other apps (for example Preview or Safari) into the share sheet so it can post them to Nostr.";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Nostur uses the camera to scan QR codes and capture photos.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To use voice chats";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Nostur uses the camera to scan QR codes, take photos and record videos.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Nostur uses the microphone for voice chats, voice messages and video recordings.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "To save screenshots or videos to your Photo Library";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

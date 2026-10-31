@@ -12,6 +12,7 @@ import PhotosUI
 struct VineVideoPicker: UIViewControllerRepresentable {
     @Binding var selectedVideoURL: URL?
     @Binding var isLoading: Bool
+    @Binding var importError: String?
     @Environment(\.dismiss) private var dismiss
     
     func makeCoordinator() -> Coordinator {
@@ -22,6 +23,7 @@ struct VineVideoPicker: UIViewControllerRepresentable {
         var config = PHPickerConfiguration()
         config.filter = .videos
         config.selectionLimit = 1
+        config.preferredAssetRepresentationMode = .current
         let picker = PHPickerViewController(configuration: config)
         picker.delegate = context.coordinator
         return picker
@@ -45,6 +47,7 @@ struct VineVideoPicker: UIViewControllerRepresentable {
             }
             
             DispatchQueue.main.async {
+                self.parent.importError = nil
                 self.parent.isLoading = true
             }
             
@@ -52,6 +55,7 @@ struct VineVideoPicker: UIViewControllerRepresentable {
                 guard let url, error == nil else {
                     DispatchQueue.main.async {
                         self.parent.isLoading = false
+                        self.parent.importError = String(localized: "Could not import this video. Please try again.")
                     }
                     return
                 }
@@ -68,6 +72,7 @@ struct VineVideoPicker: UIViewControllerRepresentable {
                 } catch {
                     DispatchQueue.main.async {
                         self.parent.isLoading = false
+                        self.parent.importError = String(localized: "Could not import this video. Please try again.")
                     }
                 }
             }

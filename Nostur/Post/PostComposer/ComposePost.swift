@@ -330,6 +330,9 @@ struct ComposePost: View {
                                             VStack(spacing: 20) {
                                                 Spacer()
                                                 
+                                                if let error = vm.typingTextModel.videoImportError {
+                                                    Text(error).font(.caption).foregroundStyle(.red)
+                                                }
                                                 if vineLoadingVideo {
                                                     ProgressView()
                                                         .scaleEffect(1.5)
@@ -394,7 +397,7 @@ struct ComposePost: View {
                                         )
                                     }
                                     .sheet(isPresented: $vineVideoPickerShown) {
-                                        VineVideoPicker(selectedVideoURL: $vineVideoSourceURL, isLoading: $vineLoadingVideo)
+                                        VineVideoPicker(selectedVideoURL: $vineVideoSourceURL, isLoading: $vineLoadingVideo, importError: $vm.typingTextModel.videoImportError)
                                     }
                                     .onChange(of: vineVideoSourceURL) { url in
                                         if url != nil && !vineShowTrimmer && vinePreviewRestoreURL == nil {
@@ -406,7 +409,8 @@ struct ComposePost: View {
                                             NBNavigationStack {
                                                 VideoTrimmerView(
                                                     sourceURL: sourceURL,
-                                                    onTrimmed: { trimmedURL, duration in
+                                                    onTrimmed: { prepared, duration in
+                                                        let trimmedURL = prepared.url
                                                         vineShowTrimmer = false
                                                         if let previousURL = vinePreviewRestoreURL, previousURL != trimmedURL {
                                                             try? FileManager.default.removeItem(at: previousURL)
@@ -420,7 +424,7 @@ struct ComposePost: View {
                                                         vineTrimmedDuration = duration
                                                         // Add to pastedVideos for upload pipeline
                                                         vm.typingTextModel.pastedVideos = [
-                                                            PostedVideoMeta(index: 0, videoURL: trimmedURL)
+                                                            PostedVideoMeta(index: 0, videoURL: trimmedURL, preparedVideo: prepared)
                                                         ]
                                                         vm.typingTextModel.vineVideoDuration = duration
                                                     },
@@ -563,7 +567,7 @@ struct ComposePost: View {
                             }                            
                         })
                         .sheet(isPresented: $videoPickerShown) {
-                            VideoPickerView(selectedVideoURL: $selectedVideoURL)
+                            VideoPickerView(selectedVideoURL: $selectedVideoURL, isLoading: $vm.typingTextModel.isImportingSelectedVideo, importError: $vm.typingTextModel.videoImportError)
                         }
                         .onChange(of: selectedVideoURL, perform: { newValue in
                             guard kind != .picture else { return }

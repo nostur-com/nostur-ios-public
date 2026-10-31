@@ -11,24 +11,28 @@ import AVFoundation
 public class PostedVideoMeta: Hashable, Identifiable, Equatable, ObservableObject {
     
     static public func == (lhs: PostedVideoMeta, rhs: PostedVideoMeta) -> Bool {
-        lhs.id == rhs.id && lhs.thumbnail == rhs.thumbnail
+        lhs.id == rhs.id
     }
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(index)
-        hasher.combine(videoURL)
-        hasher.combine(thumbnail)
+        hasher.combine(id)
     }
-    
-    public var id: Int { index }
+
+    public let id = UUID()
+    @Published var quality: VideoUploadQuality = .automatic
+    @Published var uploadState: ComposerMediaUploadState = .idle
+    @Published var preparationProgress: Double = 0
+    var preparedVideo: PreparedVideo?
+
     public let index: Int // To keep the correct order in pasted media
     public let videoURL: URL // local file url
     @Published public var thumbnail: UIImage?
     
-    init(index: Int, videoURL: URL, thumbnail: UIImage? = nil) {
+    init(index: Int, videoURL: URL, thumbnail: UIImage? = nil, preparedVideo: PreparedVideo? = nil) {
         self.index = index
         self.videoURL = videoURL
         self.thumbnail = thumbnail
+        self.preparedVideo = preparedVideo
         self.loadThumbnail()
     }
     

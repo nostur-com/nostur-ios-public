@@ -37,7 +37,7 @@ struct PostPreview: View {
     private var shouldDisablePostButton: Bool {
         if (kind == .picture && typingTextModel.pastedImages.isEmpty) { return true }
             
-        if (typingTextModel.sending || typingTextModel.uploading) { return true }
+        if (typingTextModel.sending || typingTextModel.uploading || typingTextModel.isImportingSelectedVideo) { return true }
         
         if kind == .highlight { return false }
         
@@ -71,6 +71,19 @@ struct PostPreview: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
+                ComposerVideoUploadProgress(
+                    videos: typingTextModel.pastedVideos,
+                    isBusy: typingTextModel.uploading || typingTextModel.sending,
+                    isShortVideo: kind == .shortVideos,
+                    onRetry: dispatchSend,
+                    onCancel: vm.cancelVideoPostUpload
+                )
+                if typingTextModel.isImportingSelectedVideo {
+                    HStack { ProgressView(); Text("Importing video…") }
+                }
+                if let error = typingTextModel.videoImportError {
+                    Text(error).font(.caption).foregroundStyle(.red)
+                }
                 ComposerImageUploadProgress(
                     images: typingTextModel.pastedImages,
                     states: typingTextModel.pastedImageUploadStates,

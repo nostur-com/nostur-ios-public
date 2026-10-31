@@ -12,7 +12,7 @@ import AVKit
 struct VideoTrimmerView: View {
     let sourceURL: URL
     let maxDuration: Double = 6.0
-    var onTrimmed: (URL, Double) -> Void // (trimmedURL, duration)
+    var onTrimmed: (PreparedVideo, Double) -> Void
     var onCancel: () -> Void
     
     @State private var player: AVPlayer?
@@ -22,6 +22,7 @@ struct VideoTrimmerView: View {
     @State private var currentTime: Double = 0
     @State private var thumbnails: [UIImage] = []
     @State private var isExporting = false
+    @State private var exportTask: Task<Void, Never>?
     @State private var exportError: String?
     @State private var timeObserver: Any?
     @State private var isLoaded = false
@@ -247,87 +248,38 @@ struct VideoTrimmerView: View {
         timeObserver = nil
         player?.pause()
         player = nil
+        exportTask?.cancel()
+        exportTask = nil
     }
     
     private func exportTrimmedVideo() {
         isExporting = true
         exportError = nil
-        
-        let sourceAsset = AVURLAsset(url: sourceURL)
-        let assetForExport: AVAsset
-        if removeAudio {
-            guard let mutedAsset = makeVideoOnlyComposition(from: sourceAsset) else {
-                exportError = "Failed to remove audio"
-                isExporting = false
-                return
-            }
-            assetForExport = mutedAsset
-        } else {
-            assetForExport = sourceAsset
-        }
-
-        guard let exportSession = AVAssetExportSession(asset: assetForExport, presetName: AVAssetExportPreset1280x720) else {
-            exportError = "Cannot create export session"
-            isExporting = false
-            return
-        }
-        
-        let outputURL = TemporaryMediaFiles.shared.makeURL(extension: "mp4")
-        
-        exportSession.outputURL = outputURL
-        exportSession.outputFileType = .mp4
-        exportSession.shouldOptimizeForNetworkUse = true
-        exportSession.metadata = []
-        
-        let isTrimmed = startTime > 0.05 || (duration - endTime) > 0.05
-        if isTrimmed {
-            let start = CMTime(seconds: startTime, preferredTimescale: 600)
-            let end = CMTime(seconds: endTime, preferredTimescale: 600)
-            exportSession.timeRange = CMTimeRange(start: start, end: end)
-        }
-        
-        exportSession.exportAsynchronously {
-            DispatchQueue.main.async {
-                self.isExporting = false
-                switch exportSession.status {
-                case .completed:
-                    let finalDuration = isTrimmed ? self.selectedDuration : self.duration
-                    self.cleanup()
-                    self.onTrimmed(outputURL, finalDuration)
-                case .failed:
-                    self.exportError = exportSession.error?.localizedDescription ?? "Export failed"
-                case .cancelled:
-                    self.exportError = "Export cancelled"
-                default:
-                    self.exportError = "Unknown export error"
+        let url = sourceURL
+        let start = startTime
+        let end = endTime
+        let muted = removeAudio
+        exportTask = Task {
+            do {
+                let worker = Task.detached(priority: .userInitiated) {
+                    try await VideoPreparation.prepare(inputURL: url, shortVideo: true,
+                                                       start: start, end: end, muted: muted)
                 }
+                let prepared = try await withTaskCancellationHandler {
+                    try await worker.value
+                } onCancel: { worker.cancel() }
+                try Task.checkCancellation()
+                isExporting = false
+                onTrimmed(prepared, prepared.duration)
+            } catch is CancellationError {
+                isExporting = false
+            } catch {
+                isExporting = false
+                exportError = error.localizedDescription
             }
         }
     }
 
-    private func makeVideoOnlyComposition(from asset: AVAsset) -> AVMutableComposition? {
-        guard let sourceVideoTrack = asset.tracks(withMediaType: .video).first else {
-            return nil
-        }
-
-        let composition = AVMutableComposition()
-        guard let compositionVideoTrack = composition.addMutableTrack(
-            withMediaType: .video,
-            preferredTrackID: kCMPersistentTrackID_Invalid
-        ) else {
-            return nil
-        }
-
-        do {
-            let fullRange = CMTimeRange(start: .zero, duration: asset.duration)
-            try compositionVideoTrack.insertTimeRange(fullRange, of: sourceVideoTrack, at: .zero)
-            compositionVideoTrack.preferredTransform = sourceVideoTrack.preferredTransform
-            return composition
-        } catch {
-            return nil
-        }
-    }
-    
     private func formatTime(_ seconds: Double) -> String {
         let s = max(0, seconds)
         let mins = Int(s) / 60
