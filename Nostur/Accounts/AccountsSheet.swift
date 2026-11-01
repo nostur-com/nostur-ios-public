@@ -22,7 +22,7 @@ struct AccountsSheet: View {
     private var accounts: FetchedResults<CloudAccount>
     private var accountsSorted: [CloudAccount] {
         accounts
-            .filter { $0.id != logoutAccount?.id }
+            .filter { !$0.isDeleted && $0.managedObjectContext != nil && $0.objectID != logoutAccount?.objectID }
             .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
             .sorted(by: { $0.privateKey != nil && $1.privateKey == nil })
             // always show current logged in account at top
@@ -97,40 +97,43 @@ struct AccountRow: View {
     @EnvironmentObject private var accountsState: AccountsState
     
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
-            PFP(pubkey: account.publicKey, account: account, size: DIMENSIONS.POST_ROW_PFP_DIAMETER)
-            VStack(alignment: .leading) {
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(account.anyName).font(.headline).foregroundColor(.primary)
-                            .lineLimit(1)
-                        if (account.privateKey == nil) {
-                            Text("Read only", comment: "Label to indicate this a Read Only account").font(.system(size: 12.0))
-                                .padding(.horizontal, 8)
-                                .background(.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
+        // A retained row may update once more after logout deletes its account.
+        if !account.isDeleted && account.managedObjectContext != nil {
+            HStack(alignment: .center, spacing: 10) {
+                PFP(pubkey: account.publicKey, account: account, size: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+                VStack(alignment: .leading) {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(account.anyName).font(.headline).foregroundColor(.primary)
+                                .lineLimit(1)
+                            if (account.privateKey == nil) {
+                                Text("Read only", comment: "Label to indicate this a Read Only account").font(.system(size: 12.0))
+                                    .padding(.horizontal, 8)
+                                    .background(.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(8)
+                            }
+                            if (account.isNC) {
+                                Text(verbatim: "remote signer").font(.system(size: 12.0))
+                                    .padding(.horizontal, 8)
+                                    .background(.indigo)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(8)
+                            }
                         }
-                        if (account.isNC) {
-                            Text(verbatim: "remote signer").font(.system(size: 12.0))
-                                .padding(.horizontal, 8)
-                                .background(.indigo)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                        }
+                        .multilineTextAlignment(.leading)
+                        Spacer()
                     }
-                    .multilineTextAlignment(.leading)
-                    Spacer()
+                }
+                if (account.publicKey == accountsState.activeAccountPublicKey) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .resizable()
+                        .foregroundColor(.accentColor)
+                        .frame(width: 25, height: 25)
                 }
             }
-            if (account.publicKey == accountsState.activeAccountPublicKey) {
-                Image(systemName: "checkmark.circle.fill")
-                    .resizable()
-                    .foregroundColor(.accentColor)
-                    .frame(width: 25, height: 25)
-            }
+            .padding(5)
         }
-        .padding(5)
     }
 }
 

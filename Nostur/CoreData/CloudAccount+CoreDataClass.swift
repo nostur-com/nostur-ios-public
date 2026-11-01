@@ -97,7 +97,12 @@ public class CloudAccount: NSManagedObject {
         privateFollowingPubkeysCache = []
     }
     
-    lazy var npub: String = { try! NIP19(prefix: "npub", hexString: publicKey).displayString }()
+    var npub: String {
+        // Logout can invalidate the account while SwiftUI still holds a row for it.
+        // Do not trap on cleared attributes or cache a value across key changes.
+        guard !isDeleted, let publicKey = publicKey_ else { return "" }
+        return (try? NIP19(prefix: "npub", hexString: publicKey).displayString) ?? ""
+    }
 }
 
 /// Value snapshot used to detect CloudKit changes to the parts of CloudAccount which drive
