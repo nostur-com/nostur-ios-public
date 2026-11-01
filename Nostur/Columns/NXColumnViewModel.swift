@@ -6102,19 +6102,19 @@ func makeHashtagRegex(_ hashtags: Set<String>) -> String? {
 
 typealias CM = NostrEssentials.ClientMessage
 
-let FETCH_GLOBAL_KINDS: Set<Int> = [1,1222,6,16,20,9802,30023,34235,34236] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
+let FETCH_GLOBAL_KINDS: Set<Int> = [1,1222,6,16,20,1068,9802,30023,34235,34236] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
 
-let FETCH_GLOBAL_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,16,20,9802,30023,34235,34236] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
+let FETCH_GLOBAL_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,16,20,1068,9802,30023,34235,34236] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
 
-let FETCH_FOLLOWING_FEED_KINDS: Set<Int> = [1,1222,5,6,16,20,9802,30023,34235,34236,30311]
+let FETCH_FOLLOWING_FEED_KINDS: Set<Int> = [1,1222,5,6,16,20,1068,9802,30023,34235,34236,30311]
 
-let FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,5,6,16,20,9802,30023,34235,34236,30311]
+let FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,5,6,16,20,1068,9802,30023,34235,34236,30311]
 
 let FETCH_FOLLOWING_PROFILE_KINDS: Set<Int> = [0,10002,10050,10063]
 
-let QUERY_FOLLOWING_KINDS: Set<Int> = [1,1222,6,16,20,9802,30023,34235,34236]
+let QUERY_FOLLOWING_KINDS: Set<Int> = [1,1222,6,16,20,1068,9802,30023,34235,34236]
 
-let QUERY_FOLLOWING_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,16,20,9802,30023,34235,34236]
+let QUERY_FOLLOWING_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,16,20,1068,9802,30023,34235,34236]
 
 let REPLY_KINDS: Set<Int> = [1111,1244] // substract these is replies toggle is off
 

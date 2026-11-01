@@ -30,16 +30,25 @@ struct Entry: View {
     private var replyToKind: Int64?
     private var kind: NEventKind?
     private var PLACEHOLDER: String {
+        if typingTextModel.poll != nil {
+            return String(localized: "Ask a question", comment: "Placeholder when writing a poll")
+        }
         switch kind {
             case .picture:
-            String(localized:"Add a caption", comment: "Placeholder text for adding a caption")
+            return String(localized:"Add a caption", comment: "Placeholder text for adding a caption")
             case .highlight:
-            String(localized:"Add comment", comment: "Placeholder text for adding a comment")
+            return String(localized:"Add comment", comment: "Placeholder text for adding a comment")
             case .shortVideos:
-            String(localized:"Add a caption", comment: "Placeholder text for adding a caption to a vine")
+            return String(localized:"Add a caption", comment: "Placeholder text for adding a caption to a vine")
             default:
-            String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
+            return String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
         }
+    }
+
+    private var canAttachPoll: Bool {
+        replyTo == nil && quotePost == nil
+            && kind != .picture && kind != .shortVideos && kind != .highlight
+            && kind != .shortVoiceMessage && kind != .shortVoiceMessageComment
     }
     
     @State private var isAuthorSelectionShown = false
@@ -53,6 +62,10 @@ struct Entry: View {
         if (typingTextModel.sending || typingTextModel.uploading || typingTextModel.isImportingSelectedVideo) { return true }
         
         if kind == .highlight { return false }
+
+        if let poll = typingTextModel.poll {
+            return !poll.isReady(question: typingTextModel.text)
+        }
         
         if (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty) { return true }
             
@@ -185,7 +198,9 @@ struct Entry: View {
                     vm.togglePrivateReply()
                 } : nil,
                 isPrivateReplyActive: vm.isReplyInPrivate,
-                isPrivateReplyLocked: vm.isPrivateReplyLocked || !vm.canReplyInPrivate
+                isPrivateReplyLocked: vm.isPrivateReplyLocked || !vm.canReplyInPrivate,
+                pollTapped: canAttachPoll ? togglePoll : nil,
+                isPollActive: typingTextModel.poll != nil
             )
             .introspect { editor in
                 // Needed so we can update cursors position on @mention autocomplete
@@ -209,7 +224,9 @@ struct Entry: View {
                         }
                     }
             }
-            .frame(minHeight: 100, maxHeight: .infinity, alignment: .topLeading)
+            .frame(minHeight: typingTextModel.poll == nil ? 100 : 44,
+                   maxHeight: typingTextModel.poll == nil ? .infinity : 96,
+                   alignment: .topLeading)
             .sheet(isPresented: $gifSheetShown) {
                 NBNavigationStack {
                     GifSearcher { gifUrl in
@@ -258,6 +275,14 @@ struct Entry: View {
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
+
+            if typingTextModel.poll != nil {
+                PollComposer(draft: Binding(
+                    get: { typingTextModel.poll ?? PollDraft.new() },
+                    set: { typingTextModel.poll = $0 }
+                ), onRemove: { typingTextModel.poll = nil })
+                    .padding(.top, 8)
+            }
             
             if kind != .picture && kind != .shortVideos {
                 if !typingTextModel.pastedImages.isEmpty {
@@ -416,26 +441,32 @@ struct Entry: View {
                 if kind != .shortVideos && kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
                     self.privateReplyButton
                     
-                    if showVoiceRecorderButton {
+                    if showVoiceRecorderButton && typingTextModel.poll == nil {
                         self.voiceRecordingButton
                     }
 
-                    if kind != .picture {
+                    if kind != .picture && typingTextModel.poll == nil {
                         self.startNestButton
                     }
 
-                    self.takePhotoButton
-
-                    if #available(iOS 16, *) {
-                        self.pickPhotoButton
-
-                        if kind != .picture {
-                            self.pickVideoButton
-                        }
+                    if canAttachPoll {
+                        self.pollButton
                     }
 
-                    if kind != .picture {
-                        self.gifButton
+                    if typingTextModel.poll == nil {
+                        self.takePhotoButton
+
+                        if #available(iOS 16, *) {
+                            self.pickPhotoButton
+
+                            if kind != .picture {
+                                self.pickVideoButton
+                            }
+                        }
+
+                        if kind != .picture {
+                            self.gifButton
+                        }
                     }
                 }
                 
@@ -473,24 +504,30 @@ struct Entry: View {
                 
                 self.privateReplyButton
                 
-                if showVoiceRecorderButton {
+                if showVoiceRecorderButton && typingTextModel.poll == nil {
                     self.voiceRecordingButton
                 }
 
-                if kind != .picture {
+                if kind != .picture && typingTextModel.poll == nil {
                     self.startNestButton
                 }
 
-                self.takePhotoButton
-
-                self.pickPhotoButton
-
-                if kind != .picture {
-                    self.pickVideoButton
+                if canAttachPoll {
+                    self.pollButton
                 }
 
-                if kind != .picture {
-                    self.gifButton
+                if typingTextModel.poll == nil {
+                    self.takePhotoButton
+
+                    self.pickPhotoButton
+
+                    if kind != .picture {
+                        self.pickVideoButton
+                    }
+
+                    if kind != .picture {
+                        self.gifButton
+                    }
                 }
             }
             
@@ -527,24 +564,30 @@ struct Entry: View {
                 
                 self.privateReplyButton
                 
-                if showVoiceRecorderButton {
+                if showVoiceRecorderButton && typingTextModel.poll == nil {
                     self.voiceRecordingButton
                 }
                 
-                if kind != .picture {
+                if kind != .picture && typingTextModel.poll == nil {
                     self.startNestButton
                 }
-                
-                self.takePhotoButton
-                
-                self.pickPhotoButton
-                
-                if kind != .picture {
-                    self.pickVideoButton
+
+                if canAttachPoll {
+                    self.pollButton
                 }
-                
-                if kind != .picture {
-                    self.gifButton
+
+                if typingTextModel.poll == nil {
+                    self.takePhotoButton
+
+                    self.pickPhotoButton
+
+                    if kind != .picture {
+                        self.pickVideoButton
+                    }
+
+                    if kind != .picture {
+                        self.gifButton
+                    }
                 }
             }
         }
@@ -596,17 +639,22 @@ struct Entry: View {
             ToolbarItem(id: "composer.options", placement: .primaryAction) {
                 Menu {
                     self.privateReplyButton
-                    if showVoiceRecorderButton {
+                    if showVoiceRecorderButton && typingTextModel.poll == nil {
                         self.voiceRecordingButton
                     }
-                    if kind != .picture {
+                    if kind != .picture && typingTextModel.poll == nil {
                         self.startNestButton
                     }
-                    self.takePhotoButton
-                    self.pickPhotoButton
-                    if kind != .picture {
-                        self.pickVideoButton
-                        self.gifButton
+                    if canAttachPoll {
+                        self.pollButton
+                    }
+                    if typingTextModel.poll == nil {
+                        self.takePhotoButton
+                        self.pickPhotoButton
+                        if kind != .picture {
+                            self.pickVideoButton
+                            self.gifButton
+                        }
                     }
                     self.previewButton
                 } label: {
@@ -659,6 +707,28 @@ struct Entry: View {
         } else {
             cameraSheetShown = true
         }
+    }
+
+    private func togglePoll() {
+        if typingTextModel.poll == nil {
+            typingTextModel.pastedImages = []
+            typingTextModel.pastedVideos = []
+            typingTextModel.voiceRecording = nil
+            typingTextModel.poll = PollDraft.new()
+        } else {
+            typingTextModel.poll = nil
+        }
+    }
+
+    @ViewBuilder
+    private var pollButton: some View {
+        Button(typingTextModel.poll == nil ? "Poll" : "Remove poll",
+               systemImage: typingTextModel.poll == nil ? "chart.bar.xaxis" : "chart.bar.fill") {
+            togglePoll()
+        }
+        .buttonStyle(.borderless)
+        .disabled(typingTextModel.uploading || typingTextModel.anonMode)
+        .accessibilityIdentifier("composer.poll")
     }
 
     @ViewBuilder

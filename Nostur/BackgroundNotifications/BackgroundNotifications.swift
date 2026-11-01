@@ -366,7 +366,7 @@ private func waitForBackgroundNotifications(accountData: AccountData, directMess
                             : Int(accountData.lastSeenPostCreatedAt)
                         if !directMessages { NotificationsViewModel.shared.needsUpdate = true }
                         req(RM.getMentions(pubkeys: [accountData.publicKey],
-                            kinds: directMessages ? [4,1059] : [1,1111,1222,1244,20,9802,30023,34235,1311],
+                            kinds: directMessages ? [4,1059] : [1,1111,1222,1244,20,1068,9802,30023,34235,1311],
                             subscriptionId: taskId, since: NTimestamp(timestamp: since)))
                     }
                 },

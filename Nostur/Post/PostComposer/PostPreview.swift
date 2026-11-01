@@ -40,6 +40,10 @@ struct PostPreview: View {
         if (typingTextModel.sending || typingTextModel.uploading || typingTextModel.isImportingSelectedVideo) { return true }
         
         if kind == .highlight { return false }
+
+        if let poll = typingTextModel.poll {
+            return !poll.isReady(question: typingTextModel.text)
+        }
         
         if (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty) { return true }
             

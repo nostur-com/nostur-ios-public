@@ -111,6 +111,8 @@ public enum NEventKind: Codable, Equatable, Hashable {
     case reaction
     case giftWrap
     case picture
+    case poll
+    case pollResponse
     case comment
     case shortVoiceMessage
     case shortVoiceMessageComment
@@ -154,6 +156,8 @@ public enum NEventKind: Codable, Equatable, Hashable {
         case     6: self = .repost
         case    16: self = .genericRepost
         case     7: self = .reaction
+        case  1018: self = .pollResponse
+        case  1068: self = .poll
         case    20: self = .picture
         case  1059: self = .giftWrap
         case  1111: self = .comment
@@ -211,6 +215,8 @@ public enum NEventKind: Codable, Equatable, Hashable {
         case .genericRepost:            return 16
         case .chatMessage:              return 1311
         case .reaction:                 return 7
+        case .poll:                     return 1068
+        case .pollResponse:             return 1018
         case .picture:                  return 20
         case .giftWrap:                 return 1059
         case .comment:                  return 1111

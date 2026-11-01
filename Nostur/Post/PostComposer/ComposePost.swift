@@ -481,7 +481,7 @@ struct ComposePost: View {
                                             }
                                             
                                             textEntry
-                                                .frame(height: textEntryHeight(in: geo.size.height))
+                                                .frame(height: textEntryHeight(in: geo.size.height), alignment: .top)
                                                 .id(textfield)
                                         }
                                         .padding(.top, replyToNRPost != nil ? Self.composerThreadBridgeHeight : 10)

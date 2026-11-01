@@ -153,7 +153,10 @@ struct Kind1: View {
                     .environment(\.availableWidth, availableWidth_)
 //                    .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
+                    // Poll options follow this renderer; a flexible preview frame makes
+                    // List rows stretch the question and leave a gap before the options.
+                    .frame(minHeight: nrPost.kind == 1068 ? 0 : nrPost.sizeEstimate.rawValue,
+                           maxHeight: nrPost.kind == 1068 ? nil : clipBottomHeight, alignment: .top)
                     .clipBottom(height: clipBottomHeight)
                     .overlay(alignment: .bottomTrailing) {
                         // Chevron only — a full-size Color.clear overlay steals taps from nested embeds.
@@ -187,6 +190,10 @@ struct Kind1: View {
 //                        .background(Color.red)
 //                    }
             }
+            if nrPost.kind == 1068 {
+                PollCard(nrPost: nrPost, isDetail: isDetail)
+                    .environment(\.availableWidth, availableWidth_)
+            }
         }
     }
     
@@ -208,13 +215,20 @@ struct Kind1: View {
             
             ContentRenderer(nrPost: nrPost, showMore: $showMore,  isDetail: false, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                 .environment(\.availableWidth, availableWidth_)
-                .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
+                // Poll options follow this renderer; a flexible preview frame makes
+                    // List rows stretch the question and leave a gap before the options.
+                    .frame(minHeight: nrPost.kind == 1068 ? 0 : nrPost.sizeEstimate.rawValue,
+                           maxHeight: nrPost.kind == 1068 ? nil : clipBottomHeight, alignment: .top)
                 .clipBottom(height: clipBottomHeight)
                 .overlay(alignment: .bottomTrailing) {
                     if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
                         ShowMoreChevronButton(action: expandContent)
                     }
                 }
+            if nrPost.kind == 1068 {
+                PollCard(nrPost: nrPost)
+                    .environment(\.availableWidth, availableWidth_)
+            }
         }
     }
 }

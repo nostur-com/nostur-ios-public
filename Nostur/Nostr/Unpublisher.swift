@@ -168,7 +168,7 @@ class Unpublisher {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     
                     // Clear draft
-                    if Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment, .shortVideos, .comment]).contains(nEvent.kind) {
+                    if Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment, .shortVideos, .comment, .poll]).contains(nEvent.kind) {
                         Drafts.shared.draft = ""
                         Drafts.shared.restoreDraft = ""
                     }
@@ -206,7 +206,7 @@ class Unpublisher {
                     }
                 }
                 
-                if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
+                if ([1,1111,1222,1244,6,20,1068,9802,30023,34235].contains(savedEvent.kind)) {
                     // Extract plain scalar values from managed object while on bg thread
                     let savedKind = savedEvent.kind
                     let savedPubkey = savedEvent.pubkey
@@ -236,7 +236,7 @@ class Unpublisher {
                 DispatchQueue.main.async {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     // Clear draft
-                    if Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment, .shortVideos]).contains(nEvent.kind) {
+                    if Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment, .shortVideos, .poll]).contains(nEvent.kind) {
                         Drafts.shared.draft = ""
                         Drafts.shared.restoreDraft = ""
                     }

@@ -46,6 +46,7 @@ public typealias CameraTappedCallback = () -> Void
 public typealias NestsTappedCallback = () -> Void
 public typealias VoiceMessageTappedCallback = () -> Void
 public typealias PrivateReplyTappedCallback = () -> Void
+public typealias PollTappedCallback = () -> Void
 
 protocol PastedMediaDelegate: UITextViewDelegate {
     func didPasteImage(_ image: UIImage)
@@ -62,6 +63,7 @@ protocol PastedMediaDelegate: UITextViewDelegate {
     func nestsTapped()
     func voiceMessageTapped()
     func privateReplyTapped()
+    func pollTapped()
 }
 
 class NosturTextView: UITextView {
@@ -139,8 +141,10 @@ class NosturTextView: UITextView {
     @objc func privateReplyTapped() {
         pastedMediaDelegate?.privateReplyTapped()
     }
-    
-    
+
+    @objc func pollTapped() {
+        pastedMediaDelegate?.pollTapped()
+    }
 }
 
 extension UITextView {
@@ -224,6 +228,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     var privateReplyTapped: PrivateReplyTappedCallback?
     var isPrivateReplyActive: Bool
     var isPrivateReplyLocked: Bool
+    var pollTapped: PollTappedCallback?
+    var isPollActive: Bool
     var kind: NEventKind?
     
     private(set) var onEditingChanged: OnEditingChangedCallback?
@@ -246,7 +252,9 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         voiceMessageTapped: VoiceMessageTappedCallback? = nil,
         privateReplyTapped: PrivateReplyTappedCallback? = nil,
         isPrivateReplyActive: Bool = false,
-        isPrivateReplyLocked: Bool = false
+        isPrivateReplyLocked: Bool = false,
+        pollTapped: PollTappedCallback? = nil,
+        isPollActive: Bool = false
     ) {
         _text = text
         _showVoiceRecorderButton = showVoiceRecorderButton
@@ -263,6 +271,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         self.privateReplyTapped = privateReplyTapped
         self.isPrivateReplyActive = isPrivateReplyActive
         self.isPrivateReplyLocked = isPrivateReplyLocked
+        self.pollTapped = pollTapped
+        self.isPollActive = isPollActive
         self.kind = kind
     }
     
@@ -329,8 +339,10 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         let didPrivateReplyStateChange =
             context.coordinator.lastPrivateReplyActive != isPrivateReplyActive ||
             context.coordinator.lastPrivateReplyLocked != isPrivateReplyLocked
+        let didPollChange = context.coordinator.lastIsPollActive != isPollActive
+            || context.coordinator.lastHasPollAction != (pollTapped != nil)
 
-        if didPrivateReplyActionChange || didPrivateReplyStateChange {
+        if didPrivateReplyActionChange || didPrivateReplyStateChange || didPollChange {
             if #available(iOS 26.0, *) {
                 makeToolbar26(uiView, context: context)
             }
@@ -340,6 +352,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             context.coordinator.lastHasPrivateReplyAction = hasPrivateReplyAction
             context.coordinator.lastPrivateReplyActive = isPrivateReplyActive
             context.coordinator.lastPrivateReplyLocked = isPrivateReplyLocked
+            context.coordinator.lastIsPollActive = isPollActive
+            context.coordinator.lastHasPollAction = pollTapped != nil
 
             // Refresh toolbar button icon and enabled state when private reply availability changes.
             uiView.reloadInputViews()
@@ -401,6 +415,19 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
             let privateReply = UIBarButtonItem(customView: privateReplyButton)
             barButtons.append(privateReply)
+        }
+
+        if let pollItem = pollBarButton() {
+            barButtons.append(pollItem)
+        }
+
+        if isPollActive {
+            let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
+            doneToolbar.barStyle = .default
+            barButtons.append(flexibleSpace)
+            doneToolbar.setItems(barButtons, animated: false)
+            uiView.inputAccessoryView = doneToolbar
+            return
         }
         
         if showVoiceRecorderButton {
@@ -483,6 +510,22 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
             let privateReply = UIBarButtonItem(customView: privateReplyButton)
             barButtons.append(privateReply)
+        }
+
+        if let pollItem = pollBarButton() {
+            if barButtons.count != 0 {
+                barButtons.append(fixedSpace)
+            }
+            barButtons.append(pollItem)
+        }
+
+        if isPollActive {
+            let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
+            doneToolbar.barStyle = .default
+            barButtons.append(flexibleSpace)
+            doneToolbar.setItems(barButtons, animated: false)
+            uiView.inputAccessoryView = doneToolbar
+            return
         }
         
         if showVoiceRecorderButton {
@@ -569,6 +612,16 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         uiView.inputAccessoryView = doneToolbar
     }
+
+    private func pollBarButton() -> UIBarButtonItem? {
+        guard pollTapped != nil else { return nil }
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: isPollActive ? "chart.bar.fill" : "chart.bar.xaxis"), for: .normal)
+        button.tintColor = UIColor(Themes.default.theme.accent)
+        button.accessibilityLabel = isPollActive ? "Remove poll" : "Poll"
+        button.addTarget(self, action: #selector(textView.pollTapped), for: .touchUpInside)
+        return UIBarButtonItem(customView: button)
+    }
     
     public final class Coordinator: NSObject, UITextViewDelegate, PastedMediaDelegate {
         
@@ -576,6 +629,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         var lastHasPrivateReplyAction: Bool?
         var lastPrivateReplyActive: Bool?
         var lastPrivateReplyLocked: Bool?
+        var lastIsPollActive = false
+        var lastHasPollAction = false
         
         func didPasteImage(_ image: UIImage) {
             if let gifData = image.gifData() {
@@ -647,6 +702,11 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             guard let privateReplyTapped = self.parent.privateReplyTapped else { return }
             privateReplyTapped()
         }
+
+        func pollTapped() {
+            guard let pollTapped = self.parent.pollTapped else { return }
+            pollTapped()
+        }
         
         var parent: HighlightedTextEditor
         // Store offsets rather than UITextPosition objects. Replacing attributedText
@@ -663,6 +723,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             self.lastHasPrivateReplyAction = markdownEditorView.privateReplyTapped != nil
             self.lastPrivateReplyActive = markdownEditorView.isPrivateReplyActive
             self.lastPrivateReplyLocked = markdownEditorView.isPrivateReplyLocked
+            self.lastIsPollActive = markdownEditorView.isPollActive
+            self.lastHasPollAction = markdownEditorView.pollTapped != nil
         }
 
         func applyHighlighting(to textView: UITextView, editedRange: NSRange? = nil) {

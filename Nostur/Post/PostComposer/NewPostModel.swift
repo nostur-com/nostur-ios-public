@@ -61,6 +61,8 @@ public final class TypingTextModel: ObservableObject {
     @Published var unselectedMentions: Set<NRContact> = [] // unselected from reply-p's, but maybe mentioned as nostr:npub, so should not be put back in p
     @Published var sending = false
     @Published var uploading = false
+    /// Present while this post is a NIP-88 poll. Nil for an ordinary note.
+    @Published var poll: PollDraft? = nil
     private var subscriptions = Set<AnyCancellable>()
     
     init() {
@@ -942,7 +944,7 @@ public final class NewPostModel: ObservableObject {
     
     func sendNow(isNC: Bool, pubkey: String, account: CloudAccount, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) async {
         Importer.shared.delayProcessing()
-        if (!typingTextModel.pastedImages.isEmpty || !typingTextModel.pastedVideos.isEmpty || typingTextModel.voiceRecording != nil) {
+        if typingTextModel.poll == nil && (!typingTextModel.pastedImages.isEmpty || !typingTextModel.pastedVideos.isEmpty || typingTextModel.voiceRecording != nil) {
             Task { @MainActor in
                 typingTextModel.uploading = true
 
@@ -1251,7 +1253,13 @@ public final class NewPostModel: ObservableObject {
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
         
         
-        guard var finalEvent = buildFinalEvent(imetas: imetas, replyTo: replyTo, quotePost: quotePost) else { return }
+        guard var finalEvent = buildFinalEvent(imetas: imetas, replyTo: replyTo, quotePost: quotePost) else {
+            typingTextModel.sending = false
+            if typingTextModel.poll != nil {
+                sendNotification(.anyStatus, ("Couldn’t create this poll. Check the question and answers and try again.", "NewPost"))
+            }
+            return
+        }
         
         // Need draft here because it might be cleared before we need it because async later
         persistDraftMentionAttributes()
@@ -1377,7 +1385,7 @@ public final class NewPostModel: ObservableObject {
             bgContext.perform {
                 let savedEvent = Event.saveEvent(event: finalEvent, flags: "nsecbunker_unsigned", context: bgContext)
                 savedEvent.cancellationId = cancellationId
-                if ([1,1111,1222,1244,6,20,22,9802,30023,34235,34236].contains(savedEvent.kind)) {
+                if ([1,1111,1222,1244,6,20,22,1068,9802,30023,34235,34236].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         if let lockToThisRelay = lockToThisRelay, self.lockToSingleRelay {
                             sendNotification(.newSingleRelayPostSaved, (savedEvent, lockToThisRelay))
@@ -1406,6 +1414,7 @@ public final class NewPostModel: ObservableObject {
                             savedEvent.flags = "awaiting_send"
                             savedEvent.cancellationId = cancellationId
                             ViewUpdates.shared.updateNRPost.send(savedEvent)
+                            PollArchive.remember(signedEvent)
                             DispatchQueue.main.async {
                                 _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
                             }
@@ -1431,7 +1440,7 @@ public final class NewPostModel: ObservableObject {
                 }
                 
                 DataProvider.shared().saveToDiskNow(.bgContext)
-                if ([1,1111,1222,1244,6,20,22,9802,30023,34235,34236].contains(savedEvent.kind)) {
+                if ([1,1111,1222,1244,6,20,22,1068,9802,30023,34235,34236].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         if let lockToThisRelay = lockToThisRelay, self.lockToSingleRelay {
                             sendNotification(.newSingleRelayPostSaved, (savedEvent, lockToThisRelay))
@@ -1442,6 +1451,7 @@ public final class NewPostModel: ObservableObject {
                     }
                 }
             }
+            PollArchive.remember(signedEvent)
             _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
         }
         finishDraftSend()
@@ -1559,9 +1569,14 @@ public final class NewPostModel: ObservableObject {
         } else {
             content = typingTextModel.text
         }
-        
+
+        let publishingPoll = typingTextModel.poll != nil && anonPubkey == nil
+
         // Handle voice message
-        if (nEvent.kind == .shortVoiceMessage || nEvent.kind == .shortVoiceMessageComment), let imeta = imetas.first {
+        if publishingPoll {
+            // A poll's content is the question. Pictures and video stay on ordinary posts.
+        }
+        else if (nEvent.kind == .shortVoiceMessage || nEvent.kind == .shortVoiceMessageComment), let imeta = imetas.first {
             content = imeta.url
             
             var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
@@ -1682,7 +1697,7 @@ public final class NewPostModel: ObservableObject {
         }
         
         // Handle preview images
-        if isPreviewContext {
+        if isPreviewContext && !publishingPoll {
             // Preview doesn't have image urls yet (is before upload), so we still render from local
             
             // kind:20 (images on top)
@@ -1812,6 +1827,16 @@ public final class NewPostModel: ObservableObject {
             nEvent.kind = .textNote
             nEvent.tags.append(NostrTag(["k", "20"]))
         }
+        var pollContent: String?
+        if publishingPoll, let poll = typingTextModel.poll {
+            guard let built = poll.builtEvent(question: content, relays: pollAdvertisedRelays(accountPubkey: publicKey), now: Date(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))) else {
+                return nil
+            }
+            nEvent.kind = .poll
+            nEvent.tags.append(contentsOf: built.tags.map { NostrTag($0) })
+            pollContent = built.content
+        }
+
         if anonPubkey == nil,
            SettingsStore.shared.postUserAgentEnabled,
            !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey) {
@@ -1822,10 +1847,16 @@ public final class NewPostModel: ObservableObject {
             nEvent.tags.append(NostrTag(["comment", content]))
         }
         else {
-            nEvent.content = content
+            nEvent.content = pollContent ?? content
         }
         
         return nEvent
+    }
+
+    /// Relays named on the poll. The event itself still publishes through the normal write path.
+    private func pollAdvertisedRelays(accountPubkey: String) -> [String] {
+        let lockURL = lockToSingleRelay ? Drafts.shared.lockToThisRelay?.url : nil
+        return PollRelayContext.advertisedRelays(accountPubkey: accountPubkey, lockURL: lockURL)
     }
     
     private func sendGiftWrapToRelays(wrappedEvent: NostrEssentials.Event, relays: Set<String>) {
