@@ -219,16 +219,9 @@ class EmbeddedVideoVM: ObservableObject {
             
             for (index, range) in frontRanges.enumerated() {
                 // Fetch the next chunk
-                let (data, response) = try await URLSession.shared.data(for: rangedRequest(url: actualUrl, bytes: range))
-                
-                guard let httpResponse = response as? HTTPURLResponse,
-                      httpResponse.statusCode == 206 || httpResponse.statusCode == 200 else {
-#if DEBUG
-                    L.og.debug("🎞️ statusCode not 206 or 200, got \(String(describing: response)) on \(actualUrl)")
-#endif
-                    throw URLError(.badServerResponse)
-                }
-                
+                let data = try await VideoPreviewRangeLoader.fetch(url: actualUrl, range: range)
+                try Task.checkCancellation()
+
                 combinedData.append(data)
                 
                 // Try extracting the frame, but don’t throw yet
@@ -253,6 +246,24 @@ class EmbeddedVideoVM: ObservableObject {
                 }
             }
             
+            // Locate MP4 metadata before expanding the media prefix. A large moov
+            // at the end must be fetched in full, rather than guessed from a tail window.
+            let metadata = try? await MP4PreviewMetadata.load(fileSize: fileSize, frontData: combinedData, fetch: { range in
+                try await VideoPreviewRangeLoader.fetch(url: actualUrl, range: range)
+            })
+            try Task.checkCancellation()
+            if let metadata, let (image, duration, dim) = try? await tryExtractFirstFrameDetailsFromStitchedRanges(
+                fileSize: fileSize,
+                frontData: combinedData,
+                endData: metadata.data,
+                endRangeStart: metadata.offset,
+                pathExtension: pathExtension
+            ) {
+                try Task.checkCancellation()
+                await setFirstFrame(image: image, duration: duration, dimensions: dim, for: videoURL)
+                return
+            }
+
             // If initial front ranges fail, progressively expand front fetch (bounded).
             var frontData = combinedData
             let expandedFrontTargets = [2_097_152, 4_194_304, 8_388_608] // 2MB, 4MB, 8MB
@@ -260,20 +271,25 @@ class EmbeddedVideoVM: ObservableObject {
                 let nextUpperBound = min(targetSize, fileSize)
                 let nextRange = frontData.count..<nextUpperBound
                 
-                let (extraData, response) = try await URLSession.shared.data(for: rangedRequest(url: actualUrl, bytes: nextRange))
-                guard !Task.isCancelled else { return }
-                guard let httpResponse = response as? HTTPURLResponse,
-                      httpResponse.statusCode == 206 || httpResponse.statusCode == 200 else {
-#if DEBUG
-                    L.og.debug("🎞️ Expanded front fetch failed with unexpected status on \(actualUrl) -[LOG]-")
-#endif
-                    break
-                }
-                
+                let extraData = try await VideoPreviewRangeLoader.fetch(url: actualUrl, range: nextRange)
+                try Task.checkCancellation()
+
                 frontData.append(extraData)
                 
                 do {
-                    if let (image, duration, dim) = try await tryExtractFirstFrameDetails(from: frontData, pathExtension: pathExtension) {
+                    let details: (UIImage, CMTime?, CGSize?)?
+                    if let metadata {
+                        details = try await tryExtractFirstFrameDetailsFromStitchedRanges(
+                            fileSize: fileSize,
+                            frontData: frontData,
+                            endData: metadata.data,
+                            endRangeStart: metadata.offset,
+                            pathExtension: pathExtension
+                        )
+                    } else {
+                        details = try await tryExtractFirstFrameDetails(from: frontData, pathExtension: pathExtension)
+                    }
+                    if let (image, duration, dim) = details {
                         guard !Task.isCancelled else { return }
                         await setFirstFrame(image: image, duration: duration, dimensions: dim, for: videoURL)
                         return
@@ -288,17 +304,9 @@ class EmbeddedVideoVM: ObservableObject {
             // If front probing fails, try last 1MB
             combinedData = Data() // Reset
             let endRange = max(0, fileSize - 1_048_576)..<fileSize
-            let (endData, response) = try await URLSession.shared.data(for: rangedRequest(url: actualUrl, bytes: endRange))
-            guard !Task.isCancelled else { return }
-            
-            guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 206 || httpResponse.statusCode == 200 else {
-#if DEBUG
-                L.og.debug("🎞️ statusCode not 206 or 200, got \(String(describing: response)) on \(actualUrl) -[LOG]-")
-#endif
-                throw URLError(.badServerResponse)
-            }
-            
+            let endData = try await VideoPreviewRangeLoader.fetch(url: actualUrl, range: endRange)
+            try Task.checkCancellation()
+
             combinedData.append(endData)
             
             do {
@@ -353,6 +361,7 @@ class EmbeddedVideoVM: ObservableObject {
         // Step 1: Try HEAD first
         var request = URLRequest(url: currentURL)
         request.httpMethod = "HEAD"
+        request.timeoutInterval = 10
         let (_, headResponse) = try await URLSession.shared.data(for: request)
         
         if let httpResponse = headResponse as? HTTPURLResponse,
@@ -373,7 +382,10 @@ class EmbeddedVideoVM: ObservableObject {
             getRequest.httpMethod = "GET"
             getRequest.setValue("bytes=0-1023", forHTTPHeaderField: "Range") // Fetch only 1KB
             
-            let (_, getResponse) = try await Self.noRedirectSession.data(for: getRequest)
+            // Only inspect headers. A server ignoring Range must not make size
+            // probing download its entire video before preview fetching begins.
+            let (getBytes, getResponse) = try await Self.noRedirectSession.bytes(for: getRequest)
+            getBytes.task.cancel()
             
             guard let httpResponse = getResponse as? HTTPURLResponse else {
 #if DEBUG
@@ -401,6 +413,7 @@ class EmbeddedVideoVM: ObservableObject {
                 // Step 3: Do HEAD on the redirected URL
                 var redirectedHeadRequest = URLRequest(url: currentURL)
                 redirectedHeadRequest.httpMethod = "HEAD"
+                redirectedHeadRequest.timeoutInterval = 10
                 let (_, redirectedHeadResponse) = try await URLSession.shared.data(for: redirectedHeadRequest)
                 
                 if let redirectedHttpResponse = redirectedHeadResponse as? HTTPURLResponse,
@@ -522,18 +535,13 @@ class EmbeddedVideoVM: ObservableObject {
 #endif
     }
     
-    private func rangedRequest(url: URL, bytes: Range<Int>) -> URLRequest {
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 10
-        request.setValue("bytes=\(bytes.lowerBound)-\(bytes.upperBound-1)", forHTTPHeaderField: "Range")
-        return request
-    }
-    
     // Custom URLSession with delegate to handle redirects
     private static let noRedirectSession: URLSession = {
         let config = URLSessionConfiguration.default
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
         config.urlCache = nil
+        config.timeoutIntervalForRequest = 10
+        config.timeoutIntervalForResource = 10
         return URLSession(configuration: config, delegate: NoRedirectDelegate(), delegateQueue: nil)
     }()
 }
