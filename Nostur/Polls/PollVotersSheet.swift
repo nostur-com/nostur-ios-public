@@ -47,22 +47,27 @@ struct PollVotersSheet: View {
                         .pickerStyle(.segmented)
                         .padding(.bottom, 8)
 
-                        ForEach(voters) { voter in
-                            voterRow(voter)
-                            Divider().padding(.leading, 48)
-                        }
+                        // Avatars and names stay out of the answer animation. Fading
+                        // every voter row is what made the tap feel slow.
+                        Group {
+                            ForEach(voters) { voter in
+                                voterRow(voter)
+                                Divider().padding(.leading, 48)
+                            }
 
-                        if voters.isEmpty {
-                            if model.isLoading && !model.hasLoaded {
-                                ProgressView().frame(maxWidth: .infinity).padding(.vertical, 32)
-                            } else {
-                                Text(followingOnly ? "No votes from people you follow." : "No votes yet.")
-                                    .font(.subheadline)
-                                    .foregroundStyle(theme.secondary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 32)
+                            if voters.isEmpty {
+                                if model.isLoading && !model.hasLoaded {
+                                    ProgressView().frame(maxWidth: .infinity).padding(.vertical, 32)
+                                } else {
+                                    Text(followingOnly ? "No votes from people you follow." : "No votes yet.")
+                                        .font(.subheadline)
+                                        .foregroundStyle(theme.secondary)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 32)
+                                }
                             }
                         }
+                        .animation(nil, value: selectedOption)
 
                         if model.isPartial || model.error != nil || model.poll.multipleChoice {
                             VStack(alignment: .leading, spacing: 8) {
@@ -82,7 +87,11 @@ struct PollVotersSheet: View {
                     .padding(16)
                 }
                 .onChange(of: selectedOption) { _ in
-                    proxy.scrollTo("poll-results-top", anchor: .top)
+                    var transaction = Transaction()
+                    transaction.disablesAnimations = true
+                    withTransaction(transaction) {
+                        proxy.scrollTo("poll-results-top", anchor: .top)
+                    }
                 }
             }
             .background(theme.listBackground)
@@ -112,7 +121,7 @@ struct PollVotersSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             if selectedOption != nil {
                 Button {
-                    selectedOption = nil
+                    showOption(nil)
                 } label: {
                     Label("All answers", systemImage: "chevron.left")
                         .font(.subheadline)
@@ -121,6 +130,7 @@ struct PollVotersSheet: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(theme.accent)
+                .transition(.opacity)
             }
 
             HStack {
@@ -137,6 +147,7 @@ struct PollVotersSheet: View {
 
             ForEach(visibleOptions) { option in
                 answerRow(option)
+                    .transition(.opacity)
             }
         }
     }
@@ -145,7 +156,7 @@ struct PollVotersSheet: View {
         let count = model.tally.votersByOption[option.id]?.count ?? 0
         let fraction = model.tally.totalVoters == 0 ? 0 : Double(count) / Double(model.tally.totalVoters)
         return Button {
-            selectedOption = option.id
+            showOption(option.id)
         } label: {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -185,6 +196,12 @@ struct PollVotersSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityHint("Show people who chose this answer")
+    }
+
+    private func showOption(_ id: String?) {
+        withAnimation(.easeInOut(duration: 0.25)) {
+            selectedOption = id
+        }
     }
 
     private func voterRow(_ voter: PollVote) -> some View {
