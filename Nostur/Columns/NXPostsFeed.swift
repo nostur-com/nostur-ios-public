@@ -1850,6 +1850,7 @@ struct NXPostsFeed: View {
             "UNREAD tap · no target · anchor \(start.source) \(startIndex)/\(posts.count) · counter \(vmInner.unreadCount)"
         )
 #endif
+        vm.reconcileUnreadPostIDs()
         layoutStabilizer.liftNavigationCover()
     }
 

@@ -406,6 +406,8 @@ class NXColumnViewModel: ObservableObject {
            let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate {
             let oldPosts = currentNRPostsOnScreen
             let requestedNewCount = posts.count { !oldIDs.contains($0.id) }
+            let updateID = UUID()
+            pendingPrependIDs[updateID] = Set(posts.map(\.id)).subtracting(oldIDs)
             performAnchoredFeedUpdate(NXFeedViewport.prependCoverReason) { [weak self] in
                 guard let self else { return [] }
                 let currentPosts = self.currentNRPostsOnScreen
@@ -419,6 +421,7 @@ class NXColumnViewModel: ObservableObject {
                     current: currentPosts,
                     id: \.id
                 )
+                self.pendingPrependIDs[updateID] = nil
                 withTransaction(Transaction(animation: nil)) {
                     self.viewState = .posts(rebasedPosts)
                 }
@@ -483,6 +486,25 @@ class NXColumnViewModel: ObservableObject {
     /// Newer posts kept out of the list while the user is reading below the top.
     /// Their unread counts are already in `vmInner.unreadIds`.
     private var heldNewerPosts: [NRPost] = []
+    // Counts for queued prepends remain valid before their rows reach viewState.
+    private var pendingPrependIDs: [UUID: Set<String>] = [:]
+
+    private var pendingUnreadPostIDs: Set<String> {
+        Set(heldNewerPosts.map(\.id)).union(pendingPrependIDs.values.flatMap { $0 })
+    }
+
+    /// Unread belongs to a row in this feed, including rows queued for insertion.
+    /// Dropped/truncated rows must neither inflate the badge nor block a later fetch.
+    func reconcileUnreadPostIDs() {
+        guard case .posts(let posts) = viewState else { return }
+        let validIDs = Set(posts.map(\.id)).union(pendingUnreadPostIDs)
+        let remaining = vmInner.unreadIds.filter { validIDs.contains($0.key) }
+        guard remaining != vmInner.unreadIds else { return }
+#if DEBUG
+        feedActionDebugRecord?("UNREAD reconcile · removed \(vmInner.unreadIds.count - remaining.count) absent rows · counter \(vmInner.unreadCount)→\(remaining.values.reduce(0, +))")
+#endif
+        vmInner.unreadIds = remaining
+    }
 
     @MainActor
     var feedLeadingNonPostRowCount: Int {
@@ -556,6 +578,7 @@ class NXColumnViewModel: ObservableObject {
     @Published var viewState: ColumnViewState = .loading {
         didSet {
             if case .posts(let nrPosts) = viewState {
+                reconcileUnreadPostIDs()
                 refreshAlreadySeenNewerPosts(for: nrPosts)
                 if nrPosts.isEmpty, !vmInner.unreadIds.isEmpty {
                     vmInner.unreadIds = [:]
@@ -5177,6 +5200,8 @@ extension NXColumnViewModel {
     @MainActor
     public func putOnScreen(_ addedPosts: [NRPost], config: NXColumnConfig, insertAtEnd: Bool = false, revealAtTop: Bool = false, completion: (() -> Void)? = nil) {
 
+        reconcileUnreadPostIDs()
+
         if !addedPosts.isEmpty {
             mediaUpdatesAvailable = false
         }
@@ -5184,18 +5209,11 @@ extension NXColumnViewModel {
         if case .posts(let existingPosts) = viewState { // There are already posts on screen
             
             
-            // Only the ids of self.unreadIds where unreadIds[key] > 0
-            let currentUnreadIdsOnScreen: Set<String> = Set(
-                self.vmInner.unreadIds.filter({ $0.value > 0 }).keys
-            )
-            
-            // Somehow we still have duplicates here that should have been filtered in prev steps (bug?) so filter duplicates again here
-            // Held newer posts already have unread entries without being in
-            // the List. An explicit reveal must still be allowed to insert them.
-            let currentIdsOnScreen = Set(existingPosts.map { $0.id })
-                .union(revealAtTop ? [] : currentUnreadIdsOnScreen)
-            
-            
+            // Deduplicate against real and pending rows. A stale unread entry is
+            // bookkeeping, not evidence that a post exists in the feed.
+            let currentIdsOnScreen = Set(existingPosts.map(\.id))
+                .union(revealAtTop ? [] : pendingUnreadPostIDs)
+
             let onlyNewAddedPosts = addedPosts
                 .filter {
                     // if it is a repost, check reposted-id also

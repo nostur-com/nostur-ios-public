@@ -25,6 +25,58 @@ private actor NXFeedTestGate {
 final class NXFeedViewportTests: XCTestCase {
 
     @MainActor
+    func testUnreadReconciliationDropsAbsentRowsAndPreservesQueuedPrepends() async {
+        let posts = await bg().perform {
+            (1...3).map { index in
+                var event = NEvent(content: "Unread reconciliation \(index)")
+                event.id = String(format: "%08x", index) + String(repeating: "0", count: 56)
+                let preview = createPreviewEvent(event)
+                defer { bg().delete(preview) }
+                return NRPost(event: preview, withFooter: false, withParents: false)
+            }
+        }
+        let vm = NXColumnViewModel()
+        vm.viewState = .posts([posts[0], posts[1]])
+        vm.vmInner.unreadIds = [posts[0].id: 1, posts[1].id: 2, "absent": 958]
+        vm.viewState = .posts([posts[0]])
+        XCTAssertEqual(vm.vmInner.unreadIds, [posts[0].id: 1])
+
+        // Reproduce the report: every rendered row is read, but absent rows
+        // keep the counter nonzero. The no-target recovery must clear it.
+        vm.vmInner.unreadIds = [posts[0].id: 0, "absent": 958]
+        vm.reconcileUnreadPostIDs()
+        XCTAssertEqual(vm.vmInner.unreadCount, 0)
+        XCTAssertEqual(vm.vmInner.unreadIds[posts[0].id], 0)
+
+        var queued: (() -> [String])?
+        vm.vmInner.performAnchoredFeedUpdate = { _, update in queued = update }
+        vm.vmInner.isAtTop = false
+        let config = NXColumnConfig(id: "unread-regression", name: "Unread regression")
+        vm.putOnScreen([posts[2]], config: config)
+        XCTAssertNotNil(queued)
+        let queuedCount = vm.vmInner.unreadCount
+        XCTAssertGreaterThan(queuedCount, 0)
+        // Another snapshot can land while the prepend waits for scroll idle.
+        vm.viewState = .posts([posts[0]])
+        vm.reconcileUnreadPostIDs()
+        XCTAssertEqual(vm.vmInner.unreadCount, queuedCount)
+        _ = queued?()
+        XCTAssertEqual(vm.currentNRPostsOnScreen.map(\.id), [posts[2].id, posts[0].id])
+        XCTAssertEqual(vm.vmInner.unreadCount, queuedCount)
+
+        vm.viewState = .posts([posts[0]])
+        XCTAssertEqual(vm.vmInner.unreadCount, 0)
+        // A formerly dropped row must be eligible to arrive again.
+        vm.vmInner.unreadIds[posts[2].id] = 958
+        queued = nil
+        vm.putOnScreen([posts[2]], config: config)
+        XCTAssertNotNil(queued)
+        _ = queued?()
+        XCTAssertEqual(vm.currentNRPostsOnScreen.first?.id, posts[2].id)
+        XCTAssertEqual(vm.vmInner.unreadCount, queuedCount)
+    }
+
+    @MainActor
     func testIdleSeenCleanupKeepsRenderedRowsAndUnreadUntilTop() async throws {
         _ = AppState.shared
         _ = AccountsState.shared
