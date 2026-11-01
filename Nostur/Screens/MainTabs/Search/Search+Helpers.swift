@@ -222,83 +222,58 @@ extension Search {
     }
 
     func neventSearch(_ term: String, searchID: UUID) {
-        guard let identifier = try? ShareableIdentifier(term),
-              let noteHex = identifier.eventId
-        else {
+        guard let target = NeventSearchTarget(term) else {
+            searching = false
             searchError = String(localized: "This event link is invalid.", comment: "Error shown when a pasted nevent identifier cannot be parsed")
             return
         }
 
         searching = true
         contacts = []
+        let noteHex = target.eventID
+        let session = NeventSearchSession()
+        neventSearchSession = session
+        session.start {
+            guard self.searchID == searchID, self.nrPosts.isEmpty else { return }
+            self.searching = false
+            self.searchError = neventNotFoundMessage(hasRelayHints: target.hasRelayHints)
+        }
 
-        bg().perform {
-            guard let event = Event.fetchEvent(id: noteHex, context: bg()) else { return }
-            let nrPost = NRPost(event: event)
-            Task { @MainActor in
-                guard self.searchID == searchID else { return }
-                self.nrPosts = [nrPost]
-                searching = false
-                searchError = nil
+        // Both the cache lookup and import response may wait on the private context.
+        // Neither is a prerequisite for ending the UI's loading state at its deadline.
+        let loadResult: () -> Void = {
+            bg().perform {
+                guard let event = Event.fetchEvent(id: noteHex, context: bg()) else { return }
+                let nrPost = NRPost(event: event)
+                Task { @MainActor in
+                    guard self.searchID == searchID, session.found() else { return }
+                    self.nrPosts = [nrPost]
+                    self.searching = false
+                    self.searchError = nil
+                }
             }
         }
+        loadResult()
 
         let searchTask1 = ReqTask(
             prefix: "SEA-",
             reqCommand: { taskId in
-                req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .READ)
-                req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH_ONLY)
-            },
-            processResponseCommand: { taskId, _, _ in
-                bg().perform {
-                    guard let event = Event.fetchEvent(id: noteHex, context: bg()) else {
-                        Task { @MainActor in
-                            guard self.searchID == searchID else { return }
-                            self.searching = false
-                            self.searchError = neventNotFoundMessage(hasRelayHints: !identifier.relays.isEmpty)
-                        }
-                        return
-                    }
-                    let nrPost = NRPost(event: event)
-                    Task { @MainActor in
-                        guard self.searchID == searchID else { return }
-                        self.nrPosts = [nrPost]
-                        self.searching = false
-                        self.searchError = nil
+                let message = RM.getEvent(id: noteHex, subscriptionId: taskId)
+                req(message, relayType: .READ)
+                req(message, relayType: .SEARCH_ONLY)
+                guard !target.relays.isEmpty, vpnGuardOK() else { return }
+                // Use the pool's executor rather than waiting for feed imports before
+                // contacting hints. Every response uses the same tracked subscription.
+                ConnectionPool.shared.queue.async(flags: .barrier) {
+                    for relay in target.relays {
+                        ConnectionPool.shared.sendEphemeralMessage(message, relay: relay)
                     }
                 }
             },
-            timeoutCommand: { _ in
-                guard self.searchID == searchID, self.nrPosts.isEmpty else { return }
-                self.searching = false
-                self.searchError = neventNotFoundMessage(hasRelayHints: !identifier.relays.isEmpty)
-            },
-            timeoutDelivery: .main
+            processResponseCommand: { _, _, _ in loadResult() }
         )
         backlog.add(searchTask1)
         searchTask1.fetch()
-
-
-        guard !identifier.relays.isEmpty else { return }
-        searchTask = Task {
-            do {
-                try await Task.sleep(nanoseconds: UInt64(3) * NSEC_PER_SEC)
-                guard !Task.isCancelled, self.searchID == searchID else { return }
-                await bg().perform {
-
-                    // If we don't have the event after X seconds, fetch from relay hint
-                    guard vpnGuardOK() else { return }
-                    guard Event.fetchEvent(id: noteHex, context: bg()) == nil
-                    else { return }
-
-                    guard let relay = identifier.relays.first else { return }
-
-                    // Use searchTask1.subscription so it will still be processed by existing searchTask1 (timeout is 12 sec)
-                    ConnectionPool.shared.sendEphemeralMessage(RM.getEvent(id: noteHex, subscriptionId: searchTask1.subscriptionId), relay: relay)
-                }
-            }
-            catch { }
-        }
     }
 
     func npubSearch(_ term: String, searchID: UUID) {

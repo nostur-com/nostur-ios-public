@@ -28,6 +28,7 @@ struct Search: View {
     @State private var pendingScanError = false
     @State var searchTask: Task<Void, Never>? = nil
     @State var searchID = UUID()
+    @State var neventSearchSession: NeventSearchSession? = nil
     @State var searchCancellationToken: SearchCancellationToken? = nil
     @State var searchPostResults: [SearchPostResult] = []
     @State var unfilteredContacts: [NRContact] = []
@@ -91,6 +92,17 @@ struct Search: View {
                                     .font(.title2)
                                 Text(searchError)
                                     .multilineTextAlignment(.center)
+                                if case .nevent1(let term) = typeOfSearch(searchText) {
+                                    Button("Try again") {
+                                        neventSearchSession?.cancel()
+                                        backlog.clear()
+                                        let nextID = UUID()
+                                        searchID = nextID
+                                        self.searchError = nil
+                                        neventSearch(term, searchID: nextID)
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
                             }
                             .foregroundStyle(.secondary)
                             .padding(20)
@@ -220,6 +232,8 @@ struct Search: View {
                 }
             }
             .onChange(of: searchText) { searchInput in
+                neventSearchSession?.cancel()
+                neventSearchSession = nil
                 searchTask?.cancel()
                 searchTask = nil
                 searchMaterializationTask?.cancel()
