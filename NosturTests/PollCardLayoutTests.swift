@@ -1,9 +1,99 @@
 import SwiftUI
+import NavigationBackport
 import XCTest
 @testable import Nostur
 
 @MainActor
 final class PollCardLayoutTests: XCTestCase {
+    func testAllResultsSegmentsCanBeSelected() async throws {
+        let now = Int(Date().timeIntervalSince1970)
+        let poll = NostrPoll(id: String(repeating: "aa", count: 32), createdAt: now - 60,
+                             tags: [["option", "a", "First"], ["option", "b", "Second"]])
+        let model = PollViewModel(poll: poll, initialVotes: [
+            PollVote(id: "1", pubkey: String(repeating: "ab", count: 32), createdAt: now - 10, responses: ["b"])])
+        let host = UIHostingController(rootView: PollVotersSheet(model: model, selectedOption: "b", dismissSheet: {}))
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        try await Task.sleep(nanoseconds: 250_000_000)
+        var bodyImages: [Int: Data] = [:]
+        for index in [2, 1, 0] {
+            let control = try XCTUnwrap(descendant(UISegmentedControl.self, in: host.view))
+            XCTAssertTrue(control.isEnabledForSegment(at: index))
+            let point = control.convert(CGPoint(x: control.bounds.width * (CGFloat(index) + 0.5) / 3,
+                                                y: control.bounds.midY), to: host.view)
+            let hit = host.view.hitTest(point, with: nil)
+            XCTAssertTrue(hit === control || hit?.isDescendant(of: control) == true,
+                          "Segment \(index) is covered by \(String(describing: hit))")
+            control.selectedSegmentIndex = index
+            control.sendActions(for: .valueChanged)
+            try await Task.sleep(nanoseconds: 100_000_000)
+            let updated = try XCTUnwrap(descendant(UISegmentedControl.self, in: host.view))
+            XCTAssertEqual(updated.selectedSegmentIndex, index)
+            let top = updated.convert(updated.bounds, to: host.view).maxY + 8
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 1
+            let image = UIGraphicsImageRenderer(size: CGSize(width: 390, height: 250), format: format).image { context in
+                context.cgContext.translateBy(x: 0, y: -top)
+                host.view.drawHierarchy(in: host.view.bounds, afterScreenUpdates: true)
+            }
+            bodyImages[index] = try XCTUnwrap(image.pngData())
+            let attachment = XCTAttachment(image: image)
+            attachment.name = "scope-content-\(index)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+
+        }
+        XCTAssertNotEqual(bodyImages[1], bodyImages[2], "Web of Trust must update the answer content, not only the picker highlight")
+        XCTAssertNotEqual(bodyImages[0], bodyImages[2], "Everyone must restore the answer results")
+    }
+
+    private func descendant<T: UIView>(_ type: T.Type, in view: UIView) -> T? {
+        if let result = view as? T { return result }
+        return view.subviews.lazy.compactMap { self.descendant(type, in: $0) }.first
+    }
+
+    func testScopedResultsFilterCountsAndAnswerListsTogether() {
+        let poll = NostrPoll(id: String(repeating: "ab", count: 32), createdAt: 100,
+                             tags: [["polltype", "multiplechoice"], ["option", "a", "First"],
+                                    ["option", "b", "Second"]])
+        let votes = [PollVote(id: "1", pubkey: "followed", createdAt: 101, responses: ["a", "b"]),
+                     PollVote(id: "2", pubkey: "trusted", createdAt: 102, responses: ["b"]),
+                     PollVote(id: "3", pubkey: "stranger", createdAt: 103, responses: ["a"])]
+        let everyone = PollTally(poll: poll, votes: votes, now: 200)
+        let trusted = everyone.filtered(to: ["followed", "trusted"])
+        XCTAssertEqual(trusted.totalVoters, 2)
+        XCTAssertEqual(trusted.voters(for: "a").map(\.pubkey), ["followed"])
+        XCTAssertEqual(trusted.voters(for: "b").count, 2)
+        XCTAssertEqual(Double(trusted.voters(for: "a").count) / Double(trusted.totalVoters), 0.5)
+        let followed = everyone.filtered(to: ["followed"])
+        XCTAssertEqual(followed.totalVoters, 1)
+        XCTAssertEqual(followed.voters(for: "a").count, 1)
+        XCTAssertEqual(followed.voters(for: "b").count, 1)
+        XCTAssertEqual(everyone.totalVoters, 3, "Filtering must preserve the unfiltered results")
+        let empty = everyone.filtered(to: [])
+        XCTAssertEqual(empty.totalVoters, 0)
+        XCTAssertTrue(empty.voters(for: "a").isEmpty)
+        XCTAssertTrue(empty.voters(for: nil).isEmpty)
+    }
+
+    func testAnswerVoterFilterNeverFallsBackToEveryone() {
+        let poll = NostrPoll(id: String(repeating: "ab", count: 32), createdAt: 100,
+                             tags: [["option", "a", "First"], ["option", "b", "Second"],
+                                    ["option", "c", "No votes"]])
+        let first = PollVote(id: "1", pubkey: "first", createdAt: 101, responses: ["a"])
+        let second = PollVote(id: "2", pubkey: "second", createdAt: 102, responses: ["b"])
+        let tally = PollTally(poll: poll, votes: [first, second], now: 200)
+        XCTAssertEqual(tally.voters(for: nil).count, 2)
+        XCTAssertEqual(tally.voters(for: "a").map(\.pubkey), ["first"])
+        XCTAssertEqual(tally.voters(for: "b").map(\.pubkey), ["second"])
+        XCTAssertTrue(tally.voters(for: "c").isEmpty)
+        XCTAssertTrue(tally.voters(for: "unknown").isEmpty)
+    }
+
     func testResultsSheetOverviewAndFocusedAnswerRender() async throws {
         let now = Int(Date().timeIntervalSince1970)
         let poll = NostrPoll(id: String(repeating: "aa", count: 32), createdAt: now - 3600,
@@ -17,9 +107,10 @@ final class PollCardLayoutTests: XCTestCase {
         let model = PollViewModel(poll: poll, initialVotes: votes)
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         for selected in [String?.none, Optional("b")] {
-            let host = UIHostingController(rootView: PollVotersSheet(model: model, selectedOption: selected)
+            let host = UIHostingController(rootView: PollVotersSheet(model: model, selectedOption: selected, dismissSheet: {})
                 .environment(\.theme, Themes.default.theme)
-                .environment(\.colorScheme, .light))
+                .environment(\.colorScheme, .light)
+                .nbUseNavigationStack(.never))
             let window = UIWindow(windowScene: scene)
             window.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
             window.rootViewController = host
@@ -27,6 +118,8 @@ final class PollCardLayoutTests: XCTestCase {
             defer { window.isHidden = true }
             try await Task.sleep(nanoseconds: 250_000_000)
             window.layoutIfNeeded()
+            XCTAssertEqual(visibleNavigationBars(in: host.view), 1,
+                           "Poll results must have one navigation bar even when opened from a legacy feed stack")
             let format = UIGraphicsImageRendererFormat()
             format.scale = 1
             let image = UIGraphicsImageRenderer(bounds: window.bounds, format: format).image { _ in
@@ -41,6 +134,12 @@ final class PollCardLayoutTests: XCTestCase {
             attachment.lifetime = .keepAlways
             add(attachment)
         }
+    }
+
+    private func visibleNavigationBars(in view: UIView) -> Int {
+        guard !view.isHidden, view.alpha > 0 else { return 0 }
+        return (view is UINavigationBar ? 1 : 0)
+            + view.subviews.reduce(0) { $0 + visibleNavigationBars(in: $1) }
     }
 
     func testBookmarkListAndSearchScrollViewHaveMatchingPollHeights() async throws {

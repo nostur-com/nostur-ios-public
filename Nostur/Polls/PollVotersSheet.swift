@@ -1,18 +1,118 @@
 import SwiftUI
 import NavigationBackport
 
+private enum PollResultsScope: Hashable {
+    case everyone, webOfTrust, following
+}
+
 struct PollVotersSheet: View {
-    @Environment(\.dismiss) private var dismiss
+    private let dismissSheet: () -> Void
+    @ObservedObject var model: PollViewModel
+    @State private var path: [String]
+    @State private var scope: PollResultsScope = .everyone
+
+    init(model: PollViewModel, selectedOption: String?, dismissSheet: @escaping () -> Void) {
+        self.model = model
+        self.dismissSheet = dismissSheet
+        _path = State(initialValue: selectedOption.map { [$0] } ?? [])
+    }
+
+    @ViewBuilder
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            NavigationStack(path: $path) {
+                page(optionID: nil)
+                    .navigationDestination(for: String.self) { page(optionID: $0) }
+            }
+            .presentationDetents([.large])
+        } else {
+            NBNavigationStack(path: $path) {
+                page(optionID: nil)
+                    .nbNavigationDestination(for: String.self) { page(optionID: $0) }
+            }
+            .nbUseNavigationStack(.never)
+        }
+    }
+
+    private func page(optionID: String?) -> some View {
+        PollVotersPage(model: model, scope: $scope, selectedOption: optionID,
+                       openOption: { path.append($0) }, dismissSheet: dismissSheet)
+    }
+}
+
+/// Derive results inside each destination so changes remain live after a push.
+private struct PollVotersPage: View {
+    @ObservedObject var model: PollViewModel
+    @Binding var scope: PollResultsScope
+    let selectedOption: String?
+    let openOption: (String) -> Void
+    let dismissSheet: () -> Void
+    @ObservedObject private var wot = WebOfTrust.shared
+    @ObservedObject private var settings = SettingsStore.shared
+    @ObservedObject private var accounts = AccountsState.shared
+
+    var body: some View {
+        let membership: WebOfTrust.Membership = scope == .webOfTrust
+            ? wot.membership(of: Set(model.tally.votes.map(\.pubkey))) : .disabled
+        PollVotersContent(model: model, tally: scopedTally(membership: membership), scope: $scope,
+                          unavailable: unavailableMessage(membership: membership), selectedOption: selectedOption,
+                          openOption: openOption, dismissSheet: dismissSheet)
+    }
+
+    private func scopedTally(membership: WebOfTrust.Membership) -> PollTally {
+        switch scope {
+        case .everyone: return model.tally
+        case .following:
+            return model.tally.filtered(to: accounts.loggedInAccount?.followingPublicKeys ?? [])
+        case .webOfTrust:
+            if case .ready(let keys) = membership { return model.tally.filtered(to: keys) }
+            return model.tally.filtered(to: [])
+        }
+    }
+
+    private func unavailableMessage(membership: WebOfTrust.Membership) -> LocalizedStringKey? {
+        guard scope == .webOfTrust else { return nil }
+        switch membership {
+        case .disabled: return "Enable Web of Trust in Settings to see these results."
+        case .loading: return "Your Web of Trust is still loading."
+        case .ready: return nil
+        }
+    }
+
+}
+
+private struct PollVotersContent: View {
     @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
     @ObservedObject var model: PollViewModel
-    @State var selectedOption: String?
-    @State private var followingOnly = false
+    let tally: PollTally
+    @Binding var scope: PollResultsScope
+    let unavailable: LocalizedStringKey?
+    let selectedOption: String?
+    let openOption: (String) -> Void
+    let dismissSheet: () -> Void
 
     private var voters: [PollVote] {
-        let all = selectedOption.flatMap { model.tally.votersByOption[$0] } ?? model.tally.votes
-        let follows = AccountsState.shared.loggedInAccount?.followingPublicKeys ?? []
-        return followingOnly ? all.filter { follows.contains($0.pubkey) } : all
+        tally.voters(for: selectedOption)
+    }
+
+    private var emptyMessage: LocalizedStringKey {
+        switch scope {
+        case .everyone: return "No votes yet."
+        case .webOfTrust: return "No votes from people in your Web of Trust."
+        case .following: return "No votes from people you follow."
+        }
+    }
+
+    private var voterTotal: LocalizedStringKey {
+        switch scope {
+        case .everyone:
+            return tally.totalVoters == 1 ? "1 voter" : "\(tally.totalVoters) voters"
+        case .webOfTrust:
+            return tally.totalVoters == 1 ? "1 voter in your Web of Trust" : "\(tally.totalVoters) voters in your Web of Trust"
+        case .following:
+            return tally.totalVoters == 1 ? "1 voter you follow" : "\(tally.totalVoters) voters you follow"
+        }
     }
 
     private var visibleOptions: [NostrPoll.Option] {
@@ -21,122 +121,106 @@ struct PollVotersSheet: View {
     }
 
     var body: some View {
-        NBNavigationStack {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        overview
-                            .padding(.bottom, 24)
-                        .id("poll-results-top")
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                if let unavailable {
+                    Text(unavailable)
+                        .font(.subheadline)
+                        .foregroundStyle(theme.secondary)
+                        .padding(.vertical, 24)
+                } else {
+                    overview
+                        .padding(.bottom, 24)
 
-                        HStack(alignment: .firstTextBaseline) {
-                            Text("Voters").font(.headline)
-                            Spacer()
-                            if model.hasLoaded {
-                                Text(voters.count, format: .number)
-                                    .font(.subheadline).monospacedDigit()
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Voters").font(.headline)
+                        Spacer()
+                        if model.hasLoaded {
+                            Text(voters.count, format: .number)
+                                .font(.subheadline).monospacedDigit()
+                                .foregroundStyle(theme.secondary)
+                        }
+                    }
+                    .padding(.bottom, 12)
+
+                    Group {
+                        ForEach(voters) { voter in
+                            voterRow(voter)
+                            Divider().padding(.leading, 48)
+                        }
+
+                        if voters.isEmpty {
+                            if model.isLoading && !model.hasLoaded {
+                                ProgressView().frame(maxWidth: .infinity).padding(.vertical, 32)
+                            } else {
+                                Text(emptyMessage)
+                                    .font(.subheadline)
                                     .foregroundStyle(theme.secondary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 32)
                             }
-                        }
-                        .padding(.bottom, 12)
-
-                        Picker("Voters", selection: $followingOnly) {
-                            Text("Everyone").tag(false)
-                            Text("Following").tag(true)
-                        }
-                        .pickerStyle(.segmented)
-                        .padding(.bottom, 8)
-
-                        // Avatars and names stay out of the answer animation. Fading
-                        // every voter row is what made the tap feel slow.
-                        Group {
-                            ForEach(voters) { voter in
-                                voterRow(voter)
-                                Divider().padding(.leading, 48)
-                            }
-
-                            if voters.isEmpty {
-                                if model.isLoading && !model.hasLoaded {
-                                    ProgressView().frame(maxWidth: .infinity).padding(.vertical, 32)
-                                } else {
-                                    Text(followingOnly ? "No votes from people you follow." : "No votes yet.")
-                                        .font(.subheadline)
-                                        .foregroundStyle(theme.secondary)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 32)
-                                }
-                            }
-                        }
-                        .animation(nil, value: selectedOption)
-
-                        if model.isPartial || model.error != nil || model.poll.multipleChoice {
-                            VStack(alignment: .leading, spacing: 8) {
-                                if model.isPartial {
-                                    Label("Some responses may be missing from these results.", systemImage: "exclamationmark.circle")
-                                }
-                                if let error = model.error { Text(error) }
-                                if model.poll.multipleChoice {
-                                    Text("People can choose more than one answer, so percentages can add up to more than 100%.")
-                                }
-                            }
-                            .font(.caption)
-                            .foregroundStyle(theme.secondary)
-                            .padding(.top, 20)
                         }
                     }
-                    .padding(16)
+
                 }
-                .onChange(of: selectedOption) { _ in
-                    var transaction = Transaction()
-                    transaction.disablesAnimations = true
-                    withTransaction(transaction) {
-                        proxy.scrollTo("poll-results-top", anchor: .top)
+
+                if model.isPartial || model.error != nil || model.poll.multipleChoice {
+                    VStack(alignment: .leading, spacing: 8) {
+                        if model.isPartial {
+                            Label("Some responses may be missing from these results.", systemImage: "exclamationmark.circle")
+                        }
+                        if let error = model.error { Text(error) }
+                        if model.poll.multipleChoice {
+                            Text("People can choose more than one answer, so percentages can add up to more than 100%.")
+                        }
                     }
+                    .font(.caption)
+                    .foregroundStyle(theme.secondary)
+                    .padding(.top, 20)
                 }
             }
+            .padding(16)
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            Picker("Results from", selection: $scope) {
+                Text("Everyone").tag(PollResultsScope.everyone)
+                Text("Web of Trust").tag(PollResultsScope.webOfTrust)
+                Text("Following").tag(PollResultsScope.following)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+            .frame(maxWidth: .infinity)
             .background(theme.listBackground)
-            .navigationTitle("Poll results")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        Task {
-                            await model.load(accountPubkey: AccountsState.shared.activeAccountPublicKey, force: true)
-                        }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
+        }
+        .background(theme.listBackground)
+        .navigationTitle(selectedOption == nil ? "Poll results" : "Voters")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    Task {
+                        await model.load(accountPubkey: AccountsState.shared.activeAccountPublicKey, force: true)
                     }
-                    .disabled(model.isLoading)
-                    .accessibilityLabel("Refresh poll results")
+                } label: {
+                    Image(systemName: "arrow.clockwise")
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button { dismiss() } label: { Image(systemName: "checkmark") }
-                        .accessibilityLabel("Done")
-                }
+                .disabled(model.isLoading)
+                .accessibilityLabel("Refresh poll results")
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button { dismissSheet() } label: { Image(systemName: "checkmark") }
+                    .accessibilityLabel("Done")
             }
         }
     }
 
     private var overview: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if selectedOption != nil {
-                Button {
-                    showOption(nil)
-                } label: {
-                    Label("All answers", systemImage: "chevron.left")
-                        .font(.subheadline)
-                        .frame(minHeight: 44, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(theme.accent)
-                .transition(.opacity)
-            }
-
             HStack {
-                if model.hasLoaded {
-                    if model.tally.totalVoters == 1 { Text("1 voter") }
-                    else { Text("\(model.tally.totalVoters) voters") }
+                if model.hasLoaded && selectedOption == nil {
+                    Text(voterTotal)
                 }
                 Spacer()
                 Label("Public votes", systemImage: "person.crop.circle")
@@ -146,67 +230,60 @@ struct PollVotersSheet: View {
             .foregroundStyle(theme.secondary)
 
             ForEach(visibleOptions) { option in
-                answerRow(option)
-                    .transition(.opacity)
+                if selectedOption == nil {
+                    Button { openOption(option.id) } label: { answerRow(option) }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Show people who chose this answer")
+                } else {
+                    answerRow(option)
+                }
             }
         }
     }
 
     private func answerRow(_ option: NostrPoll.Option) -> some View {
-        let count = model.tally.votersByOption[option.id]?.count ?? 0
-        let fraction = model.tally.totalVoters == 0 ? 0 : Double(count) / Double(model.tally.totalVoters)
-        return Button {
-            showOption(option.id)
-        } label: {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(option.label)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(theme.primary)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 0)
-                    Group {
-                        if model.hasLoaded {
-                            Text(fraction, format: .percent.precision(.fractionLength(0)))
-                        } else { Text("—") }
-                    }
-                    .font(.subheadline.weight(.semibold))
+        let count = tally.votersByOption[option.id]?.count ?? 0
+        let fraction = tally.totalVoters == 0 ? 0 : Double(count) / Double(tally.totalVoters)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(option.label)
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(theme.primary)
-                    .monospacedDigit()
-                    .fixedSize()
-                }
-                PollResultBar(fraction: model.hasLoaded ? fraction : nil,
-                              isLoading: model.isLoading && !model.hasLoaded, isOwnChoice: false)
-                HStack {
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Group {
                     if model.hasLoaded {
-                        if count == 1 { Text("1 vote") }
-                        else { Text("\(count) votes") }
-                    }
-                    Spacer()
-                    if selectedOption == nil {
-                        Image(systemName: "chevron.right")
-                    }
+                        Text(fraction, format: .percent.precision(.fractionLength(0)))
+                    } else { Text("—") }
                 }
-                .font(.caption)
-                .foregroundStyle(theme.secondary)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(theme.primary)
+                .monospacedDigit()
+                .fixedSize()
             }
-            .padding(.vertical, 4)
-            .contentShape(Rectangle())
+            PollResultBar(fraction: model.hasLoaded ? fraction : nil,
+                          isLoading: model.isLoading && !model.hasLoaded, isOwnChoice: false)
+            HStack {
+                if model.hasLoaded {
+                    if count == 1 { Text("1 vote") }
+                    else { Text("\(count) votes") }
+                }
+                Spacer()
+                if selectedOption == nil {
+                    Image(systemName: "chevron.right")
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(theme.secondary)
         }
-        .buttonStyle(.plain)
-        .accessibilityHint("Show people who chose this answer")
-    }
-
-    private func showOption(_ id: String?) {
-        withAnimation(.easeInOut(duration: 0.25)) {
-            selectedOption = id
-        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
     }
 
     private func voterRow(_ voter: PollVote) -> some View {
         Button {
-            dismiss()
+            dismissSheet()
             navigateTo(ContactPath(key: voter.pubkey), context: containerID)
         } label: {
             HStack(alignment: .top, spacing: 12) {

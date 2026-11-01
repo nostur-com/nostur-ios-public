@@ -554,6 +554,28 @@ class WebOfTrust: ObservableObject {
         return false
     }
 
+    enum Membership {
+        case disabled
+        case loading
+        case ready(Set<String>)
+    }
+
+    /// Actual trust membership, without the feed's onboarding fail-open policy.
+    /// Only inspect the requested keys, rather than unioning the entire graph for a view.
+    func membership(of pubkeys: Set<String>) -> Membership {
+        guard !mainAccountWoTpubkey.isEmpty,
+              webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return .disabled }
+        filteringSnapshotLock.lock()
+        let snapshot = filteringSnapshot
+        filteringSnapshotLock.unlock()
+        guard snapshot.isLoaded else { return .loading }
+        return .ready(Set(pubkeys.filter {
+            $0 == snapshot.mainPubkey || snapshot.followingPubkeys.contains($0)
+                || snapshot.followingFollowingPubkeys.contains($0) || snapshot.learnedPubkeys.contains($0)
+                || DMsVM.shared.isAllowedByWoT($0)
+        }))
+    }
+
     public func allowedPubkeysSnapshot() -> Set<String> {
         guard webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return [] }
         filteringSnapshotLock.lock()

@@ -67,7 +67,7 @@ struct PollCard: View {
             await model.load(accountPubkey: accountPubkey)
         }
         .sheet(isPresented: $showVoters) {
-            PollVotersSheet(model: model, selectedOption: selectedOption)
+            PollVotersSheet(model: model, selectedOption: selectedOption, dismissSheet: { showVoters = false })
         }
         .alert("Votes are public", isPresented: $showPrivacy) {
             Button("OK", role: .cancel) { }

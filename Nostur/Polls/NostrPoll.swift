@@ -78,6 +78,22 @@ struct PollTally: Sendable {
     let votersByOption: [String: [PollVote]]
     var totalVoters: Int { votes.count }
 
+    func voters(for optionID: String?) -> [PollVote] {
+        guard let optionID else { return votes }
+        return votersByOption[optionID] ?? []
+    }
+
+    func filtered(to pubkeys: Set<String>) -> PollTally {
+        PollTally(countedVotes: votes.filter { pubkeys.contains($0.pubkey) })
+    }
+
+    private init(countedVotes: [PollVote]) {
+        votes = countedVotes
+        votersByOption = Dictionary(grouping: countedVotes.flatMap { vote in
+            vote.responses.map { ($0, vote) }
+        }, by: { $0.0 }).mapValues { $0.map { $0.1 } }
+    }
+
     init(poll: NostrPoll, votes: [PollVote], now: Int) {
         var latest: [String: PollVote] = [:]
         for vote in votes where vote.createdAt >= poll.createdAt && vote.createdAt <= now
