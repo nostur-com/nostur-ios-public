@@ -171,10 +171,15 @@ struct Maintenance {
         
         return await context.perform {
             Self.audioDownloadCacheCleanUp()
-            Self.databaseCleanUp(context)
-            SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
-            try? context.save()
-            return true
+            do {
+                try Self.databaseCleanUp(context)
+                try context.save()
+                SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
+                return true
+            } catch {
+                L.maintenance.error("Database cleanup failed; will retry: \(error.localizedDescription)")
+                return false
+            }
         }
     }
     
@@ -311,26 +316,9 @@ struct Maintenance {
     }
 
     // TODO: NEED TO INVERT, DELETE ALL EXCEPT.. (instead of now: delete only *these*)
-    static func databaseCleanUp(_ context: NSManagedObjectContext) {
-        let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
-        let fiveDaysAgo = Date.now.addingTimeInterval(-432_000)
-        let monthsAgo = Date.now.addingTimeInterval(-5_356_800) // 2 months
-        pfr.predicate = NSPredicate(format: "createdAt < %@ AND NOT readAt = nil AND type_ != %@", fiveDaysAgo as NSDate, PNType.relayConfigNotOptimal.rawValue)
-        
-        let pfrBatchDelete = NSBatchDeleteRequest(fetchRequest: pfr)
-        pfrBatchDelete.resultType = .resultTypeCount
-        
-        do {
-            let result = try context.execute(pfrBatchDelete) as! NSBatchDeleteResult
-            if let count = result.result as? Int, count > 0 {
-                L.maintenance.info("🧹🧹 Deleted \(count) old notifications")
-            }
-        } catch {
-            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete old notifications")
-        }
-        
+    static func databaseCleanUp(_ context: NSManagedObjectContext) throws {
         let frA = CloudAccount.fetchRequest()
-        let allAccounts = Array(try! context.fetch(frA))
+        let allAccounts = Array(try context.fetch(frA))
         let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
             var newResult = Array(partialResult)
             if (account.isFullAccount) || (account.privateKey != nil) { // only if it is really our account. .privateKey could return nil if device is restarted, not unlocked yet, so keychain access not available. so we also track full account by "full_account" flag in db.
@@ -343,9 +331,9 @@ struct Maintenance {
             NSRegularExpression.escapedPattern(for: serializedP($0))
         }.joined(separator: "|") + ").*"
         
-        let ownAccountBookmarkIds:Set<String> = Set(Bookmark.fetchAll(context: context).compactMap { $0.eventId })
+        let ownAccountBookmarkIds:Set<String> = Set(try context.fetch(Bookmark.fetchRequest()).compactMap { $0.eventId })
         
-        let ownAccountPrivateNoteEventIds:Set<String> = Set(CloudPrivateNote.fetchAll(context: context).compactMap({ pn in
+        let ownAccountPrivateNoteEventIds:Set<String> = Set(try context.fetch(CloudPrivateNote.fetchRequest()).compactMap({ pn in
             guard let type = pn.type,
                   type == CloudPrivateNote.PrivateNoteType.post.rawValue,
                   let eventId = pn.eventId
@@ -353,6 +341,23 @@ struct Maintenance {
             return eventId
         }))
         
+        let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
+        let fiveDaysAgo = Date.now.addingTimeInterval(-432_000)
+        let monthsAgo = Date.now.addingTimeInterval(-5_356_800) // 2 months
+        pfr.predicate = NSPredicate(format: "createdAt < %@ AND NOT readAt = nil AND type_ != %@", fiveDaysAgo as NSDate, PNType.relayConfigNotOptimal.rawValue)
+
+        let pfrBatchDelete = NSBatchDeleteRequest(fetchRequest: pfr)
+        pfrBatchDelete.resultType = .resultTypeCount
+
+        do {
+            let result = try context.execute(pfrBatchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) old notifications")
+            }
+        } catch {
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete old notifications")
+        }
+
         let xDaysAgo = IS_CATALYST ? Date.now.addingTimeInterval(-2_678_400) : Date.now.addingTimeInterval(-345_600) // 4 days on phone, 31 days on Desktop
         
         
@@ -478,7 +483,7 @@ struct Maintenance {
         let r = NSFetchRequest<Event>(entityName: "Event")
         r.predicate = NSPredicate(format: "kind IN {3,10002,10050} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", followingPubkeys, regex)
         r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        let kind3or10002 = try! context.fetch(r)
+        let kind3or10002 = try context.fetch(r)
         
         var noDuplicates:Dictionary<String, Event> = [:]
         var forDeletion:[Event] = []
@@ -860,7 +865,13 @@ struct Maintenance {
         guard !Self.didRun(migrationCode: migrationCode.fixImposterFalsePositivesAgainAgain, context: context) else { return }
         
         let frA = CloudAccount.fetchRequest()
-        let allAccounts = Array(try! context.fetch(frA))
+        let allAccounts: [CloudAccount]
+        do {
+            allAccounts = try context.fetch(frA)
+        } catch {
+            L.maintenance.error("Deferring imposter-cache migration: \(error.localizedDescription)")
+            return
+        }
         
         var imposterCacheFixedCount = 0
         var imposterCacheFollowCount = 0

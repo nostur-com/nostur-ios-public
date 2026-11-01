@@ -109,19 +109,26 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         scheduleAppRefresh(seconds: 180.0)
         
         // Check for any new notifications (relays), if there are unread mentions or new posts (notification bell) it will trigger a (iOS) notification
-        Task {
+        let completion = BackgroundRefreshCompletion { success in
+            task.setTaskCompleted(success: success)
+        }
+        let work = Task { @MainActor in
+            var success = false
+            defer { completion.finish(success && !Task.isCancelled) }
+            guard !Task.isCancelled else { return }
             // Prepare
             guard !AccountsState.shared.activeAccountPublicKey.isEmpty else {
-                task.setTaskCompleted(success: true)
+                success = true
                 return
             }
             if !Importer.shared.didPreload {
                 await Importer.shared.preloadExistingIdsCache()
             }
             
-            guard let account = try? CloudAccount.fetchAccount(publicKey: AccountsState.shared.activeAccountPublicKey, context: context())
+            guard !Task.isCancelled else { return }
+            guard let account = try? CloudAccount.fetchAccount(publicKey: AccountsState.shared.activeAccountPublicKey, context: viewContext())
             else {
-                task.setTaskCompleted(success: true)
+                success = true
                 return
             }
             let accountData = account.toStruct()
@@ -138,7 +145,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             
             // Do checks
             await checkForNotifications(accountData: accountData)
+            guard !Task.isCancelled else { return }
             await checkForDMNotifications(accountData: accountData)
+            guard !Task.isCancelled else { return }
             
             // Check new posts
             NewPostNotifier.shared.runCheck(force: true)
@@ -148,10 +157,19 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                guard UIApplication.shared.applicationState == .background else { return }
                 ConnectionPool.shared.disconnectAll()
             }
             
-            task.setTaskCompleted(success: true)
+            success = true
+        }
+        task.expirationHandler = {
+            work.cancel()
+            completion.finish(false)
+            Task { @MainActor in
+                guard UIApplication.shared.applicationState == .background else { return }
+                ConnectionPool.shared.disconnectAll()
+            }
         }
     }
 }
@@ -269,100 +287,109 @@ func scheduleNewPostNotification(_ contactsInfo: [ContactInfo], singlePostText: 
     UNUserNotificationCenter.current().add(request)
 }
 
-// The background fetch task will run this to check for new notifications
-func checkForNotifications(accountData: AccountData) async {
-    await withCheckedContinuation { continuation in
-        // Check mentions
-        bg().perform {
-            let reqTask = ReqTask(
-                debounceTime: 0.05,
-                timeout: 10.0,
-                subscriptionId: "BG",
-                reqCommand: { taskId in
-#if DEBUG
-                    L.og.debug("checkForNotifications.reqCommand")
-#endif
-                    let since = NTimestamp(timestamp: Int(accountData.lastSeenPostCreatedAt))
-                    bg().perform {
-                        NotificationsViewModel.shared.needsUpdate = true
-                        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[1,1111,1222,1244,20,9802,30023,34235,1311], subscriptionId: taskId, since: since))
-                    }
-                },
-                processResponseCommand: { taskId, relayMessage, event in
-#if DEBUG
-                    L.og.debug("checkForNotifications.processResponseCommand")
-#endif
-                    bg().perform {
-                        if let thisTask = Backlog.shared.task(with: taskId) {
-                            Backlog.shared.remove(thisTask)
-                        }
-                    }
-                    Task {
-                        await NotificationsViewModel.shared.checkForUnreadMentionsBackground(accountData: accountData)
-                        continuation.resume()
-                    }
-                },
-                timeoutCommand: { taskId in
-#if DEBUG
-                    L.og.debug("checkForNotifications.timeoutCommand")
-#endif
-                    bg().perform {
-                        if let thisTask = Backlog.shared.task(with: taskId) {
-                            Backlog.shared.remove(thisTask)
-                        }
-                    }
-                    continuation.resume()
-                }
-            )
-            Backlog.shared.add(reqTask)
-            reqTask.fetch()
-        }
+// Both normal completion and expiration may arrive concurrently.
+final class BackgroundRefreshCompletion: @unchecked Sendable {
+    private let lock = NSLock()
+    private var completion: ((Bool) -> Void)?
+
+    init(_ completion: @escaping (Bool) -> Void) {
+        self.completion = completion
+    }
+
+    func finish(_ success: Bool) {
+        lock.lock()
+        let callback = completion
+        completion = nil
+        lock.unlock()
+        callback?(success)
     }
 }
 
+// Cancellation can arrive before the continuation is installed, or race a relay
+// response. Resume outside the lock and preserve the first result in either case.
+final class BackgroundNotificationWait: @unchecked Sendable {
+    private let lock = NSLock()
+    private var result: Bool?
+    private var continuation: CheckedContinuation<Bool, Never>?
+
+    var isFinished: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return result != nil
+    }
+
+    func install(_ continuation: CheckedContinuation<Bool, Never>) {
+        lock.lock()
+        let result = self.result
+        if result == nil { self.continuation = continuation }
+        lock.unlock()
+        if let result { continuation.resume(returning: result) }
+    }
+
+    func finish(_ result: Bool) {
+        lock.lock()
+        guard self.result == nil else { lock.unlock(); return }
+        self.result = result
+        let continuation = self.continuation
+        self.continuation = nil
+        lock.unlock()
+        continuation?.resume(returning: result)
+    }
+}
+
+func checkForNotifications(accountData: AccountData) async {
+    let receivedResponse = await waitForBackgroundNotifications(accountData: accountData, directMessages: false)
+    guard receivedResponse, !Task.isCancelled else { return }
+    await NotificationsViewModel.shared.checkForUnreadMentionsBackground(accountData: accountData)
+}
+
 func checkForDMNotifications(accountData: AccountData) async {
-    await withCheckedContinuation { continuation in
-        // Check dms
-        bg().perform {
+    _ = await waitForBackgroundNotifications(accountData: accountData, directMessages: true)
+}
+
+private func waitForBackgroundNotifications(accountData: AccountData, directMessages: Bool) async -> Bool {
+    let wait = BackgroundNotificationWait()
+    let subscriptionId = "BG-\(UUID().uuidString)"
+    return await withTaskCancellationHandler {
+        await withCheckedContinuation { continuation in
+            wait.install(continuation)
+            guard !wait.isFinished else { return }
             let reqTask = ReqTask(
                 debounceTime: 0.05,
                 timeout: 10.0,
-                subscriptionId: "BG-4",
+                subscriptionId: subscriptionId,
                 reqCommand: { taskId in
-#if DEBUG
-                    L.og.debug("checkForDMNotifications.reqCommand")
-#endif
-                    // 2 days ago to deal with NIP-17 randomized created_at
-                    let since: NTimestamp = NTimestamp(timestamp: Int(Date.now.addingTimeInterval(-2 * 24 * 60 * 60).timeIntervalSince1970))
                     bg().perform {
-                        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[4,1059], subscriptionId: taskId, since: since))
+                        guard !wait.isFinished else { return }
+                        let since = directMessages
+                            ? Int(Date.now.addingTimeInterval(-2 * 24 * 60 * 60).timeIntervalSince1970)
+                            : Int(accountData.lastSeenPostCreatedAt)
+                        if !directMessages { NotificationsViewModel.shared.needsUpdate = true }
+                        req(RM.getMentions(pubkeys: [accountData.publicKey],
+                            kinds: directMessages ? [4,1059] : [1,1111,1222,1244,20,9802,30023,34235,1311],
+                            subscriptionId: taskId, since: NTimestamp(timestamp: since)))
                     }
                 },
-                processResponseCommand: { taskId, relayMessage, event in
-#if DEBUG
-                    L.og.debug("checkForDMNotifications.processResponseCommand")
-#endif
-                    bg().perform {
-                        if let thisTask = Backlog.shared.task(with: taskId) {
-                            Backlog.shared.remove(thisTask)
-                        }
-                    }
-                    continuation.resume()
+                processResponseCommand: { taskId, _, _ in
+                    Backlog.shared.removeTask(with: taskId)
+                    wait.finish(true)
                 },
                 timeoutCommand: { taskId in
-#if DEBUG
-                    L.og.debug("checkForDMNotifications.timeoutCommand")
-#endif
-                    bg().perform {
-                        if let thisTask = Backlog.shared.task(with: taskId) {
-                            Backlog.shared.remove(thisTask)
-                        }
-                    }
-                    continuation.resume()
-                }
+                    Backlog.shared.removeTask(with: taskId)
+                    wait.finish(false)
+                },
+                timeoutDelivery: .immediate
             )
             Backlog.shared.add(reqTask)
+            // Handle cancellation between installing the continuation and add().
+            if wait.isFinished {
+                Backlog.shared.removeTask(with: subscriptionId)
+                return
+            }
             reqTask.fetch()
         }
+    } onCancel: {
+        wait.finish(false)
+        Backlog.shared.removeTask(with: subscriptionId)
     }
 }

@@ -406,7 +406,7 @@ class Backlog {
                 .sink { [weak self] importedPrioNotification in
                     guard let self = self else { return }
                     if let task = self.task(with: importedPrioNotification.subscriptionId) {
-                        task.processResponseCommand(importedPrioNotification.subscriptionId, nil, importedPrioNotification.event)
+                        task.processPriorityResponse(importedPrioNotification.event)
                         self.remove(task)
                     }
                 }
@@ -633,7 +633,7 @@ class ReqTask: Identifiable, Hashable {
     }
     
     private let reqCommand:(_ taskId: String) -> Void
-    public let processResponseCommand:(_: String, _: NXRelayMessage?, _:Event?) -> Void
+    private let processResponseCommand:(_: String, _: NXRelayMessage?, _:Event?) -> Void
     private let timeoutCommand:((_ taskId: String) -> Void)?
     private let timeoutDelivery: TimeoutDelivery
     private let stateLock = NSLock()
@@ -711,13 +711,28 @@ class ReqTask: Identifiable, Hashable {
         processSubject.send(message)
     }
     
+    // Called on the importer's context, where this event belongs. Do not hop queues.
+    public func processPriorityResponse(_ event: Event) {
+        let shouldProcess = withStateLock {
+            guard !didProcess else { return false }
+            didProcess = true
+            return true
+        }
+        guard shouldProcess else { return }
+        processResponseCommand(subscriptionId, nil, event)
+    }
+
     public func onTimeout() {
 #if DEBUG
         L.og.debug("⏳⏳ ReqTask.onTimout: \(self.subscriptionId) -[LOG]-")
 #endif
         let shouldTimeout = withStateLock {
             _isRunning = false
-            return !didProcess && !skipTimeout
+            guard !didProcess && !skipTimeout else { return false }
+            // Claim completion before dispatching the callback: a response may
+            // already be in flight on another queue.
+            didProcess = true
+            return true
         }
         if !shouldTimeout { // cover the debounce window before didProcess is set
 #if DEBUG

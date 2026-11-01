@@ -206,7 +206,7 @@ class NRTextParser { // TEXT things
                     newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
                 }
             } else if tag.0 == "e", !eTags.contains(tag.1) {
-                let key = try! NIP19(prefix: "note1", hexString: tag.1)
+                guard let key = try? NIP19(prefix: "note", hexString: tag.1) else { continue }
                 let replacementString = !plainText ?
                     "[@\(String(key.displayString).prefix(11))](nostur:e:\(tag.1))" :
                     "@\(String(key.displayString).prefix(11))"

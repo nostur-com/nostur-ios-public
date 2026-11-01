@@ -846,7 +846,13 @@ class WebOfTrust: ObservableObject {
     
     private func migrateDataIfNeeded(_ pubkey: String) {
         let fileManager = FileManager.default
-        let cachesDirectory = try! fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+        let cachesDirectory: URL
+        do {
+            cachesDirectory = try fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+        } catch {
+            L.og.error("Skipping legacy WoT migration: \(error.localizedDescription)")
+            return
+        }
         let txtFilename = cachesDirectory.appendingPathComponent("web-of-trust-\(pubkey).txt")
         
         if fileManager.fileExists(atPath: txtFilename.path) {

@@ -258,8 +258,7 @@ class ImageProcessing {
             $0.dataLoader = Self.makeLimitedDataLoader(byteLimit: Self.PFP_DOWNLOAD_SIZE_LIMIT)
             $0.makeImageDecoder = Self.makeLimitedImageDecoder(policy: .profilePicture)
 
-            let dataCache = try! DataCache(name: "com.nostur.image.pfp")
-            dataCache.sizeLimit = 1_048_576 * Self.PFP_SIZE_MB
+            let dataCache = Self.makeDataCache(name: "com.nostur.image.pfp", sizeLimit: 1_048_576 * Self.PFP_SIZE_MB)
 
             $0.imageCache = ImageCache(costLimit: 104_857_600)
             $0.dataCache = dataCache
@@ -272,16 +271,14 @@ class ImageProcessing {
             $0.dataLoader = Self.makeLimitedDataLoader(byteLimit: Self.BANNER_DOWNLOAD_SIZE_LIMIT)
             $0.makeImageDecoder = Self.makeLimitedImageDecoder(policy: .banner)
             
-            let dataCache = try! DataCache(name: "com.nostur.image.banner")
-            dataCache.sizeLimit = 1_048_576 * Self.BANNER_SIZE_MB
+            let dataCache = Self.makeDataCache(name: "com.nostur.image.banner", sizeLimit: 1_048_576 * Self.BANNER_SIZE_MB)
             
             $0.imageCache = ImageCache(costLimit: 10_485_760)
             $0.dataCache = dataCache
             $0.dataCachePolicy = .automatic
         }
         
-        let contentDataCache = try! DataCache(name: "com.nostur.image.content")
-        contentDataCache.sizeLimit = 1_048_576 * Self.CONTENT_SIZE_MB
+        let contentDataCache = Self.makeDataCache(name: "com.nostur.image.content", sizeLimit: 1_048_576 * Self.CONTENT_SIZE_MB)
         content = ImagePipeline {
 //            $0.isUsingPrepareForDisplay = true
             $0.isProgressiveDecodingEnabled = false
@@ -318,8 +315,7 @@ class ImageProcessing {
             $0.dataLoader = Self.makeLimitedDataLoader(byteLimit: Self.COMMUNITY_DOWNLOAD_SIZE_LIMIT)
             $0.makeImageDecoder = Self.makeLimitedImageDecoder(policy: .badge)
             
-            let dataCache = try! DataCache(name: "com.nostur.image.communities")
-            dataCache.sizeLimit = 524_288_000
+            let dataCache = Self.makeDataCache(name: "com.nostur.image.communities", sizeLimit: 524_288_000)
             
             $0.imageCache = ImageCache(costLimit: 104_857_600, countLimit: 1000)
             $0.dataCache = dataCache
@@ -331,8 +327,7 @@ class ImageProcessing {
             $0.dataLoader = Self.makeLimitedDataLoader(byteLimit: Self.BADGE_DOWNLOAD_SIZE_LIMIT)
             $0.makeImageDecoder = Self.makeLimitedImageDecoder(policy: .badge)
             
-            let dataCache = try! DataCache(name: "com.nostur.image.badges")
-            dataCache.sizeLimit = 104_857_600
+            let dataCache = Self.makeDataCache(name: "com.nostur.image.badges", sizeLimit: 104_857_600)
             
             $0.imageCache = ImageCache(costLimit: 26_214_400, countLimit: 200)  // 100 MB
             $0.dataCache = dataCache
@@ -343,8 +338,7 @@ class ImageProcessing {
             $0.dataLoader = Self.makeLimitedDataLoader(byteLimit: Self.EMOJI_DOWNLOAD_SIZE_LIMIT)
             $0.makeImageDecoder = Self.makeLimitedImageDecoder(policy: .emoji)
             $0.imageCache = ImageCache(costLimit: 10_485_760, countLimit: 500)
-            let dataCache = try! DataCache(name: "com.nostur.image.emoji")
-            dataCache.sizeLimit = 20_971_520
+            let dataCache = Self.makeDataCache(name: "com.nostur.image.emoji", sizeLimit: 20_971_520)
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeOriginalData
         }
@@ -357,8 +351,7 @@ class ImageProcessing {
                 return conf
             }())
             
-            let dataCache = try! DataCache(name: "com.nostur.video.content")
-            dataCache.sizeLimit = 209_715_200
+            let dataCache = Self.makeDataCache(name: "com.nostur.video.content", sizeLimit: 209_715_200)
             
 //            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 100)  // 100 MB
             $0.dataCache = dataCache
@@ -382,6 +375,18 @@ class ImageProcessing {
             } catch {
                 L.og.error("Could not remove retired Blossom cache: \(error.localizedDescription)")
             }
+        }
+    }
+
+    static func makeDataCache(name: String, sizeLimit: Int,
+                              create: (String) throws -> DataCache = { try DataCache(name: $0) }) -> DataCache? {
+        do {
+            let cache = try create(name)
+            cache.sizeLimit = sizeLimit
+            return cache
+        } catch {
+            L.og.error("Disk cache unavailable for \(name); continuing without it: \(error.localizedDescription)")
+            return nil
         }
     }
 
