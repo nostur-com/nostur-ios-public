@@ -141,8 +141,12 @@ struct HorizontallyScrollingView: ViewModifier {
     func body(content: Content) -> some View {
         ScrollView(.horizontal) {
             content
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: maxWidth)
+        // A horizontal scroller nested in the article's vertical scroller must
+        // report its full content height, including tables taller than the screen.
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
