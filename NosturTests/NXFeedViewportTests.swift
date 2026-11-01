@@ -1375,6 +1375,68 @@ final class NXFeedViewportTests: XCTestCase {
         )
     }
 
+    func testScrollingToTopClearsAStaleUnreadHold() {
+        let now = Date(timeIntervalSinceReferenceDate: 1_000)
+        XCTAssertTrue(
+            NXUnreadAtTop.shouldClearAllUnread(
+                isAtTop: true,
+                isPreparingRestore: false,
+                holdUnreadAboveReadingPost: true,
+                holdStartedAt: now.addingTimeInterval(-30),
+                now: now
+            )
+        )
+        XCTAssertTrue(
+            NXUnreadAtTop.shouldClearAllUnread(
+                isAtTop: true,
+                isPreparingRestore: false,
+                holdUnreadAboveReadingPost: false,
+                holdStartedAt: nil,
+                now: now
+            )
+        )
+        XCTAssertTrue(
+            NXUnreadAtTop.shouldClearAllUnread(
+                isAtTop: true,
+                isPreparingRestore: false,
+                holdUnreadAboveReadingPost: true,
+                holdStartedAt: nil,
+                now: now
+            )
+        )
+    }
+
+    func testFreshHoldAtTopDoesNotClearUnreadBeforeThePinLands() {
+        let now = Date(timeIntervalSinceReferenceDate: 1_000)
+        XCTAssertFalse(
+            NXUnreadAtTop.shouldClearAllUnread(
+                isAtTop: true,
+                isPreparingRestore: false,
+                holdUnreadAboveReadingPost: true,
+                holdStartedAt: now.addingTimeInterval(-0.1),
+                now: now
+            )
+        )
+        XCTAssertFalse(
+            NXUnreadAtTop.shouldClearAllUnread(
+                isAtTop: true,
+                isPreparingRestore: true,
+                holdUnreadAboveReadingPost: true,
+                holdStartedAt: now.addingTimeInterval(-30),
+                now: now
+            )
+        )
+        XCTAssertFalse(
+            NXUnreadAtTop.shouldClearAllUnread(
+                isAtTop: false,
+                isPreparingRestore: false,
+                holdUnreadAboveReadingPost: true,
+                holdStartedAt: now.addingTimeInterval(-30),
+                now: now
+            )
+        )
+    }
+
     func testReachingTheTopKeepsHeldPostsUnread() {
         let remaining = NXIncomingFeedPosts.unreadIDsAfterReachingTop(
             unreadIDs: ["held-1": 1, "held-2": 2, "already-on-screen": 1, "read": 0],

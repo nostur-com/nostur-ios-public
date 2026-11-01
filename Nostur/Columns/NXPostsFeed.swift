@@ -10,6 +10,27 @@ import QuartzCore
 @_spi(Advanced) import SwiftUIIntrospect
 import Combine
 
+enum NXUnreadAtTop {
+    /// A prepend can set the hold and still be sitting on offset 0 until its pin
+    /// lands. Ignore that brief window. A hold left over from reading further
+    /// down must not keep the counter once the feed is actually at the top.
+    static let freshHoldWindow: TimeInterval = 0.45
+
+    static func shouldClearAllUnread(
+        isAtTop: Bool,
+        isPreparingRestore: Bool,
+        holdUnreadAboveReadingPost: Bool,
+        holdStartedAt: Date?,
+        now: Date,
+        freshHoldWindow: TimeInterval = NXUnreadAtTop.freshHoldWindow
+    ) -> Bool {
+        guard isAtTop, !isPreparingRestore else { return false }
+        guard holdUnreadAboveReadingPost else { return true }
+        guard let holdStartedAt else { return true }
+        return now.timeIntervalSince(holdStartedAt) > freshHoldWindow
+    }
+}
+
 enum NXUnreadNavigation {
     struct Start: Equatable {
         let index: Int
@@ -2152,18 +2173,34 @@ struct NXPostsFeed: View {
             isPreparingRestore: vmInner.isPreparingForScrollRestore
         )
 
-        // Status-bar tap-to-top never goes through scrollToTop(). Detect it from
-        // the live offset and clear unread even if isAtTop was already true.
+        // Status-bar tap and a fling never go through scrollToTop(). The long-press
+        // path already zeroes the counter; arriving at the top must do the same.
+        // A hold only protects posts inserted above the reading row during the
+        // brief moment before that row is pinned back down.
         if isAtTopNow && !vmInner.isPreparingForScrollRestore {
-            let preservedUnreadIDs = vm.flushHeldNewerPostsIfAtTop()
-            if !preservedUnreadIDs.isEmpty {
-                // The user reached the previous top. Posts inserted above that
-                // row are not read yet, so the counter keeps them.
-                markAllAsRead(reason: "live at-top, kept held newer", preserving: preservedUnreadIDs)
-            } else if !vmInner.holdUnreadAboveReadingPost {
+            if NXUnreadAtTop.shouldClearAllUnread(
+                isAtTop: true,
+                isPreparingRestore: false,
+                holdUnreadAboveReadingPost: vmInner.holdUnreadAboveReadingPost,
+                holdStartedAt: vmInner.holdUnreadAboveReadingPostSince,
+                now: Date()
+            ) {
+                if vm.hasHeldNewerPosts {
+                    vm.releaseHeldNewerPostsForNavigation()
+                }
+                if let topID = vm.currentNRPostsOnScreen.first?.id {
+                    layoutStabilizer.rememberAnchor(id: topID, visibleTopOffset: 0)
+                }
                 vmInner.readingPostID = nil
                 vmInner.holdUnreadAboveReadingPost = false
-                markAllAsRead(reason: "live at-top detection")
+                markAllAsRead(reason: "scrolled to top")
+            } else {
+                let preservedUnreadIDs = vm.flushHeldNewerPostsIfAtTop()
+                if !preservedUnreadIDs.isEmpty {
+                    // The user reached the previous top. Posts inserted above that
+                    // row are not read yet, so the counter keeps them.
+                    markAllAsRead(reason: "live at-top, kept held newer", preserving: preservedUnreadIDs)
+                }
             }
         }
 

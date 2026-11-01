@@ -209,7 +209,15 @@ class NXColumnViewModelInner {
     /// After restore, rows just above the parked post can sit a few points into
     /// the viewport and would be marked read. Keep them unread until the user
     /// actually drags the feed.
-    public var holdUnreadAboveReadingPost = false
+    public var holdUnreadAboveReadingPost = false {
+        didSet {
+            guard holdUnreadAboveReadingPost != oldValue else { return }
+            holdUnreadAboveReadingPostSince = holdUnreadAboveReadingPost ? Date() : nil
+        }
+    }
+    /// When the current hold began. A status-bar scroll to the top clears unread
+    /// once this is older than the prepend pin window.
+    public private(set) var holdUnreadAboveReadingPostSince: Date?
 
     /// Installed by the visible feed so passive list mutations can preserve the exact post and
     /// viewport offset the user is reading, even when rows are inserted above it.
