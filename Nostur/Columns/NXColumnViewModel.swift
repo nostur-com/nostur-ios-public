@@ -483,8 +483,6 @@ class NXColumnViewModel: ObservableObject {
     /// Newer posts kept out of the list while the user is reading below the top.
     /// Their unread counts are already in `vmInner.unreadIds`.
     private var heldNewerPosts: [NRPost] = []
-    /// Parent-thread trims deferred so a visible row does not change height mid-read.
-    private var deferredParentTrims: [(PostOrThreadAttributes, [NRPost])] = []
 
     @MainActor
     var feedLeadingNonPostRowCount: Int {
@@ -922,7 +920,6 @@ class NXColumnViewModel: ObservableObject {
         let allowsRowMutation = NXFeedStructuralUpdate.shouldMutateRows(isVisuallyAtTop: isFeedActuallyAtTop)
         if !allowsRowMutation {
             if !parentUpdates.isEmpty {
-                deferParentTrims(parentUpdates)
                 parentUpdates = []
                 for id in parentTrimPostIDs {
                     unreadCountUpdates[id] = nil
@@ -1109,32 +1106,6 @@ class NXColumnViewModel: ObservableObject {
         return posts[itemIndex].id
     }
 
-    /// Drops already-read rows above the visible post only while the feed is
-    /// off screen. Doing it on screen moves a self-sizing list under the reader.
-    @MainActor
-    private func compactReadRowsAboveVisiblePostWhileHidden() {
-        guard isViewPaused else { return }
-        guard case .posts(let posts) = viewState else { return }
-        let floorID = currentTopEdgePostID(allowReadingFallback: false)
-        let idsToRemove = NXUnreadRegion.postIDsToRemove(
-            postIDs: posts.map(\.id),
-            unreadCount: { vmInner.unreadIds[$0, default: 0] },
-            readingPostID: floorID,
-            visiblePostIDs: currentVisiblePostIds()
-        )
-        guard !idsToRemove.isEmpty else { return }
-        let idSet = Set(idsToRemove)
-        let resultingPosts = posts.filter { !idSet.contains($0.id) }
-        withTransaction(Transaction(animation: nil)) {
-            viewState = .posts(resultingPosts)
-        }
-#if DEBUG
-        recordFeedAction(
-            "unread region compact · hidden · removed \(idSet.count) read rows · kept \(resultingPosts.count) posts"
-        )
-#endif
-    }
-
     @MainActor
     private func drainHeldNewerPosts() -> [NRPost] {
         let posts = heldNewerPosts
@@ -1197,28 +1168,6 @@ class NXColumnViewModel: ObservableObject {
         )
 #endif
         return Set(fresh.map(\.id))
-    }
-
-    @MainActor
-    private func deferParentTrims(_ trims: [(PostOrThreadAttributes, [NRPost])]) {
-        var byIdentity: [ObjectIdentifier: (PostOrThreadAttributes, [NRPost])] = [:]
-        for trim in deferredParentTrims + trims {
-            byIdentity[ObjectIdentifier(trim.0)] = trim
-        }
-        deferredParentTrims = Array(byIdentity.values)
-    }
-
-    @MainActor
-    private func applyDeferredParentTrims() {
-        guard !deferredParentTrims.isEmpty else { return }
-        let trims = deferredParentTrims
-        deferredParentTrims.removeAll(keepingCapacity: true)
-        for (attributes, parents) in trims {
-            attributes.parentPosts = parents
-        }
-#if DEBUG
-        recordFeedAction("deferred parent trim · \(trims.count) threads · feed hidden")
-#endif
     }
 
     private var syncFeedSubject = PassthroughSubject<Void, Never>()
@@ -2317,9 +2266,10 @@ class NXColumnViewModel: ObservableObject {
         // the List disappears and mistakes every row for offscreen.
         seenReconciliationScheduler.cancel()
         pendingSyncedSeenIds.removeAll(keepingCapacity: true)
-        // The list is leaving the screen. Structural cleanup here cannot jump.
-        applyDeferredParentTrims()
-        compactReadRowsAboveVisiblePostWhileHidden()
+        // Preserve the rendered snapshot through detail navigation. Deleting read
+        // rows or trimming thread parents here invalidates the suspended viewport
+        // and can remove the very content the user expects to find on Back.
+        // Seen reconciliation recomputes cleanup when it is safe at the top.
     }
     
     @MainActor

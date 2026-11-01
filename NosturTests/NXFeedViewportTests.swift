@@ -103,6 +103,74 @@ final class NXFeedViewportTests: XCTestCase {
     }
 
     @MainActor
+    func testDetailNavigationPreservesReadRowsAndThreadContext() async throws {
+        _ = AppState.shared
+        _ = AccountsState.shared
+        let wasEnabled = SettingsStore.shared.appWideSeenTracker
+        SettingsStore.shared.appWideSeenTracker = true
+        defer { SettingsStore.shared.appWideSeenTracker = wasEnabled }
+        let posts = await bg().perform {
+            (1...12).map { index in
+                var event = NEvent(content: "Detail return regression \(index)")
+                event.id = String(format: "%08x", index + 1000) + String(repeating: "0", count: 56)
+                let preview = createPreviewEvent(event)
+                defer { bg().delete(preview) }
+                return NRPost(event: preview, withFooter: false, withParents: false)
+            }
+        }
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 300)
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 300, height: 600), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        let source = NXFeedAppendTestSource()
+        source.count = posts.count
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 950
+        collection.layoutIfNeeded()
+        let vm = NXColumnViewModel()
+        vm.collectionView = collection
+        vm.viewState = .posts(posts)
+        // The visible row contains a read ancestor. Reconciliation must leave
+        // that displayed context intact both now and when detail opens.
+        let reading = posts[3]
+        reading.postOrThreadAttributes.parentPosts = Array(posts.prefix(2))
+        vm.vmInner.unreadIds = [reading.id: 3]
+        vm.removeUnreadPostsAlreadyMarkedRead([posts[0].shortId])
+        let beforeIDs = posts.map(\.id)
+        let beforeParents = reading.postOrThreadAttributes.parentPosts.map(\.id)
+        let beforeUnread = vm.vmInner.unreadIds
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        stabilizer.updateItemIDs(beforeIDs)
+        stabilizer.suspendPositionTracking()
+        vm.pauseViewUpdates()
+        XCTAssertTrue(vm.isViewPaused)
+        XCTAssertEqual(vm.currentNRPostsOnScreen.map(\.id), beforeIDs)
+        XCTAssertEqual(reading.postOrThreadAttributes.parentPosts.map(\.id), beforeParents)
+        XCTAssertEqual(vm.vmInner.unreadIds, beforeUnread)
+        // Even a direct seen update while away must preserve the snapshot.
+        vm.removeUnreadPostsAlreadyMarkedRead([reading.shortId])
+        stabilizer.updateItemIDs(vm.currentNRPostsOnScreen.map(\.id))
+        collection.contentOffset.y = 1250 // UIKit changed its estimate while hidden.
+        stabilizer.resumePositionTracking()
+        try? await Task.sleep(nanoseconds: 550_000_000)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), reading.id)
+        XCTAssertEqual(collection.contentOffset.y, 950, accuracy: 0.5)
+        XCTAssertEqual(reading.postOrThreadAttributes.parentPosts.map(\.id), beforeParents)
+        stabilizer.suspendPositionTracking()
+    }
+
+    @MainActor
     func testDelayedBannerInsertionPinsReadingRowWithoutChangingPostIDs() async throws {
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: 300, height: 200)
