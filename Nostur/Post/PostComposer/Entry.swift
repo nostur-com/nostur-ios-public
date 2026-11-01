@@ -45,6 +45,11 @@ struct Entry: View {
         }
     }
 
+    /// Mac and regular-width iPad show composer actions in the navigation bar.
+    private var showsWideComposerToolbar: Bool {
+        IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)
+    }
+
     private var canAttachPoll: Bool {
         replyTo == nil && quotePost == nil
             && kind != .picture && kind != .shortVideos && kind != .highlight
@@ -182,12 +187,6 @@ struct Entry: View {
 //                    showVoiceRecorderButton = false
                 },
                 cameraTapped: showCamera,
-                nestsTapped: {
-                    onDismiss()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-                        sendNotification(.showCreateNestsSheet, vm.activeAccount)
-                    }
-                },
                 voiceMessageTapped: {
                     guard !typingTextModel.anonMode else { return }
                     showAudioRecorder = true
@@ -445,10 +444,6 @@ struct Entry: View {
                         self.voiceRecordingButton
                     }
 
-                    if kind != .picture && typingTextModel.poll == nil {
-                        self.startNestButton
-                    }
-
                     if canAttachPoll {
                         self.pollButton
                     }
@@ -508,10 +503,6 @@ struct Entry: View {
                     self.voiceRecordingButton
                 }
 
-                if kind != .picture && typingTextModel.poll == nil {
-                    self.startNestButton
-                }
-
                 if canAttachPoll {
                     self.pollButton
                 }
@@ -566,10 +557,6 @@ struct Entry: View {
                 
                 if showVoiceRecorderButton && typingTextModel.poll == nil {
                     self.voiceRecordingButton
-                }
-                
-                if kind != .picture && typingTextModel.poll == nil {
-                    self.startNestButton
                 }
 
                 if canAttachPoll {
@@ -635,33 +622,36 @@ struct Entry: View {
                 self.highlightAddRemoveAuthorButton
             }
             .visibilityPriority(.high)
-        } else if kind != .shortVideos && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
-            ToolbarItem(id: "composer.options", placement: .primaryAction) {
-                Menu {
-                    self.privateReplyButton
-                    if showVoiceRecorderButton && typingTextModel.poll == nil {
-                        self.voiceRecordingButton
-                    }
-                    if kind != .picture && typingTextModel.poll == nil {
-                        self.startNestButton
-                    }
-                    if canAttachPoll {
-                        self.pollButton
-                    }
-                    if typingTextModel.poll == nil {
-                        self.takePhotoButton
-                        self.pickPhotoButton
-                        if kind != .picture {
-                            self.pickVideoButton
-                            self.gifButton
-                        }
-                    }
-                    self.previewButton
-                } label: {
-                    Label("Post options", systemImage: "ellipsis")
+        } else if kind != .shortVideos && showsWideComposerToolbar {
+            // Icons stay in the bar. iOS 27 only moves items that do not fit into the overflow menu.
+            ToolbarItemGroup(placement: .primaryAction) {
+                self.privateReplyButton
+
+                if showVoiceRecorderButton && typingTextModel.poll == nil {
+                    self.voiceRecordingButton
                 }
-                .accessibilityIdentifier("composer.options")
+
+                if canAttachPoll {
+                    self.pollButton
+                }
+
+                if typingTextModel.poll == nil {
+                    self.takePhotoButton
+                    self.pickPhotoButton
+                    if kind != .picture {
+                        self.pickVideoButton
+                        self.gifButton
+                    }
+                }
             }
+
+            ToolbarItem(id: "composer.preview", placement: .primaryAction) {
+                self.previewButton
+                    .accessibilityIdentifier("composer.preview")
+            }
+            .visibilityPriority(.high)
+
+            ToolbarSpacer(.fixed)
         } else if kind != .shortVideos {
             ToolbarItem(id: "composer.preview", placement: .primaryAction) {
                 self.previewButton
@@ -770,29 +760,19 @@ struct Entry: View {
         Button {
             gifSheetShown = true
         } label: {
-            Image("GifButton")
+            Label {
+                Text("Pick GIF", comment: "Button to choose a GIF when creating a post")
+            } icon: {
+                Image("GifButton")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
+            }
         }
         .buttonStyle(.borderless)
         .disabled(typingTextModel.uploading || typingTextModel.anonMode)
         .help("Pick GIF")
-    }
-    
-    @ViewBuilder
-    private var startNestButton: some View {
-        Button("Start Nest", systemImage: "dot.radiowaves.left.and.right") {
-            if IS_CATALYST { // MacOS can reuse same weird sheet
-                sendNotification(.showCreateNestsSheet, vm.activeAccount)
-            }
-            else { // IPAD needs to dismiss first
-                onDismiss()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-                    sendNotification(.showCreateNestsSheet, vm.activeAccount)
-                }
-            }
-        }
-        .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading)
-        .help("Start Nest (Audio room)")
+        .accessibilityIdentifier("composer.gif")
     }
     
     @ViewBuilder

@@ -439,15 +439,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             barButtons.append(voiceRecording)
         }
         
-        if kind != .shortVideos && kind != .picture && kind != .highlight {
-            let nestsButton = UIButton(type: .system)
-            nestsButton.setImage(UIImage(systemName: "dot.radiowaves.left.and.right"), for: .normal)
-            nestsButton.tintColor = UIColor(Themes.default.theme.accent)
-            nestsButton.addTarget(self, action: #selector(textView.nestsTapped), for: .touchUpInside)
-            let nests = UIBarButtonItem(customView: nestsButton)
-            barButtons.append(nests)
-        }
-        
         let cameraButton = UIButton(type: .system)
         cameraButton.setImage(UIImage(systemName: "camera"), for: .normal)
         cameraButton.tintColor = UIColor(Themes.default.theme.accent)
@@ -539,19 +530,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
                 barButtons.append(fixedSpace)
             }
             barButtons.append(voiceRecording)
-        }
-        
-        if kind != .shortVideos && kind != .picture && kind != .highlight {
-            let nestsButton = UIButton(type: .system)
-            nestsButton.setImage(UIImage(systemName: "dot.radiowaves.left.and.right"), for: .normal)
-            nestsButton.tintColor = UIColor(Themes.default.theme.accent)
-            nestsButton.addTarget(self, action: #selector(textView.nestsTapped), for: .touchUpInside)
-            let nests = UIBarButtonItem(customView: nestsButton)
-            
-            if barButtons.count != 0 {
-                barButtons.append(fixedSpace)
-            }
-            barButtons.append(nests)
         }
         
         let cameraButton = UIButton(type: .system)
