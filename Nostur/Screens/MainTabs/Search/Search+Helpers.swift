@@ -343,7 +343,7 @@ extension Search {
         bg().perform {
             let fr = Event.fetchRequest()
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            fr.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,20,9802} AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(term))
+            fr.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,20,1068,9802} AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(term))
             fr.fetchLimit = 150
             guard let results = try? bg().fetch(fr) else { return }
             let nrPosts = results.map { NRPost(event: $0) }
@@ -361,7 +361,7 @@ extension Search {
                 tags.append(tags[0].lowercased())
             }
 
-            let filters = [Filters(kinds: [1,20,9802], tagFilter: TagFilter(tag: "t", values: tags))]
+            let filters = [Filters(kinds: [1,20,1068,9802], tagFilter: TagFilter(tag: "t", values: tags))]
             if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
                 req(message, relayType: .READ)
                 req(message, relayType: .SEARCH_ONLY)
@@ -371,7 +371,7 @@ extension Search {
             let existingIds = self.nrPosts.map(\.id)
             bg().perform {
                 let fr = Event.fetchRequest()
-                fr.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,20,9802} AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(term))
+                fr.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,20,1068,9802} AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(term))
                 fr.fetchLimit = 150
                 guard let results = try? bg().fetch(fr) else { return }
                 let nrPosts = results

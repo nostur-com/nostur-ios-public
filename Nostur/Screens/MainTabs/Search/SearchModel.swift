@@ -316,7 +316,7 @@ class SearchModel {
         }
         request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
             NSPredicate(format: "NOT pubkey IN %@", blockedPubkeys),
-            NSPredicate(format: "kind IN {1,1111,1222,1244,20,9802}"),
+            NSPredicate(format: "kind IN {1,1111,1222,1244,20,1068,9802}"),
             NSPredicate(format: "NOT content BEGINSWITH %@", "lnbc"),
             NSCompoundPredicate(orPredicateWithSubpredicates: contentPredicates)
         ])
