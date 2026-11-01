@@ -238,7 +238,6 @@ final class SettingsStore: ObservableObject {
             Keys.enableOutboxRelays: false,
             Keys.enableOutboxPreview: false,
             Keys.enableVPNdetection: true,
-            Keys.proMode: false,
             Keys.macTextSize: MacTextSizeOption.standard.rawValue,
             Keys.blossomServerList: []
         ])
@@ -369,6 +368,28 @@ final class SettingsStore: ObservableObject {
         get { defaults.bool(forKey: Keys.replaceNsecWithHunter2) }
     }
     
+    // Updated from the root scene, never from a sheet or a compact Pro column.
+    private(set) var phoneIsExpanded = false
+    private(set) var phoneHasExpanded = false
+
+    func updatePhoneLayout(isExpanded: Bool) {
+        let hasExpanded = phoneHasExpanded || isExpanded
+        let enableDefaultProMode = isExpanded && defaults.object(forKey: Keys.proMode) == nil
+        guard phoneIsExpanded != isExpanded || phoneHasExpanded != hasExpanded || enableDefaultProMode else { return }
+        // This store uses a custom publisher; @Published does not send through it.
+        objectWillChange.send()
+        phoneIsExpanded = isExpanded
+        phoneHasExpanded = hasExpanded
+        if enableDefaultProMode {
+            // An absent preference means no choice yet. Never override a saved opt-out.
+            defaults.set(true, forKey: Keys.proMode)
+        }
+    }
+
+    var usesProColumns: Bool {
+        proMode && (IS_CATALYST || phoneIsExpanded)
+    }
+
     var proMode: Bool {
         set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.proMode) }
         get { defaults.bool(forKey: Keys.proMode) }

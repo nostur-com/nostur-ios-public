@@ -10,11 +10,19 @@ import SwiftUI
 struct AppearanceSettings: View {
     @ObservedObject private var settings: SettingsStore = .shared
     
+    private var showsProToggle: Bool {
+        if IS_CATALYST { return true }
+        if #available(iOS 27.1, *), IS_IPHONE {
+            return settings.phoneHasExpanded || settings.proMode
+        }
+        return false
+    }
+
     var body: some View {
         NXForm {
             Section(header: Text("Appearance", comment:"Setting heading on settings screen")) {
                 Group {
-                    if IS_CATALYST {
+                    if showsProToggle {
                         Toggle(isOn: $settings.proMode) {
                             VStack(alignment: .leading) {
                                 Text("Nostur Pro", comment:"Setting on settings screen")
@@ -23,7 +31,9 @@ struct AppearanceSettings: View {
                                     .foregroundColor(.secondary)
                             }
                         }
-                        
+                    }
+
+                    if IS_CATALYST {
                         VStack(alignment: .leading) {
                             MacTextSizePicker()
                             

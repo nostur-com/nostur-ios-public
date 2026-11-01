@@ -54,31 +54,39 @@ class MacColumnsVM: ObservableObject {
         columns.count > 0
     }
     
-    init() {
+    init(defaults: UserDefaults = .standard) {
+        _macListstateSerialized = AppStorage(wrappedValue: "", "mac_columns_serialized", store: defaults)
         self.selectedTab = UserDefaults.standard.string(forKey: "selected_tab") ?? "Main"
         self.selectedNotificationsTab = UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions"
     }
     
     @MainActor
     public func load() async {
+        // The folded phone shell can change these while Pro is inactive.
+        selectedTab = UserDefaults.standard.string(forKey: "selected_tab") ?? "Main"
+        selectedNotificationsTab = UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions"
         availableFeeds = getAvailableFeeds()
-        columns = await getConfiguredColumns()
+        restoreConfiguredColumns(defaultPhoneAccount: IS_IPHONE ? account()?.publicKey : nil)
     }
     
     @MainActor
-    private func getConfiguredColumns() async -> [MacColumnConfig] {
+    func restoreConfiguredColumns(defaultPhoneAccount: String?) {
+        // A saved empty array is intentional. Seed only a first-time phone setup.
+        if macListstateSerialized.isEmpty, let defaultPhoneAccount {
+            columns = [MacColumnConfig(type: .notifications(defaultPhoneAccount))]
+            saveState()
+            return
+        }
         let decoder = JSONDecoder()
-        if let macListState = try? decoder.decode(MacListStateSerialized.self, from: macListstateSerialized.data(using: .utf8)!) {
-            L.og.debug("MacListState: restoring columns: \(macListState.columns.count) and list ids: \(macListState.columns.map { $0.type.displayName } .joined(separator: ", "))")
-      
-            return macListState.columns
+        if let data = macListstateSerialized.data(using: .utf8),
+           let state = try? decoder.decode(MacListStateSerialized.self, from: data) {
+            columns = state.columns
         }
         else {
-            L.og.error("MacListState problem decoding macListstateSerialized")
-            return []
+            columns = []
         }
     }
-    
+
     @MainActor
     private func getAvailableFeeds() -> [CloudFeed] {
         let activeAccount: CloudAccount? = account()

@@ -30,70 +30,79 @@ struct MacMainWindow: View {
 #endif
         Zoomable {
             GeometryReader { geo in
-                HStack(spacing: COLUMN_SPACING) {
-                    // Tabs on the side
+                ProSidebarLayout {
                     SideTabs(vm: vm, selectedTab: $vm.selectedTab)
                         .frame(width: SIDEBAR_WIDTH)
-                    
-                    // Main list (following/notifications/bookmarks)
-                    TabView(selection: $vm.selectedTab) {
-                            PhoneViewIsh()
-                                .environmentObject(VideoPostPlaybackCoordinator())
-                                .environment(\.horizontalSizeClass, .compact)
-                                .environment(\.availableWidth, columnWidth)
-                                .tag("Main")
+                } columns: {
+                    HStack(spacing: COLUMN_SPACING) {
+                        // Main list (following/notifications/bookmarks)
+                        TabView(selection: $vm.selectedTab) {
+                                PhoneViewIsh()
+                                    .environmentObject(VideoPostPlaybackCoordinator())
+                                    .environment(\.horizontalSizeClass, .compact)
+                                    .environment(\.availableWidth, columnWidth)
+                                    .tag("Main")
                             
-                            NotificationsContainer()
-                                .environment(\.horizontalSizeClass, .compact)
-                                .environment(\.availableWidth, columnWidth)
-                                .tag("Notifications")
+                                NotificationsContainer()
+                                    .environment(\.horizontalSizeClass, .compact)
+                                    .environment(\.availableWidth, columnWidth)
+                                    .tag("Notifications")
 
-                            Search()
-                                .environment(\.horizontalSizeClass, .compact)
-                                .environment(\.availableWidth, columnWidth)
-                                .tag("Search")
+                                Search()
+                                    .environment(\.horizontalSizeClass, .compact)
+                                    .environment(\.availableWidth, columnWidth)
+                                    .tag("Search")
                             
-                            BookmarksTab()
-                                .environment(\.horizontalSizeClass, .compact)
-                                .environment(\.availableWidth, columnWidth)
-                                .tag("Bookmarks")
+                                BookmarksTab()
+                                    .environment(\.horizontalSizeClass, .compact)
+                                    .environment(\.availableWidth, columnWidth)
+                                    .tag("Bookmarks")
                         
-                            MainDMsTab()
-                                .environment(\.horizontalSizeClass, .compact)
-                                .environment(\.availableWidth, columnWidth)
-                                .tag("Messages")
+                                MainDMsTab()
+                                    .environment(\.horizontalSizeClass, .compact)
+                                    .environment(\.availableWidth, columnWidth)
+                                    .tag("Messages")
 
-                        }
-                        .frame(width: columnWidth)
-                        .debugDimensions()
-                    
-                    // Extra lists (+ -)
-                    ForEach(vm.columns) { columnConfig in
-                        MacColumn(config: columnConfig)
-                            .environmentObject(VideoPostPlaybackCoordinator())
-                            .environment(\.availableWidth, columnSize(geo.size.width))
-                            .environment(\.containerID, columnConfig.id.uuidString)
+                            }
                             .modifier {
-                                switch columnConfig.type {
-                                case .DMs(_), .DMConversation(_):
+                                if IS_IPHONE {
+                                    $0.tabViewStyle(.page(indexDisplayMode: .never))
+                                }
+                                else {
                                     $0
-                                case .notifications(let pubkey), .vines(let pubkey), .yaks(let pubkey), .photos(let pubkey):
-                                    if pubkey == nil {
-                                        $0
-                                    }
-                                    else {
-                                        $0.simultaneousGesture(TapGesture().onEnded({ _ in
-                                            AppState.shared.containerIDTapped = columnConfig.id.uuidString
-                                        }))
-                                    }
-                                default:
-                                    $0.simultaneousGesture(TapGesture().onEnded({ _ in
-                                        AppState.shared.containerIDTapped = columnConfig.id.uuidString
-                                    }))
                                 }
                             }
                             .frame(width: columnWidth)
                             .debugDimensions()
+
+                        // Extra lists (+ -)
+                        ForEach(vm.columns) { columnConfig in
+                            MacColumn(config: columnConfig)
+                                .environmentObject(VideoPostPlaybackCoordinator())
+                                .environment(\.availableWidth, columnSize(geo.size.width))
+                                .environment(\.containerID, columnConfig.id.uuidString)
+                                .modifier {
+                                    switch columnConfig.type {
+                                    case .DMs(_), .DMConversation(_):
+                                        $0
+                                    case .notifications(let pubkey), .vines(let pubkey), .yaks(let pubkey), .photos(let pubkey):
+                                        if pubkey == nil {
+                                            $0
+                                        }
+                                        else {
+                                            $0.simultaneousGesture(TapGesture().onEnded({ _ in
+                                                AppState.shared.containerIDTapped = columnConfig.id.uuidString
+                                            }))
+                                        }
+                                    default:
+                                        $0.simultaneousGesture(TapGesture().onEnded({ _ in
+                                            AppState.shared.containerIDTapped = columnConfig.id.uuidString
+                                        }))
+                                    }
+                                }
+                                .frame(width: columnWidth)
+                                .debugDimensions()
+                        }
                     }
                 }
                 .background(theme.background)
@@ -145,4 +154,93 @@ struct MacMainWindow: View {
     }, previewDevice: PreviewDevice(rawValue: "My Mac (Mac Catalyst)"), content: {
         MacMainWindow()
     })
+}
+
+/// The phone sidebar is a bar inside the current safe area, including its
+/// asymmetric camera/status region. Catalyst keeps its existing layout.
+struct ProSidebarLayout<Sidebar: View, Columns: View>: View {
+    @ViewBuilder let sidebar: Sidebar
+    @ViewBuilder let columns: Columns
+
+    var body: some View {
+        if #available(iOS 26.0, *), IS_IPHONE {
+            columns.safeAreaBar(edge: .leading, alignment: .top, spacing: COLUMN_SPACING) {
+                CornerAdaptedProSidebar {
+                    sidebar
+                }
+            }
+        }
+        else {
+            HStack(spacing: COLUMN_SPACING) {
+                sidebar
+                columns
+            }
+        }
+    }
+}
+
+/// A narrow rail can intersect a rounded display corner even when its ordinary
+/// safe-area inset is zero. Only add the extra vertical corner clearance.
+@available(iOS 26.0, *)
+struct CornerAdaptedProSidebar<Content: View>: View {
+    @ViewBuilder let content: Content
+    @State private var cornerPadding = EdgeInsets()
+
+    var body: some View {
+        content
+            .padding(cornerPadding)
+            .background {
+                ProSidebarCornerInsetsReader { insets in
+                    if cornerPadding != insets {
+                        cornerPadding = insets
+                    }
+                }
+            }
+    }
+}
+
+@available(iOS 26.0, *)
+private struct ProSidebarCornerInsetsReader: UIViewRepresentable {
+    var onChange: (EdgeInsets) -> Void
+
+    func makeUIView(context: Context) -> ProSidebarCornerRegionView {
+        let view = ProSidebarCornerRegionView()
+        view.onChange = onChange
+        return view
+    }
+
+    func updateUIView(_ view: ProSidebarCornerRegionView, context: Context) {
+        view.onChange = onChange
+        view.setNeedsLayout()
+    }
+}
+
+@available(iOS 26.0, *)
+final class ProSidebarCornerRegionView: UIView {
+    var onChange: ((EdgeInsets) -> Void)?
+    private var reportedInsets: EdgeInsets?
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        setNeedsLayout()
+    }
+
+    override func safeAreaInsetsDidChange() {
+        super.safeAreaInsetsDidChange()
+        setNeedsLayout()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let adapted = directionalEdgeInsets(for: .safeArea(cornerAdaptation: .vertical))
+        let insets = EdgeInsets(top: max(0, adapted.top - safeAreaInsets.top), leading: 0,
+                               bottom: max(0, adapted.bottom - safeAreaInsets.bottom), trailing: 0)
+        guard reportedInsets != insets else { return }
+        reportedInsets = insets
+        // UIKit may lay out during a SwiftUI update. Publish on the next main turn.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.reportedInsets == insets else { return }
+            self.onChange?(insets)
+        }
+    }
 }

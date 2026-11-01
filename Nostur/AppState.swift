@@ -425,7 +425,7 @@ let IS_IPAD = UIDevice.current.userInterfaceIdiom == .pad
 let IS_CATALYST = ProcessInfo.processInfo.isMacCatalystApp
 let IS_IPHONE = !ProcessInfo.processInfo.isMacCatalystApp && UIDevice.current.userInterfaceIdiom == .phone
 func IS_DESKTOP_COLUMNS() -> Bool {
-    IS_CATALYST && SettingsStore.shared.proMode 
+    SettingsStore.shared.usesProColumns
 }
 
 let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"

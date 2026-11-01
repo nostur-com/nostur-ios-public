@@ -21,20 +21,22 @@ struct NosturMainView: View {
     
     var body: some View {
         AppEnvironment(la: la) {
-            if IS_CATALYST && ss.proMode { // macOS Desktop multi-column mode (pro mode)_
+            NosturProLayout(settings: ss) {
                 WithSidebar {
                     MacMainWindow()
                 }
             }
-            else if #available(iOS 27.1, *), !IS_IPAD && !IS_CATALYST { // Adaptive phone shell; preserve the existing iPad and Mac layouts.
-                WithSidebar {
-                    MainTabs27()
+            normalContent: {
+                if #available(iOS 27.1, *), !IS_IPAD && !IS_CATALYST {
+                    WithSidebar {
+                        MainTabs27()
+                    }
+                    .environment(\.nativeNavigationEnabled, true)
                 }
-                .environment(\.nativeNavigationEnabled, true)
-            }
-            else {
-                WithSidebar { // Old layout iPhone / iPad / classic macOS Desktop (with detail pane)
-                    NosturTabsView()
+                else {
+                    WithSidebar {
+                        NosturTabsView()
+                    }
                 }
             }
         }
@@ -129,5 +131,30 @@ extension EnvironmentValues {
                         url: "https://data.zap.stream/stream/537a365c-f1ec-44ac-af10-22d14a7319fb.m3u8",
                         availableViewModes: [.audioOnlyBar])
             }
+    }
+}
+
+/// Keep shell selection and the shared Pro checks on the same observed state.
+/// The size class comes from the scene, outside the compact feed columns.
+struct NosturProLayout<ProContent: View, NormalContent: View>: View {
+    @ObservedObject var settings: SettingsStore
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @ViewBuilder let proContent: ProContent
+    @ViewBuilder let normalContent: NormalContent
+
+    var body: some View {
+        Group {
+            if settings.usesProColumns {
+                proContent
+            }
+            else {
+                normalContent
+            }
+        }
+        .task(id: horizontalSizeClass) {
+            if #available(iOS 27.1, *), IS_IPHONE {
+                settings.updatePhoneLayout(isExpanded: horizontalSizeClass == .regular)
+            }
+        }
     }
 }

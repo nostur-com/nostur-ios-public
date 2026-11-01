@@ -349,7 +349,7 @@ struct SideBar: View {
             }
             .padding(10)
         }
-        .ignoresSafeArea(edges: nativeNavigationEnabled ? [] : .all)
+        .ignoresSafeArea(edges: (nativeNavigationEnabled || (IS_IPHONE && IS_DESKTOP_COLUMNS())) ? [] : .all)
         .sheet(isPresented: $showProfileShare) {
             ProfileShareSheet(pubkey: account.publicKey, name: account.anyName, pictureUrl: account.pictureUrl)
         }
@@ -427,7 +427,7 @@ struct WithSidebar<Content: View>: View {
                 GeometryReader { geometry in
                     SideBar(showSidebar: $showSidebar)
                         .frame(width: nativeNavigationEnabled ? min(NOSTUR_SIDEBAR_WIDTH, geometry.size.width) : NOSTUR_SIDEBAR_WIDTH)
-                        .ignoresSafeArea(edges: nativeNavigationEnabled ? [] : .all)
+                        .ignoresSafeArea(edges: (nativeNavigationEnabled || (IS_IPHONE && IS_DESKTOP_COLUMNS())) ? [] : .all)
                         .opacity(showSidebar ? 1.0 : 0.0)
                         .allowsHitTesting(showSidebar)
                 }
