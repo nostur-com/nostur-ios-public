@@ -48,7 +48,16 @@ class NRContentElementBuilder {
                 
                 // Use the final extension, not a suffix earlier in the filename
                 // or query (for example, an MP4 named .gif.mp4).
-                if Self.imageFileExtensions.contains(pathExtension) {
+                if matchString.hasPrefix("blossom:") {
+                    if BlossomURI(matchString) != nil, let url = URL(string: matchString) {
+                        let item = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id)
+                        result.append(.image(item))
+                        galleryItems.append(item)
+                    } else {
+                        result.append(.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text: matchString, primaryColor: primaryColor)))
+                    }
+                }
+                else if Self.imageFileExtensions.contains(pathExtension) {
                     if let url = URL(string: matchString) {
                         let iMeta: iMetaInfo? = findImeta(fastTags, url: matchString)
                         let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash, encryptedFile: iMeta?.encryptedFile, fallbackURLs: iMeta?.fallbackURLs ?? [])
@@ -317,10 +326,10 @@ class NRContentElementBuilder {
     static let otherUrlsPattern = ###"(?i)https?:\/\/(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}(?::\d{1,5})?(?:\/[\S]*)?(?<![\.,:;!?])"###
     
     // For kind 1 or similar text notes
-    static let pattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(naddrPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
+    static let pattern = "\(BlossomURI.pattern)|\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(naddrPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
     static let regex = try! NSRegularExpression(pattern: pattern)
     
-    static let previewPattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(previewNotePattern)|\(nprofilePattern)|\(previewNeventPattern)|\(previewNaddrPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
+    static let previewPattern = "\(BlossomURI.pattern)|\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(previewNotePattern)|\(nprofilePattern)|\(previewNeventPattern)|\(previewNaddrPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
     static let previewRegex = try! NSRegularExpression(pattern: previewPattern)
     
     // For long form articles (kind 30023), no image urls, video urls, other urls, as these are handled by markdown

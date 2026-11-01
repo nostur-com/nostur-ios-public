@@ -91,7 +91,10 @@ class MediaViewVM: ObservableObject {
             contentMode: cropToTarget ? .aspectFill : .aspectFit,
             crop: cropToTarget
         )
-        let pipeline = if usePFPpipeline {
+        let pipeline = if url.scheme == "blossom" {
+            ImageProcessing.shared.blossom
+        }
+        else if usePFPpipeline {
             ImageProcessing.shared.pfp
         }
         else if loadAnyway {
@@ -172,9 +175,11 @@ class MediaViewVM: ObservableObject {
             // WebP: After the resize processor runs, Nuke reports type as PNG, not WebP.
             // Detect WebP by URL extension instead, then fetch raw bytes from the data cache.
             if loadURL.pathExtension.lowercased() == "webp" {
-                let request = ImageRequest(url: loadURL)
-                let cacheKey = ImageProcessing.shared.content.cache.makeDataCacheKey(for: request)
-                let rawData = ImageProcessing.shared.content.configuration.dataCache?.cachedData(for: cacheKey)
+                var rawRequest = ImageRequest(url: loadURL)
+                rawRequest.userInfo[.imageIdKey] = request.userInfo[.imageIdKey]
+                let cachePipeline = loadURL.scheme == "blossom" ? pipeline : ImageProcessing.shared.content
+                let cacheKey = cachePipeline.cache.makeDataCacheKey(for: rawRequest)
+                let rawData = cachePipeline.configuration.dataCache?.cachedData(for: cacheKey)
                     ?? response.container.data
                 if let rawData,
                    isAnimatedWebPData(rawData),
@@ -207,6 +212,10 @@ class MediaViewVM: ObservableObject {
         }
         catch {
             guard !preserveCurrentImage else { return false }
+            if url.scheme == "blossom" {
+                if reportFailure, case .loading = state { state = .error("Failed to load image") }
+                return false
+            }
 
             // A filename extension is only a hint. Use the failed download's
             // response to recognize webpages without another network request.

@@ -121,6 +121,17 @@ struct MediaPlaceholder: View {
     
     @State private var blurImage: UIImage?
 
+    @MainActor
+    private var requiresBlossomConsent: Bool {
+        guard galleryItem.url.scheme == "blossom" else { return false }
+        let account = AccountsState.shared.loggedInAccount
+        return !BlossomURI.allowsAutomaticLoad(
+            postAuthor: galleryItem.pubkey,
+            accountPubkey: account?.account.publicKey,
+            following: account?.viewFollowingPublicKeys ?? []
+        )
+    }
+
     private var keepsPlaceholderHeight: Bool {
         // Missing dimensions reserve the same frame before and after decoding.
         !fullScreen && contentMode == .fit && MediaFrameLayout.aspect(for: galleryItem.dimensions) == nil
@@ -155,10 +166,16 @@ struct MediaPlaceholder: View {
     var body: some View {
         if case .webpage = vm.state {
             mediaPlaceholder
+                .onDisappear {
+                    if galleryItem.url.scheme == "blossom" { pauseLoad() }
+                }
                 .frame(width: availableWidth)
         }
         else if layout.contentMode == .fit {
             mediaPlaceholder
+                .onDisappear {
+                    if galleryItem.url.scheme == "blossom" { pauseLoad() }
+                }
                 .frame(
                     width: availableWidth,
                     height: height
@@ -173,6 +190,9 @@ struct MediaPlaceholder: View {
         }
         else {
           mediaPlaceholder
+                .onDisappear {
+                    if galleryItem.url.scheme == "blossom" { pauseLoad() }
+                }
                 .frame(
                     width: availableWidth,
                     height: height
@@ -394,8 +414,14 @@ struct MediaPlaceholder: View {
                             Text("NSFW")
                                 .fontWeightBold()
                         }
-                        Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
-                            .frame(maxWidth: .infinity, alignment: .center)
+                        if galleryItem.url.scheme == "blossom" {
+                            Button("Load image") { load(forceLoad: true) }
+                                .buttonStyle(.bordered)
+                                .tint(theme.accent)
+                        } else {
+                            Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        }
                         Text(galleryItem.url.absoluteString)
                             .foregroundColor(theme.accent)
                             .lineLimit(1)
@@ -735,7 +761,7 @@ struct MediaPlaceholder: View {
                         vm.state = .gif(gifInfo)
                     }
             }
-            else if (!autoload || isNSFW) && !fullScreen {
+            else if requiresBlossomConsent || ((!autoload || isNSFW) && !fullScreen) {
                 Color.clear
                     .onAppear {
                         if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
@@ -804,6 +830,10 @@ struct MediaPlaceholder: View {
         preserveCurrentImage: Bool = false,
         recoverFromBlossom: Bool = false
     ) {
+        guard forceLoad || !requiresBlossomConsent else {
+            vm.state = .dontAutoLoad
+            return
+        }
         Task { @MainActor in
             await vm.load(
                 galleryItem.url,

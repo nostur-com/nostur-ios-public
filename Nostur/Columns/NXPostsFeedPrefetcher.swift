@@ -63,7 +63,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                 for element in item.contentElements {
                     switch element {
                     case .image(let mediaContent):
-                        if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                        if mediaContent.url.scheme == "blossom" || mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
                         imageRequests.append(makeImageRequest(
                             mediaContent.url,
@@ -75,7 +75,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                             gridImageRequestTargetSize(for: $0, columnCount: items.count == 3 ? 3 : 2)
                         }
                         for mediaContent in items.prefix(4) {
-                            if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                            if mediaContent.url.scheme == "blossom" || mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                             imageRequests.append(makeImageRequest(
                                 mediaContent.url,
                                 label: "prefetch",
@@ -162,7 +162,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                 for element in item.contentElements {
                     switch element {
                     case .image(let mediaContent):
-                        if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                        if mediaContent.url.scheme == "blossom" || mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
                         imageRequests.append(makeImageRequest(
                             mediaContent.url,
@@ -174,7 +174,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                             gridImageRequestTargetSize(for: $0, columnCount: items.count == 3 ? 3 : 2)
                         }
                         for mediaContent in items.prefix(4) {
-                            if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                            if mediaContent.url.scheme == "blossom" || mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                             imageRequests.append(makeImageRequest(
                                 mediaContent.url,
                                 label: "cancel prefetch",
@@ -261,7 +261,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                 for element in item.contentElements {
                     switch element {
                     case .image(let mediaContent):
-                        if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                        if mediaContent.url.scheme == "blossom" || mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
                         imageRequests.append(makeImageRequest(
                             mediaContent.url,
@@ -273,7 +273,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                             gridImageRequestTargetSize(for: $0, columnCount: items.count == 3 ? 3 : 2)
                         }
                         for mediaContent in items.prefix(4) {
-                            if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                            if mediaContent.url.scheme == "blossom" || mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                             imageRequests.append(makeImageRequest(
                                 mediaContent.url,
                                 label: "prefetch",
@@ -360,7 +360,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                 for element in item.contentElements {
                     switch element {
                     case .image(let mediaContent):
-                        if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                        if mediaContent.url.scheme == "blossom" || mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                         // SHOULD BE SAME AS IN MediaViewVM:
                         imageRequests.append(makeImageRequest(
                             mediaContent.url,
@@ -372,7 +372,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                             gridImageRequestTargetSize(for: $0, columnCount: items.count == 3 ? 3 : 2)
                         }
                         for mediaContent in items.prefix(4) {
-                            if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                            if mediaContent.url.scheme == "blossom" || mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
                             imageRequests.append(makeImageRequest(
                                 mediaContent.url,
                                 label: "cancel prefetch",

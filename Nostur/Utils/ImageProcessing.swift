@@ -220,6 +220,21 @@ class ImageProcessing {
     var pfp: ImagePipeline
     var banner: ImagePipeline
     var content: ImagePipeline
+    @MainActor lazy var blossom: ImagePipeline = {
+        // Isolate discovery/download work from ordinary post images. Only verified
+        // bytes reach the existing decoder and resize processors.
+        return ImagePipeline {
+            $0.isProgressiveDecodingEnabled = false
+            $0.dataLoadingQueue.maxConcurrentOperationCount = 2
+            $0.dataLoader = BlossomDataLoader()
+            $0.makeImageDecoder = Self.makeLimitedImageDecoder(policy: .post)
+            // Share the exact cache instances (including pending writes) so
+            // Settings' Post content size and Clear action cover Blossom too.
+            $0.imageCache = self.content.configuration.imageCache
+            $0.dataCache = self.content.configuration.dataCache
+            $0.dataCachePolicy = .storeOriginalData
+        }
+    }()
     var contentLoadAnyway: ImagePipeline
     var communities: ImagePipeline
     var badges: ImagePipeline
@@ -355,6 +370,19 @@ class ImageProcessing {
         
         pfpPrefetcher = ImagePrefetcher(pipeline: pfp)
         pfpPrefetcher.priority = .high
+
+        // Retire the separate cache created by the initial BUD-10 build.
+        // File-system cleanup must not delay startup or image requests.
+        Task.detached(priority: .utility) {
+            guard let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
+            let legacyCache = root.appendingPathComponent("com.nostur.image.blossom", isDirectory: true)
+            guard FileManager.default.fileExists(atPath: legacyCache.path) else { return }
+            do {
+                try FileManager.default.removeItem(at: legacyCache)
+            } catch {
+                L.og.error("Could not remove retired Blossom cache: \(error.localizedDescription)")
+            }
+        }
     }
 
     private static func makeLimitedDataLoader(byteLimit: Int) -> LimitedDataLoader {
@@ -446,6 +474,10 @@ func makeImageRequest(
 #endif
     let options: ImageRequest.Options = (!overrideLowDataMode && SettingsStore.shared.lowDataMode) ? [.returnCacheDataDontLoad] : []
     let targetSize = targetSize ?? ScreenSpace.shared.screenSize
+    var userInfo: [ImageRequest.UserInfoKey: Any] = [.scaleKey: UIScreen.main.scale]
+    if url.scheme == "blossom", let uri = BlossomURI(url.absoluteString) {
+        userInfo[.imageIdKey] = "blossom:" + uri.hash
+    }
     return ImageRequest(url: url,
                  processors: [
                     .resize(
@@ -459,6 +491,6 @@ func makeImageRequest(
                     )
                  ],
                 options: options,
-                userInfo: [.scaleKey: UIScreen.main.scale]
+                userInfo: userInfo
     )
 }

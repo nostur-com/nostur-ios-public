@@ -17492,6 +17492,9 @@
         }
       }
     },
+    "Load image" : {
+      "comment" : "Button to load a Blossom image after the reader gives permission"
+    },
     "Load more" : {
       "localizations" : {
         "nl" : {

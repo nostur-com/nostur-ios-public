@@ -171,7 +171,7 @@ struct GalleryFullScreenSwiper: View {
     }
     
     private func prefetchNextImage(currentIndex: Int) {
-        if items.count > (currentIndex + 1) {
+        if items.count > (currentIndex + 1), items[currentIndex + 1].url.scheme != "blossom" {
             let prefetchRequest = makeImageRequest(
                 items[currentIndex + 1].url,
                 label: "prefetchNextImage",
