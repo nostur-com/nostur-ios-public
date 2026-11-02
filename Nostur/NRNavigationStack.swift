@@ -22,6 +22,7 @@ struct NRNavigationStack<Content: View>: View {
             }       
         }
         .nbUseNavigationStack(.never)
+        .environment(\.nativeLocalDestinations, false)
     }
 }
 
@@ -42,6 +43,7 @@ struct NRSheetNavigationStack<Content: View>: View {
             }
         }
         .nbUseNavigationStack(.never)
+        .environment(\.nativeLocalDestinations, false)
         .presentationBackgroundCompat(Themes.default.theme.listBackground)
     }
 }

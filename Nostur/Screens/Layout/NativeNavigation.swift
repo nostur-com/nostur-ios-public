@@ -12,6 +12,10 @@ private struct NativeNavigationEnabledKey: EnvironmentKey {
     static let defaultValue = false
 }
 
+private struct NativeLocalDestinationsKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
 private struct NativeSplitActiveKey: EnvironmentKey {
     static let defaultValue = false
 }
@@ -21,6 +25,12 @@ private struct NosturAppendKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
+    /// Set by the owning stack's destination registration, independent of the app shell.
+    var nativeLocalDestinations: Bool {
+        get { self[NativeLocalDestinationsKey.self] }
+        set { self[NativeLocalDestinationsKey.self] = newValue }
+    }
+
     var nativeNavigationEnabled: Bool {
         get { self[NativeNavigationEnabledKey.self] }
         set { self[NativeNavigationEnabledKey.self] = newValue }
@@ -40,11 +50,27 @@ extension EnvironmentValues {
     }
 }
 
+/// Value links in shared post/profile content must use the owning stack's API.
+struct NosturNavigationLink<Value: Hashable, Label: View>: View {
+    @Environment(\.nativeLocalDestinations) private var nativeLocalDestinations
+    let value: Value?
+    @ViewBuilder let label: () -> Label
+
+    var body: some View {
+        if #available(iOS 16.0, *), nativeLocalDestinations {
+            NavigationLink(value: value, label: label)
+        } else {
+            NBNavigationLink(value: value, label: label)
+        }
+    }
+}
+
 private struct NosturNavigationStackModifier: ViewModifier {
     @Environment(\.nativeNavigationEnabled) private var nativeNavigationEnabled
 
     func body(content: Content) -> some View {
         content.nbUseNavigationStack(nativeNavigationEnabled ? .whenAvailable : .never)
+            .environment(\.nativeLocalDestinations, false)
     }
 }
 
@@ -57,7 +83,7 @@ extension View {
     /// stack does not install NavigationBackport's destination/path holders.
     func nosturNavigationDestination<Destination: View>(
         isPresented: Binding<Bool>,
-        usesNativeNavigation: Bool,
+        usesNativeNavigation: Bool? = nil,
         @ViewBuilder destination: @escaping () -> Destination
     ) -> some View {
         modifier(NosturLocalDestinationModifier(
@@ -66,15 +92,34 @@ extension View {
             destination: destination
         ))
     }
+
+    func nosturNavigationDestination<Item: Hashable, Destination: View>(
+        item: Binding<Item?>,
+        @ViewBuilder destination: @escaping (Item) -> Destination
+    ) -> some View {
+        nosturNavigationDestination(isPresented: Binding(
+            get: { item.wrappedValue != nil },
+            set: { isPresented, transaction in
+                if !isPresented {
+                    item.transaction(transaction).wrappedValue = nil
+                }
+            }
+        )) {
+            if let value = item.wrappedValue {
+                destination(value)
+            }
+        }
+    }
 }
 
 private struct NosturLocalDestinationModifier<Destination: View>: ViewModifier {
     @Binding var isPresented: Bool
-    let usesNativeNavigation: Bool
+    @Environment(\.nativeLocalDestinations) private var nativeLocalDestinations
+    let usesNativeNavigation: Bool?
     @ViewBuilder let destination: () -> Destination
 
     func body(content: Content) -> some View {
-        if #available(iOS 16.0, *), usesNativeNavigation {
+        if #available(iOS 16.0, *), usesNativeNavigation ?? nativeLocalDestinations {
             content.navigationDestination(isPresented: $isPresented, destination: destination)
         } else {
             content.nbNavigationDestination(isPresented: $isPresented, destination: destination)

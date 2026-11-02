@@ -27,7 +27,7 @@ struct DetailFooterFragment: View {
         }
         VStack(spacing: 5) {
             HStack(spacing: 2) {
-                NBNavigationLink(value: ViewPath.PostReactions(eventId: nrPost.id)) {
+                NosturNavigationLink(value: ViewPath.PostReactions(eventId: nrPost.id)) {
                     HStack(spacing: 2) {
                         AnimatedNumber(number: footerAttributes.likesCount)
                             .layoutPriority(footerAttributes.likesCount == 0 ? -1 : 1)
@@ -37,7 +37,7 @@ struct DetailFooterFragment: View {
                     .lineLimit(1)
                 }
                 Spacer()
-                NBNavigationLink(value: ViewPath.PostReposts(id: nrPost.id)) {
+                NosturNavigationLink(value: ViewPath.PostReposts(id: nrPost.id)) {
                     HStack(spacing: 2) {
                         AnimatedNumber(number: footerAttributes.repostsCount)
                             .layoutPriority(footerAttributes.repostsCount == 0 ? -1 : 2)
@@ -47,7 +47,7 @@ struct DetailFooterFragment: View {
                     .lineLimit(1)
                 }
                 Spacer()
-                NBNavigationLink(value: ViewPath.PostMentions(id: nrPost.id)) {
+                NosturNavigationLink(value: ViewPath.PostMentions(id: nrPost.id)) {
                     HStack(spacing: 2) {
                         AnimatedNumber(number: footerAttributes.mentionsCount)
                             .layoutPriority(footerAttributes.mentionsCount == 0 ? -1 : 2)
@@ -57,7 +57,7 @@ struct DetailFooterFragment: View {
                     .lineLimit(1)
                 }
                 Spacer()
-                NBNavigationLink(value: ViewPath.PostZaps(nrPost: nrPost)) {
+                NosturNavigationLink(value: ViewPath.PostZaps(nrPost: nrPost)) {
                     HStack(spacing: 2) {
                         AnimatedNumber(number: footerAttributes.zapsCount)
                             .layoutPriority(footerAttributes.zapsCount == 0 ? -1 : 3)

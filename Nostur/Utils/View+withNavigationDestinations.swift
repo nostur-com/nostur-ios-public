@@ -127,6 +127,7 @@ struct NavigationDestinationsModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content.backportStackDestinations(navPath: $navPath, containerID: containerID)
+            .environment(\.nativeLocalDestinations, false)
     }
 }
 
@@ -139,6 +140,7 @@ struct NativeNavigationDestinationsModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content.nativeStackDestinations(navPath: $unusedPath, containerID: containerID)
+            .environment(\.nativeLocalDestinations, true)
     }
 }
 

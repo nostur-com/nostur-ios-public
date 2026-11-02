@@ -60,7 +60,7 @@ struct BadgesIssuedView: View {
     var body: some View {
         List(badges) { badge in
             let badgeAwards = awards(for: badge)
-            NBNavigationLink(value: Badge(badge)) {
+            NosturNavigationLink(value: Badge(badge)) {
                 BadgeIssuedRow(
                     badge: badge,
                     recipientCount: recipientCount(for: badgeAwards),
@@ -111,6 +111,7 @@ struct BadgesIssuedView: View {
                     .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
+            .environment(\.nativeLocalDestinations, false)
             .presentationBackgroundCompat(theme.listBackground)
         }
     }

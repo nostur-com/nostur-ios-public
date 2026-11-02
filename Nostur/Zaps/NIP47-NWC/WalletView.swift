@@ -262,7 +262,7 @@ struct WalletView: View {
         }
         .task(id: model.filter) { await model.refreshHistory() }
         .refreshable { await model.refresh() }
-        .nbNavigationDestination(isPresented: $showSettings) { ZapsSettings() }
+        .nosturNavigationDestination(isPresented: $showSettings) { ZapsSettings() }
         .sheet(isPresented: $showConnectionInfo) {
             NBNavigationStack {
                 WalletConnectionView(model: model, availableFeatures: availableFeatures)

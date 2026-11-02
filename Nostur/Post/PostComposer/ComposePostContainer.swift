@@ -14,8 +14,10 @@ extension View {
     func composerNavigationStackCompat() -> some View {
         if #available(iOS 27.0, *) {
             self.nbUseNavigationStack(.whenAvailable)
+                .environment(\.nativeLocalDestinations, false)
         } else {
             self.nbUseNavigationStack(.never)
+                .environment(\.nativeLocalDestinations, false)
         }
     }
 }

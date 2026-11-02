@@ -23,6 +23,7 @@ struct WithNavigationIf<Content: View>: View {
             if condition {
                 NBNavigationStack {
                     content
+                        .environment(\.nativeLocalDestinations, false)
                 }
             }
             else {

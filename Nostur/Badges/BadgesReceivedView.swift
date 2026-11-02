@@ -430,6 +430,7 @@ private struct BadgeSelectionView: View {
                     .environmentObject(la)
             }
             .nbUseNavigationStack(.never)
+            .environment(\.nativeLocalDestinations, false)
             .presentationBackgroundCompat(theme.listBackground)
         }
         .alert("Could not publish badges", isPresented: Binding(
@@ -605,7 +606,7 @@ struct BadgeReceivedRow: View {
         HStack(alignment: .top, spacing: 12) {
             Group {
                 if opensDetail {
-                    NBNavigationLink(value: Badge(badge)) {
+                    NosturNavigationLink(value: Badge(badge)) {
                         badgeSummary
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
@@ -907,7 +908,7 @@ private struct BadgeWearersView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(selection.pubkeys, id: \.self) { pubkey in
-                        NBNavigationLink(value: ContactPath(key: pubkey)) {
+                        NosturNavigationLink(value: ContactPath(key: pubkey)) {
                             PFPandName(pubkey: pubkey)
                         }
                     }

@@ -158,6 +158,7 @@ private struct ResolvedProfileBadgesView: View {
                 .environmentObject(la)
             }
             .nbUseNavigationStack(.never)
+            .environment(\.nativeLocalDestinations, false)
             .presentationBackgroundCompat(theme.listBackground)
         }
         .task(id: dependencyKey, priority: .background) {

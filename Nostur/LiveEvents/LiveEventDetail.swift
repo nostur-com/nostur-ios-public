@@ -141,7 +141,7 @@ struct LiveEventDetail: View {
             .background(theme.listBackground)
             .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
 //            .withNavigationDestinations()
-            .nbNavigationDestination(isPresented: $showZapSheet, destination: {
+            .nosturNavigationDestination(isPresented: $showZapSheet, destination: {
                 if let zapCustomizerSheetInfo {
                     AppEnvironment(la: la) {
                         ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
@@ -150,7 +150,7 @@ struct LiveEventDetail: View {
                     }
                 }
             })
-            .nbNavigationDestination(isPresented: $showNonNWCZapSheet, destination: {
+            .nosturNavigationDestination(isPresented: $showNonNWCZapSheet, destination: {
                 if let paymentInfo {
                     AppEnvironment(la: la) {
                         PaymentAmountSelector(paymentInfo: paymentInfo)

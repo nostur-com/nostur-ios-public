@@ -98,7 +98,7 @@ struct VideoReplyButton: View {
         .onTapGesture {
             tap()
         }
-        .nbNavigationDestination(item: $commentsDetail) { replyTo in
+        .nosturNavigationDestination(item: $commentsDetail) { replyTo in
             CommentsDetail(nrPost: replyTo.nrPost)
                 .navigationTitle("Comments")
                 .navigationBarTitleDisplayMode(.inline)
