@@ -91,6 +91,7 @@ private struct PollVotersContent: View {
     let selectedOption: String?
     let openOption: (String) -> Void
     let dismissSheet: () -> Void
+    @State private var showPublicVotesInfo = false
 
     private var voters: [PollVote] {
         tally.voters(for: selectedOption)
@@ -105,13 +106,14 @@ private struct PollVotersContent: View {
     }
 
     private var voterTotal: LocalizedStringKey {
+        let count = selectedOption == nil ? tally.totalVoters : voters.count
         switch scope {
         case .everyone:
-            return tally.totalVoters == 1 ? "1 voter" : "\(tally.totalVoters) voters"
+            return count == 1 ? "1 voter" : "\(count) voters"
         case .webOfTrust:
-            return tally.totalVoters == 1 ? "1 voter in your Web of Trust" : "\(tally.totalVoters) voters in your Web of Trust"
+            return count == 1 ? "1 voter in your Web of Trust" : "\(count) voters in your Web of Trust"
         case .following:
-            return tally.totalVoters == 1 ? "1 voter you follow" : "\(tally.totalVoters) voters you follow"
+            return count == 1 ? "1 voter you follow" : "\(count) voters you follow"
         }
     }
 
@@ -132,16 +134,9 @@ private struct PollVotersContent: View {
                     overview
                         .padding(.bottom, 24)
 
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("Voters").font(.headline)
-                        Spacer()
-                        if model.hasLoaded {
-                            Text(voters.count, format: .number)
-                                .font(.subheadline).monospacedDigit()
-                                .foregroundStyle(theme.secondary)
-                        }
-                    }
-                    .padding(.bottom, 12)
+                    Text("Voters")
+                        .font(.headline)
+                        .padding(.bottom, 12)
 
                     Group {
                         ForEach(voters) { voter in
@@ -197,34 +192,39 @@ private struct PollVotersContent: View {
         .background(theme.listBackground)
         .navigationTitle(selectedOption == nil ? "Poll results" : "Voters")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("Votes are public", isPresented: $showPublicVotesInfo) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Anyone who receives a vote can see the voting account and its chosen answers. Web of Trust and Following only filter these results; they do not make votes private. Earlier votes may remain public after a vote changes.")
+        }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    Task {
-                        await model.load(accountPubkey: AccountsState.shared.activeAccountPublicKey, force: true)
-                    }
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                }
-                .disabled(model.isLoading)
-                .accessibilityLabel("Refresh poll results")
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                Button { dismissSheet() } label: { Image(systemName: "checkmark") }
-                    .accessibilityLabel("Done")
+            ToolbarItem(placement: .cancellationAction) {
+                Button { dismissSheet() } label: { Image(systemName: "xmark") }
+                    .accessibilityLabel("Dismiss poll results")
             }
         }
     }
 
     private var overview: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                if model.hasLoaded && selectedOption == nil {
+            HStack(spacing: 0) {
+                if model.hasLoaded {
                     Text(voterTotal)
+                        .monospacedDigit()
+                } else {
+                    Text("Votes")
                 }
-                Spacer()
-                Label("Public votes", systemImage: "person.crop.circle")
-                    .labelStyle(.titleAndIcon)
+                refreshVotesButton
+                Spacer(minLength: 8)
+                Button { showPublicVotesInfo = true } label: {
+                    Label("Public votes", systemImage: "info.circle")
+                        .labelStyle(.titleAndIcon)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("About public votes")
+                .help("About public votes")
             }
             .font(.caption)
             .foregroundStyle(theme.secondary)
@@ -239,6 +239,28 @@ private struct PollVotersContent: View {
                 }
             }
         }
+    }
+
+    private var refreshVotesButton: some View {
+        Button {
+            Task {
+                await model.load(accountPubkey: AccountsState.shared.activeAccountPublicKey, force: true)
+            }
+        } label: {
+            ZStack {
+                Image(systemName: "arrow.clockwise")
+                    .opacity(model.isLoading ? 0 : 1)
+                if model.isLoading {
+                    ProgressView().scaleEffect(0.7)
+                }
+            }
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(model.isLoading)
+        .accessibilityLabel("Refresh votes")
+        .help("Refresh votes")
     }
 
     private func answerRow(_ option: NostrPoll.Option) -> some View {
@@ -293,10 +315,12 @@ private struct PollVotersContent: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(theme.primary)
                         .lineLimit(1)
-                    Text(model.poll.options.filter { voter.responses.contains($0.id) }.map(\.label).joined(separator: ", "))
-                        .font(.caption)
-                        .foregroundStyle(theme.secondary)
-                        .multilineTextAlignment(.leading)
+                    if selectedOption == nil {
+                        Text(model.poll.options.filter { voter.responses.contains($0.id) }.map(\.label).joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundStyle(theme.secondary)
+                            .multilineTextAlignment(.leading)
+                    }
                 }
                 Spacer(minLength: 4)
                 Text(Date(timeIntervalSince1970: TimeInterval(voter.createdAt)).agoString)
