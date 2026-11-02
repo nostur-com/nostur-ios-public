@@ -1640,7 +1640,14 @@ class NXColumnViewModel: ObservableObject {
             .sink { [weak self] _ in
                 guard let self, self.isVisible,
                       !AppState.shared.rawExplorePubkeys.isEmpty else { return }
-                self.reload(config, refreshRemote: true)
+                // Author discovery can finish after the remembered feed restores.
+                // A full reload clears unreadIds via viewState = .loading, but the
+                // one-shot local restore will not run again. Refresh incrementally
+                // so the saved reading position and unread rows survive.
+                ConnectionPool.shared.closeSubscription(config.id)
+                self.sendRealtimeReq(config)
+                self.loadLocal(config)
+                self.scheduleInitialRemoteFetch(config)
             }
     }
     
