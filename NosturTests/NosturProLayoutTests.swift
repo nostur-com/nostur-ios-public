@@ -1,3 +1,4 @@
+import NavigationBackport
 import SwiftUI
 import UIKit
 import XCTest
@@ -5,6 +6,82 @@ import XCTest
 
 @MainActor
 final class NosturProLayoutTests: XCTestCase {
+    @available(iOS 17.0, *)
+    func testMainColumnPagerFillsTheSameHeightAsAdjacentColumn() async throws {
+        try XCTSkipUnless(IS_IPHONE, "Phone pager regression")
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first { $0.activationState == .foregroundActive })
+        var mainFrame = CGRect.zero
+        var adjacentFrame = CGRect.zero
+        let host = UIHostingController(rootView: ProSidebarLayout {
+            Color.gray.frame(width: SIDEBAR_WIDTH)
+        } columns: {
+            HStack(spacing: 1) {
+                TabView(selection: .constant("Main")) {
+                    NBNavigationStack {
+                        List(0..<30) { Text("Main row \($0)") }
+                            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { mainFrame = $0 }
+                            .navigationTitle("Main")
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
+                    .nbUseNavigationStack(.never)
+                    .environment(\.horizontalSizeClass, .compact)
+                    .tag("Main")
+                    Text("Other tab").tag("Other")
+                }
+                .modifier(ProMainColumnTabsStyle())
+                NBNavigationStack {
+                    List(0..<30) { Text("Adjacent row \($0)") }
+                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { adjacentFrame = $0 }
+                        .navigationTitle("Adjacent")
+                        .navigationBarTitleDisplayMode(.inline)
+                }
+                .nbUseNavigationStack(.never)
+            }
+        })
+        let window = UIWindow(windowScene: scene)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        for bottomInset in [CGFloat(0), 40, 0] {
+            host.additionalSafeAreaInsets.bottom = bottomInset
+            window.layoutIfNeeded()
+            // Allow navigation and paging controllers to complete their layout passes.
+            try await Task.sleep(for: .milliseconds(500))
+            // SwiftUI geometry excludes the safe area in both columns; the bug
+            // is the pager clipping the underlying scroll view's drawing region.
+            let lists = scrollViews(in: host.view).filter { $0.contentSize.height > $0.bounds.height }
+                .sorted { $0.convert($0.bounds, to: window).minX < $1.convert($1.bounds, to: window).minX }
+            XCTAssertEqual(lists.count, 2)
+            if lists.count == 2 {
+                let mainVisible = visibleFrame(of: lists[0], in: window)
+                let adjacentVisible = visibleFrame(of: lists[1], in: window)
+                XCTAssertEqual(mainVisible.maxY, adjacentVisible.maxY, accuracy: 1,
+                               "Pager must not clip the feed above its neighboring column: main \(mainVisible), adjacent \(adjacentVisible)")
+            }
+            XCTAssertGreaterThan(mainFrame.height, 0)
+            XCTAssertGreaterThan(adjacentFrame.height, 0)
+            XCTAssertEqual(mainFrame.maxY, adjacentFrame.maxY, accuracy: 1,
+                           "Main pager must not reserve an extra bottom strip: main \(mainFrame), adjacent \(adjacentFrame)")
+        }
+    }
+
+    private func scrollViews(in view: UIView) -> [UIScrollView] {
+        let current = (view as? UIScrollView).map { [$0] } ?? []
+        return current + view.subviews.flatMap { scrollViews(in: $0) }
+    }
+
+    private func visibleFrame(of view: UIView, in window: UIWindow) -> CGRect {
+        var frame = view.convert(view.bounds, to: window)
+        var ancestor = view.superview
+        while let parent = ancestor {
+            if parent.clipsToBounds {
+                frame = frame.intersection(parent.convert(parent.bounds, to: window))
+            }
+            ancestor = parent.superview
+        }
+        return frame
+    }
+
     @available(iOS 17.0, *)
     func testRenderedShellFollowsRepeatedFoldUnfoldWithoutRetogglingPro() async throws {
         guard #available(iOS 27.1, *) else { throw XCTSkip("Adaptive phone shell requires iOS 27.1") }

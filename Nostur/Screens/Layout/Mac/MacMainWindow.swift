@@ -64,14 +64,7 @@ struct MacMainWindow: View {
                                     .tag("Messages")
 
                             }
-                            .modifier {
-                                if IS_IPHONE {
-                                    $0.tabViewStyle(.page(indexDisplayMode: .never))
-                                }
-                                else {
-                                    $0
-                                }
-                            }
+                            .modifier(ProMainColumnTabsStyle())
                             .frame(width: columnWidth)
                             .debugDimensions()
 
@@ -241,6 +234,22 @@ final class ProSidebarCornerRegionView: UIView {
         DispatchQueue.main.async { [weak self] in
             guard let self, self.reportedInsets == insets else { return }
             self.onChange?(insets)
+        }
+    }
+}
+
+/// The sidebar owns tab selection, so the phone column uses a pager without dots.
+struct ProMainColumnTabsStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        if IS_IPHONE {
+            content
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                // Match the neighboring scroll views, which draw through the bottom
+                // safe area. Otherwise the page controller clips a blank strip here.
+                .ignoresSafeArea(.container, edges: .bottom)
+        }
+        else {
+            content
         }
     }
 }
