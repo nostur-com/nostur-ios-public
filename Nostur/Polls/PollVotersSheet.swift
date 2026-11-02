@@ -159,11 +159,8 @@ private struct PollVotersContent: View {
 
                 }
 
-                if model.isPartial || model.error != nil || model.poll.multipleChoice {
+                if model.error != nil || model.poll.multipleChoice {
                     VStack(alignment: .leading, spacing: 8) {
-                        if model.isPartial {
-                            Label("Some responses may be missing from these results.", systemImage: "exclamationmark.circle")
-                        }
                         if let error = model.error { Text(error) }
                         if model.poll.multipleChoice {
                             Text("People can choose more than one answer, so percentages can add up to more than 100%.")
@@ -174,7 +171,9 @@ private struct PollVotersContent: View {
                     .padding(.top, 20)
                 }
             }
-            .padding(16)
+            .padding(.horizontal, 16)
+            .padding(.top, 4)
+            .padding(.bottom, 16)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             Picker("Results from", selection: $scope) {
@@ -207,27 +206,31 @@ private struct PollVotersContent: View {
 
     private var overview: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 0) {
-                if model.hasLoaded {
-                    Text(voterTotal)
-                        .monospacedDigit()
-                } else {
-                    Text("Votes")
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    if model.hasLoaded {
+                        Text(voterTotal)
+                            .monospacedDigit()
+                    } else {
+                        Text("Votes")
+                    }
+                    refreshVotesButton
+                    Spacer(minLength: 8)
+                    Button { showPublicVotesInfo = true } label: {
+                        Label("Public votes", systemImage: "info.circle")
+                            .labelStyle(.titleAndIcon)
+                            .frame(minHeight: PollResultsLayout.summaryControlHeight)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("About public votes")
+                    .help("About public votes")
                 }
-                refreshVotesButton
-                Spacer(minLength: 8)
-                Button { showPublicVotesInfo = true } label: {
-                    Label("Public votes", systemImage: "info.circle")
-                        .labelStyle(.titleAndIcon)
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("About public votes")
-                .help("About public votes")
+                .font(.caption)
+                .foregroundStyle(theme.secondary)
+
+                PollResultsSourcesView(model: model)
             }
-            .font(.caption)
-            .foregroundStyle(theme.secondary)
 
             ForEach(visibleOptions) { option in
                 if selectedOption == nil {
@@ -254,7 +257,7 @@ private struct PollVotersContent: View {
                     ProgressView().scaleEffect(0.7)
                 }
             }
-            .frame(width: 44, height: 44)
+            .frame(width: PollResultsLayout.summaryControlHeight, height: PollResultsLayout.summaryControlHeight)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -178,6 +178,7 @@ struct PollCard: View {
         let follows = accounts.loggedInAccount?.followingPublicKeys ?? []
         let familiar = voters.filter { follows.contains($0.pubkey) || $0.pubkey == accountPubkey }
         let limit = availableWidth >= 600 ? 10 : (availableWidth >= 280 ? 5 : 3)
+        let additionalFollowed = familiar.dropFirst(limit).filter { follows.contains($0.pubkey) }.count
         let isOwnChoice = ownVote?.responses.contains(option.id) == true
         return Button {
             selectedOption = option.id
@@ -219,8 +220,8 @@ struct PollCard: View {
                                 .accessibilityHidden(true)
                         }
                     }
-                    if !familiar.isEmpty && voters.count > min(familiar.count, limit) {
-                        Text("+\(voters.count - min(familiar.count, limit))")
+                    if additionalFollowed > 0 {
+                        Text("+\(additionalFollowed) you follow")
                             .font(.caption2)
                             .foregroundStyle(theme.secondary)
                             .padding(.leading, 6)
@@ -310,21 +311,6 @@ struct PollCard: View {
                     privacyButton(iconOnly: showingResults)
                 }
                 .fixedSize(horizontal: true, vertical: false)
-            }
-            if !model.moreRelays.isEmpty,
-               !viewingContext.contains(.screenshot), !viewingContext.contains(.preview) {
-                Button {
-                    Task { await model.load(accountPubkey: accountPubkey, force: true, includeMoreRelays: true) }
-                } label: {
-                    Text("Check results on more relays from this poll")
-                        .font(.caption)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(theme.accent)
-                .disabled(model.isLoading)
             }
             if attemptedVote, let error = model.error {
                 Text(error).foregroundStyle(.red)

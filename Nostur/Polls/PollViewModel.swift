@@ -8,12 +8,13 @@ final class PollViewModel: ObservableObject {
     @Published private(set) var isPublishing = false
     @Published private(set) var hasLoaded = false
     @Published private(set) var isPartial = false
-    @Published private(set) var moreRelays: [String] = []
+    @Published private(set) var sources: [PollResultsSource] = []
     @Published private(set) var error: String?
     private var responses: [PollVote] = []
     private var lastLoadedAccount: String?
     private var lastLoaded: Date?
-    private var checkingMoreRelays = false
+    private var approvedRelays = Set<String>()
+    private var sourceAccount: String?
     private(set) var authorPubkey: String?
 
     // Share acknowledged votes and loading state between feed, embeds and detail.
@@ -29,11 +30,12 @@ final class PollViewModel: ObservableObject {
         return model
     }
 
-    init(poll: NostrPoll, initialVotes: [PollVote]? = nil) {
+    init(poll: NostrPoll, initialVotes: [PollVote]? = nil, initialSources: [PollResultsSource] = []) {
         self.poll = poll
         responses = initialVotes ?? []
         tally = PollTally(poll: poll, votes: responses, now: Int(Date().timeIntervalSince1970))
         hasLoaded = initialVotes != nil
+        sources = initialSources
     }
 
     func rememberAuthor(_ pubkey: String) {
@@ -42,9 +44,8 @@ final class PollViewModel: ObservableObject {
         lastLoaded = nil
     }
 
-    func load(accountPubkey: String, force: Bool = false, includeMoreRelays: Bool = false) async {
-        if includeMoreRelays { checkingMoreRelays = true }
-        let expand = includeMoreRelays
+    func load(accountPubkey: String, force: Bool = false, request: PollResultsRequest = .refresh) async {
+        let expand = request != .refresh
         // A feed card can disappear just as its detail opens. Wait asynchronously for
         // that caller to finish/cancel, then retry rather than leaving detail unloaded.
         while isLoading {
@@ -55,7 +56,19 @@ final class PollViewModel: ObservableObject {
               force || expand || lastLoadedAccount != accountPubkey || lastLoaded == nil || Date().timeIntervalSince(lastLoaded!) > 30 else { return }
         isLoading = true
         error = nil
-        defer { isLoading = false }
+        if sourceAccount != accountPubkey {
+            sources = []
+            approvedRelays = []
+            sourceAccount = accountPubkey
+        }
+        let previousSources = sources
+        defer {
+            isLoading = false
+            for index in sources.indices where sources[index].status == .loading {
+                let id = sources[index].id
+                sources[index] = previousSources.first { $0.id == id } ?? PollResultsSource(id: id)
+            }
+        }
         let author = authorPubkey ?? ""
         let isOwn = !author.isEmpty && author == accountPubkey
         if !accountPubkey.isEmpty {
@@ -68,32 +81,48 @@ final class PollViewModel: ObservableObject {
         }
         guard !Task.isCancelled else { return }
         let plan = PollRelayContext.query(accountPubkey: accountPubkey, authorPubkey: author,
-                                          eventRelays: poll.relays, includeMore: checkingMoreRelays)
-        moreRelays = plan.more
-        let relays = plan.relays
+                                          eventRelays: poll.relays, includeMore: false)
+        let selection = request.selection(from: plan, previous: sources, approved: &approvedRelays)
+        sources = selection.sources
+        let relays = selection.relays
         guard !relays.isEmpty else {
-            isPartial = !moreRelays.isEmpty
-            if !hasLoaded {
+            isPartial = sources.contains { $0.status != .checked }
+            if sources.isEmpty && !hasLoaded {
                 error = String(localized: "No available relays for this poll.")
             }
             return
         }
+        let cursors = Dictionary(uniqueKeysWithValues: sources.compactMap { source in
+            source.cursor.map { (source.id, $0) }
+        })
+        for index in sources.indices where relays.contains(sources[index].id) {
+            sources[index].status = .loading
+        }
+        let authRelays = PollRelayContext.authenticationRelays(accountPubkey: accountPubkey)
+        let authenticator = PollRelayAuthentication.forAccount(accountPubkey)
         let poll = self.poll
-        let results = await withTaskGroup(of: PollRelayResult.self) { group in
+        let attempts = await withTaskGroup(of: (String, PollRelayResult).self) { group in
             for relay in relays {
-                group.addTask { await PollRelayClient.shared.fetch(poll: poll, relay: relay, author: nil) }
+                let cursor = request == .refresh ? nil : cursors[relay]
+                let authentication = authRelays.contains(relay) ? authenticator : nil
+                group.addTask {
+                    (relay, await PollRelayClient.shared.fetch(poll: poll, relay: relay, author: nil, cursor: cursor, authentication: authentication))
+                }
             }
-            var results: [PollRelayResult] = []
+            var results: [(String, PollRelayResult)] = []
             for await result in group { results.append(result) }
             return results
         }
+        let results = attempts.map { $0.1 }
         guard !Task.isCancelled else { return }
         var received = results.flatMap(\.votes)
         // A busy poll's page limit must not hide the account's existing vote.
-        if !accountPubkey.isEmpty && results.contains(where: { !$0.complete }) {
+        let ownRelays = attempts.filter { !$0.1.complete && $0.1.failure == nil }.map { $0.0 }
+        if request == .refresh && !accountPubkey.isEmpty && !ownRelays.isEmpty {
             let ownResults = await withTaskGroup(of: PollRelayResult.self) { group in
-                for relay in relays {
-                    group.addTask { await PollRelayClient.shared.fetch(poll: poll, relay: relay, author: accountPubkey) }
+                for relay in ownRelays {
+                    let authentication = authRelays.contains(relay) ? authenticator : nil
+                    group.addTask { await PollRelayClient.shared.fetch(poll: poll, relay: relay, author: accountPubkey, authentication: authentication) }
                 }
                 var votes: [PollVote] = []
                 for await result in group { votes.append(contentsOf: result.votes) }
@@ -108,7 +137,12 @@ final class PollViewModel: ObservableObject {
         responses = await PollRelayClient.shared.merge(responses, received)
         tally = await PollRelayClient.shared.tally(poll: poll, votes: responses)
         hasLoaded = hasLoaded || results.contains(where: \.reachedRelay)
-        isPartial = !moreRelays.isEmpty || results.contains { !$0.complete }
+        for (relay, result) in attempts {
+            if let index = sources.firstIndex(where: { $0.id == relay }) {
+                sources[index].record(result)
+            }
+        }
+        isPartial = sources.contains { $0.status != .checked }
         if results.contains(where: \.reachedRelay) {
             lastLoaded = Date()
             lastLoadedAccount = accountPubkey
@@ -225,5 +259,23 @@ final class PollSigningRequest {
         } onCancel: {
             Task { @MainActor in request.finish(.failure(CancellationError())) }
         }
+    }
+}
+
+extension PollRelayAuthentication {
+    @MainActor
+    static func forAccount(_ publicKey: String) -> PollRelayAuthentication? {
+        guard let current = account(), current.publicKey == publicKey, current.isFullAccount else { return nil }
+        return PollRelayAuthentication(publicKey: publicKey) { event in
+            try await signForAccount(event, publicKey: publicKey)
+        }
+    }
+
+    @MainActor
+    private static func signForAccount(_ event: NEvent, publicKey: String) async throws -> NEvent {
+        guard AccountsState.shared.activeAccountPublicKey == publicKey else { throw CancellationError() }
+        let signed = try await PollSigningRequest.sign(event, accountPubkey: publicKey)
+        guard AccountsState.shared.activeAccountPublicKey == publicKey else { throw CancellationError() }
+        return signed
     }
 }

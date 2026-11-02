@@ -154,6 +154,11 @@ enum PollRelayContext {
         return PollRelayPlan.Query(relays: filterDisabled(plan.relays), more: filterDisabled(plan.more))
     }
 
+    @MainActor
+    static func authenticationRelays(accountPubkey: String) -> Set<String> {
+        Set(NostrPoll.relayURLs(accountRelays(accountPubkey).auth))
+    }
+
     private static func filterDisabled(_ urls: [String]) -> [String] {
         urls.filter { !DisabledRelaysStore.isDisabled($0) }
     }

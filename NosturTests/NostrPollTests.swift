@@ -124,6 +124,172 @@ final class NostrPollTests: XCTestCase {
         XCTAssertEqual(result.votes.count, 2)
     }
 
+    func testPageLimitReturnsAResumableCursorAndKeepsTimestampBoundary() async throws {
+        let a = try signedVote(at: 180)
+        let b = try signedVote(at: 170)
+        let c = try signedVote(at: 160)
+        let first = PollScriptedTransport(pages: [[a, b]])
+        let initial = await PollRelayClient.query(poll: poll(), transport: first, author: nil, pageSize: 2, maxPages: 1)
+        let cursor = try XCTUnwrap(initial.nextCursor)
+        XCTAssertFalse(initial.complete)
+        XCTAssertEqual(cursor.until, 170)
+        XCTAssertEqual(cursor.boundaryIDs, [b.id])
+        let next = PollScriptedTransport(pages: [[b, c], [c]])
+        let resumed = await PollRelayClient.query(poll: poll(), transport: next, author: nil, pageSize: 2, cursor: cursor)
+        XCTAssertTrue(resumed.complete)
+        XCTAssertEqual(resumed.votes.map(\.id), [c.id])
+        XCTAssertEqual(next.requestedUntil, [170, 160])
+    }
+
+    func testContinuationStopsWhenRelayRepeatsASaturatedBoundary() async throws {
+        let a = try signedVote(at: 180)
+        let b = try signedVote(at: 180, option: "uuid-with-hyphens")
+        let cursor = PollRelayCursor(until: 180, boundaryIDs: [a.id, b.id])
+        let transport = PollScriptedTransport(pages: [[a, b]])
+        let result = await PollRelayClient.query(poll: poll(), transport: transport, author: nil, pageSize: 2, cursor: cursor)
+        XCTAssertFalse(result.complete)
+        XCTAssertTrue(result.hitBoundaryLimit)
+        XCTAssertNil(result.nextCursor)
+        XCTAssertEqual(transport.requestedUntil, [180])
+    }
+
+    func testRelaySourcesDistinguishRetryContinuationAndCompletion() {
+        let cursor = PollRelayCursor(until: 170, boundaryIDs: ["b"])
+        var source = PollResultsSource(id: "wss://relay.example")
+        var more = PollRelayResult()
+        more.nextCursor = cursor
+        source.record(more)
+        XCTAssertEqual(source.status, .moreAvailable)
+        source.record(PollRelayResult())
+        XCTAssertEqual(source.status, .failed)
+        XCTAssertEqual(source.cursor, cursor, "Retry must retain continuation progress")
+        var limited = PollRelayResult()
+        limited.hitBoundaryLimit = true
+        source.record(limited)
+        XCTAssertEqual(source.status, .limited)
+        XCTAssertNil(source.cursor)
+        var completed = PollRelayResult()
+        completed.complete = true
+        source.record(completed)
+        XCTAssertEqual(source.status, .checked)
+        XCTAssertNotNil(source.lastChecked)
+    }
+
+    func testMoreRelaysProgressesInBatchesWithoutChangingTheBasePlan() {
+        let foreign = (0..<12).map { "wss://relay\($0).example" }
+        let plan = PollRelayPlan.Query(relays: ["wss://mine.example"], more: foreign)
+        var approved = Set<String>()
+        let base = PollResultsSource(id: "wss://mine.example", status: .checked)
+        let first = PollResultsRequest.moreRelays.selection(from: plan, previous: [base], approved: &approved)
+        XCTAssertEqual(first.relays, Array(foreign.prefix(8)))
+        let completed = first.sources.map { PollResultsSource(id: $0.id, status: first.relays.contains($0.id) ? .checked : $0.status) }
+        let second = PollResultsRequest.moreRelays.selection(from: plan, previous: completed, approved: &approved)
+        XCTAssertEqual(second.relays, Array(foreign.suffix(4)))
+        XCTAssertEqual(approved.count, 12)
+        XCTAssertEqual(plan.more, foreign)
+        let refresh = PollResultsRequest.refresh.selection(from: plan, previous: completed, approved: &approved)
+        XCTAssertEqual(refresh.relays.count, 13)
+        let restricted = PollRelayPlan.Query(relays: plan.relays, more: [])
+        let disabled = PollResultsRequest.refresh.selection(from: restricted, previous: completed, approved: &approved)
+        XCTAssertEqual(disabled.relays, plan.relays, "Previously approved relays must still respect the current relay policy")
+    }
+
+    func testRelayRecoveryActionsOnlySelectAffectedSources() {
+        let sources = [PollResultsSource(id: "checked", status: .checked),
+                       PollResultsSource(id: "failed", status: .failed),
+                       PollResultsSource(id: "more", status: .moreAvailable),
+                       PollResultsSource(id: "limited", status: .limited)]
+        let plan = PollRelayPlan.Query(relays: sources.map(\.id), more: [])
+        var approved = Set<String>()
+        XCTAssertEqual(PollResultsRequest.retryFailed.selection(from: plan, previous: sources, approved: &approved).relays, ["failed"])
+        XCTAssertEqual(PollResultsRequest.moreResponses.selection(from: plan, previous: sources, approved: &approved).relays, ["more"])
+    }
+
+    private func testAuthenticator() throws -> PollRelayAuthentication {
+        let privateKey = String(repeating: "0", count: 63) + "1"
+        let publicKey = try Keys(privateKeyHex: privateKey).publicKeyHex
+        return PollRelayAuthentication(publicKey: publicKey) { event in
+            var unsigned = event
+            return try unsigned.sign(Keys(privateKeyHex: privateKey))
+        }
+    }
+
+    func testPaidRelayAuthenticatesAndRetriesTheSameSubscription() async throws {
+        let transport = PollAuthenticationTransport(vote: try signedVote(at: 150))
+        let result = await PollRelayClient.query(poll: poll(), transport: transport, author: nil,
+                                                relayURL: "wss://filter.nostr.wine", authentication: try testAuthenticator())
+        XCTAssertTrue(result.complete)
+        XCTAssertNil(result.failure)
+        XCTAssertEqual(result.votes.count, 1)
+        XCTAssertEqual(transport.requests.count, 2)
+        XCTAssertEqual(transport.requests.first, transport.requests.last)
+        let signed = try XCTUnwrap(transport.authEvents.first)
+        XCTAssertEqual(transport.authEvents.count, 1)
+        XCTAssertEqual(signed.kind.id, 22242)
+        XCTAssertTrue(signed.tags.contains { $0.type == "relay" && $0.value == "wss://filter.nostr.wine" })
+        XCTAssertTrue(signed.tags.contains { $0.type == "challenge" && $0.value == "test-challenge" })
+        XCTAssertTrue(try signed.verified(logInvalidID: false))
+    }
+
+    func testAuthRequiredWithoutPermissionReturnsTheRelayReasonAndDoesNotSign() async throws {
+        let transport = PollAuthenticationTransport(vote: try signedVote(at: 150))
+        let result = await PollRelayClient.query(poll: poll(), transport: transport, author: nil)
+        XCTAssertFalse(result.complete)
+        XCTAssertEqual(result.failure?.kind, .authenticationRequired)
+        XCTAssertTrue(result.failure?.detail?.contains("auth-required:") == true)
+        XCTAssertTrue(transport.authEvents.isEmpty)
+        XCTAssertEqual(transport.requests.count, 1)
+    }
+
+    func testRejectedAuthDoesNotRetryOrLoopAndPreservesTheReason() async throws {
+        let transport = PollAuthenticationTransport(vote: try signedVote(at: 150), accepted: false)
+        let result = await PollRelayClient.query(poll: poll(), transport: transport, author: nil,
+                                                relayURL: "wss://filter.nostr.wine", authentication: try testAuthenticator())
+        XCTAssertFalse(result.complete)
+        XCTAssertEqual(result.failure?.kind, .authenticationRejected)
+        XCTAssertEqual(result.failure?.detail, "restricted: account has no access")
+        XCTAssertEqual(transport.authEvents.count, 1)
+        XCTAssertEqual(transport.requests.count, 1)
+        var source = PollResultsSource(id: "wss://filter.nostr.wine")
+        source.record(result)
+        XCTAssertEqual(source.failure, result.failure)
+    }
+
+    func testOptionalChallengeDoesNotSignWhenTheQueryWorksAnonymously() async throws {
+        let transport = PollAuthenticationTransport(vote: try signedVote(at: 150), requiresAuth: false)
+        let result = await PollRelayClient.query(poll: poll(), transport: transport, author: nil,
+                                                relayURL: "wss://public.example", authentication: try testAuthenticator())
+        XCTAssertTrue(result.complete)
+        XCTAssertTrue(transport.authEvents.isEmpty)
+    }
+
+    func testEOSEAuthHintAuthenticatesAndKeepsPublicResponsesDeduplicated() async throws {
+        let transport = PollAuthenticationTransport(vote: try signedVote(at: 150), authHint: true)
+        let result = await PollRelayClient.query(poll: poll(), transport: transport, author: nil,
+                                                relayURL: "wss://filter.nostr.wine", authentication: try testAuthenticator())
+        XCTAssertTrue(result.complete)
+        XCTAssertEqual(result.votes.count, 1)
+        XCTAssertEqual(transport.authEvents.count, 1)
+        XCTAssertEqual(transport.requests.count, 2)
+    }
+
+    func testAnEOSECompletedQueryDoesNotFailBecauseClosingTheSubscriptionFails() async throws {
+        let transport = PollScriptedTransport(pages: [[try signedVote(at: 150)]], failClose: true)
+        let result = await PollRelayClient.query(poll: poll(), transport: transport, author: nil)
+        XCTAssertTrue(result.complete)
+        XCTAssertNil(result.failure)
+        XCTAssertEqual(result.votes.count, 1)
+    }
+
+    func testPollTimeoutHasAnExplicitReason() async {
+        let transport = PollScriptedTransport(pages: [], stalled: true)
+        let result = await PollRelayClient.query(poll: poll(), transport: transport, author: nil,
+                                                timeoutNanoseconds: 20_000_000)
+        XCTAssertFalse(result.complete)
+        XCTAssertEqual(result.failure?.kind, .timedOut)
+        XCTAssertTrue(transport.wasClosed)
+    }
+
     func testRelayRejectsTamperedWrongPollAndOutOfWindowVotes() async throws {
         var tampered = try signedVote(at: 150)
         tampered.content = "tampered"
@@ -460,24 +626,32 @@ private final class PollScriptedTransport: ProfileRelayTransport, @unchecked Sen
     private let continuation: AsyncThrowingStream<String, Error>.Continuation
     private let lock = NSLock()
     private var pages: [[NEvent]]
+    private var untils: [Int] = []
+    var requestedUntil: [Int] { lock.withLock { untils } }
     private let accepted: Bool
     private let stalled: Bool
+    private let failClose: Bool
     private var closed = false
     var wasClosed: Bool { lock.withLock { closed } }
 
-    init(pages: [[NEvent]], accepted: Bool = true, stalled: Bool = false) {
+    init(pages: [[NEvent]], accepted: Bool = true, stalled: Bool = false, failClose: Bool = false) {
         var captured: AsyncThrowingStream<String, Error>.Continuation!
         stream = AsyncThrowingStream { captured = $0 }
         continuation = captured
         self.pages = pages
         self.accepted = accepted
         self.stalled = stalled
+        self.failClose = failClose
     }
 
     func send(_ message: String) async throws {
         guard !stalled else { return }
         let array = try JSONSerialization.jsonObject(with: Data(message.utf8)) as! [Any]
+        if array[0] as? String == "CLOSE", failClose { throw URLError(.networkConnectionLost) }
         if array[0] as? String == "REQ" {
+            if let filter = array[2] as? [String: Any], let until = filter["until"] as? Int {
+                lock.withLock { untils.append(until) }
+            }
             let page = lock.withLock { pages.isEmpty ? [] : pages.removeFirst() }
             let subscription = array[1] as! String
             for event in page {
@@ -504,6 +678,75 @@ private final class PollScriptedTransport: ProfileRelayTransport, @unchecked Sen
 
     private func yield(_ object: [Any]) throws {
         let data = try JSONSerialization.data(withJSONObject: object)
+        continuation.yield(String(decoding: data, as: UTF8.self))
+    }
+}
+
+private final class PollAuthenticationTransport: ProfileRelayTransport, @unchecked Sendable {
+    private let stream: AsyncThrowingStream<String, Error>
+    private let continuation: AsyncThrowingStream<String, Error>.Continuation
+    private let lock = NSLock()
+    private let vote: NEvent
+    private let accepted: Bool
+    private let requiresAuth: Bool
+    private let authHint: Bool
+    private var authenticated = false
+    private var storedRequests: [String] = []
+    private var storedAuth: [NEvent] = []
+    var requests: [String] { lock.withLock { storedRequests } }
+    var authEvents: [NEvent] { lock.withLock { storedAuth } }
+
+    init(vote: NEvent, accepted: Bool = true, requiresAuth: Bool = true, authHint: Bool = false) {
+        var captured: AsyncThrowingStream<String, Error>.Continuation!
+        stream = AsyncThrowingStream { captured = $0 }
+        continuation = captured
+        self.vote = vote
+        self.accepted = accepted
+        self.requiresAuth = requiresAuth
+        self.authHint = authHint
+    }
+
+    func send(_ message: String) async throws {
+        let envelope = try JSONSerialization.jsonObject(with: Data(message.utf8)) as! [Any]
+        if envelope[0] as? String == "REQ", let id = envelope[1] as? String {
+            let state = lock.withLock { () -> (Bool, Bool) in
+                storedRequests.append(id)
+                return (storedRequests.count == 1, authenticated)
+            }
+            if state.0 { try yield(["AUTH", "test-challenge"]) }
+            if requiresAuth && !state.1 {
+                if authHint {
+                    try yield(["EVENT", id, JSONSerialization.jsonObject(with: Data(vote.eventJson().utf8))])
+                    try yield(["EOSE", id, ["auth"]])
+                } else {
+                    try yield(["CLOSED", id, "auth-required: please authenticate before sending REQs"])
+                }
+            } else {
+                try yield(["EVENT", id, JSONSerialization.jsonObject(with: Data(vote.eventJson().utf8))])
+                try yield(["EOSE", id])
+            }
+        } else if envelope[0] as? String == "AUTH" {
+            let data = try JSONSerialization.data(withJSONObject: envelope[1])
+            let event = try JSONDecoder().decode(NEvent.self, from: data)
+            lock.withLock {
+                storedAuth.append(event)
+                authenticated = accepted
+            }
+            try yield(["OK", "unrelated-id", true, ""])
+            try yield(["OK", event.id, accepted, accepted ? "" : "restricted: account has no access"])
+        }
+    }
+
+    func receive() async throws -> String {
+        var iterator = stream.makeAsyncIterator()
+        guard let message = try await iterator.next() else { throw CancellationError() }
+        return message
+    }
+
+    func close() { continuation.finish(throwing: CancellationError()) }
+
+    private func yield(_ envelope: [Any]) throws {
+        let data = try JSONSerialization.data(withJSONObject: envelope)
         continuation.yield(String(decoding: data, as: UTF8.self))
     }
 }
