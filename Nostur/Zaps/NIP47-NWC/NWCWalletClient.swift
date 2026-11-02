@@ -1,6 +1,45 @@
 import Foundation
 import NostrEssentials
 
+/// Public service capabilities are kept per wallet so payments still use the
+/// negotiated encryption after relaunch, before the Wallet screen is opened.
+enum NWCRequestEncryption {
+    static func preferred(_ advertised: String?) -> String? {
+        let modes = Set((advertised ?? "nip04").split(separator: " ").map(String.init))
+        return modes.contains("nip44_v2") ? "nip44_v2" : modes.contains("nip04") ? "nip04" : nil
+    }
+
+    static func remember(_ advertised: String?, walletPubkey: String, defaults: UserDefaults = .standard) {
+        defaults.set(advertised ?? "nip04", forKey: "nwc.encryption." + walletPubkey)
+    }
+
+    static func mode(walletPubkey: String, defaults: UserDefaults = .standard) -> String? {
+        preferred(defaults.string(forKey: "nwc.encryption." + walletPubkey))
+    }
+
+    static func makeRequest(method: String, params: NWCRequest.NWCParams = .init(),
+                            secret: String, walletPubkey: String, encryption: String) throws -> NEvent {
+        let keys = try Keys(privateKeyHex: secret)
+        let data = try JSONEncoder().encode(NWCRequest(method: method, params: params))
+        let content = String(decoding: data, as: UTF8.self)
+        let encrypted: String?
+        switch encryption {
+        case "nip44_v2":
+            encrypted = Keys.encryptDirectMessageContent44(withPrivatekey: secret, pubkey: walletPubkey, content: content)
+        case "nip04":
+            encrypted = Keys.encryptDirectMessageContent(withPrivatekey: secret, pubkey: walletPubkey, content: content)
+        default:
+            throw NWCWalletClient.Failure.encryption
+        }
+        guard let encrypted else { throw NWCWalletClient.Failure.encryption }
+        var event = NEvent(content: encrypted)
+        event.kind = .nwcRequest
+        event.tags = [NostrTag(["p", walletPubkey]), NostrTag(["encryption", encryption]),
+                      NostrTag(["expiration", String(Int(Date().timeIntervalSince1970) + 30)])]
+        return try event.sign(keys)
+    }
+}
+
 /// Read-only wallet requests share the existing NWC relay and response parser.
 /// Continuations and request state belong to the main actor, never a Core Data queue.
 @MainActor
@@ -98,8 +137,8 @@ final class NWCWalletClient {
     }
 
     func receiveInfo(walletPubkey: String, methods: String, encryption: String?) {
-        let modes = Set((encryption ?? "nip04").split(separator: " ").map(String.init))
-        let selected = modes.contains("nip44_v2") ? "nip44_v2" : modes.contains("nip04") ? "nip04" : nil
+        NWCRequestEncryption.remember(encryption, walletPubkey: walletPubkey)
+        let selected = NWCRequestEncryption.preferred(encryption)
         let capabilities = selected.map {
             Capabilities(methods: Set(methods.split(separator: " ").map(String.init)), encryption: $0)
         }
@@ -121,20 +160,8 @@ final class NWCWalletClient {
     func request(_ method: String, params: NWCRequest.NWCParams = .init(), connection: Connection,
                  encryption: String) async throws -> NWCResponse.NWCResponseResult {
         // Encryption/signing is independent of managed objects and the importer.
-        let event = try await Task.detached(priority: .userInitiated) {
-            let keys = try Keys(privateKeyHex: connection.secret)
-            let data = try JSONEncoder().encode(NWCRequest(method: method, params: params))
-            let content = String(decoding: data, as: UTF8.self)
-            let encrypted = encryption == "nip44_v2"
-                ? Keys.encryptDirectMessageContent44(withPrivatekey: connection.secret, pubkey: connection.walletPubkey, content: content)
-                : Keys.encryptDirectMessageContent(withPrivatekey: connection.secret, pubkey: connection.walletPubkey, content: content)
-            guard let encrypted else { throw Failure.encryption }
-            var event = NEvent(content: encrypted)
-            event.kind = .nwcRequest
-            event.tags = [NostrTag(["p", connection.walletPubkey]), NostrTag(["encryption", encryption]),
-                          NostrTag(["expiration", String(Int(Date().timeIntervalSince1970) + 30)])]
-            return try event.sign(keys)
-        }.value
+        let event = try await makeRequestEvent(method: method, params: params,
+                                               connection: connection, encryption: encryption)
         return try await withTaskCancellationHandler {
             try Task.checkCancellation()
             guard connection.id == activeConnectionId() else { throw Failure.disconnected }
@@ -171,18 +198,9 @@ final class NWCWalletClient {
     private func makeRequestEvent(method: String, params: NWCRequest.NWCParams,
                                   connection: Connection, encryption: String) async throws -> NEvent {
         try await Task.detached(priority: .userInitiated) {
-            let keys = try Keys(privateKeyHex: connection.secret)
-            let data = try JSONEncoder().encode(NWCRequest(method: method, params: params))
-            let content = String(decoding: data, as: UTF8.self)
-            let encrypted = encryption == "nip44_v2"
-                ? Keys.encryptDirectMessageContent44(withPrivatekey: connection.secret, pubkey: connection.walletPubkey, content: content)
-                : Keys.encryptDirectMessageContent(withPrivatekey: connection.secret, pubkey: connection.walletPubkey, content: content)
-            guard let encrypted else { throw Failure.encryption }
-            var event = NEvent(content: encrypted)
-            event.kind = .nwcRequest
-            event.tags = [NostrTag(["p", connection.walletPubkey]), NostrTag(["encryption", encryption]),
-                          NostrTag(["expiration", String(Int(Date().timeIntervalSince1970) + 30)])]
-            return try event.sign(keys)
+            try NWCRequestEncryption.makeRequest(method: method, params: params,
+                                                 secret: connection.secret, walletPubkey: connection.walletPubkey,
+                                                 encryption: encryption)
         }.value
     }
 

@@ -4,6 +4,44 @@ import NostrEssentials
 @testable import Nostur
 
 struct NWCWalletTests {
+    @Test func remembersEncryptionPerWalletAcrossReads() throws {
+        let suite = "NWCWalletTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        #expect(NWCRequestEncryption.mode(walletPubkey: "legacy", defaults: defaults) == "nip04")
+        NWCRequestEncryption.remember("nip04 nip44_v2", walletPubkey: "modern", defaults: defaults)
+        NWCRequestEncryption.remember("future", walletPubkey: "unsupported", defaults: defaults)
+        let reopened = try #require(UserDefaults(suiteName: suite))
+        #expect(NWCRequestEncryption.mode(walletPubkey: "modern", defaults: reopened) == "nip44_v2")
+        #expect(NWCRequestEncryption.mode(walletPubkey: "legacy", defaults: reopened) == "nip04")
+        #expect(NWCRequestEncryption.mode(walletPubkey: "unsupported", defaults: reopened) == nil)
+        NWCRequestEncryption.remember(nil, walletPubkey: "modern", defaults: defaults)
+        #expect(NWCRequestEncryption.mode(walletPubkey: "modern", defaults: defaults) == "nip04")
+    }
+
+    @Test func paymentAndBalanceRequestsUseNegotiatedEncryption() throws {
+        let client = try Keys.newKeys()
+        let wallet = try Keys.newKeys()
+        for mode in ["nip04", "nip44_v2"] {
+            for method in ["pay_invoice", "get_balance"] {
+                let event = try NWCRequestEncryption.makeRequest(
+                    method: method, params: method == "pay_invoice" ? .init(invoice: "test-invoice") : .init(),
+                    secret: client.privateKeyHex, walletPubkey: wallet.publicKeyHex, encryption: mode
+                )
+                #expect(try event.verified())
+                #expect(event.publicKey == client.publicKeyHex)
+                #expect(event.tags.first(where: { $0.type == "p" })?.value == wallet.publicKeyHex)
+                #expect(event.tags.first(where: { $0.type == "encryption" })?.value == mode)
+                let plaintext = mode == "nip44_v2"
+                    ? Keys.decryptDirectMessageContent44(withPrivateKey: wallet.privateKeyHex, pubkey: client.publicKeyHex, content: event.content)
+                    : Keys.decryptDirectMessageContent(withPrivateKey: wallet.privateKeyHex, pubkey: client.publicKeyHex, content: event.content)
+                let request = try JSONDecoder().decode(NWCRequest.self, from: Data(try #require(plaintext).utf8))
+                #expect(request.method == method)
+                if method == "pay_invoice" { #expect(request.params?.invoice == "test-invoice") }
+            }
+        }
+    }
+
     @Test func decodesMinimalAndFutureTransactions() throws {
         let response = try JSONDecoder().decode(NWCResponse.self, from: Data("""
         {"result_type":"list_transactions","result":{"transactions":[

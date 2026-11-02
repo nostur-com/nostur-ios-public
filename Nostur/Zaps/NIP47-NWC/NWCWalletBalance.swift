@@ -84,48 +84,14 @@ func nwcSendBalanceRequest() {
             NWCRequestQueue.shared.ensureNWCconnection()
             
             DispatchQueue.main.async {
-                if let keys = try? Keys(privateKeyHex: pk) {
-                    
-                    let request = NWCRequest(method: "get_balance")
-                    let encoder = JSONEncoder()
-                    
-                    if let requestJsonData = try? encoder.encode(request) {
-                        if let requestJsonString = String(data: requestJsonData, encoding: .utf8) {
-                            var nwcReq = NEvent(content: requestJsonString)
-                            nwcReq.kind = .nwcRequest
-                            nwcReq.tags.append(NostrTag(["p",walletPubkey]))
-                            
-#if DEBUG
-                            L.og.debug("⚡️ Going to encrypt and send: \(nwcReq.eventJson())")
-#endif
-                            
-                            guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: walletPubkey, content: nwcReq.content) else {
-#if DEBUG
-                                L.og.error("⚡️ Problem encrypting request")
-#endif
-                                return
-                            }
-                            
-                            nwcReq.content = encrypted
-                            
-                            if let signedReq = try? nwcReq.sign(keys) {
-                                Unpublisher.shared.publishNow(signedReq)
-                                return
-                            }
-                            else {
-#if DEBUG
-                                L.og.error("⚡️ Problem signing: \(nwcReq.eventJson())")
-#endif
-                                return
-                            }
-                        }
-                    }
-                   
-#if DEBUG
-                    L.og.error("⚡️ Problem encoding request")
-#endif
+                guard let encryption = NWCRequestEncryption.mode(walletPubkey: walletPubkey),
+                      let request = try? NWCRequestEncryption.makeRequest(
+                        method: "get_balance", secret: pk, walletPubkey: walletPubkey, encryption: encryption
+                      ) else {
+                    nrq.balanceState = .timeout
                     return
                 }
+                Unpublisher.shared.publishNow(request)
             }
         }
     }

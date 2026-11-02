@@ -501,6 +501,7 @@ class MessageParser {
         let walletPubkey = nEvent.publicKey
         let methods = nEvent.content
         let encryption = nEvent.tags.first(where: { $0.type == "encryption" })?.value
+        NWCRequestEncryption.remember(encryption, walletPubkey: walletPubkey)
         Task { @MainActor in
             NWCWalletClient.shared.receiveInfo(walletPubkey: walletPubkey, methods: methods, encryption: encryption)
         }
