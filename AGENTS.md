@@ -140,6 +140,12 @@ When creating a new worktree, copy the Config.xcconfig from our existing folder.
 - Respect existing theming in `NosturStyles.swift` and theme assets
 - Use `Nostur/Playground/` for component-level experimentation
 
+### Navigation environment compatibility
+
+- Shared post, profile, wallet, and badge views still contain NavigationBackport controls. Main tab stacks must preserve the environment objects supplied by `NBNavigationStack`; use `.whenAvailable` for native navigation UI. Home uses `HomeNavigationStack` in both modes.
+- Do not replace a shared-content stack with a plain SwiftUI `NavigationStack` without auditing all descendants and testing actual destination pushes plus sheets/full-screen covers. A missing backport object can crash during destination registration, before a tap.
+- Keep the `AppEnvironment` wrappers and explicit sheet environment-object injections intact. Verify native and legacy stack modes with `HomeNavigationCompatibilityTests` and `ProfileNavigationTests` after changes to stack ownership.
+
 ### Native sheet and sharing controls
 
 - Use standard icon-only toolbar actions for sheets. Use a `checkmark` in `.confirmationAction` when tapping the button commits changes, such as saving or publishing. Use `xmark` in `.cancellationAction` when the button only closes, cancels, or dismisses the sheet. Read-only and auto-saving screens should close with `xmark`.

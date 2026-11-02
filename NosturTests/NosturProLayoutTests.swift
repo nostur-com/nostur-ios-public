@@ -7,6 +7,7 @@ import XCTest
 final class NosturProLayoutTests: XCTestCase {
     @available(iOS 17.0, *)
     func testRenderedShellFollowsRepeatedFoldUnfoldWithoutRetogglingPro() async throws {
+        guard #available(iOS 27.1, *) else { throw XCTSkip("Adaptive phone shell requires iOS 27.1") }
         try XCTSkipUnless(IS_IPHONE, "Phone layout regression")
         let suite = "NosturProRenderedTests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
@@ -89,6 +90,7 @@ final class NosturProLayoutTests: XCTestCase {
 
     @available(iOS 26.0, *)
     func testSidebarAccountControlClearsTheActualDisplayCorner() async throws {
+        guard #available(iOS 27.1, *) else { throw XCTSkip("Pro columns on iPhone require iOS 27.1") }
         try XCTSkipUnless(IS_IPHONE, "Phone corner regression")
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first { $0.activationState == .foregroundActive })
         var markerFrame = CGRect.zero

@@ -134,8 +134,8 @@ struct NavigationDestinationsModifier: ViewModifier {
 @available(iOS 16.0, *)
 struct NativeNavigationDestinationsModifier: ViewModifier {
     @Environment(\.containerID) var containerID
-    /// Only used when a destination still appends to an NB path. The iOS 27 shell
-    /// sets `nosturAppend` so those pushes land on the native NavigationPath instead.
+    /// Compatibility binding for destination views shared with backport stacks.
+    /// The main Home feed uses HomeNavigationStack so its NB paths remain live.
     @State private var unusedPath = NBNavigationPath()
 
     func body(content: Content) -> some View {

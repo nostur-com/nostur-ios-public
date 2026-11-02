@@ -8,6 +8,8 @@ import XCTest
 @MainActor
 final class ComposerToolbarRenderTests: XCTestCase {
     func testPostRemainsVisibleWhenDraftBecomesNonempty() async throws {
+        // XCTest discovery can invoke an @available test class on older runtimes.
+        guard #available(iOS 27.0, *) else { throw XCTSkip("iOS 27 toolbar styling regression") }
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previousDraft = Drafts.shared.draft
         let previousMentions = Drafts.shared.draftMentions

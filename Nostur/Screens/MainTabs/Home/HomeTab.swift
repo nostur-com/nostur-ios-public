@@ -9,10 +9,11 @@ import SwiftUI
 import NavigationBackport
 
 struct HomeTab: View {
+    var usesNativeNavigation = false
     @State private var navPath = NBNavigationPath()
 
     var body: some View {
-        NBNavigationStack(path: $navPath) {
+        HomeNavigationStack(path: $navPath, usesNativeNavigation: usesNativeNavigation) {
             HomeTabRoot(
                 pathCount: navPath.count,
                 append: { navPath.append($0) },
@@ -22,45 +23,29 @@ struct HomeTab: View {
                     navPath.removeLast(navPath.count)
                 }
             )
-            .withNavigationDestinations(navPath: $navPath)
         }
-        .nbUseNavigationStack(.never)
+    }
+}
+
+/// Keep the native navigation UI while supplying the backport environment that
+/// existing shared post controls and sheets depend on, just like the other tabs.
+struct HomeNavigationStack<Content: View>: View {
+    @Binding var path: NBNavigationPath
+    let usesNativeNavigation: Bool
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        NBNavigationStack(path: $path) {
+            content.withNavigationDestinations(navPath: $path)
+        }
+        .nbUseNavigationStack(usesNativeNavigation ? .whenAvailable : .never)
     }
 }
 
 @available(iOS 27.1, *)
 struct HomeTabNative: View {
-    @State private var navPath = NavigationPath()
-
     var body: some View {
-        NavigationStack(path: $navPath) {
-            HomeTabRoot(
-                pathCount: navPath.count,
-                append: { destination in
-                    var path = navPath
-                    path.append(destination: destination)
-                    navPath = path
-                },
-                pop: {
-                    guard navPath.count > 0 else { return }
-                    var path = navPath
-                    path.removeLast()
-                    navPath = path
-                },
-                clear: {
-                    guard navPath.count > 0 else { return }
-                    var path = navPath
-                    path.removeLast(path.count)
-                    navPath = path
-                }
-            )
-            .withNativeNavigationDestinations()
-        }
-        .environment(\.nosturAppend) { destination in
-            var path = navPath
-            path.append(destination: destination)
-            navPath = path
-        }
+        HomeTab(usesNativeNavigation: true)
     }
 }
 
