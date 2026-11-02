@@ -1256,7 +1256,7 @@ public final class NewPostModel: ObservableObject {
         guard var finalEvent = buildFinalEvent(imetas: imetas, replyTo: replyTo, quotePost: quotePost) else {
             typingTextModel.sending = false
             if typingTextModel.poll != nil {
-                sendNotification(.anyStatus, ("Couldn’t create this poll. Check the question and answers and try again.", "NewPost"))
+                sendNotification(.anyStatus, (String(localized: "Couldn’t create this poll. Check the question and answers and try again."), "NewPost"))
             }
             return
         }

@@ -134,6 +134,710 @@
         }
       }
     },
+    "%lld failed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld con error"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld gagal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mislukt"
+          }
+        }
+      }
+    },
+    "%lld relays available" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld relays disponibles"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld relay tersedia"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld relays beschikbaar"
+          }
+        }
+      }
+    },
+    "%lld relays checked" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld relays comprobados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld relay diperiksa"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld relays gecontroleerd"
+          }
+        }
+      }
+    },
+    "%lld relays failed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error en %lld relays"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pemeriksaan relay gagal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld relaycontroles mislukt"
+          }
+        }
+      }
+    },
+    "+%lld you follow" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld que sigues"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld yang Anda ikuti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld die je volgt"
+          }
+        }
+      }
+    },
+    "1 relay available" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 relay disponible"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 relay tersedia"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 relay beschikbaar"
+          }
+        }
+      }
+    },
+    "1 relay checked" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 relay comprobado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 relay diperiksa"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 relay gecontroleerd"
+          }
+        }
+      }
+    },
+    "1 relay failed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error en 1 relay"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 pemeriksaan relay gagal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 relaycontrole mislukt"
+          }
+        }
+      }
+    },
+    "Authentication required" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autenticación necesaria"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autentikasi diperlukan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authenticatie vereist"
+          }
+        }
+      }
+    },
+    "Check cancelled" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consulta cancelada"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemeriksaan dibatalkan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controle geannuleerd"
+          }
+        }
+      }
+    },
+    "Check that your signer is available, then retry." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprueba que tu firmante esté disponible y vuelve a intentarlo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastikan penandatangan Anda tersedia, lalu coba lagi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleer of je ondertekenaar beschikbaar is en probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "Checking relays…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consultando relays…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memeriksa relay…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays controleren…"
+          }
+        }
+      }
+    },
+    "Couldn’t create this poll. Check the question and answers and try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo crear esta encuesta. Revisa la pregunta y las respuestas e inténtalo de nuevo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat membuat jajak pendapat ini. Periksa pertanyaan dan jawaban, lalu coba lagi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze peiling kon niet worden gemaakt. Controleer de vraag en antwoorden en probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "Couldn’t sign relay authentication" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo firmar la autenticación del relay"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat menandatangani autentikasi relay"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay-authenticatie kon niet worden ondertekend"
+          }
+        }
+      }
+    },
+    "Enable Auth for this relay and use a signing account." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa Auth para este relay y usa una cuenta que pueda firmar."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktifkan Auth untuk relay ini dan gunakan akun yang dapat menandatangani."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schakel Auth in voor deze relay en gebruik een account waarmee je kunt ondertekenen."
+          }
+        }
+      }
+    },
+    "Hide relay details" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar detalles de los relays"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sembunyikan detail relay"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relaydetails verbergen"
+          }
+        }
+      }
+    },
+    "No relays checked yet" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no se han consultado relays"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belum ada relay yang diperiksa"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nog geen relays gecontroleerd"
+          }
+        }
+      }
+    },
+    "Relay check failed without a reason" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La consulta al relay falló sin indicar el motivo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemeriksaan relay gagal tanpa alasan yang diberikan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relaycontrole mislukt zonder opgegeven reden"
+          }
+        }
+      }
+    },
+    "Relay connection failed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error de conexión con el relay"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koneksi ke relay gagal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinding met relay mislukt"
+          }
+        }
+      }
+    },
+    "Relay didn’t finish its response" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relay no completó su respuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay tidak menyelesaikan tanggapannya"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay heeft zijn reactie niet voltooid"
+          }
+        }
+      }
+    },
+    "Relay rejected authentication" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relay rechazó la autenticación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay menolak autentikasi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay heeft de authenticatie geweigerd"
+          }
+        }
+      }
+    },
+    "Relay rejected the request" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relay rechazó la solicitud"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay menolak permintaan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay heeft het verzoek geweigerd"
+          }
+        }
+      }
+    },
+    "Relay request timed out" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se agotó el tiempo de espera de la solicitud al relay"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permintaan relay kehabisan waktu"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time-out bij relayverzoek"
+          }
+        }
+      }
+    },
+    "Show relay details" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar detalles de los relays"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan detail relay"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relaydetails tonen"
+          }
+        }
+      }
+    },
+    "The relay closed the subscription without giving a reason." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relay cerró la consulta sin indicar el motivo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay menghentikan permintaan tanpa memberikan alasan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De relay heeft het verzoek afgebroken zonder een reden op te geven."
+          }
+        }
+      }
+    },
+    "The relay did not acknowledge authentication." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relay no confirmó la autenticación."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay tidak mengonfirmasi autentikasi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De relay heeft de authenticatie niet bevestigd."
+          }
+        }
+      }
+    },
+    "The relay did not supply an authentication challenge." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relay no proporcionó un desafío de autenticación."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay tidak memberikan tantangan autentikasi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De relay heeft geen authenticatiechallenge verstuurd."
+          }
+        }
+      }
+    },
+    "The relay still requires authentication after accepting it." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relay sigue solicitando autenticación después de aceptarla."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay masih meminta autentikasi setelah menerimanya."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De relay vraagt nog steeds om authenticatie nadat deze is geaccepteerd."
+          }
+        }
+      }
+    },
+    "The request did not finish within %lld seconds." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La solicitud no se completó en %lld segundos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permintaan tidak selesai dalam %lld detik."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het verzoek is niet binnen %lld seconden voltooid."
+          }
+        }
+      }
+    },
+    "The signer returned an invalid authentication event." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El firmante devolvió un evento de autenticación no válido."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penandatangan mengembalikan peristiwa autentikasi yang tidak valid."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De ondertekenaar heeft een ongeldige authenticatiegebeurtenis teruggestuurd."
+          }
+        }
+      }
+    },
+    "Too many messages arrived without the relay completing the request." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se recibieron demasiados mensajes sin que el relay completara la solicitud."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terlalu banyak pesan diterima tanpa relay menyelesaikan permintaan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er zijn te veel berichten ontvangen zonder dat de relay het verzoek heeft voltooid."
+          }
+        }
+      }
+    },
+    "Unreadable relay response" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respuesta del relay ilegible"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanggapan relay tidak dapat dibaca"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onleesbare reactie van relay"
+          }
+        }
+      }
+    },
     "__Source code__" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -346,6 +1050,28 @@
     },
     "-%@" : {
       "shouldTranslate" : false
+    },
+    "limit reached" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "límite alcanzado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "batas tercapai"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "limiet bereikt"
+          }
+        }
+      }
     },
     "—" : {
 
@@ -2265,6 +2991,9 @@
     "%lld authors excluded by trust or block filtering" : {
 
     },
+    "%lld checked" : {
+
+    },
     "%lld contacts selected" : {
       "localizations" : {
         "es" : {
@@ -2813,10 +3542,92 @@
       }
     },
     "%lld voters" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld votantes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pemilih"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld stemmers"
+          }
+        }
+      }
+    },
+    "%lld voters in your Web of Trust" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld votantes de tu Web of Trust"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pemilih dalam Web of Trust Anda"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld stemmers in je Web of Trust"
+          }
+        }
+      }
+    },
+    "%lld voters you follow" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld votantes que sigues"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pemilih yang Anda ikuti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld stemmers die je volgt"
+          }
+        }
+      }
     },
     "%lld votes" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld votos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld suara"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld stemmen"
+          }
+        }
+      }
     },
     "%lld zap receipts could not be validated and are excluded" : {
 
@@ -3295,13 +4106,53 @@
       }
     },
     "1 day" : {
-      "comment" : "Poll length"
+      "comment" : "Poll length",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 día"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 hari"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 dag"
+          }
+        }
+      }
     },
     "1 GB" : {
       "shouldTranslate" : false
     },
     "1 hour" : {
-      "comment" : "Poll length"
+      "comment" : "Poll length",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 hora"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 jam"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 uur"
+          }
+        }
+      }
     },
     "1 newer post already seen" : {
       "localizations" : {
@@ -3348,13 +4199,115 @@
       }
     },
     "1 vote" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 voto"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 suara"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 stem"
+          }
+        }
+      }
     },
     "1 voter" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 votante"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 pemilih"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 stemmer"
+          }
+        }
+      }
+    },
+    "1 voter in your Web of Trust" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 votante de tu Web of Trust"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 pemilih dalam Web of Trust Anda"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 stemmer in je Web of Trust"
+          }
+        }
+      }
+    },
+    "1 voter you follow" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 votante que sigues"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 pemilih yang Anda ikuti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 stemmer die je volgt"
+          }
+        }
+      }
     },
     "1 week" : {
-      "comment" : "Poll length"
+      "comment" : "Poll length",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 semana"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 minggu"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 week"
+          }
+        }
+      }
     },
     "1 year" : {
       "comment" : "DM expiration duration label",
@@ -3541,7 +4494,27 @@
       }
     },
     "3 days" : {
-      "comment" : "Poll length"
+      "comment" : "Poll length",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 días"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 hari"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 dagen"
+          }
+        }
+      }
     },
     "4h" : {
       "localizations" : {
@@ -3837,11 +4810,36 @@
     "A relay closed the history request. Check its access settings and retry." : {
 
     },
+    "A relay could not provide another page. Expand Results sources for details." : {
+
+    },
     "A relay exceeded the history response limit. This source is incomplete." : {
 
     },
     "A relay is cooling down. Resume later to collect its remaining history." : {
 
+    },
+    "A relay returned a full page without any new responses. Its remaining responses could not be retrieved; checking other relays may help." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un relay devolvió una página completa sin votos nuevos. No se pudieron obtener los votos restantes; consultar otros relays puede ayudar."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sebuah relay mengirim halaman penuh tanpa suara baru. Suara lainnya tidak dapat diambil; memeriksa relay lain mungkin membantu."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een relay stuurde een volledige pagina zonder nieuwe stemmen. De overige stemmen konden niet worden opgehaald. Andere relays controleren kan helpen."
+          }
+        }
+      }
     },
     "A relay returned an unreadable history response." : {
 
@@ -3886,6 +4884,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tentang Temukan lebih banyak"
+          }
+        }
+      }
+    },
+    "About public votes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca de los votos públicos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentang suara publik"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over openbare stemmen"
           }
         }
       }
@@ -4441,7 +5461,27 @@
       }
     },
     "Add answer" : {
-      "comment" : "Adds another poll answer"
+      "comment" : "Adds another poll answer",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir respuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tambah jawaban"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord toevoegen"
+          }
+        }
+      }
     },
     "Add back" : {
       "comment" : "Button to add back 'possible imposter' label from a contact (only visible right after removing)",
@@ -5225,9 +6265,6 @@
         }
       }
     },
-    "All answers" : {
-
-    },
     "All participants need to have their DM relays published to start a group chat." : {
       "localizations" : {
         "es" : {
@@ -5273,7 +6310,27 @@
       }
     },
     "Allow multiple answers" : {
-      "comment" : "Poll can accept more than one answer"
+      "comment" : "Poll can accept more than one answer",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitir varias respuestas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Izinkan beberapa jawaban"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meerdere antwoorden toestaan"
+          }
+        }
+      }
     },
     "Already in Nostur" : {
       "localizations" : {
@@ -5472,7 +6529,27 @@
       }
     },
     "Answer" : {
-      "comment" : "Placeholder for a poll answer"
+      "comment" : "Placeholder for a poll answer",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jawaban"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord"
+          }
+        }
+      }
     },
     "Anyone can see which accounts are blocked." : {
       "localizations" : {
@@ -5486,6 +6563,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Siapa pun dapat melihat akun yang diblokir."
+          }
+        }
+      }
+    },
+    "Anyone who receives a vote can see the voting account and its chosen answers. Web of Trust and Following only filter these results; they do not make votes private. Earlier votes may remain public after a vote changes." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cualquiera que reciba un voto puede ver la cuenta que lo emitió y las respuestas elegidas. Web of Trust y Siguiendo solo filtran estos resultados; no hacen que los votos sean privados. Los votos anteriores pueden seguir siendo públicos después de cambiar un voto."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa pun yang menerima sebuah suara dapat melihat akun yang memberikan suara dan jawaban yang dipilihnya. Web of Trust dan Mengikuti hanya menyaring hasil ini; keduanya tidak menjadikan suara privat. Suara sebelumnya dapat tetap bersifat publik setelah suara diubah."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iedereen die een stem ontvangt, kan zien welk account heeft gestemd en welke antwoorden het heeft gekozen. Web of Trust en Volgend filteren alleen deze resultaten; ze maken stemmen niet privé. Eerdere stemmen kunnen openbaar blijven nadat een stem is gewijzigd."
           }
         }
       }
@@ -5698,7 +6797,27 @@
       }
     },
     "Ask a question" : {
-      "comment" : "Placeholder when writing a poll"
+      "comment" : "Placeholder when writing a poll",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haz una pregunta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajukan pertanyaan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stel een vraag"
+          }
+        }
+      }
     },
     "At least %lld items received before the request stopped" : {
 
@@ -7329,7 +8448,26 @@
       }
     },
     "Change vote" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar voto"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ubah suara"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stem wijzigen"
+          }
+        }
+      }
     },
     "chat" : {
       "comment" : "Label next to time indicating a live chat mention notification",
@@ -7350,6 +8488,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "chat"
+          }
+        }
+      }
+    },
+    "Check %lld more relays" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consultar %lld relays más"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periksa %lld relay lagi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleer nog %lld relays"
+          }
+        }
+      }
+    },
+    "Check 1 more relay" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consultar 1 relay más"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periksa 1 relay lagi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleer nog 1 relay"
           }
         }
       }
@@ -7395,9 +8577,6 @@
         }
       }
     },
-    "Check results on more relays from this poll" : {
-
-    },
     "Checked" : {
       "localizations" : {
         "es" : {
@@ -7410,6 +8589,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diperiksa"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gecontroleerd"
           }
         }
       },
@@ -7571,6 +8756,28 @@
     },
     "Checking zap receipts before counting lightning totals." : {
 
+    },
+    "Checking…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consultando…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memeriksa…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleren…"
+          }
+        }
+      }
     },
     "Choose a photo" : {
       "localizations" : {
@@ -10396,14 +11603,77 @@
     "Couldn’t edit photo" : {
 
     },
-    "Couldn’t load all poll results. Try again." : {
+    "Couldn’t finish checking" : {
 
+    },
+    "Couldn’t load all poll results. Try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron cargar todos los resultados de la encuesta. Inténtalo de nuevo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak semua hasil jajak pendapat dapat dimuat. Coba lagi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet alle peilingsresultaten konden worden geladen. Probeer het opnieuw."
+          }
+        }
+      }
     },
     "Couldn't load this profile. Check your connection and try again." : {
 
     },
+    "Couldn’t retrieve another page" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo obtener otra página"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat mengambil halaman berikutnya"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volgende pagina kon niet worden opgehaald"
+          }
+        }
+      }
+    },
     "Couldn’t sign your vote. Try again." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo firmar tu voto. Inténtalo de nuevo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat menandatangani suara Anda. Coba lagi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je stem kon niet worden ondertekend. Probeer het opnieuw."
+          }
+        }
+      }
     },
     "Counters for replies, likes, zaps etc." : {
       "comment" : "Setting on settings screen",
@@ -12011,6 +13281,28 @@
         }
       }
     },
+    "Dismiss poll results" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar resultados de la encuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutup hasil jajak pendapat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peilingsresultaten sluiten"
+          }
+        }
+      }
+    },
     "Dismiss year report reminder" : {
 
     },
@@ -12444,7 +13736,26 @@
       }
     },
     "Each answer needs its own label." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada respuesta debe tener un texto diferente."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setiap jawaban harus memiliki teks yang berbeda."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik voor elk antwoord een andere tekst."
+          }
+        }
+      }
     },
     "Earlier replies are unavailable." : {
       "comment" : "Shown between a thread root and a visible reply when intermediate private or missing replies cannot be fetched",
@@ -12825,6 +14136,28 @@
         }
       }
     },
+    "Enable Web of Trust in Settings to see these results." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa Web of Trust en Ajustes para ver estos resultados."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktifkan Web of Trust di Pengaturan untuk melihat hasil ini."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schakel Web of Trust in bij Instellingen om deze resultaten te zien."
+          }
+        }
+      }
+    },
     "Enable WoT filter" : {
       "localizations" : {
         "es" : {
@@ -12916,25 +14249,163 @@
       "shouldTranslate" : false
     },
     "Ended" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizada"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selesai"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afgelopen"
+          }
+        }
+      }
     },
     "Ends %@" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina en %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berakhir dalam %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eindigt over %@"
+          }
+        }
+      }
     },
     "Ends in 1 day" : {
-      "comment" : "Poll ends one day after it is posted"
+      "comment" : "Poll ends one day after it is posted",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina en 1 día"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berakhir dalam 1 hari"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eindigt over 1 dag"
+          }
+        }
+      }
     },
     "Ends in 1 hour" : {
-      "comment" : "Poll ends one hour after it is posted"
+      "comment" : "Poll ends one hour after it is posted",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina en 1 hora"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berakhir dalam 1 jam"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eindigt over 1 uur"
+          }
+        }
+      }
     },
     "Ends in 1 week" : {
-      "comment" : "Poll ends one week after it is posted"
+      "comment" : "Poll ends one week after it is posted",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina en 1 semana"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berakhir dalam 1 minggu"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eindigt over 1 week"
+          }
+        }
+      }
     },
     "Ends in 3 days" : {
-      "comment" : "Poll ends three days after it is posted"
+      "comment" : "Poll ends three days after it is posted",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina en 3 días"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berakhir dalam 3 hari"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eindigt over 3 dagen"
+          }
+        }
+      }
     },
     "Ends in 30 days" : {
-      "comment" : "Poll ends 30 days after it is posted"
+      "comment" : "Poll ends 30 days after it is posted",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina en 30 días"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berakhir dalam 30 hari"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eindigt over 30 dagen"
+          }
+        }
+      }
     },
     "Enhanced Relay Routing" : {
       "comment" : "Setting on settings screen",
@@ -16848,6 +18319,28 @@
         }
       }
     },
+    "Last checked %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última consulta: %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terakhir diperiksa: %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatst gecontroleerd: %@"
+          }
+        }
+      }
+    },
     "Last optimize: %@" : {
       "comment" : "Last run: (date) of maintanace",
       "localizations" : {
@@ -17633,6 +19126,28 @@
         }
       }
     },
+    "Load more responses" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargar más votos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muat lebih banyak suara"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer stemmen laden"
+          }
+        }
+      }
+    },
     "Load preset 1" : {
       "localizations" : {
         "es" : {
@@ -17856,7 +19371,26 @@
 
     },
     "Loading results" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando resultados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memuat hasil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultaten laden"
+          }
+        }
+      }
     },
     "Loading selected photo..." : {
       "comment" : "Shown while a selected photo is being imported into the post composer",
@@ -19152,6 +20686,28 @@
     "More report actions" : {
 
     },
+    "More responses available" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hay más votos disponibles"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tersedia suara lainnya"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer stemmen beschikbaar"
+          }
+        }
+      }
+    },
     "Most received recently on" : {
       "comment" : "Heading above posts which received the most zaps",
       "extractionState" : "stale",
@@ -19211,7 +20767,26 @@
       }
     },
     "Multiple" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varias"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beberapa"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meerdere"
+          }
+        }
+      }
     },
     "Mute" : {
       "extractionState" : "stale",
@@ -20353,7 +21928,26 @@
       }
     },
     "No available relays for this poll." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay relays disponibles para esta encuesta."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada relay yang tersedia untuk jajak pendapat ini."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er zijn geen relays beschikbaar voor deze peiling."
+          }
+        }
+      }
     },
     "No badges created" : {
       "localizations" : {
@@ -20392,6 +21986,9 @@
           }
         }
       }
+    },
+    "No checks completed" : {
+
     },
     "No comments found." : {
       "localizations" : {
@@ -20432,7 +22029,26 @@
       }
     },
     "No deadline" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin fecha de cierre"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanpa batas waktu"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen einddatum"
+          }
+        }
+      }
     },
     "No DM relays found for" : {
       "localizations" : {
@@ -20479,7 +22095,27 @@
       }
     },
     "No end date" : {
-      "comment" : "Poll does not expire"
+      "comment" : "Poll does not expire",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin fecha de cierre"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanpa tanggal berakhir"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen einddatum"
+          }
+        }
+      }
     },
     "No existing block list found." : {
       "localizations" : {
@@ -20656,11 +22292,71 @@
         }
       }
     },
+    "No votes from people in your Web of Trust." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay votos de personas de tu Web of Trust."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada suara dari orang dalam Web of Trust Anda."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen stemmen van mensen in je Web of Trust."
+          }
+        }
+      }
+    },
     "No votes from people you follow." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay votos de personas que sigues."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada suara dari orang yang Anda ikuti."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen stemmen van mensen die je volgt."
+          }
+        }
+      }
     },
     "No votes yet." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no hay votos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belum ada suara."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nog geen stemmen."
+          }
+        }
+      }
     },
     "non-https media blocked" : {
       "comment" : "Displayed when an image in a post is blocked",
@@ -21111,6 +22807,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nostur akan mencari blokir yang disimpan akun ini melalui aplikasi lain. Tidak ada yang berubah sampai Anda mengonfirmasi."
+          }
+        }
+      }
+    },
+    "Not checked" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin consultar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belum diperiksa"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet gecontroleerd"
           }
         }
       }
@@ -21923,7 +23641,26 @@
       }
     },
     "Open profile" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir perfil"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka profil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiel openen"
+          }
+        }
+      }
     },
     "Open Settings" : {
       "comment" : "Button to open system settings after camera permission was denied",
@@ -22259,13 +23996,72 @@
       }
     },
     "People can choose more than one answer, so percentages can add up to more than 100%." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se puede elegir más de una respuesta, por lo que los porcentajes pueden sumar más del 100%."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orang dapat memilih lebih dari satu jawaban, sehingga jumlah persentasenya dapat melebihi 100%."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensen kunnen meer dan één antwoord kiezen. Daardoor kunnen de percentages samen hoger zijn dan 100%."
+          }
+        }
+      }
     },
     "People can choose more than one answer. Votes are public." : {
-      "comment" : "Shown while creating a multiple-choice poll"
+      "comment" : "Shown while creating a multiple-choice poll",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se puede elegir más de una respuesta. Los votos son públicos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orang dapat memilih lebih dari satu jawaban. Suara bersifat publik."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensen kunnen meer dan één antwoord kiezen. Stemmen zijn openbaar."
+          }
+        }
+      }
     },
     "People choose one answer. Votes are public." : {
-      "comment" : "Shown while creating a single-choice poll"
+      "comment" : "Shown while creating a single-choice poll",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se elige una respuesta. Los votos son públicos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orang memilih satu jawaban. Suara bersifat publik."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensen kiezen één antwoord. Stemmen zijn openbaar."
+          }
+        }
+      }
     },
     "People I follow" : {
       "localizations" : {
@@ -22312,7 +24108,26 @@
       }
     },
     "Percentage unavailable" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Porcentaje no disponible"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Persentase tidak tersedia"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Percentage niet beschikbaar"
+          }
+        }
+      }
     },
     "Permanent blocks in Nostur" : {
       "localizations" : {
@@ -22405,6 +24220,7 @@
       }
     },
     "Pick GIF" : {
+      "comment" : "Button to choose a GIF when creating a post",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -22979,7 +24795,26 @@
 
     },
     "Please wait a moment before changing your vote." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espera un momento antes de cambiar tu voto."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tunggu sebentar sebelum mengubah suara Anda."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wacht even voordat je je stem wijzigt."
+          }
+        }
+      }
     },
     "Point your camera at a Nostr profile QR code" : {
       "localizations" : {
@@ -23015,13 +24850,70 @@
       }
     },
     "Poll" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jajak pendapat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peiling"
+          }
+        }
+      }
     },
     "Poll actions" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opciones de la encuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tindakan jajak pendapat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acties voor peiling"
+          }
+        }
+      }
     },
     "Poll results" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultados de la encuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasil jajak pendapat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peilingsresultaten"
+          }
+        }
+      }
     },
     "Portrait" : {
       "extractionState" : "stale",
@@ -23244,9 +25136,6 @@
           }
         }
       }
-    },
-    "Post options" : {
-
     },
     "Post preview" : {
       "comment" : "Navigation title for Post Preview screen",
@@ -24390,7 +26279,26 @@
 
     },
     "Public votes" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votos públicos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suara publik"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Openbare stemmen"
+          }
+        }
+      }
     },
     "Publish" : {
       "comment" : "Button to publish",
@@ -25770,10 +27678,70 @@
 
     },
     "Refresh poll results" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar resultados de la encuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui hasil jajak pendapat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peilingsresultaten vernieuwen"
+          }
+        }
+      }
     },
     "Refresh results" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar resultados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui hasil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultaten vernieuwen"
+          }
+        }
+      }
+    },
+    "Refresh votes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar votos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui suara"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stemmen vernieuwen"
+          }
+        }
+      }
     },
     "Refresh wallet" : {
 
@@ -26435,7 +28403,27 @@
       }
     },
     "Remove answer" : {
-      "comment" : "Removes one poll answer"
+      "comment" : "Removes one poll answer",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar respuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus jawaban"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord verwijderen"
+          }
+        }
+      }
     },
     "Remove artwork" : {
       "localizations" : {
@@ -26616,7 +28604,27 @@
       }
     },
     "Remove poll" : {
-      "comment" : "Removes the poll from a post being written"
+      "comment" : "Removes the poll from a post being written",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar encuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus jajak pendapat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peiling verwijderen"
+          }
+        }
+      }
     },
     "Remove this relay: %@?" : {
       "localizations" : {
@@ -27686,10 +29694,92 @@
       }
     },
     "Result bar" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barra de resultados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bilah hasil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultatenbalk"
+          }
+        }
+      }
     },
     "Results" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultaten"
+          }
+        }
+      }
+    },
+    "Results from" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultados de"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasil dari"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultaten van"
+          }
+        }
+      }
+    },
+    "Results sources" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuentes de los resultados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sumber hasil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bronnen van de resultaten"
+          }
+        }
+      }
     },
     "Resume" : {
       "localizations" : {
@@ -27778,6 +29868,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opnieuw"
+          }
+        }
+      }
+    },
+    "Retry %lld relays" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar %lld relays"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coba lagi %lld relay"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probeer %lld relays opnieuw"
+          }
+        }
+      }
+    },
+    "Retry 1 relay" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar 1 relay"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coba lagi 1 relay"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probeer 1 relay opnieuw"
           }
         }
       }
@@ -30296,7 +32430,26 @@
       }
     },
     "Show people who chose this answer" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar quién eligió esta respuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan orang yang memilih jawaban ini"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon wie dit antwoord heeft gekozen"
+          }
+        }
+      }
     },
     "Show post stats on timeline" : {
       "comment" : "Setting on settings screen",
@@ -30503,7 +32656,26 @@
       }
     },
     "Show voters and their choices" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar votantes y sus elecciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan pemilih dan pilihan mereka"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon stemmers en hun keuzes"
+          }
+        }
+      }
     },
     "Show wallet balance" : {
       "comment" : "Setting on settings screen",
@@ -30688,7 +32860,26 @@
       }
     },
     "Sign in with a signing account to vote." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión con una cuenta que pueda firmar para votar."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masuk dengan akun yang dapat menandatangani untuk memberikan suara."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log in met een account waarmee je kunt ondertekenen om te stemmen."
+          }
+        }
+      }
     },
     "sign_event" : {
       "localizations" : {
@@ -30855,9 +33046,6 @@
           }
         }
       }
-    },
-    "Some responses may be missing from these results." : {
-
     },
     "Some sources remain incomplete. Tap for relay details" : {
 
@@ -31208,6 +33396,7 @@
       }
     },
     "Start Nest" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -31230,6 +33419,7 @@
       }
     },
     "Start Nest (Audio room)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -32666,7 +34856,26 @@
 
     },
     "The signer returned an invalid vote. Try again." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El firmante devolvió un voto no válido. Inténtalo de nuevo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penandatangan mengembalikan suara yang tidak valid. Coba lagi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De ondertekenaar heeft een ongeldige stem teruggestuurd. Probeer het opnieuw."
+          }
+        }
+      }
     },
     "The text content of the post to publish." : {
       "localizations" : {
@@ -32785,6 +34994,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Blokir ini dapat dilihat semua orang."
+          }
+        }
+      }
+    },
+    "These checks apply to this poll. They do not change your relay settings or guarantee every vote has been found." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estas consultas se aplican a esta encuesta. No cambian la configuración de tus relays ni garantizan que se hayan encontrado todos los votos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemeriksaan ini berlaku untuk jajak pendapat ini. Pemeriksaan ini tidak mengubah pengaturan relay Anda atau menjamin bahwa semua suara telah ditemukan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze controles gelden voor deze peiling. Ze wijzigen je relayinstellingen niet en garanderen niet dat elke stem is gevonden."
           }
         }
       }
@@ -33155,7 +35386,26 @@
       }
     },
     "This poll has invalid or unsupported settings." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta encuesta tiene una configuración no válida o no compatible."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jajak pendapat ini memiliki pengaturan yang tidak valid atau tidak didukung."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze peiling heeft ongeldige of niet-ondersteunde instellingen."
+          }
+        }
+      }
     },
     "This post" : {
       "comment" : "Menu choice",
@@ -35617,7 +37867,26 @@
 
     },
     "View results" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver resultados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lihat hasil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultaten bekijken"
+          }
+        }
+      }
     },
     "viewState: %@" : {
       "extractionState" : "stale",
@@ -35773,16 +38042,114 @@
       }
     },
     "Vote" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beri suara"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stem"
+          }
+        }
+      }
     },
     "Vote count unavailable" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de votos no disponible"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jumlah suara tidak tersedia"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aantal stemmen niet beschikbaar"
+          }
+        }
+      }
     },
     "Voters" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votantes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemilih"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stemmers"
+          }
+        }
+      }
+    },
+    "Votes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suara"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stemmen"
+          }
+        }
+      }
     },
     "Votes are public" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los votos son públicos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suara bersifat publik"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stemmen zijn openbaar"
+          }
+        }
+      }
     },
     "VPN detected" : {
       "localizations" : {
@@ -35916,6 +38283,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Web App"
+          }
+        }
+      }
+    },
+    "Web of Trust" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web of Trust"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web of Trust"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web of Trust"
           }
         }
       }
@@ -36753,7 +39142,26 @@
       }
     },
     "Your account and selected answers are public on Nostr. Changing your vote updates the results, but earlier votes can remain public." : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu cuenta y las respuestas elegidas son públicas en Nostr. Cambiar tu voto actualiza los resultados, pero los votos anteriores pueden seguir siendo públicos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akun dan jawaban yang Anda pilih bersifat publik di Nostr. Mengubah suara akan memperbarui hasil, tetapi suara sebelumnya dapat tetap bersifat publik."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je account en gekozen antwoorden zijn openbaar op Nostr. Als je je stem wijzigt, worden de resultaten bijgewerkt, maar eerdere stemmen kunnen openbaar blijven."
+          }
+        }
+      }
     },
     "Your address for receiving zaps has been set to: %@" : {
       "localizations" : {
@@ -36850,7 +39258,26 @@
 
     },
     "Your choice" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu elección"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilihan Anda"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jouw keuze"
+          }
+        }
+      }
     },
     "Your closest connections" : {
 
@@ -37041,6 +39468,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je portemonnee is nu verbonden met **Nostur**, je kan nu zappen met gemak!"
+          }
+        }
+      }
+    },
+    "Your Web of Trust is still loading." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu Web of Trust aún se está cargando."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web of Trust Anda masih dimuat."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je Web of Trust wordt nog geladen."
           }
         }
       }
