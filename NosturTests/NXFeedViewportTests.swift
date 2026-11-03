@@ -77,6 +77,136 @@ final class NXFeedViewportTests: XCTestCase {
     }
 
     @MainActor
+    func testSyncedReadRemovalWaitsForLayoutAndDefersIncomingPosts() async throws {
+        try await assertExternalReadRemoval(useOtherColumn: false)
+    }
+
+    @MainActor
+    func testCrossColumnReadRemovalWaitsForVisibleFeedAndLayout() async throws {
+        try await assertExternalReadRemoval(useOtherColumn: true)
+    }
+
+    @MainActor
+    private func assertExternalReadRemoval(useOtherColumn: Bool) async throws {
+        _ = AppState.shared
+        _ = AccountsState.shared
+        let wasEnabled = SettingsStore.shared.appWideSeenTracker
+        SettingsStore.shared.appWideSeenTracker = true
+        defer { SettingsStore.shared.appWideSeenTracker = wasEnabled }
+        let posts = await bg().perform {
+            (1...13).map { index in
+                var event = NEvent(content: "Synced read regression \(index)")
+                event.id = String(format: "%08x", 700 + index) + String(repeating: "0", count: 56)
+                let preview = createPreviewEvent(event)
+                defer { bg().delete(preview) }
+                return NRPost(event: preview, withFooter: false, withParents: false)
+            }
+        }
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 300)
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 300, height: 600), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        let source = NXFeedAppendTestSource()
+        source.count = 12
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 900
+        collection.layoutIfNeeded()
+
+        let vm = NXColumnViewModel()
+        vm.isVisible = true
+        vm.collectionView = collection
+        vm.viewState = .posts(Array(posts.prefix(12)))
+        vm.vmInner.isAtTop = false
+        vm.vmInner.unreadIds = Dictionary(uniqueKeysWithValues: posts.prefix(12).map { ($0.id, 1) })
+        var layoutBusy = true
+        vm.vmInner.isFeedLayoutUpdating = { layoutBusy }
+        var anchoredUpdates = 0
+        vm.vmInner.performAnchoredFeedUpdate = { _, update in
+            anchoredUpdates += 1
+            _ = update()
+        }
+        // Read above, on, and below the viewport. Only the offscreen rows leave.
+        let seen = Set([posts[0].shortId, posts[3].shortId, posts[10].shortId])
+        if useOtherColumn {
+            // Keep the UIKit List attached: visibility and detail navigation must
+            // independently prevent a hidden column's rendered snapshot changing.
+            vm.isVisible = false
+            vm.removeUnreadPostsAlreadyMarkedRead(seen, otherColumnSeenShortIds: seen)
+            try? await Task.sleep(nanoseconds: 650_000_000)
+            XCTAssertEqual(vm.currentNRPostsOnScreen.count, 12)
+            XCTAssertEqual(vm.vmInner.unreadCount, 12)
+            vm.isVisible = true
+            vm.pauseViewUpdates()
+            vm.removeUnreadPostsAlreadyMarkedRead(seen, otherColumnSeenShortIds: seen)
+            try? await Task.sleep(nanoseconds: 650_000_000)
+            XCTAssertEqual(vm.currentNRPostsOnScreen.count, 12)
+            XCTAssertEqual(vm.vmInner.unreadCount, 12)
+            // No resend: returning must reconcile the reads received while away.
+            vm.resumeViewUpdates()
+        } else {
+            vm.removeUnreadPostsAlreadyMarkedRead(seen, syncedOrFeedSeenShortIds: seen)
+        }
+        try? await Task.sleep(nanoseconds: 700_000_000)
+        XCTAssertEqual(vm.currentNRPostsOnScreen.count, 12)
+        XCTAssertEqual(vm.vmInner.unreadCount, 12)
+
+        if useOtherColumn {
+            // Also hide after reconciliation has already been queued.
+            vm.isVisible = false
+            layoutBusy = false
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            XCTAssertEqual(vm.currentNRPostsOnScreen.count, 12)
+            XCTAssertEqual(vm.vmInner.unreadCount, 12)
+            layoutBusy = true
+            vm.isVisible = true
+            vm.resumeViewUpdates()
+        }
+        layoutBusy = false
+        // Wait only until the animation begins so the next batch overlaps it.
+        for _ in 0..<100 {
+            if vm.isApplyingReadRemoval { break }
+            try? await Task.sleep(nanoseconds: 10_000_000)
+        }
+        XCTAssertTrue(vm.isApplyingReadRemoval)
+        XCTAssertFalse(vm.currentNRPostsOnScreen.contains { $0.id == posts[0].id })
+        XCTAssertFalse(vm.currentNRPostsOnScreen.contains { $0.id == posts[10].id })
+        XCTAssertTrue(vm.currentNRPostsOnScreen.contains { $0.id == posts[3].id })
+        XCTAssertEqual(vm.vmInner.unreadIds[posts[3].id], 0)
+        XCTAssertEqual(vm.vmInner.unreadCount, 9)
+        XCTAssertEqual(anchoredUpdates, 0)
+
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        stabilizer.updateItemIDs(vm.currentNRPostsOnScreen.map(\.id))
+        stabilizer.shouldDeferAnchoredUpdates = { vm.isApplyingReadRemoval }
+        var queuedLayoutApplied = false
+        stabilizer.performAnchored(reason: "concurrent layout") { queuedLayoutApplied = true }
+        XCTAssertFalse(queuedLayoutApplied)
+
+        let config = NXColumnConfig(id: "synced-read-regression", name: "Synced read regression")
+        var completed = false
+        vm.putOnScreen([posts[12]], config: config, insertAtEnd: true) { completed = true }
+        XCTAssertFalse(completed)
+        XCTAssertFalse(vm.currentNRPostsOnScreen.contains { $0.id == posts[12].id })
+        try? await Task.sleep(nanoseconds: 600_000_000)
+        XCTAssertFalse(vm.isApplyingReadRemoval)
+        XCTAssertTrue(completed)
+        XCTAssertTrue(queuedLayoutApplied)
+        XCTAssertEqual(vm.currentNRPostsOnScreen.last?.id, posts[12].id)
+        XCTAssertEqual(anchoredUpdates, 1)
+    }
+
+    @MainActor
     func testIdleSeenCleanupKeepsRenderedRowsAndUnreadUntilTop() async throws {
         _ = AppState.shared
         _ = AccountsState.shared
@@ -112,6 +242,7 @@ final class NXFeedViewportTests: XCTestCase {
         collection.contentOffset.y = 900
         collection.layoutIfNeeded()
         let vm = NXColumnViewModel()
+        vm.isVisible = true
         vm.collectionView = collection
         vm.viewState = .posts(posts)
         vm.vmInner.unreadIds = Dictionary(uniqueKeysWithValues: posts.map { ($0.id, 1) })
@@ -155,6 +286,20 @@ final class NXFeedViewportTests: XCTestCase {
     }
 
     @MainActor
+    func testNetworkingResumeDoesNotUnpauseDetailSource() {
+        _ = AppState.shared
+        _ = AccountsState.shared
+        let vm = NXColumnViewModel()
+        vm.config = NXColumnConfig(id: "detail-resume-regression", name: "Detail resume regression")
+        vm.isVisible = true
+        vm.viewState = .posts([])
+        vm.pauseViewUpdates()
+        vm.resume()
+        XCTAssertTrue(vm.isViewPaused)
+        vm.pause()
+    }
+
+    @MainActor
     func testDetailNavigationPreservesReadRowsAndThreadContext() async throws {
         _ = AppState.shared
         _ = AccountsState.shared
@@ -190,6 +335,7 @@ final class NXFeedViewportTests: XCTestCase {
         collection.contentOffset.y = 950
         collection.layoutIfNeeded()
         let vm = NXColumnViewModel()
+        vm.isVisible = true
         vm.collectionView = collection
         vm.viewState = .posts(posts)
         // The visible row contains a read ancestor. Reconciliation must leave

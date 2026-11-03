@@ -136,6 +136,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private var leadingNonPostRowCount = 0
     private var pendingUpdates: [PendingUpdate] = []
     private var pendingPinByIdentity = false
+    /// Native animated deletion owns positioning until its animation finishes.
+    var shouldDeferAnchoredUpdates: (() -> Bool)?
     private var flushTask: Task<Void, Never>?
     private var settleTask: Task<Void, Never>?
     private var isProgrammaticScrollInProgress = false
@@ -178,6 +180,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     var isViewportMovingOrRecently: Bool {
         guard let scrollView else { return false }
         return isUserScrollingOrRecently(in: scrollView)
+    }
+
+    var isLayoutUpdating: Bool {
+        !pendingUpdates.isEmpty || flushTask != nil || settleTask != nil
+            || prependSnapshot != nil || isProgrammaticScrollInProgress
     }
 
     func attachSnapshotHost(_ host: UIView) {
@@ -556,7 +563,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             return
         }
 
-        if isProgrammaticScrollInProgress
+        if shouldDeferAnchoredUpdates?() == true
+            || isProgrammaticScrollInProgress
             || isUserScrollingOrRecently(in: scrollView)
             || settleTask != nil
             || prependSnapshot != nil {
@@ -577,7 +585,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         guard flushTask == nil else { return }
         flushTask = Task { @MainActor [weak self] in
             guard let self else { return }
-            while self.isProgrammaticScrollInProgress
+            while self.shouldDeferAnchoredUpdates?() == true
+                    || self.isProgrammaticScrollInProgress
                     || self.scrollView.map({ self.isUserScrollingOrRecently(in: $0) }) == true
                     || self.settleTask != nil
                     || self.prependSnapshot != nil {
@@ -918,6 +927,11 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         let liveText = live.map { "\(shortID($0.id)) @ \(String(format: "%.1f", $0.visibleTopOffset))" } ?? "none"
         let parkedText = parked.map { "\(shortID($0.id)) @ \(String(format: "%.1f", $0.visibleTopOffset))" } ?? "none"
         return "live \(liveText) · parked \(parkedText) · lookup \(itemIDs.count) posts · leading rows \(leadingNonPostRowCount) · pending \(pendingUpdates.count) · settling \(settleTask != nil) · cover \(prependSnapshot != nil) · suspended \(isSuspended)"
+    }
+
+    func debugLiveAnchor() -> (id: String, visibleTopOffset: CGFloat)? {
+        guard let scrollView else { return nil }
+        return visibleAnchor(in: scrollView)
     }
 
     private func viewportDebugSummary() -> String {
@@ -1386,6 +1400,21 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 }
 
+#if DEBUG
+private struct NXReadSyncTestButton: View {
+    @ObservedObject var unreadState: NXColumnUnreadState
+    let prepared: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(prepared || unreadState.unreadCount >= 25 ? "Simulate read sync" : "Prepare unread test",
+                  systemImage: "testtube.2")
+        }
+    }
+}
+#endif
+
 struct NXPostsFeed: View {
     
     @Environment(\.theme) private var theme
@@ -1398,6 +1427,11 @@ struct NXPostsFeed: View {
 
     @State private var updateIsAtTopSubscription: AnyCancellable?
     @StateObject private var layoutStabilizer = NXFeedLayoutStabilizer()
+#if DEBUG
+    @State private var readSyncTestPrepared = false
+    @State private var readSyncTestStatus = "Local read-sync simulation"
+    @State private var readSyncTestTask: Task<Void, Never>?
+#endif
     
     init(vm: NXColumnViewModel, posts: [NRPost]) {
         self.vm = vm
@@ -1602,6 +1636,12 @@ struct NXPostsFeed: View {
             vmInner.isFeedViewportMovingOrRecently = { [weak layoutStabilizer] in
                 layoutStabilizer?.isViewportMovingOrRecently ?? false
             }
+            vmInner.isFeedLayoutUpdating = { [weak layoutStabilizer] in
+                layoutStabilizer?.isLayoutUpdating ?? false
+            }
+            layoutStabilizer.shouldDeferAnchoredUpdates = { [weak vm] in
+                vm?.isApplyingReadRemoval ?? false
+            }
             syncLayoutPostIDs()
             layoutStabilizer.onViewportChange = { [weak vmInner] in
                 vmInner?.updateIsAtTopSubject.send()
@@ -1687,6 +1727,30 @@ struct NXPostsFeed: View {
         .overlay(alignment: .topTrailing) {
             unreadCounterView
         }
+#if DEBUG
+        .overlay(alignment: .bottomTrailing) {
+            if case .following = vm.config?.columnType {
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(readSyncTestStatus)
+                        .font(.caption2)
+                    NXReadSyncTestButton(unreadState: vmInner.unreadState, prepared: readSyncTestPrepared) {
+                        runReadSyncTest()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(readSyncTestTask != nil || posts.count < 5)
+                    .contextMenu {
+                        Button("Prepare again") {
+                            readSyncTestPrepared = false
+                            runReadSyncTest(forcePreparation: true)
+                        }
+                    }
+                }
+                .padding(10)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                .padding(10)
+            }
+        }
+#endif
         .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
             guard vm.isVisible else { return }
             scrollToFirstUnread()
@@ -1711,6 +1775,13 @@ struct NXPostsFeed: View {
                 }
         }
         .onDisappear {
+            // Mark the feed paused before suspending the stabilizer: suspension
+            // drains queued updates, which must not remove rows behind detail UI.
+            vm.pauseViewUpdates()
+#if DEBUG
+            readSyncTestTask?.cancel()
+            readSyncTestTask = nil
+#endif
             // When opening detail, the feed would still update in background using withAnimation { },
             // but because its not visible the hack to keep scroll position doesn't work
             // so we pause() updates (and resume() in onAppear {})
@@ -1724,10 +1795,11 @@ struct NXPostsFeed: View {
             layoutStabilizer.onDebugAction = nil
             vm.feedLayoutDebugState = nil
 #endif
-            vm.pauseViewUpdates()
             vmInner.performAnchoredFeedUpdate = nil
             vmInner.rememberFeedAnchor = nil
             vmInner.isFeedViewportMovingOrRecently = nil
+            vmInner.isFeedLayoutUpdating = nil
+            layoutStabilizer.shouldDeferAnchoredUpdates = nil
             vmInner.cancelPendingFeedSettle = nil
         }
     }
@@ -1755,6 +1827,95 @@ struct NXPostsFeed: View {
             .padding(.top, 5)
     }
     
+#if DEBUG
+    @MainActor
+    private func runReadSyncTest(forcePreparation: Bool = false) {
+        guard readSyncTestTask == nil else { return }
+        guard !vmInner.isPerformingScroll,
+              !vmInner.isPerformingScrollToFirstUnread,
+              !vmInner.isPreparingForScrollRestore,
+              !layoutStabilizer.isProgrammaticScrollPending,
+              !layoutStabilizer.isViewportMovingOrRecently,
+              !layoutStabilizer.hasActivePrependCover else {
+            readSyncTestStatus = "Wait for scrolling to finish"
+            return
+        }
+        let currentPosts = vm.currentNRPostsOnScreen
+        guard currentPosts.count >= 5 else { return }
+
+        if forcePreparation || (!readSyncTestPrepared && vmInner.unreadCount < 25) {
+            let targetIndex = min(25, currentPosts.count - 3)
+            readSyncTestStatus = "Preparing…"
+            scrollToIndex(targetIndex)
+            readSyncTestTask = Task { @MainActor in
+                defer { readSyncTestTask = nil }
+                // Let the normal scroll path finish, including delayed row appearances.
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                for _ in 0..<100 {
+                    guard !Task.isCancelled else { return }
+                    if !vmInner.isPerformingScroll,
+                       !vmInner.isPerformingScrollToFirstUnread,
+                       !layoutStabilizer.isProgrammaticScrollPending,
+                       !layoutStabilizer.hasActivePrependCover { break }
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                }
+                guard !Task.isCancelled else { return }
+                guard !vmInner.isPerformingScroll,
+                      !vmInner.isPerformingScrollToFirstUnread,
+                      !layoutStabilizer.isProgrammaticScrollPending,
+                      !layoutStabilizer.hasActivePrependCover,
+                      let anchor = layoutStabilizer.debugLiveAnchor(),
+                      let index = vm.currentNRPostsOnScreen.firstIndex(where: { $0.id == anchor.id }),
+                      index > 0 else {
+                    readSyncTestStatus = "Could not prepare; try again"
+                    return
+                }
+                restoreUnreadIdsAbove(postID: anchor.id)
+                vmInner.updateIsAtTopSubject.send()
+                readSyncTestPrepared = true
+                readSyncTestStatus = "Ready: \(index) unread rows above"
+                vm.recordFeedAction("READ SYNC TEST prepared · \(index) rows above · \(layoutStabilizer.debugCaptureSummary())")
+            }
+            return
+        }
+
+        readSyncTestPrepared = true
+        guard let before = layoutStabilizer.debugLiveAnchor(),
+              let visibleIndex = currentPosts.firstIndex(where: { $0.id == before.id }) else {
+            readSyncTestStatus = "No visible post; try again"
+            return
+        }
+        let candidates = currentPosts.prefix(visibleIndex).filter {
+            vmInner.unreadIds[$0.id, default: 0] > 0
+        }
+        let removedIDs = Set(candidates.shuffled().prefix(Int.random(in: 2...5)).map(\.id))
+        guard !removedIDs.isEmpty else {
+            readSyncTestStatus = "No unread rows above; hold to prepare again"
+            return
+        }
+        vm.recordFeedAction("READ SYNC TEST removing · \(removedIDs.map { String($0.prefix(8)) }.sorted().joined(separator: ",")) · before \(layoutStabilizer.debugCaptureSummary())")
+        // Exercise the production reconciliation without writing fake read state
+        // to CloudFeed or publishing it to other columns/devices.
+        let syncedIDs = Set(currentPosts.filter { removedIDs.contains($0.id) }.map(\.shortId))
+        vm.removeUnreadPostsAlreadyMarkedRead(syncedIDs, syncedOrFeedSeenShortIds: syncedIDs)
+        readSyncTestStatus = "Syncing \(removedIDs.count) read rows…"
+        readSyncTestTask = Task { @MainActor in
+            defer { readSyncTestTask = nil }
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            guard !Task.isCancelled else { return }
+            let remainingIDs = Set(vm.currentNRPostsOnScreen.map(\.id))
+            let removedCount = removedIDs.subtracting(remainingIDs).count
+            if let after = layoutStabilizer.debugLiveAnchor(), after.id == before.id {
+                let delta = after.visibleTopOffset - before.visibleTopOffset
+                readSyncTestStatus = String(format: "Removed %d · visible post moved %+.1f pt", removedCount, Double(delta))
+            } else {
+                readSyncTestStatus = "Removed \(removedCount) · top visible post changed"
+            }
+            vm.recordFeedAction("READ SYNC TEST result · \(readSyncTestStatus) · \(layoutStabilizer.debugCaptureSummary())")
+        }
+    }
+#endif
+
     private func scrollToFirstUnread() {
         syncLayoutPostIDs()
         guard !vmInner.isPerformingScrollToFirstUnread else {

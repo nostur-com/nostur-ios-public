@@ -357,6 +357,11 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private var shouldDeferSeenReconciliation: Bool {
         isFeedActivelyScrolling
+            || isApplyingReadRemoval
+            || vmInner.isFeedViewportMovingOrRecently?() == true
+            || vmInner.isFeedLayoutUpdating?() == true
+            || !pendingPrependIDs.isEmpty
+            || Date().timeIntervalSince(lastFeedRowsChangedAt) < 0.5
             || vmInner.isPerformingScroll
             || vmInner.isPerformingScrollToFirstUnread
             || vmInner.isPreparingForScrollRestore
@@ -577,6 +582,7 @@ class NXColumnViewModel: ObservableObject {
     
     @Published var viewState: ColumnViewState = .loading {
         didSet {
+            lastFeedRowsChangedAt = Date()
             if case .posts(let nrPosts) = viewState {
                 reconcileUnreadPostIDs()
                 refreshAlreadySeenNewerPosts(for: nrPosts)
@@ -642,7 +648,10 @@ class NXColumnViewModel: ObservableObject {
     public var saveLocalStateSub: AnyCancellable?
     private var subscriptions = Set<AnyCancellable>()
     private let seenReconciliationScheduler = NXSeenReconciliationScheduler()
-    private var pendingSyncedSeenIds: Set<String> = []
+    private var lastFeedRowsChangedAt = Date.distantPast
+    private(set) var isApplyingReadRemoval = false
+    private var postsWaitingForReadRemoval: [() -> Void] = []
+    private var pendingExternalReadIDs: Set<String> = []
     private var initialMediaTimeoutTask: Task<Void, Never>?
     private var autoExploreRelaysAfterWoTTimeout = false
     private var mediaDiscoverySubscriptionId: String?
@@ -773,8 +782,8 @@ class NXColumnViewModel: ObservableObject {
                     Task { @MainActor [weak self] in
                         guard let self else { return }
                         // A row may represent a whole reply chain, so reconcile the
-                        // exact component seen in the other column. Structural cleanup
-                        // waits until top, including leaf rows outside the viewport.
+                        // exact component seen in the other column using the same
+                        // idle animated removal as read state from another device.
                         let otherColumnShortId = String(postId.prefix(8))
                         var seenShortIds = Deduplicator.shared.onScreenSeen
                         seenShortIds.insert(otherColumnShortId)
@@ -838,16 +847,16 @@ class NXColumnViewModel: ObservableObject {
         // window. Treat seen reconciliation like every other view update while away:
         // with no live visible rows it would prune the post being viewed (and the read
         // region above it), invalidating the scroll anchor before Back returns.
-        guard !isViewPaused else { return }
-        pendingSyncedSeenIds.formUnion(syncedSeenIds)
+        pendingExternalReadIDs.formUnion(syncedSeenIds)
+        guard isVisible, !isViewPaused else { return }
         seenReconciliationScheduler.schedule(
             isBusy: { [weak self] in
                 self?.shouldDeferSeenReconciliation ?? false
             },
             apply: { [weak self] in
-                guard let self else { return }
-                let syncedSeenIds = self.pendingSyncedSeenIds
-                self.pendingSyncedSeenIds.removeAll(keepingCapacity: true)
+                guard let self, self.isVisible, !self.isViewPaused else { return }
+                let syncedSeenIds = self.pendingExternalReadIDs
+                self.pendingExternalReadIDs.removeAll(keepingCapacity: true)
                 var seenShortIds = Deduplicator.shared.onScreenSeen
                 seenShortIds.formUnion(syncedSeenIds)
                 var syncedOrFeedSeenIds = syncedSeenIds
@@ -873,10 +882,25 @@ class NXColumnViewModel: ObservableObject {
     ) {
         // This can also be called directly by another column's marked-as-read event,
         // bypassing the scheduler above. Never mutate an offscreen detail source feed.
-        guard !isViewPaused else { return }
+        let externallyReadIDs = syncedOrFeedSeenShortIds.union(otherColumnSeenShortIds)
+        pendingExternalReadIDs.formUnion(externallyReadIDs)
+        guard isVisible, !isViewPaused, hasLiveFeedViewport else { return }
         guard SettingsStore.shared.appWideSeenTracker else { return }
         guard !seenShortIds.isEmpty else { return }
         guard case .posts(let existingPosts) = viewState else { return }
+
+        if !isFeedActuallyAtTop, !externallyReadIDs.isEmpty {
+            guard !shouldDeferSeenReconciliation else {
+                scheduleAlreadySeenReconciliation(removingVisiblePostsFor: externallyReadIDs)
+                return
+            }
+            if removeExternallyReadRows(externallyReadIDs, from: existingPosts) {
+                pendingExternalReadIDs.subtract(externallyReadIDs)
+            } else {
+                scheduleAlreadySeenReconciliation(removingVisiblePostsFor: externallyReadIDs)
+            }
+            return
+        }
 
         var postIdsMarkedRead = Set<String>()
         var postIdsToRemove = Set<String>()
@@ -971,7 +995,10 @@ class NXColumnViewModel: ObservableObject {
         guard !postIdsMarkedRead.isEmpty
                 || !unreadCountUpdates.isEmpty
                 || !parentUpdates.isEmpty
-                || !postIdsToRemove.isEmpty else { return }
+                || !postIdsToRemove.isEmpty else {
+            pendingExternalReadIDs.subtract(externallyReadIDs)
+            return
+        }
 
 #if DEBUG
         for postId in postIdsMarkedRead {
@@ -984,7 +1011,8 @@ class NXColumnViewModel: ObservableObject {
             guard let self else { return [] }
             // The anchor coordinator may have queued this at top during a drag
             // or restore. Recheck at execution time: the reader may now be elsewhere.
-            guard !self.isViewPaused, self.isFeedActuallyAtTop else {
+            guard self.isVisible, !self.isViewPaused, self.hasLiveFeedViewport,
+                  self.isFeedActuallyAtTop else {
                 return self.currentNRPostsOnScreen.map(\.id)
             }
             self.vmInner.updateUnreadIds { unreadIds in
@@ -1011,6 +1039,7 @@ class NXColumnViewModel: ObservableObject {
                 }
             }
             self.vmInner.updateIsAtTopSubject.send()
+            self.pendingExternalReadIDs.subtract(externallyReadIDs)
 #if DEBUG
             let removedList = self.debugIDList(postIdsToRemove, ordered: existingPosts.map(\.id))
             self.recordFeedAction(
@@ -1029,6 +1058,50 @@ class NXColumnViewModel: ObservableObject {
         } else {
             _ = applyUpdates()
         }
+    }
+
+    @MainActor
+    private var hasLiveFeedViewport: Bool {
+        let scrollView: UIScrollView? = collectionView ?? tableView
+        return scrollView?.window != nil
+    }
+
+    @MainActor
+    private func removeExternallyReadRows(_ externallyReadIDs: Set<String>, from posts: [NRPost]) -> Bool {
+        guard !posts.isEmpty else { return true }
+        let visibleIDs = currentVisiblePostIds()
+        // No live viewport means we cannot distinguish offscreen rows from the
+        // post being viewed in a detail destination or a detached List.
+        guard !visibleIDs.isEmpty else { return false }
+        let readIDs = Set(posts.filter {
+            vmInner.unreadIds[$0.id, default: 0] > 0 && externallyReadIDs.contains($0.shortId)
+        }.map(\.id))
+        guard !readIDs.isEmpty else { return true }
+        let removedIDs = readIDs.subtracting(visibleIDs)
+        isApplyingReadRemoval = true
+        // Let List own animated deletion, as in the debug experiment. Combining
+        // this with our anchored-update offset correction can move the viewport twice.
+        withAnimation(.easeInOut(duration: 0.25)) {
+            vmInner.updateUnreadIds { unreadIDs in
+                for id in readIDs { unreadIDs[id] = removedIDs.contains(id) ? nil : 0 }
+            }
+            if !removedIDs.isEmpty {
+                viewState = .posts(posts.filter { !removedIDs.contains($0.id) })
+            }
+        }
+        vmInner.updateIsAtTopSubject.send()
+#if DEBUG
+        recordFeedAction("external read removal · removed \(removedIDs.count) · kept visible \(readIDs.count - removedIDs.count) · \(removalGeometry())")
+#endif
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            guard let self else { return }
+            self.isApplyingReadRemoval = false
+            let waiting = self.postsWaitingForReadRemoval
+            self.postsWaitingForReadRemoval.removeAll()
+            waiting.forEach { $0() }
+        }
+        return true
     }
 
     @MainActor
@@ -1275,7 +1348,7 @@ class NXColumnViewModel: ObservableObject {
         selectedRelayAutoRetryAttempted = false
         clearLatestFeedSession()
         seenReconciliationScheduler.cancel()
-        pendingSyncedSeenIds.removeAll(keepingCapacity: true)
+        pendingExternalReadIDs.removeAll(keepingCapacity: true)
         // get initial feed state from
         self.subscriptions.forEach { $0.cancel() }
         self.subscriptions.removeAll()
@@ -1395,8 +1468,8 @@ class NXColumnViewModel: ObservableObject {
         }
 
         onScreenSeenInsertedSub = Deduplicator.shared.onScreenSeenInsertedSubject
-            .sink { [weak self] _ in
-                self?.scheduleAlreadySeenReconciliation()
+            .sink { [weak self] seenIDs in
+                self?.scheduleAlreadySeenReconciliation(removingVisiblePostsFor: seenIDs)
             }
 
         cloudSeenInsertedSub = Deduplicator.shared.cloudSeenInsertedSubject
@@ -2295,21 +2368,26 @@ class NXColumnViewModel: ObservableObject {
         // A reconciliation already inside its idle grace period must not run after
         // the List disappears and mistakes every row for offscreen.
         seenReconciliationScheduler.cancel()
-        pendingSyncedSeenIds.removeAll(keepingCapacity: true)
         // Preserve the rendered snapshot through detail navigation. Deleting read
         // rows or trimming thread parents here invalidates the suspended viewport
         // and can remove the very content the user expects to find on Back.
-        // Seen reconciliation recomputes cleanup when it is safe at the top.
+        // Keep external read IDs queued until the live feed returns.
     }
     
     @MainActor
     public func resumeViewUpdates() {
-        guard let config, isViewPaused else { return }
-        isViewPaused = false
+        guard isVisible else { return }
+        if isViewPaused {
+            isViewPaused = false
+            if let config {
 #if DEBUG
-        recordFeedAction("RESUME view updates · \(feedActionDebugViewport())")
+                recordFeedAction("RESUME view updates · \(feedActionDebugViewport())")
 #endif
-        self.loadLocal(config)
+                self.loadLocal(config)
+            }
+        }
+        scheduleAlreadySeenReconciliation(removingVisiblePostsFor:
+            SettingsStore.shared.appWideSeenTrackeriCloud ? Deduplicator.shared.cloudSyncedSeen : [])
     }
     
     @MainActor
@@ -2437,11 +2515,16 @@ class NXColumnViewModel: ObservableObject {
         )
 #endif
         paused = false
-        isViewPaused = false
+        scheduleAlreadySeenReconciliation(removingVisiblePostsFor:
+            SettingsStore.shared.appWideSeenTrackeriCloud ? Deduplicator.shared.cloudSyncedSeen : [])
         FeedsCoordinator.shared.registerColumn(self)
         self.fetchFeedTimerNextTick()
         self.listenForNewPosts(config)
         self.listenForPaginationImports(config)
+
+        // Resuming networking after backgrounding does not mean the feed's List
+        // has reappeared. Only resumeViewUpdates() may unpause a detail source.
+        guard !isViewPaused else { return }
 
         if !config.continue,
            case .posts(let nrPosts) = viewState,
@@ -5206,6 +5289,19 @@ extension NXColumnViewModel {
 
     @MainActor
     public func putOnScreen(_ addedPosts: [NRPost], config: NXColumnConfig, insertAtEnd: Bool = false, revealAtTop: Bool = false, completion: (() -> Void)? = nil) {
+
+        if isApplyingReadRemoval {
+            let generation = feedSessionGeneration
+            postsWaitingForReadRemoval.append { [weak self] in
+                guard let self, self.isVisible, !self.isViewPaused,
+                      self.shouldAcceptResults(for: config, sessionGeneration: generation) else {
+                    completion?()
+                    return
+                }
+                self.putOnScreen(addedPosts, config: config, insertAtEnd: insertAtEnd, revealAtTop: revealAtTop, completion: completion)
+            }
+            return
+        }
 
         reconcileUnreadPostIDs()
 

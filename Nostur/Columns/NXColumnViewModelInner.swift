@@ -226,8 +226,10 @@ class NXColumnViewModelInner {
     /// `readingPostID` is too late for the layout stabilizer when it has no parked row yet.
     public var rememberFeedAnchor: ((_ postID: String) -> Void)?
     /// The UIKit feed can remain layout-sensitive briefly after drag/deceleration ends.
-    /// Seen-row removals use this to join the deferred anchored-update queue.
+    /// Reads from another column/device wait for this cooldown before animating.
     public var isFeedViewportMovingOrRecently: (() -> Bool)?
+    /// Queued inserts, layout settling, or a viewport cover still own positioning.
+    public var isFeedLayoutUpdating: (() -> Bool)?
     /// Cancels a leftover prepend settle so a bottom append cannot be pinned.
     public var cancelPendingFeedSettle: (() -> Void)?
     
