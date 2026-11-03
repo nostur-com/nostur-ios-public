@@ -28,7 +28,22 @@ dwarfdump --uuid \
 
 Take the first eight UUID characters and lowercase them to match the sidebar.
 
-### Build Commands
+### Simulator interaction preference
+
+- Build, install, and launch using `./scripts/run-sim.sh`, `xcodebuild`, and
+  `xcrun simctl`. Opening the simulator window through the script is allowed.
+- Taking and inspecting simulator screenshots with
+  `xcrun simctl io <device> screenshot <path>` is allowed and does not require
+  Computer Use or permission to control Device Hub.
+- The user performs interactive and visual testing. Do not use Computer Use,
+  `cua`, or UI automation to inspect or control Device Hub or Simulator, and do
+  not request permission to do so, unless the user explicitly asks for that
+  interaction in the current task. A need for manual verification is not an
+  exception: launch the app, report TEST_BUILD_ID, and describe what to test.
+- If Device Hub needs a device selection or pose change, leave that interaction
+  to the user. Report manual checks as unverified until the user tests them.
+
+### Build commands and destinations
 
 Note: When doing iPhone Duo related things, run in the 'iPhone Duo' simulator, not 'iPhone 17 Pro'.
 The existing iPhone 17 Pro / iOS 26.5 simulator remains usable for general testing.
@@ -59,9 +74,9 @@ If multiple Xcodes are installed, set `DEVELOPER_DIR` to the intended
 `Xcode.app/Contents/Developer` directory when running commands, or select it in
 Xcode Settings → Locations → Command Line Tools. Avoid `open -a Simulator` or
 opening Device Hub by name: macOS may choose a different Xcode's app.
-Open Device Hub through Xcode → Open Developer Tool → Device Hub, or let the
-script open the matching copy. Select the target device there to view its screen
-and use its controls, including iPhone Duo's poses.
+Let the script open the matching copy of Device Hub. The user can also open it
+through Xcode → Open Developer Tool → Device Hub, select the target device to
+view its screen, and use its controls, including iPhone Duo's poses.
 If a simulator name exists under multiple runtimes, use
 `-destination 'platform=iOS Simulator,id=<simulator_udid>'` with `xcodebuild`.
 
