@@ -144,10 +144,7 @@ struct PostMenu: View {
                         if IS_DESKTOP_COLUMNS() {
                             // Create new column, or replace last column (if too many)
                             withAnimation {
-                                if !MacColumnsVM.shared.allowAddColumn {
-                                    MacColumnsVM.shared.columns.removeLast()
-                                }
-                                MacColumnsVM.shared.addColumn(
+                                MacColumnsVM.shared.addOrReplaceColumn(
                                     MacColumnConfig(
                                         type: .someoneElses(nrContact.pubkey),
                                         title: nrContact.anyName

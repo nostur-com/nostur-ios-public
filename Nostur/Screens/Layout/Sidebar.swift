@@ -21,7 +21,6 @@ struct SideBar: View {
     @State private var accountsSheetIsShown = false
     @State private var logoutAccount: CloudAccount? = nil
     @State private var showAnySigner = false
-    @State private var sidebarOffset: CGFloat = -NOSTUR_SIDEBAR_WIDTH
     @State private var npub = ""
     @State private var showProfileShare = false
     
@@ -385,13 +384,7 @@ struct SideBar: View {
         })
         .background(theme.listBackground)
         .compositingGroup()
-        .opacity(showSidebar ? 1.0 : 0)
-        .offset(x: sidebarOffset)
-        .onChange(of: showSidebar) { newValue in
-            withAnimation(.easeOut(duration: 0.1)) {
-                sidebarOffset = newValue ? 0 : -NOSTUR_SIDEBAR_WIDTH
-            }
-        }
+
     }
 }
 
@@ -410,6 +403,9 @@ struct SideBarOverlay: View {
 
 struct WithSidebar<Content: View>: View {
     @Environment(\.nativeNavigationEnabled) private var nativeNavigationEnabled
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var opensFromRight: Bool { IS_IPHONE && horizontalSizeClass == .regular }
     @State private var showSidebar: Bool = false
     
     @ViewBuilder
@@ -423,16 +419,38 @@ struct WithSidebar<Content: View>: View {
                     .opacity(showSidebar ? 1.0 : 0.0)
                     .allowsHitTesting(showSidebar)
             }
-            .overlay(alignment: .topLeading) {
-                GeometryReader { geometry in
+            .overlay {
+                SidebarDrawerLayout(isShown: showSidebar, opensFromRight: opensFromRight,
+                                    clampsWidth: nativeNavigationEnabled || opensFromRight) {
                     SideBar(showSidebar: $showSidebar)
-                        .frame(width: nativeNavigationEnabled ? min(NOSTUR_SIDEBAR_WIDTH, geometry.size.width) : NOSTUR_SIDEBAR_WIDTH)
                         .ignoresSafeArea(edges: (nativeNavigationEnabled || (IS_IPHONE && IS_DESKTOP_COLUMNS())) ? [] : .all)
-                        .opacity(showSidebar ? 1.0 : 0.0)
-                        .allowsHitTesting(showSidebar)
                 }
                 .allowsHitTesting(showSidebar)
             }
+    }
+}
+
+/// The account drawer follows the unfolded phone's app rail. Its contents
+/// keep their usual reading direction; only placement and motion change.
+struct SidebarDrawerLayout<Drawer: View>: View {
+    let isShown: Bool
+    let opensFromRight: Bool
+    let clampsWidth: Bool
+    @ViewBuilder let drawer: Drawer
+    @Environment(\.layoutDirection) private var layoutDirection
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = clampsWidth ? min(NOSTUR_SIDEBAR_WIDTH, geometry.size.width) : NOSTUR_SIDEBAR_WIDTH
+            let alignment: Alignment = opensFromRight && layoutDirection != .rightToLeft ? .topTrailing : .topLeading
+            let hiddenOffset = opensFromRight && layoutDirection != .rightToLeft ? width : -width
+            drawer
+                .frame(width: width)
+                .opacity(isShown ? 1 : 0)
+                .offset(x: isShown ? 0 : hiddenOffset)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
+                .animation(.easeOut(duration: 0.1), value: isShown)
+        }
     }
 }
 

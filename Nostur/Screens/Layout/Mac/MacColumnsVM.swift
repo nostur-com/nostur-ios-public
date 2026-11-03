@@ -28,6 +28,34 @@ class MacColumnsVM: ObservableObject {
     
     static let shared = MacColumnsVM()
     
+    private let defaults: UserDefaults
+    private static let duoColumnCountKey = "duo_pro_column_count"
+    @Published private(set) var duoColumnCount = 2
+
+    var duoColumns: [MacColumnConfig] { Array(columns.prefix(duoColumnCount - 1)) }
+
+    @MainActor
+    func setDuoColumnCount(_ count: Int) {
+        duoColumnCount = count >= 3 ? 3 : 2
+        defaults.set(duoColumnCount, forKey: Self.duoColumnCountKey)
+        prepareDuoColumns(defaultPhoneAccount: nil)
+    }
+
+    @MainActor
+    func prepareDuoColumns(defaultPhoneAccount: String?) {
+        let required = duoColumnCount - 1
+        guard columns.count < required else { return }
+        while columns.count < required {
+            if columns.isEmpty, let defaultPhoneAccount {
+                columns.append(MacColumnConfig(type: .notifications(defaultPhoneAccount)))
+            }
+            else {
+                columns.append(MacColumnConfig())
+            }
+        }
+        saveState()
+    }
+
     @Published var columns: [MacColumnConfig] = []
     @Published var availableFeeds: [CloudFeed] = []
     
@@ -35,26 +63,67 @@ class MacColumnsVM: ObservableObject {
     public func addColumn(_ config: MacColumnConfig? = nil) {
         guard allowAddColumn else { return }
         availableFeeds = getAvailableFeeds()
+        if IS_IPHONE {
+            prepareDuoColumns(defaultPhoneAccount: account()?.publicKey)
+            if let config, columns.count > 1 {
+                columns[1] = config
+            }
+            else if columns.count < 2 {
+                columns.append(config ?? MacColumnConfig())
+            }
+            setDuoColumnCount(3)
+            saveState()
+            return
+        }
         columns.append(config ?? MacColumnConfig())
         saveState()
     }
     
+    /// Feed creation and "open in column" actions replace the last visible
+    /// slot when full, without deleting hidden Duo configurations.
+    @MainActor
+    public func addOrReplaceColumn(_ config: MacColumnConfig) {
+        if IS_IPHONE, duoColumnCount == 3 {
+            availableFeeds = getAvailableFeeds()
+            prepareDuoColumns(defaultPhoneAccount: nil)
+            columns[1] = config
+            saveState()
+            return
+        }
+        if !allowAddColumn {
+            columns.removeLast()
+        }
+        addColumn(config)
+    }
+
     public var allowAddColumn: Bool {
-        columns.count < 10
+        IS_IPHONE ? duoColumnCount < 3 : columns.count < 10
     }
     
     @MainActor
     public func removeColumn(_ id: String? = nil) {
         guard allowRemoveColumn else { return }
+        if IS_IPHONE {
+            setDuoColumnCount(2)
+            return
+        }
         _ = columns.removeLast()
         saveState()
     }
     
     public var allowRemoveColumn: Bool {
-        columns.count > 0
+        IS_IPHONE ? duoColumnCount > 2 : columns.count > 0
     }
     
     init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        if let storedCount = defaults.object(forKey: Self.duoColumnCountKey) as? Int {
+            duoColumnCount = storedCount >= 3 ? 3 : 2
+        }
+        else if let data = defaults.string(forKey: "mac_columns_serialized")?.data(using: .utf8),
+                let state = try? JSONDecoder().decode(MacListStateSerialized.self, from: data) {
+            duoColumnCount = state.columns.count >= 2 ? 3 : 2
+        }
         _macListstateSerialized = AppStorage(wrappedValue: "", "mac_columns_serialized", store: defaults)
         self.selectedTab = UserDefaults.standard.string(forKey: "selected_tab") ?? "Main"
         self.selectedNotificationsTab = UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions"
@@ -67,6 +136,9 @@ class MacColumnsVM: ObservableObject {
         selectedNotificationsTab = UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions"
         availableFeeds = getAvailableFeeds()
         restoreConfiguredColumns(defaultPhoneAccount: IS_IPHONE ? account()?.publicKey : nil)
+        if IS_IPHONE {
+            prepareDuoColumns(defaultPhoneAccount: account()?.publicKey)
+        }
     }
     
     @MainActor

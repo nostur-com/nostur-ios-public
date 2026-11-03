@@ -2265,6 +2265,9 @@
     "%lld authors excluded by trust or block filtering" : {
 
     },
+    "%lld columns" : {
+
+    },
     "%lld contacts selected" : {
       "localizations" : {
         "es" : {
@@ -35574,6 +35577,9 @@
         }
       }
     },
+    "Three columns" : {
+
+    },
     "Through %@" : {
 
     },
@@ -36091,6 +36097,9 @@
           }
         }
       }
+    },
+    "Toggle two or three columns" : {
+
     },
     "Too many messages arrived without the relay completing the request." : {
       "localizations" : {
