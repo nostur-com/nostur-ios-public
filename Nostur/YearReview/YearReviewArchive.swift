@@ -216,7 +216,7 @@ actor YearReviewArchive {
     private func indexThread(_ event: YearReviewEvent, database: OpaquePointer) throws {
         let threadReferences = Set([event.parentId, event.rootId].compactMap { $0 })
         var detailReferences = Set<String>()
-        if YearReviewKinds.support.contains(event.kind), let target = event.tagValues("e").last ?? event.tagValues("a").last {
+        if YearReviewKinds.support.contains(event.kind), let target = event.kind == 1018 ? event.tagValues("e").first : event.tagValues("e").last ?? event.tagValues("a").last {
             detailReferences.insert(target)
         }
         if YearReviewKinds.content.contains(event.kind) {
@@ -526,6 +526,10 @@ actor YearReviewArchive {
                 }
                 if let parent = event.parentId,
                    YearReviewEvent.isHex(parent, length: 64) || YearReviewEvent.isCoordinate(parent) { missing.insert(parent) }
+            }
+            if event.kind == 1018, event.pubkey == owner, period.contains(event.createdAt),
+               let target = event.tagValues("e").first, YearReviewEvent.isHex(target, length: 64) {
+                outgoing.insert(target)
             }
             if [6, 7, 16].contains(event.kind), event.pubkey == owner, period.contains(event.createdAt) {
                 outgoing.formUnion((event.tagValues("e") + event.tagValues("a")).filter { YearReviewEvent.isHex($0, length: 64) || YearReviewEvent.isCoordinate($0) })

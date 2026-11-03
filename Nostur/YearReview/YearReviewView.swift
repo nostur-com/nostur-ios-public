@@ -336,7 +336,7 @@ struct YearReviewView: View {
 }
 
 enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
-    case gang, activeDay, conversation, mostReacted, mostZapped, mostZapValue, supporters, mentions
+    case gang, activeDay, polls, conversation, mostReacted, mostZapped, mostZapValue, supporters, mentions
     case mostInteracted, mostTalked, replyGuy, reactedBy, liked, zappedBy, zapped, amplifiedBy
     static let defaultSelection: Set<Self> = Set(allCases)
     var id: String { rawValue }
@@ -344,6 +344,7 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .gang: "My Nostr Gang"
         case .activeDay: "Your posting rhythm"
+        case .polls: "You put it to a vote"
         case .conversation: "You got people talking"
         case .mostReacted: "Your most-loved post"
         case .mostZapped: "Your most-zapped post"
@@ -364,6 +365,7 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .gang, .mostInteracted: "person.3.fill"
         case .activeDay: "calendar"
+        case .polls: "chart.bar.xaxis"
         case .conversation, .mostTalked, .replyGuy: "bubble.left.and.bubble.right.fill"
         case .mostReacted, .reactedBy, .liked: "heart.fill"
         case .mostZapped, .mostZapValue, .zappedBy, .zapped: "bolt.fill"
@@ -373,11 +375,12 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
         }
     }
     func hasHighlight(in report: YearReviewReport) -> Bool {
-        post(in: report) != nil || (self == .activeDay && report.mostActiveDay != nil)
+        post(in: report) != nil || (self == .activeDay && report.mostActiveDay != nil) || (self == .polls && report.polls != nil)
     }
 
     func post(in report: YearReviewReport) -> YearReviewPost? {
         switch self {
+        case .polls: report.polls?.mostVoted
         case .conversation: report.conversation
         case .mostReacted: report.mostReacted
         case .mostZapped: report.mostZapped
@@ -705,7 +708,7 @@ private struct YearReviewHighlightsView: View {
                 if !enabledCards.contains(card), let toggleCard {
                     YearReviewCollapsedCard(card: card, show: { toggleCard(card) })
                 } else {
-                    YearReviewHighlightCard(card: card, post: card.post(in: report), activeDay: card == .activeDay ? report.mostActiveDay : nil, averagePostsPerDay: report.averagePostsPerDay, dateFormat: report.period.dateFormat,
+                    YearReviewHighlightCard(card: card, post: card.post(in: report), activeDay: card == .activeDay ? report.mostActiveDay : nil, averagePostsPerDay: report.averagePostsPerDay, pollActivity: card == .polls ? report.polls : nil, dateFormat: report.period.dateFormat,
                         people: card.people(in: report).filter { !hiddenPeople.contains($0.pubkey) },
                         names: names, pictures: pictures, preview: card.post(in: report).flatMap { previews[$0.id] }, openPost: openPost, openProfile: openProfile, hidePerson: hidePerson,
                         hide: toggleCard.map { toggle in { toggle(card) } })
@@ -745,6 +748,7 @@ private struct YearReviewHighlightCard: View {
     let post: YearReviewPost?
     let activeDay: YearReviewActiveDay?
     let averagePostsPerDay: Double
+    let pollActivity: YearReviewPollActivity?
     let dateFormat: Date.FormatStyle
     let people: [YearReviewPerson]
     let names: [String: String]
@@ -774,7 +778,11 @@ private struct YearReviewHighlightCard: View {
             if let activeDay {
                 YearReviewActiveDayContent(day: activeDay, average: averagePostsPerDay, dateFormat: dateFormat)
             }
+            if let pollActivity {
+                YearReviewPollActivityContent(activity: pollActivity)
+            }
             if let post {
+                if card == .polls { Text("Your most-voted poll").font(.subheadline).foregroundStyle(.secondary) }
                 if let openPost {
                     Button { openPost(post) } label: {
                         HStack(alignment: .top, spacing: 8) {
@@ -786,6 +794,7 @@ private struct YearReviewHighlightCard: View {
                     .accessibilityLabel(Text("Open highlighted post"))
                 } else { postPreview(post) }
                 switch card {
+                case .polls: Text("\(pollActivity?.mostVotedCount ?? 0) voters").font(.headline)
                 case .conversation: Text("\(post.replies) replies · \(post.respondents) people").font(.headline)
                 case .mostReacted: Text("\(post.reactions) reactions").font(.headline)
                 case .mostZapped: Text("\(post.zaps) zaps").font(.headline)
@@ -804,6 +813,23 @@ private struct YearReviewHighlightCard: View {
             extraCount: preview?.extraCount ?? 0, isVideo: preview?.isVideo ?? false, lineLimit: 6, textColor: .primary)
     }
 
+}
+
+private struct YearReviewPollActivityContent: View {
+    let activity: YearReviewPollActivity
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if activity.created > 0 {
+                Text("You created \(activity.created) polls and attracted \(activity.voters) voters.")
+                    .font(.headline)
+            }
+            if activity.votedIn > 0 {
+                Text("You voted in \(activity.votedIn) polls.")
+                    .font(.subheadline)
+            }
+        }
+    }
 }
 
 private struct YearReviewActiveDayContent: View {

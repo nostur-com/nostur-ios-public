@@ -134,6 +134,25 @@
         }
       }
     },
+    "You created %lld polls and attracted %lld voters." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You created %1$lld polls and attracted %2$lld voters."
+          }
+        }
+      }
+    },
+    "You put it to a vote" : {
+
+    },
+    "You voted in %lld polls." : {
+
+    },
+    "Your most-voted poll" : {
+
+    },
     "__Source code__" : {
       "extractionState" : "manual",
       "localizations" : {

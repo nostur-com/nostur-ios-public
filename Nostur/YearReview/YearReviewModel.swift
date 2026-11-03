@@ -5,7 +5,7 @@ import NostrEssentials
 import CoreData
 
 struct YearReviewPreferences: Codable, Equatable {
-    var cardSelectionVersion: Int? = 2
+    var cardSelectionVersion: Int? = 3
     var relayDefaultsVersion: Int? = 1
     let cards: Set<YearReviewCard>
     let hiddenPeople: Set<String>
@@ -13,6 +13,11 @@ struct YearReviewPreferences: Codable, Equatable {
     let selectedRelays: Set<String>
     let relays: [YearReviewCollection.RelayDataSnapshot]
     var relayAuthOverrides: [String: Bool]? = nil
+
+    var selectedCards: Set<YearReviewCard> {
+        if (cardSelectionVersion ?? 0) < 2 { return YearReviewCard.defaultSelection }
+        return (cardSelectionVersion ?? 0) < 3 ? cards.union([.polls]) : cards
+    }
 
     static func applyingAuth(to relays: [RelayData], configured: [RelayData], overrides: [String: Bool]) -> [RelayData] {
         var defaults: [String: Bool] = [:]
@@ -298,7 +303,7 @@ final class YearReviewModel {
             if let archive {
                 let saved = try await archive.load(YearReviewCollection.self, key: checkpointKey(selectedPeriod(year: year)))
                 guard generation == token else { return }
-                if saved?.schemaVersion == 3, saved?.owner == owner {
+                if saved?.schemaVersion == YearReviewCollection.currentSchemaVersion, saved?.owner == owner {
                     collection = saved
                     if let saved {
                         for relay in saved.relays where !relays.contains(where: { $0.url == relay.url }) {
@@ -312,9 +317,7 @@ final class YearReviewModel {
         guard generation == token else { return }
         let preferences = YearReviewPreferences.load(owner: owner)
         relayAuthOverrides = preferences?.relayAuthOverrides ?? [:]
-        enabledCards = preferences.map {
-            ($0.cardSelectionVersion ?? 0) < 2 ? YearReviewCard.defaultSelection : $0.cards
-        } ?? YearReviewCard.defaultSelection
+        enabledCards = preferences?.selectedCards ?? YearReviewCard.defaultSelection
         hiddenPeople = preferences?.hiddenPeople ?? []
         selectedShareFormat = preferences?.shareFormat ?? .report
         if let preferences {
@@ -436,6 +439,14 @@ final class YearReviewModel {
                     offset += batch.fetchedCount
                     if batch.fetchedCount < 200 { break }
                 }
+                var pollCursor = ""
+                while true {
+                    try Task.checkCancellation()
+                    let page = await PollArchive.shared.historyPage(owner: owner, after: pollCursor)
+                    guard let last = page.last else { break }
+                    pollCursor = last.id
+                    recordArchived(try await archive.ingest(page, source: "poll-archive"))
+                }
                 if download {
                     var job = previous ?? YearReviewCollection(owner: owner, period: period, relays: sources, trusted: trust)
                     // Authentication preferences can change before retrying a
@@ -482,6 +493,7 @@ final class YearReviewModel {
                 let revision = previewRevision
                 let ownPosts = try await archive.inventory(owner: owner, period: period).ownPostIds
                 try await seedCachedPostReactions(ids: ownPosts, archive: archive)
+                try await seedCachedPollVotes(ids: ownPosts, archive: archive)
                 let report = try await archive.report(owner: owner, period: period, trusted: reportTrust,
                                                      blocked: CloudBlocked.blockedPubkeys(), zapperKeys: zapperKeys)
                 guard generation == token else { return }
@@ -843,7 +855,7 @@ final class YearReviewModel {
     }
 
     private func loadPostPreviews(report: YearReviewReport, archive: YearReviewArchive) async throws -> [String: YearReviewPostPreview] {
-        let ids = Set([report.conversation, report.mostReacted, report.mostZapped, report.mostZapValue].compactMap { $0?.id })
+        let ids = Set([report.conversation, report.mostReacted, report.mostZapped, report.mostZapValue, report.polls?.mostVoted].compactMap { $0?.id })
         var events: [YearReviewEvent] = []
         for id in ids { if let event = try await archive.event(id: id) { events.append(event) } }
         let snapshots = events
@@ -882,6 +894,22 @@ final class YearReviewModel {
                 guard let last = page.lastId, last != cursor else { break }
                 cursor = last
                 _ = try await archive.ingest(page.events, source: "local-post-reactions")
+                try await archive.recordLocalDeletions(page.deletedIds)
+                await cache.perform { cache.reset() }
+            }
+        }
+    }
+
+    private func seedCachedPollVotes(ids: [String], archive: YearReviewArchive) async throws {
+        let cache = DataProvider.shared().newTaskContext()
+        for targets in ids.chunks(of: 128) {
+            var cursor = ""
+            while true {
+                try Task.checkCancellation()
+                let page = try await YearReviewLocalSeed.pollVotes(ids: targets, after: cursor, context: cache)
+                guard let last = page.lastId, last != cursor else { break }
+                cursor = last
+                recordArchived(try await archive.ingest(page.events, source: "local-poll-votes"))
                 try await archive.recordLocalDeletions(page.deletedIds)
                 await cache.perform { cache.reset() }
             }
@@ -959,7 +987,7 @@ final class YearReviewModel {
         let token = generation
         do {
             let saved = try await archive.load(YearReviewCollection.self, key: checkpointKey(selectedPeriod(year: requestedYear)))
-            if generation == token, year == requestedYear, saved?.schemaVersion == 3 { collection = saved }
+            if generation == token, year == requestedYear, saved?.schemaVersion == YearReviewCollection.currentSchemaVersion { collection = saved }
         } catch { errorMessage = error.localizedDescription }
     }
 

@@ -24,6 +24,137 @@ final class YearReviewTests: XCTestCase {
         YearReviewAnalyzer.analyze(events: events, owner: owner, period: period, trusted: trusted, blocked: blocked)
     }
 
+    private var pollTags: [[String]] { [["option", "a", "Yes"], ["option", "b", "No"], ["polltype", "singlechoice"]] }
+
+    func testPollsEnterRegularHighlightsAndPostingRhythmButVotesDoNot() {
+        let poll = note("poll", by: owner, content: "Tea or coffee?", tags: pollTags, kind: 1068)
+        let vote = note("vote", by: alice, tags: [["e", "poll"], ["response", "a"]], kind: 1018)
+        let report = analyze([poll, vote,
+            note("reply", by: alice, parent: "poll"),
+            note("reaction", by: alice, content: "+", tags: [["e", "poll"]], kind: 7)], trusted: [alice])
+        XCTAssertEqual(report.ownPostCount, 1)
+        XCTAssertEqual(report.mostActiveDay?.posts, 1)
+        XCTAssertEqual(report.conversation?.id, "poll")
+        XCTAssertEqual(report.conversation?.replies, 1)
+        XCTAssertEqual(report.mostReacted?.id, "poll")
+        XCTAssertEqual(report.mostReacted?.reactions, 1)
+        XCTAssertEqual(report.supporters.first?.supportCount, 1)
+        XCTAssertEqual(report.polls?.mostVotedCount, 1)
+        XCTAssertEqual(report.polls?.mostVoted?.kind, 1068)
+    }
+
+    func testPollVotersAreUniqueAcrossPollsAndParticipationCountsPollsNotVotes() {
+        let events = [note("first", by: owner, tags: pollTags, kind: 1068),
+            note("second", by: owner, tags: pollTags, kind: 1068),
+            note("other", by: alice, tags: pollTags, timestamp: period.start - 10, kind: 1068),
+            note("one", by: bob, tags: [["e", "first"], ["response", "a"]], kind: 1018),
+            note("two", by: bob, tags: [["e", "second"], ["response", "b"]], kind: 1018),
+            note("my-old", by: owner, tags: [["e", "other"], ["response", "a"]], timestamp: period.start + 2, kind: 1018),
+            note("my-new", by: owner, tags: [["e", "other"], ["response", "b"]], timestamp: period.start + 3, kind: 1018)]
+        let report = analyze(events + events)
+        XCTAssertEqual(report.polls?.created, 2)
+        XCTAssertEqual(report.polls?.voters, 1) // All valid voters, even outside WoT.
+        XCTAssertEqual(report.polls?.votedIn, 1)
+        XCTAssertEqual(report.polls?.mostVoted?.id, "first")
+        XCTAssertTrue(report.supporters.isEmpty)
+        XCTAssertTrue(report.mostInteracted.isEmpty)
+    }
+
+    func testPollTallyHonorsClosingTimeOptionsChangedVotesAndReportCutoff() {
+        let end = period.start + 20
+        let poll = note("poll", by: owner, tags: pollTags + [["endsAt", String(end)]], kind: 1068)
+        let votes = [note("before", by: alice, tags: [["e", "poll"], ["response", "a"]], timestamp: period.start + 2, kind: 1018),
+            note("invalid-latest", by: alice, tags: [["e", "poll"], ["response", "invalid"], ["response", "b"]], timestamp: period.start + 3, kind: 1018),
+            note("valid", by: bob, tags: [["e", "poll"], ["response", "b"]], timestamp: end, kind: 1018),
+            note("after-close", by: bob, tags: [["e", "poll"], ["response", "invalid"]], timestamp: end + 1, kind: 1018),
+            note("before-poll", by: owner, tags: [["e", "poll"], ["response", "a"]], timestamp: period.start, kind: 1018),
+            note("after-year", by: owner, tags: [["e", "poll"], ["response", "a"]], timestamp: period.end, kind: 1018)]
+        let report = analyze([poll] + votes)
+        XCTAssertEqual(report.polls?.voters, 1)
+        XCTAssertEqual(report.polls?.mostVotedCount, 1)
+        XCTAssertEqual(report.polls?.votedIn, 0)
+    }
+
+    func testMultipleChoiceStillCountsOneVoterAndUsesFirstETag() {
+        let tags = pollTags.filter { $0.first != "polltype" } + [["polltype", "multiplechoice"]]
+        let report = analyze([note("poll", by: owner, tags: tags, kind: 1068),
+            note("vote", by: alice, tags: [["e", "poll"], ["e", "wrong"], ["response", "a"], ["response", "b"], ["response", "a"]], kind: 1018)])
+        XCTAssertEqual(report.polls?.voters, 1)
+        XCTAssertEqual(report.polls?.mostVotedCount, 1)
+    }
+
+    func testPollBlocksDeletionsAndParticipationOnlyCard() {
+        let poll = note("poll", by: alice, tags: pollTags, kind: 1068)
+        let vote = note("vote", by: owner, tags: [["e", "poll"], ["response", "a"]], kind: 1018)
+        let report = analyze([poll, vote])
+        XCTAssertEqual(report.polls?.created, 0)
+        XCTAssertEqual(report.polls?.votedIn, 1)
+        XCTAssertTrue(YearReviewCard.polls.hasHighlight(in: report))
+        XCTAssertNil(report.polls?.mostVoted)
+        XCTAssertNil(analyze([poll, vote], blocked: [alice]).polls)
+        XCTAssertNil(analyze([poll, vote, note("delete", by: owner, tags: [["e", "vote"]], kind: 5)]).polls)
+        XCTAssertNil(analyze([poll, vote, note("delete", by: alice, tags: [["e", "poll"]], kind: 5)]).polls)
+        XCTAssertNil(analyze([]).polls)
+    }
+
+    func testPollCollectionFetchesVotesWithoutAuthorPTagAndResolvesVotedPolls() async throws {
+        let poll = try signedEvent(kind: 1068, tags: pollTags)
+        let vote = try signedEvent(kind: 1018, tags: [["e", poll.id], ["response", "a"]])
+        let work = YearReviewWork(relay: "wss://relay.example", category: .references, since: period.start, until: period.end - 1, ids: [poll.id])
+        XCTAssertTrue((work.filter(owner: poll.pubkey)["kinds"] as? [Int])?.contains(1018) == true)
+        XCTAssertTrue(work.accepts(vote, owner: poll.pubkey))
+        XCTAssertTrue(YearReviewKinds.content.contains(1068))
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let archive = YearReviewArchive(owner: vote.pubkey, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        _ = try await archive.ingest([vote], source: "test")
+        let inventory = try await archive.inventory(owner: vote.pubkey, period: period)
+        XCTAssertTrue(inventory.missingParentIds.contains(poll.id))
+    }
+
+    func testNewPollCardDefaultsPreserveExistingHiddenCards() {
+        var preferences = YearReviewPreferences(cards: [.activeDay], hiddenPeople: [], shareFormat: .report, selectedRelays: [], relays: [])
+        preferences.cardSelectionVersion = 2
+        XCTAssertEqual(preferences.selectedCards, [.activeDay, .polls])
+        preferences.cardSelectionVersion = 3
+        XCTAssertEqual(preferences.selectedCards, [.activeDay])
+    }
+
+    func testPollArchiveAndHighlightedDetailRestoreVotesWithMatchingTally() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let poll = try signedEvent(content: "A question?", kind: 1068, tags: pollTags)
+        let vote = try signedEvent(kind: 1018, tags: [["e", poll.id], ["response", "a"]])
+        let pollArchive = PollArchive(root: directory.appendingPathComponent("polls"))
+        let pollJSON = String(decoding: try JSONEncoder().encode(poll), as: UTF8.self)
+        let voteJSON = String(decoding: try JSONEncoder().encode(vote), as: UTF8.self)
+        let saved = await pollArchive.save(owner: poll.pubkey, json: pollJSON)
+        XCTAssertTrue(saved)
+        _ = await pollArchive.saveResults(owner: poll.pubkey, pollID: poll.id, jsons: [voteJSON])
+        let reopened = PollArchive(root: directory.appendingPathComponent("polls"))
+        let page = await reopened.historyPage(owner: poll.pubkey, after: "")
+        XCTAssertEqual(Set(page.map(\.id)), [poll.id, vote.id])
+        let archive = YearReviewArchive(owner: poll.pubkey, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        _ = try await archive.ingest(page + [vote], source: "poll-archive")
+        let report = try await archive.report(owner: poll.pubkey, period: period, trusted: [], blocked: [])
+        let highlight = try XCTUnwrap(report.polls?.mostVoted)
+        XCTAssertEqual(report.polls?.mostVotedCount, 1)
+        let detail = try await archive.detailPage(to: poll.id)
+        XCTAssertEqual(detail.events.map(\.id), [vote.id])
+        XCTAssertTrue(detail.replyIds.isEmpty)
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: DataProvider.shared().container.managedObjectModel)
+        _ = try coordinator.addPersistentStore(ofType: NSInMemoryStoreType, configurationName: nil, at: nil)
+        let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        context.persistentStoreCoordinator = coordinator
+        try await YearReviewDetailHydrator.restore(post: highlight, archive: archive, blocked: [], context: context)
+        let definition = NostrPoll(id: poll.id, createdAt: Int(poll.createdAt), tags: poll.tags)
+        let cached = await PollRelayClient.shared.cachedVotes(poll: definition, context: context)
+        let tally = PollTally(poll: definition, votes: cached, now: Int(period.end))
+        XCTAssertEqual(tally.totalVoters, report.polls?.mostVotedCount)
+        let empty = await reopened.historyPage(owner: poll.pubkey, after: page.last!.id)
+        XCTAssertTrue(empty.isEmpty)
+    }
+
     func testMostActiveDayCountsPublicContentButNotInteractionsOrDeletedPosts() {
         let first = period.start + 3600
         let second = first + 86400

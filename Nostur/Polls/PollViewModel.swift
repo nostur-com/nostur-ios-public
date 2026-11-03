@@ -79,6 +79,12 @@ final class PollViewModel: ObservableObject {
                 hasLoaded = true
             }
         }
+        let cached = await PollRelayClient.shared.cachedVotes(poll: poll)
+        if !cached.isEmpty {
+            responses = await PollRelayClient.shared.merge(responses, cached)
+            tally = await PollRelayClient.shared.tally(poll: poll, votes: responses)
+            hasLoaded = true
+        }
         guard !Task.isCancelled else { return }
         let plan = PollRelayContext.query(accountPubkey: accountPubkey, authorPubkey: author,
                                           eventRelays: poll.relays, includeMore: false)

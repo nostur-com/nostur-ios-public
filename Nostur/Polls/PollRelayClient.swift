@@ -1,4 +1,5 @@
 import Foundation
+import CoreData
 
 struct PollRelayResult: Sendable {
     var votes: [PollVote] = []
@@ -34,6 +35,29 @@ actor PollRelayClient {
         guard !Task.isCancelled, let url = URL(string: relay) else { return PollRelayResult() }
         return await Self.query(poll: poll, transport: ProfileRelaySocket(url: url), author: author, cursor: cursor,
                                 relayURL: relay, authentication: authentication)
+    }
+
+    /// Includes votes restored from a report, even when relays have dropped them.
+    func cachedVotes(poll: NostrPoll, context: NSManagedObjectContext? = nil) async -> [PollVote] {
+        let context = context ?? DataProvider.shared().newTaskContext()
+        let now = Int(Date.now.timeIntervalSince1970)
+        var cursor = ""
+        var votes: [PollVote] = []
+        do {
+            while true {
+                try Task.checkCancellation()
+                let page = try await YearReviewLocalSeed.pollVotes(ids: [poll.id], after: cursor, context: context)
+                guard let last = page.lastId, last != cursor else { break }
+                cursor = last
+                for event in page.events where event.tagValues("e").first == poll.id
+                    && event.createdAt >= poll.createdAt && event.createdAt <= now
+                    && (poll.endsAt == nil || event.createdAt <= poll.endsAt!) && event.verified() {
+                    votes.append(PollVote(id: event.id, pubkey: event.pubkey, createdAt: Int(event.createdAt), responses: event.tagValues("response")))
+                }
+                await context.perform { context.reset() }
+            }
+        } catch { /* Already gathered local votes remain usable if cancelled. */ }
+        return votes
     }
 
     /// An explicit relay OK is required before a vote is reflected in the tally.

@@ -211,7 +211,7 @@ Report-ready screens call resumable collection “Continue unfinished checks” 
 explain that history checks remain; resuming keeps saved events and retries the
 remaining work rather than starting a new download. Highlight post previews use
 the same passive text/thumbnail component as reaction notifications. Only the
-four selected highlight events are read by ID from SQLite and parsed on a private
+selected highlight events are read by ID from SQLite and parsed on a private
 context into immutable display snapshots, without saving preview objects to the
 feed. Tapping a post asynchronously promotes that single archived event to the
 normal detail cache and uses existing post/article/video navigation. Person rows
@@ -353,3 +353,31 @@ five minutes. Existing authorized keys are accumulated to preserve historical
 providers. Receipt validation version must be bumped when its acceptance rules
 change. Regression coverage reopens the archive, changes current provider keys,
 and verifies cached counts remain while blocks and deletions still suppress them.
+
+
+## Polls in Year in Review
+
+Kind 1068 polls count as public posts for posting rhythm and existing reply,
+reaction and zap highlights. Kind 1018 votes are interactions, never posts,
+replies, reactions or relationship scores. Collection schema 4 starts fresh work
+checkpoints for the expanded kinds while retaining downloaded archive data.
+Own votes also contribute missing poll IDs for local/relay parent resolution.
+Reference queries include votes by e-tag, even when no author p-tag is present.
+
+“You put it to a vote” combines polls created, distinct valid voters across those
+polls, the most-voted poll and its voter count, and the number of distinct polls
+voted in. No activity means no card; participation alone can show the card.
+The new card defaults on without resetting previously hidden sections. Shared
+images honor its hide setting and expose no individual voting choices.
+
+Analysis reuses PollTally: one latest vote per pubkey per poll, valid options,
+single/multiple-choice rules, creation/closing times, and deterministic ties.
+Counts stop at the report cutoff (or now, whichever is earlier), exclude deleted
+and blocked votes, and include otherwise valid voters outside WoT, matching the
+poll's All audience rather than its Following/WoT presentation filters.
+
+Reports seed signed originals from PollArchive, the regular database and public
+history SQLite archive, deduplicated by event ID. Highlight preparation restores
+only the highlighted poll and its related votes to the normal database. The poll
+loader reads those cached votes before networking, preserving report evidence
+when relays no longer retain it. PollArchive remains independently usable.

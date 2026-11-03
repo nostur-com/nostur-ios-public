@@ -160,6 +160,7 @@ struct YearReviewMonthProgress: Identifiable, Equatable, Sendable {
 }
 
 struct YearReviewCollection: Codable, Equatable, Sendable {
+    static let currentSchemaVersion = 4
     enum Phase: String, Codable, Sendable { case primary, references, parents, finished }
     let schemaVersion: Int
     let owner: String
@@ -182,7 +183,7 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
     var pacing: YearReviewRelayPacing? = nil
 
     init(owner: String, period: YearReviewPeriod, relays: [RelayData], trusted: Set<String>) {
-        schemaVersion = 3
+        schemaVersion = Self.currentSchemaVersion
         self.owner = owner
         self.period = period
         self.relays = relays.map { RelayDataSnapshot(url: $0.url, auth: $0.auth) }
@@ -418,6 +419,25 @@ enum YearReviewLocalSeed {
         try await context.perform {
             let request = Event.fetchRequest()
             request.predicate = NSPredicate(format: "kind == 7 AND reactionToId IN %@ AND id > %@ AND sig != nil AND otherId == nil AND groupId == nil AND NOT kTag IN {4,14,15}", ids, cursor)
+            request.sortDescriptors = [NSSortDescriptor(key: "id", ascending: true)]
+            request.fetchLimit = 200
+            let fetched = try context.fetch(request)
+            return Batch(events: fetched.filter { $0.deletedById == nil }.map(snapshot),
+                         deletedIds: Set(fetched.filter { $0.deletedById != nil }.map(\.id)), fetchedCount: fetched.count)
+        }
+    }
+
+    /// Votes can omit the author's p-tag, so seed by the poll's e-tag as well.
+    static func pollVotes(ids: [String], after cursor: String, context: NSManagedObjectContext) async throws -> Batch {
+        guard !ids.isEmpty else { return Batch(events: [], deletedIds: [], fetchedCount: 0) }
+        return try await context.perform {
+            let request = Event.fetchRequest()
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                NSPredicate(format: "kind == 1018 AND id > %@ AND sig != nil", cursor),
+                NSCompoundPredicate(orPredicateWithSubpredicates: ids.map {
+                    NSPredicate(format: "tagsSerialized CONTAINS %@", "[\"e\",\"" + $0 + "\"")
+                })
+            ])
             request.sortDescriptors = [NSSortDescriptor(key: "id", ascending: true)]
             request.fetchLimit = 200
             let fetched = try context.fetch(request)

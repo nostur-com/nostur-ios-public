@@ -64,6 +64,15 @@ actor PollArchive {
         }
     }
 
+    /// Signed originals for Year in Review, paged without copying the whole archive.
+    func historyPage(owner: String, after cursor: String) -> [YearReviewEvent] {
+        load(owner)
+        return cache[owner, default: [:]].values.filter { $0.id > cursor }
+            .sorted { $0.id < $1.id }.prefix(200).compactMap {
+                try? JSONDecoder().decode(YearReviewEvent.self, from: Data($0.json.utf8))
+            }
+    }
+
     private func store(_ record: Record, owner: String, allowWhenFull: Bool) -> Bool {
         guard Self.isPubkey(owner) else { return false }
         load(owner)

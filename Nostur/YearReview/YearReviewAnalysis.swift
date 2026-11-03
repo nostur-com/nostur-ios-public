@@ -192,6 +192,14 @@ struct YearReviewActiveDay: Equatable, Sendable {
     let posts: Int
 }
 
+struct YearReviewPollActivity: Equatable, Sendable {
+    let created: Int
+    let voters: Int
+    let votedIn: Int
+    let mostVoted: YearReviewPost?
+    let mostVotedCount: Int
+}
+
 struct YearReviewReport: Equatable, Sendable {
     let period: YearReviewPeriod
     let gang: [YearReviewPerson]
@@ -215,6 +223,7 @@ struct YearReviewReport: Equatable, Sendable {
     var amplifiedBy: [YearReviewPerson] = []
     var unverifiedZaps = 0
     var anonymousZaps = 0
+    var polls: YearReviewPollActivity? = nil
 
     var averagePostsPerDay: Double { Double(ownPostCount) / Double(period.calendarDays) }
 
@@ -250,12 +259,17 @@ enum YearReviewAnalyzer {
                         locallyDeleted: Set<String>, zapperKeys: [String: Set<String>],
                         verifiedZap: ((YearReviewEvent) -> YearReviewZap?)? = nil) throws -> YearReviewReport {
         var index: [String: ContentIndex] = [:]
+        var polls: [String: NostrPoll] = [:]
         var latest: [String: String] = [:]
         var versions: [String: Set<String>] = [:]
         var deletions: [(String, [String], Int64)] = []
         try scan { event in
             if event.kind == 5 { deletions.append((event.pubkey, event.tagValues("e") + event.tagValues("a"), event.createdAt)); return }
             guard YearReviewKinds.content.contains(event.kind), event.createdAt < period.end else { return }
+            if event.kind == 1068 {
+                let poll = NostrPoll(id: event.id, createdAt: Int(event.createdAt), tags: event.tags)
+                if poll.isSupported { polls[event.id] = poll }
+            }
             index[event.id] = ContentIndex(pubkey: event.pubkey, parent: event.parentId, root: event.rootId, createdAt: event.createdAt,
                 kind: event.kind, coordinate: event.coordinate, publishedAt: event.tagValues("published_at").first.flatMap(Int64.init).flatMap { $0 > 0 && $0 <= event.createdAt ? $0 : nil } ?? event.createdAt, preview: event.pubkey == owner ? event.preview : "")
             if let address = event.coordinate {
@@ -266,8 +280,10 @@ enum YearReviewAnalyzer {
             }
         }
         var deleted = locallyDeleted
+        var deletionAuthors: [String: Set<String>] = [:]
         for (author, ids, cutoff) in deletions {
             for id in ids {
+                deletionAuthors[id, default: []].insert(author)
                 if index[id]?.pubkey == author { deleted.insert(id) }
                 for version in versions[id, default: []] {
                     if let item = index[version], item.pubkey == author, item.createdAt <= cutoff { deleted.insert(version) }
@@ -307,8 +323,21 @@ enum YearReviewAnalyzer {
         var unresolved = 0
         var unverifiedZaps = 0
         var anonymousZaps = 0
+        var pollVotes: [String: [String: PollVote]] = [:]
+        let pollCutoff = Int(min(period.end - 1, Int64(Date.now.timeIntervalSince1970)))
         try scan { event in
-            guard !deleted.contains(event.id) else { return }
+            guard !deleted.contains(event.id), deletionAuthors[event.id]?.contains(event.pubkey) != true else { return }
+            if event.kind == 1018 {
+                guard !blocked.contains(event.pubkey), let target = event.tagValues("e").first,
+                      let poll = polls[target], !deleted.contains(target),
+                      event.createdAt >= poll.createdAt, event.createdAt <= pollCutoff,
+                      poll.endsAt == nil || event.createdAt <= poll.endsAt! else { return }
+                let vote = PollVote(id: event.id, pubkey: event.pubkey, createdAt: Int(event.createdAt), responses: event.tagValues("response"))
+                if let old = pollVotes[target]?[event.pubkey],
+                   old.createdAt > vote.createdAt || old.createdAt == vote.createdAt && old.id <= vote.id { return }
+                pollVotes[target, default: [:]][event.pubkey] = vote
+                return // Votes never become replies, reactions, or relationship scores.
+            }
             // Post highlights use the same positive reaction-event total as detail.
             // Trust, unique people and the year boundary remain relationship rules.
             let reactionTarget = event.tagValues("e").last ?? event.tagValues("a").last.flatMap(canonical)
@@ -427,6 +456,23 @@ enum YearReviewAnalyzer {
         let mostActiveDay = postingDays.sorted {
             $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value
         }.first.map { YearReviewActiveDay(date: $0.key, posts: $0.value) }
+        var voters = Set<String>()
+        var votedIn = 0
+        var mostVoted: YearReviewPost?
+        var mostVotedCount = 0
+        for (id, poll) in polls where !deleted.contains(id) && !blocked.contains(index[id]?.pubkey ?? "") {
+            let tally = PollTally(poll: poll, votes: Array(pollVotes[id, default: [:]].values), now: pollCutoff)
+            if tally.votes.contains(where: { $0.pubkey == owner && period.contains(Int64($0.createdAt)) }) { votedIn += 1 }
+            guard let post = posts[id] else { continue }
+            voters.formUnion(tally.votes.map(\.pubkey))
+            if tally.totalVoters > mostVotedCount || (tally.totalVoters == mostVotedCount && tally.totalVoters > 0 && id < (mostVoted?.id ?? id)) {
+                mostVoted = post
+                mostVotedCount = tally.totalVoters
+            }
+        }
+        let createdPolls = polls.keys.filter { posts[$0] != nil }.count
+        let pollActivity = createdPolls > 0 || votedIn > 0
+            ? YearReviewPollActivity(created: createdPolls, voters: voters.count, votedIn: votedIn, mostVoted: mostVoted, mostVotedCount: mostVotedCount) : nil
         return YearReviewReport(period: period, gang: Array(gang.prefix(5)), conversation: best { Int64($0.replies) },
             mentionedBy: mentionedBy, ownPostCount: posts.count, unresolvedParents: unresolved, excludedAuthors: excluded.count,
             mostActiveDay: mostActiveDay, mostReacted: best { Int64($0.reactions) }, mostZapped: best { Int64($0.zaps) }, mostZapValue: best { $0.millisats },
@@ -435,7 +481,7 @@ enum YearReviewAnalyzer {
             supporters: rank(all) { $0.supportCount }, reactedBy: rank(all) { $0.reactions },
             liked: rank(Array(liked.values)) { $0.reactions }, zappedBy: rank(all) { $0.zaps },
             zapped: rank(Array(zapped.values)) { $0.zaps }, amplifiedBy: rank(all) { $0.reposts + $0.quotes },
-            unverifiedZaps: unverifiedZaps, anonymousZaps: anonymousZaps)
+            unverifiedZaps: unverifiedZaps, anonymousZaps: anonymousZaps, polls: pollActivity)
     }
 
     static func mentions(_ event: YearReviewEvent, pubkey: String) -> Bool {

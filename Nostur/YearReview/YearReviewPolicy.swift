@@ -2,9 +2,9 @@ import Foundation
 
 /// All kinds remain public; gift wraps, DMs and decrypted rumors are excluded.
 enum YearReviewKinds {
-    static let content: Set<Int> = [1, 20, 21, 22, 1111, 1222, 1244, 9802, 30023, 34235, 34236]
+    static let content: Set<Int> = [1, 20, 21, 22, 1068, 1111, 1222, 1244, 9802, 30023, 34235, 34236]
     static let replies: Set<Int> = [1, 1111, 1244]
-    static let support: Set<Int> = [6, 7, 16, 9735]
+    static let support: Set<Int> = [6, 7, 16, 1018, 9735]
     static let archived = content.union(support).union([5])
 }
 
