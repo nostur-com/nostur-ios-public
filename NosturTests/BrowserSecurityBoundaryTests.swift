@@ -54,6 +54,71 @@ final class BrowserSecurityBoundaryTests: XCTestCase {
         XCTAssertEqual(fixture.signer.approvals.count, 1)
     }
 
+    func testWord5NewEventKindSignsWithoutPromptAndAppActionsToggleRevokesIt() async throws {
+        let fixture = try BrowserSecurityFixture(origin: "https://otherstuff.ai")
+        defer { fixture.close() }
+        try await fixture.load()
+        let script = """
+        return await nostr.signEvent({kind:5555,created_at:Math.floor(Date.now()/1000),
+          tags:[],content:'game request'});
+        """
+        let signed = try await fixture.view.callAsyncJavaScript(script, arguments: [:], in: nil, contentWorld: .page) as? [String: Any]
+        XCTAssertEqual(signed?["kind"] as? Int, 5555)
+        XCTAssertTrue(fixture.browser.blockedRequests.isEmpty)
+        XCTAssertEqual(fixture.signer.approvals.count, 1)
+        fixture.browser.setSocial(false)
+        let denied = try await fixture.view.callAsyncJavaScript("try { \(script) } catch (_) { return true; }", arguments: [:], in: nil, contentWorld: .page)
+        XCTAssertEqual(denied as? Bool, true)
+        XCTAssertEqual(fixture.signer.approvals.count, 1)
+    }
+
+    func testCategoryControlsMergeUploadsAndKeepAccountAndWalletPermissionsScoped() async throws {
+        let fixture = try BrowserSecurityFixture(origin: "https://primal.net")
+        defer { fixture.close() }
+        try await fixture.load()
+        XCTAssertFalse(fixture.browser.accountChangesAllowed)
+        XCTAssertFalse(fixture.browser.deletionsAllowed)
+        XCTAssertFalse(fixture.browser.walletAllowed)
+        fixture.browser.setSocial(false)
+        XCTAssertFalse(fixture.browser.uploadsAllowed)
+        fixture.browser.setSocial(true)
+        XCTAssertTrue(fixture.browser.uploadsAllowed)
+        fixture.browser.setWallet(true)
+        let script = """
+        return await nostr.signEvent({kind:23194,created_at:Math.floor(Date.now()/1000),
+          tags:[],content:'opaque wallet request'});
+        """
+        let signed = try await fixture.view.callAsyncJavaScript(script, arguments: [:], in: nil, contentWorld: .page) as? [String: Any]
+        XCTAssertEqual(signed?["kind"] as? Int, 23194)
+        let grants = BrowserActionPermissions(preferences: fixture.preferences)
+        for kind in [3, 5, 23194, 24242] {
+            grants.allow(kind: kind, account: fixture.account.publicKey, origin: "https://primal.net", duration: .always)
+        }
+        fixture.browser.setSocial(false)
+        XCTAssertFalse(fixture.browser.actionGrants.contains { $0.kind == 24242 })
+        XCTAssertTrue(fixture.browser.actionGrants.contains { $0.kind == 3 })
+        fixture.browser.setAccountChanges(false)
+        XCTAssertFalse(fixture.browser.actionGrants.contains { $0.kind == 3 })
+        XCTAssertTrue(fixture.browser.actionGrants.contains { $0.kind == 5 })
+        fixture.browser.setDeletions(false)
+        XCTAssertFalse(fixture.browser.actionGrants.contains { $0.kind == 5 })
+        fixture.browser.setWallet(false)
+        XCTAssertTrue(fixture.browser.actionGrants.isEmpty)
+        async let denied = fixture.view.callAsyncJavaScript("try { \(script) } catch (_) { return true; }", arguments: [:], in: nil, contentWorld: .page)
+        try await fixture.waitUntil { !fixture.browser.blockedRequests.isEmpty }
+        fixture.browser.declineBlockedRequest(try XCTUnwrap(fixture.browser.blockedRequests.first?.id))
+        let result = try await denied
+        XCTAssertEqual(result as? Bool, true)
+        XCTAssertEqual(fixture.signer.approvals.count, 1)
+        fixture.browser.setAccountChanges(true)
+        fixture.browser.setDeletions(true)
+        fixture.browser.setWallet(true)
+        fixture.browser.open(URL(string: "https://otherstuff.ai")!)
+        XCTAssertFalse(fixture.browser.accountChangesAllowed)
+        XCTAssertFalse(fixture.browser.deletionsAllowed)
+        XCTAssertFalse(fixture.browser.walletAllowed)
+    }
+
     func testWebsiteLoginStorageSurvivesHomeAndBrowserRecreation() async throws {
         let fixture = try BrowserSecurityFixture(origin: "https://primal.net")
         defer { fixture.close() }
@@ -332,7 +397,7 @@ private final class BrowserSecurityFixture {
         while Date() < deadline {
             let actual = try? await view.evaluateJavaScript("document.getElementById('marker')?.textContent") as? String
             let token = try? await token()
-            if actual == marker, token != nil { return }
+            if actual == marker, token != nil, UIApplication.shared.applicationState == .active { return }
             try await Task.sleep(nanoseconds: 50_000_000)
         }
         XCTFail("The real isolated browser bridge did not become ready")

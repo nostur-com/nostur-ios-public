@@ -40,7 +40,14 @@ hardware enclave or a guarantee against native-process compromise.
 
 - Every compiled homepage app and its exact deployment aliases receives the
   same defaults: connection, public social signing, website authorization and
-  bounded Blossom uploads. Outside sites start disconnected with capabilities
+  bounded Blossom uploads. Public app actions use a protection list rather than a
+  finite kind allowlist: unfamiliar kinds are allowed when App actions is enabled.
+  Shared account settings (all 10000–19999 kinds), profile/follow updates, known
+  shared addressable lists and deletion require explicit grants where supported.
+  Known private-message, signer and group-administration kinds remain
+  blocked; NWC signing requires its separate wallet permission; relay/HTTP/Blossom events keep their specific validation. This trades
+  semantic certainty about future kinds for compatibility; page scripts can sign
+  unfamiliar public events, not just actions caused by a tap. Outside sites start disconnected with capabilities
   off. Directory membership grants these defaults, so additions require review.
   Removing an entry removes its automatic defaults; explicit user overrides are
   retained. There are no separate per-app capability tiers.
@@ -65,7 +72,7 @@ hardware enclave or a guarantee against native-process compromise.
   blocked. Tokens are portable as defined by the protocol.
 - Profile/follow/relay changes and deletion are blocked by default but may receive
   explicit native action grants. Private-message/decryption operations,
-  wallet-command kinds and delegation remain unavailable. Kind 30078 is allowed for
+  delegation remains unavailable; NWC signing needs its separate wallet permission. Kind 30078 is allowed for
   connected sites without schema, namespace or content-shape exceptions. This
   trusts services with app data and service-specific commands encoded in that
   kind. Nostr does not isolate namespaces: another connected site can overwrite
@@ -138,9 +145,9 @@ Only native UI can store a grant: an exact origin/account/kind tuple, expiring a
 local midnight or persisting until native revocation. The page bridge accepts no
 permission/grant fields. A finite list of recognized public/account kinds is
 eligible; grants cannot override structural, timestamp, size, delegation, account
-or document checks. Private-message/wallet/signer kinds cannot be enabled through these grants.
+or document checks. Private-message and remote-signer kinds cannot be enabled through these grants; NWC signing can.
 HTTP and Blossom grants still require their normal protocol validation, and
-relay-authentication permission remains authoritative in native relay settings. Defaults are unchanged.
+relay-authentication permission remains authoritative in native relay settings. These protocol checks also apply under the broader app-action defaults.
 
 A policy-blocked eligible request is retained for at most two minutes, within the
 existing four-pending-request limit. No key work occurs before approval. The
@@ -152,3 +159,18 @@ Grants and their revocation are account/origin scoped and stored in native
 preferences, independent of website cookies. Revoking a grant cancels pending
 work. Denials appear quietly in native toolbar state; relay-auth denials retain
 activity-only behavior. Closing the sheet alone does not approve anything.
+
+## Category overrides
+
+Account changes, Delete content and Wallet actions are off by default and scoped
+to the selected account and exact origin. They are rechecked before signing and
+before delivery. Account changes excludes NWC and other restricted wallet
+protocols, even where their kind is in the account replacement range. Deletion
+covers 5 and 62. NWC signing (13194, 23194–23197) can be explicitly enabled via
+Wallet actions or an individual native action grant, without payment-content
+inspection or browser spending limits. This never reads or exposes Nostur's saved
+wallet connection credentials and does not add encryption or decryption APIs.
+Turning a category off removes that category's saved grants and cancels pending
+requests. App actions now also governs Blossom uploads; the old uploads preference
+is ignored. HTTP authorization remains separately controlled and can authorize
+media-service requests under its existing rules.

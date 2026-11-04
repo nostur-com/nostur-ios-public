@@ -51,10 +51,15 @@ returns signed events without publishing them itself.
   website login, public social actions and bounded upload authorization. These
   defaults are identical for all homepage apps and their deployment aliases. Unknown origins start disconnected. Explicit user
   overrides remain per account and origin.
-- Public actions include posts, reposts, reactions, comments, chat, photos, videos,
-  polls and long-form articles. Shared profile/follow/relay changes and deletion
-  need an extra action grant. Private-message and wallet-command events remain
-  unavailable.
+- App actions permit new and unfamiliar event kinds, including games and
+  processing requests, without adding them to a kind allowlist. The App actions
+  toggle controls this default. Shared profile/follow changes, deletion, all
+  replaceable account settings (10000–19999), and known shared addressable lists
+  still need an extra action grant where supported. Private-message, remote-signer and group-administration protocols remain
+  unavailable. NWC signing requires Wallet actions or an explicit kind grant. Relay,
+  HTTP and Blossom authorization retain their separate checks. Unknown kinds
+  can acquire new meanings outside Nostur; this is compatibility-first signing,
+  not a guarantee about the meaning or consequences of an unfamiliar event.
 - Relay authentication (22242) is allowed only when **Enable authentication** is
   on for that relay in Nostur's saved app relay settings and the site is connected. Requests require a fresh
   timestamp, empty content, one relay URL and one nonempty challenge. Endpoint
@@ -77,8 +82,8 @@ returns signed events without publishing them itself.
 - Kind 30078 app data is allowed for every connected site without per-app
   payload exceptions or extra toggles, including Word5 room lookups and scores.
   Shared profile/follow/relay updates and deletion need an extra action grant;
-  DMs, native encryption/decryption, wallet-command kinds and delegation remain
-  unavailable. App-data namespaces are not
+  DMs, native encryption/decryption and delegation remain unavailable. NWC
+  signing is separately controlled by Wallet actions. App-data namespaces are not
   isolated by Nostr; services may interpret app data as service-specific commands.
 - At most 20 signatures per minute, four pending signatures, and 120 bridge
   requests per minute per browser instance. Event size, tags and timestamps are
@@ -167,13 +172,10 @@ direct long-press action dialog. Their long press is exclusive with the normal
 tap, so completing a hold does not also open the external browser. This avoids
 depending on context-menu recognition inside swipeable Bookmarks rows.
 
-Website controls use four optional toggles: Use my Nostur account, Post & react,
-Sign in to services, and Upload media. Each explains its effect. The upload toggle
-controls file-specific Blossom tokens; NIP-98 requests (including uploads) use
-Sign in to services. Relay authentication uses the existing relay settings.
-Homepage membership defines automatic defaults, with only exact deployment
-aliases configured separately. Removed directory apps no longer receive automatic
-permissions. Explicit per-site/account user overrides remain authoritative.
+Website controls has five capability switches: App actions (including media
+uploads), Sign in to services, Account changes, Delete content and Wallet actions.
+The Use account switch controls the connection. Each switch explains
+its effect. These choices apply to one account and exact website origin.
 
 ## Optional action grants
 
@@ -190,12 +192,12 @@ retry; the old request is never signed. Navigation, minimizing, account changes,
 connection/permission changes or closing cancel pending work and clear page
 requests. Grants are rechecked before signing and before delivering a result.
 
-Invalid, expired-at-arrival, oversized, delegated, private-message, wallet/remote-
+Invalid, expired-at-arrival, oversized, delegated, private-message, remote-
 signer and unrecognized requests cannot bypass checks with a grant. NIP-98 and Blossom grants retain their full protocol validation; they cannot
 allow an invalid target/method, malformed upload, or a Blossom deletion. Relay
 authentication remains governed by native relay settings. Website
-controls are accessible from the sheet. Turning Post & react off also removes
-existing extra public-post/reaction grants. Removed grants cancel pending work.
+controls are accessible from the sheet. Turning App actions off also removes
+existing extra grants for ordinary app actions. Removed grants cancel pending work.
 
 Website controls keeps the account and permission toggles visible. Requested
 actions and extra permissions appear only when relevant; recent activity is
@@ -203,3 +205,20 @@ collapsed and omitted when empty. The info button beside What this app can do ex
 scope. General browser documentation is not shown in this website sheet. Allow
 today/Always allow explanations appear only beside actionable blocked requests. Shared-account warnings stay inline beside
 relevant requests, and retry wording appears only after a request expires.
+
+## Website control categories
+
+App actions combines public/app event signing and file-specific Blossom uploads.
+The existing social choice is retained; the obsolete independent uploads choice
+is ignored. Sign in to services still controls HTTP authorization, which can also
+be needed by media providers. Account changes, Delete content and Wallet actions
+are separate, off by default, per account and exact origin. Account changes covers
+profile/follow/list settings, excluding wallet protocols. Delete content covers
+kinds 5 and 62. Wallet actions covers NWC kinds 13194 and 23194–23197; it does not
+provide saved wallet credentials, native encryption/decryption, Cashu wallet
+access, spending limits or per-payment approval. The wallet manages its own
+connection permissions. Ordinary NWC uses a connection key rather than the
+user's Nostr identity; allowing identity signing alone is not a wallet connection.
+Existing per-kind action grants remain visible; switching a category off removes
+its saved grants and cancels pending work. All categories retain request, origin,
+account, document and signed-event validation.

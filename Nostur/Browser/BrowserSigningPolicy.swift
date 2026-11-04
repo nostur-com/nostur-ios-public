@@ -47,13 +47,35 @@ enum BrowserSigningPolicy {
         BrowserSiteDefaults.forOrigin(origin).social
     }
 
-    static let socialKinds: Set<Int> = [1, 6, 7, 9, 16, 20, 21, 22, 24, 1018, 1068, 1111, 1311, 30023]
+    // Protect account-wide replacement state and known sensitive protocols, rather
+    // than requiring every new game or public app event to join an allowlist.
+    static func requiresExtraPermission(_ kind: Int) -> Bool {
+        (10000..<20000).contains(kind) ||
+        [0, 3, 5, 62, 30000, 30002, 30003, 30004, 30005, 30006, 30007,
+         30008, 30015, 30030, 30315].contains(kind)
+    }
+
+    static let nwcKinds: Set<Int> = [13194, 23194, 23195, 23196, 23197]
+    static func isDeletion(_ kind: Int) -> Bool { kind == 5 || kind == 62 }
+    static func isAccountChange(_ kind: Int) -> Bool {
+        requiresExtraPermission(kind) && !isDeletion(kind) && !nwcKinds.contains(kind) && !isRestrictedProtocol(kind)
+    }
+
+    static func isRestrictedProtocol(_ kind: Int) -> Bool {
+        [4, 13, 14, 15, 1059, 21059, 7374, 7375, 7376, 9321,
+         17375, 22242, 23194, 23195, 23196, 23197, 24133, 24242, 27235, 38000, 38172, 38173].contains(kind) ||
+        (8000...8001).contains(kind) || (9000...9030).contains(kind)
+    }
+
+    static func isAppAction(_ kind: Int) -> Bool {
+        (0...65535).contains(kind) && !requiresExtraPermission(kind) && !isRestrictedProtocol(kind)
+    }
 
     // Explicit native user grants may enable recognized public/account actions.
-    // Private messages, wallet/signing commands and unknown kinds cannot be
-    // granted. HTTP/Blossom grants still pass all protocol-specific checks.
+    // Private messages, remote-signer commands and unknown kinds cannot be
+    // granted. NWC events can be enabled separately from account changes. HTTP/Blossom grants still pass all protocol-specific checks.
     static func canGrant(_ kind: Int) -> Bool {
-        [0, 1, 3, 5, 6, 7, 8, 9, 11, 16, 17, 20, 21, 22, 24, 40, 41, 42, 43, 44, 64, 78,
+        nwcKinds.contains(kind) || [0, 1, 3, 5, 6, 7, 8, 9, 11, 16, 17, 20, 21, 22, 24, 40, 41, 42, 43, 44, 64, 78,
          1018, 1063, 1068, 1111, 1222, 1244, 1311, 1337, 1617, 1618, 1619, 1621, 1984, 1985,
          2003, 2004, 9041, 9734, 9802, 24242, 27235, 10000, 10001, 10002, 10003, 10004, 10005, 10006, 10007,
          10008, 10009, 10012, 10015, 10020, 10021, 10030, 10050, 10063, 10096, 30000, 30002,
@@ -64,15 +86,15 @@ enum BrowserSigningPolicy {
 
     static func approval(for event: BrowserUnsignedEvent, accountPubkey: String, origin: String,
                          connected: Bool, social: Bool, websiteAuth: Bool, uploads: Bool,
-                         relaySettings: [BrowserRelaySetting], allowedKinds: Set<Int> = [], now: Int64 = Int64(Date().timeIntervalSince1970)) -> BrowserSigningApproval? {
+                         relaySettings: [BrowserRelaySetting], accountChanges: Bool = false, deletions: Bool = false, wallet: Bool = false, allowedKinds: Set<Int> = [], now: Int64 = Int64(Date().timeIntervalSince1970)) -> BrowserSigningApproval? {
         guard connected, BrowserSignedEvent.isHex(accountPubkey, count: 64),
               rejection(for: event, origin: origin, social: social, websiteAuth: websiteAuth,
-                        uploads: uploads, relaySettings: relaySettings, allowedKinds: allowedKinds, now: now) == nil else { return nil }
+                        uploads: uploads, relaySettings: relaySettings, accountChanges: accountChanges, deletions: deletions, wallet: wallet, allowedKinds: allowedKinds, now: now) == nil else { return nil }
         return BrowserSigningApproval(event: event, accountPubkey: accountPubkey, origin: origin, approvedAt: now)
     }
 
     static func rejection(for event: BrowserUnsignedEvent, origin: String,
-                          social: Bool, websiteAuth: Bool = false, uploads: Bool = false, relaySettings: [BrowserRelaySetting] = [], allowedKinds: Set<Int> = [],
+                          social: Bool, websiteAuth: Bool = false, uploads: Bool = false, relaySettings: [BrowserRelaySetting] = [], accountChanges: Bool = false, deletions: Bool = false, wallet: Bool = false, allowedKinds: Set<Int> = [],
                           now: Int64 = Int64(Date().timeIntervalSince1970)) -> String? {
         func blocked(_ reason: String? = nil) -> String {
             BrowserEventDescription.blockedMessage(for: event, reason: reason)
@@ -88,8 +110,6 @@ enum BrowserSigningPolicy {
         guard !event.tags.contains(where: { $0.first == "delegation" }) else { return blocked(String(localized: "Delegation is blocked.")) }
 
         if allowedKinds.contains(event.kind), canGrant(event.kind), ![24242, 27235].contains(event.kind) { return nil }
-
-        if social && socialKinds.contains(event.kind) { return nil }
 
         // General app data is permitted for connected sites. The broker checks
         // connection, native account and document scope before and after signing.
@@ -145,7 +165,17 @@ enum BrowserSigningPolicy {
             }
             return nil
         }
-        return blocked()
+        if nwcKinds.contains(event.kind) {
+            return wallet ? nil : blocked(String(localized: "Wallet actions are disabled in website controls."))
+        }
+        if isAccountChange(event.kind), accountChanges { return nil }
+        if isDeletion(event.kind), deletions { return nil }
+        if requiresExtraPermission(event.kind) {
+            return blocked(String(localized: "This action can change shared account data or remove content. Allow it explicitly if you trust this app."))
+        }
+        if isRestrictedProtocol(event.kind) { return blocked() }
+        if social { return nil }
+        return blocked(String(localized: "App actions are disabled in website controls."))
     }
 
     /// Normalize scheme, host, default ports and the root slash only. Preserve

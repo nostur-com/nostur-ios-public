@@ -30,8 +30,56 @@ final class BrowserSigningPolicyTests: XCTestCase {
             XCTAssertNil(rejection(event(kind)))
             XCTAssertNotNil(rejection(event(kind), social: false))
         }
-        for kind in [0, 3, 4, 5, 13, 14, 1059, 9734, 10000, 10002, 10050, 22242, 23194, 24133, 65535] {
+        for kind in [0, 3, 4, 5, 13, 14, 1059, 10000, 10002, 10050, 22242, 23194, 24133] {
             XCTAssertNotNil(rejection(event(kind)), "Unexpectedly allowed kind \(kind)")
+        }
+    }
+
+    func testNewAppKindsWorkWithoutAnAllowlistButSharedStateStaysProtected() {
+        let key = String(repeating: "a", count: 64)
+        for origin in ["https://otherstuff.ai", "https://brand-new.example"] {
+            for kind in [64, 5555, 6555, 7000, 9734, 29999, 30079, 39999, 65535] {
+                let request = event(kind)
+                XCTAssertNotNil(BrowserSigningPolicy.approval(for: request, accountPubkey: key, origin: origin,
+                    connected: true, social: true, websiteAuth: false, uploads: false, relaySettings: [], now: now), "kind \(kind)")
+                XCTAssertNil(BrowserSigningPolicy.approval(for: request, accountPubkey: key, origin: origin,
+                    connected: false, social: true, websiteAuth: true, uploads: true, relaySettings: [], now: now))
+                XCTAssertNotNil(rejection(request, origin: origin, social: false))
+                XCTAssertNotNil(rejection(event(kind, tags: [["delegation", "key"]]), origin: origin))
+                XCTAssertNotNil(rejection(event(kind, age: 301), origin: origin))
+                XCTAssertNotNil(rejection(event(kind, content: String(repeating: "a", count: 65537)), origin: origin))
+            }
+        }
+        for kind in [0, 3, 5, 62, 10000, 10002, 10050, 17375, 19999, 30000, 30002, 30003, 30030] {
+            XCTAssertNotNil(rejection(event(kind)), "Shared state kind \(kind) must remain protected")
+        }
+        for kind in [4, 13, 14, 15, 1059, 21059, 7374, 7375, 7376, 9321, 8000, 9000, 9030, 23194, 23195, 24133, 38000, 38172, 38173] {
+            XCTAssertNotNil(rejection(event(kind)), "Sensitive kind \(kind) must remain blocked")
+        }
+    }
+
+    func testAccountDeletionAndWalletCategoriesAreIndependent() {
+        func reject(_ kind: Int, account: Bool = false, deletion: Bool = false, wallet: Bool = false) -> String? {
+            BrowserSigningPolicy.rejection(for: event(kind), origin: site, social: true,
+                accountChanges: account, deletions: deletion, wallet: wallet, now: now)
+        }
+        for kind in [0, 3, 10002, 10050, 30003] {
+            XCTAssertNotNil(reject(kind))
+            XCTAssertNil(reject(kind, account: true))
+            XCTAssertNotNil(reject(kind, deletion: true, wallet: true))
+        }
+        for kind in [5, 62] {
+            XCTAssertNotNil(reject(kind, account: true, wallet: true))
+            XCTAssertNil(reject(kind, deletion: true))
+        }
+        for kind in BrowserSigningPolicy.nwcKinds {
+            XCTAssertNotNil(reject(kind, account: true, deletion: true))
+            XCTAssertNil(reject(kind, wallet: true))
+            XCTAssertNotNil(BrowserSigningPolicy.rejection(for: event(kind, tags: [["delegation", "key"]]),
+                origin: site, social: true, wallet: true, now: now))
+        }
+        for kind in [4, 7375, 17375, 24133] {
+            XCTAssertNotNil(reject(kind, account: true, deletion: true, wallet: true))
         }
     }
 
@@ -136,7 +184,7 @@ final class BrowserSigningPolicyTests: XCTestCase {
         XCTAssertTrue(message.contains("30078"))
         XCTAssertFalse(message.contains("approve_payment"))
         XCTAssertFalse(message.contains(custom.content))
-        let unknown = try XCTUnwrap(rejection(event(65535)))
+        let unknown = BrowserEventDescription.blockedMessage(for: event(65535))
         XCTAssertTrue(unknown.contains(BrowserEventDescription.name(for: 65535)))
         XCTAssertTrue(unknown.contains("65535"))
         // Display recognition must not change permissions for these kinds.
@@ -216,11 +264,10 @@ final class BrowserSigningPolicyTests: XCTestCase {
             XCTAssertTrue(defaults.connected, "\(app.name) must not require connecting in settings")
             XCTAssertTrue(defaults.websiteAuth, "\(app.name) must not require enabling login")
             XCTAssertTrue(defaults.social, "\(app.name) must have the same public action defaults")
-            XCTAssertTrue(defaults.uploads, "\(app.name) must have the same upload defaults")
         }
         for origin in ["https://app.flotilla.social", "https://account.nostr.build", "https://honey.hivetalk.org"] {
             let defaults = BrowserSiteDefaults.forOrigin(origin)
-            XCTAssertTrue(defaults.connected && defaults.social && defaults.websiteAuth && defaults.uploads)
+            XCTAssertTrue(defaults.connected && defaults.social && defaults.websiteAuth)
         }
         for origin in ["https://primal.net.evil.test", "https://primal.net:8443", "http://primal.net", "https://unknown.example", "https://nostrudel.ninja", "https://nostr.watch", "https://njump.me"] {
             XCTAssertEqual(BrowserSiteDefaults.forOrigin(origin), .unknown)

@@ -6,10 +6,9 @@ struct BrowserSiteDefaults: Equatable {
     let connected: Bool
     let social: Bool
     let websiteAuth: Bool
-    let uploads: Bool
 
-    private static let homepage = Self(connected: true, social: true, websiteAuth: true, uploads: true)
-    static let unknown = Self(connected: false, social: false, websiteAuth: false, uploads: false)
+    private static let homepage = Self(connected: true, social: true, websiteAuth: true)
+    static let unknown = Self(connected: false, social: false, websiteAuth: false)
 
     /// Cross-origin HTTP authorization is a capability of homepage apps,
     /// independent of the provider receiving the authorized request.

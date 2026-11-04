@@ -31,7 +31,7 @@ final class BrowserActionPermissionsTests: XCTestCase {
         let following = BrowserUnsignedEvent(created_at: now, kind: 3, tags: [], content: "")
         XCTAssertNil(reject(following, grants: [3]))
         XCTAssertNotNil(reject(following, grants: [10002]))
-        for kind in [4, 13, 14, 1059, 23194, 24133, 22242, 65535] {
+        for kind in [4, 13, 14, 1059, 24133, 22242, 65535] {
             XCTAssertFalse(BrowserSigningPolicy.canGrant(kind))
             XCTAssertNotNil(reject(BrowserUnsignedEvent(created_at: now, kind: kind, tags: [], content: ""), grants: [kind]))
         }

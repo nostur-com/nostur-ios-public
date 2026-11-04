@@ -4263,6 +4263,9 @@
         }
       }
     },
+    "A Nostr social client for the web." : {
+
+    },
     "A relay closed the history request. Check its access settings and retry." : {
 
     },
@@ -4372,6 +4375,9 @@
     "About sharing formats" : {
 
     },
+    "About these permissions" : {
+
+    },
     "About your year" : {
 
     },
@@ -4466,6 +4472,9 @@
           }
         }
       }
+    },
+    "Account connection" : {
+
     },
     "Account content removal request" : {
 
@@ -5800,6 +5809,15 @@
         }
       }
     },
+    "Allow today" : {
+
+    },
+    "Allow today ends at midnight. Always allow stays enabled until you remove it." : {
+
+    },
+    "Allowed today" : {
+
+    },
     "Already in Nostur" : {
       "localizations" : {
         "es" : {
@@ -5831,6 +5849,12 @@
           }
         }
       }
+    },
+    "Always allow" : {
+
+    },
+    "Always allowed" : {
+
     },
     "Always protected" : {
 
@@ -7431,6 +7455,12 @@
     "Blocked relays update" : {
 
     },
+    "Blocked requests" : {
+
+    },
+    "Blocked signing requests" : {
+
+    },
     "blocked until %@" : {
       "localizations" : {
         "es" : {
@@ -8517,7 +8547,7 @@
         }
       }
     },
-    "Choose an app's browser extension login to use your Nostur account. Some features may request signatures this browser does not support yet." : {
+    "Choose an app's browser extension login to use your account. Some features may request signatures this browser does not support yet." : {
 
     },
     "Choose at least one relay, or preview your saved history." : {
@@ -10691,6 +10721,9 @@
           }
         }
       }
+    },
+    "Copy Link" : {
+
     },
     "Copy list address" : {
       "localizations" : {
@@ -13017,6 +13050,9 @@
         }
       }
     },
+    "Dismiss blocked requests" : {
+
+    },
     "Dismiss browser" : {
 
     },
@@ -13044,6 +13080,9 @@
           }
         }
       }
+    },
+    "Dismiss request" : {
+
     },
     "Dismiss website controls" : {
 
@@ -13958,6 +13997,9 @@
           }
         }
       }
+    },
+    "Enabled actions run without asking each time." : {
+
     },
     "Encrypted Image" : {
       "localizations" : {
@@ -14931,6 +14973,12 @@
           }
         }
       }
+    },
+    "Extra permissions" : {
+
+    },
+    "Extra permissions below can allow individual actions. Turning a switch off removes existing allowances for that category." : {
+
     },
     "Failed to generate QR Code" : {
       "localizations" : {
@@ -15968,6 +16016,9 @@
           }
         }
       }
+    },
+    "Food & cooking" : {
+
     },
     "Footer buttons" : {
       "localizations" : {
@@ -18442,6 +18493,15 @@
         }
       }
     },
+    "Let this app authorize sign-in, uploads and other requests to HTTPS services." : {
+
+    },
+    "Let this app authorize sign-in, uploads and other requests to this website." : {
+
+    },
+    "Let this app use your public identity and sign its app data. Your private key stays in Nostur." : {
+
+    },
     "Let's go!" : {
       "comment" : "Button to start using Nostur, during onboarding",
       "localizations" : {
@@ -18688,6 +18748,9 @@
         }
       }
     },
+    "Link actions" : {
+
+    },
     "Linked identities update" : {
 
     },
@@ -18870,6 +18933,9 @@
           }
         }
       }
+    },
+    "Live conversations with the Nostr community." : {
+
     },
     "Live event announcement" : {
 
@@ -21905,6 +21971,9 @@
         }
       }
     },
+    "No blocked requests." : {
+
+    },
     "No Blossom server configured. Please configure a Blossom server in Nostur settings to upload images." : {
       "localizations" : {
         "es" : {
@@ -23588,6 +23657,12 @@
         }
       }
     },
+    "Open in Browser" : {
+
+    },
+    "Open in Nostur Browser" : {
+
+    },
     "Open latest" : {
       "comment" : "Button go to latest version of article",
       "localizations" : {
@@ -23610,6 +23685,9 @@
           }
         }
       }
+    },
+    "Open Link" : {
+
     },
     "Open profile" : {
       "localizations" : {
@@ -23826,6 +23904,9 @@
       }
     },
     "Other people’s activity · %@" : {
+
+    },
+    "Other websites and accounts keep their own choices." : {
 
     },
     "Outrage feed may or may not be available in a future release" : {
@@ -24130,6 +24211,12 @@
           }
         }
       }
+    },
+    "Permission saved. Retry the action in the app." : {
+
+    },
+    "Permission saved. This action is now allowed." : {
+
     },
     "Personal and community relay hosting." : {
 
@@ -27381,6 +27468,9 @@
         }
       }
     },
+    "Recent activity" : {
+
+    },
     "Recent signing activity" : {
 
     },
@@ -27428,6 +27518,9 @@
           }
         }
       }
+    },
+    "Recipes, cooking stories and a food community." : {
+
     },
     "Recipients" : {
       "localizations" : {
@@ -28841,6 +28934,9 @@
         }
       }
     },
+    "Remove permission" : {
+
+    },
     "Remove poll" : {
       "comment" : "Removes the poll from a post being written",
       "localizations" : {
@@ -29717,6 +29813,9 @@
       }
     },
     "Request that stopped this source" : {
+
+    },
+    "Requested actions" : {
 
     },
     "Requested relay: %@." : {
@@ -33143,6 +33242,9 @@
         }
       }
     },
+    "Sign in to services" : {
+
+    },
     "Sign in with a signing account to vote." : {
       "localizations" : {
         "es" : {
@@ -35482,6 +35584,9 @@
         }
       }
     },
+    "These choices control what this website can request using this account:" : {
+
+    },
     "These relays are used for all accounts, and are not announced unless configured on the account specific settings." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -35714,6 +35819,9 @@
           }
         }
       }
+    },
+    "This can change shared account data used by your other Nostr apps." : {
+
     },
     "This event link is invalid." : {
       "comment" : "Error shown when a pasted nevent identifier cannot be parsed",
@@ -35997,6 +36105,12 @@
           }
         }
       }
+    },
+    "This request can’t be allowed." : {
+
+    },
+    "This request has expired. Allow the action, then retry it in the app." : {
+
     },
     "This request is not authorized." : {
 
@@ -36954,6 +37068,9 @@
           }
         }
       }
+    },
+    "Turning this off stops signing and clears this website’s saved login." : {
+
     },
     "Type" : {
       "localizations" : {
@@ -38035,6 +38152,9 @@
         }
       }
     },
+    "Use account" : {
+
+    },
     "Use photo" : {
       "localizations" : {
         "es" : {
@@ -38104,6 +38224,9 @@
           }
         }
       }
+    },
+    "Use Website controls to connect this site to your account." : {
+
     },
     "Used for app preferences or custom service requests. The kind alone does not identify the requested action." : {
 
@@ -38930,6 +39053,9 @@
         }
       }
     },
+    "Website account access is disabled, or this app is not allowed to authorize another HTTPS service." : {
+
+    },
     "Website account access" : {
 
     },
@@ -39086,6 +39212,9 @@
           }
         }
       }
+    },
+    "What this app can do" : {
+
     },
     "What's happening?" : {
       "comment" : "Placeholder text for typing a new post",
@@ -40452,6 +40581,51 @@
 
     },
     "Zoom" : {
+
+    },
+    "accountChanges" : {
+
+    },
+    "Account changes" : {
+
+    },
+    "Change your profile, follows, relay lists and other account settings." : {
+
+    },
+    "Delete content" : {
+
+    },
+    "Request removal of your published content." : {
+
+    },
+    "Sign Nostr Wallet Connect events. Manage wallet access and limits in your wallet." : {
+
+    },
+    "Use games and apps, post, react and upload media. Account changes stay protected." : {
+
+    },
+    "Wallet actions" : {
+
+    },
+    "App actions are disabled in website controls." : {
+
+    },
+    "This action can change shared account data or remove content. Allow it explicitly if you trust this app." : {
+
+    },
+    "Wallet actions are disabled in website controls." : {
+
+    },
+    "App processing request" : {
+
+    },
+    "App processing result" : {
+
+    },
+    "App processing status" : {
+
+    },
+    "Wallet notification" : {
 
     }
   },

@@ -471,7 +471,7 @@ private struct BrowserDirectoryView: View {
                         BrowserDirectoryCategory(section: section, browser: browser)
                     }
                 }
-                Text("Choose an app's browser extension login to use your Nostur account. Some features may request signatures this browser does not support yet.")
+                Text("Choose an app's browser extension login to use your account. Some features may request signatures this browser does not support yet.")
                     .font(.footnote)
                     .foregroundStyle(theme.secondary)
             }
@@ -545,14 +545,14 @@ private struct BrowserSiteSettings: View {
                     Text(browser.origin ?? "").font(.headline)
                     LabeledContentCompat(title: "Account", value: browser.accountName)
                     Toggle(isOn: Binding(get: { browser.connected }, set: { browser.setConnected($0) })) {
-                        BrowserPermissionLabel(title: "Use my Nostur account", detail: "Let this app use your public identity and sign its app data. Your private key stays in Nostur.")
+                        BrowserPermissionLabel(title: "Use account", detail: "Let this app use your public identity and sign its app data. Your private key stays in Nostur.")
                     }
                 } footer: {
                     Text("Turning this off stops signing and clears this website’s saved login.")
                 }
                 Section {
                     Toggle(isOn: Binding(get: { browser.socialAllowed }, set: { browser.setSocial($0) })) {
-                        BrowserPermissionLabel(title: "Post & react", detail: "Publish posts, comments, reactions, polls and articles.")
+                        BrowserPermissionLabel(title: "App actions", detail: "Use games and apps, post, react and upload media. Account changes stay protected.")
                     }
                     .disabled(!browser.connected)
                     Toggle(isOn: Binding(get: { browser.websiteAuthAllowed }, set: { browser.setWebsiteAuth($0) })) {
@@ -561,8 +561,16 @@ private struct BrowserSiteSettings: View {
                             : "Let this app authorize sign-in, uploads and other requests to this website.")
                     }
                     .disabled(!browser.connected)
-                    Toggle(isOn: Binding(get: { browser.uploadsAllowed }, set: { browser.setUploads($0) })) {
-                        BrowserPermissionLabel(title: "Upload media", detail: "Allow Blossom uploads for individual files. Other uploads can also use Sign in to services.")
+                    Toggle(isOn: Binding(get: { browser.accountChangesAllowed }, set: { browser.setAccountChanges($0) })) {
+                        BrowserPermissionLabel(title: "Account changes", detail: "Change your profile, follows, relay lists and other account settings.")
+                    }
+                    .disabled(!browser.connected)
+                    Toggle(isOn: Binding(get: { browser.deletionsAllowed }, set: { browser.setDeletions($0) })) {
+                        BrowserPermissionLabel(title: "Delete content", detail: "Request removal of your published content.")
+                    }
+                    .disabled(!browser.connected)
+                    Toggle(isOn: Binding(get: { browser.walletAllowed }, set: { browser.setWallet($0) })) {
+                        BrowserPermissionLabel(title: "Wallet actions", detail: "Sign Nostr Wallet Connect events. Manage wallet access and limits in your wallet.")
                     }
                     .disabled(!browser.connected)
                 } header: {
@@ -628,7 +636,7 @@ private struct BrowserPermissionScopeInfo: View {
             Text("These choices control what this website can request using this account:").font(.headline)
             Text(site).font(.subheadline).textSelection(.enabled)
             Label(account, systemImage: "person.crop.circle")
-            Text("Other websites and Nostur accounts keep their own choices.")
+            Text("Other websites and accounts keep their own choices.")
         }
         .font(.body)
         .foregroundStyle(.primary)

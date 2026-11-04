@@ -93,18 +93,32 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         guard let origin, let key = preferenceKey("websiteAuth") else { return false }
         return preferences.object(forKey: key) as? Bool ?? BrowserSiteDefaults.forOrigin(origin).websiteAuth
     }
-    var uploadsAllowed: Bool {
-        guard let origin, let key = preferenceKey("uploads") else { return false }
-        return preferences.object(forKey: key) as? Bool ?? BrowserSiteDefaults.forOrigin(origin).uploads
+    // Uploads follow App actions, including existing social overrides. The old
+    // independent uploads preference is no longer consulted.
+    var uploadsAllowed: Bool { socialAllowed }
+    var accountChangesAllowed: Bool { capability("accountChanges") }
+    var deletionsAllowed: Bool { capability("deletions") }
+    var walletAllowed: Bool { capability("wallet") }
+    private func capability(_ name: String) -> Bool {
+        guard let key = preferenceKey(name) else { return false }
+        return preferences.bool(forKey: key)
     }
     func setWebsiteAuth(_ enabled: Bool) { setCapability("websiteAuth", enabled: enabled) }
-    func setUploads(_ enabled: Bool) { setCapability("uploads", enabled: enabled) }
+    func setAccountChanges(_ enabled: Bool) { setCapability("accountChanges", enabled: enabled) }
+    func setDeletions(_ enabled: Bool) { setCapability("deletions", enabled: enabled) }
+    func setWallet(_ enabled: Bool) { setCapability("wallet", enabled: enabled) }
     private func setCapability(_ name: String, enabled: Bool) {
         guard let key = preferenceKey(name) else { return }
         preferences.set(enabled, forKey: key)
         if !enabled, let origin {
-            let kind = name == "websiteAuth" ? 27235 : 24242
-            BrowserActionPermissions(preferences: preferences).revoke(kind: kind, account: accountPubkey, origin: origin)
+            let permissions = BrowserActionPermissions(preferences: preferences)
+            for grant in permissions.grants(account: accountPubkey, origin: origin) {
+                let matches = (name == "websiteAuth" && grant.kind == 27235)
+                    || (name == "accountChanges" && BrowserSigningPolicy.isAccountChange(grant.kind))
+                    || (name == "deletions" && BrowserSigningPolicy.isDeletion(grant.kind))
+                    || (name == "wallet" && BrowserSigningPolicy.nwcKinds.contains(grant.kind))
+                if matches { permissions.revoke(kind: grant.kind, account: accountPubkey, origin: origin) }
+            }
         }
         cancelPending()
         objectWillChange.send()
@@ -134,7 +148,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         preferences.set(enabled, forKey: key)
         if !enabled, let origin {
             let permissions = BrowserActionPermissions(preferences: preferences)
-            for grant in permissions.grants(account: accountPubkey, origin: origin) where BrowserSigningPolicy.socialKinds.contains(grant.kind) {
+            for grant in permissions.grants(account: accountPubkey, origin: origin) where BrowserSigningPolicy.isAppAction(grant.kind) || grant.kind == 24242 {
                 permissions.revoke(kind: grant.kind, account: accountPubkey, origin: origin)
             }
         }
@@ -362,7 +376,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
                decodedRequest?.documentToken == documentToken, let origin, frameOrigin == origin {
                 let blockedScope = BrowserRequestScope(documentToken: documentToken, origin: origin, accountPubkey: accountPubkey)
                 if !blockedRequests.contains(where: { $0.kind == -1 && $0.scope == blockedScope }) {
-                    let reason = String(localized: "Use Website controls to connect this site to your Nostur account.")
+                    let reason = String(localized: "Use Website controls to connect this site to your account.")
                     blockedRequests.insert(BrowserBlockedRequest(id: UUID(), scope: blockedScope, kind: -1,
                         reason: reason, canAllow: false, waiting: false), at: 0)
                     blockedRequests = Array(blockedRequests.prefix(30))
@@ -406,11 +420,11 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         guard currentScope() == request.scope else { reject(id, reason: String(localized: "Browser session changed.")); return }
         let event = request.event
         if let reason = BrowserSigningPolicy.rejection(for: event, origin: request.scope.origin, social: socialAllowed,
-                                                       websiteAuth: websiteAuthAllowed, uploads: uploadsAllowed, relaySettings: relaySettings, allowedKinds: allowedKinds) {
+                                                       websiteAuth: websiteAuthAllowed, uploads: uploadsAllowed, relaySettings: relaySettings, accountChanges: accountChangesAllowed, deletions: deletionsAllowed, wallet: walletAllowed, allowedKinds: allowedKinds) {
             let grantable = BrowserSigningPolicy.canGrant(event.kind) && BrowserSigningPolicy.approval(
                 for: event, accountPubkey: request.scope.accountPubkey, origin: request.scope.origin, connected: connected,
                 social: socialAllowed, websiteAuth: websiteAuthAllowed, uploads: uploadsAllowed,
-                relaySettings: relaySettings, allowedKinds: [event.kind]) != nil
+                relaySettings: relaySettings, accountChanges: accountChangesAllowed, deletions: deletionsAllowed, wallet: walletAllowed, allowedKinds: [event.kind]) != nil
             if grantable {
                 if !blockedRequests.contains(where: { $0.id == id }) {
                     blockedRequests.insert(BrowserBlockedRequest(id: id, scope: request.scope, kind: event.kind,
@@ -428,7 +442,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         }
         guard let approval = BrowserSigningPolicy.approval(for: event, accountPubkey: request.scope.accountPubkey,
                                                           origin: request.scope.origin, connected: connected, social: socialAllowed,
-                                                          websiteAuth: websiteAuthAllowed, uploads: uploadsAllowed, relaySettings: relaySettings, allowedKinds: allowedKinds) else {
+                                                          websiteAuth: websiteAuthAllowed, uploads: uploadsAllowed, relaySettings: relaySettings, accountChanges: accountChangesAllowed, deletions: deletionsAllowed, wallet: walletAllowed, allowedKinds: allowedKinds) else {
             reject(id, reason: String(localized: "This request is not authorized.")); return
         }
         signatureTimes.append(now)
@@ -449,7 +463,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         guard let request = pending[id] else { return }
         guard currentScope() == request.scope,
               BrowserSigningPolicy.rejection(for: request.event, origin: request.scope.origin, social: socialAllowed,
-                                             websiteAuth: websiteAuthAllowed, uploads: uploadsAllowed, relaySettings: relaySettings, allowedKinds: allowedKinds) == nil else {
+                                             websiteAuth: websiteAuthAllowed, uploads: uploadsAllowed, relaySettings: relaySettings, accountChanges: accountChangesAllowed, deletions: deletionsAllowed, wallet: walletAllowed, allowedKinds: allowedKinds) == nil else {
             reject(id, reason: String(localized: "Browser permissions or session changed.")); return
         }
         switch result {
