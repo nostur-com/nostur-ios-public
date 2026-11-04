@@ -23,6 +23,12 @@ struct BigLinkPreview: View {
     static let BIG_PREVIEW_IMAGE_HEIGHT: CGFloat = 350
     
     var body: some View {
+        previewContent
+            .modifier(BrowserPostLinkMenu(url: url))
+    }
+
+    @ViewBuilder
+    private var previewContent: some View {
         if autoload {
             Group {
                 VStack(alignment: .leading, spacing: 5) {
@@ -59,7 +65,7 @@ struct BigLinkPreview: View {
                         Text(tags["description"] ?? "")
                             .lineLimit(2)
                         
-                        NRTextDynamic(url.absoluteString)
+                        Text(url.absoluteString)
                             .padding(.top, 5)
                             .foregroundColor(.gray)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -71,9 +77,6 @@ struct BigLinkPreview: View {
                 .background(theme.listBackground)
                 .cornerRadius(8.0)
                 .clipShape(RoundedRectangle(cornerRadius: 8.0))
-            }
-            .onTapGesture {
-                UIApplication.shared.open(url)
             }
             .task {
                 guard !SettingsStore.shared.lowDataMode else { return }
@@ -107,9 +110,6 @@ struct BigLinkPreview: View {
             Text(url.absoluteString)
                 .foregroundColor(theme.accent)
                 .truncationMode(.middle)
-                .onTapGesture {
-                    UIApplication.shared.open(url)
-                }
         }
     }
 }

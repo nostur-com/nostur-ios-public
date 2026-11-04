@@ -27,6 +27,7 @@ struct AppView: View {
                 Onboarding()
             case .loggedIn(let loggedInAccount):
                 NosturMainView()
+                    .modifier(NostrBrowserPresentation(account: loggedInAccount))
                     .environment(\.theme, themes.theme)
                     .tint(themes.theme.accent)
                     .accentColor(themes.theme.accent)
@@ -52,6 +53,7 @@ struct AppView: View {
             }
         }
         .onChange(of: accountsState.loggedInAccount) { newLoggedInAccount in
+            if newLoggedInAccount == nil { NostrBrowserSession.shared.close() }
             // Don't set to .loggedIn too soon, need to wait for startNosturing() to have finished or .connections will be empty (needed in MainFeedsScreen)
             guard AppState.shared.finishedTasks.contains(.didRunConnectAll) else { return }
 

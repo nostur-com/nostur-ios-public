@@ -23,6 +23,7 @@ struct SideBar: View {
     @State private var showAnySigner = false
     @State private var npub = ""
     @State private var showProfileShare = false
+    @ObservedObject private var browserSession = NostrBrowserSession.shared
     
     static let ICON_WIDTH = 30.0
     static let MENU_TEXT_WIDTH = NOSTUR_SIDEBAR_WIDTH - 70.0
@@ -121,6 +122,16 @@ struct SideBar: View {
                             icon: { Image(systemName: "person")
                                 .frame(width: Self.ICON_WIDTH) }
                         )
+                        .padding(.vertical, Self.BUTTON_VPADDING)
+                        .contentShape(Rectangle())
+                    }
+                    Button { browserSession.present() } label: {
+                        Label {
+                            Text("Web apps")
+                                .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                        } icon: {
+                            Image(systemName: "globe").frame(width: Self.ICON_WIDTH)
+                        }
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                     }

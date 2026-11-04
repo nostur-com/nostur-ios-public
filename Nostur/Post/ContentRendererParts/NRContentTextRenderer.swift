@@ -95,6 +95,7 @@ struct NRContentTextRendererInner: View {
     var body: some View {
         if let nxText {
             Text(nxText)
+                .modifier(BrowserPostTextLinkMenu(text: nxText))
                 .font(Font.nosturBody())
                 .foregroundColor(primaryColor)
                 .tint(accentColor)

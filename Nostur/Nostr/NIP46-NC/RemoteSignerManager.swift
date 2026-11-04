@@ -49,7 +49,11 @@ class RemoteSignerManager: ObservableObject {
     private var getPublicKeyFallbackWorkItem: DispatchWorkItem?
     
     // Queue of commands to execute when we receive a response
-    var responseCommmandQueue: [String: (NEvent) -> Void] = [:] // TODO: need to add clean up, timeout...
+    private let signatureCallbacks = RemoteSignerCallbacks()
+
+    public func cancelSignatureRequest(_ requestID: String) {
+        _ = signatureCallbacks.take(requestID)
+    }
 
     private func startIdentityResolutionAfterConnect() {
         getPublicKeyFallbackWorkItem?.cancel()
@@ -103,7 +107,7 @@ class RemoteSignerManager: ObservableObject {
                     return
                 }
                  
-                if let command = responseCommmandQueue[ncResponse.id] {
+                if let command = signatureCallbacks.take(ncResponse.id) {
                     // SIGNED EVENT RESPONSE
                     if let error = ncResponse.error {
 #if DEBUG
@@ -119,7 +123,7 @@ class RemoteSignerManager: ObservableObject {
                         return
                     }
 #if DEBUG
-                        L.og.error("🏰 Remote Signer result event \(decrypted)")
+                        if !ncResponse.id.hasPrefix("sign-event-browser-") { L.og.error("🏰 Remote Signer result event \(decrypted)") }
 #endif
                     guard let nEvent = try? decoder.decode(NEvent.self, from: result.data(using: .utf8)!) else {
 #if DEBUG
@@ -128,7 +132,6 @@ class RemoteSignerManager: ObservableObject {
                         return
                     }
                     command(nEvent)
-                    responseCommmandQueue[ncResponse.id] = nil
                     return
                 }
                 
@@ -435,7 +438,7 @@ class RemoteSignerManager: ObservableObject {
     }
     
     // Ask nsecBunker for signature for given event, runs whenSigned(..) callback with signed event after
-    public func requestSignature(forEvent event: NEvent, usingAccount: CloudAccount? = nil, whenSigned: ((NEvent) -> Void)? = nil) {
+    public func requestSignature(forEvent event: NEvent, usingAccount: CloudAccount? = nil, requestID: String = "sign-event-\(UUID().uuidString)", whenSigned: ((NEvent) -> Void)? = nil) {
         guard let account = (usingAccount ?? account) else { return }
         
         // account does not have a .privateKey, but because isNC=true it will look up in NIP46SecretManager for a session private key and use that instead
@@ -446,7 +449,7 @@ class RemoteSignerManager: ObservableObject {
         unsignedEvent.publicKey = account.publicKey
         let unsignedEventWithId = unsignedEvent.withId()
             
-        let commandId = "sign-event-\(UUID().uuidString)"
+        let commandId = requestID
         let request = NCRequest(id: commandId, method: "sign_event", params: [unsignedEventWithId.eventJson()])
         let encoder = JSONEncoder()
         
@@ -458,7 +461,7 @@ class RemoteSignerManager: ObservableObject {
         ncReq.kind = .ncMessage
         ncReq.tags.append(NostrTag(["p", account.ncRemoteSignerPubkey]))
 #if DEBUG
-        L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
+        if !requestID.hasPrefix("sign-event-browser-") { L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())") }
 #endif
         
         guard let encrypted = Keys.encryptDirectMessageContent44(withPrivatekey: keys.privateKeyHex, pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
@@ -473,14 +476,14 @@ class RemoteSignerManager: ObservableObject {
         guard let signedReq = try? ncReq.sign(keys) else { return }
         
 #if DEBUG
-        L.og.debug("🏰 ncReqSigned (encrypted): \(signedReq.wrappedEventJson())")
+        if !requestID.hasPrefix("sign-event-browser-") { L.og.debug("🏰 ncReqSigned (encrypted): \(signedReq.wrappedEventJson())") }
 #endif
         
         // set account so the response is decrypted using the correct account
         self.setAccount(account)
         
         if let whenSigned {
-            responseCommmandQueue[commandId] = whenSigned
+            signatureCallbacks.register(commandId, callback: whenSigned)
         }
         
         // Make sure "NC" subscription is active

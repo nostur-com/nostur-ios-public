@@ -134,25 +134,6 @@
         }
       }
     },
-    "You created %lld polls and attracted %lld voters." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "You created %1$lld polls and attracted %2$lld voters."
-          }
-        }
-      }
-    },
-    "You put it to a vote" : {
-
-    },
-    "You voted in %lld polls." : {
-
-    },
-    "Your most-voted poll" : {
-
-    },
     "__Source code__" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4254,6 +4235,12 @@
         }
       }
     },
+    "A customizable social client from Soapbox." : {
+
+    },
+    "A five-letter word puzzle with Nostr scores." : {
+
+    },
     "A nostr client for iOS & macOS - nostur.com" : {
       "localizations" : {
         "es" : {
@@ -4310,7 +4297,13 @@
     "A relay returned an unreadable history response." : {
 
     },
+    "A secure website is required." : {
+
+    },
     "A source capped one timestamp. Some history remains unresolved." : {
+
+    },
+    "A web client for conversations on Nostr." : {
 
     },
     "A year worth sharing" : {
@@ -4474,6 +4467,9 @@
         }
       }
     },
+    "Account content removal request" : {
+
+    },
     "Account has no private key" : {
       "comment" : "Error message",
       "localizations" : {
@@ -4518,6 +4514,9 @@
           }
         }
       }
+    },
+    "Account status update" : {
+
     },
     "Account: @%@ / %@" : {
       "comment" : "Informational text during logout action, showing Account name/handle",
@@ -4793,6 +4792,9 @@
           }
         }
       }
+    },
+    "Add %@ to favorites" : {
+
     },
     "Add %lld blocks to Nostur" : {
       "localizations" : {
@@ -5830,6 +5832,9 @@
         }
       }
     },
+    "Always protected" : {
+
+    },
     "Amount (satoshis)" : {
       "localizations" : {
         "es" : {
@@ -6055,6 +6060,15 @@
         }
       }
     },
+    "App collection update" : {
+
+    },
+    "App handler information" : {
+
+    },
+    "App recommendation" : {
+
+    },
     "App relays inherit their Auth setting unless you change it here. Report-only relays start with Auth off." : {
 
     },
@@ -6079,6 +6093,9 @@
           }
         }
       }
+    },
+    "App-specific data" : {
+
     },
     "Appearance" : {
       "comment" : "Setting heading on settings screen",
@@ -6239,6 +6256,9 @@
           }
         }
       }
+    },
+    "Articles, notes and other Nostr content." : {
+
     },
     "Artwork" : {
       "localizations" : {
@@ -6938,6 +6958,9 @@
         }
       }
     },
+    "Badge definition" : {
+
+    },
     "Badge identifier" : {
       "localizations" : {
         "es" : {
@@ -7405,6 +7428,9 @@
         }
       }
     },
+    "Blocked relays update" : {
+
+    },
     "blocked until %@" : {
       "localizations" : {
         "es" : {
@@ -7423,6 +7449,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "geblokkeerd tot %@"
+          }
+        }
+      }
+    },
+    "Blocked: %@ (kind %@)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Blocked: %1$@ (kind %2$@)."
           }
         }
       }
@@ -7564,6 +7600,9 @@
         }
       }
     },
+    "Bookmarks update" : {
+
+    },
     "Booksmarks" : {
       "comment" : "Feed title",
       "localizations" : {
@@ -7612,6 +7651,15 @@
           }
         }
       }
+    },
+    "Browser account" : {
+
+    },
+    "Browser permissions or session changed." : {
+
+    },
+    "Browser session changed." : {
+
     },
     "Button configurator" : {
       "comment" : "Heading when entering Report details",
@@ -7760,6 +7808,15 @@
         }
       }
     },
+    "Calendar attendance response" : {
+
+    },
+    "Calendar event" : {
+
+    },
+    "Calendar update" : {
+
+    },
     "Camera" : {
 
     },
@@ -7891,6 +7948,21 @@
         }
       }
     },
+    "Cashu mint recommendation" : {
+
+    },
+    "Cashu payment" : {
+
+    },
+    "Cashu wallet configuration" : {
+
+    },
+    "Cashu wallet history" : {
+
+    },
+    "Cashu wallet tokens" : {
+
+    },
     "Change account" : {
       "localizations" : {
         "es" : {
@@ -7979,6 +8051,18 @@
           }
         }
       }
+    },
+    "Chat channel creation" : {
+
+    },
+    "Chat channel update" : {
+
+    },
+    "Chat message" : {
+
+    },
+    "Chat subscriptions update" : {
+
     },
     "Check %lld more relays" : {
       "localizations" : {
@@ -8333,6 +8417,9 @@
         }
       }
     },
+    "Chess game" : {
+
+    },
     "Choose a photo" : {
       "localizations" : {
         "es" : {
@@ -8429,6 +8516,9 @@
           }
         }
       }
+    },
+    "Choose an app's browser extension login to use your Nostur account. Some features may request signatures this browser does not support yet." : {
+
     },
     "Choose at least one relay, or preview your saved history." : {
 
@@ -9166,6 +9256,15 @@
         }
       }
     },
+    "Code patch" : {
+
+    },
+    "Code repository update" : {
+
+    },
+    "Code snippet" : {
+
+    },
     "Collapse" : {
       "localizations" : {
         "es" : {
@@ -9265,6 +9364,9 @@
           }
         }
       }
+    },
+    "Comment" : {
+
     },
     "Commenting on %@" : {
       "comment" : "Shown when adding a comment to a website",
@@ -9403,8 +9505,23 @@
         }
       }
     },
+    "Community definition" : {
+
+    },
+    "Community post approval" : {
+
+    },
+    "Community spaces, chat and events." : {
+
+    },
+    "Community subscriptions update" : {
+
+    },
     "community_builder" : {
       "shouldTranslate" : false
+    },
+    "Conference event" : {
+
     },
     "Configuration looks good" : {
       "localizations" : {
@@ -9795,6 +9912,9 @@
     "Connect a wallet" : {
 
     },
+    "Connect account" : {
+
+    },
     "Connect Alby wallet" : {
       "comment" : "Button to connect to Alby wallet",
       "localizations" : {
@@ -9817,6 +9937,9 @@
           }
         }
       }
+    },
+    "Connect this site in website controls to use your Nostur account." : {
+
     },
     "Connect to additional relays from people you follow to reduce missing content that can't be found on your own relay set" : {
       "comment" : "Setting on settings screen",
@@ -10247,6 +10370,9 @@
         }
       }
     },
+    "Content collection update" : {
+
+    },
     "Content from these accounts you follow was received from this relay" : {
       "localizations" : {
         "es" : {
@@ -10291,6 +10417,12 @@
           }
         }
       }
+    },
+    "Content label" : {
+
+    },
+    "Content or account report" : {
+
     },
     "Content relays" : {
       "localizations" : {
@@ -10487,6 +10619,9 @@
           }
         }
       }
+    },
+    "Conversations and relay feeds." : {
+
     },
     "Copied" : {
 
@@ -11359,6 +11494,9 @@
         }
       }
     },
+    "Create and manage a hosted relay." : {
+
+    },
     "Create badge" : {
       "localizations" : {
         "es" : {
@@ -12108,6 +12246,9 @@
           }
         }
       }
+    },
+    "Delegation is blocked." : {
+
     },
     "Delete" : {
       "comment" : "Button to delete\nPost context menu action to Delete a post",
@@ -12876,6 +13017,12 @@
         }
       }
     },
+    "Dismiss browser" : {
+
+    },
+    "Dismiss message" : {
+
+    },
     "Dismiss poll results" : {
       "localizations" : {
         "es" : {
@@ -12897,6 +13044,9 @@
           }
         }
       }
+    },
+    "Dismiss website controls" : {
+
     },
     "Dismiss year report reminder" : {
 
@@ -13241,6 +13391,12 @@
         }
       }
     },
+    "Draft content" : {
+
+    },
+    "Draft marketplace listing" : {
+
+    },
     "Drag handles to trim video" : {
       "localizations" : {
         "es" : {
@@ -13547,6 +13703,9 @@
         }
       }
     },
+    "Emoji collection update" : {
+
+    },
     "Emoji Feed" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -13684,6 +13843,9 @@
           }
         }
       }
+    },
+    "Enable authentication for this relay in Nostur's relay settings." : {
+
     },
     "Enable full width pictures" : {
       "comment" : "Setting on settings screen",
@@ -14070,7 +14232,13 @@
         }
       }
     },
+    "Enter a valid HTTPS address." : {
+
+    },
     "Enter a valid ws:// or wss:// relay URL." : {
+
+    },
+    "Enter a website address" : {
 
     },
     "Enter JSON" : {
@@ -14436,6 +14604,9 @@
         }
       }
     },
+    "Event deletion request" : {
+
+    },
     "Event ID" : {
       "localizations" : {
         "es" : {
@@ -14665,6 +14836,9 @@
         }
       }
     },
+    "Explore Nostr apps, communities and services." : {
+
+    },
     "Export signed public history" : {
 
     },
@@ -14842,6 +15016,12 @@
           }
         }
       }
+    },
+    "Favorite relays update" : {
+
+    },
+    "Favorites" : {
+
     },
     "Feed" : {
       "comment" : "Tab title for a feed",
@@ -15183,6 +15363,9 @@
           }
         }
       }
+    },
+    "File information" : {
+
     },
     "File Storage Server address" : {
       "comment" : "File Storage Server address",
@@ -15757,6 +15940,12 @@
         }
       }
     },
+    "Following groups update" : {
+
+    },
+    "Following list update" : {
+
+    },
     "Follows you" : {
       "comment" : "Label shown when someone follows you",
       "localizations" : {
@@ -15801,6 +15990,12 @@
           }
         }
       }
+    },
+    "Forum thread" : {
+
+    },
+    "Forward" : {
+
     },
     "Found" : {
       "localizations" : {
@@ -15936,6 +16131,9 @@
         }
       }
     },
+    "Games" : {
+
+    },
     "Gather your history" : {
 
     },
@@ -16049,6 +16247,12 @@
           }
         }
       }
+    },
+    "Group administration" : {
+
+    },
+    "Group memberships update" : {
+
     },
     "h" : {
       "comment" : "short for hours (ago), appended to number. Example: 7h",
@@ -16240,6 +16444,12 @@
           }
         }
       }
+    },
+    "Hide browser controls" : {
+
+    },
+    "Hide chat message" : {
+
     },
     "Hide keyboard" : {
       "localizations" : {
@@ -17246,6 +17456,12 @@
         }
       }
     },
+    "Interactive room" : {
+
+    },
+    "Interests update" : {
+
+    },
     "Internet connection unavailable" : {
       "localizations" : {
         "es" : {
@@ -17336,6 +17552,15 @@
         }
       }
     },
+    "Invalid request-body hash." : {
+
+    },
+    "Invalid website login or upload authorization." : {
+
+    },
+    "Invalid, oversized, or expired signing request." : {
+
+    },
     "Is bookmarked: %@" : {
       "localizations" : {
         "es" : {
@@ -17357,6 +17582,9 @@
           }
         }
       }
+    },
+    "Issue report" : {
+
     },
     "Issued" : {
       "comment" : "Tab title of Issues badges",
@@ -18460,6 +18688,9 @@
         }
       }
     },
+    "Linked identities update" : {
+
+    },
     "List" : {
       "localizations" : {
         "es" : {
@@ -18640,6 +18871,9 @@
         }
       }
     },
+    "Live event announcement" : {
+
+    },
     "Live Nests or streams from follows" : {
       "localizations" : {
         "es" : {
@@ -18661,6 +18895,12 @@
           }
         }
       }
+    },
+    "Live streaming and creator channels." : {
+
+    },
+    "Live streams" : {
+
     },
     "Live Streams" : {
       "comment" : "Feed title\nTab title for Live Streams feed\nTab title for the Live Streams feed",
@@ -19201,6 +19441,9 @@
         }
       }
     },
+    "Long-form article" : {
+
+    },
     "Long-form articles from people you follow" : {
       "localizations" : {
         "es" : {
@@ -19557,6 +19800,12 @@
         }
       }
     },
+    "Marketplace listing" : {
+
+    },
+    "Marketplace shop update" : {
+
+    },
     "Max 6 seconds" : {
       "localizations" : {
         "es" : {
@@ -19692,6 +19941,9 @@
         }
       }
     },
+    "Media following list update" : {
+
+    },
     "Media from posts from anyone which are most liked or reposted by people you follow" : {
       "localizations" : {
         "es" : {
@@ -19738,6 +19990,18 @@
       }
     },
     "Media server is processing the video…" : {
+
+    },
+    "Media servers update" : {
+
+    },
+    "Media storage authorization" : {
+
+    },
+    "Media upload authorization is disabled in website controls." : {
+
+    },
+    "Media upload authorizations" : {
 
     },
     "Media upload service" : {
@@ -20147,6 +20411,9 @@
         }
       }
     },
+    "Minimize browser" : {
+
+    },
     "Missing mesages?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20472,6 +20739,9 @@
         }
       }
     },
+    "Mute chat participant" : {
+
+    },
     "Mute conversation" : {
       "comment" : "Post context menu action to mute conversation",
       "localizations" : {
@@ -20494,6 +20764,9 @@
           }
         }
       }
+    },
+    "Mute list update" : {
+
     },
     "Mute mic" : {
       "localizations" : {
@@ -21906,6 +22179,9 @@
     "No saved public history" : {
 
     },
+    "No signing requests yet." : {
+
+    },
     "No stats collected yet." : {
       "localizations" : {
         "es" : {
@@ -22261,6 +22537,9 @@
         }
       }
     },
+    "Nostr profile, following and relay changes, event deletions, private messages, wallet commands and unknown event types are blocked." : {
+
+    },
     "Nostr Wallet Connect" : {
       "comment" : "Navigation title for setting up Nostr Wallet Connect (NWC)",
       "localizations" : {
@@ -22512,6 +22791,9 @@
           }
         }
       }
+    },
+    "Not connected" : {
+
     },
     "Not on your profile" : {
       "localizations" : {
@@ -23200,6 +23482,9 @@
         }
       }
     },
+    "Only HTTPS pages can open in this browser." : {
+
+    },
     "Only me" : {
       "localizations" : {
         "es" : {
@@ -23247,6 +23532,9 @@
     "Only selected cards and visible people appear in the shared image. Nothing is posted automatically." : {
 
     },
+    "Only short-lived, file-specific upload authorization is allowed." : {
+
+    },
     "Only show content from your follows or follows-follows" : {
       "localizations" : {
         "es" : {
@@ -23270,6 +23558,9 @@
       }
     },
     "Open %@'s profile" : {
+
+    },
+    "Open and share Nostr profiles and events on the web." : {
 
     },
     "Open highlighted post" : {
@@ -23364,6 +23655,9 @@
           }
         }
       }
+    },
+    "Open website controls to read the full signing activity" : {
+
     },
     "Open with" : {
       "localizations" : {
@@ -23582,6 +23876,9 @@
         }
       }
     },
+    "Paid relay membership and related tools." : {
+
+    },
     "Partial history" : {
 
     },
@@ -23655,6 +23952,12 @@
           }
         }
       }
+    },
+    "Payment destinations update" : {
+
+    },
+    "Payment mint announcement" : {
+
     },
     "Payments" : {
 
@@ -23787,6 +24090,9 @@
         }
       }
     },
+    "People, posts and long-form reads." : {
+
+    },
     "Percentage unavailable" : {
       "localizations" : {
         "es" : {
@@ -23825,6 +24131,9 @@
         }
       }
     },
+    "Personal and community relay hosting." : {
+
+    },
     "PFP's here (max 10)" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -23848,7 +24157,13 @@
         }
       }
     },
+    "Photo collection update" : {
+
+    },
     "Photo crop preview" : {
+
+    },
+    "Photo post" : {
 
     },
     "Photo server is processing uploads…" : {
@@ -23876,6 +24191,9 @@
           }
         }
       }
+    },
+    "Photos & media" : {
+
     },
     "Photos Feed settings" : {
       "localizations" : {
@@ -24404,6 +24722,9 @@
         }
       }
     },
+    "Pinned posts update" : {
+
+    },
     "Play sound automatically" : {
       "localizations" : {
         "es" : {
@@ -24496,6 +24817,9 @@
         }
       }
     },
+    "Podcast episode" : {
+
+    },
     "Point your camera at a Nostr profile QR code" : {
       "localizations" : {
         "nl" : {
@@ -24573,6 +24897,9 @@
         }
       }
     },
+    "Poll creation" : {
+
+    },
     "Poll results" : {
       "localizations" : {
         "es" : {
@@ -24594,6 +24921,9 @@
           }
         }
       }
+    },
+    "Poll vote" : {
+
     },
     "Portrait" : {
       "extractionState" : "stale",
@@ -25452,6 +25782,9 @@
         }
       }
     },
+    "Private content relays update" : {
+
+    },
     "Private conversation" : {
       "comment" : "Navigation title for screen to select a contact to send a Direct Message to",
       "localizations" : {
@@ -25474,6 +25807,9 @@
           }
         }
       }
+    },
+    "Private file message" : {
+
     },
     "Private key" : {
       "localizations" : {
@@ -25535,6 +25871,21 @@
           }
         }
       }
+    },
+    "Private message" : {
+
+    },
+    "Private message (legacy)" : {
+
+    },
+    "Private message envelope" : {
+
+    },
+    "Private message relays update" : {
+
+    },
+    "Private message seal" : {
+
     },
     "Private note" : {
       "comment" : "Label for private note edit field",
@@ -25731,6 +26082,9 @@
         }
       }
     },
+    "Profile badges update" : {
+
+    },
     "Profile banner URL" : {
       "comment" : "Label for entering an URL to profile banner on Edit Profile screen",
       "localizations" : {
@@ -25833,6 +26187,9 @@
         }
       }
     },
+    "Profile update" : {
+
+    },
     "pubkey: %@" : {
       "localizations" : {
         "es" : {
@@ -25931,6 +26288,9 @@
         }
       }
     },
+    "Public message" : {
+
+    },
     "Public or private key (npub or nsec)" : {
       "comment" : "Input field to enter public or private key on Add Existing Account screen",
       "extractionState" : "stale",
@@ -25956,6 +26316,9 @@
       }
     },
     "Public post" : {
+
+    },
+    "Public posts, comments & reactions" : {
 
     },
     "Public votes" : {
@@ -26339,6 +26702,9 @@
         }
       }
     },
+    "Pull request" : {
+
+    },
     "Purple" : {
       "localizations" : {
         "es" : {
@@ -26515,6 +26881,9 @@
           }
         }
       }
+    },
+    "Reaction" : {
+
     },
     "Reaction buttons" : {
       "localizations" : {
@@ -26737,6 +27106,9 @@
           }
         }
       }
+    },
+    "Reading & writing" : {
+
     },
     "Reading dimensions" : {
 
@@ -27009,6 +27381,9 @@
         }
       }
     },
+    "Recent signing activity" : {
+
+    },
     "Recently pinned" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -27103,6 +27478,9 @@
           }
         }
       }
+    },
+    "Recommended apps are ready to use with automatic defaults. These controls are optional overrides. Enabled signing permissions can be used by the site's scripts without further prompts. Relay authentication follows Nostur's relay settings. Disconnecting clears this browser session." : {
+
     },
     "Recommended by" : {
       "localizations" : {
@@ -27448,7 +27826,16 @@
         }
       }
     },
+    "Relay aggregation, backups and account services." : {
+
+    },
     "Relay authentication" : {
+
+    },
+    "Relay authentication follows Enable authentication in Nostur’s relay settings. Only the configured relay can be authorized." : {
+
+    },
+    "Relay authentication requires a fresh, empty event with one relay and one challenge." : {
 
     },
     "Relay Autopilot" : {
@@ -27649,6 +28036,9 @@
         }
       }
     },
+    "Relay discovery information" : {
+
+    },
     "Relay feed" : {
       "localizations" : {
         "es" : {
@@ -27693,6 +28083,18 @@
         }
       }
     },
+    "Relay invitation request" : {
+
+    },
+    "Relay join request" : {
+
+    },
+    "Relay leave request" : {
+
+    },
+    "Relay list update" : {
+
+    },
     "Relay Mastery" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -27715,6 +28117,15 @@
           }
         }
       }
+    },
+    "Relay member addition" : {
+
+    },
+    "Relay member removal" : {
+
+    },
+    "Relay membership list" : {
+
     },
     "Relay rejected authentication" : {
       "localizations" : {
@@ -27782,6 +28193,9 @@
         }
       }
     },
+    "Relay role definition" : {
+
+    },
     "Relay selection" : {
       "comment" : "Header for a feed setting",
       "localizations" : {
@@ -27804,6 +28218,9 @@
           }
         }
       }
+    },
+    "Relay services" : {
+
     },
     "Relay settings" : {
       "comment" : "Relay settings header",
@@ -28081,6 +28498,9 @@
         }
       }
     },
+    "Reload page" : {
+
+    },
     "Remember feed" : {
       "localizations" : {
         "es" : {
@@ -28170,6 +28590,9 @@
         }
       }
     },
+    "Remote signer communication" : {
+
+    },
     "Remove" : {
       "localizations" : {
         "es" : {
@@ -28191,6 +28614,9 @@
           }
         }
       }
+    },
+    "Remove %@ from favorites" : {
+
     },
     "Remove %lld contacts" : {
       "localizations" : {
@@ -29293,6 +29719,9 @@
     "Request that stopped this source" : {
 
     },
+    "Requested relay: %@." : {
+
+    },
     "Requests" : {
       "comment" : "Tab title for DM (Direct Message) requests",
       "localizations" : {
@@ -29637,6 +30066,9 @@
         }
       }
     },
+    "Resume the page you minimized" : {
+
+    },
     "Resumes posting after uploading the remaining photos" : {
 
     },
@@ -29784,6 +30216,12 @@
         }
       }
     },
+    "Return to Nostur and keep this page open" : {
+
+    },
+    "Return to web app" : {
+
+    },
     "Reveal" : {
       "comment" : "Button to reveal a blocked a post\nButton to reveal an embedded post hidden by muted words",
       "localizations" : {
@@ -29828,6 +30266,9 @@
           }
         }
       }
+    },
+    "Room presence" : {
+
     },
     "Rumor" : {
       "localizations" : {
@@ -30417,6 +30858,9 @@
           }
         }
       }
+    },
+    "Search relays update" : {
+
     },
     "Search..." : {
       "comment" : "Placeholder text in a search input box",
@@ -31643,6 +32087,9 @@
     "Sharing formats" : {
 
     },
+    "Short video post" : {
+
+    },
     "Short videos" : {
       "localizations" : {
         "es" : {
@@ -31899,6 +32346,9 @@
           }
         }
       }
+    },
+    "Show browser controls" : {
+
     },
     "Show collapsed reply thread" : {
       "comment" : "A11y",
@@ -32737,6 +33187,16 @@
         }
       }
     },
+    "Signed: %@ (kind %@)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Signed: %1$@ (kind %2$@)."
+          }
+        }
+      }
+    },
     "Signer" : {
       "comment" : "Side bar navigation button",
       "localizations" : {
@@ -32782,6 +33242,18 @@
         }
       }
     },
+    "Signing failed or timed out." : {
+
+    },
+    "Signing failed." : {
+
+    },
+    "Signing limit reached. Try again in a minute." : {
+
+    },
+    "Signing request expired." : {
+
+    },
     "Skip and try as guest first" : {
       "comment" : "Button to skip adding account and use the guest account instead",
       "localizations" : {
@@ -32806,6 +33278,18 @@
       }
     },
     "Smaller file" : {
+
+    },
+    "Social" : {
+
+    },
+    "Social feeds and relay exploration." : {
+
+    },
+    "Software application information" : {
+
+    },
+    "Software release collection" : {
 
     },
     "Some existing private items could not be read. Saving is disabled so they are not lost." : {
@@ -34075,6 +34559,9 @@
         }
       }
     },
+    "Text highlight" : {
+
+    },
     "Text Post" : {
       "localizations" : {
         "es" : {
@@ -34218,6 +34705,9 @@
         }
       }
     },
+    "The app wants to sign in to a Nostr relay using your account." : {
+
+    },
     "The article feed shows articles from people you follow in the selected time frame" : {
       "localizations" : {
         "es" : {
@@ -34263,6 +34753,9 @@
       }
     },
     "The Blossom upload timed out. Check your connection or try another Blossom server." : {
+
+    },
+    "The bridge exposes only the public key and permitted signed events. It does not expose Nostur's database, wallet, private messages or native files. Text you enter and files you select are shared with the website." : {
 
     },
     "The database could not be loaded." : {
@@ -34565,6 +35058,9 @@
 
     },
     "The missing-parent lookup reached its limit. Some conversations remain unresolved." : {
+
+    },
+    "The page stopped. Reload to continue." : {
 
     },
     "The profile above was found to be similar to one below that you are already following:" : {
@@ -35329,6 +35825,9 @@
         }
       }
     },
+    "This page could not load. Check the address or try reloading." : {
+
+    },
     "This permanently deletes all downloaded files and media from conversations that are not marked Keep. The messages themselves will not be deleted." : {
       "localizations" : {
         "es" : {
@@ -35498,6 +35997,9 @@
           }
         }
       }
+    },
+    "This request is not authorized." : {
+
     },
     "This saved run did not record a failure reason. Retry this source for updated details." : {
 
@@ -36142,6 +36644,9 @@
         }
       }
     },
+    "Tools & discovery" : {
+
+    },
     "Torch Off" : {
       "comment" : "Button to turn off the torch while scanning a QR code",
       "localizations" : {
@@ -36187,6 +36692,12 @@
           }
         }
       }
+    },
+    "Torrent comment" : {
+
+    },
+    "Torrent listing" : {
+
     },
     "Total" : {
 
@@ -36279,10 +36790,16 @@
         }
       }
     },
+    "Trust assertion" : {
+
+    },
     "Trusted public activity · %lld of your posts found" : {
 
     },
     "Trusted public activity found through %@" : {
+
+    },
+    "Trusted services update" : {
 
     },
     "Try again" : {
@@ -37158,6 +37675,9 @@
         }
       }
     },
+    "Unrecognized event type" : {
+
+    },
     "Unsigned or invalid event" : {
       "comment" : "Error message",
       "localizations" : {
@@ -37203,6 +37723,9 @@
           }
         }
       }
+    },
+    "Up to 20 signatures per minute. Account changes start a fresh private browsing session. Minimizing keeps your page and sign-in state. Website data is discarded when you close the browser." : {
+
     },
     "Update" : {
       "comment" : "Button to update WoT",
@@ -37343,6 +37866,9 @@
           }
         }
       }
+    },
+    "Upload and manage photos, video and files." : {
+
     },
     "Upload method" : {
       "comment" : "Setting on settings screen",
@@ -37579,6 +38105,9 @@
         }
       }
     },
+    "Used for app preferences or custom service requests. The kind alone does not identify the requested action." : {
+
+    },
     "Used when everyone on selected relays is selected. Blocked accounts and muted content are always hidden." : {
       "localizations" : {
         "es" : {
@@ -37673,6 +38202,9 @@
           }
         }
       }
+    },
+    "Using %@" : {
+
     },
     "Using account: %@" : {
       "localizations" : {
@@ -37802,6 +38334,9 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "Video collection update" : {
+
     },
     "Video post" : {
 
@@ -38252,10 +38787,25 @@
     "Wallet" : {
 
     },
+    "Wallet command" : {
+
+    },
+    "Wallet commands can request payments or access wallet information." : {
+
+    },
     "Wallet connection" : {
 
     },
+    "Wallet information" : {
+
+    },
+    "Wallet response" : {
+
+    },
     "Wallet settings" : {
+
+    },
+    "Watch live streams from the Nostr community." : {
 
     },
     "We Don't Need No Stinkin' Badges" : {
@@ -38302,6 +38852,12 @@
           }
         }
       }
+    },
+    "Web app directory" : {
+
+    },
+    "Web apps" : {
+
     },
     "Web of Trust" : {
       "localizations" : {
@@ -38373,6 +38929,27 @@
           }
         }
       }
+    },
+    "Website account access" : {
+
+    },
+    "Website account access or upload authorization is not enabled for this target." : {
+
+    },
+    "Website address" : {
+
+    },
+    "Website controls" : {
+
+    },
+    "Website login or upload authorization" : {
+
+    },
+    "Website permissions and activity" : {
+
+    },
+    "Website reaction" : {
+
     },
     "Week" : {
       "localizations" : {
@@ -38701,6 +39278,12 @@
 
     },
     "Who you zapped the most" : {
+
+    },
+    "Wiki article" : {
+
+    },
+    "Wiki redirect" : {
 
     },
     "Will not download media and previews" : {
@@ -39096,6 +39679,16 @@
     "You couldn't help reacting" : {
 
     },
+    "You created %lld polls and attracted %lld voters." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You created %1$lld polls and attracted %2$lld voters."
+          }
+        }
+      }
+    },
     "You got people talking" : {
 
     },
@@ -39134,6 +39727,12 @@
           }
         }
       }
+    },
+    "You put it to a vote" : {
+
+    },
+    "You voted in %lld polls." : {
+
     },
     "Your **Alby** wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!" : {
       "localizations" : {
@@ -39356,6 +39955,9 @@
     "Your most-loved post counts positive reaction events, like post details. People rankings count each person once per post. Supporters combine reactions, reposts and validated zaps." : {
 
     },
+    "Your most-voted poll" : {
+
+    },
     "Your most-zapped post" : {
 
     },
@@ -39558,6 +40160,12 @@
         }
       }
     },
+    "Zap goal" : {
+
+    },
+    "Zap receipt" : {
+
+    },
     "Zap receipt from" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -39580,6 +40188,9 @@
           }
         }
       }
+    },
+    "Zap request" : {
+
     },
     "Zap validation" : {
 

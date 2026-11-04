@@ -20,6 +20,12 @@ struct LinkPreviewView: View {
     static let aspect: CGFloat = 16/9
     
     var body: some View {
+        previewContent
+            .modifier(BrowserPostLinkMenu(url: url))
+    }
+
+    @ViewBuilder
+    private var previewContent: some View {
         if autoload {
             HStack(alignment: .center, spacing: 2) {
                 theme.background
@@ -69,9 +75,6 @@ struct LinkPreviewView: View {
             .background(theme.background)
             .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             .clipShape(RoundedRectangle(cornerRadius: 8.0))
-            .onTapGesture {
-                UIApplication.shared.open(url)
-            }
             .task {
                 guard !SettingsStore.shared.lowDataMode else { return }
                 guard url.absoluteString.prefix(7) != "http://" else { return }
@@ -102,9 +105,6 @@ struct LinkPreviewView: View {
             Text(url.absoluteString)
                 .foregroundColor(linkColor ?? theme.accent)
                 .truncationMode(.middle)
-                .onTapGesture {
-                    UIApplication.shared.open(url)
-                }
         }
     }
 }
