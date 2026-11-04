@@ -126,6 +126,9 @@ final class YearReviewModel {
     var zapStatus: LocalizedStringResource?
     var progressLabel: LocalizedStringResource { stage == .zaps ? zapStatus ?? stage.label : stage.label }
     var isRunning = false
+    var isDownloading = false
+    var queuedMonth: Int?
+    var lastFetchedDate: Date?
     var archivedCounts = YearReviewArchivedCounts()
     var relayAdditionError: YearReviewRelayAdditionError?
     var errorMessage: String?
@@ -209,7 +212,7 @@ final class YearReviewModel {
         collection?.period.year == year && (collection?.phase != .finished || !(collection?.failed.isEmpty ?? true))
     }
 
-    func configure(account: LoggedInAccount, contact: Contact? = nil) async {
+    func configure(account: LoggedInAccount, contact: Contact? = nil, loadSaved: Bool = true) async {
         let selectedOwner = contact?.pubkey ?? account.pubkey
         let selectedName = contact?.anyName ?? account.account.anyName
         let selectedPicture = contact?.pictureUrl ?? (contact == nil ? URL(string: account.account.picture) : nil)
@@ -330,6 +333,12 @@ final class YearReviewModel {
             selectedRelays.formUnion(receiveRelays)
         }
         refreshHistoryRelayAuth()
+        if loadSaved { loadSavedReportIfNeeded() }
+    }
+
+    func loadSavedReportIfNeeded() {
+        guard report == nil, !isRunning, !owner.isEmpty else { return }
+        start(download: false)
     }
 
     func addRelay(_ value: String) -> Bool {
@@ -377,7 +386,15 @@ final class YearReviewModel {
         archivedCounts.fromOthers += result.addedFromOthers
     }
 
-    func start(download: Bool, resume: Bool = false) {
+    func fetchMonth(_ month: Int) {
+        if isRunning {
+            if isDownloading { queuedMonth = month }
+            return
+        }
+        start(download: true, resume: true, month: month)
+    }
+
+    func start(download: Bool, resume: Bool = false, month: Int? = nil) {
         refreshHistoryRelayAuth()
         guard !isRunning, !isDeleting, let archive, !owner.isEmpty else { return }
         if download && selectedRelays.isEmpty {
@@ -386,10 +403,12 @@ final class YearReviewModel {
         }
         profileTask?.cancel()
         isRunning = true
+        isDownloading = download
+        queuedMonth = nil
         activities.removeAll()
         lastResponse = nil
         errorMessage = nil
-        report = nil
+        if download { report = nil }
         reportCollection = nil
         exportURL = nil
         let token = generation
@@ -407,17 +426,18 @@ final class YearReviewModel {
             }
 #endif
         }
-        let period = previous?.period ?? selectedPeriod(year: year)
+        var period = (resume || !download ? collection?.period : nil) ?? selectedPeriod(year: year)
         let sources = Array(relays.filter { selectedRelays.contains($0.url) }.prefix(20))
         task = Task { [self] in
             defer {
-                if generation == token { isRunning = false; activities.removeAll(); task = nil }
+                if generation == token { isRunning = false; isDownloading = false; queuedMonth = nil; activities.removeAll(); task = nil }
             }
             do {
                 stage = .local
                 let counts = try await archive.archivedCounts()
                 guard generation == token else { return }
                 archivedCounts = counts
+                lastFetchedDate = try await archive.load(Date.self, key: "last-fetched-\(period.year)")
                 let context = DataProvider.shared().newTaskContext()
                 var offset = 0
                 var invalidSeedEvents = 0
@@ -455,7 +475,8 @@ final class YearReviewModel {
                         .init(url: saved.url, auth: relays.first(where: { $0.url == saved.url })?.auth ?? saved.auth)
                     }
                     job.invalidEvents += invalidSeedEvents
-                    if resume && job.pending.isEmpty && !job.failed.isEmpty {
+                    if let month { job.prepareMonth(month) }
+                    if month == nil && job.monthScope == nil && resume && job.pending.isEmpty && !job.failed.isEmpty {
                         let retryCategories = Set(job.failed.map(\.category))
                         job.pending = job.failed
                         job.failed = []
@@ -467,6 +488,10 @@ final class YearReviewModel {
                     }
                     try await collect(&job, archive: archive)
                     collection = job
+                    period = job.period
+                    let fetchedAt = Date.now
+                    lastFetchedDate = fetchedAt
+                    try await archive.save(fetchedAt, key: "last-fetched-\(period.year)")
                 }
                 try Task.checkCancellation()
                 // Local parent resolution also makes saved-history-only previews useful.
@@ -487,7 +512,15 @@ final class YearReviewModel {
                 }
                 activities.removeAll()
                 stage = .zaps
-                let zapperKeys = try await resolveZapProviders(archive: archive, period: period, sources: sources, context: context)
+                let zapperKeys: [String: Set<String>]
+                if download {
+                    zapperKeys = try await resolveZapProviders(archive: archive, period: period, sources: sources, context: context)
+                } else {
+                    var savedKeys = try await archive.load([String: Set<String>].self, key: "zap-providers") ?? [:]
+                    let shared = await YearReviewZapProviderCache.shared.snapshot()
+                    for (recipient, keys) in shared.keys { savedKeys[recipient, default: []].formUnion(keys) }
+                    zapperKeys = savedKeys
+                }
                 stage = .analyzing
                 let reportTrust = download ? collection?.trusted ?? trust : trust
                 let revision = previewRevision
@@ -502,7 +535,7 @@ final class YearReviewModel {
                 guard generation == token, previewRevision == revision else { return }
                 postPreviews = previews
                 self.report = report
-                reportCollection = download ? collection : nil
+                reportCollection = collection
                 archivedCounts = try await archive.archivedCounts()
                 let people = report.people
                 names = Dictionary(uniqueKeysWithValues: Set(people).map {
@@ -513,7 +546,7 @@ final class YearReviewModel {
                 })
                 stage = .finished
                 prepareHighlightedDetails(report: report, archive: archive)
-                resolveMissingProfiles(people: people)
+                if download { resolveMissingProfiles(people: people) }
             } catch is CancellationError {
                 if generation == token { stage = .paused }
             } catch {
@@ -552,12 +585,14 @@ final class YearReviewModel {
 
     private func resolveZapProviders(archive: YearReviewArchive, period: YearReviewPeriod,
                                      sources: [RelayData], context: NSManagedObjectContext) async throws -> [String: Set<String>] {
-        let signers = try await archive.zapSigners(period: period)
+        let signers = try await archive.zapSigners(period: period, relevantTo: owner, blocked: CloudBlocked.blockedPubkeys())
         let recipients = Set(signers.keys)
-        zapStatus = "Checking zap providers: 0 of \(recipients.count)…"
+        zapStatus = "Preparing zap totals…"
         defer { zapStatus = nil }
         guard !recipients.isEmpty else { return [:] }
+        let shared = await YearReviewZapProviderCache.shared.snapshot()
         var keys = try await archive.load([String: Set<String>].self, key: "zap-providers") ?? [:]
+        for recipient in recipients { keys[recipient, default: []].formUnion(shared.keys[recipient, default: []]) }
         let contacts: [YearReviewZapProvider] = try await context.perform {
             let query = Contact.fetchRequest()
             query.predicate = NSPredicate(format: "pubkey IN %@", Array(recipients))
@@ -565,6 +600,10 @@ final class YearReviewModel {
         }
         var providers = try await archive.load([String: YearReviewZapProvider].self, key: "zap-provider-profiles") ?? [:]
         var checks = try await archive.load([String: YearReviewZapProviderCheck].self, key: "zap-provider-checks") ?? [:]
+        for recipient in recipients {
+            if let profile = shared.profiles[recipient] { providers[recipient] = profile }
+            if let check = shared.checks[recipient], check.checkedAt > (checks[recipient]?.checkedAt ?? .distantPast) { checks[recipient] = check }
+        }
         for contact in contacts {
             if contact.endpoint == nil, let cached = providers[contact.pubkey] {
                 providers[contact.pubkey] = YearReviewZapProvider(pubkey: contact.pubkey,
@@ -580,7 +619,7 @@ final class YearReviewModel {
                 && !signers[$0, default: []].isSubset(of: keys[$0, default: []].union(providers[$0]?.keys ?? []))
                 && (checks[$0]?.shouldRetry(endpoint: nil, signers: signers[$0, default: []]) ?? true)
         }
-        if !unknown.isEmpty { zapStatus = "Finding Lightning profiles for \(unknown.count) people…" }
+        if !unknown.isEmpty { zapStatus = "Checking missing zap providers…" }
         for relay in sources.prefix(3) where !unknown.isEmpty && (collection?.pacing?.delay(for: relay.url) ?? 0) <= 3 {
             let limit = await YearReviewRelayLimits.shared.pageSize(for: relay.url)
             guard limit > 0 else { continue }
@@ -598,32 +637,46 @@ final class YearReviewModel {
             }
         }
         try await archive.save(providers, key: "zap-provider-profiles")
-        var checked = 0
-        for recipient in recipients.sorted() {
-            try Task.checkCancellation()
-            zapStatus = "Checking zap providers: \(checked + 1) of \(recipients.count)…"
-            defer { checked += 1 }
-            let provider = providers[recipient]
-            keys[recipient, default: []].formUnion(provider?.keys ?? [])
-            if signers[recipient, default: []].isSubset(of: keys[recipient, default: []]) { continue }
-            let endpoint = provider?.endpoint?.absoluteString
-            guard checks[recipient]?.shouldRetry(endpoint: endpoint, signers: signers[recipient, default: []]) ?? true else { continue }
-            if let provider {
-                let resolved = await provider.resolve()
-                try Task.checkCancellation()
-                keys[recipient, default: []].formUnion(resolved)
-                try await archive.save(keys, key: "zap-providers")
-            }
-            checks[recipient] = .init(checkedAt: .now, endpoint: endpoint, signers: signers[recipient, default: []])
-            try await archive.save(checks, key: "zap-provider-checks")
-            if provider?.endpoint != nil { try await Task.sleep(for: .seconds(1)) }
+        for recipient in recipients { keys[recipient, default: []].formUnion(providers[recipient]?.keys ?? []) }
+        try await archive.save(keys, key: "zap-providers")
+        try? await YearReviewZapProviderCache.shared.remember(keys: keys, profiles: providers, checks: checks)
+        let missing = recipients.sorted().filter { recipient in
+            guard providers[recipient]?.endpoint != nil else { return false }
+            return !signers[recipient, default: []].isSubset(of: keys[recipient, default: []])
+                && (checks[recipient]?.shouldRetry(endpoint: providers[recipient]?.endpoint?.absoluteString, signers: signers[recipient, default: []]) ?? true)
         }
+        for (index, recipient) in missing.enumerated() {
+            try Task.checkCancellation()
+            zapStatus = "Checking missing zap providers: \(index + 1) of \(missing.count)…"
+            guard let provider = providers[recipient] else { continue }
+            let resolved = await provider.resolve()
+            keys[recipient, default: []].formUnion(resolved)
+            let check = YearReviewZapProviderCheck(checkedAt: .now, endpoint: provider.endpoint?.absoluteString, signers: signers[recipient, default: []])
+            try? await YearReviewZapProviderCache.shared.remember(keys: [recipient: keys[recipient, default: []]], profiles: [recipient: provider], checks: [:])
+            try await archive.save(keys, key: "zap-providers")
+            // Keep successful keys on cancellation, without treating a cancelled
+            // request as an unresolved provider that must cool down for a day.
+            try Task.checkCancellation()
+            checks[recipient] = check
+            try? await YearReviewZapProviderCache.shared.remember(keys: [:], profiles: [:], checks: [recipient: check])
+            try await archive.save(checks, key: "zap-provider-checks")
+            if index + 1 < missing.count { try await Task.sleep(for: .seconds(1)) }
+        }
+        // Cache unsuccessful profile discovery too, without inventing authorization.
+        for recipient in recipients where providers[recipient]?.endpoint == nil {
+            if checks[recipient]?.shouldRetry(endpoint: nil, signers: signers[recipient, default: []]) ?? true {
+                checks[recipient] = .init(checkedAt: .now, endpoint: nil, signers: signers[recipient, default: []])
+            }
+        }
+        try await archive.save(checks, key: "zap-provider-checks")
+        try? await YearReviewZapProviderCache.shared.remember(keys: keys, profiles: providers, checks: checks)
         try await archive.save(keys, key: "zap-providers")
         return keys
     }
 
     private func collect(_ job: inout YearReviewCollection, archive: YearReviewArchive) async throws {
         var requestsThisRun = 0
+        var priorityMonth = job.monthScope
         var timedPhase = job.phase
         var phaseStartedAt = Date.now
         let timeLimitMessage = String(localized: "Your month scans are saved. Some extra checks remain; resume later to improve the report.")
@@ -641,6 +694,30 @@ final class YearReviewModel {
         collection = job
         while true {
             try Task.checkCancellation()
+            if let month = queuedMonth {
+                queuedMonth = nil
+                let wasScoped = job.monthScope != nil
+                job.prepareMonth(month)
+                if !wasScoped { job.monthScope = nil }
+                priorityMonth = month
+            }
+            if let month = priorityMonth {
+                if job.pending.contains(where: { job.belongsToMonth($0, month: month) }) { job.prioritizeMonth(month) }
+                else { priorityMonth = nil }
+            }
+            if let month = job.monthScope {
+                if !job.pending.contains(where: { job.belongsToMonth($0, month: month) }) {
+                    job.monthScope = nil
+                    try await archive.save(job, key: checkpointKey(job.period))
+                    collection = job
+                    return // Other months and extra checks stay saved for later.
+                }
+                job.prioritizeMonth(month)
+            }
+            if job.phase == .primary, !job.pending.isEmpty,
+               !job.pending.contains(where: { YearReviewCollection.isPrimary($0.category) }) {
+                job.phase = job.pending.contains(where: { [.references, .quoteReferences, .addressReferences].contains($0.category) }) ? .references : .parents
+            }
             if job.pending.isEmpty {
                 switch job.phase {
                 case .primary:
@@ -989,6 +1066,8 @@ final class YearReviewModel {
             let saved = try await archive.load(YearReviewCollection.self, key: checkpointKey(selectedPeriod(year: requestedYear)))
             if generation == token, year == requestedYear, saved?.schemaVersion == YearReviewCollection.currentSchemaVersion { collection = saved }
         } catch { errorMessage = error.localizedDescription }
+        guard generation == token, year == requestedYear else { return }
+        loadSavedReportIfNeeded()
     }
 
     func exportArchive() {

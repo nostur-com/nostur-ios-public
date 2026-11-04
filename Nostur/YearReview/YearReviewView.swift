@@ -5,6 +5,7 @@ import Combine
 @MainActor
 struct YearReviewView: View {
     var initialYear: Int? = nil
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.containerID) private var containerID
     @EnvironmentObject private var account: LoggedInAccount
     @Environment(\.theme) private var theme
@@ -16,7 +17,11 @@ struct YearReviewView: View {
     @State private var showInfo = false
     @State private var showProfilePicker = false
     @State private var shareImage: UIImage?
+    @State private var selectedMonth: YearReviewMonthProgress?
+    @State private var showRefreshSources = false
     @State private var showShare = false
+    @State private var shareText = ""
+    @State private var pendingSharePost: NewPostInfo?
     @State private var isRendering = false
 
     var body: some View {
@@ -47,7 +52,12 @@ struct YearReviewView: View {
                     }
 #endif
                 }
-                if model.isRunning {
+                if model.isRunning && !model.isDownloading {
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text("Preparing saved report…").font(.subheadline)
+                    }
+                } else if model.isRunning {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 8) {
                             Button { model.pause() } label: {
@@ -57,7 +67,7 @@ struct YearReviewView: View {
                             ProgressView().controlSize(.small)
                             Text(model.progressLabel).font(.subheadline.weight(.semibold))
                         }
-                        YearReviewMonthCalendarView(collection: model.collection, period: model.currentPeriod, active: model.calendarActivity, activities: model.activeActivities)
+                        YearReviewMonthCalendarView(collection: model.collection, period: model.currentPeriod, active: model.calendarActivity, activities: model.activeActivities, onSelect: { selectedMonth = $0 })
                         if model.stage == .references, let collection = model.collection, collection.phase == .references {
                             Text("\(collection.referenceQueriesChecked ?? 0) extra checks completed · \(collection.pending.count) queued")
                                 .font(.caption).monospacedDigit().foregroundStyle(.secondary)
@@ -79,14 +89,21 @@ struct YearReviewView: View {
                     .yearReviewCard()
                 }
                 if !model.isRunning {
-                    YearReviewActionsView(hasReport: model.report != nil, canResume: model.canResume, forOtherProfile: model.owner != account.pubkey,
+                    YearReviewMonthCalendarView(collection: model.collection, period: model.currentPeriod,
+                        active: [], activities: [], onSelect: { selectedMonth = $0 })
+                    YearReviewActionsView(hasHistory: model.collection != nil || model.archivedCounts.fromYou + model.archivedCounts.fromOthers > 0, canResume: model.canResume,
                         disabled: model.owner.isEmpty || model.viewer != account.pubkey || model.isDeleting,
-                        create: { resetPreview(); model.start(download: true) },
-                        resume: { resetPreview(); model.start(download: true, resume: true) },
-                        preview: { resetPreview(); model.start(download: false) })
+                        create: { showRefreshSources = true },
+                        resume: { resetPreview(); model.start(download: true, resume: true) })
+                    if model.archivedCounts.fromYou + model.archivedCounts.fromOthers > 0 {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Saved on this device")
+                            if let date = model.lastFetchedDate { Text("Last fetched \(date, format: .dateTime.day().month(.wide))") }
+                        }.font(.caption).foregroundStyle(.secondary)
+                    }
                 }
                 if let report = model.report {
-                    YearReviewHighlightsView(report: report, names: model.names, pictures: model.pictures,
+                    YearReviewHighlightsView(report: report, voice: model.owner == account.pubkey ? .reader : .neutral, names: model.names, pictures: model.pictures,
                         enabledCards: model.enabledCards, hiddenPeople: model.hiddenPeople, previews: model.postPreviews, openPost: openPost, openProfile: openProfile,
                         toggleCard: { card in
                             if model.enabledCards.contains(card) { model.enabledCards.remove(card) }
@@ -106,7 +123,7 @@ struct YearReviewView: View {
             .frame(maxWidth: .infinity)
         }
         .background(theme.listBackground)
-        .navigationTitle("Your year on Nostr")
+        .navigationTitle(model.owner == account.pubkey ? Text("Your year on Nostr") : Text("\(model.ownerName)'s year on Nostr"))
         .nosturNavBgCompat(theme: theme)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
@@ -127,10 +144,18 @@ struct YearReviewView: View {
         .task(id: account.pubkey) {
             model.refreshHistoryRelayAuth()
             guard openedAccount != account.pubkey else { return }
-            if model.viewer != account.pubkey || model.owner != account.pubkey { await model.configure(account: account) }
-            if !model.isRunning, let initialYear, model.year != initialYear { model.year = initialYear }
+            // The report owner may deliberately differ from the signed-in viewer.
+            // Reopening must not reconfigure (and cancel) that owner's collection.
+            let needsConfiguration = model.viewer != account.pubkey || model.owner.isEmpty
+            if needsConfiguration { await model.configure(account: account, loadSaved: false) }
+            if needsConfiguration, !model.isRunning, let initialYear, model.year != initialYear {
+                model.year = initialYear
+                openedAccount = account.pubkey
+                return // The year-change handler loads that year's saved report.
+            }
             guard !Task.isCancelled else { return }
             openedAccount = account.pubkey
+            model.loadSavedReportIfNeeded()
             YearReviewDiscovery.markOpened(owner: account.pubkey, year: model.year)
         }
 #if DEBUG
@@ -145,8 +170,7 @@ struct YearReviewView: View {
             Task { await model.selectYear() }
         }
         .onChange(of: model.report) { _, _ in
-            shareImage = nil
-            showShare = false
+            if !showShare { shareImage = nil }
         }
         .onReceive(receiveNotification(.blockListUpdated).receive(on: DispatchQueue.main)) { _ in
             model.invalidatePreview()
@@ -189,9 +213,48 @@ struct YearReviewView: View {
                 }
             }
         }
-        .sheet(isPresented: $showShare, onDismiss: { shareImage = nil }) {
-            if let shareImage, let report = model.report {
-                ActivityView(activityItems: [shareImage, shareCaption(report)])
+        .sheet(item: $selectedMonth) { month in
+            YearReviewMonthActionsView(model: model, initialMonth: month)
+                .environment(\.theme, theme)
+        }
+        .sheet(isPresented: $showRefreshSources) {
+            NavigationStack {
+                YearReviewSourcesView(model: model, extraRelay: $extraRelay, invalidRelay: $invalidRelay)
+                    .safeAreaInset(edge: .bottom) {
+                        Button {
+                            showRefreshSources = false
+                            resetPreview()
+                            model.start(download: true)
+                        } label: {
+                            Label("Refresh selected relays", systemImage: "arrow.clockwise")
+                                .frame(maxWidth: .infinity).padding(.vertical, 8)
+                        }
+                        .buttonStyle(.borderedProminent).padding()
+                        .background(theme.listBackground)
+                        .disabled(model.selectedRelays.isEmpty)
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button { showRefreshSources = false } label: { Image(systemName: "xmark") }.accessibilityLabel("Dismiss")
+                        }
+                    }
+            }
+            .environment(\.theme, theme)
+        }
+        .sheet(isPresented: $showShare, onDismiss: {
+            shareImage = nil
+            if let post = pendingSharePost {
+                pendingSharePost = nil
+                AppSheetsModel.shared.newPostInfo = post
+            }
+        }) {
+            if let shareImage {
+                YearReviewSharePreview(image: shareImage) {
+                    let images = shareCardComposerImage(shareImage, altText: shareText).map { [$0] } ?? []
+                    pendingSharePost = NewPostInfo(kind: .textNote, initialText: shareText, initialImages: images)
+                    showShare = false
+                }
+                .environment(\.theme, theme)
             }
         }
     }
@@ -210,9 +273,9 @@ struct YearReviewView: View {
             }
 #if DEBUG
             Section("Testing") {
-                Toggle("Fetch two random adjacent months", isOn: $model.debugTwoMonths)
+                Toggle("Start with two random adjacent months", isOn: $model.debugTwoMonths)
                     .disabled(model.isRunning)
-                Text("Limits history scans and extra interaction checks to two months. Test progress is saved separately from full-year progress.")
+                Text("Starts with two months. Tap another month in the calendar to add it. Test progress is saved separately from full-year progress.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
 #endif
@@ -230,7 +293,7 @@ struct YearReviewView: View {
 
             Section {
                 ForEach(YearReviewCard.allCases) { card in
-                    Toggle(card.title, isOn: Binding(
+                    Toggle(card.title(for: model.owner == account.pubkey ? .reader : .neutral), isOn: Binding(
                         get: { model.enabledCards.contains(card) },
                         set: { if $0 { model.enabledCards.insert(card) } else { model.enabledCards.remove(card) } }
                     ))
@@ -244,10 +307,6 @@ struct YearReviewView: View {
                 }
                 if !model.hiddenPeople.isEmpty {
                     Button("Restore hidden people") { model.hiddenPeople = [] }
-                }
-                Picker("Share format", selection: $model.selectedShareFormat) {
-                    Text("Summary").tag(YearReviewShareFormat.report)
-                    Text("My Nostr Gang").tag(YearReviewShareFormat.gang)
                 }
             } header: {
                 Text("Choose what to share")
@@ -273,7 +332,7 @@ struct YearReviewView: View {
 
     private var hasShareableCard: Bool {
         guard let report = model.report else { return false }
-        let cards: Set<YearReviewCard> = model.selectedShareFormat == .gang ? model.enabledCards.intersection([.gang]) : model.enabledCards
+        let cards: Set<YearReviewCard> = model.enabledCards
         return cards.contains { card in
             card.hasHighlight(in: report) || card.people(in: report).contains { !model.hiddenPeople.contains($0.pubkey) }
         }
@@ -284,16 +343,10 @@ struct YearReviewView: View {
     }
 
     private func shareCaption(_ report: YearReviewReport) -> String {
-        var caption = report.period.isYearToDate
-            ? String(localized: "My Nostr in \(String(report.period.year)) so far")
-            : String(localized: "My Nostr in \(String(report.period.year))")
-        if model.owner != model.viewer {
-            caption = String(localized: "\(model.ownerName)'s Nostr in \(String(report.period.year))")
+        if model.owner != AccountsState.shared.activeAccountPublicKey {
+            return String(localized: "\(model.ownerName)'s nostr in \(String(report.period.year))")
         }
-        if report.period.monthLimit != nil { caption += "\n" + String(localized: "Test report: \(Date(timeIntervalSince1970: TimeInterval(report.period.start)).formatted(report.period.monthFormat)) – \(report.period.cutoffDate.formatted(report.period.monthFormat))") }
-        if model.selectedShareFormat == .report, model.enabledCards.contains(.conversation),
-           let id = report.conversation?.id, let note = note1(id) { caption += "\nnostr:" + note }
-        return caption + "\n" + String(localized: "Created with Nostur")
+        return String(localized: "My nostr in \(String(report.period.year))")
     }
 
     private func openProfile(_ pubkey: String) {
@@ -314,7 +367,7 @@ struct YearReviewView: View {
     private func renderShare() {
         guard let report = model.report, hasShareableCard else { return }
         isRendering = true
-        let cards: Set<YearReviewCard> = model.selectedShareFormat == .gang ? model.enabledCards.intersection([.gang]) : model.enabledCards
+        let cards: Set<YearReviewCard> = model.enabledCards
         let hidden = model.hiddenPeople
         let names = model.names
         let pictures = model.pictures
@@ -323,17 +376,19 @@ struct YearReviewView: View {
         Task {
             defer { isRendering = false }
             let image = await ShareCardRenderer.render(
-                ShareCardCanvas(showsBranding: true) {
-                    YearReviewShareContent(report: report, ownerName: model.ownerName, names: names,
-                        pictures: pictures, enabledCards: cards, hiddenPeople: hidden, collection: collection, previews: model.postPreviews)
-                }.environment(\.theme, theme)
+                YearReviewShareContent(report: report, voice: owner == AccountsState.shared.activeAccountPublicKey ? .author : .neutral, ownerName: model.ownerName, owner: owner, ownerPicture: model.ownerPicture, names: names,
+                    pictures: pictures, enabledCards: cards, hiddenPeople: hidden, collection: collection, previews: model.postPreviews)
+                    .environment(\.theme, theme)
+                    .environment(\.colorScheme, colorScheme)
             )
-            guard model.owner == owner, model.report == report else { return }
-            if let image { shareImage = image; showShare = true }
+            guard model.owner == owner, model.year == report.period.year else { return }
+            if let image { shareText = shareCaption(report); shareImage = image; showShare = true }
             else { model.errorMessage = String(localized: "The share image could not be created. Please try again.") }
         }
     }
 }
+
+enum YearReviewVoice { case neutral, reader, author }
 
 enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
     case gang, activeDay, polls, conversation, mostReacted, mostZapped, mostZapValue, supporters, mentions
@@ -342,25 +397,72 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
     var title: LocalizedStringKey {
         switch self {
-        case .gang: "My Nostr Gang"
-        case .activeDay: "Your posting rhythm"
-        case .polls: "You put it to a vote"
-        case .conversation: "You got people talking"
-        case .mostReacted: "Your most-loved post"
-        case .mostZapped: "Your most-zapped post"
-        case .mostZapValue: "Your biggest lightning moment"
-        case .supporters: "Your supporters"
-        case .mentions: "Who can't stop talking about you?"
-        case .mostInteracted: "Your closest connections"
-        case .mostTalked: "Your public conversations"
-        case .replyGuy: "Your top reply guy"
-        case .reactedBy: "Your biggest fans"
-        case .liked: "You couldn't help reacting"
-        case .zappedBy: "Who sent you the most zaps?"
-        case .zapped: "Who you zapped the most"
-        case .amplifiedBy: "Who spread your words?"
+        case .gang: "Nostr Gang"
+        case .activeDay: "Posting rhythm"
+        case .polls: "Poll highlights"
+        case .conversation: "Conversation starter"
+        case .mostReacted: "Most-loved post"
+        case .mostZapped: "Most-zapped post"
+        case .mostZapValue: "Biggest lightning moment"
+        case .supporters: "Top supporters"
+        case .mentions: "Frequent mentions"
+        case .mostInteracted: "Closest connections"
+        case .mostTalked: "Public conversations"
+        case .replyGuy: "Top reply guy"
+        case .reactedBy: "Biggest fans"
+        case .liked: "Favorite posts"
+        case .zappedBy: "Top zap senders"
+        case .zapped: "Top zap recipients"
+        case .amplifiedBy: "Repost & quote leaders"
         }
     }
+
+    func title(for voice: YearReviewVoice) -> LocalizedStringKey {
+        switch voice {
+        case .neutral: return title
+        case .reader:
+            switch self {
+            case .gang: return "Your Nostr Gang"
+            case .activeDay: return "Your posting rhythm"
+            case .polls: return "You put it to a vote"
+            case .conversation: return "You got people talking"
+            case .mostReacted: return "Your most-loved post"
+            case .mostZapped: return "Your most-zapped post"
+            case .mostZapValue: return "Your biggest lightning moment"
+            case .supporters: return "Your supporters"
+            case .mentions: return "Who can't stop talking about you?"
+            case .mostInteracted: return "Your closest connections"
+            case .mostTalked: return "Your public conversations"
+            case .replyGuy: return "Your top reply guy"
+            case .reactedBy: return "Your biggest fans"
+            case .liked: return "You couldn't help reacting"
+            case .zappedBy: return "Who sent you the most zaps?"
+            case .zapped: return "Who you zapped the most"
+            case .amplifiedBy: return "Who spread your words?"
+            }
+        case .author:
+            switch self {
+            case .gang: return "My Nostr Gang"
+            case .activeDay: return "My posting rhythm"
+            case .polls: return "I put it to a vote"
+            case .conversation: return "I got people talking"
+            case .mostReacted: return "My most-loved post"
+            case .mostZapped: return "My most-zapped post"
+            case .mostZapValue: return "My biggest lightning moment"
+            case .supporters: return "My supporters"
+            case .mentions: return "Who can't stop talking about me?"
+            case .mostInteracted: return "My closest connections"
+            case .mostTalked: return "My public conversations"
+            case .replyGuy: return "My top reply guy"
+            case .reactedBy: return "My biggest fans"
+            case .liked: return "I couldn't help reacting"
+            case .zappedBy: return "Who sent me the most zaps?"
+            case .zapped: return "Who I zapped the most"
+            case .amplifiedBy: return "Who spread my words?"
+            }
+        }
+    }
+
     var icon: String {
         switch self {
         case .gang, .mostInteracted: "person.3.fill"
@@ -409,37 +511,25 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
 enum YearReviewShareFormat: String, Codable { case report, gang }
 
 private struct YearReviewActionsView: View {
-    let hasReport: Bool
+    let hasHistory: Bool
     let canResume: Bool
-    let forOtherProfile: Bool
     let disabled: Bool
     let create: () -> Void
     let resume: () -> Void
-    let preview: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
             Button(action: canResume ? resume : create) {
-                if canResume {
-                    Label("Continue gathering", systemImage: "arrow.down.circle")
-                } else if hasReport {
-                    if forOtherProfile { Label("Update report", systemImage: "arrow.clockwise") }
-                    else { Label("Update my year", systemImage: "arrow.clockwise") }
-                } else {
-                    if forOtherProfile { Label("Create report", systemImage: "sparkles") }
-                    else { Label("Create my year", systemImage: "sparkles") }
-                }
+                if canResume { Label("Continue fetching", systemImage: "arrow.down.circle") }
+                else if hasHistory { Label("Refresh history…", systemImage: "arrow.clockwise") }
+                else { Label("Fetch history…", systemImage: "arrow.down.circle") }
             }
             .buttonStyle(.borderedProminent)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Menu {
-                Button(action: preview) { Label("Refresh from saved history", systemImage: "cylinder.split.1x2") }
-                if canResume {
-                    Button(action: create) { Label("Check all sources again", systemImage: "arrow.clockwise") }
+            Spacer(minLength: 0)
+            if canResume {
+                Button(action: create) {
+                    Label("Choose relays for a new refresh", systemImage: "slider.horizontal.3").labelStyle(.iconOnly)
                 }
-            } label: {
-                Label("More report actions", systemImage: "ellipsis.circle").labelStyle(.iconOnly)
-                    .font(.title2)
             }
         }
         .disabled(disabled)
@@ -685,6 +775,7 @@ private struct YearReviewCoverageView: View {
 
 private struct YearReviewHighlightsView: View {
     let report: YearReviewReport
+    let voice: YearReviewVoice
     let names: [String: String]
     let pictures: [String: URL]
     let enabledCards: Set<YearReviewCard>
@@ -706,9 +797,9 @@ private struct YearReviewHighlightsView: View {
         VStack(alignment: .leading, spacing: 16) {
             ForEach(visibleCards) { card in
                 if !enabledCards.contains(card), let toggleCard {
-                    YearReviewCollapsedCard(card: card, show: { toggleCard(card) })
+                    YearReviewCollapsedCard(card: card, voice: voice, show: { toggleCard(card) })
                 } else {
-                    YearReviewHighlightCard(card: card, post: card.post(in: report), activeDay: card == .activeDay ? report.mostActiveDay : nil, averagePostsPerDay: report.averagePostsPerDay, pollActivity: card == .polls ? report.polls : nil, dateFormat: report.period.dateFormat,
+                    YearReviewHighlightCard(card: card, voice: voice, post: card.post(in: report), activeDay: card == .activeDay ? report.mostActiveDay : nil, averagePostsPerDay: report.averagePostsPerDay, pollActivity: card == .polls ? report.polls : nil, dateFormat: report.period.dateFormat,
                         people: card.people(in: report).filter { !hiddenPeople.contains($0.pubkey) },
                         names: names, pictures: pictures, preview: card.post(in: report).flatMap { previews[$0.id] }, openPost: openPost, openProfile: openProfile, hidePerson: hidePerson,
                         hide: toggleCard.map { toggle in { toggle(card) } })
@@ -722,12 +813,13 @@ private struct YearReviewHighlightsView: View {
 private struct YearReviewCollapsedCard: View {
     @Environment(\.theme) private var theme
     let card: YearReviewCard
+    let voice: YearReviewVoice
     let show: () -> Void
 
     var body: some View {
         Button(action: show) {
             HStack(spacing: 12) {
-                Text(card.title).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                Text(card.title(for: voice)).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
                 Spacer(minLength: 0)
                 Image(systemName: "eye").foregroundStyle(theme.accent)
                     .frame(width: 32, height: 32)
@@ -738,13 +830,14 @@ private struct YearReviewCollapsedCard: View {
             .contentShape(RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text("Show \(Text(card.title)) in your report"))
+        .accessibilityLabel(Text("Show \(Text(card.title(for: voice))) in your report"))
     }
 }
 
 private struct YearReviewHighlightCard: View {
     @Environment(\.theme) private var theme
     let card: YearReviewCard
+    let voice: YearReviewVoice
     let post: YearReviewPost?
     let activeDay: YearReviewActiveDay?
     let averagePostsPerDay: Double
@@ -762,7 +855,7 @@ private struct YearReviewHighlightCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .top, spacing: 12) {
-                Label { Text(card.title).font(.title3.bold()) } icon: {
+                Label { Text(card.title(for: voice)).font(.title3.bold()) } icon: {
                     Image(systemName: card.icon).foregroundStyle(theme.accent)
                 }
                 if let hide {
@@ -772,7 +865,7 @@ private struct YearReviewHighlightCard: View {
                             .frame(width: 32, height: 32)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(Text("Hide \(Text(card.title)) from your report"))
+                    .accessibilityLabel(Text("Hide \(Text(card.title(for: voice))) from your report"))
                 }
             }
             if let activeDay {
@@ -821,11 +914,11 @@ private struct YearReviewPollActivityContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if activity.created > 0 {
-                Text("You created \(activity.created) polls and attracted \(activity.voters) voters.")
+                Text("\(activity.created) polls · \(activity.voters) voters")
                     .font(.headline)
             }
             if activity.votedIn > 0 {
-                Text("You voted in \(activity.votedIn) polls.")
+                Text("Polls voted in: \(activity.votedIn)")
                     .font(.subheadline)
             }
         }
@@ -881,9 +974,9 @@ private struct YearReviewPersonRow: View {
 
     @ViewBuilder private var detail: some View {
         switch card {
-        case .mentions: Text("Mentioned you in \(person.mentions) posts")
-        case .gang, .mostTalked: Text("\(person.sent) replies from you · \(person.received) back")
-        case .replyGuy: Text("\(person.received) replies to you")
+        case .mentions: Text("Mentioned in \(person.mentions) posts")
+        case .gang, .mostTalked: Text("\(person.sent) replies sent · \(person.received) received")
+        case .replyGuy: Text("\(person.received) replies received")
         case .mostInteracted: Text("\(person.interactions) public interactions")
         case .supporters: Text("\(person.reactions) reactions · \(person.reposts) reposts · \(person.zaps) zaps")
         case .reactedBy, .liked: Text("\(person.reactions) posts reacted to")
@@ -894,9 +987,52 @@ private struct YearReviewPersonRow: View {
     }
 }
 
+@available(iOS 17.0, *)
+private struct YearReviewSharePreview: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
+    @State private var showSystemShare = false
+    let image: UIImage
+    let compose: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                ScrollView {
+                    Image(uiImage: image).resizable().scaledToFit()
+                        .accessibilityLabel("Your year report image")
+                }
+                Button { compose() } label: {
+                    Label("Prepare post", systemImage: "square.and.pencil")
+                        .frame(maxWidth: .infinity).padding(.vertical, 8)
+                }
+                .buttonStyle(.borderedProminent).padding()
+            }
+            .background(theme.listBackground)
+            .navigationTitle("Share your year")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Dismiss")
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button { showSystemShare = true } label: { Image(systemName: "square.and.arrow.up") }.accessibilityLabel("Share")
+                }
+            }
+            .sheet(isPresented: $showSystemShare) {
+                ActivityView(activityItems: [image])
+            }
+        }
+    }
+}
+
 private struct YearReviewShareContent: View {
+    @Environment(\.theme) private var theme
     let report: YearReviewReport
+    let voice: YearReviewVoice
     let ownerName: String
+    let owner: String
+    let ownerPicture: URL?
     let names: [String: String]
     let pictures: [String: URL]
     let enabledCards: Set<YearReviewCard>
@@ -905,29 +1041,158 @@ private struct YearReviewShareContent: View {
     let previews: [String: YearReviewPostPreview]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            VStack(alignment: .leading, spacing: 6) {
-                if report.period.isYearToDate {
-                    Text("My Nostr in \(String(report.period.year)) so far").font(.largeTitle.bold())
-                } else {
-                    Text("My Nostr in \(String(report.period.year))").font(.largeTitle.bold())
+        VStack(alignment: .leading, spacing: 0) {
+            YearReviewPosterHeader(year: report.period.year, ownReport: voice == .author, name: ownerName, owner: owner, picture: ownerPicture, isYearToDate: report.period.isYearToDate)
+                .padding(.bottom, 28)
+            ForEach(YearReviewCard.allCases.filter { availableCards.contains($0) }) { card in
+                YearReviewPosterSection(card: card, voice: voice, report: report, names: names, pictures: pictures,
+                    hiddenPeople: hiddenPeople, previews: previews)
+                    .padding(.vertical, 24)
+                    .overlay(alignment: .top) { Rectangle().fill(theme.lineColor).frame(height: 1) }
+            }
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Through \(report.period.cutoffDate, format: report.period.dateFormat)")
+                    if collection == nil || collection?.phase != .finished || collection?.estimatedResponses ?? 0 > 0 || !(collection?.failed.isEmpty ?? true) || report.unresolvedParents > 0 || collection?.parentsLimited == true {
+                        Text("Partial history")
+                    }
                 }
-                Text(ownerName).font(.headline).foregroundStyle(.secondary)
+                .font(.system(size: 11)).foregroundStyle(theme.secondary)
+                Spacer()
+                Image("NosturLogoCreature").resizable().renderingMode(.template).scaledToFit().frame(width: 20, height: 24)
+                Text(verbatim: "nostur.com").font(.system(size: 12, weight: .bold, design: .rounded))
             }
-            YearReviewHighlightsView(report: report, names: names, pictures: pictures,
-                enabledCards: availableCards, hiddenPeople: hiddenPeople)
-            Text("Trusted public activity found through \(report.period.cutoffDate, format: report.period.dateFormat)")
-                .font(.caption).foregroundStyle(.secondary)
-            if collection == nil || collection?.phase != .finished || collection?.estimatedResponses ?? 0 > 0 || !(collection?.failed.isEmpty ?? true) || report.unresolvedParents > 0 || collection?.parentsLimited == true {
-                Text("Partial history").font(.caption).foregroundStyle(.secondary)
-            }
+            .padding(.top, 20)
         }
+        .padding(26)
+        .frame(width: 440, alignment: .leading)
+        .background {
+            theme.background
+            LinearGradient(colors: [theme.accent.opacity(0.12), .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+        .foregroundStyle(theme.primary)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private var availableCards: Set<YearReviewCard> {
         Set(enabledCards.filter { card in
             card.hasHighlight(in: report) || card.people(in: report).contains { !hiddenPeople.contains($0.pubkey) }
         })
+    }
+}
+
+private struct YearReviewPosterHeader: View {
+    @Environment(\.theme) private var theme
+    let year: Int
+    let ownReport: Bool
+    let name: String
+    let owner: String
+    let picture: URL?
+    let isYearToDate: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Group {
+                    if ownReport { Text("My year on Nostr") }
+                    else { Text("\(name)'s year on Nostr") }
+                }.font(.system(size: 16, weight: .bold, design: .rounded))
+                Spacer()
+                Image(systemName: "sparkles").font(.system(size: 27, weight: .bold)).foregroundStyle(theme.accent).rotationEffect(.degrees(12))
+            }
+            Text(verbatim: String(year))
+                .font(.system(size: 108, weight: .black, design: .rounded)).tracking(-7)
+                .lineLimit(1).minimumScaleFactor(0.8)
+            HStack(spacing: 12) {
+                PFP(pubkey: owner, pictureUrl: picture, size: 42)
+                Text(name).font(.system(size: 26, weight: .bold, design: .rounded)).fixedSize(horizontal: false, vertical: true)
+            }
+            if isYearToDate {
+                Text("The story so far").font(.system(size: 15, weight: .medium)).foregroundStyle(theme.secondary)
+            }
+        }
+    }
+}
+
+private struct YearReviewPosterSection: View {
+    @Environment(\.theme) private var theme
+    let card: YearReviewCard
+    let voice: YearReviewVoice
+    let report: YearReviewReport
+    let names: [String: String]
+    let pictures: [String: URL]
+    let hiddenPeople: Set<String>
+    let previews: [String: YearReviewPostPreview]
+
+    private var people: [YearReviewPerson] { card.people(in: report).filter { !hiddenPeople.contains($0.pubkey) } }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 9) {
+                Image(systemName: card.icon).foregroundStyle(theme.accent)
+                Text(card.title(for: voice)).font(.system(size: 19, weight: .bold, design: .rounded))
+            }
+            if card == .gang {
+                HStack(alignment: .top, spacing: 8) {
+                    ForEach(people) { person in
+                        VStack(spacing: 8) {
+                            PFP(pubkey: person.pubkey, pictureUrl: pictures[person.pubkey], size: 54)
+                            Text(names[person.pubkey] ?? String(npub(person.pubkey).prefix(10)) + "…")
+                                .font(.system(size: 11, weight: .bold)).lineLimit(2).multilineTextAlignment(.center)
+                        }.frame(maxWidth: .infinity)
+                    }
+                }
+            } else {
+                if card == .activeDay, let day = report.mostActiveDay {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Text(report.averagePostsPerDay, format: .number.precision(.fractionLength(1)))
+                            .font(.system(size: 60, weight: .black, design: .rounded)).tracking(-2)
+                        Text("posts per day").font(.system(size: 15, weight: .semibold))
+                    }
+                    Text("Busiest day: \(day.date, format: report.period.dateFormat) · \(day.posts) posts")
+                        .font(.system(size: 14, weight: .medium))
+                }
+                if card == .polls, let activity = report.polls {
+                    VStack(alignment: .leading, spacing: 8) {
+                        if activity.created > 0 { Text("\(activity.created) polls · \(activity.voters) voters").font(.headline) }
+                        if activity.votedIn > 0 { Text("Polls voted in: \(activity.votedIn)").font(.subheadline) }
+                    }
+                }
+                if let post = card.post(in: report) {
+                    YearReviewPosterPostMetric(card: card, post: post, voters: report.polls?.mostVotedCount ?? 0)
+                    Text(previews[post.id]?.text ?? post.content)
+                        .font(.system(size: 17, weight: .medium, design: .serif))
+                        .lineLimit(5).lineSpacing(3)
+                        .padding(.leading, 14)
+                        .overlay(alignment: .leading) { Rectangle().fill(theme.accent).frame(width: 3) }
+                }
+                ForEach(people) { person in
+                    YearReviewPersonRow(person: person, name: names[person.pubkey] ?? String(npub(person.pubkey).prefix(16)) + "…",
+                        picture: pictures[person.pubkey], card: card, openProfile: nil, hidePerson: nil)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct YearReviewPosterPostMetric: View {
+    let card: YearReviewCard
+    let post: YearReviewPost
+    let voters: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            switch card {
+            case .conversation: Text("\(post.replies) replies")
+            case .mostReacted: Text("\(post.reactions) reactions")
+            case .mostZapped: Text("\(post.zaps) zaps")
+            case .mostZapValue: Text("\((post.millisats / 1000).formatted()) sats")
+            case .polls: Text("\(voters) voters")
+            default: EmptyView()
+            }
+        }
+        .font(.system(size: 36, weight: .black, design: .rounded))
     }
 }
 
@@ -1009,6 +1274,7 @@ private struct YearReviewMonthCalendarView: View {
     let period: YearReviewPeriod
     let active: [YearReviewWork]
     let activities: [YearReviewActivity]
+    let onSelect: (YearReviewMonthProgress) -> Void
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
 
     private var months: [YearReviewMonthProgress] {
@@ -1027,7 +1293,8 @@ private struct YearReviewMonthCalendarView: View {
         VStack(alignment: .leading, spacing: 10) {
             LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(months) { month in
-                    YearReviewMonthCell(month: month)
+                    Button { onSelect(month) } label: { YearReviewMonthCell(month: month) }
+                        .buttonStyle(.plain).disabled(!month.available)
                 }
             }
             HStack(spacing: 16) {
@@ -1042,7 +1309,6 @@ private struct YearReviewMonthCalendarView: View {
 @available(iOS 17.0, *)
 private struct YearReviewMonthCell: View {
     let month: YearReviewMonthProgress
-    @State private var showingIncompleteSources = false
 
     private var interactionPass: Bool { month.own.pending == 0 }
     private var pass: YearReviewMonthProgress.Pass { interactionPass ? month.others : month.own }
@@ -1093,14 +1359,6 @@ private struct YearReviewMonthCell: View {
         .frame(maxWidth: .infinity)
         .background(background, in: RoundedRectangle(cornerRadius: 12))
         .contentShape(Rectangle())
-        .onTapGesture {
-            if incomplete { showingIncompleteSources = true }
-        }
-        .sheet(isPresented: $showingIncompleteSources) {
-            NavigationStack {
-                YearReviewIncompleteSourcesView(month: month)
-            }
-        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(month.date, format: monthStyle))
         .accessibilityValue(accessibilityStatus + Text(". \(month.received) items received, including duplicates"))
@@ -1113,6 +1371,97 @@ private struct YearReviewMonthCell: View {
         if bothFinished { return Text("Both month passes checked") }
         if month.own.finished { return Text("Your content checked; interactions queued") }
         return Text("Queued")
+    }
+}
+
+@available(iOS 17.0, *)
+private struct YearReviewMonthActionsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var model: YearReviewModel
+    let initialMonth: YearReviewMonthProgress
+
+    private var month: YearReviewMonthProgress {
+        model.collection?.monthProgress(active: model.calendarActivity, received: model.activeActivities.map { ($0.work, $0.received) })
+            .first { $0.month == initialMonth.month } ?? initialMonth
+    }
+    private var actionTitle: LocalizedStringKey {
+        if model.isDownloading { return "Fetch next" }
+        if month.own.failed + month.others.failed > 0 { return "Retry failed sources" }
+        if month.own.finished && month.others.finished { return "Check for updates" }
+        if month.own.completed + month.others.completed > 0 { return "Continue month" }
+        return "Fetch month"
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    LabeledContent("Your content") {
+                        YearReviewMonthPassStatus(pass: month.own)
+                    }
+                    LabeledContent("Interactions") {
+                        YearReviewMonthPassStatus(pass: month.others)
+                    }
+                    Text("\(month.received) items received, including duplicates").font(.caption).foregroundStyle(.secondary)
+                }
+                Section {
+                    Button {
+                        model.fetchMonth(month.month)
+                        dismiss()
+                    } label: { Label(actionTitle, systemImage: "arrow.down.circle") }
+                    .disabled(model.isRunning && (!model.isDownloading || month.own.active || month.others.active))
+                } footer: {
+                    Text("Downloaded items are kept. Continue and retry only request unfinished work for this month. Relay cooldowns still apply. Extra reference checks are available through Continue fetching on the report.")
+                }
+                if !month.failures.isEmpty {
+                    Section {
+                        NavigationLink("Incomplete source details") { YearReviewIncompleteSourcesView(month: month) }
+                    }
+                }
+                Section("Relay sources") {
+                    ForEach(model.collection?.relays ?? model.relays.filter { model.selectedRelays.contains($0.url) }.map { YearReviewCollection.RelayDataSnapshot(url: $0.url, auth: $0.auth) }, id: \.url) { relay in
+                        YearReviewMonthRelayStatus(collection: model.collection, month: month, relay: relay.url)
+                    }
+                }
+            }
+            .navigationTitle(month.date.formatted(model.currentPeriod.monthFormat))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Dismiss")
+                }
+            }
+        }
+    }
+}
+
+private struct YearReviewMonthPassStatus: View {
+    let pass: YearReviewMonthProgress.Pass
+    var body: some View {
+        if pass.active { Text("Fetching") }
+        else if pass.failed > 0 { Text("Incomplete sources").foregroundStyle(.orange) }
+        else if pass.finished { Text("All selected sources finished").foregroundStyle(.green) }
+        else if pass.completed > 0 { Text("Partly fetched") }
+        else { Text("Not fetched") }
+    }
+}
+
+private struct YearReviewMonthRelayStatus: View {
+    let collection: YearReviewCollection?
+    let month: YearReviewMonthProgress
+    let relay: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(relay).font(.subheadline).lineLimit(2)
+            if let failure = month.failures.first(where: { $0.work.relay == relay }) {
+                Text(failure.reason).font(.caption).foregroundStyle(.secondary)
+            } else if let collection {
+                let pending = collection.pending.filter { $0.relay == relay && collection.belongsToMonth($0, month: month.month) }
+                if pending.isEmpty { Text("Month requests finished").font(.caption).foregroundStyle(.secondary) }
+                else { Text("\(pending.count) month requests remaining").font(.caption).foregroundStyle(.secondary) }
+            } else { Text("Not fetched").font(.caption).foregroundStyle(.secondary) }
+        }
     }
 }
 

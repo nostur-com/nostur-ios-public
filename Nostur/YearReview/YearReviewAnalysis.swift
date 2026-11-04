@@ -88,11 +88,12 @@ struct YearReviewEvent: Codable, Equatable, Sendable, Identifiable {
 struct YearReviewPeriod: Codable, Equatable, Sendable {
     let year: Int
     let timeZoneIdentifier: String
-    let start: Int64
-    let end: Int64 // Exclusive, including for a year-to-date snapshot.
+    var start: Int64
+    var end: Int64 // Exclusive, including for a year-to-date snapshot.
     let isYearToDate: Bool
     let monthLimit: Int?
     let monthStart: Int?
+    var includedMonths: Set<Int>? = nil
 
     static var currentYear: Int { Calendar(identifier: .gregorian).component(.year, from: Date()) }
 
@@ -127,7 +128,31 @@ struct YearReviewPeriod: Codable, Equatable, Sendable {
         return 1 + max(0, choice) % max(1, lastMonth - 1)
     }
 
-    func contains(_ timestamp: Int64) -> Bool { timestamp >= start && timestamp < end }
+    func contains(_ timestamp: Int64) -> Bool {
+        guard timestamp >= start && timestamp < end else { return false }
+        guard let includedMonths else { return true }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: timeZoneIdentifier) ?? .current
+        return includedMonths.contains(calendar.component(.month, from: Date(timeIntervalSince1970: Double(timestamp))))
+    }
+
+    mutating func includeMonth(_ month: Int, now: Date = .now) {
+        guard (1...12).contains(month) else { return }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: timeZoneIdentifier) ?? .current
+        guard let first = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
+              first < now, let next = calendar.date(byAdding: .month, value: 1, to: first) else { return }
+        if contains(Int64(first.timeIntervalSince1970)) { return }
+        if includedMonths == nil {
+            includedMonths = Set((1...12).filter {
+                let date = calendar.date(from: DateComponents(year: year, month: $0, day: 1))!
+                return contains(Int64(date.timeIntervalSince1970))
+            })
+        }
+        includedMonths?.insert(month)
+        start = min(start, Int64(first.timeIntervalSince1970))
+        end = max(end, Int64(min(next, now).timeIntervalSince1970))
+    }
 
     var cutoffDate: Date { Date(timeIntervalSince1970: TimeInterval(max(start, end - 1))) }
 
@@ -136,6 +161,15 @@ struct YearReviewPeriod: Codable, Equatable, Sendable {
         calendar.timeZone = TimeZone(identifier: timeZoneIdentifier) ?? .current
         let first = calendar.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(start)))
         let last = calendar.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(max(start, end - 1))))
+        if includedMonths != nil {
+            var day = first
+            var count = 0
+            while day <= last {
+                if contains(Int64(day.timeIntervalSince1970)) { count += 1 }
+                day = calendar.date(byAdding: .day, value: 1, to: day)!
+            }
+            return max(1, count)
+        }
         return max(1, (calendar.dateComponents([.day], from: first, to: last).day ?? 0) + 1)
     }
 
@@ -352,6 +386,7 @@ enum YearReviewAnalyzer {
             // inherited thread references. Never fall back to an earlier known post.
             let target = (event.tagValues("e").last ?? event.tagValues("a").last).flatMap(canonical)
             if event.kind == 9735 {
+                guard YearReviewZap.involves(event, owner: owner) else { return }
                 let checkedZap: YearReviewZap?
                 if let verifiedZap { checkedZap = verifiedZap(event) }
                 else { checkedZap = YearReviewZap.validate(event, authorized: zapperKeys) }

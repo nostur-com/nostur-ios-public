@@ -134,6 +134,1010 @@
         }
       }
     },
+    "%@'s nostr in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@'s nostr in %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nostr de %1$@ en %2$@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nostr %1$@ pada %2$@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ op nostr in %2$@"
+          }
+        }
+      }
+    },
+    "%@'s year on Nostr" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het Nostrjaar van %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El año de %@ en Nostr"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setahun %@ di Nostr"
+          }
+        }
+      }
+    },
+    "%lld polls · %lld voters" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld encuestas · %2$lld votantes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld jajak pendapat · %2$lld pemilih"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld polls · %2$lld stemmers"
+          }
+        }
+      }
+    },
+    "%lld replies" : {
+
+    },
+    "%lld replies received" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld respuestas recibidas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld balasan diterima"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld reacties ontvangen"
+          }
+        }
+      }
+    },
+    "%lld replies sent · %lld received" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld respuestas enviadas · %2$lld recibidas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld balasan dikirim · %2$lld diterima"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld reacties verstuurd · %2$lld ontvangen"
+          }
+        }
+      }
+    },
+    "Biggest fans" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mayores fans"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penggemar terbesar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grootste fans"
+          }
+        }
+      }
+    },
+    "Biggest lightning moment" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gran momento Lightning"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Momen Lightning terbesar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grootste lightningmoment"
+          }
+        }
+      }
+    },
+    "Busiest day: %@ · %lld posts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Día más activo: %1$@ · %2$lld publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hari paling aktif: %1$@ · %2$lld postingan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drukste dag: %1$@ · %2$lld berichten"
+          }
+        }
+      }
+    },
+    "Closest connections" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conexiones más cercanas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koneksi terdekat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hechtste contacten"
+          }
+        }
+      }
+    },
+    "Continue previous collection" : {
+
+    },
+    "Conversation starter" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio de conversación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemicu percakapan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespreksstarter"
+          }
+        }
+      }
+    },
+    "Dismiss" : {
+
+    },
+    "Favorite posts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicaciones favoritas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan favorit"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoriete berichten"
+          }
+        }
+      }
+    },
+    "Frequent mentions" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menciones frecuentes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sebutan terbanyak"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaak genoemd"
+          }
+        }
+      }
+    },
+    "I couldn't help reacting" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik kon het reageren niet laten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No pude evitar reaccionar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya tak bisa menahan diri untuk bereaksi"
+          }
+        }
+      }
+    },
+    "I got people talking" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik bracht mensen aan het praten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hice que la gente hablara"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya memulai percakapan"
+          }
+        }
+      }
+    },
+    "I put it to a vote" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik liet de stemmen spreken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo puse a votación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya mengadakan jajak pendapat"
+          }
+        }
+      }
+    },
+    "Load saved history" : {
+
+    },
+    "Mentioned in %lld posts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menciones en %lld publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disebut dalam %lld postingan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genoemd in %lld berichten"
+          }
+        }
+      }
+    },
+    "Most-loved post" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicación favorita"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan terfavorit"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Populairste bericht"
+          }
+        }
+      }
+    },
+    "Most-zapped post" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicación con más zaps"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan dengan zap terbanyak"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht met de meeste zaps"
+          }
+        }
+      }
+    },
+    "My biggest fans" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn grootste fans"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mis mayores fans"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penggemar terbesar saya"
+          }
+        }
+      }
+    },
+    "My biggest lightning moment" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn grootste lightningmoment"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi gran momento Lightning"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Momen Lightning terbesar saya"
+          }
+        }
+      }
+    },
+    "My closest connections" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn hechtste contacten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mis conexiones más cercanas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koneksi terdekat saya"
+          }
+        }
+      }
+    },
+    "My most-loved post" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn populairste bericht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi publicación favorita"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan terfavorit saya"
+          }
+        }
+      }
+    },
+    "My most-zapped post" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn bericht met de meeste zaps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi publicación con más zaps"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan saya dengan zap terbanyak"
+          }
+        }
+      }
+    },
+    "My nostr in %@" : {
+
+    },
+    "My posting rhythm" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn postritme"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi ritmo de publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ritme posting saya"
+          }
+        }
+      }
+    },
+    "My public conversations" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn openbare gesprekken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mis conversaciones públicas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Percakapan publik saya"
+          }
+        }
+      }
+    },
+    "My supporters" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn supporters"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quienes me apoyaron"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendukung saya"
+          }
+        }
+      }
+    },
+    "My top reply guy" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn trouwste reageerder"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quien más me respondió"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemberi balasan terbanyak kepada saya"
+          }
+        }
+      }
+    },
+    "My year on Nostr" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn jaar op Nostr"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi año en Nostr"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setahun saya di Nostr"
+          }
+        }
+      }
+    },
+    "Nostr Gang" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pandilla Nostr"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geng Nostr"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostr-gang"
+          }
+        }
+      }
+    },
+    "Poll highlights" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encuestas destacadas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorotan jajak pendapat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pollhoogtepunten"
+          }
+        }
+      }
+    },
+    "Polls voted in: %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encuestas con participación: %lld"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jajak pendapat yang diikuti: %lld"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestemd in %lld polls"
+          }
+        }
+      }
+    },
+    "Posting rhythm" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ritmo de publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ritme posting"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postritme"
+          }
+        }
+      }
+    },
+    "Prepare post" : {
+
+    },
+    "Public conversations" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conversaciones públicas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Percakapan publik"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Openbare gesprekken"
+          }
+        }
+      }
+    },
+    "Refresh from relays…" : {
+
+    },
+    "Refresh selected relays" : {
+
+    },
+    "Repost & quote leaders" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Líderes en republicaciones y citas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perepost dan pengutip teratas"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meeste reposts en citaten"
+          }
+        }
+      }
+    },
+    "The story so far" : {
+
+    },
+    "Top reply guy" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quien más respondió"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemberi balasan terbanyak"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouwste reageerder"
+          }
+        }
+      }
+    },
+    "Top supporters" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Principales apoyos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendukung utama"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grootste supporters"
+          }
+        }
+      }
+    },
+    "Top zap recipients" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quienes más zaps recibieron"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penerima zap terbanyak"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grootste zapontvangers"
+          }
+        }
+      }
+    },
+    "Top zap senders" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quienes más zaps enviaron"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pengirim zap terbanyak"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grootste zapgevers"
+          }
+        }
+      }
+    },
+    "Who I zapped the most" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie ik de meeste zaps stuurde"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A quién envié más zaps"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penerima zap terbanyak dari saya"
+          }
+        }
+      }
+    },
+    "Who can't stop talking about me?" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie blijft me noemen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quién no deja de hablar de mí?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa yang terus membicarakan saya?"
+          }
+        }
+      }
+    },
+    "Who sent me the most zaps?" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie stuurde me de meeste zaps?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quién me envió más zaps?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa yang mengirim zap terbanyak kepada saya?"
+          }
+        }
+      }
+    },
+    "Who spread my words?" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie verspreidde mijn woorden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quién difundió mis palabras?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa yang menyebarkan kata-kata saya?"
+          }
+        }
+      }
+    },
+    "YEAR ON NOSTR" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AÑO EN NOSTR"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SETAHUN DI NOSTR"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JAAR OP NOSTR"
+          }
+        }
+      }
+    },
+    "Your Nostr Gang" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je Nostr-gang"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu pandilla Nostr"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geng Nostr kamu"
+          }
+        }
+      }
+    },
+    "Your year report image" : {
+
+    },
     "__Source code__" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -346,6 +1350,9 @@
     },
     "-%@" : {
       "shouldTranslate" : false
+    },
+    "posts per day" : {
+
     },
     "—" : {
 
@@ -2054,16 +3061,6 @@
         }
       }
     },
-    "%@'s Nostr in %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@'s Nostr in %2$@"
-          }
-        }
-      }
-    },
     "%@'s posts can be found at" : {
       "localizations" : {
         "es" : {
@@ -2747,20 +3744,7 @@
         }
       }
     },
-    "%lld replies from you · %lld back" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld replies from you · %2$lld back"
-          }
-        }
-      }
-    },
     "%lld replies still have missing parents" : {
-
-    },
-    "%lld replies to you" : {
 
     },
     "%lld reposts · %lld quotes" : {
@@ -8138,9 +9122,6 @@
         }
       }
     },
-    "Check all sources again" : {
-
-    },
     "Check and prepare" : {
       "localizations" : {
         "es" : {
@@ -10537,9 +11518,6 @@
         }
       }
     },
-    "Continue gathering" : {
-
-    },
     "Conversation" : {
       "comment" : "Feed title",
       "localizations" : {
@@ -11552,9 +12530,6 @@
         }
       }
     },
-    "Create my year" : {
-
-    },
     "Create new account" : {
       "comment" : "Button to create a new account\nButton to start creating a new account\nNavigation title of create new account screen",
       "localizations" : {
@@ -11625,9 +12600,6 @@
         }
       }
     },
-    "Create report" : {
-
-    },
     "Create test keys" : {
       "localizations" : {
         "es" : {
@@ -11671,9 +12643,6 @@
           }
         }
       }
-    },
-    "Created with Nostur" : {
-
     },
     "Creates a public list on nostr relays" : {
       "localizations" : {
@@ -20139,9 +21108,6 @@
         }
       }
     },
-    "Mentioned you in %lld posts" : {
-
-    },
     "mentions" : {
       "comment" : "Label for quoted count, example: (7) quoted",
       "localizations" : {
@@ -20925,12 +21891,28 @@
       }
     },
     "My Nostr Gang" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn Nostr-gang"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi pandilla Nostr"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geng Nostr saya"
+          }
+        }
+      }
     },
     "My Nostr in %@" : {
-
-    },
-    "My Nostr in %@ so far" : {
 
     },
     "My profile" : {
@@ -27825,9 +28807,6 @@
         }
       }
     },
-    "Refresh from saved history" : {
-
-    },
     "Refresh poll results" : {
       "localizations" : {
         "es" : {
@@ -31969,9 +32948,6 @@
         }
       }
     },
-    "Share format" : {
-
-    },
     "Share highlight" : {
       "comment" : "Navigation title for screen to Share a Highlighted Text",
       "localizations" : {
@@ -34056,9 +35032,6 @@
         }
       }
     },
-    "Summary" : {
-
-    },
     "Support people who curate high quality lists by zapping them" : {
       "localizations" : {
         "es" : {
@@ -34627,16 +35600,6 @@
         }
       },
       "shouldTranslate" : false
-    },
-    "Test report: %@ – %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Test report: %1$@ – %2$@"
-          }
-        }
-      }
     },
     "Test Toggle" : {
       "extractionState" : "stale",
@@ -36910,9 +37873,6 @@
     "Trusted public activity · %lld of your posts found" : {
 
     },
-    "Trusted public activity found through %@" : {
-
-    },
     "Trusted services update" : {
 
     },
@@ -37910,12 +38870,6 @@
           }
         }
       }
-    },
-    "Update my year" : {
-
-    },
-    "Update report" : {
-
     },
     "Updates refer to people added or removed from this list, not posts or content." : {
       "localizations" : {
@@ -39398,16 +40352,92 @@
       }
     },
     "Who can't stop talking about you?" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie blijft je noemen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quién no deja de hablar de ti?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa yang terus membicarakan kamu?"
+          }
+        }
+      }
     },
     "Who sent you the most zaps?" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie stuurde je de meeste zaps?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quién te envió más zaps?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa yang mengirim zap terbanyak kepadamu?"
+          }
+        }
+      }
     },
     "Who spread your words?" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie verspreidde je woorden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quién difundió tus palabras?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa yang menyebarkan kata-kata kamu?"
+          }
+        }
+      }
     },
     "Who you zapped the most" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie je de meeste zaps stuurde"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A quién enviaste más zaps"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penerima zap terbanyak dari kamu"
+          }
+        }
+      }
     },
     "Wiki article" : {
 
@@ -39806,20 +40836,48 @@
 
     },
     "You couldn't help reacting" : {
-
-    },
-    "You created %lld polls and attracted %lld voters." : {
       "localizations" : {
-        "en" : {
+        "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You created %1$lld polls and attracted %2$lld voters."
+            "state" : "translated",
+            "value" : "Je kon het reageren niet laten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No pudiste evitar reaccionar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamu tak bisa menahan diri untuk bereaksi"
           }
         }
       }
     },
     "You got people talking" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bracht mensen aan het praten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiciste que la gente hablara"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamu memulai percakapan"
+          }
+        }
+      }
     },
     "You got people talking includes direct replies, sub-replies and your own replies in the collected conversation. People are counted once per thread. Relationship highlights count direct exchanges." : {
 
@@ -39858,10 +40916,26 @@
       }
     },
     "You put it to a vote" : {
-
-    },
-    "You voted in %lld polls." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je liet de stemmen spreken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo pusiste a votación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamu mengadakan jajak pendapat"
+          }
+        }
+      }
     },
     "Your **Alby** wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!" : {
       "localizations" : {
@@ -39996,10 +41070,48 @@
       }
     },
     "Your biggest fans" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je grootste fans"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus mayores fans"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penggemar terbesar kamu"
+          }
+        }
+      }
     },
     "Your biggest lightning moment" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je grootste lightningmoment"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu gran momento Lightning"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Momen Lightning terbesar kamu"
+          }
+        }
+      }
     },
     "Your choice" : {
       "localizations" : {
@@ -40024,7 +41136,26 @@
       }
     },
     "Your closest connections" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hechtste contacten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus conexiones más cercanas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koneksi terdekat kamu"
+          }
+        }
+      }
     },
     "Your content" : {
 
@@ -40079,7 +41210,26 @@
 
     },
     "Your most-loved post" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je populairste bericht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu publicación favorita"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan terfavorit kamu"
+          }
+        }
+      }
     },
     "Your most-loved post counts positive reaction events, like post details. People rankings count each person once per post. Supporters combine reactions, reposts and validated zaps." : {
 
@@ -40088,7 +41238,26 @@
 
     },
     "Your most-zapped post" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bericht met de meeste zaps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu publicación con más zaps"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan kamu dengan zap terbanyak"
+          }
+        }
+      }
     },
     "Your name" : {
       "comment" : "Label for entering your name on Edit Profile screen",
@@ -40123,7 +41292,26 @@
 
     },
     "Your posting rhythm" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je postritme"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu ritmo de publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ritme posting kamu"
+          }
+        }
+      }
     },
     "Your posts and interactions" : {
 
@@ -40157,7 +41345,26 @@
       }
     },
     "Your public conversations" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je openbare gesprekken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus conversaciones públicas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Percakapan publik kamu"
+          }
+        }
+      }
     },
     "Your reactions and reposts" : {
 
@@ -40192,10 +41399,48 @@
 
     },
     "Your supporters" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je supporters"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quienes te apoyaron"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendukung kamu"
+          }
+        }
+      }
     },
     "Your top reply guy" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je trouwste reageerder"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quien más te respondió"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemberi balasan terbanyak kepada kamu"
+          }
+        }
+      }
     },
     "Your wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!" : {
       "localizations" : {

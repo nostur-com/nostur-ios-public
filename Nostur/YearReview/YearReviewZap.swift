@@ -10,6 +10,15 @@ struct YearReviewZap: Codable, Equatable, Sendable {
     let millisats: Int64
     let paymentHash: String
 
+    static func involves(_ receipt: YearReviewEvent, owner: String) -> Bool {
+        if receipt.tagValues("p") == [owner] { return true }
+        guard let description = receipt.tagValues("description").first,
+              let request = try? JSONDecoder().decode(YearReviewEvent.self, from: Data(description.utf8)),
+              request.kind == 9734, request.pubkey == owner,
+              !request.tags.contains(where: { $0.first == "anon" }) else { return false }
+        return true // Full signature/invoice checks still happen before it counts.
+    }
+
     static func validate(_ receipt: YearReviewEvent, authorized: [String: Set<String>]) -> Self? {
         guard receipt.kind == 9735, receipt.verified(),
               receipt.tagValues("p").count == 1, let recipient = receipt.tagValues("p").first,
@@ -145,5 +154,43 @@ struct YearReviewZapProvider: Codable, Sendable {
                   let key = info.nostrPubkey, YearReviewEvent.isHex(key, length: 64) else { return keys }
             return keys.union([key])
         } catch { return keys }
+    }
+}
+
+
+/// Public authorization keys and retry history shared across report owners.
+/// Verified receipts remain in their account archive and are never invalidated here.
+actor YearReviewZapProviderCache {
+    static let shared = YearReviewZapProviderCache()
+    struct Snapshot: Codable, Sendable {
+        var keys: [String: Set<String>] = [:]
+        var profiles: [String: YearReviewZapProvider] = [:]
+        var checks: [String: YearReviewZapProviderCheck] = [:]
+    }
+    private let fileURL: URL
+    private var state: Snapshot?
+
+    init(fileURL: URL? = nil) {
+        self.fileURL = fileURL ?? YearReviewArchive.storageDirectory.appendingPathComponent("zap-provider-cache.json")
+    }
+
+    func snapshot() -> Snapshot {
+        if let state { return state }
+        let loaded = (try? Data(contentsOf: fileURL)).flatMap { try? JSONDecoder().decode(Snapshot.self, from: $0) } ?? Snapshot()
+        state = loaded
+        return loaded
+    }
+
+    func remember(keys: [String: Set<String>], profiles: [String: YearReviewZapProvider], checks: [String: YearReviewZapProviderCheck]) throws {
+        var value = snapshot()
+        for (recipient, keys) in keys { value.keys[recipient, default: []].formUnion(keys) }
+        for (recipient, profile) in profiles { value.profiles[recipient] = profile }
+        for (recipient, check) in checks where check.checkedAt >= (value.checks[recipient]?.checkedAt ?? .distantPast) {
+            value.checks[recipient] = check
+        }
+        let data = try JSONEncoder().encode(value)
+        try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try data.write(to: fileURL, options: .atomic)
+        state = value
     }
 }

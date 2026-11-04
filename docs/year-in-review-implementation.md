@@ -381,3 +381,48 @@ history SQLite archive, deduplicated by event ID. Highlight preparation restores
 only the highlighted poll and its related votes to the normal database. The poll
 loader reads those cached votes before networking, preserving report evidence
 when relays no longer retain it. PollArchive remains independently usable.
+
+
+## Interactive month collection
+
+The calendar remains visible while idle. Tapping an available month opens a sheet
+with separate authored-content and interaction status, received counts, relay
+sources and incomplete-source details. The action changes between Fetch month,
+Continue month, Retry failed sources and Check for updates. Completed status says
+all selected sources finished, rather than promising that every event exists on
+those relays.
+
+Month scope is stored in the existing collection checkpoint. Failed buckets move
+back to pending only for the chosen month; successful buckets and other months
+are retained. A finished month can explicitly be scanned again for updates.
+Scoped relay failures do not mark unrelated months failed. Existing pagination,
+relay pacing, authentication and cooldown rules remain in force.
+
+During collection, Fetch next sets a month priority consumed between batches;
+requests already in flight finish normally. A full collection keeps running after
+the prioritized month. An idle month-only run scans primary content/interactions
+and stops, leaving other months and supplementary reference checks for Continue
+fetching. Archived items are never cleared by these actions.
+
+
+## Relevant zap provider lookups
+
+Provider discovery excludes deleted receipts, blocked recipients/senders,
+unrelated third-party zaps and receipts that fail structural, signature or invoice
+preflight. Preflight supplies the receipt signer only to check structure; it never
+authorizes that signer or writes verified_zaps. Counting still requires separately
+cached or resolved recipient authorization. Incoming zaps to the report owner and
+signed outgoing requests by that owner remain eligible, including incoming
+anonymous receipts. Existing verified receipt caching is unchanged.
+
+Public provider keys, profiles and retry checks also persist in a shared atomic
+JSON cache under YearReview/zap-provider-cache.json. Historical keys accumulate
+per recipient, and newer checks supersede older ones. Contact database keys and
+per-report caches seed this shared cache; individual network lookup results are
+saved immediately, including unresolved checks. Saved-only analysis can reuse
+shared keys without networking. Failure to persist this derived shared cache does
+not discard the report's own saved authorization data.
+
+The main progress count includes only missing providers with an endpoint and an
+eligible retry, not cached recipients. Cached/unresolved breakdowns are omitted
+from the main screen. Unrelated receipts do not inflate unverified-zap warnings.

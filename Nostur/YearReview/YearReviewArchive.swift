@@ -475,7 +475,7 @@ actor YearReviewArchive {
         return validated
     }
 
-    func zapSigners(period: YearReviewPeriod) throws -> [String: Set<String>] {
+    func zapSigners(period: YearReviewPeriod, relevantTo owner: String? = nil, blocked: Set<String> = []) throws -> [String: Set<String>] {
         let deleted = try deletionIds()
         return try withDatabase { database in
             let query = try statement(database, "SELECT e.json, z.json FROM events e LEFT JOIN verified_zaps z ON z.receipt_id = e.id AND z.version = ? WHERE e.kind = 9735 AND e.created_at >= ? AND e.created_at < ?")
@@ -491,8 +491,21 @@ actor YearReviewArchive {
                     continue
                 }
                 let event = try JSONDecoder().decode(YearReviewEvent.self, from: Data(text(query, 0).utf8))
-                if deleted.contains(event.id) { status = sqlite3_step(query); continue }
-                if let recipient = event.tagValues("p").first, YearReviewEvent.isHex(recipient, length: 64) { result[recipient, default: []].insert(event.pubkey) }
+                if !period.contains(event.createdAt) || deleted.contains(event.id) { status = sqlite3_step(query); continue }
+                if let recipient = event.tagValues("p").first, YearReviewEvent.isHex(recipient, length: 64), !blocked.contains(recipient) {
+                    if let owner {
+                        // Preflight checks structure/signatures/invoice only. Supplying the
+                        // signer here is not authorization and never creates a verified cache entry.
+                        guard YearReviewZap.involves(event, owner: owner),
+                              let candidate = YearReviewZap.validate(event, authorized: [recipient: [event.pubkey]]),
+                              candidate.recipient == owner || candidate.sender == owner,
+                              candidate.sender.map({ !blocked.contains($0) }) ?? true else {
+                            status = sqlite3_step(query)
+                            continue
+                        }
+                    }
+                    result[recipient, default: []].insert(event.pubkey)
+                }
                 status = sqlite3_step(query)
             }
             guard status == SQLITE_DONE else { throw YearReviewError.database("signers") }

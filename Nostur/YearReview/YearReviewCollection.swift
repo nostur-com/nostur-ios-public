@@ -164,7 +164,7 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
     enum Phase: String, Codable, Sendable { case primary, references, parents, finished }
     let schemaVersion: Int
     let owner: String
-    let period: YearReviewPeriod
+    var period: YearReviewPeriod
     var relays: [RelayDataSnapshot]
     let trusted: Set<String>
     var pending: [YearReviewWork]
@@ -181,6 +181,7 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
     var issues: [String] = []
     var parentsLimited = false
     var pacing: YearReviewRelayPacing? = nil
+    var monthScope: Int? = nil
 
     init(owner: String, period: YearReviewPeriod, relays: [RelayData], trusted: Set<String>) {
         schemaVersion = Self.currentSchemaVersion
@@ -205,6 +206,35 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
         }
     }
 
+    func belongsToMonth(_ work: YearReviewWork, month: Int) -> Bool {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: period.timeZoneIdentifier) ?? .current
+        return Self.isPrimary(work.category) && calendar.component(.month, from: Date(timeIntervalSince1970: Double(work.until))) == month
+    }
+
+    /// Retry only failed buckets, retaining successful requests and all other months.
+    mutating func prepareMonth(_ month: Int) {
+        period.includeMonth(month)
+        let snapshot = self
+        let retry = failed.filter { snapshot.belongsToMonth($0, month: month) }
+        failed.removeAll { snapshot.belongsToMonth($0, month: month) }
+        sourceFailures?.removeAll { snapshot.belongsToMonth($0.work, month: month) }
+        pending.append(contentsOf: retry)
+        if !pending.contains(where: { belongsToMonth($0, month: month) }) {
+            let fresh = Self(owner: owner, period: period, relays: relays.map(\.relayData), trusted: trusted)
+            pending.append(contentsOf: fresh.pending.filter { fresh.belongsToMonth($0, month: month) })
+        }
+        phase = .primary
+        monthScope = month
+        prioritizeMonth(month)
+    }
+
+    mutating func prioritizeMonth(_ month: Int) {
+        let chosen = pending.filter { belongsToMonth($0, month: month) }
+        let remaining = pending.filter { !belongsToMonth($0, month: month) }
+        pending = chosen + remaining
+    }
+
     static func monthWindows(period: YearReviewPeriod) -> [(since: Int64, until: Int64)] {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: period.timeZoneIdentifier) ?? .current
@@ -215,7 +245,7 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
                 to: Date(timeIntervalSince1970: Double(start))) else { break }
             let end = min(period.end, Int64(next.timeIntervalSince1970))
             guard end > start else { break }
-            windows.append((start, end - 1))
+            if period.contains(start) { windows.append((start, end - 1)) }
             start = end
         }
         return windows
@@ -223,7 +253,11 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
 
     /// Keep a month/pass together, with at most one request per relay.
     func nextBatch(excluding unavailable: Set<String>, maximum: Int = 20, now: Date = .now) -> [YearReviewWork] {
-        guard let first = pending.first(where: { !unavailable.contains($0.relay) }) else { return [] }
+        guard let first = pending.first(where: {
+            !unavailable.contains($0.relay) &&
+            (monthScope == nil || belongsToMonth($0, month: monthScope!)) &&
+            (phase != .primary || Self.isPrimary($0.category))
+        }) else { return [] }
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: period.timeZoneIdentifier) ?? .current
         let month = calendar.dateComponents([.year, .month], from: Date(timeIntervalSince1970: Double(first.until)))
@@ -231,6 +265,8 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
         var relays = Set<String>()
         let currentPacing = pacing ?? YearReviewRelayPacing()
         let candidates = pending.filter {
+            (phase != .primary || Self.isPrimary($0.category)) &&
+            (monthScope == nil || belongsToMonth($0, month: monthScope!)) &&
             !unavailable.contains($0.relay) && ($0.category == .authored) == authored &&
             calendar.dateComponents([.year, .month], from: Date(timeIntervalSince1970: Double($0.until))) == month
         }
@@ -247,6 +283,8 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
         calendar.timeZone = TimeZone(identifier: period.timeZoneIdentifier) ?? .current
         let month = calendar.dateComponents([.year, .month], from: Date(timeIntervalSince1970: Double(anchor.until)))
         return pending.first {
+            (phase != .primary || Self.isPrimary($0.category)) &&
+            (monthScope == nil || belongsToMonth($0, month: monthScope!)) &&
             $0.relay == relay && ($0.category == .authored) == (anchor.category == .authored) &&
             calendar.dateComponents([.year, .month], from: Date(timeIntervalSince1970: Double($0.until))) == month
         }
@@ -302,11 +340,10 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
             YearReviewMonthProgress(month: month,
                 date: calendar.date(from: DateComponents(year: period.year, month: month, day: 1))!,
                 timeZoneIdentifier: period.timeZoneIdentifier,
-                available: calendar.date(from: DateComponents(year: period.year, month: month, day: 1))!.timeIntervalSince1970 < Double(period.end)
-                    && calendar.date(from: DateComponents(year: period.year, month: month + 1, day: 1))!.timeIntervalSince1970 > Double(period.start),
+                available: calendar.date(from: DateComponents(year: period.year, month: month, day: 1))! < Date.now,
                 received: monthlyReceived?[String(month)] ?? 0,
-                own: .init(completed: monthlyQueries?["\(month)-own"] ?? 0),
-                others: .init(completed: monthlyQueries?["\(month)-others"] ?? 0))
+                own: .init(completed: monthlyQueries?["\(month)-own"] ?? 0, pending: period.contains(Int64(calendar.date(from: DateComponents(year: period.year, month: month, day: 1))!.timeIntervalSince1970)) ? 0 : 1),
+                others: .init(completed: monthlyQueries?["\(month)-others"] ?? 0, pending: period.contains(Int64(calendar.date(from: DateComponents(year: period.year, month: month, day: 1))!.timeIntervalSince1970)) ? 0 : 1))
         }
         for (work, count) in received where Self.isPrimary(work.category) {
             let index = calendar.component(.month, from: Date(timeIntervalSince1970: Double(work.until))) - 1
@@ -346,7 +383,7 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
     }
 
     mutating func markRelayUnavailable(_ relay: String, reason: String, trigger: YearReviewWork? = nil, received: Int = 0, now: Date = .now) {
-        let remaining = pending.filter { $0.relay == relay }
+        let remaining = pending.filter { $0.relay == relay && (monthScope == nil || belongsToMonth($0, month: monthScope!)) }
         var details = sourceFailures ?? []
         for work in remaining {
             let status: YearReviewSourceFailure.Status = work == trigger ? .failed : trigger == nil ? .coolingDown : .skipped
@@ -355,7 +392,7 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
         }
         sourceFailures = details
         failed.append(contentsOf: remaining)
-        pending.removeAll { $0.relay == relay }
+        pending.removeAll { remaining.contains($0) }
     }
 
     func readyWorkIndex(excluding unavailable: Set<String>, now: Date = .now) -> Int? {

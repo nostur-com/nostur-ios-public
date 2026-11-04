@@ -24,6 +24,83 @@ final class YearReviewTests: XCTestCase {
         YearReviewAnalyzer.analyze(events: events, owner: owner, period: period, trusted: trusted, blocked: blocked)
     }
 
+    func testAddingMonthToTwoMonthSelectionKeepsGapsUnselected() throws {
+        let timeZone = TimeZone(secondsFromGMT: 0)!
+        let selected = YearReviewPeriod(year: 2026, now: Date(timeIntervalSince1970: 1_800_000_000), timeZone: timeZone, monthLimit: 2, monthStart: 6)
+        var job = YearReviewCollection(owner: owner, period: selected, relays: [.new(url: "wss://relay.example", read: true)], trusted: [])
+        let existing = job.pending
+        job.prepareMonth(1)
+        XCTAssertTrue(existing.allSatisfy { job.pending.contains($0) })
+        XCTAssertEqual(job.period.includedMonths, [1, 6, 7])
+        XCTAssertEqual(job.period.monthLimit, 2) // Keep the existing checkpoint key.
+        XCTAssertEqual(job.period.monthStart, 6)
+        XCTAssertEqual(job.period.calendarDays, 92)
+        let months = YearReviewCollection.monthWindows(period: job.period).map { window in
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = timeZone
+            return calendar.component(.month, from: Date(timeIntervalSince1970: Double(window.since)))
+        }
+        XCTAssertEqual(months, [1, 6, 7])
+        let restored = try JSONDecoder().decode(YearReviewCollection.self, from: JSONEncoder().encode(job))
+        XCTAssertEqual(restored.period, job.period)
+        let untouched = try XCTUnwrap(job.monthProgress(active: []).first { $0.month == 2 })
+        XCTAssertTrue(untouched.available)
+        XCTAssertFalse(untouched.own.finished)
+        XCTAssertEqual(untouched.own.completed, 0)
+    }
+
+    func testExpandedTestReportExcludesUnselectedMonths() {
+        let zone = TimeZone(secondsFromGMT: 0)!
+        var selected = YearReviewPeriod(year: 2026, now: Date(timeIntervalSince1970: 1_800_000_000), timeZone: zone, monthLimit: 2, monthStart: 6)
+        selected.includeMonth(1)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let events = [1, 2, 6, 7].map { month in
+            note("post-\(month)", by: owner,
+                timestamp: Int64(calendar.date(from: DateComponents(year: 2026, month: month, day: 2))!.timeIntervalSince1970))
+        }
+        let report = YearReviewAnalyzer.analyze(events: events, owner: owner, period: selected, trusted: [], blocked: [])
+        XCTAssertEqual(report.ownPostCount, 3)
+        XCTAssertEqual(report.averagePostsPerDay, 3.0 / 92.0, accuracy: 0.00001)
+    }
+
+    func testMonthRetryPreservesSuccessfulRequestsAndOtherMonths() throws {
+        var job = YearReviewCollection(owner: owner, period: period,
+            relays: [.new(url: "wss://relay.example", read: true)], trusted: [])
+        let completed = try XCTUnwrap(job.pending.first { job.belongsToMonth($0, month: 1) && $0.category == .authored })
+        let failed = try XCTUnwrap(job.pending.first { job.belongsToMonth($0, month: 1) && $0.category == .incoming })
+        job.pending.removeAll { $0 == completed || $0 == failed }
+        job.failed = [failed]
+        let others = job.pending.filter { !job.belongsToMonth($0, month: 1) }
+        job.prepareMonth(1)
+        XCTAssertFalse(job.pending.contains(completed))
+        XCTAssertTrue(job.pending.contains(failed))
+        XCTAssertTrue(job.failed.isEmpty)
+        XCTAssertEqual(job.pending.filter { !job.belongsToMonth($0, month: 1) }, others)
+        XCTAssertEqual(job.monthScope, 1)
+        let restored = try JSONDecoder().decode(YearReviewCollection.self, from: JSONEncoder().encode(job))
+        XCTAssertEqual(restored.monthScope, 1)
+    }
+
+    func testMonthRefreshFailureDoesNotFailOtherMonths() throws {
+        var job = YearReviewCollection(owner: owner, period: period,
+            relays: [.new(url: "wss://relay.example", read: true)], trusted: [])
+        let snapshot = job
+        job.pending.removeAll { snapshot.belongsToMonth($0, month: 1) }
+        let others = job.pending
+        job.phase = .finished
+        job.prepareMonth(1)
+        XCTAssertTrue(job.nextBatch(excluding: []).allSatisfy { job.belongsToMonth($0, month: 1) })
+        let authored = job.pending.filter { job.belongsToMonth($0, month: 1) && $0.category == .authored }
+        job.pending.removeAll { authored.contains($0) }
+        XCTAssertTrue(job.nextBatch(excluding: []).allSatisfy { job.belongsToMonth($0, month: 1) && $0.category != .authored })
+        job.markRelayUnavailable("wss://relay.example", reason: "timeout")
+        XCTAssertEqual(job.pending, others)
+        XCTAssertTrue(job.nextBatch(excluding: []).isEmpty)
+        XCTAssertTrue(job.failed.allSatisfy { job.belongsToMonth($0, month: 1) })
+        XCTAssertFalse(job.failed.isEmpty)
+    }
+
     private var pollTags: [[String]] { [["option", "a", "Yes"], ["option", "b", "No"], ["polltype", "singlechoice"]] }
 
     func testPollsEnterRegularHighlightsAndPostingRhythmButVotesDoNot() {
@@ -575,7 +652,12 @@ final class YearReviewTests: XCTestCase {
             relays: [.new(url: "wss://relay.example.com", read: true)], trusted: [])
         XCTAssertFalse(job.pending.isEmpty)
         XCTAssertTrue(job.pending.allSatisfy { $0.since >= limited.start && $0.until < limited.end })
-        XCTAssertEqual(job.monthProgress(active: []).filter(\.available).map(\.month), [1, 2])
+        let tappable = (1...12).filter { month in
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = zone
+            return calendar.date(from: DateComponents(year: 2026, month: month, day: 1))! < Date.now
+        }
+        XCTAssertEqual(job.monthProgress(active: []).filter(\.available).map(\.month), tappable)
         let data = try JSONEncoder().encode(limited)
         XCTAssertEqual(try JSONDecoder().decode(YearReviewPeriod.self, from: data), limited)
         let legacy = try JSONEncoder().encode(period)
@@ -598,7 +680,12 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(limited.start, Int64(september.timeIntervalSince1970))
         XCTAssertEqual(limited.end, Int64(now.timeIntervalSince1970))
         let job = YearReviewCollection(owner: owner, period: limited, relays: [.new(url: "wss://relay.example.com", read: true)], trusted: [])
-        XCTAssertEqual(job.monthProgress(active: []).filter(\.available).map(\.month), [9, 10])
+        let tappable = (1...12).filter { month in
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = zone
+            return calendar.date(from: DateComponents(year: 2026, month: month, day: 1))! < Date.now
+        }
+        XCTAssertEqual(job.monthProgress(active: []).filter(\.available).map(\.month), tappable)
         XCTAssertTrue(job.pending.allSatisfy { $0.since >= limited.start && $0.until < limited.end })
     }
 
@@ -1525,6 +1612,56 @@ final class YearReviewTests: XCTestCase {
         _ = try await archive.ingest([post, deletion], source: "test")
         let report = try await archive.report(owner: keys.publicKeyHex, period: period, trusted: [], blocked: [])
         XCTAssertEqual(report.ownPostCount, 0)
+    }
+
+    func testZapProviderDiscoveryOnlyIncludesRelevantValidReceipts() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let account = try Keys.newKeys()
+        let other = try Keys.newKeys()
+        let stranger = try Keys.newKeys()
+        let provider = try Keys.newKeys()
+        func receipt(to recipient: Keys, from payer: Keys, payment: UInt8) throws -> YearReviewEvent {
+            let request = try signedEvent(content: "", kind: 9734, keys: payer,
+                tags: [["p", recipient.publicKeyHex], ["amount", "21000"]])
+            let description = String(decoding: try JSONEncoder().encode(request), as: UTF8.self)
+            return try signedEvent(content: "", kind: 9735, keys: provider,
+                tags: [["p", recipient.publicKeyHex], ["description", description],
+                       ["bolt11", invoice(description: description, millisats: 21000, payment: payment)]])
+        }
+        let incoming = try receipt(to: account, from: stranger, payment: 1)
+        let outgoing = try receipt(to: other, from: account, payment: 2)
+        let unrelated = try receipt(to: stranger, from: other, payment: 3)
+        let invalid = try signedEvent(content: "", kind: 9735, keys: provider, tags: [["p", account.publicKeyHex]])
+        let archive = YearReviewArchive(owner: account.publicKeyHex, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        _ = try await archive.ingest([incoming, outgoing, unrelated, invalid], source: "test")
+        let signers = try await archive.zapSigners(period: period, relevantTo: account.publicKeyHex)
+        XCTAssertEqual(Set(signers.keys), [account.publicKeyHex, other.publicKeyHex])
+        let blocked = try await archive.zapSigners(period: period, relevantTo: account.publicKeyHex, blocked: [stranger.publicKeyHex])
+        XCTAssertEqual(Set(blocked.keys), [other.publicKeyHex])
+        let report = try await archive.report(owner: account.publicKeyHex, period: period, trusted: [], blocked: [],
+            zapperKeys: [account.publicKeyHex: [provider.publicKeyHex], other.publicKeyHex: [provider.publicKeyHex]])
+        XCTAssertEqual(report.zappedBy.first?.zaps, 1)
+        XCTAssertEqual(report.zapped.first?.zaps, 1)
+    }
+
+    func testSharedZapProviderCachePersistsHistoricalKeysAndRetryChecks() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("providers.json")
+        let cache = YearReviewZapProviderCache(fileURL: file)
+        let old = YearReviewZapProviderCheck(checkedAt: Date(timeIntervalSince1970: 100), endpoint: "https://example.com/old", signers: [alice])
+        let new = YearReviewZapProviderCheck(checkedAt: Date(timeIntervalSince1970: 200), endpoint: "https://example.com/new", signers: [bob])
+        let profile = YearReviewZapProvider(pubkey: owner, keys: [], lud16: "user@example.com", lud06: nil)
+        try await cache.remember(keys: [owner: [alice]], profiles: [owner: profile], checks: [owner: old])
+        try await cache.remember(keys: [owner: [bob]], profiles: [:], checks: [owner: new])
+        try await cache.remember(keys: [:], profiles: [:], checks: [owner: old])
+        let reopened = YearReviewZapProviderCache(fileURL: file)
+        let saved = await reopened.snapshot()
+        XCTAssertEqual(saved.keys[owner], [alice, bob])
+        XCTAssertEqual(saved.profiles[owner]?.lud16, "user@example.com")
+        XCTAssertEqual(saved.checks[owner]?.checkedAt, new.checkedAt)
+        XCTAssertFalse(saved.checks[owner]!.shouldRetry(endpoint: new.endpoint, signers: [bob], now: Date(timeIntervalSince1970: 201)))
     }
 
     func testVerifiedZapCacheSurvivesReopenAndSkipsProviderDiscoveryButHonorsBlocksAndDeletes() async throws {
