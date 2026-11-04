@@ -463,14 +463,7 @@ private struct BrowserDirectoryView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 BrowserDirectoryHeader()
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), alignment: .top)], alignment: .leading, spacing: 12) {
-                    if !favorites.isEmpty {
-                        BrowserDirectoryCategory(section: BrowserDirectorySection(id: "favorites", title: "Favorites", icon: "star", apps: favorites, keywords: ""), browser: browser)
-                    }
-                    ForEach(BrowserDirectory.sections) { section in
-                        BrowserDirectoryCategory(section: section, browser: browser)
-                    }
-                }
+                BrowserDirectoryColumns(browser: browser, favorites: favorites)
                 Text("Choose an app's browser extension login to use your account. Some features may request signatures this browser does not support yet.")
                     .font(.footnote)
                     .foregroundStyle(theme.secondary)
@@ -481,6 +474,37 @@ private struct BrowserDirectoryView: View {
         }
         .foregroundStyle(theme.primary)
         .background(theme.listBackground)
+    }
+}
+
+private struct BrowserDirectoryColumns: View {
+    @ObservedObject var browser: NostrBrowserModel
+    let favorites: [BrowserDirectoryApp]
+
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            BrowserDirectoryLayout {
+                BrowserDirectoryCategories(browser: browser, favorites: favorites)
+            }
+        } else {
+            VStack(spacing: 12) {
+                BrowserDirectoryCategories(browser: browser, favorites: favorites)
+            }
+        }
+    }
+}
+
+private struct BrowserDirectoryCategories: View {
+    @ObservedObject var browser: NostrBrowserModel
+    let favorites: [BrowserDirectoryApp]
+
+    var body: some View {
+        if !favorites.isEmpty {
+            BrowserDirectoryCategory(section: BrowserDirectorySection(id: "favorites", title: "Favorites", icon: "star", apps: favorites, keywords: ""), browser: browser)
+        }
+        ForEach(BrowserDirectory.sections) { section in
+            BrowserDirectoryCategory(section: section, browser: browser)
+        }
     }
 }
 
