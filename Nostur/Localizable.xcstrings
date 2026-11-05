@@ -3038,6 +3038,16 @@
         }
       }
     },
+    "%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
     "%@'s Feed" : {
       "comment" : "(name)'s Feed",
       "localizations" : {
@@ -5457,6 +5467,9 @@
         }
       }
     },
+    "Account changes" : {
+
+    },
     "Account connection" : {
 
     },
@@ -5540,6 +5553,9 @@
           }
         }
       }
+    },
+    "accountChanges" : {
+
     },
     "Accounts" : {
       "comment" : "Navigation title for Accounts screen",
@@ -6840,9 +6856,6 @@
     "Always allowed" : {
 
     },
-    "Always protected" : {
-
-    },
     "Amount (satoshis)" : {
       "localizations" : {
         "es" : {
@@ -7068,10 +7081,25 @@
         }
       }
     },
+    "App actions" : {
+
+    },
+    "App actions are disabled in website controls." : {
+
+    },
     "App collection update" : {
 
     },
     "App handler information" : {
+
+    },
+    "App processing request" : {
+
+    },
+    "App processing result" : {
+
+    },
+    "App processing status" : {
 
     },
     "App recommendation" : {
@@ -9043,6 +9071,9 @@
         }
       }
     },
+    "Change your profile, follows, relay lists and other account settings." : {
+
+    },
     "chat" : {
       "comment" : "Label next to time indicating a live chat mention notification",
       "localizations" : {
@@ -10923,9 +10954,6 @@
     "Connect a wallet" : {
 
     },
-    "Connect account" : {
-
-    },
     "Connect Alby wallet" : {
       "comment" : "Button to connect to Alby wallet",
       "localizations" : {
@@ -10948,9 +10976,6 @@
           }
         }
       }
-    },
-    "Connect this site in website controls to use your Nostur account." : {
-
     },
     "Connect to additional relays from people you follow to reduce missing content that can't be found on your own relay set" : {
       "comment" : "Setting on settings screen",
@@ -13302,6 +13327,9 @@
 
     },
     "Delete collected history" : {
+
+    },
+    "Delete content" : {
 
     },
     "Delete feed %@" : {
@@ -21036,9 +21064,6 @@
     "Media upload authorization is disabled in website controls." : {
 
     },
-    "Media upload authorizations" : {
-
-    },
     "Media upload service" : {
       "comment" : "Setting on settings screen",
       "extractionState" : "stale",
@@ -23230,9 +23255,6 @@
     "No saved public history" : {
 
     },
-    "No signing requests yet." : {
-
-    },
     "No stats collected yet." : {
       "localizations" : {
         "es" : {
@@ -23587,9 +23609,6 @@
           }
         }
       }
-    },
-    "Nostr profile, following and relay changes, event deletions, private messages, wallet commands and unknown event types are blocked." : {
-
     },
     "Nostr Wallet Connect" : {
       "comment" : "Navigation title for setting up Nostr Wallet Connect (NWC)",
@@ -24611,9 +24630,6 @@
     "Open %@'s profile" : {
 
     },
-    "Open and share Nostr profiles and events on the web." : {
-
-    },
     "Open highlighted post" : {
 
     },
@@ -24643,6 +24659,9 @@
 
     },
     "Open in Nostur Browser" : {
+
+    },
+    "Open in Nostur Browser: %@" : {
 
     },
     "Open latest" : {
@@ -27387,9 +27406,6 @@
     "Public post" : {
 
     },
-    "Public posts, comments & reactions" : {
-
-    },
     "Public votes" : {
       "localizations" : {
         "es" : {
@@ -28453,9 +28469,6 @@
     "Recent activity" : {
 
     },
-    "Recent signing activity" : {
-
-    },
     "Recently pinned" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -28553,9 +28566,6 @@
           }
         }
       }
-    },
-    "Recommended apps are ready to use with automatic defaults. These controls are optional overrides. Enabled signing permissions can be used by the site's scripts without further prompts. Relay authentication follows Nostur's relay settings. Disconnecting clears this browser session." : {
-
     },
     "Recommended by" : {
       "localizations" : {
@@ -28902,9 +28912,6 @@
 
     },
     "Relay authentication" : {
-
-    },
-    "Relay authentication follows Enable authentication in Nostur’s relay settings. Only the configured relay can be authorized." : {
 
     },
     "Relay authentication requires a fresh, empty event with one relay and one challenge." : {
@@ -30790,6 +30797,9 @@
           }
         }
       }
+    },
+    "Request removal of your published content." : {
+
     },
     "Request that stopped this source" : {
 
@@ -34243,6 +34253,9 @@
         }
       }
     },
+    "Sign Nostr Wallet Connect events. Manage wallet access and limits in your wallet." : {
+
+    },
     "sign_event" : {
       "localizations" : {
         "es" : {
@@ -35820,9 +35833,6 @@
     "The Blossom upload timed out. Check your connection or try another Blossom server." : {
 
     },
-    "The bridge exposes only the public key and permitted signed events. It does not expose Nostur's database, wallet, private messages or native files. Text you enter and files you select are shared with the website." : {
-
-    },
     "The database could not be loaded." : {
       "localizations" : {
         "es" : {
@@ -36671,6 +36681,9 @@
           }
         }
       }
+    },
+    "This action can change shared account data or remove content. Allow it explicitly if you trust this app." : {
+
     },
     "This article has been updated" : {
       "comment" : "Message shown when there is a newer version available of an article",
@@ -37720,9 +37733,6 @@
           }
         }
       }
-    },
-    "Tools & discovery" : {
-
     },
     "Torch Off" : {
       "comment" : "Button to turn off the torch while scanning a QR code",
@@ -38801,9 +38811,6 @@
         }
       }
     },
-    "Up to 20 signatures per minute. Account changes start a fresh private browsing session. Minimizing keeps your page and sign-in state. Website data is discarded when you close the browser." : {
-
-    },
     "Update" : {
       "comment" : "Button to update WoT",
       "localizations" : {
@@ -39033,6 +39040,9 @@
         }
       }
     },
+    "Use account" : {
+
+    },
     "Use additional relays from contacts in this feed to fetch posts" : {
       "localizations" : {
         "es" : {
@@ -39106,7 +39116,7 @@
         }
       }
     },
-    "Use account" : {
+    "Use games and apps, post, react and upload media. Account changes stay protected." : {
 
     },
     "Use photo" : {
@@ -39864,6 +39874,12 @@
     "Wallet" : {
 
     },
+    "Wallet actions" : {
+
+    },
+    "Wallet actions are disabled in website controls." : {
+
+    },
     "Wallet command" : {
 
     },
@@ -39874,6 +39890,9 @@
 
     },
     "Wallet information" : {
+
+    },
+    "Wallet notification" : {
 
     },
     "Wallet response" : {
@@ -40010,12 +40029,6 @@
     "Website account access is disabled, or this app is not allowed to authorize another HTTPS service." : {
 
     },
-    "Website account access" : {
-
-    },
-    "Website account access or upload authorization is not enabled for this target." : {
-
-    },
     "Website address" : {
 
     },
@@ -40023,9 +40036,6 @@
 
     },
     "Website login or upload authorization" : {
-
-    },
-    "Website permissions and activity" : {
 
     },
     "Website reaction" : {
@@ -41826,51 +41836,6 @@
 
     },
     "Zoom" : {
-
-    },
-    "accountChanges" : {
-
-    },
-    "Account changes" : {
-
-    },
-    "Change your profile, follows, relay lists and other account settings." : {
-
-    },
-    "Delete content" : {
-
-    },
-    "Request removal of your published content." : {
-
-    },
-    "Sign Nostr Wallet Connect events. Manage wallet access and limits in your wallet." : {
-
-    },
-    "Use games and apps, post, react and upload media. Account changes stay protected." : {
-
-    },
-    "Wallet actions" : {
-
-    },
-    "App actions are disabled in website controls." : {
-
-    },
-    "This action can change shared account data or remove content. Allow it explicitly if you trust this app." : {
-
-    },
-    "Wallet actions are disabled in website controls." : {
-
-    },
-    "App processing request" : {
-
-    },
-    "App processing result" : {
-
-    },
-    "App processing status" : {
-
-    },
-    "Wallet notification" : {
 
     }
   },
