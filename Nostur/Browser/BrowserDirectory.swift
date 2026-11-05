@@ -41,7 +41,8 @@ enum BrowserDirectory {
         ], keywords: "live streams streaming video"),
         BrowserDirectorySection(id: "communities", title: "Communities", icon: "person.3", apps: [
             BrowserDirectoryApp(id: "hivetalk", name: "HiveTalk", description: "Live conversations with the Nostr community.", url: URL(string: "https://hivetalk.org")!, keywords: "audio video rooms calls"),
-            BrowserDirectoryApp(id: "flotilla", name: "Flotilla", description: "Community spaces, chat and events.", url: URL(string: "https://flotilla.social")!, keywords: "groups chat events")
+            BrowserDirectoryApp(id: "flotilla", name: "Flotilla", description: "Community spaces, chat and events.", url: URL(string: "https://flotilla.social")!, keywords: "groups chat events"),
+            BrowserDirectoryApp(id: "nostreddit", name: "NostReddit", description: "Browse and join discussions on Nostr.", url: URL(string: "https://nostreddit.iris.to/")!, keywords: "communities forums discussions")
         ], keywords: "communities groups chat events"),
         BrowserDirectorySection(id: "games", title: "Games", icon: "gamecontroller", apps: [
             BrowserDirectoryApp(id: "word5", name: "Word5", description: "A five-letter word puzzle with Nostr scores.", url: URL(string: "https://otherstuff.ai/word5/")!, keywords: "word puzzle game")
