@@ -277,10 +277,21 @@ struct PollCard: View {
                 .lineLimit(1)
                 Spacer(minLength: 8)
                 HStack(spacing: 0) {
+                    if showingResults && !ended && ownVote == nil {
+                        Button("Vote") {
+                            selection = []
+                            changingVote = true
+                            viewingResults = false
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundStyle(theme.accent)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .padding(.horizontal, 8)
+                    }
                     if model.isLoading && (!showingResults || model.hasLoaded) {
                         ProgressView().controlSize(.small)
                             .frame(width: 44, height: 44)
-                    } else if showingResults && !ended && model.hasLoaded {
+                    } else if showingResults && !ended && model.hasLoaded && ownVote != nil {
                         // ImageRenderer draws Menu as a missing-image placeholder.
                         if viewingContext.contains(.screenshot) {
                             Image(systemName: "ellipsis")
@@ -288,7 +299,7 @@ struct PollCard: View {
                                 .frame(width: 44, height: 44)
                         } else {
                             Menu {
-                                Button(ownVote == nil ? "Vote" : "Change vote") {
+                                Button("Change vote") {
                                     selection = Set(ownVote?.responses ?? [])
                                     changingVote = true
                                 }
