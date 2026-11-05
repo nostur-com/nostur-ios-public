@@ -125,7 +125,10 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                     }
-                    Button { browserSession.present() } label: {
+                    Button {
+                        showSidebar = false
+                        browserSession.present()
+                    } label: {
                         Label {
                             Text("Web apps")
                                 .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
