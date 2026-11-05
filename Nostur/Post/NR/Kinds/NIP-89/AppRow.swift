@@ -23,24 +23,30 @@ struct AppRow: View {
     
     var body: some View {
         HStack(alignment: .center) {
-            if !ss.lowDataMode, let appLogoUrl {
-                LazyImage(url: appLogoUrl) { state in
-                    if let image = state.image {
-                        image
-                            .resizable()
-                            .scaledToFill()
+            Group {
+                if !ss.lowDataMode, let appLogoUrl {
+                    LazyImage(url: appLogoUrl) { state in
+                        if let image = state.image {
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        }
+                        else if state.isLoading {
+                            CenteredProgressView()
+                        }
+                        else {
+                            appIconPlaceholder
+                        }
                     }
-                    else if state.isLoading { 
-                        CenteredProgressView()
-                    }
-                    else {
-                        Color(.secondarySystemBackground)
-                    }
+                    .pipeline(ImageProcessing.shared.content)
                 }
-                .pipeline(ImageProcessing.shared.content)
-                .frame(width: 50, height: 50)
-                .roundedCorner(8, corners: .allCorners)
+                else {
+                    appIconPlaceholder
+                }
             }
+            .frame(width: 50, height: 50)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .accessibilityHidden(true)
 
             VStack(alignment: .leading) {
                 Text(appName)
@@ -81,6 +87,15 @@ struct AppRow: View {
         })
     }
     
+    private var appIconPlaceholder: some View {
+        Color(.secondarySystemBackground)
+            .overlay {
+                Image(systemName: "app")
+                    .font(.title2)
+                    .foregroundColor(theme.secondary)
+            }
+    }
+
     private func openApp() {
         openURL(appOpenURL)
     }
