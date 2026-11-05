@@ -69,13 +69,11 @@ returns signed events without publishing them itself.
   context for each request, including unsaved toggle changes. No connection-pool
   or importer queue is involved. The web app owns its WebSocket, so it remains
   responsible for obtaining the challenge from that relay.
-- NIP-98 requires website-account-access permission, HTTPS, a fresh timestamp,
-  empty content, one URL/method and valid payload hashes when supplied. Homepage
-  apps (including explicit deployment aliases) may authorize any HTTPS target;
-  other connected sites are limited to their own origin. GET, HEAD, POST, PUT
-  and PATCH are accepted; DELETE remains excluded. There are no provider or
-  upload-path allowlists. This is general HTTP authorization, including possible
-  service-specific account actions, not a guarantee that a request is an upload.
+- Signed HTTP requests to the app’s own HTTPS origin are enabled after account
+  connection by default, with a website setting to turn them off. External HTTPS
+  destinations require a separate allowance from Recent activity for the exact
+  source site, destination, and account, regardless of directory membership.
+  HTTPS, freshness, URL, method and payload-hash validation still apply.
 - Blossom upload authorization works with any provider for connected apps with
   uploads enabled. Tokens require the upload action, one SHA-256 file hash and
   expiration within ten minutes. Listing, downloading and deletion stay blocked.
@@ -173,15 +171,15 @@ tap, so completing a hold does not also open the external browser. This avoids
 depending on context-menu recognition inside swipeable Bookmarks rows.
 
 Website controls has five capability switches: App actions (including media
-uploads), Sign in to services, Account changes, Delete content and Wallet actions.
+uploads), Sign in to this website, Account changes, Delete content and Wallet actions.
 The Use account switch controls the connection. Each switch explains
 its effect. These choices apply to one account and exact website origin.
 
 ## Optional action grants
 
 The blocked-request sheet offers **Allow today** and **Always allow** for
-recognized public/account action kinds. Grants apply to one kind, exact HTTPS
-origin and selected account. Today expires at the local calendar day's end
+recognized public/account actions and replaceable account data kinds. Grants apply to one kind, exact HTTPS
+origin and selected account. External HTTP grants additionally identify the exact destination origin. Today expires at the local calendar day's end
 (including daylight-saving transitions); always persists until removed in the
 sheet or Website controls. Existing connected-app defaults still apply.
 
@@ -193,25 +191,24 @@ connection/permission changes or closing cancel pending work and clear page
 requests. Grants are rechecked before signing and before delivering a result.
 
 Invalid, expired-at-arrival, oversized, delegated, private-message, remote-
-signer and unrecognized requests cannot bypass checks with a grant. NIP-98 and Blossom grants retain their full protocol validation; they cannot
+signer and other ineligible requests cannot bypass checks with a grant. NIP-98 and Blossom grants retain their full protocol validation; they cannot
 allow an invalid target/method, malformed upload, or a Blossom deletion. Relay
 authentication remains governed by native relay settings. Website
 controls are accessible from the sheet. Turning App actions off also removes
 existing extra grants for ordinary app actions. Removed grants cancel pending work.
 
-Website controls keeps the account and permission toggles visible. Requested
-actions and extra permissions appear only when relevant; recent activity is
-collapsed and omitted when empty. The info button beside What this app can do explains the current website/account
-scope. General browser documentation is not shown in this website sheet. Allow
-today/Always allow explanations appear only beside actionable blocked requests. Shared-account warnings stay inline beside
-relevant requests, and retry wording appears only after a request expires.
+Recent activity shows current blocked requests first, then signing history. Each
+row expands to show the full details and a copy button. Eligible blocked requests
+offer Allow today or Always allow. Saved permissions can be expanded and revoked
+from the same section. The info button in Website controls explains which site
+and account the settings apply to.
 
 ## Website control categories
 
 App actions combines public/app event signing and file-specific Blossom uploads.
 The existing social choice is retained; the obsolete independent uploads choice
-is ignored. Sign in to services still controls HTTP authorization, which can also
-be needed by media providers. Account changes, Delete content and Wallet actions
+is ignored. Sign in to this website controls same-origin HTTP authorization.
+External media or login providers use destination grants in Recent activity. Account changes, Delete content and Wallet actions
 are separate, off by default, per account and exact origin. Account changes covers
 profile/follow/list settings, excluding wallet protocols. Delete content covers
 kinds 5 and 62. Wallet actions covers NWC kinds 13194 and 23194–23197; it does not

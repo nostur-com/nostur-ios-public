@@ -71,14 +71,12 @@ enum BrowserSigningPolicy {
         (0...65535).contains(kind) && !requiresExtraPermission(kind) && !isRestrictedProtocol(kind)
     }
 
-    // Explicit native user grants may enable recognized public/account actions.
-    // Private messages, remote-signer commands and unknown kinds cannot be
-    // granted. NWC events can be enabled separately from account changes. HTTP/Blossom grants still pass all protocol-specific checks.
+    // Replaceable account data can be approved per kind, including app-specific
+    // kinds. Restricted protocols still require their own validation and grants.
     static func canGrant(_ kind: Int) -> Bool {
-        nwcKinds.contains(kind) || [0, 1, 3, 5, 6, 7, 8, 9, 11, 16, 17, 20, 21, 22, 24, 40, 41, 42, 43, 44, 64, 78,
+        ((10000..<20000).contains(kind) && isAccountChange(kind)) || nwcKinds.contains(kind) || [0, 1, 3, 5, 6, 7, 8, 9, 11, 16, 17, 20, 21, 22, 24, 40, 41, 42, 43, 44, 64, 78,
          1018, 1063, 1068, 1111, 1222, 1244, 1311, 1337, 1617, 1618, 1619, 1621, 1984, 1985,
-         2003, 2004, 9041, 9734, 9802, 24242, 27235, 10000, 10001, 10002, 10003, 10004, 10005, 10006, 10007,
-         10008, 10009, 10012, 10015, 10020, 10021, 10030, 10050, 10063, 10096, 30000, 30002,
+         2003, 2004, 9041, 9734, 9802, 24242, 27235, 30000, 30002,
          30003, 30004, 30005, 30006, 30007, 30008, 30009, 30015, 30017, 30018, 30020, 30023,
          30024, 30030, 30311, 30312, 30313, 30315, 30402, 30403, 30617, 30618, 30818, 30819,
          31922, 31923, 31924, 31925, 31989, 31990, 32267, 34235, 34236, 34550].contains(kind)
@@ -86,15 +84,15 @@ enum BrowserSigningPolicy {
 
     static func approval(for event: BrowserUnsignedEvent, accountPubkey: String, origin: String,
                          connected: Bool, social: Bool, websiteAuth: Bool, uploads: Bool,
-                         relaySettings: [BrowserRelaySetting], accountChanges: Bool = false, deletions: Bool = false, wallet: Bool = false, allowedKinds: Set<Int> = [], now: Int64 = Int64(Date().timeIntervalSince1970)) -> BrowserSigningApproval? {
+                         relaySettings: [BrowserRelaySetting], accountChanges: Bool = false, deletions: Bool = false, wallet: Bool = false, allowedKinds: Set<Int> = [], httpDestinations: Set<String> = [], now: Int64 = Int64(Date().timeIntervalSince1970)) -> BrowserSigningApproval? {
         guard connected, BrowserSignedEvent.isHex(accountPubkey, count: 64),
               rejection(for: event, origin: origin, social: social, websiteAuth: websiteAuth,
-                        uploads: uploads, relaySettings: relaySettings, accountChanges: accountChanges, deletions: deletions, wallet: wallet, allowedKinds: allowedKinds, now: now) == nil else { return nil }
+                        uploads: uploads, relaySettings: relaySettings, accountChanges: accountChanges, deletions: deletions, wallet: wallet, allowedKinds: allowedKinds, httpDestinations: httpDestinations, now: now) == nil else { return nil }
         return BrowserSigningApproval(event: event, accountPubkey: accountPubkey, origin: origin, approvedAt: now)
     }
 
     static func rejection(for event: BrowserUnsignedEvent, origin: String,
-                          social: Bool, websiteAuth: Bool = false, uploads: Bool = false, relaySettings: [BrowserRelaySetting] = [], accountChanges: Bool = false, deletions: Bool = false, wallet: Bool = false, allowedKinds: Set<Int> = [],
+                          social: Bool, websiteAuth: Bool = false, uploads: Bool = false, relaySettings: [BrowserRelaySetting] = [], accountChanges: Bool = false, deletions: Bool = false, wallet: Bool = false, allowedKinds: Set<Int> = [], httpDestinations: Set<String> = [],
                           now: Int64 = Int64(Date().timeIntervalSince1970)) -> String? {
         func blocked(_ reason: String? = nil) -> String {
             BrowserEventDescription.blockedMessage(for: event, reason: reason)
@@ -132,6 +130,19 @@ enum BrowserSigningPolicy {
         }
 
         if event.kind == 27235 {
+            // Some sites use a nonce challenge instead of NIP-98 URL and
+            // method tags. Bind the signed domain to the HTTPS origin's authority.
+            let authority = String(origin.dropFirst("https://".count))
+            if event.content.isEmpty, event.created_at >= now - 60, event.tags.count == 3,
+               event.tags.contains(["domain", authority]),
+               event.tags.contains(["action", "login"]),
+               event.tags.contains(where: {
+                   $0.count == 2 && $0[0] == "nonce" && BrowserSignedEvent.isHex($0[1], count: 64)
+               }) {
+                if websiteAuth || allowedKinds.contains(27235) { return nil }
+                return blocked(String(localized: "Website account access is disabled."))
+            }
+
             let urls = event.tags.filter { $0.first == "u" }
             let methods = event.tags.filter { $0.first == "method" }
             guard urls.count == 1, urls[0].count == 2,
@@ -146,8 +157,12 @@ enum BrowserSigningPolicy {
             guard payloads.isEmpty || (payloads.count == 1 && payloads[0].count == 2 && BrowserSignedEvent.isHex(payloads[0][1], count: 64)) else {
                 return blocked(String(localized: "Invalid request-body hash."))
             }
-            if (websiteAuth || allowedKinds.contains(27235)) && (target == origin || BrowserSiteDefaults.isHomepageApp(origin)) { return nil }
-            return blocked(String(localized: "Website account access is disabled, or this app is not allowed to authorize another HTTPS service."))
+            if target == origin {
+                if websiteAuth || allowedKinds.contains(27235) { return nil }
+                return blocked(String(localized: "Website account access is disabled."))
+            }
+            if httpDestinations.contains(target) { return nil }
+            return blocked(String(localized: "This app wants to sign a web request to \(target)."))
         }
 
         // Blossom upload tokens must name a single file and expire shortly.
@@ -171,11 +186,22 @@ enum BrowserSigningPolicy {
         if isAccountChange(event.kind), accountChanges { return nil }
         if isDeletion(event.kind), deletions { return nil }
         if requiresExtraPermission(event.kind) {
+            if (10000..<20000).contains(event.kind), isAccountChange(event.kind) {
+                return blocked(String(localized: "This can replace your saved data of the same type. Allow it if you trust this app."))
+            }
             return blocked(String(localized: "This action can change shared account data or remove content. Allow it explicitly if you trust this app."))
         }
         if isRestrictedProtocol(event.kind) { return blocked() }
         if social { return nil }
         return blocked(String(localized: "App actions are disabled in website controls."))
+    }
+
+    static func externalHTTPDestination(for event: BrowserUnsignedEvent, from source: String) -> String? {
+        guard event.kind == 27235 else { return nil }
+        let urls = event.tags.filter { $0.first == "u" }
+        guard urls.count == 1, urls[0].count == 2,
+              let target = origin(URL(string: urls[0][1])), target != source else { return nil }
+        return target
     }
 
     /// Normalize scheme, host, default ports and the root slash only. Preserve

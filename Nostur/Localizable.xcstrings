@@ -7632,9 +7632,6 @@
     "Blocked relays update" : {
 
     },
-    "Blocked requests" : {
-
-    },
     "Blocked signing requests" : {
 
     },
@@ -13293,9 +13290,6 @@
     "Dismiss" : {
 
     },
-    "Dismiss blocked requests" : {
-
-    },
     "Dismiss browser" : {
 
     },
@@ -14243,9 +14237,6 @@
           }
         }
       }
-    },
-    "Enabled actions run without asking each time." : {
-
     },
     "Encrypted Image" : {
       "localizations" : {
@@ -15219,12 +15210,6 @@
           }
         }
       }
-    },
-    "Extra permissions" : {
-
-    },
-    "Extra permissions below can allow individual actions. Turning a switch off removes existing allowances for that category." : {
-
     },
     "Failed to generate QR Code" : {
       "localizations" : {
@@ -18863,15 +18848,6 @@
           }
         }
       }
-    },
-    "Let this app authorize sign-in, uploads and other requests to HTTPS services." : {
-
-    },
-    "Let this app authorize sign-in, uploads and other requests to this website." : {
-
-    },
-    "Let this app use your public identity and sign its app data. Your private key stays in Nostur." : {
-
     },
     "Let's go!" : {
       "comment" : "Button to start using Nostur, during onboarding",
@@ -22640,9 +22616,6 @@
           }
         }
       }
-    },
-    "No blocked requests." : {
-
     },
     "No Blossom server configured. Please configure a Blossom server in Nostur settings to upload images." : {
       "localizations" : {
@@ -30626,9 +30599,6 @@
     "Request that stopped this source" : {
 
     },
-    "Requested actions" : {
-
-    },
     "Requested relay: %@." : {
 
     },
@@ -34056,9 +34026,6 @@
         }
       }
     },
-    "Sign in to services" : {
-
-    },
     "Sign in with a signing account to vote." : {
       "localizations" : {
         "es" : {
@@ -34080,9 +34047,6 @@
           }
         }
       }
-    },
-    "Sign Nostr Wallet Connect events. Manage wallet access and limits in your wallet." : {
-
     },
     "sign_event" : {
       "localizations" : {
@@ -39035,9 +38999,6 @@
         }
       }
     },
-    "Use games and apps, post, react and upload media. Account changes stay protected." : {
-
-    },
     "Use photo" : {
       "localizations" : {
         "es" : {
@@ -39107,9 +39068,6 @@
           }
         }
       }
-    },
-    "Use Website controls to connect this site to your account." : {
-
     },
     "Used for app preferences or custom service requests. The kind alone does not identify the requested action." : {
 
@@ -39944,9 +39902,6 @@
           }
         }
       }
-    },
-    "Website account access is disabled, or this app is not allowed to authorize another HTTPS service." : {
-
     },
     "Website address" : {
 
@@ -41891,6 +41846,60 @@
 
     },
     "Zoom" : {
+
+    },
+    "Authorize sign-ins and other web requests to this site. Other services need their own approval." : {
+
+    },
+    "Connect and allow app actions" : {
+
+    },
+    "Connect your Nostr account to this app." : {
+
+    },
+    "Connect your account to use this app, then retry the action." : {
+
+    },
+    "Copy details" : {
+
+    },
+    "Dismiss recent activity" : {
+
+    },
+    "External service: %@" : {
+
+    },
+    "Let this app request payments and other wallet actions." : {
+
+    },
+    "Lets this site use your public identity, post, react, and upload media." : {
+
+    },
+    "No recent activity." : {
+
+    },
+    "Saved permissions" : {
+
+    },
+    "Saved permissions can allow individual actions. Turning a switch off removes existing allowances for that category." : {
+
+    },
+    "Sign in to this website" : {
+
+    },
+    "Signed" : {
+
+    },
+    "This app wants to sign a web request to %@." : {
+
+    },
+    "This can replace your saved data of the same type. Allow it if you trust this app." : {
+
+    },
+    "Use games and apps, post, react, and upload media through Blossom." : {
+
+    },
+    "Website account access is disabled." : {
 
     }
   },

@@ -321,21 +321,43 @@ private struct BrowserAccountMenu: View {
 }
 
 private struct BrowserRequestsButton: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var seenRequests: Set<UUID> = []
+    @State private var isPulsing = false
     @ObservedObject var browser: NostrBrowserModel
     var body: some View {
+        let requestIDs = Set(browser.blockedRequests.map(\.id))
         Button {
             if browser.blockedRequests.isEmpty { browser.settingsShown = true }
             else { browser.blockedRequestsShown = true }
         } label: {
             HStack(spacing: 3) {
-                Image(systemName: browser.blockedRequests.isEmpty ? "slider.horizontal.3" : "exclamationmark.shield")
+                Image(systemName: requestIDs.isEmpty ? "slider.horizontal.3" : "exclamationmark.shield.fill")
+                    .scaleEffect(isPulsing ? 1.18 : 1)
+                    .opacity(isPulsing ? 0.72 : 1)
                 if !browser.blockedRequests.isEmpty {
                     Text(browser.blockedRequests.count.formatted())
                         .font(.caption2.bold())
                         .monospacedDigit()
                 }
             }
+            .foregroundColor(requestIDs.isEmpty ? nil : .orange)
             .frame(minWidth: 44, minHeight: 44)
+        }
+        .task(id: reduceMotion ? Set<UUID>() : requestIDs) {
+            isPulsing = false
+            let hasNewRequest = !requestIDs.isSubset(of: seenRequests)
+            seenRequests = requestIDs
+            guard !reduceMotion, hasNewRequest else { return }
+            do {
+                for _ in 0..<2 {
+                    try Task.checkCancellation()
+                    withAnimation(.easeInOut(duration: 0.24)) { isPulsing = true }
+                    try await Task.sleep(nanoseconds: 240_000_000)
+                    withAnimation(.easeInOut(duration: 0.24)) { isPulsing = false }
+                    try await Task.sleep(nanoseconds: 240_000_000)
+                }
+            } catch { }
         }
         .accessibilityLabel(browser.blockedRequests.isEmpty ? Text("Website controls") : Text("Blocked signing requests"))
         .accessibilityValue(browser.blockedRequests.isEmpty ? "" : browser.blockedRequests.count.formatted())
@@ -353,14 +375,14 @@ private struct BrowserBlockedRequestsView: View {
                     Text(browser.origin ?? "")
                     LabeledContentCompat(title: "Account", value: browser.accountName)
                 }
-                BrowserBlockedRequestsContent(browser: browser)
+                BrowserRecentActivityContent(browser: browser)
             }
-            .navigationTitle("Blocked requests")
+            .navigationTitle("Recent activity")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: { Image(systemName: "xmark") }
-                        .accessibilityLabel("Dismiss blocked requests")
+                        .accessibilityLabel("Dismiss recent activity")
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -375,81 +397,159 @@ private struct BrowserBlockedRequestsView: View {
     }
 }
 
-private struct BrowserBlockedRequestsContent: View {
+private struct BrowserRecentActivityContent: View {
     @ObservedObject var browser: NostrBrowserModel
     var showEmptyState = true
 
     var body: some View {
-        if showEmptyState || !browser.blockedRequests.isEmpty {
+        let activeIDs = Set(browser.blockedRequests.map(\.id))
+        if showEmptyState || !activeIDs.isEmpty || !browser.activity.isEmpty || !browser.actionGrants.isEmpty {
             Section {
                 if let feedback = browser.grantFeedback {
                     Text(feedback).font(.callout)
                 }
-                if browser.blockedRequests.isEmpty { Text("No blocked requests.").foregroundStyle(.secondary) }
+                if browser.blockedRequests.isEmpty && browser.activity.isEmpty {
+                    Text("No recent activity.").foregroundStyle(.secondary)
+                }
                 ForEach(browser.blockedRequests) { item in
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text(item.actionName).font(.headline)
-                            Spacer()
-                            Button { browser.declineBlockedRequest(item.id) } label: {
-                                Image(systemName: "xmark").frame(minWidth: 32, minHeight: 32)
-                            }
-                            .buttonStyle(.borderless)
-                            .accessibilityLabel("Dismiss request")
-                        }
-                        Text(item.reason).font(.caption).foregroundStyle(.secondary)
-                        if [0, 3, 5, 10002, 10050].contains(item.kind) {
-                            Text("This can change shared account data used by your other Nostr apps.")
-                                .font(.callout)
-                        }
-                        if browser.canAllow(item) {
-                            if !item.waiting {
-                                Text("This request has expired. Allow the action, then retry it in the app.")
-                                    .font(.caption).foregroundStyle(.secondary)
-                            }
-                            HStack {
-                                Button("Allow today") { browser.allowBlockedRequest(item.id, duration: .today) }
-                                Button("Always allow") { browser.allowBlockedRequest(item.id, duration: .always) }
-                            }
-                            .buttonStyle(.bordered)
-                        } else {
-                            Text("This request can’t be allowed.")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
+                    BrowserActivityRow(item: browser.activity.first { $0.id == item.id }
+                        ?? BrowserActivity(id: item.id, site: item.scope.origin, detail: item.reason, blocked: true)) {
+                        BrowserBlockedRequestActions(browser: browser, item: item)
                     }
                 }
+                ForEach(browser.activity.filter { !activeIDs.contains($0.id) }) { item in
+                    BrowserActivityRow(item: item) { EmptyView() }
+                }
+                if !browser.actionGrants.isEmpty {
+                    BrowserSavedPermissions(browser: browser)
+                }
             } header: {
-                Text("Requested actions")
+                Text("Recent activity")
             } footer: {
                 if browser.blockedRequests.contains(where: { browser.canAllow($0) }) {
                     Text("Allow today ends at midnight. Always allow stays enabled until you remove it.")
                 }
             }
         }
-        if !browser.actionGrants.isEmpty {
-            Section("Extra permissions") {
-                ForEach(browser.actionGrants) { grant in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(BrowserEventDescription.name(for: grant.kind))
-                            Text(grant.isPermanent ? "Always allowed" : "Allowed today")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Button { browser.revokeAction(grant.kind) } label: {
-                            Image(systemName: "minus.circle").frame(minWidth: 44, minHeight: 44)
-                        }
-                        .buttonStyle(.borderless)
-                        .accessibilityLabel("Remove permission")
+    }
+}
+
+private struct BrowserBlockedRequestActions: View {
+    @ObservedObject var browser: NostrBrowserModel
+    let item: BrowserBlockedRequest
+
+    var body: some View {
+        if [0, 3, 5, 10002, 10050].contains(item.kind) {
+            Text("This can change shared account data used by your other Nostr apps.")
+                .font(.callout)
+        }
+        if item.kind == -1, !browser.connected,
+           item.scope.origin == browser.origin, item.scope.accountPubkey == browser.accountPubkey {
+            Text("Lets this site use your public identity, post, react, and upload media.")
+                .font(.caption).foregroundStyle(.secondary)
+            Button("Connect and allow app actions") { browser.connectAndAllowAppActions() }
+                .buttonStyle(.bordered)
+        } else if browser.canAllow(item) {
+            if !item.waiting {
+                Text("This request has expired. Allow the action, then retry it in the app.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            HStack {
+                Button("Allow today") { browser.allowBlockedRequest(item.id, duration: .today) }
+                Button("Always allow") { browser.allowBlockedRequest(item.id, duration: .always) }
+            }
+            .buttonStyle(.bordered)
+        } else {
+            Text("This request can’t be allowed.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        Button("Dismiss request") { browser.declineBlockedRequest(item.id) }
+            .buttonStyle(.borderless)
+    }
+}
+
+private struct BrowserActivityRow<Actions: View>: View {
+    let item: BrowserActivity
+    @ViewBuilder let actions: () -> Actions
+    @State private var copied = false
+
+    var body: some View {
+        DisclosureGroup {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(item.detail)
+                    .textSelection(.enabled)
+                if !item.site.isEmpty {
+                    Text(item.site)
+                        .textSelection(.enabled)
+                }
+                Text(item.date.formatted(date: .abbreviated, time: .standard))
+                    .foregroundStyle(.secondary)
+                Button {
+                    UIPasteboard.general.string = [
+                        item.detail,
+                        item.site,
+                        item.date.formatted(date: .abbreviated, time: .standard)
+                    ].filter { !$0.isEmpty }.joined(separator: "\n")
+                    copied = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                            .frame(width: 16)
+                        Text("Copy details")
                     }
                 }
+                .buttonStyle(.borderless)
+                actions()
             }
-            .task(id: browser.actionGrants.filter { !$0.isPermanent }.map(\.expiresAt).min()) {
-                guard let expiry = browser.actionGrants.filter({ !$0.isPermanent }).map(\.expiresAt).min() else { return }
-                do { try await Task.sleep(nanoseconds: UInt64(max(0, expiry.timeIntervalSinceNow) * 1_000_000_000)) }
-                catch { return }
-                browser.objectWillChange.send()
+            .font(.caption)
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: item.blocked ? "hand.raised" : "checkmark.shield")
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(item.blocked ? Text("Blocked") : Text("Signed"))
+                Text(item.detail)
+                    .lineLimit(1)
+                Spacer(minLength: 2)
+                Text(item.date, style: .time)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize()
             }
+            .font(.caption)
+        }
+    }
+}
+
+private struct BrowserSavedPermissions: View {
+    @ObservedObject var browser: NostrBrowserModel
+
+    var body: some View {
+        DisclosureGroup("Saved permissions") {
+            ForEach(browser.actionGrants) { grant in
+                HStack {
+                    VStack(alignment: .leading) {
+                        if let destination = grant.destination {
+                            Text("External service: \(destination)")
+                        } else {
+                            Text(BrowserEventDescription.name(for: grant.kind))
+                        }
+                        Text(grant.isPermanent ? "Always allowed" : "Allowed today")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button { browser.revokeAction(grant.kind, destination: grant.destination) } label: {
+                        Image(systemName: "minus.circle").frame(minWidth: 44, minHeight: 44)
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Remove permission")
+                }
+            }
+        }
+        .task(id: browser.actionGrants.filter { !$0.isPermanent }.map(\.expiresAt).min()) {
+            guard let expiry = browser.actionGrants.filter({ !$0.isPermanent }).map(\.expiresAt).min() else { return }
+            do { try await Task.sleep(nanoseconds: UInt64(max(0, expiry.timeIntervalSinceNow) * 1_000_000_000)) }
+            catch { return }
+            browser.objectWillChange.send()
         }
     }
 }
@@ -564,25 +664,27 @@ private struct BrowserSiteSettings: View {
 
     var body: some View {
         NBNavigationStack {
-            Form {
+            NXForm {
                 Section {
                     Text(browser.origin ?? "").font(.headline)
                     LabeledContentCompat(title: "Account", value: browser.accountName)
                     Toggle(isOn: Binding(get: { browser.connected }, set: { browser.setConnected($0) })) {
-                        BrowserPermissionLabel(title: "Use account", detail: "Let this app use your public identity and sign its app data. Your private key stays in Nostur.")
+                        BrowserPermissionLabel(title: "Use account", detail: "Connect your Nostr account to this app.")
+                    }
+                    if !browser.connected, browser.origin != nil, !browser.accountPubkey.isEmpty {
+                        Button("Connect and allow app actions") { browser.connectAndAllowAppActions() }
                     }
                 } footer: {
                     Text("Turning this off stops signing and clears this website’s saved login.")
                 }
                 Section {
                     Toggle(isOn: Binding(get: { browser.socialAllowed }, set: { browser.setSocial($0) })) {
-                        BrowserPermissionLabel(title: "App actions", detail: "Use games and apps, post, react and upload media. Account changes stay protected.")
+                        BrowserPermissionLabel(title: "App actions", detail: "Use games and apps, post, react, and upload media through Blossom.")
                     }
                     .disabled(!browser.connected)
                     Toggle(isOn: Binding(get: { browser.websiteAuthAllowed }, set: { browser.setWebsiteAuth($0) })) {
-                        BrowserPermissionLabel(title: "Sign in to services", detail: BrowserSiteDefaults.isHomepageApp(browser.origin ?? "")
-                            ? "Let this app authorize sign-in, uploads and other requests to HTTPS services."
-                            : "Let this app authorize sign-in, uploads and other requests to this website.")
+                        BrowserPermissionLabel(title: "Sign in to this website",
+                                               detail: "Authorize sign-ins and other web requests to this site. Other services need their own approval.")
                     }
                     .disabled(!browser.connected)
                     Toggle(isOn: Binding(get: { browser.accountChangesAllowed }, set: { browser.setAccountChanges($0) })) {
@@ -594,7 +696,7 @@ private struct BrowserSiteSettings: View {
                     }
                     .disabled(!browser.connected)
                     Toggle(isOn: Binding(get: { browser.walletAllowed }, set: { browser.setWallet($0) })) {
-                        BrowserPermissionLabel(title: "Wallet actions", detail: "Sign Nostr Wallet Connect events. Manage wallet access and limits in your wallet.")
+                        BrowserPermissionLabel(title: "Wallet actions", detail: "Let this app request payments and other wallet actions.")
                     }
                     .disabled(!browser.connected)
                 } header: {
@@ -611,32 +713,12 @@ private struct BrowserSiteSettings: View {
                         }
                     }
                 } footer: {
-                    Text("Enabled actions run without asking each time.")
                     if !browser.actionGrants.isEmpty {
-                        Text("Extra permissions below can allow individual actions. Turning a switch off removes existing allowances for that category.")
+                        Text("Saved permissions can allow individual actions. Turning a switch off removes existing allowances for that category.")
                     }
                 }
-                BrowserBlockedRequestsContent(browser: browser, showEmptyState: false)
-                if !browser.activity.isEmpty {
-                    Section {
-                        DisclosureGroup {
-                            ForEach(browser.activity) { item in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Label(item.detail, systemImage: item.blocked ? "hand.raised" : "checkmark.shield")
-                                    Text(item.site).font(.caption).foregroundStyle(.secondary)
-                                    Text(item.date, style: .time).font(.caption).foregroundStyle(.secondary)
-                                }
-                            }
-                        } label: {
-                            HStack {
-                                Label("Recent activity", systemImage: "clock")
-                                Spacer()
-                                Text(browser.activity.count.formatted())
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                }
+                BrowserRecentActivityContent(browser: browser, showEmptyState: false)
+
             }
             .navigationTitle("Website controls")
             .navigationBarTitleDisplayMode(.inline)

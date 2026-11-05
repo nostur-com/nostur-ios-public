@@ -186,6 +186,36 @@ final class BrowserSecurityBoundaryTests: XCTestCase {
         XCTAssertNil(fixture.browser.notice)
     }
 
+    func testNewSiteCanConnectAndSignAppActionsInOneStep() async throws {
+        let fixture = try BrowserSecurityFixture()
+        defer { fixture.close() }
+        try await fixture.load()
+        XCTAssertFalse(fixture.browser.connected)
+        fixture.browser.connectAndAllowAppActions()
+        XCTAssertTrue(fixture.browser.connected)
+        XCTAssertTrue(fixture.browser.socialAllowed)
+        let now = Int64(Date().timeIntervalSince1970)
+        let action = BrowserUnsignedEvent(created_at: now, kind: 4242, tags: [], content: "New app action")
+        XCTAssertNotNil(BrowserSigningPolicy.approval(for: action, accountPubkey: fixture.account.publicKey,
+            origin: try XCTUnwrap(fixture.browser.origin), connected: fixture.browser.connected,
+            social: fixture.browser.socialAllowed, websiteAuth: fixture.browser.websiteAuthAllowed,
+            uploads: fixture.browser.uploadsAllowed, relaySettings: [], now: now))
+        XCTAssertTrue(fixture.browser.websiteAuthAllowed)
+        XCTAssertFalse(fixture.browser.accountChangesAllowed)
+        XCTAssertFalse(fixture.browser.deletionsAllowed)
+        XCTAssertFalse(fixture.browser.walletAllowed)
+
+        let reopened = NostrBrowserModel(preferences: fixture.preferences)
+        defer { reopened.close() }
+        reopened.selectAccount(fixture.account)
+        reopened.open(fixture.baseURL)
+        XCTAssertTrue(reopened.connected)
+        XCTAssertTrue(reopened.socialAllowed)
+        reopened.open(try XCTUnwrap(URL(string: "https://other.example.invalid")))
+        XCTAssertFalse(reopened.connected)
+        XCTAssertFalse(reopened.socialAllowed)
+    }
+
     func testRealBridgeSharesOnlyExplicitlyConnectedIdentityAndApprovedEvents() async throws {
         let fixture = try BrowserSecurityFixture()
         defer { fixture.close() }

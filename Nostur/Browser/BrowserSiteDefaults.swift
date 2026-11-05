@@ -5,13 +5,11 @@ import Foundation
 struct BrowserSiteDefaults: Equatable {
     let connected: Bool
     let social: Bool
-    let websiteAuth: Bool
 
-    private static let homepage = Self(connected: true, social: true, websiteAuth: true)
-    static let unknown = Self(connected: false, social: false, websiteAuth: false)
+    private static let homepage = Self(connected: true, social: true)
+    static let unknown = Self(connected: false, social: false)
 
-    /// Cross-origin HTTP authorization is a capability of homepage apps,
-    /// independent of the provider receiving the authorized request.
+    /// Directory membership controls the initial site preferences.
     static func isHomepageApp(_ origin: String) -> Bool {
         let aliases = ["https://account.nostr.build": "https://nostr.build",
                        "https://app.flotilla.social": "https://flotilla.social",

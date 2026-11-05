@@ -61,12 +61,11 @@ hardware enclave or a guarantee against native-process compromise.
   timestamp. Scheme/host/default-port/root-slash normalization does not widen
   permission to a different path, query, port or scheme. The latest setting is
   checked before dispatch and again before delivery after signer delays.
-- NIP-98 authorization requires website-access permission and a validated HTTPS
-  request. Compiled homepage apps and explicit deployment aliases may authorize
-  any HTTPS destination; other sites remain same-origin only. Destination domains
-  and paths receive no preferred treatment. The grant includes service-specific
-  actions the endpoint may implement; HTTP method/path do not prove upload-only
-  semantics. Existing freshness, method, input and request-body-hash checks apply.
+- Signed HTTP requests to the app’s own HTTPS origin are enabled after account
+  connection by default, with a website setting to turn them off. External HTTPS
+  destinations require a separate allowance from Recent activity for the exact
+  source site, destination, and account, regardless of directory membership.
+  HTTPS, freshness, URL, method and payload-hash validation still apply.
 - Blossom authorization is provider-neutral and requires the upload grant, upload
   action, a single file hash and a short expiration. Other storage actions remain
   blocked. Tokens are portable as defined by the protocol.
@@ -143,8 +142,8 @@ run does not establish live-site compatibility or a physical-device security aud
 
 Only native UI can store a grant: an exact origin/account/kind tuple, expiring at
 local midnight or persisting until native revocation. The page bridge accepts no
-permission/grant fields. A finite list of recognized public/account kinds is
-eligible; grants cannot override structural, timestamp, size, delegation, account
+permission/grant fields. Known public/account actions and replaceable account
+data kinds are eligible for explicit grants. Grants cannot override structural, timestamp, size, delegation, account
 or document checks. Private-message and remote-signer kinds cannot be enabled through these grants; NWC signing can.
 HTTP and Blossom grants still require their normal protocol validation, and
 relay-authentication permission remains authoritative in native relay settings. These protocol checks also apply under the broader app-action defaults.

@@ -83,25 +83,69 @@ final class BrowserSigningPolicyTests: XCTestCase {
         }
     }
 
-    func testHomepageAppsCanAuthorizeAnyHTTPSProvider() throws {
-        for app in BrowserDirectory.all {
-            let source = try XCTUnwrap(BrowserSigningPolicy.origin(app.url))
-            for provider in ["https://media.example/upload", "https://another.example:8443/custom/path?file=1"] {
-                let login = event(27235, tags: [["u", provider], ["method", "POST"]])
-                XCTAssertNil(rejection(login, origin: source), app.name)
-                XCTAssertNotNil(BrowserSigningPolicy.rejection(for: login, origin: source, social: true, websiteAuth: false, uploads: true, now: now))
-                for outsider in ["https://unknown.example", source + ".evil.test", source + ":8443"] {
-                    XCTAssertNotNil(rejection(login, origin: outsider))
-                }
+    func testAppSpecificReplaceableDataRequiresAnExplicitGrantForItsKind() {
+        for kind in [11125, 16767] {
+            let request = event(kind)
+            XCTAssertTrue(BrowserSigningPolicy.canGrant(kind))
+            XCTAssertNotNil(rejection(request))
+            XCTAssertNil(BrowserSigningPolicy.rejection(for: request, origin: site, social: true,
+                                                        allowedKinds: [kind], now: now))
+            for other in [3, 5, 10002, 17375, 23194] {
+                XCTAssertNotNil(BrowserSigningPolicy.rejection(for: event(other), origin: site, social: true,
+                                                               allowedKinds: [kind], now: now))
             }
         }
-        for source in ["https://account.nostr.build", "https://app.flotilla.social", "https://honey.hivetalk.org"] {
-            XCTAssertTrue(BrowserSiteDefaults.isHomepageApp(source))
+        XCTAssertFalse(BrowserSigningPolicy.canGrant(17375))
+    }
+
+    func testExternalHTTPAuthorizationRequiresDestinationGrantForEverySite() {
+        let destination = "https://api.example:8443"
+        let request = event(27235, tags: [["u", destination + "/upload"], ["method", "POST"]])
+        for source in ["https://jumble.social", "https://honey.hivetalk.org", "https://new-app.example"] {
+            XCTAssertNotNil(BrowserSigningPolicy.rejection(for: request, origin: source,
+                social: true, websiteAuth: true, allowedKinds: [27235], now: now))
+            XCTAssertNil(BrowserSigningPolicy.rejection(for: request, origin: source,
+                social: false, httpDestinations: [destination], now: now))
+            XCTAssertNotNil(BrowserSigningPolicy.rejection(for: request, origin: source,
+                social: true, websiteAuth: true, httpDestinations: ["https://api.example"], now: now))
         }
-        let sameSite = event(27235, tags: [["u", "https://unknown.example/login"], ["method", "GET"]])
-        XCTAssertNil(rejection(sameSite, origin: "https://unknown.example"))
         for target in ["http://media.example/upload", "file:///upload", "https://user@media.example/upload", "https://media.example/upload#fragment"] {
             XCTAssertNotNil(rejection(event(27235, tags: [["u", target], ["method", "POST"]])))
+        }
+    }
+
+    func testNonceLoginWorksForAnySiteWithMatchingAuthorityAndPermission() {
+        let origin = "https://honey.hivetalk.org"
+        let nonce = ["nonce", String(repeating: "a", count: 64)]
+        let domain = ["domain", "honey.hivetalk.org"]
+        let action = ["action", "login"]
+        let tags = [nonce, domain, action]
+        let challenge = event(27235, tags: tags)
+        XCTAssertNil(rejection(challenge, origin: origin))
+        for authority in ["new-app.example", "new-app.example:8443"] {
+            let newOrigin = "https://" + authority
+            XCTAssertFalse(BrowserSiteDefaults.isHomepageApp(newOrigin))
+            let newChallenge = event(27235, tags: [nonce, ["domain", authority], action])
+            XCTAssertNil(rejection(newChallenge, origin: newOrigin))
+            XCTAssertNotNil(rejection(newChallenge, origin: origin))
+            XCTAssertNotNil(BrowserSigningPolicy.rejection(for: newChallenge, origin: newOrigin, social: true, now: now))
+            XCTAssertNil(BrowserSigningPolicy.rejection(for: newChallenge, origin: newOrigin, social: true,
+                                                         allowedKinds: [27235], now: now))
+        }
+        XCTAssertNotNil(rejection(challenge, origin: origin + ":8443"))
+
+        XCTAssertNotNil(rejection(challenge, origin: "https://hivetalk.org"))
+        XCTAssertNotNil(BrowserSigningPolicy.rejection(for: challenge, origin: origin, social: false, now: now))
+        XCTAssertNil(BrowserSigningPolicy.rejection(for: challenge, origin: origin, social: false,
+                                                     allowedKinds: [27235], now: now))
+        for invalid in [event(27235, tags: tags, age: 61),
+                        event(27235, tags: tags, content: "unexpected"),
+                        event(27235, tags: [nonce, domain, ["action", "delete"]]),
+                        event(27235, tags: [nonce, ["domain", "elsewhere.example"], action]),
+                        event(27235, tags: [["nonce", "invalid"], domain, action]),
+                        event(27235, tags: tags + [["u", "https://elsewhere.example"]])] {
+            XCTAssertNotNil(BrowserSigningPolicy.rejection(for: invalid, origin: origin, social: true,
+                                                            websiteAuth: true, allowedKinds: [27235], now: now))
         }
     }
 
@@ -230,11 +274,11 @@ final class BrowserSigningPolicyTests: XCTestCase {
         XCTAssertNotNil(BrowserSigningPolicy.rejection(for: login, origin: site, social: false, now: now))
         XCTAssertNil(BrowserSigningPolicy.rejection(for: login, origin: site, social: false, websiteAuth: true, now: now))
         let upload = event(27235, tags: [["u", "https://api.nostr.build/api/v2/upload"], ["method", "POST"]])
-        XCTAssertNil(BrowserSigningPolicy.rejection(for: upload, origin: site, social: true, websiteAuth: true, now: now))
+        XCTAssertNotNil(BrowserSigningPolicy.rejection(for: upload, origin: site, social: true, websiteAuth: true, now: now))
         XCTAssertNotNil(BrowserSigningPolicy.rejection(for: upload, origin: site, social: false, uploads: true, now: now))
         let unrelatedAPI = event(27235, tags: [["u", "https://api.nostr.build/account/delete"], ["method", "POST"]])
         // HTTP authorization cannot infer endpoint semantics, even for POST.
-        XCTAssertNil(BrowserSigningPolicy.rejection(for: unrelatedAPI, origin: site, social: true, websiteAuth: true, uploads: true, now: now))
+        XCTAssertNil(BrowserSigningPolicy.rejection(for: unrelatedAPI, origin: site, social: true, httpDestinations: ["https://api.nostr.build"], now: now))
         for kind in [0, 3, 4, 5, 13, 14, 1059, 10002, 23194, 24133] {
             XCTAssertNotNil(BrowserSigningPolicy.rejection(for: event(kind), origin: site, social: true, websiteAuth: true, uploads: true, now: now))
         }
@@ -257,17 +301,16 @@ final class BrowserSigningPolicyTests: XCTestCase {
         XCTAssertNotNil(rejection(event(30078, tags: [["delegation", "key", "conditions", "sig"]])))
     }
 
-    func testEveryHomepageEntryHasAutomaticAccountAndLoginDefaults() throws {
+    func testEveryHomepageEntryHasAutomaticConnectionAndAppActions() throws {
         for app in BrowserDirectory.all {
             let origin = try XCTUnwrap(BrowserSigningPolicy.origin(app.url))
             let defaults = BrowserSiteDefaults.forOrigin(origin)
             XCTAssertTrue(defaults.connected, "\(app.name) must not require connecting in settings")
-            XCTAssertTrue(defaults.websiteAuth, "\(app.name) must not require enabling login")
             XCTAssertTrue(defaults.social, "\(app.name) must have the same public action defaults")
         }
         for origin in ["https://app.flotilla.social", "https://account.nostr.build", "https://honey.hivetalk.org"] {
             let defaults = BrowserSiteDefaults.forOrigin(origin)
-            XCTAssertTrue(defaults.connected && defaults.social && defaults.websiteAuth)
+            XCTAssertTrue(defaults.connected && defaults.social)
         }
         for origin in ["https://primal.net.evil.test", "https://primal.net:8443", "http://primal.net", "https://unknown.example", "https://nostrudel.ninja", "https://nostr.watch", "https://njump.me"] {
             XCTAssertEqual(BrowserSiteDefaults.forOrigin(origin), .unknown)

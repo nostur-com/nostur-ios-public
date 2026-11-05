@@ -2,6 +2,21 @@ import XCTest
 @testable import Nostur
 
 final class BrowserActionPermissionsTests: XCTestCase {
+    func testHTTPDestinationGrantIsScopedAndRevocable() throws {
+        let suite = "browser.destination.test." + UUID().uuidString
+        let preferences = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { preferences.removePersistentDomain(forName: suite) }
+        let permissions = BrowserActionPermissions(preferences: preferences)
+        let origin = "https://app.example"
+        let destination = "https://api.example"
+        permissions.allow(kind: 27235, account: "first", origin: origin, duration: .always, destination: destination)
+        XCTAssertEqual(permissions.grants(account: "first", origin: origin).compactMap(\.destination), [destination])
+        XCTAssertTrue(permissions.grants(account: "second", origin: origin).isEmpty)
+        XCTAssertTrue(permissions.grants(account: "first", origin: "https://another.example").isEmpty)
+        permissions.revoke(kind: 27235, account: "first", origin: origin, destination: destination)
+        XCTAssertTrue(permissions.grants(account: "first", origin: origin).isEmpty)
+    }
+
     func testTodayExpiresAtCalendarMidnightAndGrantsAreScopedAndRevocable() throws {
         let name = "browser.action-permissions.test." + UUID().uuidString
         let prefs = try XCTUnwrap(UserDefaults(suiteName: name))
@@ -36,7 +51,7 @@ final class BrowserActionPermissionsTests: XCTestCase {
             XCTAssertNotNil(reject(BrowserUnsignedEvent(created_at: now, kind: kind, tags: [], content: ""), grants: [kind]))
         }
         let auth = BrowserUnsignedEvent(created_at: now, kind: 27235, tags: [["u", "https://service.example/upload"], ["method", "POST"]], content: "")
-        XCTAssertNil(reject(auth, grants: [27235]))
+        XCTAssertNotNil(reject(auth, grants: [27235]))
         let badAuth = BrowserUnsignedEvent(created_at: now, kind: 27235, tags: [["u", "http://service.example/upload"], ["method", "DELETE"]], content: "")
         XCTAssertNotNil(reject(badAuth, grants: [27235]))
         let upload = BrowserUnsignedEvent(created_at: now, kind: 24242,
