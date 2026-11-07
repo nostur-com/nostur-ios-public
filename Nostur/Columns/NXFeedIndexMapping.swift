@@ -264,6 +264,20 @@ enum NXFeedViewport {
         return expected
     }
 
+    /// The surviving old rows must be an unchanged prefix. A mixed deletion
+    /// elsewhere in the list cannot use the tail-trim recovery.
+    static func isPrependTrimmingTail(
+        oldIDs: [String],
+        newIDs: [String],
+        insertedCount: Int,
+        removedCount: Int,
+        anchorID: String
+    ) -> Bool {
+        insertedCount > 0 && removedCount > 0
+            && oldIDs.first == anchorID
+            && newIDs.dropFirst(insertedCount).elementsEqual(oldIDs.dropLast(removedCount))
+    }
+
     /// Furthest `contentOffset.y` a prepend may use: where it started, plus the
     /// height the list has actually gained, plus a small estimate slack.
     static func prependOffsetLimit(
@@ -291,7 +305,8 @@ enum NXFeedViewport {
         contentHeight: CGFloat,
         contentHeightAtStart: CGFloat,
         slack: CGFloat = 80,
-        viewportHeight: CGFloat = 956
+        viewportHeight: CGFloat = 956,
+        hasStableTrimmedPrependGeometry: Bool = false
     ) -> Bool {
         let allowedOffset = prependOffsetLimit(
             offsetAtStart: offsetAtStart,
@@ -304,6 +319,15 @@ enum NXFeedViewport {
         // Already past the inserted height. Allow a correction that comes back.
         if projected < currentOffset - 0.5 { return true }
         let viewport = max(viewportHeight, 1)
+        // Removing the tail can put the retained first post inside the usual
+        // tail buffer. A short follow-up pin can use stable, committed geometry
+        // there, provided it lands within the scrollable content.
+        if hasStableTrimmedPrependGeometry,
+           currentOffset > offsetAtStart + slack,
+           correction <= viewport + slack,
+           projected <= contentHeight - viewport {
+            return true
+        }
         let clearOfTail = projected <= contentHeight - viewport * 1.5
         guard clearOfTail else { return false }
         // The first sample is still at the pre-insert offset, so a pin taller

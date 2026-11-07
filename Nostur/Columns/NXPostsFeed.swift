@@ -724,6 +724,14 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 bringOnScreen: pinByIdentity,
                 prependMinimumCellCount: prependMinimumCellCount,
                 limitsPrependTravel: !pinTailAppend,
+                tracksTrimmedPrepend: NXFeedViewport.shouldCoverPrepend(updateReasons: updateReasons)
+                    && NXFeedViewport.isPrependTrimmingTail(
+                        oldIDs: oldIDs,
+                        newIDs: itemIDs,
+                        insertedCount: addedCount,
+                        removedCount: removedCount,
+                        anchorID: post.id
+                    ),
                 expectedBannerCellCount: leadingRowsBefore != leadingNonPostRowCount
                     ? cellsBefore.map { $0 + addedCount - removedCount + leadingNonPostRowCount - leadingRowsBefore }
                     : nil
@@ -750,6 +758,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         bringOnScreen: Bool,
         prependMinimumCellCount: Int? = nil,
         limitsPrependTravel: Bool = true,
+        tracksTrimmedPrepend: Bool = false,
         expectedBannerCellCount: Int? = nil
     ) {
         anchorGeneration += 1
@@ -776,6 +785,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             guard let self else { return }
             var didBringOnScreen = false
             var progress = NXFeedSettleProgress()
+            var trimmedPrependProgress = NXFeedSettleProgress()
 #if DEBUG
             var offsetAfterYield: CGFloat?
             var correctionCount = 0
@@ -837,6 +847,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     scrollView.layoutIfNeeded()
                 }
 
+                if tracksTrimmedPrepend {
+                    trimmedPrependProgress.observe(
+                        geometry: cellsLanded ? self.settleGeometry(anchorID: anchor.id, in: scrollView) : nil,
+                        corrected: false
+                    )
+                }
+
                 let shouldBringOnScreen = bringOnScreen && !didBringOnScreen
                 let result: RestoreResult
                 if cellsLanded {
@@ -846,7 +863,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                         bringOnScreen: shouldBringOnScreen,
                         prependTravel: prependContentHeightAtStart.map {
                             (offsetAtStart: startingOffset ?? scrollView.contentOffset.y, contentHeightAtStart: $0)
-                        }
+                        },
+                        hasStableTrimmedPrependGeometry: trimmedPrependProgress.stableSamples >= 3
                     )
                 } else {
                     result = .unavailable
@@ -899,7 +917,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     anchor: anchor,
                     correctionCount: correctionCount,
                     startingOffset: startingOffset,
-                    offsetAfterYield: offsetAfterYield
+                    offsetAfterYield: offsetAfterYield,
+                    timedOut: true
                 )
 #endif
                 self.endPrependSettle(generation: generation)
@@ -912,13 +931,16 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         anchor: (id: String, visibleTopOffset: CGFloat),
         correctionCount: Int,
         startingOffset: CGFloat?,
-        offsetAfterYield: CGFloat?
+        offsetAfterYield: CGFloat?,
+        timedOut: Bool = false
     ) {
         let start = startingOffset.map { String(format: "%.1f", $0) } ?? "?"
         let afterYield = offsetAfterYield.map { String(format: "%.1f", $0) } ?? "?"
         let end = scrollView.map { String(format: "%.1f", $0.contentOffset.y) } ?? "?"
+        let outcome = timedOut ? "timeout" : "done"
+        let live = timedOut ? " · \(anchorSummary(in: scrollView))" : ""
         onDebugAction?(
-            "SETTLE done · \(correctionCount)× · y \(start)→\(end) · afterYield \(afterYield) · anchor \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset)) · \(viewportDebugSummary())"
+            "SETTLE \(outcome) · \(correctionCount)× · y \(start)→\(end) · afterYield \(afterYield) · anchor \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset)) · \(viewportDebugSummary())\(live)"
         )
     }
 
@@ -999,7 +1021,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         anchor: (id: String, visibleTopOffset: CGFloat),
         in scrollView: UIScrollView,
         bringOnScreen: Bool = false,
-        prependTravel: (offsetAtStart: CGFloat, contentHeightAtStart: CGFloat)? = nil
+        prependTravel: (offsetAtStart: CGFloat, contentHeightAtStart: CGFloat)? = nil,
+        hasStableTrimmedPrependGeometry: Bool = false
     ) -> RestoreResult {
         guard let itemIndex = itemIDs.firstIndex(of: anchor.id) else { return .unavailable }
         let sectionCounts = sectionCounts(in: scrollView)
@@ -1041,7 +1064,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             correction: correction,
             contentHeight: scrollView.contentSize.height,
             contentHeightAtStart: prependTravel.contentHeightAtStart,
-            viewportHeight: scrollView.bounds.height
+            viewportHeight: scrollView.bounds.height,
+            hasStableTrimmedPrependGeometry: hasStableTrimmedPrependGeometry
            ) {
             guard let clamped = NXFeedViewport.prependOffsetClamp(
                 offsetAtStart: prependTravel.offsetAtStart,

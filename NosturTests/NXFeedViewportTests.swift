@@ -1481,6 +1481,59 @@ final class NXFeedViewportTests: XCTestCase {
     }
 
     @MainActor
+    func testTailTrimmingPrependFinishesPinAfterInsertedRowsGrow() async throws {
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 320, height: 1282), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        collection.contentInset.top = 97
+        let source = NXFeedAppendTestSource()
+        source.count = 36
+        source.rowHeights = Array(repeating: 210, count: 36)
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        collection.delegate = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = -97
+        collection.layoutIfNeeded()
+        let oldIDs = (0..<36).map { "old-\($0)" }
+        let newIDs = (0..<8).map { "new-\($0)" } + Array(oldIDs.prefix(12))
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        stabilizer.updateItemIDs(oldIDs)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), oldIDs.first)
+
+        stabilizer.performAnchored(reason: NXFeedViewport.prependCoverReason) {
+            source.count = 20
+            source.rowHeights = Array(repeating: 215, count: 8) + Array(repeating: 165, count: 12)
+            collection.reloadData()
+            collection.layoutIfNeeded()
+            stabilizer.updateItemIDs(newIDs)
+        }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(collection.contentOffset.y, 1623, accuracy: 0.5)
+
+        // The eight inserted rows grow by 920 points after the first pin.
+        // The trimmed snapshot is still shorter than before the prepend.
+        source.rowHeights = Array(repeating: 330, count: 8) + Array(repeating: 142, count: 12)
+        layout.invalidateLayout()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 1623
+        try await Task.sleep(nanoseconds: 250_000_000)
+        XCTAssertEqual(collection.contentOffset.y, 2543, accuracy: 0.5)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), oldIDs.first)
+        XCTAssertFalse(stabilizer.hasActivePrependCover)
+        stabilizer.suspendPositionTracking()
+    }
+
+    @MainActor
     func testPrependPreservesLiveAnchorAcrossCollapsedHeightEstimates() async throws {
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: 300, height: 338)
@@ -1695,8 +1748,14 @@ final class NXFeedViewportTests: XCTestCase {
 }
 
 @MainActor
-private final class NXFeedAppendTestSource: NSObject, UICollectionViewDataSource {
+private final class NXFeedAppendTestSource: NSObject, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     var count = 4
+    var rowHeights: [CGFloat] = []
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        CGSize(width: 300, height: rowHeights[indexPath.item])
+    }
+
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int { count }
 
