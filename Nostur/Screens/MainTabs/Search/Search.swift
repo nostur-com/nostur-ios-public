@@ -74,7 +74,7 @@ struct Search: View {
                     )
                         .padding(10)
                 }
-                AvailableWidthContainer {
+                GeometryReader { viewport in
                     ScrollView {
                         if isSearchingHashtag {
                             FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:la.account)
@@ -173,6 +173,8 @@ struct Search: View {
                             }
                         }
                     }
+                    .frame(width: viewport.size.width)
+                    .environment(\.availableWidth, viewport.size.width)
                     .scrollDismissesKeyboardCompat()
                     .onTapGesture {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
