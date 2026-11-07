@@ -53,6 +53,10 @@ enum BrowserDirectory {
             BrowserDirectoryApp(id: "nostr1", name: "nostr1.com / relay.tools", description: "Personal and community relay hosting.", url: URL(string: "https://nostr1.com")!, keywords: "hosting feeds relay tools"),
             BrowserDirectoryApp(id: "relay-tools-feeds", name: "Feeds by relay.tools", description: "Create and manage a hosted relay.", url: URL(string: "https://feeds.relay.tools")!, keywords: "hosting feeds personal community relay")
         ], keywords: "relays relay services hosting paid backups"),
+        BrowserDirectorySection(id: "account-tools", title: "Account tools", icon: "person.crop.circle", apps: [
+            BrowserDirectoryApp(id: "mutable", name: "Mutable", description: "Manage, back up and share Nostr mute lists.", url: URL(string: "https://mutable.top/")!, keywords: "mute lists moderation backups"),
+            BrowserDirectoryApp(id: "plebs-vs-zombies", name: "Plebs vs. Zombies", description: "Find inactive accounts in your Nostr follows.", url: URL(string: "https://plebsvszombies.cc/")!, keywords: "zombies dormant follows")
+        ], keywords: "account tools moderation"),
         BrowserDirectorySection(id: "food", title: "Food & cooking", icon: "fork.knife", apps: [
             BrowserDirectoryApp(id: "zap-cooking", name: "zap.cooking", description: "Recipes, cooking stories and a food community.", url: URL(string: "https://zap.cooking")!, keywords: "food recipes cooking")
         ], keywords: "food cooking recipes")

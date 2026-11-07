@@ -30,7 +30,8 @@ struct Kind443: View {
             VStack(alignment:.leading, spacing: 3) {// Post container
                 if let url {
                     // Link preview here
-                    BigLinkPreview(url: url, autoload: shouldAutoload)
+                    BigLinkPreview(url: url, autoload: shouldAutoload,
+                                   browserPostSource: BrowserPostSource(id: nrPost.id, pubkey: nrPost.pubkey))
                 }
             }
             .contentShape(Rectangle())

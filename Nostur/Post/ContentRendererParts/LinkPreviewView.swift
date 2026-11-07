@@ -15,13 +15,14 @@ struct LinkPreviewView: View {
     public let url: URL
     public var autoload: Bool = false
     public var linkColor: Color? = nil
+    var browserPostSource: BrowserPostSource? = nil
     @State var tags: [String: String] = [:]
     
     static let aspect: CGFloat = 16/9
     
     var body: some View {
         previewContent
-            .modifier(BrowserPostLinkMenu(url: url))
+            .modifier(BrowserPostLinkMenu(url: url, postSource: browserPostSource))
     }
 
     @ViewBuilder

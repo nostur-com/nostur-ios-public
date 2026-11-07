@@ -18,10 +18,13 @@ final class NostrBrowserSession: ObservableObject {
         isPresented = true
     }
 
-    func open(_ url: URL) {
+    func open(_ url: URL, from post: BrowserPostSource? = nil) {
         guard BrowserSigningPolicy.origin(url) != nil else { return }
         present()
-        browser?.open(url)
+        if browser?.accountPubkey.isEmpty == true, let account = AccountsState.shared.loggedInAccount?.account {
+            browser?.selectAccount(account)
+        }
+        browser?.openPostLink(url, source: post)
     }
 
     func minimize() {

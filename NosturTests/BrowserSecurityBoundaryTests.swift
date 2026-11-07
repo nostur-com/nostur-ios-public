@@ -6,6 +6,125 @@ import XCTest
 
 @MainActor
 final class BrowserSecurityBoundaryTests: XCTestCase {
+    func testConnectionApprovalResumesLoginAndAlwaysRemembersTheSite() async throws {
+        let fixture = try BrowserSecurityFixture()
+        defer { fixture.close() }
+        let browser = fixture.browser
+        let script = """
+        window.loginOutcome = null;
+        nostr.getPublicKey().then(key => { window.loginOutcome = key; }, () => { window.loginOutcome = 'denied'; });
+        true;
+        """
+        for duration in [BrowserGrantDuration.once, .always] {
+            try await fixture.load()
+            XCTAssertFalse(browser.connected)
+            _ = try await fixture.view.evaluateJavaScript(script)
+            try await fixture.waitUntil { browser.blockedRequests.first?.kind == -1 }
+            let blocked = try XCTUnwrap(browser.blockedRequests.first)
+            XCTAssertTrue(browser.canAllow(blocked))
+            browser.allowBlockedRequest(blocked.id, duration: duration)
+            let deadline = Date().addingTimeInterval(3)
+            var publicKey: String?
+            while publicKey == nil && Date() < deadline {
+                publicKey = try await fixture.view.evaluateJavaScript("window.loginOutcome") as? String
+                if publicKey == nil { try await Task.sleep(nanoseconds: 25_000_000) }
+            }
+            XCTAssertEqual(publicKey, fixture.account.publicKey)
+            XCTAssertTrue(browser.connected)
+            XCTAssertTrue(browser.socialAllowed)
+            XCTAssertFalse(browser.accountChangesAllowed)
+        }
+        try await fixture.load()
+        XCTAssertTrue(browser.connected)
+    }
+
+    func testAllowOnceSignsOnlyThePendingRequest() async throws {
+        let fixture = try BrowserSecurityFixture(origin: "https://primal.net")
+        defer { fixture.close() }
+        let browser = fixture.browser
+        try await fixture.load()
+        let script = """
+        try {
+            return (await nostr.signEvent({kind:3,created_at:Math.floor(Date.now()/1000),tags:[],content:''})).kind;
+        } catch (_) { return 'denied'; }
+        """
+        async let first = fixture.view.callAsyncJavaScript(script, arguments: [:], in: nil, contentWorld: .page)
+        try await fixture.waitUntil { browser.blockedRequests.first?.kind == 3 }
+        browser.allowBlockedRequest(try XCTUnwrap(browser.blockedRequests.first?.id), duration: .once)
+        let firstResult = try await first as? Int
+        XCTAssertEqual(firstResult, 3)
+        XCTAssertTrue(browser.actionGrants.isEmpty)
+        async let second = fixture.view.callAsyncJavaScript(script, arguments: [:], in: nil, contentWorld: .page)
+        try await fixture.waitUntil { browser.blockedRequests.first?.kind == 3 }
+        browser.declineBlockedRequest(try XCTUnwrap(browser.blockedRequests.first?.id))
+        let secondResult = try await second as? String
+        XCTAssertEqual(secondResult, "denied")
+        XCTAssertEqual(fixture.signer.approvals.count, 1)
+    }
+
+    func testAllowOnceAfterTimeoutRequiresTheSameActionOnRetry() async throws {
+        let fixture = try BrowserSecurityFixture(origin: "https://primal.net", approvalWaitSeconds: 1)
+        defer { fixture.close() }
+        let browser = fixture.browser
+        try await fixture.load()
+        let original = """
+        try {
+            return (await nostr.signEvent({kind:3,created_at:Math.floor(Date.now()/1000),tags:[['p','chosen']],content:''})).kind;
+        } catch (_) { return 'denied'; }
+        """
+        async let expired = fixture.view.callAsyncJavaScript(original, arguments: [:], in: nil, contentWorld: .page)
+        try await fixture.waitUntil { browser.blockedRequests.first?.waiting == false }
+        let expiredResult = try await expired as? String
+        XCTAssertEqual(expiredResult, "denied")
+        browser.allowBlockedRequest(try XCTUnwrap(browser.blockedRequests.first?.id), duration: .once)
+        let different = original.replacingOccurrences(of: "'chosen'", with: "'different'")
+        async let unexpected = fixture.view.callAsyncJavaScript(different, arguments: [:], in: nil, contentWorld: .page)
+        try await fixture.waitUntil { browser.blockedRequests.first?.kind == 3 }
+        browser.declineBlockedRequest(try XCTUnwrap(browser.blockedRequests.first?.id))
+        let unexpectedResult = try await unexpected as? String
+        XCTAssertEqual(unexpectedResult, "denied")
+        let retried = try await fixture.view.callAsyncJavaScript(original, arguments: [:], in: nil, contentWorld: .page)
+        XCTAssertEqual(retried as? Int, 3)
+        XCTAssertEqual(fixture.signer.approvals.count, 1)
+        XCTAssertTrue(browser.actionGrants.isEmpty)
+    }
+
+    func testAddressBarTrustRequiresAnEditAndStaysWithTheRequestedOrigin() async throws {
+        let fixture = try BrowserSecurityFixture()
+        defer { fixture.close() }
+        let browser = fixture.browser
+        try await fixture.load()
+        XCTAssertFalse(browser.connected)
+        browser.openAddress()
+        XCTAssertFalse(browser.connected)
+
+        browser.editAddress(fixture.baseURL.absoluteString)
+        browser.openAddress()
+        XCTAssertTrue(browser.connected)
+        XCTAssertTrue(browser.socialAllowed)
+        XCTAssertFalse(browser.accountChangesAllowed)
+        XCTAssertFalse(browser.deletionsAllowed)
+        XCTAssertFalse(browser.walletAllowed)
+
+        browser.webView.stopLoading()
+        let redirect = try XCTUnwrap(URL(string: "https://other.example.invalid"))
+        browser.webView.loadHTMLString("<p>Different origin</p>", baseURL: redirect)
+        try await fixture.waitUntil { browser.origin == BrowserSigningPolicy.origin(redirect) }
+        XCTAssertFalse(browser.connected)
+        XCTAssertFalse(browser.socialAllowed)
+        browser.webView.loadHTMLString("<p>Back to the original origin</p>", baseURL: fixture.baseURL)
+        try await fixture.waitUntil { browser.origin == BrowserSigningPolicy.origin(fixture.baseURL) }
+        XCTAssertFalse(browser.connected)
+
+        browser.setConnected(false)
+        browser.setSocial(false)
+        fixture.attach()
+        browser.editAddress(fixture.baseURL.absoluteString)
+        browser.openAddress()
+        XCTAssertFalse(browser.connected)
+        XCTAssertFalse(browser.socialAllowed)
+    }
+
     func testHomepageAppWorksWithFreshDefaultsWithoutPermissionSetup() async throws {
         let fixture = try BrowserSecurityFixture(origin: "https://primal.net")
         defer { fixture.close() }
@@ -49,7 +168,10 @@ final class BrowserSecurityBoundaryTests: XCTestCase {
         fixture.browser.setConnected(false)
         fixture.attach()
         try await fixture.load()
-        let denied = try await fixture.view.callAsyncJavaScript("try { \(script) } catch (_) { return true; }", arguments: [:], in: nil, contentWorld: .page)
+        async let pending = fixture.view.callAsyncJavaScript("try { \(script) } catch (_) { return true; }", arguments: [:], in: nil, contentWorld: .page)
+        try await fixture.waitUntil { fixture.browser.blockedRequests.first?.kind == -1 }
+        fixture.browser.declineBlockedRequest(try XCTUnwrap(fixture.browser.blockedRequests.first?.id))
+        let denied = try await pending
         XCTAssertEqual(denied as? Bool, true)
         XCTAssertEqual(fixture.signer.approvals.count, 1)
     }
@@ -224,7 +346,10 @@ final class BrowserSecurityBoundaryTests: XCTestCase {
         XCTAssertFalse(fixture.browser.socialAllowed)
         XCTAssertFalse(fixture.browser.websiteAuthAllowed)
         XCTAssertFalse(fixture.browser.uploadsAllowed)
-        let denied = try await fixture.view.callAsyncJavaScript("try { await nostr.getPublicKey(); return false; } catch (_) { return true; }", arguments: [:], in: nil, contentWorld: .page)
+        async let connection = fixture.view.callAsyncJavaScript("try { await nostr.getPublicKey(); return false; } catch (_) { return true; }", arguments: [:], in: nil, contentWorld: .page)
+        try await fixture.waitUntil { fixture.browser.blockedRequests.first?.kind == -1 }
+        fixture.browser.declineBlockedRequest(try XCTUnwrap(fixture.browser.blockedRequests.first?.id))
+        let denied = try await connection
         XCTAssertEqual(denied as? Bool, true)
         fixture.browser.setConnected(true)
         fixture.attach()
@@ -419,7 +544,7 @@ private final class BrowserSecurityFixture {
         window.rootViewController?.view.addSubview(view)
     }
 
-    func load(marker: String = "first-document") async throws {
+    func load(marker: String = UUID().uuidString) async throws {
         browser.open(baseURL)
         view.stopLoading()
         view.loadHTMLString("<html><body><p id='marker'>\(marker)</p></body></html>", baseURL: baseURL)

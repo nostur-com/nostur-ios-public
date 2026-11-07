@@ -42,6 +42,10 @@ struct ContentRenderer: View { // VIEW things
         self.zoomableId = zoomableId
     }
     
+    private var browserPostSource: BrowserPostSource {
+        BrowserPostSource(id: nrPost.id, pubkey: nrPost.pubkey)
+    }
+
     private var shouldAutoload: Bool {
         return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
@@ -175,7 +179,7 @@ struct ContentRenderer: View { // VIEW things
     //                        }
                         NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: $showMore, availableWidth: availableWidth, isDetail: isDetail, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
                                 handleContentTap()
-                        }, theme: theme, nxViewingContext: nxViewingContext)
+                        }, theme: theme, nxViewingContext: nxViewingContext, browserPostSource: browserPostSource)
                         .equatable()
                         
                     case .md(let markdownContentWithPs): // For long form articles
@@ -259,7 +263,7 @@ struct ContentRenderer: View { // VIEW things
                         }
                         
                     case .linkPreview(let url, _):
-                        LinkPreviewView(url: url, autoload: shouldAutoload)
+                        LinkPreviewView(url: url, autoload: shouldAutoload, browserPostSource: browserPostSource)
                             .padding(.vertical, 10)
     //                        .withoutAnimation()
     //                        .transaction { t in t.animation = nil }

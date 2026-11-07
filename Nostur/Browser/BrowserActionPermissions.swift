@@ -8,7 +8,7 @@ struct BrowserActionGrant: Identifiable {
     var isPermanent: Bool { expiresAt == .distantFuture }
 }
 
-enum BrowserGrantDuration { case today, always }
+enum BrowserGrantDuration { case once, today, always }
 
 /// Native-only grants. A web page never supplies the account, origin or expiry.
 struct BrowserActionPermissions {
@@ -32,7 +32,7 @@ struct BrowserActionPermissions {
     }
     func allow(kind: Int, account: String, origin: String, duration: BrowserGrantDuration, destination: String? = nil,
                now: Date = Date(), calendar: Calendar = .current) {
-        guard BrowserSigningPolicy.canGrant(kind), !account.isEmpty,
+        guard duration != .once, BrowserSigningPolicy.canGrant(kind), !account.isEmpty,
               BrowserSigningPolicy.origin(URL(string: origin)) == origin else { return }
         if let destination {
             guard kind == 27235, destination != origin,
@@ -59,6 +59,7 @@ struct BrowserBlockedRequest: Identifiable {
     let canAllow: Bool
     var waiting: Bool
     var destination: String? = nil
+    var event: BrowserUnsignedEvent? = nil
     var actionName: String {
         kind < 0 ? String(localized: "Account connection") : BrowserEventDescription.name(for: kind)
     }

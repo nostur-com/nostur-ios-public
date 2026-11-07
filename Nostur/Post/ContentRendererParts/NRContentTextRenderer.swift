@@ -17,7 +17,8 @@ struct NRContentTextRenderer: View, Equatable {
         lhs.primaryColor == rhs.primaryColor &&
         lhs.accentColor == rhs.accentColor &&
         lhs.theme == rhs.theme &&
-        lhs.availableWidth == rhs.availableWidth
+        lhs.availableWidth == rhs.availableWidth &&
+        lhs.browserPostSource == rhs.browserPostSource
     }
     
     public let attributedStringWithPs: AttributedStringWithPs
@@ -29,11 +30,12 @@ struct NRContentTextRenderer: View, Equatable {
     public var onTap: (() -> Void)? = nil
     public var theme: Theme
     public var nxViewingContext: Set<NXViewingContextOptions>
+    var browserPostSource: BrowserPostSource? = nil
     
     
     
     var body: some View {
-        NRContentTextRendererInner(nxViewingContext: nxViewingContext, showMore: $showMore, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap, theme: theme)
+        NRContentTextRendererInner(nxViewingContext: nxViewingContext, showMore: $showMore, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap, theme: theme, browserPostSource: browserPostSource)
     }
 }
 
@@ -50,6 +52,7 @@ struct NRContentTextRendererInner: View {
     private let onTap: (() -> Void)?
     private let nxViewingContext: Set<NXViewingContextOptions>
     private var theme: Theme
+    private let browserPostSource: BrowserPostSource?
     
     @State private var text: NSAttributedString?
     @State private var nxText: AttributedString?
@@ -59,7 +62,7 @@ struct NRContentTextRendererInner: View {
     @State private var reparsedOutput: NSAttributedString? = nil
     @State private var reparsedNxOutput: AttributedString? = nil
     
-    init(nxViewingContext: Set<NXViewingContextOptions>, showMore: Binding<Bool>, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isDetail: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil, theme: Theme) {
+    init(nxViewingContext: Set<NXViewingContextOptions>, showMore: Binding<Bool>, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isDetail: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil, theme: Theme, browserPostSource: BrowserPostSource?) {
         self.attributedStringWithPs = attributedStringWithPs
         _showMore = showMore
         self.availableWidth = availableWidth
@@ -69,6 +72,7 @@ struct NRContentTextRendererInner: View {
         self.onTap = onTap
         self.nxViewingContext = nxViewingContext
         self.theme = theme
+        self.browserPostSource = browserPostSource
         
         _textWidth = State(wrappedValue: availableWidth)
         _textHeight = State(wrappedValue: 60)
@@ -95,7 +99,7 @@ struct NRContentTextRendererInner: View {
     var body: some View {
         if let nxText {
             Text(nxText)
-                .modifier(BrowserPostTextLinkMenu(text: nxText))
+                .modifier(BrowserPostTextLinkMenu(text: nxText, postSource: browserPostSource))
                 .font(Font.nosturBody())
                 .foregroundColor(primaryColor)
                 .tint(accentColor)
@@ -142,7 +146,7 @@ struct NRContentTextRendererInner: View {
         }
         else if let text {
             if nxViewingContext.contains(.preview) {
-                NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
+                NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor, browserPostSource: browserPostSource)
                     .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -158,7 +162,7 @@ struct NRContentTextRendererInner: View {
             else {
                 if #available(iOS 16.0, *) { // because 15.0 doesn't have sizeThatFits(_ proposal: ProposedViewSize...
                     
-                    NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight, onTap: {
+                    NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight, browserPostSource: browserPostSource, onTap: {
                             // Expand truncated text before navigating
                             if shouldShowMoreButton {
                                 showMore = true
@@ -206,7 +210,7 @@ struct NRContentTextRendererInner: View {
                         }
                 }
                 else {
-                    NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
+                    NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor, browserPostSource: browserPostSource)
                         .onTapGesture {
                             // Expand truncated text before navigating
                             if shouldShowMoreButton {

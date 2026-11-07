@@ -198,7 +198,7 @@ private struct BrowserAddressBar: View {
             Image(systemName: browser.isHome ? "magnifyingglass" : "lock.fill")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            TextField("Enter a website address", text: $browser.address)
+            TextField("Enter a website address", text: Binding(get: { browser.address }, set: browser.editAddress))
                 .keyboardType(.URL)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
@@ -408,13 +408,19 @@ private struct BrowserRecentActivityContent: View {
                 if let feedback = browser.grantFeedback {
                     Text(feedback).font(.callout)
                 }
-                if browser.blockedRequests.isEmpty && browser.activity.isEmpty {
+                if browser.blockedRequests.isEmpty && browser.activity.isEmpty && browser.grantFeedback == nil {
                     Text("No recent activity.").foregroundStyle(.secondary)
                 }
                 ForEach(browser.blockedRequests) { item in
-                    BrowserActivityRow(item: browser.activity.first { $0.id == item.id }
-                        ?? BrowserActivity(id: item.id, site: item.scope.origin, detail: item.reason, blocked: true)) {
-                        BrowserBlockedRequestActions(browser: browser, item: item)
+                    VStack(alignment: .leading, spacing: 8) {
+                        BrowserActivityRow(item: browser.activity.first { $0.id == item.id }
+                            ?? BrowserActivity(id: item.id, site: item.scope.origin, detail: item.reason, blocked: true)) {
+                            Button("Dismiss request") { browser.declineBlockedRequest(item.id) }
+                                .buttonStyle(.borderless)
+                        }
+                        if browser.canAllow(item) {
+                            BrowserBlockedRequestActions(browser: browser, item: item)
+                        }
                     }
                 }
                 ForEach(browser.activity.filter { !activeIDs.contains($0.id) }) { item in
@@ -425,10 +431,6 @@ private struct BrowserRecentActivityContent: View {
                 }
             } header: {
                 Text("Recent activity")
-            } footer: {
-                if browser.blockedRequests.contains(where: { browser.canAllow($0) }) {
-                    Text("Allow today ends at midnight. Always allow stays enabled until you remove it.")
-                }
             }
         }
     }
@@ -439,32 +441,29 @@ private struct BrowserBlockedRequestActions: View {
     let item: BrowserBlockedRequest
 
     var body: some View {
-        if [0, 3, 5, 10002, 10050].contains(item.kind) {
-            Text("This can change shared account data used by your other Nostr apps.")
-                .font(.callout)
-        }
-        if item.kind == -1, !browser.connected,
-           item.scope.origin == browser.origin, item.scope.accountPubkey == browser.accountPubkey {
-            Text("Lets this site use your public identity, post, react, and upload media.")
-                .font(.caption).foregroundStyle(.secondary)
-            Button("Connect and allow app actions") { browser.connectAndAllowAppActions() }
-                .buttonStyle(.bordered)
-        } else if browser.canAllow(item) {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(item.actionName)
+                .font(.subheadline.weight(.semibold))
+            if item.kind == -1 {
+                Text("Use your account and allow app actions for this visit or future visits.")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else if let destination = item.destination {
+                Text(destination)
+                    .font(.caption).textSelection(.enabled)
+            } else if BrowserSigningPolicy.isAccountChange(item.kind) || BrowserSigningPolicy.isDeletion(item.kind) {
+                Text("This can change shared account data used by your other Nostr apps.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             if !item.waiting {
-                Text("This request has expired. Allow the action, then retry it in the app.")
+                Text("Allow access, then retry on the site.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             HStack {
-                Button("Allow today") { browser.allowBlockedRequest(item.id, duration: .today) }
+                Button("Allow once") { browser.allowBlockedRequest(item.id, duration: .once) }
                 Button("Always allow") { browser.allowBlockedRequest(item.id, duration: .always) }
             }
             .buttonStyle(.bordered)
-        } else {
-            Text("This request can’t be allowed.")
-                .font(.caption).foregroundStyle(.secondary)
         }
-        Button("Dismiss request") { browser.declineBlockedRequest(item.id) }
-            .buttonStyle(.borderless)
     }
 }
 

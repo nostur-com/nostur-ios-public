@@ -6,6 +6,18 @@ final class BrowserSigningPolicyTests: XCTestCase {
     private let now: Int64 = 1_800_000_000
     private let site = "https://jumble.social"
 
+    func testPostLinkTrustRequiresASignatureCoveringTheDestination() throws {
+        let url = try XCTUnwrap(URL(string: "https://app.example.invalid/play"))
+        let unrelated = try XCTUnwrap(URL(string: "https://app.example.invalid/other"))
+        let keys = try Keys.newKeys()
+        var note = NEvent(content: "Try this: \(url.absoluteString)")
+        note = try note.sign(keys)
+        XCTAssertTrue(BrowserPostSource.verifiesLink(url, in: note))
+        XCTAssertFalse(BrowserPostSource.verifiesLink(unrelated, in: note))
+        note.content = unrelated.absoluteString
+        XCTAssertFalse(BrowserPostSource.verifiesLink(unrelated, in: note))
+    }
+
     private func event(_ kind: Int, tags: [[String]] = [], content: String = "", age: Int64 = 0) -> BrowserUnsignedEvent {
         BrowserUnsignedEvent(created_at: now - age, kind: kind, tags: tags, content: content)
     }

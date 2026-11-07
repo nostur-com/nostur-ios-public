@@ -10,7 +10,8 @@ import RepresentableKit
 import Gifu
 import Nuke
 
-private final class NIP30InlineEmojiTextView: UITextView {
+final class NIP30InlineEmojiTextView: UITextView {
+    var browserPostSource: BrowserPostSource?
     private var overlayViews: [UIView] = []
 
     override func layoutSubviews() {
@@ -163,7 +164,10 @@ struct NRTextDynamic: View {
     private let fontColor: Color
     private let accentColor: Color?
     
-    init(_ attributedString: NSAttributedString, plain: Bool = false, fontColor: Color = Themes.default.theme.primary, accentColor: Color? = nil) {
+    private var browserPostSource: BrowserPostSource?
+
+    init(_ attributedString: NSAttributedString, plain: Bool = false, fontColor: Color = Themes.default.theme.primary, accentColor: Color? = nil, browserPostSource: BrowserPostSource? = nil) {
+        self.browserPostSource = browserPostSource
         self.attributedString = attributedString
         self.plain = plain
         self.fontColor = fontColor
@@ -222,6 +226,7 @@ struct NRTextDynamic: View {
         UIViewAdaptor {
             makeUITextView()
         }
+        .id(browserPostSource?.id)
         .fixedSize(horizontal: false, vertical: true)
     }
     
@@ -230,6 +235,7 @@ struct NRTextDynamic: View {
     func makeUITextView() -> UITextView {
         let view = NIP30InlineEmojiTextView()
         view.delegate = BrowserPostLinkActions.shared
+        view.browserPostSource = browserPostSource
 //        _ = view.layoutManager
         view.isScrollEnabled = false
         view.adjustsFontForContentSizeCategory = true
@@ -362,8 +368,10 @@ struct NRTextFixed: UIViewRepresentable {
     @Binding var textHeight: CGFloat
     private let textCutOffFixerHeight: CGFloat // to fix text cutoff need to add  some height  always as workaround
     public var onTap: (() -> Void)? = nil
+    private let browserPostSource: BrowserPostSource?
     
-    init(text attributedString: NSAttributedString, plain: Bool = false, fontColor: Color, accentColor: Color, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>, onTap: (() -> Void)? = nil) {
+    init(text attributedString: NSAttributedString, plain: Bool = false, fontColor: Color, accentColor: Color, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>, browserPostSource: BrowserPostSource? = nil, onTap: (() -> Void)? = nil) {
+        self.browserPostSource = browserPostSource
         self.attributedString = attributedString
         self.onTap = onTap
         self.plain = plain
@@ -380,6 +388,7 @@ struct NRTextFixed: UIViewRepresentable {
 
         let view = NIP30InlineEmojiTextView()
         view.delegate = BrowserPostLinkActions.shared
+        view.browserPostSource = browserPostSource
         _ = view.layoutManager // Maybe this fixes: <NSTextViewportLayoutController: 0x132c14eb0>: -[NSTextViewportLayoutController textViewportElementsInRect:] cannot be called during layout. Seems to fix crash also. (still crash without this as of 24/05/2025)
         view.isScrollEnabled = false
         view.textColor = UIColor(fontColor)
@@ -431,6 +440,7 @@ struct NRTextFixed: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UITextView, context: Context) {
+        (uiView as? NIP30InlineEmojiTextView)?.browserPostSource = browserPostSource
         
         if uiView.textColor != UIColor(fontColor) || uiView.tintColor != UIColor(accentColor) {
             uiView.textColor = UIColor(fontColor)

@@ -4588,6 +4588,12 @@
     "Account changes" : {
 
     },
+    "Account connected." : {
+
+    },
+    "Account connected. Retry signing in on the site." : {
+
+    },
     "Account connection" : {
 
     },
@@ -4640,6 +4646,9 @@
       }
     },
     "Account status update" : {
+
+    },
+    "Account tools" : {
 
     },
     "Account: @%@ / %@" : {
@@ -5907,6 +5916,9 @@
     "All selected sources finished" : {
 
     },
+    "Allow access, then retry on the site." : {
+
+    },
     "Allow multiple answers" : {
       "comment" : "Poll can accept more than one answer",
       "localizations" : {
@@ -5930,10 +5942,7 @@
         }
       }
     },
-    "Allow today" : {
-
-    },
-    "Allow today ends at midnight. Always allow stays enabled until you remove it." : {
+    "Allow once" : {
 
     },
     "Allowed today" : {
@@ -6579,6 +6588,9 @@
           }
         }
       }
+    },
+    "Authorize sign-ins and other web requests to this site. Other services need their own approval." : {
+
     },
     "Auto scroll to new posts" : {
       "comment" : "Setting on settings screen",
@@ -7855,6 +7867,9 @@
           }
         }
       }
+    },
+    "Browse and join discussions on Nostr." : {
+
     },
     "Browser account" : {
 
@@ -10189,6 +10204,9 @@
         }
       }
     },
+    "Connect and allow app actions" : {
+
+    },
     "Connect to additional relays from people you follow to reduce missing content that can't be found on your own relay set" : {
       "comment" : "Setting on settings screen",
       "extractionState" : "manual",
@@ -10283,6 +10301,9 @@
           }
         }
       }
+    },
+    "Connect your Nostr account to this app." : {
+
     },
     "Connect your NWC compatible wallet with **Nostur** for a seamless zapping experience" : {
       "localizations" : {
@@ -10942,6 +10963,9 @@
           }
         }
       }
+    },
+    "Copy details" : {
+
     },
     "Copy image URL" : {
       "localizations" : {
@@ -13318,6 +13342,9 @@
         }
       }
     },
+    "Dismiss recent activity" : {
+
+    },
     "Dismiss request" : {
 
     },
@@ -15165,6 +15192,9 @@
         }
       }
     },
+    "External service: %@" : {
+
+    },
     "Extra information" : {
       "comment" : "Label for report field to give extra information",
       "localizations" : {
@@ -15860,6 +15890,9 @@
           }
         }
       }
+    },
+    "Find inactive accounts in your Nostr follows." : {
+
     },
     "Find more Emoji sets" : {
       "localizations" : {
@@ -18849,6 +18882,9 @@
         }
       }
     },
+    "Let this app request payments and other wallet actions." : {
+
+    },
     "Let's go!" : {
       "comment" : "Button to start using Nostur, during onboarding",
       "localizations" : {
@@ -20189,6 +20225,9 @@
           }
         }
       }
+    },
+    "Manage, back up and share Nostr mute lists." : {
+
     },
     "Mark all as read" : {
       "comment" : "Menu action to mark all dm requests as read\nMenu action to mark all messages as read",
@@ -22845,6 +22884,9 @@
 
     },
     "No reactions found on the available relays." : {
+
+    },
+    "No recent activity." : {
 
     },
     "No relays checked yet" : {
@@ -31071,6 +31113,9 @@
         }
       }
     },
+    "Retry the action in the app to use this one-time permission." : {
+
+    },
     "Retry upload" : {
 
     },
@@ -31380,6 +31425,12 @@
 
     },
     "Saved on this device" : {
+
+    },
+    "Saved permissions" : {
+
+    },
+    "Saved permissions can allow individual actions. Turning a switch off removes existing allowances for that category." : {
 
     },
     "Saved to picker" : {
@@ -34026,6 +34077,9 @@
         }
       }
     },
+    "Sign in to this website" : {
+
+    },
     "Sign in with a signing account to vote." : {
       "localizations" : {
         "es" : {
@@ -34069,6 +34123,9 @@
           }
         }
       }
+    },
+    "Signed" : {
+
     },
     "Signed: %@ (kind %@)." : {
       "localizations" : {
@@ -36480,6 +36537,9 @@
     "This action can change shared account data or remove content. Allow it explicitly if you trust this app." : {
 
     },
+    "This app wants to sign a web request to %@." : {
+
+    },
     "This article has been updated" : {
       "comment" : "Message shown when there is a newer version available of an article",
       "localizations" : {
@@ -36592,6 +36652,9 @@
       }
     },
     "This can change shared account data used by your other Nostr apps." : {
+
+    },
+    "This can replace your saved data of the same type. Allow it if you trust this app." : {
 
     },
     "This event link is invalid." : {
@@ -36877,16 +36940,13 @@
         }
       }
     },
-    "This request can’t be allowed." : {
-
-    },
-    "This request has expired. Allow the action, then retry it in the app." : {
-
-    },
     "This request is not authorized." : {
 
     },
     "This saved run did not record a failure reason. Retry this source for updated details." : {
+
+    },
+    "This site wants to use your Nostur account." : {
 
     },
     "This video could not be read. Choose another video or try again." : {
@@ -38999,6 +39059,9 @@
         }
       }
     },
+    "Use games and apps, post, react, and upload media through Blossom." : {
+
+    },
     "Use photo" : {
       "localizations" : {
         "es" : {
@@ -39068,6 +39131,9 @@
           }
         }
       }
+    },
+    "Use your account and allow app actions for this visit or future visits." : {
+
     },
     "Used for app preferences or custom service requests. The kind alone does not identify the requested action." : {
 
@@ -39902,6 +39968,9 @@
           }
         }
       }
+    },
+    "Website account access is disabled." : {
+
     },
     "Website address" : {
 
@@ -41846,60 +41915,6 @@
 
     },
     "Zoom" : {
-
-    },
-    "Authorize sign-ins and other web requests to this site. Other services need their own approval." : {
-
-    },
-    "Connect and allow app actions" : {
-
-    },
-    "Connect your Nostr account to this app." : {
-
-    },
-    "Connect your account to use this app, then retry the action." : {
-
-    },
-    "Copy details" : {
-
-    },
-    "Dismiss recent activity" : {
-
-    },
-    "External service: %@" : {
-
-    },
-    "Let this app request payments and other wallet actions." : {
-
-    },
-    "Lets this site use your public identity, post, react, and upload media." : {
-
-    },
-    "No recent activity." : {
-
-    },
-    "Saved permissions" : {
-
-    },
-    "Saved permissions can allow individual actions. Turning a switch off removes existing allowances for that category." : {
-
-    },
-    "Sign in to this website" : {
-
-    },
-    "Signed" : {
-
-    },
-    "This app wants to sign a web request to %@." : {
-
-    },
-    "This can replace your saved data of the same type. Allow it if you trust this app." : {
-
-    },
-    "Use games and apps, post, react, and upload media through Blossom." : {
-
-    },
-    "Website account access is disabled." : {
 
     }
   },
