@@ -219,7 +219,7 @@ final class BrowserSigningPolicyTests: XCTestCase {
     }
 
     func testRelayDescriptionKeepsCredentialsAndPrivateTokensOutOfNotices() throws {
-        let auth = event(22242, tags: [["relay", "wss://relay.example.com:8443/private-path?token=secret#private-fragment"], ["challenge", "private-challenge"]])
+        let auth = event(22242, tags: [["relay", "wss://relay.example.com:8443/private-path?token=secret"], ["challenge", "private-challenge"]])
         let message = try XCTUnwrap(rejection(auth))
         XCTAssertTrue(message.contains(BrowserEventDescription.name(for: 22242)))
         XCTAssertTrue(message.contains("22242"))
@@ -231,6 +231,34 @@ final class BrowserSigningPolicyTests: XCTestCase {
         let credentialMessage = try XCTUnwrap(rejection(credentials))
         XCTAssertFalse(credentialMessage.contains("user:password"))
         XCTAssertFalse(credentialMessage.contains("relay.example.com"))
+    }
+
+    func testOnlyCompleteUnambiguousRelayAuthenticationIsQuiet() {
+        let relay = [["relay", "wss://relay.example"], ["challenge", "nonce"]]
+        XCTAssertTrue(BrowserSigningPolicy.isRelayAuthentication(event(22242, tags: relay)))
+        for tags in [[], [["challenge", "nonce"]], [["domain", "jumble.social"], ["challenge", "nonce"]],
+                     relay + [["url", site]], relay + [["challenge", "duplicate"]],
+                     relay + [["action", "delete"]]] {
+            XCTAssertFalse(BrowserSigningPolicy.isRelayAuthentication(event(22242, tags: tags)))
+        }
+        XCTAssertFalse(BrowserSigningPolicy.isRelayAuthentication(event(22242, tags: relay, content: "auth")))
+    }
+
+    func testLargeSharedListsHaveBoundedSizeAndRequireExplicitApproval() {
+        let tags = (0..<2500).map { ["p", String(format: "%064x", $0)] }
+        for kind in [3, 10000] {
+            let list = event(kind, tags: tags)
+            XCTAssertNotNil(rejection(list))
+            XCTAssertNil(BrowserSigningPolicy.rejection(for: list, origin: site, social: true,
+                                                       allowedKinds: [kind], now: now))
+            let oversized = event(kind, tags: Array(repeating: ["p", "key"], count: 10001))
+            XCTAssertNotNil(BrowserSigningPolicy.rejection(for: oversized, origin: site, social: true,
+                                                           allowedKinds: [kind], now: now))
+            let excessiveBytes = event(kind, tags: Array(repeating: ["p", String(repeating: "x", count: 512)], count: 5000))
+            XCTAssertNotNil(BrowserSigningPolicy.rejection(for: excessiveBytes, origin: site, social: true,
+                                                           allowedKinds: [kind], now: now))
+        }
+        XCTAssertNotNil(rejection(event(1, tags: tags)))
     }
 
     func testDescriptionsDoNotTreatCustomPayloadsAsTrustedInstructions() throws {
@@ -255,6 +283,39 @@ final class BrowserSigningPolicyTests: XCTestCase {
         XCTAssertNotNil(rejection(auth, relays: [BrowserRelaySetting(url: "wss://relay.example.com", auth: false)]))
         XCTAssertNotNil(rejection(auth, relays: enabled + [BrowserRelaySetting(url: "wss://relay.example.com/", auth: false)]))
         XCTAssertNotNil(rejection(auth, relays: [BrowserRelaySetting(url: "wss://other.example.com", auth: true)]))
+    }
+
+    func testWebsiteChallengeLoginUsesWebsitePermissionForAnyOrigin() {
+        for origin in ["https://account.nostr.build", "https://new-app.example", "https://new-app.example:8443"] {
+            let tags = [["challenge", "server-nonce"], ["url", origin]]
+            let login = event(22242, tags: tags)
+            XCTAssertNil(rejection(login, origin: origin, social: false))
+            XCTAssertNotNil(BrowserSigningPolicy.rejection(for: login, origin: origin, social: true, now: now))
+            XCTAssertNil(BrowserSigningPolicy.rejection(for: login, origin: origin, social: false,
+                                                        allowedKinds: [27235], now: now))
+            XCTAssertEqual(BrowserSigningPolicy.permissionKind(for: login), 27235)
+            let description = BrowserEventDescription.blockedMessage(for: login)
+            XCTAssertTrue(description.contains("Website sign-in"))
+            XCTAssertFalse(description.contains("Relay authentication"))
+            XCTAssertFalse(description.contains("server-nonce"))
+            for invalid in [
+                event(22242, tags: tags, age: 61),
+                event(22242, tags: tags, content: "unexpected"),
+                event(22242, tags: tags + [["relay", "wss://relay.example"]]),
+                event(22242, tags: tags + [["challenge", "duplicate"]]),
+                event(22242, tags: [["challenge", ""], ["url", origin]])
+            ] {
+                XCTAssertNotNil(BrowserSigningPolicy.rejection(for: invalid, origin: origin, social: true,
+                                                              websiteAuth: true, allowedKinds: [27235, 22242], now: now))
+            }
+            for target in ["https://elsewhere.example", origin + "/claim-npub",
+                           origin + "/account/delete", origin + "?action=delete", origin + "#fragment",
+                           origin.replacingOccurrences(of: "https:", with: "http:")] {
+                XCTAssertNotNil(BrowserSigningPolicy.rejection(
+                    for: event(22242, tags: [["challenge", "nonce"], ["url", target]]),
+                    origin: origin, social: true, websiteAuth: true, allowedKinds: [27235], now: now))
+            }
+        }
     }
 
     func testRelayAuthDoesNotBroadenToOtherEndpointsOnSameHost() {

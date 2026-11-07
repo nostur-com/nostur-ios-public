@@ -300,12 +300,22 @@ private struct BrowserAccountMenu: View {
     private var accounts: FetchedResults<CloudAccount>
 
     var body: some View {
+        let signingAccounts = accounts.filter { NostrBrowserModel.canUseAccount($0) }
         Menu {
-            Text("Using \(browser.accountName)")
-            ForEach(accounts.filter { !$0.isDeleted && $0.managedObjectContext != nil }) { account in
+            if browser.accountPubkey.isEmpty {
+                Text("Choose an account")
+            } else {
+                Text("Using \(browser.accountName)")
+            }
+            if signingAccounts.isEmpty {
+                Text("Add an account with signing access in Nostur.")
+            }
+            ForEach(signingAccounts) { account in
                 Button { browser.selectAccount(account) } label: {
                     if account.publicKey == browser.accountPubkey {
                         Label(account.anyName, systemImage: "checkmark")
+                    } else if account.isNC {
+                        Label("\(account.anyName) — Remote signer", systemImage: "network")
                     } else {
                         Text(account.anyName)
                     }
@@ -316,7 +326,7 @@ private struct BrowserAccountMenu: View {
                 .frame(minWidth: 44, minHeight: 44)
         }
         .accessibilityLabel("Browser account")
-        .accessibilityValue(browser.accountName)
+        .accessibilityValue(browser.accountPubkey.isEmpty ? String(localized: "Choose an account") : browser.accountName)
     }
 }
 
@@ -450,6 +460,12 @@ private struct BrowserBlockedRequestActions: View {
             } else if let destination = item.destination {
                 Text(destination)
                     .font(.caption).textSelection(.enabled)
+            } else if item.kind == 3 {
+                Text("Replaces your following list across Nostr apps.")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else if item.kind == 10000 {
+                Text("Replaces your mute list across Nostr apps.")
+                    .font(.caption).foregroundStyle(.secondary)
             } else if BrowserSigningPolicy.isAccountChange(item.kind) || BrowserSigningPolicy.isDeletion(item.kind) {
                 Text("This can change shared account data used by your other Nostr apps.")
                     .font(.caption).foregroundStyle(.secondary)
@@ -666,10 +682,15 @@ private struct BrowserSiteSettings: View {
             NXForm {
                 Section {
                     Text(browser.origin ?? "").font(.headline)
-                    LabeledContentCompat(title: "Account", value: browser.accountName)
+                    HStack {
+                        Text("Account")
+                        Spacer()
+                        BrowserAccountMenu(browser: browser)
+                    }
                     Toggle(isOn: Binding(get: { browser.connected }, set: { browser.setConnected($0) })) {
                         BrowserPermissionLabel(title: "Use account", detail: "Connect your Nostr account to this app.")
                     }
+                    .disabled(browser.accountPubkey.isEmpty)
                     if !browser.connected, browser.origin != nil, !browser.accountPubkey.isEmpty {
                         Button("Connect and allow app actions") { browser.connectAndAllowAppActions() }
                     }

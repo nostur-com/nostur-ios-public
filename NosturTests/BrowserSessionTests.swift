@@ -112,7 +112,7 @@ final class BrowserSessionTests: XCTestCase {
         let account = CloudAccount(entity: try XCTUnwrap(model.entitiesByName["CloudAccount"]), insertInto: managedContext)
         account.publicKey = String(repeating: "c", count: 64)
         account.name = "Browser test"
-        account.flagsSet = ["nostur_created"]
+        account.flagsSet = ["nostur_created", "full_account"]
         let session = NostrBrowserSession()
         let root = Color.clear
             .modifier(NostrBrowserPresentation(session: session, account: LoggedInAccount(account)))

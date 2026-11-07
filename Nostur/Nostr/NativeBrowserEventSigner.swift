@@ -82,7 +82,9 @@ final class NativeBrowserEventSigner: BrowserEventSigning {
     }
 
     nonisolated static func validate(_ data: Data, approval: BrowserSigningApproval) throws -> BrowserSignedEvent {
-        guard data.count <= 131072 else { throw BrowserSigningFailure.failed }
+        guard data.count <= BrowserSigningPolicy.maximumRequestBytes(for: approval.event.kind) + 512 else {
+            throw BrowserSigningFailure.failed
+        }
         let result = try JSONDecoder().decode(BrowserSignedEvent.self, from: data)
         guard result.matches(approval.event, accountPubkey: approval.accountPubkey),
               try JSONDecoder().decode(NEvent.self, from: data).verified(logInvalidID: false) else { throw BrowserSigningFailure.failed }

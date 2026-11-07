@@ -28,6 +28,14 @@ struct BrowserSigningApproval: Sendable {
 }
 
 enum BrowserSigningPolicy {
+    static func maximumTagCount(for kind: Int) -> Int {
+        [3, 10000].contains(kind) ? 10000 : 256
+    }
+
+    static func maximumRequestBytes(for kind: Int) -> Int {
+        [3, 10000].contains(kind) ? 1_048_576 : 131_072
+    }
+
     static func origin(scheme: String, host: String, port: Int) -> String? {
         guard scheme.lowercased() == "https", !host.isEmpty, (0...65535).contains(port) else { return nil }
         var components = URLComponents()
@@ -45,6 +53,25 @@ enum BrowserSigningPolicy {
 
     static func socialDefault(_ origin: String) -> Bool {
         BrowserSiteDefaults.forOrigin(origin).social
+    }
+
+    static func isWebsiteChallenge(_ event: BrowserUnsignedEvent) -> Bool {
+        event.kind == 22242 && event.tags.contains { $0.first == "url" }
+    }
+
+    static func isRelayAuthentication(_ event: BrowserUnsignedEvent) -> Bool {
+        let relays = event.tags.filter { $0.first == "relay" }
+        let challenges = event.tags.filter { $0.first == "challenge" }
+        return event.kind == 22242 && event.content.isEmpty
+            && !event.tags.contains { ["url", "u", "domain", "method", "action", "origin", "client-origin"].contains($0.first ?? "") }
+            && relays.count == 1 && relays[0].count == 2 && relayIdentity(relays[0][1]) != nil
+            && challenges.count == 1 && challenges[0].count == 2 && !challenges[0][1].isEmpty
+    }
+
+    // Website challenge logins share the website sign-in permission regardless
+    // of which event kind the service uses. Relay auth keeps its native setting.
+    static func permissionKind(for event: BrowserUnsignedEvent) -> Int {
+        isWebsiteChallenge(event) ? 27235 : event.kind
     }
 
     // Protect account-wide replacement state and known sensitive protocols, rather
@@ -99,10 +126,16 @@ enum BrowserSigningPolicy {
         }
         guard Self.origin(URL(string: origin)) == origin else { return blocked(String(localized: "A secure website is required.")) }
         guard (0...65535).contains(event.kind), event.content.utf8.count <= 65536,
-              event.tags.count <= 256,
+              event.tags.count <= maximumTagCount(for: event.kind),
               event.tags.allSatisfy({ !$0.isEmpty && $0.count <= 16 && $0.allSatisfy { $0.utf8.count <= 4096 } }),
               event.created_at >= now - 300, event.created_at <= now + 60 else {
             return blocked(String(localized: "Invalid, oversized, or expired signing request."))
+        }
+        let payloadBytes = event.tags.reduce(event.content.utf8.count) { total, tag in
+            total + tag.reduce(0) { $0 + $1.utf8.count }
+        }
+        guard payloadBytes <= maximumRequestBytes(for: event.kind) else {
+            return blocked(String(localized: "Signing request is too large."))
         }
         // Never allow websites to delegate authority using NIP-26 tags.
         guard !event.tags.contains(where: { $0.first == "delegation" }) else { return blocked(String(localized: "Delegation is blocked.")) }
@@ -114,12 +147,22 @@ enum BrowserSigningPolicy {
         if event.kind == 30078 { return nil }
 
         if event.kind == 22242 {
-            let relays = event.tags.filter { $0.first == "relay" }
-            let challenges = event.tags.filter { $0.first == "challenge" }
-            guard event.content.isEmpty, event.created_at >= now - 60,
-                  relays.count == 1, relays[0].count == 2,
-                  challenges.count == 1, challenges[0].count == 2, !challenges[0][1].isEmpty,
-                  let relay = relayIdentity(relays[0][1]) else {
+            if isWebsiteChallenge(event) {
+                let urls = event.tags.filter { $0.first == "url" }
+                let challenges = event.tags.filter { $0.first == "challenge" }
+                guard event.content.isEmpty, event.created_at >= now - 60, event.tags.count == 2,
+                      urls.count == 1, urls[0].count == 2,
+                      challenges.count == 1, challenges[0].count == 2, !challenges[0][1].isEmpty,
+                      let url = URL(string: urls[0][1]), Self.origin(url) == origin,
+                      url.path.isEmpty || url.path == "/", url.query == nil, url.fragment == nil else {
+                    return blocked(String(localized: "Website authentication requires a fresh challenge for this site's HTTPS origin."))
+                }
+                if websiteAuth || allowedKinds.contains(27235) { return nil }
+                return blocked(String(localized: "Website account access is disabled."))
+            }
+            guard isRelayAuthentication(event), event.created_at >= now - 60,
+                  let rawRelay = event.tags.first(where: { $0.first == "relay" })?[1],
+                  let relay = relayIdentity(rawRelay) else {
                 return blocked(String(localized: "Relay authentication requires a fresh, empty event with one relay and one challenge."))
             }
             let matching = relaySettings.filter { relayIdentity($0.url) == relay }

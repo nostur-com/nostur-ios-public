@@ -3,6 +3,14 @@ import Foundation
 /// Display labels only: recognizing a kind never grants signing permission.
 /// Source: https://github.com/nostr-protocol/nips#event-kinds
 enum BrowserEventDescription {
+    static func name(for event: BrowserUnsignedEvent) -> String {
+        if BrowserSigningPolicy.isWebsiteChallenge(event) { return String(localized: "Website sign-in") }
+        if event.kind == 22242, !BrowserSigningPolicy.isRelayAuthentication(event) {
+            return String(localized: "Unrecognized sign-in request")
+        }
+        return name(for: event.kind)
+    }
+
     static func name(for kind: Int) -> String {
         switch kind {
         case 0: return String(localized: "Profile update")
@@ -129,10 +137,14 @@ enum BrowserEventDescription {
     }
 
     static func blockedMessage(for event: BrowserUnsignedEvent, reason: String? = nil) -> String {
-        let name = name(for: event.kind)
+        let name = name(for: event)
         let kind = String(event.kind) // Protocol identifiers must not acquire locale grouping separators.
         var message = String(localized: "Blocked: \(name) (kind \(kind)).")
         switch event.kind {
+        case 22242 where BrowserSigningPolicy.isWebsiteChallenge(event):
+            break
+        case 22242 where !BrowserSigningPolicy.isRelayAuthentication(event):
+            message += " " + String(localized: "This sign-in request does not identify a supported website or relay.")
         case 22242:
             message += " " + String(localized: "The app wants to sign in to a Nostr relay using your account.")
             if let relay = relayAddress(in: event.tags) {

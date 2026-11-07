@@ -61,6 +61,7 @@ struct BrowserBlockedRequest: Identifiable {
     var destination: String? = nil
     var event: BrowserUnsignedEvent? = nil
     var actionName: String {
-        kind < 0 ? String(localized: "Account connection") : BrowserEventDescription.name(for: kind)
+        if let event { return BrowserEventDescription.name(for: event) }
+        return kind < 0 ? String(localized: "Account connection") : BrowserEventDescription.name(for: kind)
     }
 }

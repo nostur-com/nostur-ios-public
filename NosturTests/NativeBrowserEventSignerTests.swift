@@ -29,6 +29,25 @@ final class NativeBrowserEventSignerTests: XCTestCase {
         XCTAssertTrue(signed.matches(approved.event, accountPubkey: approved.accountPubkey))
     }
 
+    func testNativeSignerCanSignAndValidateAnApprovedLargeFollowingList() async throws {
+        let keys = try Keys(privateKeyHex: fixtureKey)
+        let event = BrowserUnsignedEvent(created_at: Int64(Date().timeIntervalSince1970), kind: 3,
+                                         tags: (0..<2500).map { ["p", String(format: "%064x", $0)] }, content: "")
+        let approved = try XCTUnwrap(BrowserSigningPolicy.approval(
+            for: event, accountPubkey: keys.publicKeyHex, origin: "https://plebsvszombies.cc",
+            connected: true, social: true, websiteAuth: false, uploads: false, relaySettings: [], allowedKinds: [3]))
+        let key = fixtureKey
+        let signer = NativeBrowserEventSigner(localKeyProvider: { _ in key })
+        let result = await withCheckedContinuation { continuation in
+            signer.sign(approved, requestID: UUID()) { continuation.resume(returning: $0) }
+        }
+        let signed = try result.get()
+        let encoded = try JSONEncoder().encode(signed)
+        XCTAssertGreaterThan(encoded.count, 131072)
+        XCTAssertEqual(signed.tags, event.tags)
+        XCTAssertTrue(try JSONDecoder().decode(NEvent.self, from: encoded).verified())
+    }
+
     func testSignerResponseValidationStripsExtraFieldsAndRejectsChangedEvents() throws {
         let approved = try approval()
         let native = try localSignNEvent(approved.event.nostrEvent(publicKey: approved.accountPubkey), pk: fixtureKey)

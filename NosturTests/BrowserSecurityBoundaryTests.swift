@@ -6,6 +6,206 @@ import XCTest
 
 @MainActor
 final class BrowserSecurityBoundaryTests: XCTestCase {
+    func testPrimaryHomepageAppsCanConnectSignAndResumeWithoutSetup() async throws {
+        let origins = ["https://jumble.social", "https://primal.net", "https://account.nostr.build",
+                       "https://otherstuff.ai", "https://honey.hivetalk.org"]
+        for origin in origins {
+            let fixture = try BrowserSecurityFixture(origin: origin)
+            defer { fixture.close() }
+            try await fixture.load()
+            XCTAssertTrue(fixture.browser.connected, origin)
+            let first = try await fixture.view.callAsyncJavaScript("""
+            const key = await nostr.getPublicKey();
+            localStorage.setItem('browser-app-session', key);
+            const event = await nostr.signEvent({kind:30078,created_at:Math.floor(Date.now()/1000),
+              tags:[['d','app-preferences']],content:'preferences'});
+            window.browserDraft = 'unfinished';
+            return {key,kind:event.kind};
+            """, arguments: [:], in: nil, contentWorld: .page) as? [String: Any]
+            XCTAssertEqual(first?["key"] as? String, fixture.account.publicKey, origin)
+            XCTAssertEqual(first?["kind"] as? Int, 30078, origin)
+            fixture.browser.setPresented(false)
+            fixture.browser.setPresented(true)
+            let draft = try await fixture.view.evaluateJavaScript("window.browserDraft") as? String
+            XCTAssertEqual(draft, "unfinished", origin)
+            fixture.browser.home()
+            try await fixture.load()
+            let session = try await fixture.view.evaluateJavaScript("localStorage.getItem('browser-app-session')") as? String
+            XCTAssertEqual(session, fixture.account.publicKey, origin)
+            XCTAssertTrue(fixture.browser.blockedRequests.isEmpty, origin)
+        }
+    }
+
+    func testFullFollowingAndMuteListsRequireApprovalAndResumeTheOriginalRequest() async throws {
+        for (origin, kind) in [("https://mutable.top", 10000), ("https://plebsvszombies.cc", 3)] {
+            let fixture = try BrowserSecurityFixture(origin: origin)
+            defer { fixture.close() }
+            try await fixture.load()
+            let script = """
+            return await nostr.signEvent({kind:kind,created_at:Math.floor(Date.now()/1000),
+              tags:Array.from({length:2500},(_,index)=>['p',index.toString(16).padStart(64,'0')]),content:''});
+            """
+            for duration in [BrowserGrantDuration.once, .always] {
+                async let requested = fixture.view.callAsyncJavaScript(script, arguments: ["kind": kind], in: nil, contentWorld: .page)
+                try await fixture.waitUntil { fixture.browser.blockedRequests.first?.kind == kind }
+                let blocked = try XCTUnwrap(fixture.browser.blockedRequests.first)
+                XCTAssertTrue(fixture.signer.approvals.isEmpty || duration == .always)
+                XCTAssertTrue(fixture.browser.canAllow(blocked))
+                XCTAssertTrue(blocked.waiting)
+                fixture.browser.allowBlockedRequest(blocked.id, duration: duration)
+                let signed = try await requested as? [String: Any]
+                XCTAssertEqual(signed?["kind"] as? Int, kind)
+                XCTAssertEqual((signed?["tags"] as? [[String]])?.count, 2500)
+                XCTAssertEqual(fixture.browser.actionGrants.map(\.kind), duration == .once ? [] : [kind])
+            }
+            XCTAssertFalse(fixture.browser.accountChangesAllowed)
+            fixture.browser.setAccountChanges(false)
+            XCTAssertTrue(fixture.browser.actionGrants.isEmpty)
+        }
+    }
+
+    func testRelayBurstQueuesSeparatelyAndLeavesLoginAndPostingAvailable() async throws {
+        let gate = BrowserRelaySettingsGate()
+        let fixture = try BrowserSecurityFixture(origin: "https://jumble.social", relaySettingsProvider: { await gate.snapshot() })
+        defer { gate.release(); fixture.close() }
+        try await fixture.load()
+        _ = try await fixture.view.evaluateJavaScript("""
+        window.relayEvent = index => ({kind:22242,created_at:Math.floor(Date.now()/1000),
+          tags:[['relay','wss://relay.example.invalid'],['challenge','burst-'+index]],content:''});
+        window.relayBurst = Promise.all(Array.from({length:40}, (_,index) =>
+          nostr.signEvent(window.relayEvent(index)).then(() => 1, () => 0)));
+        true;
+        """)
+        try await fixture.waitUntil { gate.waiters.count == 1 }
+        XCTAssertTrue(fixture.signer.approvals.isEmpty)
+        let app = try await fixture.view.callAsyncJavaScript("""
+        const key = await nostr.getPublicKey();
+        const signed = await Promise.all([
+          nostr.signEvent({kind:1,created_at:Math.floor(Date.now()/1000),tags:[],content:'draft'}),
+          nostr.signEvent({kind:27235,created_at:Math.floor(Date.now()/1000),
+            tags:[['u','https://jumble.social/login'],['method','POST']],content:''}),
+          nostr.signEvent({kind:30078,created_at:Math.floor(Date.now()/1000),tags:[],content:'app data'})
+        ]);
+        return {key, kinds:signed.map(event => event.kind)};
+        """, arguments: [:], in: nil, contentWorld: .page) as? [String: Any]
+        XCTAssertEqual(app?["key"] as? String, fixture.account.publicKey)
+        XCTAssertEqual(app?["kinds"] as? [Int], [1, 27235, 30078])
+        XCTAssertEqual(fixture.signer.approvals.count, 3)
+        gate.release()
+        let completed = try await fixture.view.callAsyncJavaScript(
+            "return (await window.relayBurst).reduce((total,value) => total+value,0);",
+            arguments: [:], in: nil, contentWorld: .page)
+        XCTAssertEqual(completed as? Int, BrowserBridge.relayPendingLimit)
+        // Exceed the old shared transport and signing budgets, then post again.
+        _ = try await fixture.view.callAsyncJavaScript("""
+        for (let batch=0;batch<5;batch++) {
+          await Promise.all(Array.from({length:32},(_,index) =>
+            nostr.signEvent(window.relayEvent(40+batch*32+index)).catch(() => null)));
+        }
+        return true;
+        """, arguments: [:], in: nil, contentWorld: .page)
+        XCTAssertEqual(fixture.signer.approvals.filter { $0.event.kind == 22242 }.count, 120)
+        let post = try await fixture.view.callAsyncJavaScript("""
+        return (await nostr.signEvent({kind:1,created_at:Math.floor(Date.now()/1000),tags:[],content:'another draft'})).kind;
+        """, arguments: [:], in: nil, contentWorld: .page)
+        XCTAssertEqual(post as? Int, 1)
+        XCTAssertTrue(fixture.browser.blockedRequests.isEmpty)
+    }
+
+    func testMinimizeCancelsEveryQueuedRelayRequestAndLateSettingsCannotRestartIt() async throws {
+        let gate = BrowserRelaySettingsGate()
+        let fixture = try BrowserSecurityFixture(origin: "https://jumble.social", relaySettingsProvider: { await gate.snapshot() })
+        defer { gate.release(); fixture.close() }
+        try await fixture.load()
+        _ = try await fixture.view.evaluateJavaScript("""
+        window.queuedRelays = Promise.all(Array.from({length:12},(_,index) =>
+          nostr.signEvent({kind:22242,created_at:Math.floor(Date.now()/1000),
+            tags:[['relay','wss://relay.example.invalid'],['challenge','cancel-'+index]],content:''})
+            .then(() => false, () => true)));
+        true;
+        """)
+        try await fixture.waitUntil { gate.waiters.count == 1 }
+        fixture.browser.setPresented(false)
+        gate.release()
+        let canceled = try await fixture.view.callAsyncJavaScript(
+            "return (await window.queuedRelays).every(value => value);",
+            arguments: [:], in: nil, contentWorld: .page)
+        XCTAssertEqual(canceled as? Bool, true)
+        fixture.browser.setPresented(true)
+        XCTAssertTrue(fixture.signer.approvals.isEmpty)
+        XCTAssertTrue(fixture.browser.blockedRequests.isEmpty)
+    }
+
+    func testMalformedAuthenticationIsVisibleInsteadOfHiddenAsRelayNoise() async throws {
+        let fixture = try BrowserSecurityFixture(origin: "https://primal.net")
+        defer { fixture.close() }
+        try await fixture.load()
+        let result = try await fixture.view.callAsyncJavaScript("""
+        try {
+          await nostr.signEvent({kind:22242,created_at:Math.floor(Date.now()/1000),
+            tags:[['domain','primal.net'],['challenge','private-nonce']],content:''});
+          return false;
+        } catch (_) { return true; }
+        """, arguments: [:], in: nil, contentWorld: .page)
+        XCTAssertEqual(result as? Bool, true)
+        let blocked = try XCTUnwrap(fixture.browser.blockedRequests.first)
+        XCTAssertFalse(blocked.canAllow)
+        XCTAssertEqual(blocked.actionName, "Unrecognized sign-in request")
+        XCTAssertFalse(blocked.reason.contains("private-nonce"))
+        XCTAssertTrue(fixture.signer.approvals.isEmpty)
+    }
+
+    func testReadOnlyAccountsAreRejectedAndRemoteSignerAccountsCanBeSelected() throws {
+        let fixture = try BrowserSecurityFixture()
+        defer { fixture.close() }
+        let readOnly = CloudAccount(entity: fixture.account.entity, insertInto: fixture.context)
+        readOnly.publicKey = String(repeating: "b", count: 64)
+        XCTAssertFalse(NostrBrowserModel.canUseAccount(readOnly))
+        fixture.browser.selectAccount(readOnly)
+        XCTAssertEqual(fixture.browser.accountPubkey, fixture.account.publicKey)
+        let remote = CloudAccount(entity: fixture.account.entity, insertInto: fixture.context)
+        remote.publicKey = String(repeating: "c", count: 64)
+        remote.isNC = true
+        XCTAssertTrue(NostrBrowserModel.canUseAccount(remote))
+        fixture.browser.selectAccount(remote)
+        XCTAssertEqual(fixture.browser.accountPubkey, remote.publicKey)
+        fixture.browser.selectAccount(readOnly)
+        XCTAssertEqual(fixture.browser.accountPubkey, remote.publicKey)
+        fixture.context.delete(remote)
+        XCTAssertFalse(NostrBrowserModel.canUseAccount(remote))
+    }
+
+    func testWebsiteChallengeLoginSignsAndCanBeAllowedWithoutRelayPermission() async throws {
+        let fixture = try BrowserSecurityFixture(origin: "https://account.nostr.build")
+        defer { fixture.close() }
+        try await fixture.load()
+        let script = """
+        try {
+            return (await nostr.signEvent({kind:22242,created_at:Math.floor(Date.now()/1000),
+              tags:[['challenge','website-login'],['url','https://account.nostr.build']],content:''})).kind;
+        } catch (_) { return 'denied'; }
+        """
+        let signed = try await fixture.view.callAsyncJavaScript(script, arguments: [:], in: nil, contentWorld: .page)
+        XCTAssertEqual(signed as? Int, 22242)
+        XCTAssertTrue(fixture.browser.blockedRequests.isEmpty)
+        XCTAssertEqual(fixture.signer.approvals.count, 1)
+        fixture.browser.setWebsiteAuth(false)
+        for duration in [BrowserGrantDuration.once, .always] {
+            async let login = fixture.view.callAsyncJavaScript(script, arguments: [:], in: nil, contentWorld: .page)
+            try await fixture.waitUntil { fixture.browser.blockedRequests.first?.kind == 22242 }
+            let item = try XCTUnwrap(fixture.browser.blockedRequests.first)
+            XCTAssertEqual(item.actionName, "Website sign-in")
+            XCTAssertTrue(fixture.browser.canAllow(item))
+            fixture.browser.allowBlockedRequest(item.id, duration: duration)
+            let result = try await login
+            XCTAssertEqual(result as? Int, 22242)
+            XCTAssertEqual(fixture.browser.actionGrants.map(\.kind), duration == .once ? [] : [27235])
+        }
+        fixture.browser.setWebsiteAuth(false)
+        XCTAssertTrue(fixture.browser.actionGrants.isEmpty)
+        XCTAssertEqual(fixture.signer.approvals.count, 3)
+    }
+
     func testConnectionApprovalResumesLoginAndAlwaysRemembersTheSite() async throws {
         let fixture = try BrowserSecurityFixture()
         defer { fixture.close() }
@@ -422,6 +622,7 @@ final class BrowserSecurityBoundaryTests: XCTestCase {
         let second = CloudAccount(entity: fixture.account.entity, insertInto: fixture.context)
         second.publicKey = String(repeating: "b", count: 64)
         second.name = "Other browser test"
+        second.flagsSet = ["full_account"]
         AccountsState.shared.accounts.append(second)
         fixture.browser.selectAccount(second)
         fixture.attach()
@@ -515,7 +716,8 @@ private final class BrowserSecurityFixture {
     let suite = "browser.security.test." + UUID().uuidString
     var view: WKWebView { browser.webView }
 
-    init(origin: String = "https://security.example.invalid", approvalWaitSeconds: UInt64 = 120) throws {
+    init(origin: String = "https://security.example.invalid", approvalWaitSeconds: UInt64 = 120,
+         relaySettingsProvider: @escaping @MainActor () async -> [BrowserRelaySetting] = { [] }) throws {
         baseURL = try XCTUnwrap(URL(string: origin))
         let model = DataProvider.shared().container.managedObjectModel
         let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
@@ -525,8 +727,9 @@ private final class BrowserSecurityFixture {
         account = CloudAccount(entity: try XCTUnwrap(model.entitiesByName["CloudAccount"]), insertInto: context)
         account.publicKey = String(repeating: "a", count: 64)
         account.name = "Browser boundary test"
+        account.flagsSet = ["full_account"]
         preferences = try XCTUnwrap(UserDefaults(suiteName: suite))
-        browser = NostrBrowserModel(relaySettingsProvider: { [] }, signer: signer, preferences: preferences, approvalWaitSeconds: approvalWaitSeconds)
+        browser = NostrBrowserModel(relaySettingsProvider: relaySettingsProvider, signer: signer, preferences: preferences, approvalWaitSeconds: approvalWaitSeconds)
         browser.selectAccount(account)
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         window = UIWindow(windowScene: scene)
@@ -576,6 +779,26 @@ private final class BrowserSecurityFixture {
         window.isHidden = true
         AccountsState.shared.accounts.removeAll { $0.managedObjectContext === context }
         preferences.removePersistentDomain(forName: suite)
+    }
+}
+
+@MainActor
+private final class BrowserRelaySettingsGate {
+    var waiters: [CheckedContinuation<Void, Never>] = []
+    private var released = false
+
+    func snapshot() async -> [BrowserRelaySetting] {
+        if !released {
+            await withCheckedContinuation { waiters.append($0) }
+        }
+        return [BrowserRelaySetting(url: "wss://relay.example.invalid", auth: true)]
+    }
+
+    func release() {
+        released = true
+        let waiting = waiters
+        waiters.removeAll()
+        for waiter in waiting { waiter.resume() }
     }
 }
 

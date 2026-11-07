@@ -67,7 +67,12 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
     private(set) var isPresented = false
     private let relaySettingsProvider: @MainActor () async -> [BrowserRelaySetting]
     private var requestTimes: [Date] = []
+    private var relayRequestTimes: [Date] = []
     private var signatureTimes: [Date] = []
+    private var relaySignatureTimes: [Date] = []
+    private var relayQueue: [UUID] = []
+    private var activeRelayRequest: UUID?
+    private var signingRequests: Set<UUID> = []
     private var previousPanTranslation: CGFloat = 0
     private var scrollTravel: CGFloat = 0
     private var addressEdited = false
@@ -186,7 +191,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
     }
 
     func selectAccount(_ account: CloudAccount) {
-        guard !account.isDeleted, account.managedObjectContext != nil else { return }
+        guard Self.canUseAccount(account) else { return }
         guard accountPubkey != account.publicKey else { return }
         postLinkTask?.cancel()
         postLinkTask = nil
@@ -196,6 +201,10 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         accountName = account.anyName
         accountPictureURL = account.pictureUrl
         resetSession()
+    }
+
+    static func canUseAccount(_ account: CloudAccount) -> Bool {
+        !account.isDeleted && account.managedObjectContext != nil && (account.isFullAccount || account.isNC)
     }
 
     private func resetSession() {
@@ -396,7 +405,8 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             }
             return
         }
-        BrowserActionPermissions(preferences: preferences).allow(kind: item.kind, account: item.scope.accountPubkey,
+        let kind = item.event.map { BrowserSigningPolicy.permissionKind(for: $0) } ?? item.kind
+        BrowserActionPermissions(preferences: preferences).allow(kind: kind, account: item.scope.accountPubkey,
                                                                 origin: item.scope.origin, duration: duration, destination: item.destination)
         let retryIDs = blockedRequests.filter { $0.kind == item.kind && $0.scope == item.scope && $0.destination == item.destination && $0.waiting }.map(\.id)
         blockedRequests.removeAll { $0.kind == item.kind && $0.scope == item.scope && $0.destination == item.destination }
@@ -436,14 +446,24 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
     }
 
     private func takePending(_ id: UUID) -> PendingRequest? {
+        signingRequests.remove(id)
         oneTimeApprovals.remove(id)
         timeouts.removeValue(forKey: id)?.cancel()
         signer.cancel(id)
         if let index = blockedRequests.firstIndex(where: { $0.id == id }) { blockedRequests[index].waiting = false }
-        return pending.removeValue(forKey: id)
+        let request = pending.removeValue(forKey: id)
+        relayQueue.removeAll { $0 == id }
+        if activeRelayRequest == id {
+            activeRelayRequest = nil
+            if !relayQueue.isEmpty {
+                Task { @MainActor [weak self] in self?.startNextRelayRequest() }
+            }
+        }
+        return request
     }
 
     private func cancelPending() {
+        relayQueue.removeAll()
         if let item = blockedRequests.first(where: { $0.kind == -1 }) {
             endConnectionRequest(item.id, reason: "Browser session changed.")
         }
@@ -471,19 +491,20 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
               let documentToken, let origin, BrowserSigningPolicy.origin(webView.url) == origin,
               UIApplication.shared.applicationState == .active,
               BrowserSignedEvent.isHex(accountPubkey, count: 64),
-              AccountsState.shared.accounts.contains(where: { !$0.isDeleted && $0.publicKey == accountPubkey }) else { return nil }
+              AccountsState.shared.accounts.contains(where: { Self.canUseAccount($0) && $0.publicKey == accountPubkey }) else { return nil }
         return BrowserRequestScope(documentToken: documentToken, origin: origin, accountPubkey: accountPubkey)
     }
 
     func receive(_ message: WKScriptMessage, reply: @escaping (Any?, String?) -> Void) {
         let now = Date()
-        requestTimes.removeAll { now.timeIntervalSince($0) >= 60 }
-        guard requestTimes.count < 120 else { reply(nil, "Nostur request limit reached."); return }
-        requestTimes.append(now)
+        let decodedRequest = BrowserBridgeRequest.decode(message.body)
+        let relay = decodedRequest?.event.map { BrowserSigningPolicy.isRelayAuthentication($0) } ?? false
+        let accepted = relay ? Self.charge(&relayRequestTimes, limit: 240, now: now)
+            : Self.charge(&requestTimes, limit: 120, now: now)
+        guard accepted else { reply(nil, "Nostur request limit reached."); return }
         // Security origin and frame identity come from WebKit, not the page.
         let securityOrigin = message.frameInfo.securityOrigin
         let frameOrigin = BrowserSigningPolicy.origin(scheme: securityOrigin.protocol, host: securityOrigin.host, port: securityOrigin.port)
-        let decodedRequest = BrowserBridgeRequest.decode(message.body)
         guard message.webView === webView, message.frameInfo.isMainFrame,
               let request = decodedRequest,
               let scope = documentScope(), frameOrigin == scope.origin,
@@ -491,7 +512,8 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             reply(nil, "Nostur signing is unavailable for this page."); return
         }
         guard connected else {
-            guard request.event?.kind != 22242, pendingConnection.count < 4 else {
+            guard request.event.map({ !BrowserSigningPolicy.isRelayAuthentication($0) }) ?? true,
+                  pendingConnection.count < 4 else {
                 reply(nil, "Nostur signing is unavailable for this page.")
                 return
             }
@@ -547,15 +569,42 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             reply(Self.jsonString(scope.accountPubkey), nil)
             return
         }
-        guard let event = request.event, pending.count < 4 else { reply(nil, "Invalid request or too many pending requests."); return }
+        guard let event = request.event else { reply(nil, "Invalid request."); return }
+        let relay = BrowserSigningPolicy.isRelayAuthentication(event)
+        let waiting = pending.values.filter { BrowserSigningPolicy.isRelayAuthentication($0.event) == relay }.count
+        guard waiting < (relay ? BrowserBridge.relayPendingLimit : BrowserBridge.appPendingLimit) else {
+            reply(nil, "Too many pending Nostur requests."); return
+        }
         let id = UUID()
         pending[id] = PendingRequest(reply: reply, scope: scope, event: event)
+        if relay {
+            relayQueue.append(id)
+            armTimeout(id, seconds: 60)
+            startNextRelayRequest()
+            return
+        }
         armTimeout(id, seconds: 15)
+        authorizeAndSign(id, relaySettings: [])
+    }
+
+    private func startNextRelayRequest() {
+        guard activeRelayRequest == nil, let id = relayQueue.first, pending[id] != nil else { return }
+        relayQueue.removeFirst()
+        activeRelayRequest = id
         let provider = relaySettingsProvider
         Task { @MainActor [weak self] in
-            let settings = event.kind == 22242 ? await provider() : []
-            self?.authorizeAndSign(id, relaySettings: settings)
+            let settings = await provider()
+            guard let self, self.activeRelayRequest == id, self.pending[id] != nil else { return }
+            self.armTimeout(id, seconds: 15)
+            self.authorizeAndSign(id, relaySettings: settings)
         }
+    }
+
+    private static func charge(_ times: inout [Date], limit: Int, now: Date) -> Bool {
+        times.removeAll { now.timeIntervalSince($0) >= 60 }
+        guard times.count < limit else { return false }
+        times.append(now)
+        return true
     }
 
     private func reject(_ id: UUID, reason: String) {
@@ -564,23 +613,23 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         // routine when native relay authentication is off; retain diagnostics
         // without interrupting browsing with a banner.
         record(reason, blocked: true, showNotice: false, id: id)
-        if request.event.kind != 22242, currentScope() == request.scope,
+        if !BrowserSigningPolicy.isRelayAuthentication(request.event), currentScope() == request.scope,
            !blockedRequests.contains(where: { $0.id == id }) {
             blockedRequests.insert(BrowserBlockedRequest(id: id, scope: request.scope, kind: request.event.kind,
-                reason: reason, canAllow: false, waiting: false), at: 0)
+                reason: reason, canAllow: false, waiting: false, event: request.event), at: 0)
             blockedRequests = Array(blockedRequests.prefix(30))
         }
         request.reply(nil, "Nostur declined this request.")
     }
 
     private func authorizeAndSign(_ id: UUID, relaySettings: [BrowserRelaySetting]) {
-        guard let request = pending[id] else { return }
+        guard let request = pending[id], !signingRequests.contains(id) else { return }
         guard currentScope() == request.scope else { reject(id, reason: String(localized: "Browser session changed.")); return }
         let event = request.event
         if let reason = BrowserSigningPolicy.rejection(for: event, origin: request.scope.origin, social: socialAllowed,
                                                        websiteAuth: websiteAuthAllowed, uploads: uploadsAllowed, relaySettings: relaySettings, accountChanges: accountChangesAllowed, deletions: deletionsAllowed, wallet: walletAllowed, allowedKinds: allowedKinds, httpDestinations: httpDestinations) {
             let destination = BrowserSigningPolicy.externalHTTPDestination(for: event, from: request.scope.origin)
-            guard BrowserSigningPolicy.canGrant(event.kind),
+            guard BrowserSigningPolicy.canGrant(BrowserSigningPolicy.permissionKind(for: event)),
                   signingApproval(for: request, relaySettings: relaySettings, allowOnce: true) != nil else {
                 reject(id, reason: reason)
                 return
@@ -603,14 +652,16 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             }
         }
         let now = Date()
-        signatureTimes.removeAll { now.timeIntervalSince($0) >= 60 }
-        guard signatureTimes.count < 20 else {
+        let relay = BrowserSigningPolicy.isRelayAuthentication(event)
+        let accepted = relay ? Self.charge(&relaySignatureTimes, limit: 120, now: now)
+            : Self.charge(&signatureTimes, limit: 20, now: now)
+        guard accepted else {
             reject(id, reason: String(localized: "Signing limit reached. Try again in a minute.")); return
         }
         guard let approval = signingApproval(for: request, relaySettings: relaySettings, allowOnce: oneTimeApprovals.contains(id)) else {
             reject(id, reason: String(localized: "This request is not authorized.")); return
         }
-        signatureTimes.append(now)
+        signingRequests.insert(id)
         signer.sign(approval, requestID: id) { [weak self] result in self?.finish(id, result: result) }
     }
 
@@ -622,7 +673,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             if let destination = BrowserSigningPolicy.externalHTTPDestination(for: request.event, from: request.scope.origin) {
                 destinations.insert(destination)
             } else {
-                kinds.insert(request.event.kind)
+                kinds.insert(BrowserSigningPolicy.permissionKind(for: request.event))
             }
         }
         return BrowserSigningPolicy.approval(for: request.event, accountPubkey: request.scope.accountPubkey,
@@ -638,7 +689,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         let provider = relaySettingsProvider
         Task { @MainActor [weak self] in
             // Recheck relay permission after a remote signer/queue delay too.
-            let settings = request.event.kind == 22242 ? await provider() : []
+            let settings = BrowserSigningPolicy.isRelayAuthentication(request.event) ? await provider() : []
             self?.deliver(id, result: result, relaySettings: settings)
         }
     }
@@ -655,7 +706,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
                 reject(id, reason: String(localized: "Signing failed.")); return
             }
             guard let response = takePending(id) else { return }
-            let name = BrowserEventDescription.name(for: request.event.kind)
+            let name = BrowserEventDescription.name(for: request.event)
             let kind = String(request.event.kind)
             record(String(localized: "Signed: \(name) (kind \(kind))."), blocked: false, id: id)
             blockedRequests.removeAll { $0.id == id }

@@ -34,9 +34,10 @@ struct BrowserBridgeRequest: Decodable {
     }
 
     static func decode(_ body: Any) -> BrowserBridgeRequest? {
-        guard let string = body as? String, string.utf8.count <= 131072,
+        guard let string = body as? String, string.utf8.count <= 1_048_576,
               let data = string.data(using: .utf8),
               let request = try? JSONDecoder().decode(Self.self, from: data),
+              string.utf8.count <= BrowserSigningPolicy.maximumRequestBytes(for: request.event?.kind ?? 0),
               UUID(uuidString: request.documentToken) != nil,
               (request.method == .getPublicKey && request.event == nil)
                 || (request.method == .signEvent && request.event != nil) else { return nil }
@@ -77,6 +78,27 @@ struct BrowserSignedEvent: Codable, Equatable, Sendable {
 
 enum BrowserBridge {
     static let world = WKContentWorld.world(name: "NosturSignerTransport")
+    static let appPendingLimit = 4
+    static let relayPendingLimit = 32
+
+    // Used in both content worlds for transport admission only. Native policy
+    // remains authoritative for the relay setting, origin, account and payload.
+    private static let relayAuthenticationPredicate = #"""
+    event => {
+      if (event?.kind !== 22242 || event.content !== '' || !Array.isArray(event.tags)
+          || event.tags.length > 256 || !event.tags.every(tag => Array.isArray(tag) && tag.length > 0
+            && tag.length <= 16 && tag.every(value => typeof value === 'string' && value.length <= 4096))) return false;
+      if (event.tags.some(tag => ['url','u','domain','method','action','origin','client-origin'].includes(tag[0]))) return false;
+      const relays = event.tags.filter(tag => tag[0] === 'relay');
+      const challenges = event.tags.filter(tag => tag[0] === 'challenge');
+      if (relays.length !== 1 || relays[0].length !== 2 || challenges.length !== 1
+          || challenges[0].length !== 2 || !challenges[0][1]) return false;
+      try {
+        const url = new URL(relays[0][1]);
+        return ['wss:','ws:'].includes(url.protocol) && !!url.hostname && !url.username && !url.password && !url.hash;
+      } catch (_) { return false; }
+    }
+    """#
 
     static func install(in controller: WKUserContentController, handler: WKScriptMessageHandlerWithReply) {
         controller.addScriptMessageHandler(handler, contentWorld: world, name: "nostur")
@@ -95,10 +117,11 @@ enum BrowserBridge {
     (() => {
       if (window.top !== window) return;
       const pending = new Map();
+      const isRelayAuthentication = \#(relayAuthenticationPredicate);
       const post = window.postMessage.bind(window);
       let sequence = 0;
       window.addEventListener('message', event => {
-        if (!event.isTrusted || event.source !== window || typeof event.data !== 'string' || event.data.length > 262144) return;
+        if (!event.isTrusted || event.source !== window || typeof event.data !== 'string' || event.data.length > 2097152) return;
         let reply;
         try { reply = JSON.parse(event.data); } catch (_) { return; }
         if (reply?.channel !== 'nostur.response.v1' || !pending.has(reply.id)) return;
@@ -109,12 +132,17 @@ enum BrowserBridge {
         else request.resolve(reply.result);
       });
       const request = (method, event) => new Promise((resolve, reject) => {
-        if (pending.size >= 4) { reject(new Error('Too many pending Nostur requests.')); return; }
+        const relay = method === 'signEvent' && isRelayAuthentication(event);
+        const count = [...pending.values()].filter(request => request.relay === relay).length;
+        if (count >= (relay ? \#(relayPendingLimit) : \#(appPendingLimit))) {
+          reject(new Error('Too many pending Nostur requests.')); return;
+        }
         let payload = null;
         if (method === 'signEvent') {
           if (!event || !Number.isSafeInteger(event.created_at) || !Number.isInteger(event.kind)
               || event.kind < 0 || event.kind > 65535 || typeof event.content !== 'string'
-              || event.content.length > 65536 || !Array.isArray(event.tags) || event.tags.length > 256
+              || event.content.length > 65536 || !Array.isArray(event.tags)
+              || event.tags.length > ([3,10000].includes(event.kind) ? 10000 : 256)
               || !event.tags.every(tag => Array.isArray(tag) && tag.length > 0 && tag.length <= 16
                 && tag.every(value => typeof value === 'string' && value.length <= 4096))) {
             reject(new Error('Invalid or oversized signing request.')); return;
@@ -123,9 +151,11 @@ enum BrowserBridge {
         }
         const id = String(++sequence);
         const message = JSON.stringify({channel: 'nostur.request.v1', id, method, event: payload});
-        if (message.length > 131000) { reject(new Error('Signing request is too large.')); return; }
+        if (message.length > ([3,10000].includes(payload?.kind) ? 1048000 : 131000)) {
+          reject(new Error('Signing request is too large.')); return;
+        }
         const timeout = setTimeout(() => { pending.delete(id); reject(new Error('Nostur request timed out.')); }, 140000);
-        pending.set(id, {resolve, reject, timeout});
+        pending.set(id, {resolve, reject, timeout, relay});
         post(message, window.location.origin);
       });
       const nostr = Object.freeze({
@@ -148,29 +178,36 @@ enum BrowserBridge {
       const ready = new Promise(resolve => { activate = resolve; });
       globalThis.__nosturActivate = value => { token = value; activate(); };
       if (token) activate();
-      const pending = new Set();
-      let minute = Date.now(), count = 0;
+      const pending = new Map();
+      const isRelayAuthentication = \#(relayAuthenticationPredicate);
+      let minute = Date.now(), appCount = 0, relayCount = 0;
       window.addEventListener('message', async event => {
         if (!event.isTrusted || event.source !== window || event.origin !== window.location.origin
-            || typeof event.data !== 'string' || event.data.length > 131072) return;
+            || typeof event.data !== 'string' || event.data.length > 1048576) return;
         let request;
         try { request = JSON.parse(event.data); } catch (_) { return; }
         if (request?.channel !== 'nostur.request.v1' || typeof request.id !== 'string' || request.id.length > 64) return;
         const reply = (result, error) => post(JSON.stringify({channel: 'nostur.response.v1', id: request.id, result, error}), window.location.origin);
-        if (Date.now() - minute >= 60000) { minute = Date.now(); count = 0; }
-        if (++count > 120 || pending.size >= 4 || pending.has(request.id)) { reply(null, 'Nostur request limit reached.'); return; }
+        const relay = request.method === 'signEvent' && isRelayAuthentication(request.event);
+        const byteLimit = [3,10000].includes(request.event?.kind) ? 1048576 : 131072;
+        if (encoder.encode(event.data).length > byteLimit) { reply(null, 'Signing request is too large.'); return; }
+        if (Date.now() - minute >= 60000) { minute = Date.now(); appCount = 0; relayCount = 0; }
+        const count = relay ? ++relayCount : ++appCount;
+        const waiting = [...pending.values()].filter(value => value === relay).length;
+        if (count > (relay ? 240 : 120) || waiting >= (relay ? \#(relayPendingLimit) : \#(appPendingLimit))
+            || pending.has(request.id)) { reply(null, 'Nostur request limit reached.'); return; }
         if (request.method !== 'getPublicKey' && request.method !== 'signEvent') { reply(null, 'Unsupported Nostur capability.'); return; }
-        pending.add(request.id);
+        pending.set(request.id, relay);
         let timer;
         try {
           await Promise.race([ready, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Page is not ready.')), 15000); })]);
           const message = JSON.stringify({documentToken: token, method: request.method, event: request.event});
-          if (encoder.encode(message).length > 131072) throw new Error('Signing request is too large.');
+          if (encoder.encode(message).length > byteLimit) throw new Error('Signing request is too large.');
           const result = await handler.postMessage(message);
           reply(JSON.parse(result), null);
         } catch (_) {
           // Do not reflect arbitrary native errors or web-controlled exceptions.
-          reply(null, 'Nostur declined this request. Check website controls.');
+          reply(null, 'Nostur declined this request. Check Recent activity in Nostur.');
         } finally { clearTimeout(timer); pending.delete(request.id); }
       });
     })();
