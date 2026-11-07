@@ -399,29 +399,29 @@ struct MainFeedsScreen: View {
                 
                 // ZAPPED/HOT/ARTICLES/GALLERY
                 if la.viewFollowingPublicKeys.count > 10 {
-                    AvailableWidthContainer {
-                        switch selectedSubTab {
-                        case "Emoji":
-                            EmojiFeed()
-                                .environmentObject(emojiVM)
-                        case "Zapped":
-                            Zapped()
-                                .environmentObject(zappedVM)
-                        case "Hot":
-                            Hot()
-                                .environmentObject(hotVM)
-//                        case "Discover":
-//                            Discover()
-//                                .environmentObject(discoverVM)
-                        case "Articles":
-                            ArticlesFeed()
-                                .environmentObject(articlesVM)
-                        case "Gallery":
-                            Gallery()
-                                .environmentObject(galleryVM)
-                        default:
-                            EmptyView()
+                    GeometryReader { geometry in
+                        Group {
+                            switch selectedSubTab {
+                            case "Emoji":
+                                EmojiFeed()
+                                    .environmentObject(emojiVM)
+                            case "Zapped":
+                                Zapped()
+                                    .environmentObject(zappedVM)
+                            case "Hot":
+                                Hot()
+                                    .environmentObject(hotVM)
+                            case "Articles":
+                                ArticlesFeed()
+                                    .environmentObject(articlesVM)
+                            case "Gallery":
+                                Gallery()
+                                    .environmentObject(galleryVM)
+                            default:
+                                EmptyView()
+                            }
                         }
+                        .environment(\.availableWidth, geometry.size.width)
                     }
                 }
             }
