@@ -154,6 +154,16 @@ struct YearReviewPeriod: Codable, Equatable, Sendable {
         end = max(end, Int64(min(next, now).timeIntervalSince1970))
     }
 
+    /// Presentation only: the report still counts through its actual cutoff.
+    var showsYearToDateLabel: Bool {
+        guard isYearToDate else { return false }
+        if monthLimit != nil { return true }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: timeZoneIdentifier) ?? .current
+        let sharingStart = calendar.date(from: DateComponents(year: year, month: 12, day: 15))!
+        return end < Int64(sharingStart.timeIntervalSince1970)
+    }
+
     var cutoffDate: Date { Date(timeIntervalSince1970: TimeInterval(max(start, end - 1))) }
 
     var calendarDays: Int {
@@ -234,6 +244,12 @@ struct YearReviewPollActivity: Equatable, Sendable {
     let mostVotedCount: Int
 }
 
+struct YearReviewThreadStory: Equatable, Sendable {
+    let post: YearReviewPost
+    let activeDays: [Date]
+    let newConversations: Int
+}
+
 struct YearReviewReport: Equatable, Sendable {
     let period: YearReviewPeriod
     let gang: [YearReviewPerson]
@@ -243,6 +259,8 @@ struct YearReviewReport: Equatable, Sendable {
     let unresolvedParents: Int
     let excludedAuthors: Int
     var mostActiveDay: YearReviewActiveDay? = nil
+    var longestPostingStreak = 0
+    var longestPostingBreak = 0
     var mostReacted: YearReviewPost? = nil
     var mostZapped: YearReviewPost? = nil
     var mostZapValue: YearReviewPost? = nil
@@ -258,6 +276,8 @@ struct YearReviewReport: Equatable, Sendable {
     var unverifiedZaps = 0
     var anonymousZaps = 0
     var polls: YearReviewPollActivity? = nil
+    var returningThread: YearReviewThreadStory? = nil
+    var newConversations: YearReviewThreadStory? = nil
 
     var averagePostsPerDay: Double { Double(ownPostCount) / Double(period.calendarDays) }
 
@@ -341,6 +361,20 @@ enum YearReviewAnalyzer {
         var posts: [String: YearReviewPost] = [:]
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: period.timeZoneIdentifier) ?? .current
+        // Look before the report window too: earlier saved replies can rule out
+        // a "first exchange" even if they do not contribute to this year's count.
+        var firstExchanges: [String: (timestamp: Int64, id: String)] = [:]
+        for (id, item) in index where canonical(id) == id {
+            guard let parentId = item.parent.flatMap(canonical), let parent = index[parentId],
+                  item.pubkey != parent.pubkey, item.createdAt >= parent.createdAt,
+                  item.pubkey == owner || parent.pubkey == owner,
+                  !blocked.contains(item.pubkey), !blocked.contains(parent.pubkey) else { continue }
+            let peer = item.pubkey == owner ? parent.pubkey : item.pubkey
+            if let first = firstExchanges[peer], (first.timestamp, first.id) <= (item.createdAt, id) { continue }
+            firstExchanges[peer] = (item.createdAt, id)
+        }
+        var threadDays: [String: Set<Date>] = [:]
+        var newPeople: [String: Int] = [:]
         var postingDays: [Date: Int] = [:]
         for (id, item) in index where item.pubkey == owner && period.contains(item.publishedAt) && canonical(id) == id {
             posts[id] = YearReviewPost(id: id, content: item.preview, replies: 0, respondents: 0, kind: item.kind, coordinate: item.coordinate)
@@ -430,6 +464,7 @@ enum YearReviewAnalyzer {
                 // A conversation includes descendants, while relationship cards below
                 // continue to count only direct exchanges. Root tags also bridge gaps
                 // when a relay has not returned an intermediate parent.
+                let day = calendar.startOfDay(for: Date(timeIntervalSince1970: Double(event.createdAt)))
                 var pending = [event.parentId, event.rootId].compactMap { $0 }
                 var visited: Set<String> = [event.id]
                 while let reference = pending.popLast() {
@@ -438,6 +473,14 @@ enum YearReviewAnalyzer {
                     if posts[ancestorId] != nil {
                         posts[ancestorId]!.replies += 1
                         replies[ancestorId, default: []].insert(event.pubkey)
+                        if event.pubkey != owner, ancestor.parent == nil, ancestor.root == nil,
+                           event.createdAt >= ancestor.createdAt {
+                            threadDays[ancestorId, default: []].insert(day)
+                            // A first direct reply to the owner can be nested under this post.
+                            if firstExchanges[event.pubkey]?.id == event.id {
+                                newPeople[ancestorId, default: 0] += 1
+                            }
+                        }
                     }
                     pending.append(contentsOf: [ancestor.parent, ancestor.root].compactMap { $0 })
                 }
@@ -508,15 +551,55 @@ enum YearReviewAnalyzer {
         let createdPolls = polls.keys.filter { posts[$0] != nil }.count
         let pollActivity = createdPolls > 0 || votedIn > 0
             ? YearReviewPollActivity(created: createdPolls, voters: voters.count, votedIn: votedIn, mostVoted: mostVoted, mostVotedCount: mostVotedCount) : nil
+        func threadStory(_ post: YearReviewPost?) -> YearReviewThreadStory? {
+            post.map {
+                YearReviewThreadStory(post: $0, activeDays: (threadDays[$0.id] ?? []).sorted(),
+                    newConversations: newPeople[$0.id] ?? 0)
+            }
+        }
+        let returningThread = threadStory(best {
+            let count = threadDays[$0.id]?.count ?? 0
+            return count >= 5 ? Int64(count) : 0
+        })
+        let newConversations = threadStory(best {
+            let count = newPeople[$0.id] ?? 0
+            return count >= 4 ? Int64(count) : 0
+        })
+        // Missing months split runs. Only count a break bounded by saved posts.
+        var longestStreak = 0
+        var longestBreak = 0
+        var streak = 0
+        var gap = 0
+        var hasPosted = false
+        var day = calendar.startOfDay(for: Date(timeIntervalSince1970: Double(period.start)))
+        while day <= period.cutoffDate {
+            if !period.contains(Int64(day.timeIntervalSince1970)) {
+                streak = 0
+                gap = 0
+                hasPosted = false
+            } else if postingDays[day] != nil {
+                streak += 1
+                longestStreak = max(longestStreak, streak)
+                longestBreak = max(longestBreak, gap)
+                gap = 0
+                hasPosted = true
+            } else {
+                streak = 0
+                if hasPosted { gap += 1 }
+            }
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
         return YearReviewReport(period: period, gang: Array(gang.prefix(5)), conversation: best { Int64($0.replies) },
             mentionedBy: mentionedBy, ownPostCount: posts.count, unresolvedParents: unresolved, excludedAuthors: excluded.count,
-            mostActiveDay: mostActiveDay, mostReacted: best { Int64($0.reactions) }, mostZapped: best { Int64($0.zaps) }, mostZapValue: best { $0.millisats },
+            mostActiveDay: mostActiveDay, longestPostingStreak: longestStreak, longestPostingBreak: longestBreak, mostReacted: best { Int64($0.reactions) }, mostZapped: best { Int64($0.zaps) }, mostZapValue: best { $0.millisats },
             mostInteracted: rank(Array(interactions.values)) { $0.interactions },
             mostTalked: rank(all) { $0.sent + $0.received }, topReplyGuy: rank(all) { $0.received }.first,
             supporters: rank(all) { $0.supportCount }, reactedBy: rank(all) { $0.reactions },
             liked: rank(Array(liked.values)) { $0.reactions }, zappedBy: rank(all) { $0.zaps },
             zapped: rank(Array(zapped.values)) { $0.zaps }, amplifiedBy: rank(all) { $0.reposts + $0.quotes },
-            unverifiedZaps: unverifiedZaps, anonymousZaps: anonymousZaps, polls: pollActivity)
+            unverifiedZaps: unverifiedZaps, anonymousZaps: anonymousZaps, polls: pollActivity,
+            returningThread: returningThread, newConversations: newConversations)
     }
 
     static func mentions(_ event: YearReviewEvent, pubkey: String) -> Bool {

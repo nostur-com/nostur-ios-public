@@ -426,3 +426,22 @@ not discard the report's own saved authorization data.
 The main progress count includes only missing providers with an endpoint and an
 eligible retry, not cached recipients. Cached/unresolved breakdowns are omitted
 from the main screen. Unrelated receipts do not inflate unverified-zap warnings.
+
+## Conversation stories
+
+* **Still talking about it** ranks original posts by distinct local calendar
+  days on which others replied, including replies further down the thread. The
+  dots represent days with replies, not a continuous streak.
+* **Beyond the usual crowd** counts distinct people whose earliest saved direct
+  reply exchange was their reply to the report owner in one of the owner's
+  threads. An earlier saved exchange elsewhere rules out that person. These are
+  first exchanges found in available history, not a claim about all of Nostr.
+
+The stories use the existing archive and do not add relay queries. They follow
+the report's trust and block filters and exclude deleted events. The two post
+highlights use the regular preview and post navigation paths.
+
+Posting rhythm also shows streaks of at least three consecutive posting days
+and breaks of at least seven days between saved posts. Calculations use the
+report time zone and reset across unselected months. The thread stories
+require at least five distinct reply days or four first exchanges respectively.

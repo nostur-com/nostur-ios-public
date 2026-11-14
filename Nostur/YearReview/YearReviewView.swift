@@ -5,6 +5,7 @@ import Combine
 @MainActor
 struct YearReviewView: View {
     var initialYear: Int? = nil
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.containerID) private var containerID
     @EnvironmentObject private var account: LoggedInAccount
@@ -16,19 +17,16 @@ struct YearReviewView: View {
     @State private var showDelete = false
     @State private var showInfo = false
     @State private var showProfilePicker = false
-    @State private var shareImage: UIImage?
-    @State private var selectedMonth: YearReviewMonthProgress?
+    @State private var shareDraft: YearReviewShareDraft?
+    @State private var showHistory = false
     @State private var showRefreshSources = false
-    @State private var showShare = false
-    @State private var shareText = ""
     @State private var pendingSharePost: NewPostInfo?
-    @State private var isRendering = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
-                    if model.report?.period.isYearToDate ?? (model.year == YearReviewPeriod.currentYear) {
+                    if model.report?.period.showsYearToDateLabel ?? (model.year == YearReviewPeriod.currentYear) {
                         Text("\(String(model.year)) so far").font(.largeTitle.bold())
                     } else {
                         Text("My Nostr in \(String(model.year))").font(.largeTitle.bold())
@@ -52,67 +50,25 @@ struct YearReviewView: View {
                     }
 #endif
                 }
-                if model.isRunning && !model.isDownloading {
-                    HStack(spacing: 8) {
-                        ProgressView().controlSize(.small)
-                        Text("Preparing saved report…").font(.subheadline)
+                YearReviewHistorySummary(model: model, openHistory: { showHistory = true })
+                if !model.isRunning, (model.report?.ownPostCount ?? 0) == 0, !hasShareableCard,
+                   model.collection == nil {
+                    Button { showRefreshSources = true } label: {
+                        Label("Fetch history…", systemImage: "arrow.down.circle")
                     }
-                } else if model.isRunning {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 8) {
-                            Button { model.pause() } label: {
-                                Label("Pause collection", systemImage: "pause.fill").labelStyle(.iconOnly)
-                            }
-                            .buttonStyle(.borderless)
-                            ProgressView().controlSize(.small)
-                            Text(model.progressLabel).font(.subheadline.weight(.semibold))
-                        }
-                        YearReviewMonthCalendarView(collection: model.collection, period: model.currentPeriod, active: model.calendarActivity, activities: model.activeActivities, onSelect: { selectedMonth = $0 })
-                        if model.stage == .references, let collection = model.collection, collection.phase == .references {
-                            Text("\(collection.referenceQueriesChecked ?? 0) extra checks completed · \(collection.pending.count) queued")
-                                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                        }
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("\(model.archivedCounts.fromYou) posts or interactions by you")
-                            Text("\(model.archivedCounts.fromOthers) interactions by others")
-                        }.font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                    }
-                    .yearReviewCard()
-                    Label("You can use Nostur while collection runs. Keep the app on screen; or, if you close it, continue later from saved progress.", systemImage: "iphone")
-                        .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 4)
-                } else if model.report == nil {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Image(systemName: "sparkles").font(.largeTitle).foregroundStyle(theme.accent)
-                        Text("Your conversations. Your people. Your year.").font(.title2.bold())
-                    }
-                    .yearReviewCard()
-                }
-                if !model.isRunning {
-                    YearReviewMonthCalendarView(collection: model.collection, period: model.currentPeriod,
-                        active: [], activities: [], onSelect: { selectedMonth = $0 })
-                    YearReviewActionsView(hasHistory: model.collection != nil || model.archivedCounts.fromYou + model.archivedCounts.fromOthers > 0, canResume: model.canResume,
-                        disabled: model.owner.isEmpty || model.viewer != account.pubkey || model.isDeleting,
-                        create: { showRefreshSources = true },
-                        resume: { resetPreview(); model.start(download: true, resume: true) })
-                    if model.archivedCounts.fromYou + model.archivedCounts.fromOthers > 0 {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("Saved on this device")
-                            if let date = model.lastFetchedDate { Text("Last fetched \(date, format: .dateTime.day().month(.wide))") }
-                        }.font(.caption).foregroundStyle(.secondary)
-                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(model.owner.isEmpty || model.viewer != account.pubkey || model.isDeleting)
                 }
                 if let report = model.report {
-                    YearReviewHighlightsView(report: report, voice: model.owner == account.pubkey ? .reader : .neutral, names: model.names, pictures: model.pictures,
+                    YearReviewHighlightsView(report: report, voice: model.owner == account.pubkey ? .reader : .neutral(ownerName: model.ownerName), names: model.names, pictures: model.pictures,
                         enabledCards: model.enabledCards, hiddenPeople: model.hiddenPeople, previews: model.postPreviews, openPost: openPost, openProfile: openProfile,
                         toggleCard: { card in
-                            if model.enabledCards.contains(card) { model.enabledCards.remove(card) }
-                            else { model.enabledCards.insert(card) }
+                            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.28)) {
+                                if model.enabledCards.contains(card) { model.enabledCards.remove(card) }
+                                else { model.enabledCards.insert(card) }
+                            }
                         })
-                    if !hasShareableCard {
-                        Text("Show a section to include it in your shared report, or gather more history.")
-                            .foregroundStyle(.secondary).yearReviewCard()
-                    }
+
                 }
                 if let error = model.errorMessage {
                     Text(error).font(.footnote).foregroundStyle(.secondary)
@@ -138,16 +94,17 @@ struct YearReviewView: View {
                 Button { renderShare() } label: {
                     Label("Share your year", systemImage: "square.and.arrow.up").labelStyle(.iconOnly)
                 }
-                .disabled(!hasShareableCard || isRendering || model.isRunning)
+                .disabled(!hasShareableCard)
             }
         }
         .task(id: account.pubkey) {
             model.refreshHistoryRelayAuth()
-            guard openedAccount != account.pubkey else { return }
+            guard openedAccount != account.pubkey || model.viewer != account.pubkey || model.isConfiguring else { return }
             // The report owner may deliberately differ from the signed-in viewer.
             // Reopening must not reconfigure (and cancel) that owner's collection.
-            let needsConfiguration = model.viewer != account.pubkey || model.owner.isEmpty
+            let needsConfiguration = model.isConfiguring || model.viewer != account.pubkey || model.owner.isEmpty
             if needsConfiguration { await model.configure(account: account, loadSaved: false) }
+            guard !Task.isCancelled, !model.isConfiguring, model.viewer == account.pubkey else { return }
             if needsConfiguration, !model.isRunning, let initialYear, model.year != initialYear {
                 model.year = initialYear
                 openedAccount = account.pubkey
@@ -160,17 +117,12 @@ struct YearReviewView: View {
         }
 #if DEBUG
         .onChange(of: model.debugTwoMonths) { _, _ in
-            resetPreview()
             Task { await model.selectYear() }
         }
 #endif
         .onChange(of: model.year) { _, _ in
             if model.owner == account.pubkey { YearReviewDiscovery.markOpened(owner: account.pubkey, year: model.year) }
-            resetPreview()
             Task { await model.selectYear() }
-        }
-        .onChange(of: model.report) { _, _ in
-            if !showShare { shareImage = nil }
         }
         .onReceive(receiveNotification(.blockListUpdated).receive(on: DispatchQueue.main)) { _ in
             model.invalidatePreview()
@@ -213,8 +165,8 @@ struct YearReviewView: View {
                 }
             }
         }
-        .sheet(item: $selectedMonth) { month in
-            YearReviewMonthActionsView(model: model, initialMonth: month)
+        .sheet(isPresented: $showHistory) {
+            YearReviewHistoryView(model: model)
                 .environment(\.theme, theme)
         }
         .sheet(isPresented: $showRefreshSources) {
@@ -223,10 +175,9 @@ struct YearReviewView: View {
                     .safeAreaInset(edge: .bottom) {
                         Button {
                             showRefreshSources = false
-                            resetPreview()
                             model.start(download: true)
                         } label: {
-                            Label("Refresh selected relays", systemImage: "arrow.clockwise")
+                            Label("Fetch from selected relays", systemImage: "arrow.down.circle")
                                 .frame(maxWidth: .infinity).padding(.vertical, 8)
                         }
                         .buttonStyle(.borderedProminent).padding()
@@ -241,21 +192,19 @@ struct YearReviewView: View {
             }
             .environment(\.theme, theme)
         }
-        .sheet(isPresented: $showShare, onDismiss: {
-            shareImage = nil
+        .sheet(item: $shareDraft, onDismiss: {
             if let post = pendingSharePost {
                 pendingSharePost = nil
                 AppSheetsModel.shared.newPostInfo = post
             }
-        }) {
-            if let shareImage {
-                YearReviewSharePreview(image: shareImage) {
-                    let images = shareCardComposerImage(shareImage, altText: shareText).map { [$0] } ?? []
-                    pendingSharePost = NewPostInfo(kind: .textNote, initialText: shareText, initialImages: images)
-                    showShare = false
-                }
-                .environment(\.theme, theme)
+        }) { draft in
+            YearReviewSharePreview(content: draft.content, colorScheme: colorScheme) { image, people in
+                guard let attachment = shareCardComposerImage(image, altText: draft.caption) else { return }
+                let text = people.isEmpty ? draft.caption : draft.caption + "\n\n" + String(localized: "With \(people)")
+                pendingSharePost = NewPostInfo(kind: .textNote, initialText: text, initialImages: [attachment])
+                shareDraft = nil
             }
+            .environment(\.theme, theme)
         }
     }
 
@@ -293,7 +242,7 @@ struct YearReviewView: View {
 
             Section {
                 ForEach(YearReviewCard.allCases) { card in
-                    Toggle(card.title(for: model.owner == account.pubkey ? .reader : .neutral), isOn: Binding(
+                    Toggle(card.title(for: model.owner == account.pubkey ? .reader : .neutral(ownerName: model.ownerName)), isOn: Binding(
                         get: { model.enabledCards.contains(card) },
                         set: { if $0 { model.enabledCards.insert(card) } else { model.enabledCards.remove(card) } }
                     ))
@@ -332,14 +281,9 @@ struct YearReviewView: View {
 
     private var hasShareableCard: Bool {
         guard let report = model.report else { return false }
-        let cards: Set<YearReviewCard> = model.enabledCards
-        return cards.contains { card in
+        return YearReviewCard.allCases.contains { card in
             card.hasHighlight(in: report) || card.people(in: report).contains { !model.hiddenPeople.contains($0.pubkey) }
         }
-    }
-
-    private func resetPreview() {
-        shareImage = nil
     }
 
     private func shareCaption(_ report: YearReviewReport) -> String {
@@ -366,35 +310,32 @@ struct YearReviewView: View {
 
     private func renderShare() {
         guard let report = model.report, hasShareableCard else { return }
-        isRendering = true
-        let cards: Set<YearReviewCard> = model.enabledCards
-        let hidden = model.hiddenPeople
-        let names = model.names
-        let pictures = model.pictures
-        let collection = model.reportCollection
-        let owner = model.owner
-        Task {
-            defer { isRendering = false }
-            let image = await ShareCardRenderer.render(
-                YearReviewShareContent(report: report, voice: owner == AccountsState.shared.activeAccountPublicKey ? .author : .neutral, ownerName: model.ownerName, owner: owner, ownerPicture: model.ownerPicture, names: names,
-                    pictures: pictures, enabledCards: cards, hiddenPeople: hidden, collection: collection, previews: model.postPreviews)
-                    .environment(\.theme, theme)
-                    .environment(\.colorScheme, colorScheme)
-            )
-            guard model.owner == owner, model.year == report.period.year else { return }
-            if let image { shareText = shareCaption(report); shareImage = image; showShare = true }
-            else { model.errorMessage = String(localized: "The share image could not be created. Please try again.") }
-        }
+        let content = YearReviewShareContent(report: report,
+            voice: model.owner == AccountsState.shared.activeAccountPublicKey ? .author : .neutral(ownerName: model.ownerName),
+            ownerName: model.ownerName, owner: model.owner, ownerPicture: model.ownerPicture,
+            names: model.names, pictures: model.pictures, enabledCards: model.enabledCards,
+            hiddenPeople: model.hiddenPeople, collection: model.reportCollection, previews: model.postPreviews)
+        shareDraft = YearReviewShareDraft(content: content, caption: shareCaption(report))
     }
 }
 
-enum YearReviewVoice { case neutral, reader, author }
+enum YearReviewVoice: Equatable {
+    case neutral(ownerName: String)
+    case reader, author
+}
 
 enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
     case gang, activeDay, polls, conversation, mostReacted, mostZapped, mostZapValue, supporters, mentions
     case mostInteracted, mostTalked, replyGuy, reactedBy, liked, zappedBy, zapped, amplifiedBy
+    case returningThread, newConversations
     static let defaultSelection: Set<Self> = Set(allCases)
     var id: String { rawValue }
+    static func ordered(_ cards: [Self]) -> [Self] {
+        let featured: [Self] = [.activeDay, .returningThread, .newConversations, .gang, .conversation, .mostReacted, .mostZapped]
+        let primary = featured.filter { cards.contains($0) }
+        return primary + cards.filter { !primary.contains($0) }
+    }
+
     var title: LocalizedStringKey {
         switch self {
         case .gang: "Nostr Gang"
@@ -408,18 +349,22 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
         case .mentions: "Frequent mentions"
         case .mostInteracted: "Closest connections"
         case .mostTalked: "Public conversations"
-        case .replyGuy: "Top reply guy"
+        case .replyGuy: "Regular in the replies"
         case .reactedBy: "Biggest fans"
         case .liked: "Favorite posts"
         case .zappedBy: "Top zap senders"
         case .zapped: "Top zap recipients"
-        case .amplifiedBy: "Repost & quote leaders"
+        case .amplifiedBy: "Who spread the word?"
+        case .returningThread: "Still talking about it"
+        case .newConversations: "Beyond the usual crowd"
         }
     }
 
     func title(for voice: YearReviewVoice) -> LocalizedStringKey {
         switch voice {
-        case .neutral: return title
+        case .neutral(let ownerName):
+            if self == .amplifiedBy, !ownerName.isEmpty { return "Who spread \(ownerName)'s words?" }
+            return title
         case .reader:
             switch self {
             case .gang: return "Your Nostr Gang"
@@ -433,12 +378,13 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
             case .mentions: return "Who can't stop talking about you?"
             case .mostInteracted: return "Your closest connections"
             case .mostTalked: return "Your public conversations"
-            case .replyGuy: return "Your top reply guy"
+            case .replyGuy: return "Your regular in the replies"
             case .reactedBy: return "Your biggest fans"
             case .liked: return "You couldn't help reacting"
             case .zappedBy: return "Who sent you the most zaps?"
             case .zapped: return "Who you zapped the most"
             case .amplifiedBy: return "Who spread your words?"
+            case .returningThread, .newConversations: return title
             }
         case .author:
             switch self {
@@ -453,12 +399,13 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
             case .mentions: return "Who can't stop talking about me?"
             case .mostInteracted: return "My closest connections"
             case .mostTalked: return "My public conversations"
-            case .replyGuy: return "My top reply guy"
+            case .replyGuy: return "My regular in the replies"
             case .reactedBy: return "My biggest fans"
             case .liked: return "I couldn't help reacting"
             case .zappedBy: return "Who sent me the most zaps?"
             case .zapped: return "Who I zapped the most"
             case .amplifiedBy: return "Who spread my words?"
+            case .returningThread, .newConversations: return title
             }
         }
     }
@@ -474,6 +421,8 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
         case .supporters: "hands.clap.fill"
         case .mentions: "at"
         case .amplifiedBy: "arrow.2.squarepath"
+        case .returningThread: "calendar"
+        case .newConversations: "sparkles"
         }
     }
     func hasHighlight(in report: YearReviewReport) -> Bool {
@@ -483,6 +432,8 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
     func post(in report: YearReviewReport) -> YearReviewPost? {
         switch self {
         case .polls: report.polls?.mostVoted
+        case .returningThread: report.returningThread?.post
+        case .newConversations: report.newConversations?.post
         case .conversation: report.conversation
         case .mostReacted: report.mostReacted
         case .mostZapped: report.mostZapped
@@ -510,9 +461,115 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
 
 enum YearReviewShareFormat: String, Codable { case report, gang }
 
+@available(iOS 17.0, *)
+private struct YearReviewHistorySummary: View {
+    let model: YearReviewModel
+    let openHistory: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                if model.isRunning {
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        if !model.isDownloading { Text(model.savedReportProgressLabel) }
+                        else if let activity = model.activity, YearReviewCollection.isPrimary(activity.work.category) {
+                            Text("Fetching \(activity.monthName)")
+                        } else { Text(model.progressLabel) }
+                    }
+                    if model.isDownloading { Text("You can keep browsing.") }
+                } else {
+                    if model.report != nil && (model.archivedCounts.fromYou > 0 || model.archivedCounts.fromOthers > 0) {
+                        Text("Saved report")
+                    }
+                    if let date = model.lastFetchedDate {
+                        Text("Last fetched \(date, format: .dateTime.day().month(.abbreviated))")
+                    }
+                }
+            }
+            .font(.caption).foregroundStyle(.secondary)
+            Spacer(minLength: 8)
+            Button(action: openHistory) { Label("History", systemImage: "calendar") }
+                .buttonStyle(.bordered)
+                .disabled(model.owner.isEmpty || model.isDeleting)
+        }
+    }
+}
+
+@available(iOS 17.0, *)
+private struct YearReviewHistoryView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
+    let model: YearReviewModel
+    @State private var selectedMonth: YearReviewMonthProgress?
+    @State private var showSources = false
+    @State private var extraRelay = ""
+    @State private var invalidRelay = false
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    YearReviewMonthCalendarView(collection: model.collection, period: model.currentPeriod,
+                        active: model.calendarActivity, activities: model.activeActivities, onSelect: { selectedMonth = $0 })
+                    if model.isDownloading {
+                        Text(model.progressLabel).font(.subheadline.weight(.semibold))
+                        YearReviewCollectionProgressView(model: model)
+                        Button { model.pause() } label: { Label("Pause collection", systemImage: "pause.fill") }
+                        Text("You can keep browsing. Collection can continue while Nostur stays open.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    } else if !model.isRunning {
+                        YearReviewActionsView(hasHistory: model.collection != nil || model.lastFetchedDate != nil,
+                            canResume: model.canResume,
+                            retryFailed: model.collection.map { $0.pending.isEmpty && !$0.failed.isEmpty } ?? false,
+                            disabled: model.isDeleting || model.viewer != AccountsState.shared.activeAccountPublicKey,
+                            create: { showSources = true }, resume: { model.start(download: true, resume: true) })
+                        if let job = model.collection, job.phase == .finished && job.pending.isEmpty && job.failed.isEmpty {
+                            Text("Selected sources checked. Some history may still be missing.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }
+                    if let error = model.errorMessage {
+                        Text(error).font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                .padding(20)
+            }
+            .background(theme.listBackground)
+            .navigationTitle("History")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Dismiss")
+                }
+            }
+            .navigationDestination(isPresented: $showSources) {
+                YearReviewSourcesView(model: model, extraRelay: $extraRelay, invalidRelay: $invalidRelay)
+                    .safeAreaInset(edge: .bottom) {
+                        Button {
+                            showSources = false
+                            model.start(download: true)
+                        } label: {
+                            Label("Fetch from selected relays", systemImage: "arrow.down.circle")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent).padding()
+                        .background(theme.listBackground)
+                        .disabled(model.selectedRelays.isEmpty || model.isRunning)
+                    }
+            }
+            .sheet(item: $selectedMonth) { month in
+                YearReviewMonthActionsView(model: model, initialMonth: month)
+                    .environment(\.theme, theme)
+            }
+        }
+    }
+}
+
 private struct YearReviewActionsView: View {
     let hasHistory: Bool
     let canResume: Bool
+    let retryFailed: Bool
     let disabled: Bool
     let create: () -> Void
     let resume: () -> Void
@@ -520,7 +577,8 @@ private struct YearReviewActionsView: View {
     var body: some View {
         HStack(spacing: 12) {
             Button(action: canResume ? resume : create) {
-                if canResume { Label("Continue fetching", systemImage: "arrow.down.circle") }
+                if retryFailed { Label("Retry failed sources", systemImage: "arrow.clockwise") }
+                else if canResume { Label("Continue fetching", systemImage: "arrow.down.circle") }
                 else if hasHistory { Label("Refresh history…", systemImage: "arrow.clockwise") }
                 else { Label("Fetch history…", systemImage: "arrow.down.circle") }
             }
@@ -660,7 +718,7 @@ private struct YearReviewAboutView: View {
                         Text("Your most-loved post counts positive reaction events, like post details. People rankings count each person once per post. Supporters combine reactions, reposts and validated zaps.")
                         Text("You got people talking includes direct replies, sub-replies and your own replies in the collected conversation. People are counted once per thread. Relationship highlights count direct exchanges.")
                         Text("People rankings cover the report period with your trust filters applied. Most-loved post totals include all available positive reactions to posts from that year and update when more reactions are found.")
-                        Text("Your most active day counts public posts, including replies, pictures, videos, voice messages and articles. Reactions, reposts and zaps are not posts. Edited articles count once on their original publication day. The daily average includes every calendar day covered by the report, including days without posts.")
+                        Text("Posting rhythm counts public posts, including replies, polls, pictures, videos, voice messages and articles. Votes, reactions, reposts and zaps do not count. Edited articles count once on their original publication day. The daily average includes every calendar day covered by the report, including days without posts.")
                         Text("The mentions highlight needs more than ten explicit mentions in public posts or comments. Threading tags alone do not count.")
                     }
                     Divider()
@@ -774,6 +832,7 @@ private struct YearReviewCoverageView: View {
 }
 
 private struct YearReviewHighlightsView: View {
+    @State private var showMore = false
     let report: YearReviewReport
     let voice: YearReviewVoice
     let names: [String: String]
@@ -793,19 +852,35 @@ private struct YearReviewHighlightsView: View {
         }
     }
 
+    private var orderedCards: [YearReviewCard] {
+        YearReviewCard.ordered(visibleCards)
+    }
+
     var body: some View {
+        let cards = orderedCards
         VStack(alignment: .leading, spacing: 16) {
-            ForEach(visibleCards) { card in
-                if !enabledCards.contains(card), let toggleCard {
-                    YearReviewCollapsedCard(card: card, voice: voice, show: { toggleCard(card) })
-                } else {
-                    YearReviewHighlightCard(card: card, voice: voice, post: card.post(in: report), activeDay: card == .activeDay ? report.mostActiveDay : nil, averagePostsPerDay: report.averagePostsPerDay, pollActivity: card == .polls ? report.polls : nil, dateFormat: report.period.dateFormat,
-                        people: card.people(in: report).filter { !hiddenPeople.contains($0.pubkey) },
-                        names: names, pictures: pictures, preview: card.post(in: report).flatMap { previews[$0.id] }, openPost: openPost, openProfile: openProfile, hidePerson: hidePerson,
-                        hide: toggleCard.map { toggle in { toggle(card) } })
-                        .yearReviewCard()
+            ForEach(cards.prefix(3)) { card in row(card) }
+            if cards.count > 3 {
+                DisclosureGroup("More highlights", isExpanded: $showMore) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        ForEach(cards.dropFirst(3)) { card in row(card) }
+                    }.padding(.top, 12)
                 }
             }
+        }
+    }
+
+    @ViewBuilder private func row(_ card: YearReviewCard) -> some View {
+        if !enabledCards.contains(card), let toggleCard {
+            YearReviewCollapsedCard(card: card, voice: voice, show: { toggleCard(card) })
+                .transition(.opacity)
+        } else {
+            YearReviewHighlightCard(card: card, voice: voice, story: YearReviewConversationStoryContent(card: card, report: report), post: card.post(in: report), activeDay: card == .activeDay ? report.mostActiveDay : nil, averagePostsPerDay: report.averagePostsPerDay, postingRuns: YearReviewPostingRuns(streak: report.longestPostingStreak, gap: report.longestPostingBreak), pollActivity: card == .polls ? report.polls : nil, dateFormat: report.period.dateFormat,
+                people: card.people(in: report).filter { !hiddenPeople.contains($0.pubkey) },
+                names: names, pictures: pictures, preview: card.post(in: report).flatMap { previews[$0.id] }, openPost: openPost, openProfile: openProfile, hidePerson: hidePerson,
+                hide: toggleCard.map { toggle in { toggle(card) } })
+                .yearReviewCard()
+                .transition(.opacity)
         }
     }
 }
@@ -838,9 +913,11 @@ private struct YearReviewHighlightCard: View {
     @Environment(\.theme) private var theme
     let card: YearReviewCard
     let voice: YearReviewVoice
+    let story: YearReviewConversationStoryContent
     let post: YearReviewPost?
     let activeDay: YearReviewActiveDay?
     let averagePostsPerDay: Double
+    let postingRuns: YearReviewPostingRuns
     let pollActivity: YearReviewPollActivity?
     let dateFormat: Date.FormatStyle
     let people: [YearReviewPerson]
@@ -870,10 +947,12 @@ private struct YearReviewHighlightCard: View {
             }
             if let activeDay {
                 YearReviewActiveDayContent(day: activeDay, average: averagePostsPerDay, dateFormat: dateFormat)
+                postingRuns
             }
             if let pollActivity {
                 YearReviewPollActivityContent(activity: pollActivity)
             }
+            story
             if let post {
                 if card == .polls { Text("Your most-voted poll").font(.subheadline).foregroundStyle(.secondary) }
                 if let openPost {
@@ -908,19 +987,74 @@ private struct YearReviewHighlightCard: View {
 
 }
 
+private struct YearReviewConversationStoryContent: View {
+    @Environment(\.theme) private var theme
+    let card: YearReviewCard
+    let report: YearReviewReport
+
+    var body: some View {
+        switch card {
+        case .returningThread:
+            if let thread = report.returningThread {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Replies on \(thread.activeDays.count) different days").font(.headline)
+                    // Each dot is a day with a reply, not an elapsed day.
+                    HStack(spacing: 4) {
+                        ForEach(thread.activeDays.prefix(24), id: \.self) { _ in
+                            Circle().fill(theme.accent).frame(width: 6, height: 6)
+                        }
+                        if thread.activeDays.count > 24 {
+                            Text("+\(thread.activeDays.count - 24)").font(.caption)
+                        }
+                    }
+                    .accessibilityHidden(true)
+                }
+            }
+        case .newConversations:
+            if let story = report.newConversations {
+                Text("First exchanges found with \(story.newConversations) people in this thread")
+                    .font(.headline)
+            }
+        default: EmptyView()
+        }
+    }
+}
+
 private struct YearReviewPollActivityContent: View {
     let activity: YearReviewPollActivity
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if activity.created > 0 {
-                Text("\(activity.created) polls · \(activity.voters) voters")
-                    .font(.headline)
+                if activity.voters > 0 {
+                    Text("\(activity.created) polls · \(activity.voters) voters").font(.headline)
+                } else {
+                    Text("\(activity.created) polls").font(.headline)
+                }
             }
             if activity.votedIn > 0 {
                 Text("Polls voted in: \(activity.votedIn)")
                     .font(.subheadline)
             }
+        }
+    }
+}
+
+private struct YearReviewPostingRuns: View {
+    let streak: Int
+    let gap: Int
+
+    var body: some View {
+        if streak >= 3 || gap >= 7 {
+            VStack(alignment: .leading, spacing: 8) {
+                if streak >= 3 {
+                    Label("Longest posting streak: \(streak) days", systemImage: "flame")
+                }
+                if gap >= 7 {
+                    Label("Longest break: \(gap) days between posts", systemImage: "moon.zzz")
+                }
+            }
+            .font(.subheadline)
         }
     }
 }
@@ -937,6 +1071,7 @@ private struct YearReviewActiveDayContent: View {
 }
 
 private struct YearReviewPersonRow: View {
+    @Environment(\.locale) private var locale
     let person: YearReviewPerson
     let name: String
     let picture: URL?
@@ -975,13 +1110,27 @@ private struct YearReviewPersonRow: View {
     @ViewBuilder private var detail: some View {
         switch card {
         case .mentions: Text("Mentioned in \(person.mentions) posts")
-        case .gang, .mostTalked: Text("\(person.sent) replies sent · \(person.received) received")
-        case .replyGuy: Text("\(person.received) replies received")
+        case .gang, .mostTalked:
+            let total = person.sent + person.received
+            if person.sent > 0 && person.received > 0 { Text("\(total) replies back and forth") }
+            else if total > 0 { Text("\(total) replies") }
+        case .replyGuy: Text("\(person.received) replies")
         case .mostInteracted: Text("\(person.interactions) public interactions")
-        case .supporters: Text("\(person.reactions) reactions · \(person.reposts) reposts · \(person.zaps) zaps")
+        case .supporters:
+            Text(verbatim: [
+                person.reactions > 0 ? String(localized: "\(person.reactions) reactions", locale: locale) : nil,
+                person.reposts > 0 ? String(localized: "\(person.reposts) reposts", locale: locale) : nil,
+                person.zaps > 0 ? String(localized: "\(person.zaps) zaps", locale: locale) : nil
+            ].compactMap { $0 }.joined(separator: " · "))
         case .reactedBy, .liked: Text("\(person.reactions) posts reacted to")
-        case .zappedBy, .zapped: Text("\(person.zaps) zaps · \((person.millisats / 1000).formatted()) sats")
-        case .amplifiedBy: Text("\(person.reposts) reposts · \(person.quotes) quotes")
+        case .zappedBy, .zapped:
+            if person.millisats >= 1000 { Text("\(person.zaps) zaps · \((person.millisats / 1000).formatted()) sats") }
+            else { Text("\(person.zaps) zaps") }
+        case .amplifiedBy:
+            Text(verbatim: [
+                person.reposts > 0 ? String(localized: "\(person.reposts) reposts", locale: locale) : nil,
+                person.quotes > 0 ? String(localized: "\(person.quotes) quotes", locale: locale) : nil
+            ].compactMap { $0 }.joined(separator: " · "))
         default: EmptyView()
         }
     }
@@ -992,21 +1141,68 @@ private struct YearReviewSharePreview: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
     @State private var showSystemShare = false
-    let image: UIImage
-    let compose: () -> Void
+    @State private var choices: Set<YearReviewCard>?
+    @State private var rendered: (cards: Set<YearReviewCard>, image: UIImage)?
+    @State private var renderFailed = false
+    @State private var renderAttempt = 0
+    @Environment(\.locale) private var locale
+    let content: YearReviewShareContent
+    let colorScheme: ColorScheme
+    let compose: (UIImage, String) -> Void
+
+    private struct RenderRequest: Equatable {
+        let cards: Set<YearReviewCard>
+        let attempt: Int
+    }
+
+    private var selected: Set<YearReviewCard> { choices ?? content.enabledCards }
+    private var image: UIImage? { rendered?.cards == selected ? rendered?.image : nil }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                ScrollView {
-                    Image(uiImage: image).resizable().scaledToFit()
-                        .accessibilityLabel("Your year report image")
+                NavigationLink {
+                    List {
+                        ForEach(content.shareableCards) { card in
+                            Toggle(card.title(for: content.voice), isOn: Binding(
+                                get: { selected.contains(card) },
+                                set: { enabled in
+                                    var updated = selected
+                                    if enabled { updated.insert(card) } else { updated.remove(card) }
+                                    choices = updated
+                                }
+                            ))
+                        }
+                    }
+                    .navigationTitle("Choose highlights")
+                    .navigationBarTitleDisplayMode(.inline)
+                } label: {
+                    Label("Choose highlights", systemImage: "slider.horizontal.3")
                 }
-                Button { compose() } label: {
+                .buttonStyle(.bordered).padding(.vertical, 10)
+                ScrollView {
+                    if let image {
+                        Image(uiImage: image).resizable().scaledToFit()
+                            .accessibilityLabel("Your year report image")
+                    } else if selected.isDisjoint(with: content.shareableCards) {
+                        Text("Choose at least one highlight.").padding()
+                    } else if renderFailed {
+                        VStack(spacing: 12) {
+                            Text("The share image could not be created. Please try again.")
+                            Button("Try again") { renderAttempt += 1 }
+                        }.padding()
+                    } else {
+                        ProgressView("Preparing preview…").padding()
+                    }
+                }
+                Button {
+                    if let image { compose(image, content.mentions(for: selected, locale: locale)) }
+                } label: {
                     Label("Prepare post", systemImage: "square.and.pencil")
                         .frame(maxWidth: .infinity).padding(.vertical, 8)
                 }
                 .buttonStyle(.borderedProminent).padding()
+                .disabled(image == nil)
             }
             .background(theme.listBackground)
             .navigationTitle("Share your year")
@@ -1016,14 +1212,32 @@ private struct YearReviewSharePreview: View {
                     Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Dismiss")
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button { showSystemShare = true } label: { Image(systemName: "square.and.arrow.up") }.accessibilityLabel("Share")
+                    Button { showSystemShare = true } label: { Image(systemName: "square.and.arrow.up") }
+                        .accessibilityLabel("Share").disabled(image == nil)
                 }
             }
             .sheet(isPresented: $showSystemShare) {
-                ActivityView(activityItems: [image])
+                if let image { ActivityView(activityItems: [image]) }
             }
         }
+        .task(id: RenderRequest(cards: selected, attempt: renderAttempt)) {
+            let cards = selected
+            renderFailed = false
+            guard !cards.isDisjoint(with: content.shareableCards) else { return }
+            var poster = content
+            poster.cardsToRender = cards
+            let image = await ShareCardRenderer.render(poster.environment(\.theme, theme).environment(\.colorScheme, colorScheme).environment(\.locale, locale))
+            guard !Task.isCancelled else { return }
+            if let image { rendered = (cards, image) }
+            else { renderFailed = true }
+        }
     }
+}
+
+private struct YearReviewShareDraft: Identifiable {
+    let id = UUID()
+    let content: YearReviewShareContent
+    let caption: String
 }
 
 private struct YearReviewShareContent: View {
@@ -1036,15 +1250,16 @@ private struct YearReviewShareContent: View {
     let names: [String: String]
     let pictures: [String: URL]
     let enabledCards: Set<YearReviewCard>
+    var cardsToRender: Set<YearReviewCard>? = nil
     let hiddenPeople: Set<String>
     let collection: YearReviewCollection?
     let previews: [String: YearReviewPostPreview]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            YearReviewPosterHeader(year: report.period.year, ownReport: voice == .author, name: ownerName, owner: owner, picture: ownerPicture, isYearToDate: report.period.isYearToDate)
+            YearReviewPosterHeader(year: report.period.year, ownReport: voice == .author, name: ownerName, owner: owner, picture: ownerPicture, showsYearToDateLabel: report.period.showsYearToDateLabel)
                 .padding(.bottom, 28)
-            ForEach(YearReviewCard.allCases.filter { availableCards.contains($0) }) { card in
+            ForEach(shareableCards.filter { (cardsToRender ?? enabledCards).contains($0) }) { card in
                 YearReviewPosterSection(card: card, voice: voice, report: report, names: names, pictures: pictures,
                     hiddenPeople: hiddenPeople, previews: previews)
                     .padding(.vertical, 24)
@@ -1074,10 +1289,23 @@ private struct YearReviewShareContent: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    private var availableCards: Set<YearReviewCard> {
-        Set(enabledCards.filter { card in
+    func mentions(for cards: Set<YearReviewCard>, locale: Locale) -> String {
+        var seen: Set<String> = [owner, AccountsState.shared.activeAccountPublicKey]
+        let mentions = shareableCards.filter { cards.contains($0) }.flatMap { card in
+            card.people(in: report).compactMap { person -> String? in
+                guard !hiddenPeople.contains(person.pubkey), seen.insert(person.pubkey).inserted else { return nil }
+                let key = npub(person.pubkey)
+                return key.hasPrefix("npub1") ? "nostr:" + key : nil
+            }
+        }
+        return mentions.formatted(.list(type: .and).locale(locale))
+    }
+
+    var shareableCards: [YearReviewCard] {
+        let cards = YearReviewCard.allCases.filter { card in
             card.hasHighlight(in: report) || card.people(in: report).contains { !hiddenPeople.contains($0.pubkey) }
-        })
+        }
+        return YearReviewCard.ordered(cards)
     }
 }
 
@@ -1088,7 +1316,7 @@ private struct YearReviewPosterHeader: View {
     let name: String
     let owner: String
     let picture: URL?
-    let isYearToDate: Bool
+    let showsYearToDateLabel: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -1107,7 +1335,7 @@ private struct YearReviewPosterHeader: View {
                 PFP(pubkey: owner, pictureUrl: picture, size: 42)
                 Text(name).font(.system(size: 26, weight: .bold, design: .rounded)).fixedSize(horizontal: false, vertical: true)
             }
-            if isYearToDate {
+            if showsYearToDateLabel {
                 Text("The story so far").font(.system(size: 15, weight: .medium)).foregroundStyle(theme.secondary)
             }
         }
@@ -1132,6 +1360,7 @@ private struct YearReviewPosterSection: View {
                 Image(systemName: card.icon).foregroundStyle(theme.accent)
                 Text(card.title(for: voice)).font(.system(size: 19, weight: .bold, design: .rounded))
             }
+            YearReviewConversationStoryContent(card: card, report: report)
             if card == .gang {
                 HStack(alignment: .top, spacing: 8) {
                     ForEach(people) { person in
@@ -1151,15 +1380,15 @@ private struct YearReviewPosterSection: View {
                     }
                     Text("Busiest day: \(day.date, format: report.period.dateFormat) · \(day.posts) posts")
                         .font(.system(size: 14, weight: .medium))
+                    YearReviewPostingRuns(streak: report.longestPostingStreak, gap: report.longestPostingBreak)
                 }
                 if card == .polls, let activity = report.polls {
-                    VStack(alignment: .leading, spacing: 8) {
-                        if activity.created > 0 { Text("\(activity.created) polls · \(activity.voters) voters").font(.headline) }
-                        if activity.votedIn > 0 { Text("Polls voted in: \(activity.votedIn)").font(.subheadline) }
-                    }
+                    YearReviewPollActivityContent(activity: activity)
                 }
                 if let post = card.post(in: report) {
-                    YearReviewPosterPostMetric(card: card, post: post, voters: report.polls?.mostVotedCount ?? 0)
+                    if card != .returningThread && card != .newConversations {
+                        YearReviewPosterPostMetric(card: card, post: post, voters: report.polls?.mostVotedCount ?? 0)
+                    }
                     Text(previews[post.id]?.text ?? post.content)
                         .font(.system(size: 17, weight: .medium, design: .serif))
                         .lineLimit(5).lineSpacing(3)

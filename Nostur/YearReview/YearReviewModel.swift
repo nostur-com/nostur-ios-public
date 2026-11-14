@@ -5,7 +5,7 @@ import NostrEssentials
 import CoreData
 
 struct YearReviewPreferences: Codable, Equatable {
-    var cardSelectionVersion: Int? = 3
+    var cardSelectionVersion: Int? = 4
     var relayDefaultsVersion: Int? = 1
     let cards: Set<YearReviewCard>
     let hiddenPeople: Set<String>
@@ -16,7 +16,10 @@ struct YearReviewPreferences: Codable, Equatable {
 
     var selectedCards: Set<YearReviewCard> {
         if (cardSelectionVersion ?? 0) < 2 { return YearReviewCard.defaultSelection }
-        return (cardSelectionVersion ?? 0) < 3 ? cards.union([.polls]) : cards
+        var selected = cards
+        if (cardSelectionVersion ?? 0) < 3 { selected.insert(.polls) }
+        if (cardSelectionVersion ?? 0) < 4 { selected.formUnion([.returningThread, .newConversations]) }
+        return selected
     }
 
     static func applyingAuth(to relays: [RelayData], configured: [RelayData], overrides: [String: Bool]) -> [RelayData] {
@@ -38,6 +41,21 @@ struct YearReviewPreferences: Codable, Equatable {
     static func load(owner: String, defaults: UserDefaults = .standard) -> Self? {
         guard let data = defaults.data(forKey: "year-review-preferences-" + owner) else { return nil }
         return try? JSONDecoder().decode(Self.self, from: data)
+    }
+}
+
+extension YearReviewPreferences {
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        cardSelectionVersion = try values.decodeIfPresent(Int.self, forKey: .cardSelectionVersion)
+        relayDefaultsVersion = try values.decodeIfPresent(Int.self, forKey: .relayDefaultsVersion)
+        // Ignore retired card IDs without losing the rest of the saved preferences.
+        cards = Set(try values.decode([String].self, forKey: .cards).compactMap(YearReviewCard.init(rawValue:)))
+        hiddenPeople = try values.decode(Set<String>.self, forKey: .hiddenPeople)
+        shareFormat = try values.decode(YearReviewShareFormat.self, forKey: .shareFormat)
+        selectedRelays = try values.decode(Set<String>.self, forKey: .selectedRelays)
+        relays = try values.decode([YearReviewCollection.RelayDataSnapshot].self, forKey: .relays)
+        relayAuthOverrides = try values.decodeIfPresent([String: Bool].self, forKey: .relayAuthOverrides)
     }
 }
 
@@ -124,8 +142,18 @@ final class YearReviewModel {
     var lastResponse: (received: Int, added: Int)?
     var stage: Stage = .ready
     var zapStatus: LocalizedStringResource?
+    var savedReportProgressLabel: LocalizedStringResource {
+        switch stage {
+        case .local: "Reading saved history…"
+        case .parents: "Piecing together conversations…"
+        case .zaps: "Loading saved zap information…"
+        case .analyzing: "Finding your highlights…"
+        default: "Preparing saved report…"
+        }
+    }
     var progressLabel: LocalizedStringResource { stage == .zaps ? zapStatus ?? stage.label : stage.label }
     var isRunning = false
+    private(set) var isConfiguring = false
     var isDownloading = false
     var queuedMonth: Int?
     var lastFetchedDate: Date?
@@ -213,30 +241,45 @@ final class YearReviewModel {
     }
 
     func configure(account: LoggedInAccount, contact: Contact? = nil, loadSaved: Bool = true) async {
-        let selectedOwner = contact?.pubkey ?? account.pubkey
-        let selectedName = contact?.anyName ?? account.account.anyName
-        let selectedPicture = contact?.pictureUrl ?? (contact == nil ? URL(string: account.account.picture) : nil)
+        // Snapshot managed values on the main actor before any suspension.
+        let cloudAccount = account.account
+        let selectedViewer = cloudAccount.publicKey
+        let selectedOwner = contact?.pubkey ?? selectedViewer
+        let selectedName = contact?.anyName ?? cloudAccount.anyName
+        let selectedPicture = contact?.pictureUrl ?? (contact == nil ? URL(string: cloudAccount.picture) : nil)
         let contactTrust = contact.map { Set($0.followingPubkeys) } ?? []
-        let selectedTrust = contactTrust.isEmpty ? account.account.followingPubkeys : contactTrust
+        let selectedTrust = contactTrust.isEmpty ? cloudAccount.followingPubkeys : contactTrust
+        let advertisedRelays = cloudAccount.accountRelays.map { RelayData.new(url: $0.url, read: true) }
+        let isOtherProfile = contact != nil
         let selectedProvider = YearReviewZapProvider(pubkey: selectedOwner, keys: [],
-            lud16: contact?.lud16 ?? (contact == nil ? account.account.lud16 : nil),
-            lud06: contact?.lud06 ?? (contact == nil ? account.account.lud06 : nil))
-        guard owner != selectedOwner || viewer != account.pubkey else {
+            lud16: contact?.lud16 ?? (isOtherProfile ? nil : cloudAccount.lud16),
+            lud06: contact?.lud06 ?? (isOtherProfile ? nil : cloudAccount.lud06))
+        guard isConfiguring || owner != selectedOwner || viewer != selectedViewer else {
             refreshHistoryRelayAuth()
             return
         }
-        pause()
-        profileTask?.cancel()
-        await task?.value
-        guard !Task.isCancelled else { return }
-        isRunning = false
-        task = nil
+        let previousTask = task
         generation = UUID()
         let token = generation
+        isConfiguring = true
         restoringPreferences = true
-        defer { restoringPreferences = false }
+        defer {
+            if generation == token {
+                restoringPreferences = false
+                isConfiguring = false
+            }
+        }
+        pause()
+        profileTask?.cancel()
+        await previousTask?.value
+        guard generation == token else { return }
+        isRunning = false
+        isDownloading = false
+        queuedMonth = nil
+        task = nil
+        archive = nil
         owner = selectedOwner
-        viewer = account.pubkey
+        viewer = selectedViewer
         ownerName = selectedName
         ownerPicture = selectedPicture
         trusted = selectedTrust
@@ -258,8 +301,8 @@ final class YearReviewModel {
         archive = selectedArchive
 
         let configured = CloudRelay.fetchAll().map { $0.toStruct() }
-        var advertised = account.account.accountRelays.map { RelayData.new(url: $0.url, read: true) }
-        if contact != nil {
+        var advertised = advertisedRelays
+        if isOtherProfile {
             let selectedPubkey = owner
             let context = DataProvider.shared().newTaskContext()
             let cachedProfileLists = await context.perform { () -> (follows: Set<String>, relays: [RelayData]) in
@@ -333,7 +376,8 @@ final class YearReviewModel {
             selectedRelays.formUnion(receiveRelays)
         }
         refreshHistoryRelayAuth()
-        if loadSaved { loadSavedReportIfNeeded() }
+        isConfiguring = false
+        if loadSaved, !Task.isCancelled { loadSavedReportIfNeeded() }
     }
 
     func loadSavedReportIfNeeded() {
@@ -396,7 +440,7 @@ final class YearReviewModel {
 
     func start(download: Bool, resume: Bool = false, month: Int? = nil) {
         refreshHistoryRelayAuth()
-        guard !isRunning, !isDeleting, let archive, !owner.isEmpty else { return }
+        guard !isConfiguring, !isRunning, !isDeleting, let archive, !owner.isEmpty else { return }
         if download && selectedRelays.isEmpty {
             errorMessage = String(localized: "Choose at least one relay, or preview your saved history.")
             return
@@ -404,12 +448,12 @@ final class YearReviewModel {
         profileTask?.cancel()
         isRunning = true
         isDownloading = download
+        stage = .local
         queuedMonth = nil
         activities.removeAll()
         lastResponse = nil
         errorMessage = nil
-        if download { report = nil }
-        reportCollection = nil
+        // Keep the previous report and its coverage together until the replacement is ready.
         exportURL = nil
         let token = generation
         let owner = owner
@@ -435,6 +479,7 @@ final class YearReviewModel {
             do {
                 stage = .local
                 let counts = try await archive.archivedCounts()
+                try Task.checkCancellation()
                 guard generation == token else { return }
                 archivedCounts = counts
                 lastFetchedDate = try await archive.load(Date.self, key: "last-fetched-\(period.year)")
@@ -529,9 +574,11 @@ final class YearReviewModel {
                 try await seedCachedPollVotes(ids: ownPosts, archive: archive)
                 let report = try await archive.report(owner: owner, period: period, trusted: reportTrust,
                                                      blocked: CloudBlocked.blockedPubkeys(), zapperKeys: zapperKeys)
+                try Task.checkCancellation()
                 guard generation == token else { return }
                 guard previewRevision == revision else { stage = .paused; return }
                 let previews = try await loadPostPreviews(report: report, archive: archive)
+                try Task.checkCancellation()
                 guard generation == token, previewRevision == revision else { return }
                 postPreviews = previews
                 self.report = report
@@ -932,7 +979,7 @@ final class YearReviewModel {
     }
 
     private func loadPostPreviews(report: YearReviewReport, archive: YearReviewArchive) async throws -> [String: YearReviewPostPreview] {
-        let ids = Set([report.conversation, report.mostReacted, report.mostZapped, report.mostZapValue, report.polls?.mostVoted].compactMap { $0?.id })
+        let ids = Set([report.conversation, report.mostReacted, report.mostZapped, report.mostZapValue, report.polls?.mostVoted, report.returningThread?.post, report.newConversations?.post].compactMap { $0?.id })
         var events: [YearReviewEvent] = []
         for id in ids { if let event = try await archive.event(id: id) { events.append(event) } }
         let snapshots = events
@@ -1054,7 +1101,7 @@ final class YearReviewModel {
     }
 
     func selectYear() async {
-        guard !isRunning, let archive else { return }
+        guard !isConfiguring, !isRunning, let archive else { return }
         profileTask?.cancel()
         report = nil
         collection = nil

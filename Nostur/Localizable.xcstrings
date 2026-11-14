@@ -134,6 +134,270 @@
         }
       }
     },
+    "%lld polls" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld polls"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld encuestas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld jajak pendapat"
+          }
+        }
+      }
+    },
+    "%lld quotes" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld citaten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld citas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kutipan"
+          }
+        }
+      }
+    },
+    "%lld replies back and forth" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld reacties over en weer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld respuestas de ida y vuelta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld balasan bolak-balik"
+          }
+        }
+      }
+    },
+    "%lld reposts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld reposts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld republicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld repost"
+          }
+        }
+      }
+    },
+    "Longest break: %lld days between posts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langste pauze: %lld dagen tussen berichten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausa más larga: %lld días entre publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeda terpanjang: %lld hari di antara postingan"
+          }
+        }
+      }
+    },
+    "Longest posting streak: %lld days" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langste postreeks: %lld dagen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Racha de publicaciones más larga: %lld días"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rangkaian posting terpanjang: %lld hari"
+          }
+        }
+      }
+    },
+    "My regular in the replies" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn vaste gast in de reacties"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quien no falta en mis respuestas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langganan di kolom balasanku"
+          }
+        }
+      }
+    },
+    "Regular in the replies" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaste gast in de reacties"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Presencia habitual en las respuestas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langganan di kolom balasan"
+          }
+        }
+      }
+    },
+    "Who spread %@'s words?" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie verspreidde de woorden van %@?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quién difundió las palabras de %@?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa yang menyebarkan kata-kata %@?"
+          }
+        }
+      }
+    },
+    "Who spread the word?" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie verspreidde het woord?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quién corrió la voz?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapa yang menyebarkan kabar?"
+          }
+        }
+      }
+    },
+    "With %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Met %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bersama %@"
+          }
+        }
+      }
+    },
+    "Your regular in the replies" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je vaste gast in de reacties"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quien no falta en tus respuestas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langganan di kolom balasanmu"
+          }
+        }
+      }
+    },
     "__Source code__" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2667,7 +2931,26 @@
 
     },
     "%lld reactions" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld reacties"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld reacciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld reaksi"
+          }
+        }
+      }
     },
     "%lld reactions · %lld reposts · %lld zaps" : {
       "localizations" : {
@@ -2816,7 +3099,26 @@
       }
     },
     "%lld replies" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld reacties"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld respuestas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld balasan"
+          }
+        }
+      }
     },
     "%lld replies · %lld people" : {
       "localizations" : {
@@ -3107,7 +3409,26 @@
 
     },
     "%lld zaps" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld zaps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld zaps"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld zap"
+          }
+        }
+      }
     },
     "%lld zaps · %@ sats" : {
       "localizations" : {

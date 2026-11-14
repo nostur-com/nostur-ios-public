@@ -13,6 +13,21 @@ final class YearReviewTests: XCTestCase {
         YearReviewPeriod(year: 2026, now: Date(timeIntervalSince1970: 1_800_000_000), timeZone: TimeZone(secondsFromGMT: 0)!)
     }
 
+    func testYearToDateLabelEndsDecember15InReportTimeZone() {
+        let zone = TimeZone(identifier: "Europe/Amsterdam")!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let boundary = calendar.date(from: DateComponents(year: 2026, month: 12, day: 15))!
+        let before = YearReviewPeriod(year: 2026, now: boundary.addingTimeInterval(-1), timeZone: zone)
+        let after = YearReviewPeriod(year: 2026, now: boundary, timeZone: zone)
+        XCTAssertTrue(before.showsYearToDateLabel)
+        XCTAssertFalse(after.showsYearToDateLabel)
+        XCTAssertTrue(after.isYearToDate)
+        XCTAssertFalse(after.contains(Int64(boundary.timeIntervalSince1970)))
+        let testPeriod = YearReviewPeriod(year: 2026, now: boundary, timeZone: zone, monthLimit: 2, monthStart: 11)
+        XCTAssertTrue(testPeriod.showsYearToDateLabel)
+    }
+
     private func note(_ id: String, by pubkey: String, parent: String? = nil, content: String = "",
                       tags: [[String]] = [], timestamp: Int64? = nil, kind: Int = 1) -> YearReviewEvent {
         let replyTags = parent.map { [["e", $0, "", "reply"]] } ?? []
@@ -22,6 +37,73 @@ final class YearReviewTests: XCTestCase {
 
     private func analyze(_ events: [YearReviewEvent], trusted: Set<String> = [], blocked: Set<String> = []) -> YearReviewReport {
         YearReviewAnalyzer.analyze(events: events, owner: owner, period: period, trusted: trusted, blocked: blocked)
+    }
+
+    func testConversationStoriesUseSavedHistoryAndDistinctReplyDays() {
+        let day = period.start
+        let events = [
+            note("old-post", by: owner, timestamp: day - 100),
+            note("old-reply", by: bob, parent: "old-post", timestamp: day - 90),
+            note("thread", by: owner, timestamp: day + 1),
+            note("first", by: alice, parent: "thread", timestamp: day + 2),
+            note("owner-reply", by: owner, parent: "first", timestamp: day + 86_401),
+            note("back", by: alice, parent: "owner-reply", timestamp: day + 86_402),
+            note("again", by: alice, parent: "owner-reply", timestamp: day + 86_403),
+            note("return", by: bob, parent: "thread", timestamp: day + 5 * 86_400),
+            note("owner-self", by: owner, parent: "thread", timestamp: day + 6 * 86_400)
+        ]
+        let report = analyze(events + [events[3]], trusted: [alice, bob])
+        XCTAssertNil(report.returningThread)
+        XCTAssertNil(report.newConversations)
+        let recurring = (7...8).map { note("later-\($0)", by: bob, parent: "thread", timestamp: day + Int64($0) * 86_400) }
+        let longer = analyze(events + recurring, trusted: [alice, bob])
+        XCTAssertEqual(longer.returningThread?.post.id, "thread")
+        XCTAssertEqual(longer.returningThread?.activeDays.count, 5)
+        XCTAssertNil(longer.newConversations)
+        let blocked = analyze(events, trusted: [alice, bob], blocked: [alice])
+        XCTAssertNil(blocked.newConversations)
+        XCTAssertNil(blocked.returningThread)
+    }
+
+    func testConversationStoriesIgnoreDeletedPriorExchangeAndRankFirstExchangesByThread() {
+        let day = period.start
+        let events = [
+            note("old-post", by: owner, timestamp: day - 100),
+            note("old-reply", by: bob, parent: "old-post", timestamp: day - 90),
+            note("deletion", by: bob, tags: [["e", "old-reply"]], timestamp: day - 80, kind: 5),
+            note("first-thread", by: owner, timestamp: day + 1),
+            note("second-thread", by: owner, timestamp: day + 2),
+            note("alice-first", by: alice, parent: "second-thread", timestamp: day + 3),
+            note("bob-first", by: bob, parent: "second-thread", timestamp: day + 4),
+            note("alice-later", by: alice, parent: "first-thread", timestamp: day + 5),
+            note("bob-later", by: bob, parent: "first-thread", timestamp: day + 6)
+        ]
+        let charlie = String(repeating: "d", count: 64)
+        let dana = String(repeating: "e", count: 64)
+        let third = note("charlie-first", by: charlie, parent: "second-thread", timestamp: day + 7)
+        let fourth = note("dana-first", by: dana, parent: "second-thread", timestamp: day + 8)
+        XCTAssertNil(analyze(events + [third], trusted: [alice, bob, charlie]).newConversations)
+        let report = analyze(Array(events.reversed()) + [third, fourth], trusted: [alice, bob, charlie, dana])
+        XCTAssertEqual(report.newConversations?.post.id, "second-thread")
+        XCTAssertEqual(report.newConversations?.newConversations, 4)
+        XCTAssertNil(report.returningThread)
+    }
+
+    func testPostingStreakAndBreakOnlyUseSelectedLocalDays() {
+        let zone = TimeZone(identifier: "Europe/Amsterdam")!
+        var selected = YearReviewPeriod(year: 2026, now: Date(timeIntervalSince1970: 1_800_000_000),
+            timeZone: zone, monthLimit: 2, monthStart: 3)
+        selected.includeMonth(7, now: Date(timeIntervalSince1970: 1_800_000_000))
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let dates = [(3, 28), (3, 29), (3, 29), (3, 30), (4, 10), (7, 1)]
+        let events = dates.enumerated().map { i, date in
+            let local = calendar.date(from: DateComponents(year: 2026, month: date.0, day: date.1, hour: 12))!
+            return note("post-\(i)", by: owner, timestamp: Int64(local.timeIntervalSince1970))
+        }
+        let report = YearReviewAnalyzer.analyze(events: events, owner: owner, period: selected, trusted: [], blocked: [])
+        XCTAssertEqual(report.longestPostingStreak, 3) // Includes the spring DST change.
+        XCTAssertEqual(report.longestPostingBreak, 10) // March 31 through April 9.
     }
 
     func testAddingMonthToTwoMonthSelectionKeepsGapsUnselected() throws {
@@ -189,11 +271,23 @@ final class YearReviewTests: XCTestCase {
         XCTAssertTrue(inventory.missingParentIds.contains(poll.id))
     }
 
+    func testRetiredHighlightDoesNotResetSavedPreferences() throws {
+        let data = Data("""
+        {"cardSelectionVersion":4,"cards":["replyRegular","returningThread"],"hiddenPeople":["hidden"],"shareFormat":"report","selectedRelays":["wss://relay.example"],"relays":[]}
+        """.utf8)
+        let preferences = try JSONDecoder().decode(YearReviewPreferences.self, from: data)
+        XCTAssertEqual(preferences.selectedCards, [.returningThread])
+        XCTAssertEqual(preferences.hiddenPeople, ["hidden"])
+        XCTAssertEqual(preferences.selectedRelays, ["wss://relay.example"])
+    }
+
     func testNewPollCardDefaultsPreserveExistingHiddenCards() {
         var preferences = YearReviewPreferences(cards: [.activeDay], hiddenPeople: [], shareFormat: .report, selectedRelays: [], relays: [])
         preferences.cardSelectionVersion = 2
-        XCTAssertEqual(preferences.selectedCards, [.activeDay, .polls])
+        XCTAssertEqual(preferences.selectedCards, [.activeDay, .polls, .returningThread, .newConversations])
         preferences.cardSelectionVersion = 3
+        XCTAssertEqual(preferences.selectedCards, [.activeDay, .returningThread, .newConversations])
+        preferences.cardSelectionVersion = 4
         XCTAssertEqual(preferences.selectedCards, [.activeDay])
     }
 
