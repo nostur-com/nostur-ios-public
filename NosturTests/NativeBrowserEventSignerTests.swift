@@ -6,6 +6,57 @@ import NostrEssentials
 final class NativeBrowserEventSignerTests: XCTestCase {
     private let fixtureKey = String(repeating: "0", count: 63) + "1"
 
+    func testNativeEncryptionRoundTripsBothFormatsAndPeers() async throws {
+        let key = fixtureKey
+        let keys = try Keys(privateKeyHex: key)
+        let otherKey = String(repeating: "0", count: 63) + "2"
+        let other = try Keys(privateKeyHex: otherKey)
+        let cryptor = NativeBrowserCryptor(localKeyProvider: { _ in key })
+        let plaintext = "Private following-list backup 🐱"
+        for peer in [keys.publicKeyHex, other.publicKeyHex] {
+            for method in [BrowserCryptoMethod.nip04Encrypt, .nip44Encrypt] {
+                let request = BrowserCryptoRequest(method: method, pubkey: peer, data: plaintext)
+                XCTAssertNil(BrowserSigningPolicy.cryptoApproval(for: request, accountPubkey: keys.publicKeyHex,
+                    origin: "https://mutable.top", connected: true, allowed: false))
+                let approval = try XCTUnwrap(BrowserSigningPolicy.cryptoApproval(for: request,
+                    accountPubkey: keys.publicKeyHex, origin: "https://mutable.top", connected: true, allowed: true))
+                let encrypted = try await withCheckedContinuation { continuation in
+                    cryptor.perform(approval, requestID: UUID()) { continuation.resume(returning: $0) }
+                }.get()
+                XCTAssertNotEqual(encrypted, plaintext)
+                let decrypt = BrowserCryptoRequest(method: method == .nip04Encrypt ? .nip04Decrypt : .nip44Decrypt,
+                    pubkey: peer, data: encrypted)
+                let decryptApproval = try XCTUnwrap(BrowserSigningPolicy.cryptoApproval(for: decrypt,
+                    accountPubkey: keys.publicKeyHex, origin: "https://mutable.top", connected: true, allowed: true))
+                let restored = try await withCheckedContinuation { continuation in
+                    cryptor.perform(decryptApproval, requestID: UUID()) { continuation.resume(returning: $0) }
+                }.get()
+                XCTAssertEqual(restored, plaintext)
+                if peer == other.publicKeyHex {
+                    let theirs = method == .nip04Encrypt
+                        ? Keys.decryptDirectMessageContent(withPrivateKey: otherKey, pubkey: keys.publicKeyHex, content: encrypted)
+                        : Keys.decryptDirectMessageContent44(withPrivateKey: otherKey, pubkey: keys.publicKeyHex, content: encrypted)
+                    XCTAssertEqual(theirs, plaintext)
+                }
+            }
+        }
+    }
+
+    func testNativeEncryptionRejectsMalformedCiphertextWithoutReflectingIt() async throws {
+        let key = fixtureKey
+        let keys = try Keys(privateKeyHex: key)
+        let cryptor = NativeBrowserCryptor(localKeyProvider: { _ in key })
+        for method in [BrowserCryptoMethod.nip04Decrypt, .nip44Decrypt] {
+            let request = BrowserCryptoRequest(method: method, pubkey: keys.publicKeyHex, data: "not ciphertext")
+            let approval = try XCTUnwrap(BrowserSigningPolicy.cryptoApproval(for: request,
+                accountPubkey: keys.publicKeyHex, origin: "https://mutable.top", connected: true, allowed: true))
+            let result = await withCheckedContinuation { continuation in
+                cryptor.perform(approval, requestID: UUID()) { continuation.resume(returning: $0) }
+            }
+            guard case .failure = result else { return XCTFail("Malformed ciphertext must fail") }
+        }
+    }
+
     private func approval() throws -> BrowserSigningApproval {
         let keys = try Keys(privateKeyHex: fixtureKey)
         let event = BrowserUnsignedEvent(created_at: Int64(Date().timeIntervalSince1970), kind: 1, tags: [], content: "Public test content")

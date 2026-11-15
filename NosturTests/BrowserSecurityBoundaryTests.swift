@@ -1,4 +1,5 @@
 import CoreData
+import NostrEssentials
 import UIKit
 import WebKit
 import XCTest
@@ -6,6 +7,89 @@ import XCTest
 
 @MainActor
 final class BrowserSecurityBoundaryTests: XCTestCase {
+    func testEncryptedBackupPermissionsResumeAndStaySeparate() async throws {
+        let key = String(repeating: "0", count: 63) + "1"
+        let keys = try Keys(privateKeyHex: key)
+        let fixture = try BrowserSecurityFixture(origin: "https://mutable.top", accountPubkey: keys.publicKeyHex,
+            cryptor: NativeBrowserCryptor(localKeyProvider: { _ in key }))
+        defer { fixture.close() }
+        try await fixture.load()
+        XCTAssertTrue(fixture.browser.connected)
+        XCTAssertFalse(fixture.browser.encryptionAllowed)
+        XCTAssertFalse(fixture.browser.decryptionAllowed)
+        for method in ["nip44", "nip04"] {
+            async let requested = fixture.view.callAsyncJavaScript(
+                "return await nostr[method].encrypt(await nostr.getPublicKey(), 'private backup');",
+                arguments: ["method": method], in: nil, contentWorld: .page)
+            try await fixture.waitUntil { fixture.browser.blockedRequests.first?.crypto != nil }
+            let item = try XCTUnwrap(fixture.browser.blockedRequests.first)
+            XCTAssertTrue(fixture.browser.canAllow(item))
+            fixture.browser.allowBlockedRequest(item.id, duration: method == "nip44" ? .once : .always)
+            let requestedValue = try await requested
+            let cipher = try XCTUnwrap(requestedValue as? String)
+            XCTAssertNotEqual(cipher, "private backup")
+            XCTAssertEqual(fixture.browser.encryptionAllowed, method == "nip04")
+            XCTAssertFalse(fixture.browser.decryptionAllowed)
+            async let restored = fixture.view.callAsyncJavaScript(
+                "return await nostr[method].decrypt(await nostr.getPublicKey(), cipher);",
+                arguments: ["method": method, "cipher": cipher], in: nil, contentWorld: .page)
+            try await fixture.waitUntil { fixture.browser.blockedRequests.first?.crypto?.method.encrypts == false }
+            let read = try XCTUnwrap(fixture.browser.blockedRequests.first)
+            fixture.browser.allowBlockedRequest(read.id, duration: .once)
+            let plaintext = try await restored as? String
+            XCTAssertEqual(plaintext, "private backup")
+            XCTAssertFalse(fixture.browser.decryptionAllowed)
+            XCTAssertFalse(fixture.browser.activity.contains { $0.detail.contains("private backup") || $0.detail.contains(cipher) })
+        }
+        fixture.browser.setEncryption(false)
+        XCTAssertFalse(fixture.browser.encryptionAllowed)
+    }
+
+    func testPendingDecryptionCannotDeliverAfterMinimizing() async throws {
+        let key = String(repeating: "0", count: 63) + "1"
+        let keys = try Keys(privateKeyHex: key)
+        let ciphertext = try XCTUnwrap(Keys.encryptDirectMessageContent44(withPrivatekey: key,
+            pubkey: keys.publicKeyHex, content: "private backup"))
+        let queue = DispatchQueue(label: "test.browser.held-encryption")
+        queue.suspend()
+        defer { queue.resume() }
+        let fixture = try BrowserSecurityFixture(origin: "https://mutable.top", accountPubkey: keys.publicKeyHex,
+            cryptor: NativeBrowserCryptor(queue: queue, localKeyProvider: { _ in key }))
+        defer { fixture.close() }
+        try await fixture.load()
+        async let requested = fixture.view.callAsyncJavaScript(
+            "try { return await nostr.nip44.decrypt(await nostr.getPublicKey(), cipher); } catch (_) { return 'denied'; }",
+            arguments: ["cipher": ciphertext], in: nil, contentWorld: .page)
+        try await fixture.waitUntil { fixture.browser.blockedRequests.first?.crypto != nil }
+        let item = try XCTUnwrap(fixture.browser.blockedRequests.first)
+        fixture.browser.allowBlockedRequest(item.id, duration: .always)
+        fixture.browser.setPresented(false)
+        let result = try await requested as? String
+        XCTAssertEqual(result, "denied")
+        XCTAssertFalse(fixture.browser.activity.contains { !$0.blocked })
+        fixture.browser.setPresented(true)
+        XCTAssertTrue(fixture.browser.decryptionAllowed)
+        fixture.browser.open(URL(string: "https://another.example.invalid")!)
+        XCTAssertFalse(fixture.browser.decryptionAllowed)
+        fixture.browser.open(fixture.baseURL)
+        XCTAssertTrue(fixture.browser.decryptionAllowed)
+    }
+
+    func testRemoteEncryptionNeverFallsBackToLocalOrSessionKeys() async throws {
+        var localKeyRequested = false
+        let fixture = try BrowserSecurityFixture(origin: "https://mutable.top",
+            cryptor: NativeBrowserCryptor(localKeyProvider: { _ in localKeyRequested = true; return nil }))
+        defer { fixture.close() }
+        fixture.account.isNC = true
+        try await fixture.load()
+        fixture.browser.setEncryption(true)
+        let result = try await fixture.view.callAsyncJavaScript(
+            "try { await nostr.nip44.encrypt(await nostr.getPublicKey(), 'backup'); return 'success'; } catch (_) { return 'denied'; }",
+            arguments: [:], in: nil, contentWorld: .page) as? String
+        XCTAssertEqual(result, "denied", "A missing remote transport session must fail closed")
+        XCTAssertFalse(localKeyRequested, "A remote account must never use the local account encryption path")
+    }
+
     func testPrimaryHomepageAppsCanConnectSignAndResumeWithoutSetup() async throws {
         let origins = ["https://jumble.social", "https://primal.net", "https://account.nostr.build",
                        "https://otherstuff.ai", "https://honey.hivetalk.org"]
@@ -717,7 +801,8 @@ private final class BrowserSecurityFixture {
     var view: WKWebView { browser.webView }
 
     init(origin: String = "https://security.example.invalid", approvalWaitSeconds: UInt64 = 120,
-         relaySettingsProvider: @escaping @MainActor () async -> [BrowserRelaySetting] = { [] }) throws {
+         relaySettingsProvider: @escaping @MainActor () async -> [BrowserRelaySetting] = { [] },
+         accountPubkey: String = String(repeating: "a", count: 64), cryptor: (any BrowserCryptoPerforming)? = nil) throws {
         baseURL = try XCTUnwrap(URL(string: origin))
         let model = DataProvider.shared().container.managedObjectModel
         let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
@@ -725,11 +810,11 @@ private final class BrowserSecurityFixture {
         context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         context.persistentStoreCoordinator = coordinator
         account = CloudAccount(entity: try XCTUnwrap(model.entitiesByName["CloudAccount"]), insertInto: context)
-        account.publicKey = String(repeating: "a", count: 64)
+        account.publicKey = accountPubkey
         account.name = "Browser boundary test"
         account.flagsSet = ["full_account"]
         preferences = try XCTUnwrap(UserDefaults(suiteName: suite))
-        browser = NostrBrowserModel(relaySettingsProvider: relaySettingsProvider, signer: signer, preferences: preferences, approvalWaitSeconds: approvalWaitSeconds)
+        browser = NostrBrowserModel(relaySettingsProvider: relaySettingsProvider, signer: signer, cryptor: cryptor, preferences: preferences, approvalWaitSeconds: approvalWaitSeconds)
         browser.selectAccount(account)
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         window = UIWindow(windowScene: scene)

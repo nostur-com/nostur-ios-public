@@ -33,12 +33,30 @@ final class BrowserBridgeTests: XCTestCase {
         XCTAssertEqual(result?["key"] as? String, String(repeating: "a", count: 64))
         XCTAssertEqual(result?["id"] as? String, "signed-test-event")
         XCTAssertEqual(result?["rejected"] as? Bool, true)
-        XCTAssertEqual(result?["capabilities"] as? String, "getPublicKey,signEvent")
+        XCTAssertEqual(result?["capabilities"] as? String, "getPublicKey,nip04,nip44,signEvent")
         XCTAssertEqual(result?["nativeHandler"] as? String, "undefined")
         XCTAssertEqual(result?["nativeToken"] as? String, "undefined")
         XCTAssertTrue(harness.mainFramesOnly)
         XCTAssertEqual(harness.requests.count, 3)
         XCTAssertTrue(harness.requests.allSatisfy { $0.documentToken == harness.token })
+    }
+
+    func testEncryptionPacketsAcceptOnlyBoundedPublicPeerAndData() throws {
+        for method in BrowserCryptoMethod.allCases {
+            var packet: [String: Any] = ["documentToken": UUID().uuidString, "method": method.rawValue,
+                "event": NSNull(), "crypto": ["pubkey": String(repeating: "a", count: 64), "data": "backup"]]
+            func decode() throws -> BrowserBridgeRequest? {
+                BrowserBridgeRequest.decode(String(decoding: try JSONSerialization.data(withJSONObject: packet), as: UTF8.self))
+            }
+            XCTAssertEqual(try decode()?.crypto?.method, method)
+            packet["crypto"] = ["pubkey": String(repeating: "a", count: 64), "data": "backup", "privateKey": "not allowed"]
+            XCTAssertNil(try decode())
+            packet["crypto"] = ["pubkey": "invalid", "data": "backup"]
+            XCTAssertNil(try decode())
+            packet["crypto"] = ["pubkey": String(repeating: "a", count: 64),
+                "data": String(repeating: "x", count: method.encrypts ? 65536 : 131073)]
+            XCTAssertNil(try decode())
+        }
     }
 
     func testEmbeddedFramesAndForgedEventsCannotReachNativeHandler() async throws {

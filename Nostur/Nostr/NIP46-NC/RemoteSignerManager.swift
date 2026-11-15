@@ -86,6 +86,8 @@ class RemoteSignerManager: ObservableObject {
     
     private func listenForNCMessages() {
         receiveNotification(.receivedMessage)
+            .filter { ($0.object as? NXRelayMessage)?.event?.kind == .ncMessage }
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let message = notification.object as! NXRelayMessage
@@ -102,7 +104,7 @@ class RemoteSignerManager: ObservableObject {
                 }
                 guard let ncResponse = try? decoder.decode(NCResponse.self, from: decrypted.data(using: .utf8)!) else {
 #if DEBUG
-                    L.og.error("🏰 Could not parse/decode ncMessage, \(event.eventJson()) - \(decrypted)")
+                    L.og.error("🏰 Could not decode remote signer response")
 #endif
                     return
                 }
@@ -437,6 +439,18 @@ class RemoteSignerManager: ObservableObject {
         }
     }
     
+    // The browser cryptor owns the matching response and cancellation lifetime.
+    @MainActor
+    func sendBrowserCryptoMessage(_ event: NEvent, usingAccount account: CloudAccount, sessionPublicKey: String) {
+        setAccount(account)
+        req(RM.getNCResponses(pubkey: sessionPublicKey, bunkerPubkey: account.ncRemoteSignerPubkey,
+                              subscriptionId: "NC"), activeSubscriptionId: "NC")
+        ConnectionPool.shared.sendMessage(
+            NosturClientMessage(clientMessage: NostrEssentials.ClientMessage(type: .EVENT), onlyForNCRelay: true,
+                               relayType: .READ, nEvent: event),
+            accountPubkey: account.publicKey)
+    }
+
     // Ask nsecBunker for signature for given event, runs whenSigned(..) callback with signed event after
     public func requestSignature(forEvent event: NEvent, usingAccount: CloudAccount? = nil, requestID: String = "sign-event-\(UUID().uuidString)", whenSigned: ((NEvent) -> Void)? = nil) {
         guard let account = (usingAccount ?? account) else { return }

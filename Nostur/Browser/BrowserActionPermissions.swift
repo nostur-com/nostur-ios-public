@@ -60,7 +60,9 @@ struct BrowserBlockedRequest: Identifiable {
     var waiting: Bool
     var destination: String? = nil
     var event: BrowserUnsignedEvent? = nil
+    var crypto: BrowserCryptoRequest? = nil
     var actionName: String {
+        if let crypto { return crypto.method.encrypts ? String(localized: "Encrypt data") : String(localized: "Read encrypted data") }
         if let event { return BrowserEventDescription.name(for: event) }
         return kind < 0 ? String(localized: "Account connection") : BrowserEventDescription.name(for: kind)
     }

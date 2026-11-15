@@ -834,6 +834,12 @@
         }
       }
     },
+    "Zoom In" : {
+
+    },
+    "Zoom Out" : {
+
+    },
     "[#asknostr](nostur:t:asknostr)" : {
       "localizations" : {
         "es" : {
@@ -6553,6 +6559,9 @@
     "App processing status" : {
 
     },
+    "App publisher followed by" : {
+
+    },
     "App recommendation" : {
 
     },
@@ -12140,6 +12149,12 @@
         }
       }
     },
+    "Create encrypted backups and messages using your account." : {
+
+    },
+    "Create encrypted backups or messages using your account. Your private key stays in Nostur." : {
+
+    },
     "Create new account" : {
       "comment" : "Button to create a new account\nButton to start creating a new account\nNavigation title of create new account screen",
       "localizations" : {
@@ -12485,6 +12500,9 @@
         }
       }
     },
+    "Data encrypted." : {
+
+    },
     "Data export" : {
       "localizations" : {
         "es" : {
@@ -12725,6 +12743,9 @@
           }
         }
       }
+    },
+    "Decrypted" : {
+
     },
     "Decrypting..." : {
       "localizations" : {
@@ -14586,6 +14607,12 @@
         }
       }
     },
+    "Encrypt data" : {
+
+    },
+    "Encrypted" : {
+
+    },
     "Encrypted Image" : {
       "localizations" : {
         "es" : {
@@ -14608,6 +14635,9 @@
         }
       }
     },
+    "Encrypted data read." : {
+
+    },
     "Encrypting and uploading..." : {
       "localizations" : {
         "es" : {
@@ -14629,6 +14659,12 @@
           }
         }
       }
+    },
+    "Encryption or decryption failed." : {
+
+    },
+    "Encryption request expired." : {
+
     },
     "End test" : {
       "extractionState" : "stale",
@@ -19204,6 +19240,9 @@
       }
     },
     "Let this app request payments and other wallet actions." : {
+
+    },
+    "Let this website read encrypted data accessible to your account, including private messages and backups from other apps." : {
 
     },
     "Let's go!" : {
@@ -24982,6 +25021,9 @@
         }
       }
     },
+    "Page Zoom" : {
+
+    },
     "Paid relay membership and related tools." : {
 
     },
@@ -28251,6 +28293,12 @@
         }
       }
     },
+    "Read encrypted data" : {
+
+    },
+    "Read encrypted data accessible to your account, including private messages and backups from other apps." : {
+
+    },
     "Read only" : {
       "comment" : "Label to indicate this a Read Only account",
       "localizations" : {
@@ -31033,6 +31081,9 @@
       }
     },
     "Reset" : {
+
+    },
+    "Reset Zoom" : {
 
     },
     "Resolving conversation references" : {
@@ -37267,6 +37318,12 @@
     "This saved run did not record a failure reason. Retry this source for updated details." : {
 
     },
+    "This site wants to encrypt data using your account." : {
+
+    },
+    "This site wants to read encrypted data using your account." : {
+
+    },
     "This site wants to use your Nostur account." : {
 
     },
@@ -37886,6 +37943,9 @@
       }
     },
     "Toggle two or three columns" : {
+
+    },
+    "Too many encryption requests. Try again in a minute." : {
 
     },
     "Too many messages arrived without the relay completing the request." : {
@@ -41241,6 +41301,9 @@
           }
         }
       }
+    },
+    "You follow the app publisher." : {
+
     },
     "You got people talking" : {
       "localizations" : {

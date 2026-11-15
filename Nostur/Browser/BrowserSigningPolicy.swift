@@ -14,6 +14,19 @@ struct BrowserRelaySetting: Sendable {
     let auth: Bool
 }
 
+struct BrowserCryptoApproval: Sendable {
+    let request: BrowserCryptoRequest
+    let accountPubkey: String
+    let origin: String
+    let approvedAt: Int64
+    fileprivate init(request: BrowserCryptoRequest, accountPubkey: String, origin: String, approvedAt: Int64) {
+        self.request = request
+        self.accountPubkey = accountPubkey
+        self.origin = origin
+        self.approvedAt = approvedAt
+    }
+}
+
 struct BrowserSigningApproval: Sendable {
     let event: BrowserUnsignedEvent
     let accountPubkey: String
@@ -28,6 +41,14 @@ struct BrowserSigningApproval: Sendable {
 }
 
 enum BrowserSigningPolicy {
+    static func cryptoApproval(for request: BrowserCryptoRequest, accountPubkey: String, origin: String,
+                               connected: Bool, allowed: Bool) -> BrowserCryptoApproval? {
+        guard connected, allowed, request.isValid, BrowserSignedEvent.isHex(accountPubkey, count: 64),
+              Self.origin(URL(string: origin)) == origin else { return nil }
+        return BrowserCryptoApproval(request: request, accountPubkey: accountPubkey, origin: origin,
+                                     approvedAt: Int64(Date().timeIntervalSince1970))
+    }
+
     static func maximumTagCount(for kind: Int) -> Int {
         [3, 10000].contains(kind) ? 10000 : 256
     }

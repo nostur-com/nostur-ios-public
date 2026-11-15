@@ -122,6 +122,9 @@ private struct BrowserControls: View {
             if browser.isHome || browser.controlsExpanded {
                 HStack(spacing: 6) {
                     BrowserAddressBar(browser: browser)
+                    if !browser.isHome {
+                        BrowserZoomMenu(browser: browser)
+                    }
                     Button(action: minimize) {
                         Image(systemName: "minus").frame(width: 44, height: 44)
                     }
@@ -168,6 +171,7 @@ private struct BrowserControls: View {
                     }
                     .accessibilityLabel("Show browser controls")
                     .accessibilityValue("\(browser.currentURL?.host ?? ""), \(browser.connected ? browser.accountName : String(localized: "Not connected"))")
+                    BrowserZoomMenu(browser: browser)
                     if !browser.blockedRequests.isEmpty {
                         BrowserRequestsButton(browser: browser)
                     }
@@ -186,6 +190,40 @@ private struct BrowserControls: View {
             }
         }
         .buttonStyle(.borderless)
+    }
+}
+
+private struct BrowserZoomMenu: View {
+    @ObservedObject var browser: NostrBrowserModel
+
+    var body: some View {
+        Menu {
+            Button(action: browser.zoomIn) {
+                Label("Zoom In", systemImage: "plus.magnifyingglass")
+            }
+            .disabled(!browser.canZoomIn)
+
+            Button(action: browser.zoomOut) {
+                Label("Zoom Out", systemImage: "minus.magnifyingglass")
+            }
+            .disabled(!browser.canZoomOut)
+
+            Button(action: browser.resetZoom) {
+                Label("Reset Zoom", systemImage: "arrow.counterclockwise")
+            }
+            .disabled(browser.pageZoom == 100)
+        } label: {
+            if browser.pageZoom == 100 {
+                Image(systemName: "textformat.size")
+                    .frame(width: 44, height: 44)
+            } else {
+                Text(Double(browser.pageZoom) / 100, format: .percent)
+                    .font(.caption.monospacedDigit())
+                    .frame(width: 44, height: 44)
+            }
+        }
+        .accessibilityLabel("Page Zoom")
+        .accessibilityValue(Text(Double(browser.pageZoom) / 100, format: .percent))
     }
 }
 
@@ -457,6 +495,11 @@ private struct BrowserBlockedRequestActions: View {
             if item.kind == -1 {
                 Text("Use your account and allow app actions for this visit or future visits.")
                     .font(.caption).foregroundStyle(.secondary)
+            } else if let crypto = item.crypto {
+                Text(crypto.method.encrypts
+                     ? "Create encrypted backups or messages using your account. Your private key stays in Nostur."
+                     : "Let this website read encrypted data accessible to your account, including private messages and backups from other apps.")
+                    .font(.caption).foregroundStyle(.secondary)
             } else if let destination = item.destination {
                 Text(destination)
                     .font(.caption).textSelection(.enabled)
@@ -521,7 +564,7 @@ private struct BrowserActivityRow<Actions: View>: View {
             HStack(spacing: 6) {
                 Image(systemName: item.blocked ? "hand.raised" : "checkmark.shield")
                     .foregroundStyle(.secondary)
-                    .accessibilityLabel(item.blocked ? Text("Blocked") : Text("Signed"))
+                    .accessibilityLabel(item.blocked ? Text("Blocked") : Text(item.successLabel ?? String(localized: "Signed")))
                 Text(item.detail)
                     .lineLimit(1)
                 Spacer(minLength: 2)
@@ -717,6 +760,14 @@ private struct BrowserSiteSettings: View {
                     .disabled(!browser.connected)
                     Toggle(isOn: Binding(get: { browser.walletAllowed }, set: { browser.setWallet($0) })) {
                         BrowserPermissionLabel(title: "Wallet actions", detail: "Let this app request payments and other wallet actions.")
+                    }
+                    .disabled(!browser.connected)
+                    Toggle(isOn: Binding(get: { browser.encryptionAllowed }, set: { browser.setEncryption($0) })) {
+                        BrowserPermissionLabel(title: "Encrypt data", detail: "Create encrypted backups and messages using your account.")
+                    }
+                    .disabled(!browser.connected)
+                    Toggle(isOn: Binding(get: { browser.decryptionAllowed }, set: { browser.setDecryption($0) })) {
+                        BrowserPermissionLabel(title: "Read encrypted data", detail: "Read encrypted data accessible to your account, including private messages and backups from other apps.")
                     }
                     .disabled(!browser.connected)
                 } header: {

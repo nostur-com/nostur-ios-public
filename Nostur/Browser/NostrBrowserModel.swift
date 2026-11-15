@@ -20,6 +20,7 @@ struct BrowserActivity: Identifiable {
     let site: String
     let detail: String
     let blocked: Bool
+    var successLabel: String? = nil
 }
 
 @MainActor
@@ -27,6 +28,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
     @Published private(set) var webView: WKWebView!
     @Published private(set) var isHome = true
     @Published private(set) var currentURL: URL?
+    @Published private(set) var pageZoom = 100
     @Published private(set) var canGoBack = false
     @Published private(set) var canGoForward = false
     @Published private(set) var loading = false
@@ -57,11 +59,20 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         let reply: (Any?, String?) -> Void
     }
     private var pending: [UUID: PendingRequest] = [:]
+    private struct PendingCrypto {
+        let reply: (Any?, String?) -> Void
+        let scope: BrowserRequestScope
+        let request: BrowserCryptoRequest
+    }
+    private var pendingCrypto: [UUID: PendingCrypto] = [:]
+    private var cryptoRetries: [BrowserBlockedRequest] = []
+    private var cryptoTimes: [Date] = []
     private var pendingConnection: [PendingConnection] = []
     private var oneTimeApprovals: Set<UUID> = []
     private var oneTimeRetries: [BrowserBlockedRequest] = []
     private var timeouts: [UUID: Task<Void, Never>] = [:]
     private let signer: any BrowserEventSigning
+    private let cryptor: any BrowserCryptoPerforming
     private var documentToken: String?
     private var documentReady = false
     private(set) var isPresented = false
@@ -83,12 +94,14 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
     private var postLinkTask: Task<Void, Never>?
 
     init(relaySettingsProvider: @escaping @MainActor () async -> [BrowserRelaySetting] = { await BrowserRelaySettings.snapshot() },
-         signer: (any BrowserEventSigning)? = nil, preferences: UserDefaults = .standard, approvalWaitSeconds: UInt64 = 120) {
+         signer: (any BrowserEventSigning)? = nil, cryptor: (any BrowserCryptoPerforming)? = nil,
+         preferences: UserDefaults = .standard, approvalWaitSeconds: UInt64 = 120) {
         self.relaySettingsProvider = relaySettingsProvider
         self.preferences = preferences
         self.approvalWaitSeconds = min(120, max(1, approvalWaitSeconds))
         self.favorites = Set(preferences.stringArray(forKey: "browser.favorites") ?? [])
         self.signer = signer ?? NativeBrowserEventSigner()
+        self.cryptor = cryptor ?? NativeBrowserCryptor()
         super.init()
         replaceWebView()
     }
@@ -126,6 +139,8 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
     var accountChangesAllowed: Bool { capability("accountChanges") }
     var deletionsAllowed: Bool { capability("deletions") }
     var walletAllowed: Bool { capability("wallet") }
+    var encryptionAllowed: Bool { capability("encrypt") }
+    var decryptionAllowed: Bool { capability("decrypt") }
     private func capability(_ name: String) -> Bool {
         guard let key = preferenceKey(name) else { return false }
         return preferences.bool(forKey: key)
@@ -134,6 +149,8 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
     func setAccountChanges(_ enabled: Bool) { setCapability("accountChanges", enabled: enabled) }
     func setDeletions(_ enabled: Bool) { setCapability("deletions", enabled: enabled) }
     func setWallet(_ enabled: Bool) { setCapability("wallet", enabled: enabled) }
+    func setEncryption(_ enabled: Bool) { setCapability("encrypt", enabled: enabled) }
+    func setDecryption(_ enabled: Bool) { setCapability("decrypt", enabled: enabled) }
     private func setCapability(_ name: String, enabled: Bool) {
         guard let key = preferenceKey(name) else { return }
         preferences.set(enabled, forKey: key)
@@ -251,6 +268,35 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         addressEdited = true
     }
 
+    var canZoomIn: Bool { pageZoom < 200 }
+    var canZoomOut: Bool { pageZoom > 75 }
+
+    func zoomIn() { setPageZoom(pageZoom + 25) }
+    func zoomOut() { setPageZoom(pageZoom - 25) }
+    func resetZoom() { setPageZoom(100) }
+
+    private func setPageZoom(_ percent: Int) {
+        guard !isHome, let origin else { return }
+        let percent = min(200, max(75, percent))
+        let key = "browser.pageZoom.\(origin)"
+        if percent == 100 {
+            preferences.removeObject(forKey: key)
+        } else {
+            preferences.set(percent, forKey: key)
+        }
+        applyPageZoom(percent)
+    }
+
+    private func restorePageZoom() {
+        let saved = origin.map { preferences.integer(forKey: "browser.pageZoom.\($0)") } ?? 0
+        applyPageZoom((75...200).contains(saved) ? saved : 100)
+    }
+
+    private func applyPageZoom(_ percent: Int) {
+        webView.pageZoom = CGFloat(percent) / 100
+        if pageZoom != percent { pageZoom = percent }
+    }
+
     func openAddress() {
         let input = address.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let url = URL(string: input.contains("://") ? input : "https://" + input),
@@ -305,6 +351,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         isHome = false
         controlsExpanded = false
         currentURL = url
+        restorePageZoom()
         address = url.absoluteString
         addressEdited = false
         webView.load(URLRequest(url: url))
@@ -322,6 +369,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         // Unload the site so hidden pages cannot continue requesting signatures.
         webView.loadHTMLString("", baseURL: nil)
         currentURL = nil
+        restorePageZoom()
         address = ""
         addressEdited = false
         notice = nil
@@ -391,6 +439,10 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             allowConnection(item, duration: duration)
             return
         }
+        if item.crypto != nil {
+            allowCrypto(item, duration: duration)
+            return
+        }
         if duration == .once {
             blockedRequests.removeAll { $0.id == id }
             if let request = pending[id], signingApproval(for: request, relaySettings: [], allowOnce: true) != nil {
@@ -422,6 +474,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             endConnectionRequest(id, reason: "Nostur declined this request.")
         }
         if let request = takePending(id) { request.reply(nil, "Nostur declined this request.") }
+        if let request = takeCrypto(id) { request.reply(nil, "Nostur declined this request.") }
         blockedRequests.removeAll { $0.id == id }
     }
 
@@ -441,6 +494,9 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
                 self.endConnectionRequest(id, reason: "Request expired. Retry the action after allowing it.")
             } else if self.blockedRequests.contains(where: { $0.id == id }) {
                 self.takePending(id)?.reply(nil, "Request expired. Retry the action after allowing it.")
+                self.takeCrypto(id)?.reply(nil, "Request expired. Retry the action after allowing it.")
+            } else if self.pendingCrypto[id] != nil {
+                self.rejectCrypto(id, reason: String(localized: "Encryption request expired."))
             } else { self.reject(id, reason: String(localized: "Signing request expired.")) }
         }
     }
@@ -468,16 +524,20 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             endConnectionRequest(item.id, reason: "Browser session changed.")
         }
         oneTimeRetries.removeAll()
+        cryptoRetries.removeAll()
         blockedRequests.removeAll()
         grantFeedback = nil
         for id in Array(pending.keys) {
             takePending(id)?.reply(nil, "Browser session changed.")
         }
+        for id in Array(pendingCrypto.keys) {
+            takeCrypto(id)?.reply(nil, "Browser session changed.")
+        }
     }
 
-    private func record(_ detail: String, blocked: Bool, showNotice: Bool = true, id: UUID = UUID()) {
+    private func record(_ detail: String, blocked: Bool, showNotice: Bool = true, id: UUID = UUID(), successLabel: String? = nil) {
         activity.removeAll { $0.id == id }
-        activity.insert(BrowserActivity(id: id, site: origin ?? "", detail: detail, blocked: blocked), at: 0)
+        activity.insert(BrowserActivity(id: id, site: origin ?? "", detail: detail, blocked: blocked, successLabel: successLabel), at: 0)
         activity = Array(activity.prefix(30))
         if blocked && showNotice { notice = detail }
     }
@@ -569,9 +629,14 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             reply(Self.jsonString(scope.accountPubkey), nil)
             return
         }
+        if let crypto = request.crypto {
+            receiveCrypto(crypto, scope: scope, reply: reply)
+            return
+        }
         guard let event = request.event else { reply(nil, "Invalid request."); return }
         let relay = BrowserSigningPolicy.isRelayAuthentication(event)
         let waiting = pending.values.filter { BrowserSigningPolicy.isRelayAuthentication($0.event) == relay }.count
+            + (relay ? 0 : pendingCrypto.count)
         guard waiting < (relay ? BrowserBridge.relayPendingLimit : BrowserBridge.appPendingLimit) else {
             reply(nil, "Too many pending Nostur requests."); return
         }
@@ -585,6 +650,120 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         }
         armTimeout(id, seconds: 15)
         authorizeAndSign(id, relaySettings: [])
+    }
+
+    private func receiveCrypto(_ request: BrowserCryptoRequest, scope: BrowserRequestScope,
+                               reply: @escaping (Any?, String?) -> Void) {
+        let waiting = pending.values.filter { !BrowserSigningPolicy.isRelayAuthentication($0.event) }.count + pendingCrypto.count
+        guard request.isValid, waiting < BrowserBridge.appPendingLimit else {
+            reply(nil, "Invalid request or too many pending requests.")
+            return
+        }
+        let id = UUID()
+        pendingCrypto[id] = PendingCrypto(reply: reply, scope: scope, request: request)
+        if let retry = cryptoRetries.firstIndex(where: { $0.scope == scope && $0.crypto == request }) {
+            cryptoRetries.remove(at: retry)
+            oneTimeApprovals.insert(id)
+        }
+        authorizeCrypto(id)
+    }
+
+    private func allowCrypto(_ item: BrowserBlockedRequest, duration: BrowserGrantDuration) {
+        guard let crypto = item.crypto, let key = preferenceKey(crypto.method.encrypts ? "encrypt" : "decrypt") else { return }
+        if duration != .always {
+            if pendingCrypto[item.id] != nil {
+                oneTimeApprovals.insert(item.id)
+                blockedRequests.removeAll { $0.id == item.id }
+                authorizeCrypto(item.id)
+            } else {
+                cryptoRetries.removeAll { $0.scope == item.scope && $0.crypto == crypto }
+                cryptoRetries.append(item)
+                blockedRequests.removeAll { $0.id == item.id }
+                grantFeedback = String(localized: "Retry the action in the app to use this one-time permission.")
+            }
+            return
+        }
+        preferences.set(true, forKey: key)
+        let ids = blockedRequests.filter {
+            $0.scope == item.scope && $0.crypto?.method.encrypts == crypto.method.encrypts
+        }.map(\.id)
+        blockedRequests.removeAll { ids.contains($0.id) }
+        for id in ids where pendingCrypto[id] != nil { authorizeCrypto(id) }
+        grantFeedback = String(localized: "Permission saved. This action is now allowed.")
+    }
+
+    private func cryptoApproval(_ pending: PendingCrypto, id: UUID) -> BrowserCryptoApproval? {
+        let allowed = pending.request.method.encrypts ? encryptionAllowed : decryptionAllowed
+        return BrowserSigningPolicy.cryptoApproval(for: pending.request, accountPubkey: pending.scope.accountPubkey,
+            origin: pending.scope.origin, connected: connected, allowed: allowed || oneTimeApprovals.contains(id))
+    }
+
+    private func authorizeCrypto(_ id: UUID) {
+        guard let request = pendingCrypto[id], !signingRequests.contains(id) else { return }
+        guard currentScope() == request.scope else {
+            rejectCrypto(id, reason: String(localized: "Browser session changed."))
+            return
+        }
+        guard let approval = cryptoApproval(request, id: id) else {
+            let reason = request.request.method.encrypts
+                ? String(localized: "This site wants to encrypt data using your account.")
+                : String(localized: "This site wants to read encrypted data using your account.")
+            blockedRequests.insert(BrowserBlockedRequest(id: id, scope: request.scope,
+                kind: request.request.method.encrypts ? -2 : -3, reason: reason, canAllow: true,
+                waiting: true, crypto: request.request), at: 0)
+            record(reason, blocked: true, showNotice: false, id: id)
+            armTimeout(id, seconds: approvalWaitSeconds)
+            return
+        }
+        guard Self.charge(&cryptoTimes, limit: 60, now: Date()) else {
+            rejectCrypto(id, reason: String(localized: "Too many encryption requests. Try again in a minute."))
+            return
+        }
+        signingRequests.insert(id)
+        armTimeout(id, seconds: 30)
+        cryptor.perform(approval, requestID: id) { [weak self] result in
+            guard let self, let current = self.pendingCrypto[id] else { return }
+            guard self.currentScope() == current.scope, self.cryptoApproval(current, id: id) != nil else {
+                self.rejectCrypto(id, reason: String(localized: "Browser permissions or session changed."))
+                return
+            }
+            switch result {
+            case .success(let value):
+                guard value.utf8.count <= (current.request.method.encrypts ? 131072 : 65535),
+                      let json = Self.jsonString(value), let response = self.takeCrypto(id) else {
+                    self.rejectCrypto(id, reason: String(localized: "Encryption or decryption failed."))
+                    return
+                }
+                self.blockedRequests.removeAll { $0.id == id }
+                self.record(current.request.method.encrypts ? String(localized: "Data encrypted.") : String(localized: "Encrypted data read."),
+                            blocked: false, id: id, successLabel: current.request.method.encrypts ? String(localized: "Encrypted") : String(localized: "Decrypted"))
+                response.reply(json, nil)
+            case .failure:
+                self.rejectCrypto(id, reason: String(localized: "Encryption or decryption failed."))
+            }
+        }
+    }
+
+    private func takeCrypto(_ id: UUID) -> PendingCrypto? {
+        timeouts.removeValue(forKey: id)?.cancel()
+        oneTimeApprovals.remove(id)
+        signingRequests.remove(id)
+        cryptor.cancel(id)
+        if let index = blockedRequests.firstIndex(where: { $0.id == id }) { blockedRequests[index].waiting = false }
+        return pendingCrypto.removeValue(forKey: id)
+    }
+
+    private func rejectCrypto(_ id: UUID, reason: String) {
+        guard let request = takeCrypto(id) else { return }
+        record(reason, blocked: true, showNotice: false, id: id)
+        if currentScope() == request.scope {
+            blockedRequests.removeAll { $0.id == id }
+            blockedRequests.insert(BrowserBlockedRequest(id: id, scope: request.scope,
+                kind: request.request.method.encrypts ? -2 : -3, reason: reason, canAllow: false,
+                waiting: false, crypto: request.request), at: 0)
+            blockedRequests = Array(blockedRequests.prefix(30))
+        }
+        request.reply(nil, "Nostur declined this request.")
     }
 
     private func startNextRelayRequest() {
@@ -750,6 +929,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         let token = UUID().uuidString
         documentToken = token
         currentURL = webView.url
+        restorePageZoom()
         address = webView.url?.absoluteString ?? ""
         addressEdited = false
         canGoBack = webView.canGoBack

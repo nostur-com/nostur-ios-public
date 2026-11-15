@@ -11,15 +11,15 @@ import NavigationBackport
 
 struct AppRow: View {
     @Environment(\.theme) private var theme
-    @Environment(\.openURL) private var openURL
+    @Environment(\.containerID) private var containerID
     public var app: SuggestedApp
     private var appName: String { app.name }
     private var appDescription: String? { app.description }
     private var appLogoUrl: URL? { app.logoUrl }
-    private var appOpenURL: URL { app.openUrl }
     
     @ObservedObject private var ss: SettingsStore = .shared
     @State private var showDetailSheet = false
+    @State private var pendingAction: AppDetail.Action?
     
     var body: some View {
         HStack(alignment: .center) {
@@ -71,22 +71,50 @@ struct AppRow: View {
         .onTapGesture {
             showDetailSheet = true
         }
-        .sheet(isPresented: $showDetailSheet, content: {
-            NBNavigationStack {
-                VStack(spacing: 10) {
-                    Spacer()
-                    AppDetail(app: app, onDismiss: {
-                        showDetailSheet = false
-                    })
-                    .padding()
-                    .environment(\.theme, theme)
-                }
-            }
-            .nbUseNavigationStack(.never)
-            .presentationDetents350l()
-        })
+        .sheet(isPresented: $showDetailSheet, onDismiss: performPendingAction) {
+            appDetailSheet
+        }
     }
-    
+
+    @ViewBuilder
+    private var appDetailSheet: some View {
+        let content = NBNavigationStack {
+            AppDetail(app: app) { action in
+                pendingAction = action
+                showDetailSheet = false
+            }
+            .padding()
+            .environment(\.theme, theme)
+        }
+        .nbUseNavigationStack(.never)
+
+        if #available(iOS 16.4, *) {
+            // On Mac, a single detent keeps mouse scrolling focused on the list.
+            let detents: Set<PresentationDetent> = ProcessInfo.processInfo.isMacCatalystApp
+                || ProcessInfo.processInfo.isiOSAppOnMac ? [.large] : [.height(350), .large]
+            content
+                .presentationDetents(detents)
+                .presentationContentInteraction(.scrolls)
+        } else if #available(iOS 16, *) {
+            content.presentationDetents([.height(350), .large])
+        } else {
+            content
+        }
+    }
+
+    private func performPendingAction() {
+        let action = pendingAction
+        pendingAction = nil
+        switch action {
+        case .open(let url):
+            NostrBrowserSession.shared.open(url)
+        case .profile(let pubkey):
+            navigateTo(ContactPath(key: pubkey), context: containerID)
+        case nil:
+            break
+        }
+    }
+
     private var appIconPlaceholder: some View {
         Color(.secondarySystemBackground)
             .overlay {
@@ -96,39 +124,14 @@ struct AppRow: View {
             }
     }
 
-    private func openApp() {
-        openURL(appOpenURL)
-    }
 }
 
 #Preview {
     NBNavigationStack {
-        AppRow(app: SuggestedApp(id: "1", name: "Nostur", description: "A nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\n", logoUrl: URL(string: "https://nostur.com/nostur.png")!, openUrl: URL(string: "https://nostur.com")!, recommendedBy: [
-            (
-                "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
-            ),
-            (
-                "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
-            ),
-            (
-                "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
-            ),
-            (
-                "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
-            ),
-            (
-                "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
-            ),
-            (
-                "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
-            )
-        ]))
-            .padding(10)
+        AppRow(app: SuggestedApp(
+            id: "1", name: "Nostur", description: "A Nostr client",
+            openUrl: URL(string: "https://nostur.com")!
+        ))
+        .padding(10)
     }
 }
