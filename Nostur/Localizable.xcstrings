@@ -156,6 +156,28 @@
         }
       }
     },
+    "%lld posts found · Through %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld berichten gevonden · T/m %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld publicaciones encontradas · Hasta el %2$@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld postingan ditemukan · Hingga %2$@"
+          }
+        }
+      }
+    },
     "%lld quotes" : {
       "localizations" : {
         "nl" : {
@@ -222,6 +244,182 @@
         }
       }
     },
+    "Beyond the usual crowd" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buiten de vaste kring"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más allá del círculo habitual"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Di luar lingkaran biasa"
+          }
+        }
+      }
+    },
+    "Choose at least one highlight." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies minstens één hoogtepunt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige al menos un momento destacado."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih setidaknya satu sorotan."
+          }
+        }
+      }
+    },
+    "Choose highlights" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies hoogtepunten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige los momentos destacados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih sorotan"
+          }
+        }
+      }
+    },
+    "Fetch from selected relays" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haal op bij gekozen relays"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargar de los relés seleccionados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambil dari relai yang dipilih"
+          }
+        }
+      }
+    },
+    "Fetching %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ophalen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargando %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengambil %@"
+          }
+        }
+      }
+    },
+    "First exchanges found with %lld people in this thread" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eerste gevonden uitwisselingen met %lld personen in dit gesprek"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primeros intercambios encontrados con %lld personas en este hilo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Percakapan pertama yang ditemukan dengan %lld orang di utas ini"
+          }
+        }
+      }
+    },
+    "Hide highlights or people you’d rather leave out. Preview your image, then choose Prepare post to make an editable draft." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verberg hoogtepunten of personen die je liever weglaat. Bekijk de afbeelding en kies daarna Bericht voorbereiden om een bewerkbaar concept te maken."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oculta los momentos destacados o las personas que prefieras dejar fuera. Previsualiza la imagen y elige Preparar publicación para crear un borrador editable."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sembunyikan sorotan atau orang yang tidak ingin kamu sertakan. Pratinjau gambar, lalu pilih Siapkan postingan untuk membuat draf yang bisa diedit."
+          }
+        }
+      }
+    },
+    "Loading saved zap information…" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opgeslagen zapgegevens laden…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando la información de zaps guardada…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memuat informasi zap yang tersimpan…"
+          }
+        }
+      }
+    },
     "Longest break: %lld days between posts" : {
       "localizations" : {
         "nl" : {
@@ -266,6 +464,50 @@
         }
       }
     },
+    "Missing something?" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mis je iets?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Falta algo?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ada yang kurang?"
+          }
+        }
+      }
+    },
+    "More highlights" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer hoogtepunten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más momentos destacados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorotan lainnya"
+          }
+        }
+      }
+    },
     "My regular in the replies" : {
       "localizations" : {
         "nl" : {
@@ -288,6 +530,94 @@
         }
       }
     },
+    "Open History to fetch a month or retry a source. Some older posts may no longer be available." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Geschiedenis om een maand op te halen of een bron opnieuw te proberen. Sommige oudere berichten zijn mogelijk niet meer beschikbaar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre Historial para descargar un mes o volver a intentar con una fuente. Es posible que algunas publicaciones antiguas ya no estén disponibles."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka Riwayat untuk mengambil data satu bulan atau mencoba kembali suatu sumber. Beberapa postingan lama mungkin sudah tidak tersedia."
+          }
+        }
+      }
+    },
+    "Piecing together conversations…" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesprekken samenvoegen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconstruyendo conversaciones…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyusun percakapan…"
+          }
+        }
+      }
+    },
+    "Preparing preview…" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voorbeeld voorbereiden…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparando la vista previa…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyiapkan pratinjau…"
+          }
+        }
+      }
+    },
+    "Reading saved history…" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opgeslagen geschiedenis lezen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leyendo el historial guardado…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Membaca riwayat tersimpan…"
+          }
+        }
+      }
+    },
     "Regular in the replies" : {
       "localizations" : {
         "nl" : {
@@ -306,6 +636,182 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Langganan di kolom balasan"
+          }
+        }
+      }
+    },
+    "Replies on %lld different days" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reacties op %lld verschillende dagen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respuestas en %lld días distintos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balasan pada %lld hari berbeda"
+          }
+        }
+      }
+    },
+    "Saved report" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opgeslagen overzicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resumen guardado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laporan tersimpan"
+          }
+        }
+      }
+    },
+    "Selected sources checked. Some history may still be missing." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gekozen bronnen gecontroleerd. Er kan nog geschiedenis ontbreken."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se comprobaron las fuentes seleccionadas. Es posible que aún falte parte del historial."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sumber yang dipilih telah diperiksa. Sebagian riwayat mungkin masih belum ditemukan."
+          }
+        }
+      }
+    },
+    "Some activity may be missing." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sommige activiteit kan ontbreken."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puede faltar parte de la actividad."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sebagian aktivitas mungkin tidak tercatat."
+          }
+        }
+      }
+    },
+    "Start with two random adjacent months" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begin met twee willekeurige opeenvolgende maanden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empezar con dos meses consecutivos al azar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mulai dengan dua bulan berurutan yang dipilih acak"
+          }
+        }
+      }
+    },
+    "Starts with two months. Tap another month in the calendar to add it. Test progress is saved separately from full-year progress." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begint met twee maanden. Tik op een andere maand in de kalender om die toe te voegen. De testvoortgang wordt apart opgeslagen van het volledige jaar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empieza con dos meses. Toca otro mes del calendario para añadirlo. El progreso de prueba se guarda por separado del año completo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimulai dengan dua bulan. Ketuk bulan lain di kalender untuk menambahkannya. Progres pengujian disimpan terpisah dari progres setahun penuh."
+          }
+        }
+      }
+    },
+    "Still talking about it" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nog steeds onderwerp van gesprek"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía da de qué hablar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masih ramai dibahas"
+          }
+        }
+      }
+    },
+    "Test report · %@ – %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testoverzicht · %1$@ – %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resumen de prueba · %1$@ – %2$@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laporan uji · %1$@ – %2$@"
           }
         }
       }
@@ -372,6 +878,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bersama %@"
+          }
+        }
+      }
+    },
+    "You can keep using Nostur while it gathers history. If you close the app, continue later from where you left off." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kunt Nostur blijven gebruiken terwijl je geschiedenis wordt opgehaald. Sluit je de app, dan kun je later verder waar je was gebleven."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puedes seguir usando Nostur mientras se recopila el historial. Si cierras la app, podrás continuar más tarde desde donde lo dejaste."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamu bisa tetap menggunakan Nostur saat riwayat dikumpulkan. Jika aplikasi ditutup, kamu bisa melanjutkannya nanti."
           }
         }
       }
@@ -611,6 +1139,28 @@
     "-%@" : {
       "shouldTranslate" : false
     },
+    "Your report uses public posts and interactions. Private messages aren’t included." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je overzicht gebruikt openbare berichten en interacties. Privéberichten worden niet meegenomen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El resumen usa publicaciones e interacciones públicas. No incluye mensajes privados."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laporan ini menggunakan postingan dan interaksi publik. Pesan pribadi tidak disertakan."
+          }
+        }
+      }
+    },
     "—" : {
 
     },
@@ -654,7 +1204,26 @@
       "shouldTranslate" : false
     },
     ". %lld items received, including duplicates" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ". %lld items ontvangen, inclusief duplicaten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ". %lld elementos recibidos, incluidos duplicados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ". %lld item diterima, termasuk duplikat"
+          }
+        }
+      }
     },
     "·" : {
       "localizations" : {
@@ -2229,7 +2798,26 @@
       }
     },
     "%@ sats" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sats"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sats"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sat"
+          }
+        }
+      }
     },
     "%@ sats · %lld zaps" : {
       "localizations" : {
@@ -2315,7 +2903,26 @@
       }
     },
     "%@ so far" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tot nu toe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ hasta ahora"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sejauh ini"
+          }
+        }
+      }
     },
     "%@ tuned in" : {
       "localizations" : {
@@ -2846,7 +3453,26 @@
 
     },
     "%lld items received, including duplicates" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld items ontvangen, inclusief duplicaten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld elementos recibidos, incluidos duplicados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld item diterima, termasuk duplikat"
+          }
+        }
+      }
     },
     "%lld listeners" : {
       "localizations" : {
@@ -2893,7 +3519,26 @@
       }
     },
     "%lld month requests remaining" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nog %lld verzoeken voor deze maand"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld solicitudes pendientes de este mes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld permintaan tersisa untuk bulan ini"
+          }
+        }
+      }
     },
     "%lld more" : {
       "extractionState" : "stale",
@@ -2991,10 +3636,48 @@
 
     },
     "%lld posts reacted to" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gereageerd op %lld berichten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld publicaciones con reacciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld postingan diberi reaksi"
+          }
+        }
+      }
     },
     "%lld public interactions" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld openbare interacties"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld interacciones públicas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld interaksi publik"
+          }
+        }
+      }
     },
     "%lld reactions" : {
       "localizations" : {
@@ -3029,7 +3712,26 @@
       }
     },
     "%lld received" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ontvangen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld recibidos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld diterima"
+          }
+        }
+      }
     },
     "%lld recipients" : {
       "localizations" : {
@@ -3060,6 +3762,24 @@
             "state" : "new",
             "value" : "%1$lld relay queries completed · %2$lld queued"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld relayverzoeken klaar · %2$lld in de wachtrij"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld consultas a relés completadas · %2$lld en cola"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld permintaan relai selesai · %2$lld dalam antrean"
+          }
         }
       }
     },
@@ -3074,7 +3794,26 @@
       }
     },
     "%lld relays active" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld relays actief"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld relés activos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld relai aktif"
+          }
+        }
+      }
     },
     "%lld relays available" : {
       "localizations" : {
@@ -3193,6 +3932,24 @@
             "state" : "new",
             "value" : "%1$lld replies · %2$lld people"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld reacties · %2$lld personen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld respuestas · %2$lld personas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld balasan · %2$lld orang"
+          }
         }
       }
     },
@@ -3254,10 +4011,48 @@
       }
     },
     "%lld requests deferred for cooldown" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld verzoeken uitgesteld tot de wachttijd voorbij is"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld solicitudes aplazadas durante el tiempo de espera"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld permintaan ditunda hingga waktu tunggu berakhir"
+          }
+        }
+      }
     },
     "%lld requests failed in this month" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld verzoeken voor deze maand mislukt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld solicitudes fallidas este mes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld permintaan gagal untuk bulan ini"
+          }
+        }
+      }
     },
     "%lld requests not shown" : {
       "extractionState" : "stale",
@@ -3359,7 +4154,26 @@
       }
     },
     "%lld requests skipped in this month" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld verzoeken voor deze maand overgeslagen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld solicitudes omitidas este mes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld permintaan dilewati untuk bulan ini"
+          }
+        }
+      }
     },
     "%lld viewers" : {
       "localizations" : {
@@ -3502,6 +4316,24 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld zaps · %2$@ sats"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld zaps · %2$@ sats"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld zaps · %2$@ sats"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld zap · %2$@ sat"
           }
         }
       }
@@ -4823,13 +5655,70 @@
       }
     },
     "A relay closed the history request. Check its access settings and retry." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een relay heeft het geschiedenisverzoek gesloten. Controleer de toegangsinstellingen en probeer het opnieuw."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un relé cerró la solicitud de historial. Revisa su configuración de acceso y vuelve a intentarlo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai menutup permintaan riwayat. Periksa pengaturan aksesnya lalu coba lagi."
+          }
+        }
+      }
     },
     "A relay exceeded the history response limit. This source is incomplete." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een relay heeft de antwoordlimiet overschreden. Deze bron is niet volledig."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un relé superó el límite de respuestas de historial. Esta fuente está incompleta."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai melampaui batas respons riwayat. Sumber ini belum lengkap."
+          }
+        }
+      }
     },
     "A relay is cooling down. Resume later to collect its remaining history." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een relay heeft een wachttijd ingesteld. Ga later verder om de rest op te halen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un relé está en pausa. Continúa más tarde para recuperar el historial restante."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai sedang dalam masa tunggu. Lanjutkan nanti untuk mengambil sisa riwayat."
+          }
+        }
+      }
     },
     "A relay returned a full page without any new responses. Its remaining responses could not be retrieved; checking other relays may help." : {
       "localizations" : {
@@ -4854,7 +5743,26 @@
       }
     },
     "A relay returned an unreadable history response." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een relay gaf een onleesbaar antwoord op het geschiedenisverzoek."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un relé devolvió una respuesta de historial ilegible."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai mengirim respons riwayat yang tidak dapat dibaca."
+          }
+        }
+      }
     },
     "A secure website is required." : {
       "localizations" : {
@@ -4879,7 +5787,26 @@
       }
     },
     "A source capped one timestamp. Some history remains unresolved." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een bron beperkte het aantal resultaten voor één tijdstip. Een deel van de geschiedenis ontbreekt nog."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una fuente limitó los resultados de un mismo instante. Parte del historial sigue sin recuperarse."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sumber membatasi hasil untuk satu waktu. Sebagian riwayat belum ditemukan."
+          }
+        }
+      }
     },
     "A web client for conversations on Nostr." : {
       "localizations" : {
@@ -4904,7 +5831,26 @@
       }
     },
     "A year worth sharing" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een jaar om te delen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un año para compartir"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setahun yang layak dibagikan"
+          }
+        }
+      }
     },
     "About badge publishing" : {
       "localizations" : {
@@ -4992,7 +5938,26 @@
       }
     },
     "About your year" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over je jaar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca de tu año"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentang tahunmu"
+          }
+        }
+      }
     },
     "Accept" : {
       "comment" : "Button to accept terms and conditions",
@@ -6589,7 +7554,26 @@
       }
     },
     "All selected sources finished" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle gekozen bronnen zijn klaar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las fuentes seleccionadas han terminado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semua sumber yang dipilih telah selesai"
+          }
+        }
+      }
     },
     "Allow access, then retry on the site." : {
       "localizations" : {
@@ -7246,7 +8230,26 @@
       }
     },
     "App relays inherit their Auth setting unless you change it here. Report-only relays start with Auth off." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays uit de app behouden hun verificatie-instelling tenzij je die hier wijzigt. Voor relays die je alleen voor het overzicht gebruikt, staat verificatie standaard uit."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los relés de la app conservan su configuración de autenticación salvo que la cambies aquí. Los relés exclusivos del resumen tienen la autenticación desactivada por defecto."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai aplikasi memakai pengaturan autentikasi yang sudah ada kecuali diubah di sini. Autentikasi relai khusus laporan awalnya nonaktif."
+          }
+        }
+      }
     },
     "App theme" : {
       "localizations" : {
@@ -7520,7 +8523,26 @@
       }
     },
     "At least %lld items received before the request stopped" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minstens %lld items ontvangen voordat het verzoek stopte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se recibieron al menos %lld elementos antes de que se detuviera la solicitud"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setidaknya %lld item diterima sebelum permintaan berhenti"
+          }
+        }
+      }
     },
     "auth required" : {
       "comment" : "Small label to indicate auth is required",
@@ -7591,7 +8613,26 @@
       }
     },
     "Authenticate with your logged-in signing account. This identifies your public key to the relay, including when gathering a report for someone else." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifieer je met het account waarmee je bent ingelogd en kunt ondertekenen. De relay ziet je publieke sleutel, ook als je een overzicht voor iemand anders maakt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autentícate con la cuenta de firma con la que has iniciado sesión. El relé conocerá tu clave pública, incluso al crear el resumen de otra persona."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lakukan autentikasi dengan akun penandatangan yang sedang digunakan. Relai akan mengetahui kunci publikmu, termasuk saat membuat laporan untuk orang lain."
+          }
+        }
+      }
     },
     "Authenticating with account: %@" : {
       "localizations" : {
@@ -9007,7 +10048,26 @@
       }
     },
     "Both month passes checked" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten en interacties gecontroleerd"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicaciones e interacciones comprobadas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan dan interaksi telah diperiksa"
+          }
+        }
+      }
     },
     "Broadcast nostr event" : {
       "comment" : "Navigation title for screen to broadcast any nostr event",
@@ -9262,6 +10322,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Archiefopslag berekenen..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calculando el tamaño del archivo…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menghitung ukuran arsip…"
           }
         }
       }
@@ -9878,7 +10950,26 @@
       }
     },
     "Check for updates" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleren op updates"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar novedades"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periksa pembaruan"
+          }
+        }
+      }
     },
     "Check out the “%@” badge." : {
       "localizations" : {
@@ -9970,20 +11061,95 @@
             "state" : "new",
             "value" : "Checking missing zap providers: %1$lld of %2$lld…"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontbrekende zapdiensten controleren: %1$lld van %2$lld…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando servicios de zap pendientes: %1$lld de %2$lld…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memeriksa penyedia zap yang belum diketahui: %1$lld dari %2$lld…"
+          }
         }
       }
     },
     "Checking missing zap providers…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontbrekende zapdiensten controleren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando servicios de zap pendientes…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memeriksa penyedia zap yang belum diketahui…"
+          }
+        }
+      }
     },
     "Checking profile on relays…" : {
 
     },
     "Checking references to your posts" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijzingen naar je berichten controleren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando referencias a tus publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memeriksa rujukan ke postinganmu"
+          }
+        }
+      }
     },
     "Checking relay limits" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relaylimieten controleren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando los límites del relé"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memeriksa batas relai"
+          }
+        }
+      }
     },
     "Checking relays for your blossom server list..." : {
       "localizations" : {
@@ -10121,10 +11287,48 @@
 
     },
     "Checking zap providers…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapdiensten controleren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando servicios de zap…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memeriksa penyedia zap…"
+          }
+        }
+      }
     },
     "Checking zap receipts before counting lightning totals." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapbewijzen controleren voordat de Lightning-totalen worden berekend."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando los recibos de zap antes de calcular los totales de Lightning."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memeriksa bukti zap sebelum menghitung total Lightning."
+          }
+        }
+      }
     },
     "Checking…" : {
       "localizations" : {
@@ -10218,10 +11422,48 @@
       }
     },
     "Choose a profile" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies een profiel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige un perfil"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih profil"
+          }
+        }
+      }
     },
     "Choose a profile for this report" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies een profiel voor dit overzicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige un perfil para este resumen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih profil untuk laporan ini"
+          }
+        }
+      }
     },
     "Choose a relay that requires authentication to receive private messages." : {
       "localizations" : {
@@ -10312,7 +11554,26 @@
       }
     },
     "Choose at least one relay, or preview your saved history." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies minstens één relay of bekijk je opgeslagen geschiedenis."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige al menos un relé o consulta tu historial guardado."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih setidaknya satu relai atau lihat riwayat yang tersimpan."
+          }
+        }
+      }
     },
     "Choose content for this column" : {
       "extractionState" : "stale",
@@ -10537,7 +11798,26 @@
       }
     },
     "Choose relays for a new refresh" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies relays voor een nieuwe zoekronde"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige los relés para una nueva actualización"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih relai untuk pembaruan baru"
+          }
+        }
+      }
     },
     "Choose relays for private messages" : {
       "localizations" : {
@@ -10584,19 +11864,114 @@
       }
     },
     "Choose up to 20 relays. Nostur checks different relays in parallel, with one history request at a time per relay. Old relays may have history that your current relays no longer store." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies maximaal 20 relays. Nostur controleert meerdere relays tegelijk, met één geschiedenisverzoek per relay. Oude relays kunnen gegevens hebben die je huidige relays niet meer bewaren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige hasta 20 relés. Nostur consulta varios en paralelo, con una solicitud de historial a la vez por relé. Los relés antiguos pueden conservar historial que los actuales ya no guardan."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih hingga 20 relai. Nostur memeriksa beberapa relai sekaligus, dengan satu permintaan riwayat per relai. Relai lama mungkin masih menyimpan riwayat yang tidak ada di relai saat ini."
+          }
+        }
+      }
     },
     "Choose what to share" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies wat je wilt delen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige qué compartir"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih yang ingin dibagikan"
+          }
+        }
+      }
     },
     "Choose what you want to highlight" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies je hoogtepunten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige qué destacar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih yang ingin disorot"
+          }
+        }
+      }
     },
     "Choose who appears in your report and shared image." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies wie in je overzicht en gedeelde afbeelding verschijnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige quién aparece en el resumen y en la imagen compartida."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih siapa yang muncul di laporan dan gambar yang dibagikan."
+          }
+        }
+      }
     },
     "Choosing your standout posts and people." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bijzondere berichten en contacten uitzoeken."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionando tus publicaciones y contactos más destacados."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memilih postingan dan orang yang paling menonjol."
+          }
+        }
+      }
     },
     "Classic" : {
       "localizations" : {
@@ -11184,10 +12559,48 @@
       }
     },
     "Collecting conversations, reactions, reposts and zaps." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesprekken, reacties, reposts en zaps verzamelen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilando conversaciones, reacciones, republicaciones y zaps."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengumpulkan percakapan, reaksi, repost, dan zap."
+          }
+        }
+      }
     },
     "Collecting your public posts, month by month." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je openbare berichten per maand verzamelen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilando tus publicaciones públicas mes a mes."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengumpulkan postingan publikmu bulan demi bulan."
+          }
+        }
+      }
     },
     "Collection is paced per relay and saves progress as it goes. Relays may omit old content or cap results, so your report only reflects the history we could find." : {
 
@@ -11350,7 +12763,26 @@
       }
     },
     "Comments on your posts" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reacties op je berichten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comentarios en tus publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komentar pada postinganmu"
+          }
+        }
+      }
     },
     "Communities" : {
       "comment" : "Navigation title for Communities view",
@@ -12590,10 +14022,48 @@
       }
     },
     "Continue fetching" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verder ophalen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar la recopilación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lanjutkan pengambilan"
+          }
+        }
+      }
     },
     "Continue month" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verder met deze maand"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar este mes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lanjutkan bulan ini"
+          }
+        }
+      }
     },
     "Conversation" : {
       "comment" : "Feed title",
@@ -12681,7 +14151,26 @@
       }
     },
     "Conversation parents" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eerdere berichten in gesprekken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensajes anteriores de la conversación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan sebelumnya dalam percakapan"
+          }
+        }
+      }
     },
     "Conversation starter" : {
       "localizations" : {
@@ -14587,7 +16076,26 @@
 
     },
     "Delete collected history" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder verzamelde geschiedenis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar el historial recopilado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus riwayat yang dikumpulkan"
+          }
+        }
+      }
     },
     "Delete content" : {
       "localizations" : {
@@ -14681,10 +16189,48 @@
       }
     },
     "Delete this account's collected public history?" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De verzamelde openbare geschiedenis van dit account verwijderen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar el historial público recopilado de esta cuenta?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus riwayat publik yang dikumpulkan untuk akun ini?"
+          }
+        }
+      }
     },
     "Delete this profile's saved public history?" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De opgeslagen openbare geschiedenis van dit profiel verwijderen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar el historial público guardado de este perfil?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus riwayat publik yang tersimpan untuk profil ini?"
+          }
+        }
+      }
     },
     "Deleting in %lld seconds" : {
       "comment" : "Text that is counting down when you are deleting your account",
@@ -15481,7 +17027,26 @@
       }
     },
     "Dismiss year report reminder" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sluit herinnering voor het jaaroverzicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar el recordatorio del resumen anual"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutup pengingat laporan tahunan"
+          }
+        }
+      }
     },
     "Display" : {
       "comment" : "Setting heading on settings screen",
@@ -15799,7 +17364,26 @@
       }
     },
     "Downloaded items are kept. Continue and retry only request unfinished work for this month. Relay cooldowns still apply. Extra reference checks are available through Continue fetching on the report." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opgehaalde items blijven bewaard. Verdergaan of opnieuw proberen haalt alleen op wat voor deze maand nog ontbreekt. Relaywachttijden blijven gelden. Kies Verder ophalen in het overzicht om extra verwijzingen te controleren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se conserva lo descargado. Al continuar o reintentar, solo se solicita lo pendiente de este mes. Se respetan los tiempos de espera de los relés. Usa Continuar la recopilación en el resumen para revisar más referencias."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data yang sudah diambil tetap tersimpan. Melanjutkan atau mencoba lagi hanya meminta data bulan ini yang belum selesai. Waktu tunggu relai tetap berlaku. Pilih Lanjutkan pengambilan di laporan untuk memeriksa rujukan lain."
+          }
+        }
+      }
     },
     "Downloading resized photos to read dimensions…" : {
       "comment" : "Blossom /media omitted output dimensions, so the processed file is being downloaded."
@@ -16289,7 +17873,26 @@
       }
     },
     "Enable Auth for this history source and use a signing account to access this relay." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schakel verificatie in voor deze bron en gebruik een account waarmee je kunt ondertekenen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa la autenticación de esta fuente y usa una cuenta de firma para acceder al relé."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktifkan autentikasi untuk sumber riwayat ini dan gunakan akun penandatangan untuk mengakses relai."
+          }
+        }
+      }
     },
     "Enable Auth for this relay and use a signing account." : {
       "localizations" : {
@@ -16876,7 +18479,26 @@
       }
     },
     "Enter a valid ws:// or wss:// relay URL." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer een geldig relayadres in dat begint met ws:// of wss://."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce una URL válida de relé que empiece por ws:// o wss://."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masukkan URL relai yang valid dengan awalan ws:// atau wss://."
+          }
+        }
+      }
     },
     "Enter a website address" : {
       "localizations" : {
@@ -17537,7 +19159,26 @@
       }
     },
     "Export signed public history" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteer ondertekende openbare geschiedenis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar historial público firmado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekspor riwayat publik bertanda tangan"
+          }
+        }
+      }
     },
     "Export to relays" : {
       "localizations" : {
@@ -18008,13 +19649,70 @@
       }
     },
     "Fetch history…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschiedenis ophalen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilar historial…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambil riwayat…"
+          }
+        }
+      }
     },
     "Fetch month" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haal maand op"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargar este mes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambil data bulan ini"
+          }
+        }
+      }
     },
     "Fetch next" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haal deze als volgende op"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargar a continuación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambil berikutnya"
+          }
+        }
+      }
     },
     "Fetches like/zaps/replies counts as posts appear" : {
       "comment" : "Setting on settings screen",
@@ -18058,13 +19756,70 @@
       "shouldTranslate" : false
     },
     "Fetching" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezig met ophalen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargando"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sedang mengambil"
+          }
+        }
+      }
     },
     "Fetching interactions" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interacties ophalen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargando interacciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengambil interaksi"
+          }
+        }
+      }
     },
     "Fetching your content" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je berichten ophalen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargando tus publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengambil postinganmu"
+          }
+        }
+      }
     },
     "Fetching..." : {
       "localizations" : {
@@ -18245,10 +20000,48 @@
       }
     },
     "Fill gaps" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vul ontbrekende geschiedenis aan"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rellenar lagunas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lengkapi riwayat"
+          }
+        }
+      }
     },
     "Filling in conversations…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesprekken aanvullen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completando conversaciones…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melengkapi percakapan…"
+          }
+        }
+      }
     },
     "Filter" : {
       "localizations" : {
@@ -18403,13 +20196,70 @@
       }
     },
     "Finding missed interactions…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontbrekende interacties zoeken…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando interacciones que faltan…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencari interaksi yang belum ditemukan…"
+          }
+        }
+      }
     },
     "Finding replies, reactions, reposts, quotes and zaps linked directly to your posts." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reacties, reposts, citaten en zaps zoeken die direct bij je berichten horen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando respuestas, reacciones, republicaciones, citas y zaps vinculados directamente a tus publicaciones."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencari balasan, reaksi, repost, kutipan, dan zap yang terkait langsung dengan postinganmu."
+          }
+        }
+      }
     },
     "Finding your highlights…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hoogtepunten zoeken…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando tus momentos destacados…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencari sorotanmu…"
+          }
+        }
+      }
     },
     "Finish or remove the voice recording before posting a video." : {
 
@@ -19103,13 +20953,70 @@
       }
     },
     "Gather your history" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzamel je geschiedenis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopila tu historial"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kumpulkan riwayatmu"
+          }
+        }
+      }
     },
     "Gathering replies and support…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reacties en steun verzamelen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilando respuestas y muestras de apoyo…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengumpulkan balasan dan dukungan…"
+          }
+        }
+      }
     },
     "Gathering your posts…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je berichten verzamelen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilando tus publicaciones…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengumpulkan postinganmu…"
+          }
+        }
+      }
     },
     "get_public_key" : {
       "localizations" : {
@@ -19436,10 +21343,48 @@
       }
     },
     "Hide %@ from shared cards" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verberg %@ op gedeelde kaarten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar a %@ en las tarjetas compartidas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sembunyikan %@ dari kartu yang dibagikan"
+          }
+        }
+      }
     },
     "Hide %@ from your report" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verberg %@ in je overzicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar %@ en tu resumen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sembunyikan %@ dari laporanmu"
+          }
+        }
+      }
     },
     "Hide balance" : {
       "localizations" : {
@@ -19681,19 +21626,114 @@
       }
     },
     "History" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschiedenis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riwayat"
+          }
+        }
+      }
     },
     "History archive" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschiedenisarchief"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo de historial"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arsip riwayat"
+          }
+        }
+      }
     },
     "History collection paused" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschiedenis ophalen gepauzeerd"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilación de historial en pausa"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pengumpulan riwayat dijeda"
+          }
+        }
+      }
     },
     "History coverage" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschikbare geschiedenis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial encontrado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cakupan riwayat"
+          }
+        }
+      }
     },
     "History sources" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bronnen voor je geschiedenis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuentes de historial"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sumber riwayat"
+          }
+        }
+      }
     },
     "Home" : {
       "localizations" : {
@@ -20516,13 +22556,70 @@
       }
     },
     "Incoming replies and support" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvangen reacties en steun"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respuestas y apoyo recibidos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balasan dan dukungan yang diterima"
+          }
+        }
+      }
     },
     "Incomplete source details" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details van onvolledige bronnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles de las fuentes incompletas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rincian sumber yang belum lengkap"
+          }
+        }
+      }
     },
     "Incomplete sources" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onvolledige bronnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuentes incompletas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sumber belum lengkap"
+          }
+        }
+      }
     },
     "Increase privacy" : {
       "localizations" : {
@@ -21436,7 +23533,26 @@
       }
     },
     "Last fetched %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatst opgehaald: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última descarga: %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terakhir diambil: %@"
+          }
+        }
+      }
     },
     "Last optimize: %@" : {
       "comment" : "Last run: (date) of maintanace",
@@ -21467,6 +23583,24 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Last response: %1$lld items received · %2$lld newly archived"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatste antwoord: %1$lld items ontvangen · %2$lld nieuw opgeslagen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última respuesta: %1$lld elementos recibidos · %2$lld añadidos al archivo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respons terakhir: %1$lld item diterima · %2$lld baru diarsipkan"
           }
         }
       }
@@ -22599,7 +24733,26 @@
       }
     },
     "Loading missing posts so replies can be matched to the right people." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontbrekende berichten laden om reacties aan de juiste personen te koppelen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando publicaciones que faltan para asociar las respuestas a las personas correctas."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memuat postingan yang hilang agar balasan dapat dikaitkan dengan orang yang tepat."
+          }
+        }
+      }
     },
     "Loading older posts" : {
       "localizations" : {
@@ -24174,7 +26327,26 @@
       }
     },
     "Month requests finished" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzoeken voor deze maand klaar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitudes de este mes completadas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permintaan bulan ini selesai"
+          }
+        }
+      }
     },
     "More" : {
       "localizations" : {
@@ -24685,7 +26857,26 @@
       }
     },
     "My profile" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn profiel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi perfil"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil saya"
+          }
+        }
+      }
     },
     "My public conversations" : {
       "localizations" : {
@@ -26104,7 +28295,26 @@
       }
     },
     "No saved public history" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen opgeslagen openbare geschiedenis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay historial público guardado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belum ada riwayat publik tersimpan"
+          }
+        }
+      }
     },
     "No stats collected yet." : {
       "localizations" : {
@@ -26758,7 +28968,26 @@
       }
     },
     "Not fetched" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet opgehaald"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin descargar"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belum diambil"
+          }
+        }
+      }
     },
     "Not on your profile" : {
       "localizations" : {
@@ -27376,10 +29605,48 @@
       }
     },
     "One failed request can pause a relay for the rest of this run. Other months may be skipped without being attempted. Other relays can still finish." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na een mislukt verzoek kan een relay voor deze zoekronde worden gepauzeerd. Andere maanden worden dan mogelijk overgeslagen. Andere relays kunnen wel doorgaan."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una solicitud fallida puede pausar un relé durante el resto de esta recopilación. Es posible que se omitan otros meses. Los demás relés pueden continuar."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Satu permintaan yang gagal dapat menjeda relai hingga proses ini selesai. Bulan lain mungkin dilewati tanpa dicoba. Relai lain tetap bisa menyelesaikan pengambilan."
+          }
+        }
+      }
     },
     "One or more relays could not finish. Retry incomplete sources to gather more history." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een of meer relays konden niet afronden. Probeer de onvolledige bronnen opnieuw om meer geschiedenis op te halen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uno o más relés no pudieron terminar. Vuelve a intentar con las fuentes incompletas para recopilar más historial."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Satu atau beberapa relai tidak selesai. Coba lagi sumber yang belum lengkap untuk mengambil lebih banyak riwayat."
+          }
+        }
+      }
     },
     "Only connect to additional relays when a VPN is active" : {
       "localizations" : {
@@ -27514,7 +29781,26 @@
       }
     },
     "Only selected cards and visible people appear in the shared image. Nothing is posted automatically." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen gekozen kaarten en zichtbare personen verschijnen in de gedeelde afbeelding. Er wordt niets automatisch geplaatst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo las tarjetas seleccionadas y las personas visibles aparecen en la imagen compartida. No se publica nada automáticamente."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hanya kartu yang dipilih dan orang yang terlihat yang muncul pada gambar. Tidak ada yang diposting secara otomatis."
+          }
+        }
+      }
     },
     "Only short-lived, file-specific upload authorization is allowed." : {
       "localizations" : {
@@ -27561,10 +29847,48 @@
       }
     },
     "Open %@'s profile" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open het profiel van %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir el perfil de %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka profil %@"
+          }
+        }
+      }
     },
     "Open highlighted post" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open uitgelicht bericht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir la publicación destacada"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka postingan yang disorot"
+          }
+        }
+      }
     },
     "Open in %@" : {
       "localizations" : {
@@ -27933,7 +30257,26 @@
       }
     },
     "Other people’s activity · %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activiteit van anderen · %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actividad de otras personas · %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivitas orang lain · %@"
+          }
+        }
+      }
     },
     "Other websites and accounts keep their own choices." : {
       "localizations" : {
@@ -27981,7 +30324,26 @@
       }
     },
     "Outside the selected period" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buiten de gekozen periode"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuera del periodo seleccionado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Di luar periode yang dipilih"
+          }
+        }
+      }
     },
     "P" : {
       "localizations" : {
@@ -28050,10 +30412,48 @@
       }
     },
     "Partial history" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onvolledige geschiedenis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial parcial"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riwayat sebagian"
+          }
+        }
+      }
     },
     "Partly fetched" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deels opgehaald"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descarga parcial"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diambil sebagian"
+          }
+        }
+      }
     },
     "Paste" : {
       "comment" : "Button to paste a Nostr Wallet Connect URI from the clipboard",
@@ -28079,7 +30479,26 @@
       }
     },
     "Pause collection" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pauzeer het ophalen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar la recopilación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeda pengumpulan"
+          }
+        }
+      }
     },
     "Pay" : {
       "comment" : "Button to pay a lightning invoice",
@@ -28280,7 +30699,26 @@
       }
     },
     "People in your report" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personen in je overzicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personas en tu resumen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orang dalam laporanmu"
+          }
+        }
+      }
     },
     "People rankings cover the report period with your trust filters applied. Most-loved post totals include all available positive reactions to posts from that year and update when more reactions are found." : {
 
@@ -28635,7 +31073,26 @@
       }
     },
     "Picture post" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotobericht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicación con imagen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan foto"
+          }
+        }
+      }
     },
     "Picture-in-picture" : {
       "extractionState" : "stale",
@@ -30098,7 +32555,26 @@
       }
     },
     "posts per day" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "berichten per dag"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "publicaciones por día"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "postingan per hari"
+          }
+        }
+      }
     },
     "Posts, photos, videos, voice messages and articles. Your private messages stay private." : {
 
@@ -30126,7 +32602,26 @@
       }
     },
     "Prepare post" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereid bericht voor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparar publicación"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapkan postingan"
+          }
+        }
+      }
     },
     "Prepared video: %@" : {
 
@@ -30160,7 +32655,26 @@
 
     },
     "Preparing saved report…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opgeslagen overzicht voorbereiden…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparando el resumen guardado…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyiapkan laporan tersimpan…"
+          }
+        }
+      }
     },
     "Preparing video..." : {
       "localizations" : {
@@ -30188,7 +32702,26 @@
 
     },
     "Preparing zap totals…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zap-totalen berekenen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calculando los totales de zaps…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menghitung total zap…"
+          }
+        }
+      }
     },
     "Preview" : {
       "comment" : "Heading when entering Report details\nNavigation title for Post Preview screen\nPreview button when creating a new post",
@@ -30910,7 +33443,26 @@
       }
     },
     "Public activity only" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen openbare activiteit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo actividad pública"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hanya aktivitas publik"
+          }
+        }
+      }
     },
     "Public conversations" : {
       "localizations" : {
@@ -30935,10 +33487,48 @@
       }
     },
     "Public history archive" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archief van openbare activiteit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo de historial público"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arsip riwayat publik"
+          }
+        }
+      }
     },
     "Public history is stored locally and syncs in batches through iCloud Drive when available." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Openbare geschiedenis wordt lokaal bewaard en in delen gesynchroniseerd via iCloud Drive als dat beschikbaar is."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El historial público se guarda en el dispositivo y se sincroniza por lotes mediante iCloud Drive cuando está disponible."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riwayat publik disimpan di perangkat dan disinkronkan secara bertahap melalui iCloud Drive jika tersedia."
+          }
+        }
+      }
     },
     "Public key" : {
       "localizations" : {
@@ -31496,7 +34086,26 @@
       }
     },
     "Queued" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In de wachtrij"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En cola"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dalam antrean"
+          }
+        }
+      }
     },
     "Quote" : {
       "comment" : "Button to Quote a post",
@@ -31973,7 +34582,26 @@
       }
     },
     "Ready to gather your year" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klaar om je jaar samen te stellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo listo para recopilar tu año"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siap mengumpulkan riwayat tahunmu"
+          }
+        }
+      }
     },
     "Reason" : {
       "comment" : "Label for the reason of a report",
@@ -32578,7 +35206,26 @@
       }
     },
     "References to your posts" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijzingen naar je berichten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referencias a tus publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rujukan ke postinganmu"
+          }
+        }
+      }
     },
     "Refresh" : {
       "comment" : "Toolbar action to refresh the emoji feed\nToolbar action to refresh the gallery feed\nToolbar action to refresh the hot feed\nToolbar action to refresh the zapped feed",
@@ -32604,7 +35251,26 @@
       }
     },
     "Refresh history…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschiedenis bijwerken…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar historial…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui riwayat…"
+          }
+        }
+      }
     },
     "Refresh poll results" : {
       "localizations" : {
@@ -33364,7 +36030,26 @@
       }
     },
     "Relay sources" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays als bron"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relés de origen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sumber relai"
+          }
+        }
+      }
     },
     "Relay stats" : {
       "comment" : "Title for  relay connection statistics sheet",
@@ -33594,7 +36279,26 @@
       }
     },
     "Relays: %lld" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays: %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relés: %lld"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai: %lld"
+          }
+        }
+      }
     },
     "Reload" : {
       "comment" : "Reload button",
@@ -35005,7 +37709,26 @@
       }
     },
     "Request that stopped this source" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzoek waardoor deze bron stopte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitud que detuvo esta fuente"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permintaan yang menghentikan sumber ini"
+          }
+        }
+      }
     },
     "Requested relay: %@." : {
       "localizations" : {
@@ -35122,7 +37845,26 @@
       }
     },
     "Resolving conversation references" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijzingen in gesprekken volgen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resolviendo referencias de conversaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menelusuri rujukan percakapan"
+          }
+        }
+      }
     },
     "Restart room" : {
       "localizations" : {
@@ -35169,7 +37911,26 @@
       }
     },
     "Restore hidden people" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon verborgen personen weer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a mostrar a las personas ocultas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan kembali orang yang disembunyikan"
+          }
+        }
+      }
     },
     "Restore previous NWC configuration" : {
       "localizations" : {
@@ -35512,7 +38273,26 @@
 
     },
     "Retry failed sources" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probeer mislukte bronnen opnieuw"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar las fuentes fallidas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coba lagi sumber yang gagal"
+          }
+        }
+      }
     },
     "Retry failed uploads" : {
 
@@ -35921,7 +38701,26 @@
       }
     },
     "Saved history is kept" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opgeslagen geschiedenis blijft bewaard"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se conserva el historial guardado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riwayat yang tersimpan tetap disimpan"
+          }
+        }
+      }
     },
     "Saved history only · partial history" : {
 
@@ -35996,7 +38795,26 @@
       }
     },
     "Saving your existing history…" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestaande geschiedenis opslaan…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardando tu historial existente…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyimpan riwayat yang sudah ada…"
+          }
+        }
+      }
     },
     "Scan a Nostr npub or nprofile QR code." : {
       "localizations" : {
@@ -36423,7 +39241,26 @@
       }
     },
     "See your year on Nostr" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekijk je jaar op Nostr"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mira tu año en Nostr"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lihat tahunmu di Nostr"
+          }
+        }
+      }
     },
     "Select at least one relay first" : {
       "localizations" : {
@@ -37390,7 +40227,26 @@
       }
     },
     "Share history archive" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel geschiedenisarchief"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir el archivo de historial"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan arsip riwayat"
+          }
+        }
+      }
     },
     "Share in a post" : {
       "localizations" : {
@@ -37530,7 +40386,26 @@
       }
     },
     "Share your year" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel je jaar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparte tu año"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bagikan tahunmu"
+          }
+        }
+      }
     },
     "Share..." : {
       "extractionState" : "stale",
@@ -37692,7 +40567,26 @@
       }
     },
     "Show %@ in your report" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon %@ in je overzicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar %@ en tu resumen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan %@ di laporanmu"
+          }
+        }
+      }
     },
     "Show %@'s feed" : {
       "comment" : "Menu button to show someone's feed",
@@ -39133,7 +42027,26 @@
       }
     },
     "Some sources remain incomplete. Tap for relay details" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sommige bronnen zijn onvolledig. Tik voor relaydetails"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunas fuentes siguen incompletas. Toca para ver los detalles de los relés"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beberapa sumber belum lengkap. Ketuk untuk melihat rincian relai"
+          }
+        }
+      }
     },
     "Someone's Feed" : {
       "comment" : "Feed title",
@@ -39594,7 +42507,26 @@
       }
     },
     "Starting with public history already saved on this device." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We beginnen met de openbare geschiedenis die al op dit apparaat staat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empezamos con el historial público guardado en este dispositivo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimulai dari riwayat publik yang sudah tersimpan di perangkat ini."
+          }
+        }
+      }
     },
     "Status" : {
       "comment" : "Connection status header",
@@ -40699,7 +43631,26 @@
       }
     },
     "The history request did not complete with EOSE within %lld seconds, including connection setup and response processing." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het geschiedenisverzoek kreeg binnen %lld seconden geen EOSE-bevestiging, inclusief de tijd om verbinding te maken en het antwoord te verwerken."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La solicitud de historial no recibió la confirmación EOSE en %lld segundos, incluido el tiempo de conexión y procesamiento."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permintaan riwayat tidak menerima konfirmasi EOSE dalam %lld detik, termasuk waktu untuk menyambung dan memproses respons."
+          }
+        }
+      }
     },
     "The Hot feed shows posts from anyone which are most liked or reposted by people you follow in the last %lld hours" : {
       "localizations" : {
@@ -40894,7 +43845,26 @@
       }
     },
     "The relay capped a one-second history window. Splitting it further cannot safely recover the remaining items." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De relay beperkte de resultaten binnen één seconde. Verder opsplitsen kan de overige items niet betrouwbaar ophalen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relé limitó los resultados de un intervalo de un segundo. Dividirlo más no permite recuperar con seguridad los elementos restantes."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai membatasi hasil dalam rentang satu detik. Membaginya lagi tidak dapat mengambil sisa item dengan aman."
+          }
+        }
+      }
     },
     "The relay closed the subscription without giving a reason." : {
       "localizations" : {
@@ -40963,10 +43933,48 @@
       }
     },
     "The relay rejected authentication for your account. %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De relay heeft de verificatie van je account geweigerd. %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relé rechazó la autenticación de tu cuenta. %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai menolak autentikasi akunmu. %@"
+          }
+        }
+      }
     },
     "The relay returned an EVENT response without an event payload." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De relay stuurde een EVENT-antwoord zonder gebeurtenisgegevens."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relé devolvió una respuesta EVENT sin datos del evento."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai mengirim respons EVENT tanpa data peristiwa."
+          }
+        }
+      }
     },
     "The relay still requires authentication after accepting it." : {
       "localizations" : {
@@ -40991,7 +43999,26 @@
       }
     },
     "The relay still requires authentication after an authenticated retry. Check relay access for your account." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De relay vraagt opnieuw om verificatie. Controleer of je account toegang heeft tot de relay."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relé sigue pidiendo autenticación tras el nuevo intento. Comprueba el acceso de tu cuenta al relé."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai masih meminta autentikasi setelah dicoba kembali. Periksa akses akunmu ke relai."
+          }
+        }
+      }
     },
     "The report does not identify its target." : {
       "localizations" : {
@@ -41101,7 +44128,26 @@
 
     },
     "The share image could not be created. Please try again." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De deelafbeelding kon niet worden gemaakt. Probeer het opnieuw."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo crear la imagen para compartir. Inténtalo de nuevo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gambar untuk dibagikan tidak dapat dibuat. Coba lagi."
+          }
+        }
+      }
     },
     "The signer returned an invalid authentication event." : {
       "localizations" : {
@@ -41148,7 +44194,26 @@
       }
     },
     "The story so far" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het verhaal tot nu toe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La historia hasta ahora"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kisah sejauh ini"
+          }
+        }
+      }
     },
     "The text content of the post to publish." : {
       "localizations" : {
@@ -41677,7 +44742,26 @@
       }
     },
     "This history collection reached its storage limit. Your saved history is still available." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De opslaglimiet voor deze geschiedenis is bereikt. Je opgeslagen geschiedenis is nog beschikbaar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta recopilación alcanzó el límite de almacenamiento. El historial guardado sigue disponible."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pengumpulan riwayat mencapai batas penyimpanan. Riwayat yang sudah tersimpan tetap tersedia."
+          }
+        }
+      }
     },
     "This identifier is already used by “%@”. Creating will update that badge." : {
       "localizations" : {
@@ -41905,19 +44989,114 @@
       }
     },
     "This relay connection is paused by your relay or VPN settings." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze relayverbinding is gepauzeerd door je relay- of VPN-instellingen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La conexión con este relé está en pausa debido a la configuración del relé o de la VPN."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koneksi relai dijeda oleh pengaturan relai atau VPN."
+          }
+        }
+      }
     },
     "This relay does not allow historical queries." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze relay staat geen geschiedenisverzoeken toe."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este relé no permite consultas de historial."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai ini tidak mengizinkan permintaan riwayat."
+          }
+        }
+      }
     },
     "This relay is cooling down after an earlier failure. Retry later." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze relay heeft een wachttijd na een eerdere fout. Probeer het later opnieuw."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este relé está en pausa tras un fallo anterior. Inténtalo más tarde."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai sedang dalam masa tunggu setelah kegagalan sebelumnya. Coba lagi nanti."
+          }
+        }
+      }
     },
     "This relay is disabled in your relay settings. Enable it there first." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze relay is uitgeschakeld in je relay-instellingen. Schakel hem daar eerst in."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este relé está desactivado en tus ajustes. Actívalo allí primero."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai ini dinonaktifkan di pengaturan relai. Aktifkan dahulu di sana."
+          }
+        }
+      }
     },
     "This relay requires authentication for more history." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze relay vereist verificatie om meer geschiedenis op te halen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este relé requiere autenticación para consultar más historial."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relai ini memerlukan autentikasi untuk mengakses lebih banyak riwayat."
+          }
+        }
+      }
     },
     "This removes the saved history and report progress for this profile on your devices, including its iCloud archive. If offline, iCloud deletion will continue when available. Some older interactions may no longer be available from relays. Browsing and cache maintenance can collect history again." : {
 
@@ -41961,7 +45140,26 @@
       }
     },
     "This saved run did not record a failure reason. Retry this source for updated details." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bij deze zoekronde is geen foutreden opgeslagen. Probeer deze bron opnieuw voor actuele details."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se guardó el motivo del fallo en esta recopilación. Vuelve a intentar con esta fuente para obtener más detalles."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alasan kegagalan tidak tersimpan untuk proses ini. Coba lagi sumber ini untuk melihat rincian terbaru."
+          }
+        }
+      }
     },
     "This sign-in request does not identify a supported website or relay." : {
       "localizations" : {
@@ -42149,7 +45347,26 @@
 
     },
     "Through %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "T/m %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasta el %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hingga %@"
+          }
+        }
+      }
     },
     "Thumbnail URL (256x256)" : {
       "comment" : "Label for input field for badge image on Badge creation screen",
@@ -44329,10 +47546,48 @@
       }
     },
     "Use app authentication defaults" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik de verificatie-instellingen van de app"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar la autenticación predeterminada de la app"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gunakan pengaturan autentikasi bawaan aplikasi"
+          }
+        }
+      }
     },
     "Use Continue gathering on the report screen to resume remaining checks and retry incomplete sources. Successful saved batches are kept. Items buffered in a failed request may need to be downloaded again." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies Verder ophalen in het overzicht om resterende controles en onvolledige bronnen opnieuw te proberen. Opgeslagen gegevens blijven bewaard. Items uit een mislukt verzoek moeten soms opnieuw worden opgehaald."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa Continuar la recopilación en el resumen para completar las comprobaciones pendientes y reintentar las fuentes incompletas. Se conserva lo guardado. Puede que haya que descargar de nuevo algunos elementos de solicitudes fallidas."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih Lanjutkan pengambilan di laporan untuk meneruskan pemeriksaan dan mencoba kembali sumber yang belum lengkap. Data yang sudah tersimpan tetap ada. Item dari permintaan yang gagal mungkin perlu diambil kembali."
+          }
+        }
+      }
     },
     "Use Edit to reorder the badges shown on your profile." : {
       "localizations" : {
@@ -44725,7 +47980,26 @@
       }
     },
     "Verifying and saving response" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord controleren en opslaan"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificando y guardando la respuesta"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memverifikasi dan menyimpan respons"
+          }
+        }
+      }
     },
     "Verifying..." : {
       "localizations" : {
@@ -45259,13 +48533,51 @@
       "comment" : "Photo bytes have been sent; the upload server has not replied yet."
     },
     "Waiting for relay response" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten op antwoord van de relay"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando respuesta del relé"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menunggu respons relai"
+          }
+        }
+      }
     },
     "Waiting for server" : {
 
     },
     "Waiting for the relay pacing interval" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten voor het volgende relayverzoek"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando antes de la siguiente solicitud al relé"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menunggu sebelum permintaan relai berikutnya"
+          }
+        }
+      }
     },
     "Wallet" : {
 
@@ -46081,7 +49393,26 @@
       }
     },
     "While gathering history" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijdens het ophalen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mientras se recopila el historial"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saat riwayat dikumpulkan"
+          }
+        }
+      }
     },
     "Who can see the blocks?" : {
       "localizations" : {
@@ -46640,7 +49971,26 @@
       }
     },
     "Year settings" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaaroverzicht instellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes del resumen anual"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pengaturan laporan tahunan"
+          }
+        }
+      }
     },
     "you · anon" : {
       "localizations" : {
@@ -46733,13 +50083,70 @@
       }
     },
     "You can keep using Nostur." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kunt Nostur blijven gebruiken."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puedes seguir usando Nostur."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamu bisa tetap menggunakan Nostur."
+          }
+        }
+      }
     },
     "You can keep using Nostur. Collection can continue while Nostur stays open." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kunt Nostur blijven gebruiken. De geschiedenis wordt verder opgehaald zolang Nostur open is."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puedes seguir usando Nostur. La recopilación puede continuar mientras Nostur siga abierto."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamu bisa tetap menggunakan Nostur. Pengumpulan dapat berlanjut selama Nostur tetap terbuka."
+          }
+        }
+      }
     },
     "You can select up to 20 relays. Deselect one before adding another." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kunt maximaal 20 relays kiezen. Deselecteer er een voordat je een andere toevoegt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puedes seleccionar hasta 20 relés. Deselecciona uno antes de añadir otro."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamu bisa memilih hingga 20 relai. Batalkan pilihan salah satu sebelum menambahkan yang lain."
+          }
+        }
+      }
     },
     "You can use Nostur while collection runs. Keep the app on screen; or, if you close it, continue later from saved progress." : {
 
@@ -46842,6 +50249,24 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "You posted an average of %1$@ times per day and your most active day was %2$@ with %3$lld posts."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je plaatste gemiddeld %1$@ keer per dag. Je actiefste dag was %2$@, met %3$lld berichten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicaste una media de %1$@ veces al día. Tu día más activo fue el %2$@, con %3$lld publicaciones."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rata-rata kamu memposting %1$@ kali per hari. Hari teraktifmu adalah %2$@ dengan %3$lld postingan."
           }
         }
       }
@@ -47089,13 +50514,70 @@
       }
     },
     "Your content" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je berichten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus publicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postinganmu"
+          }
+        }
+      }
     },
     "Your content · %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je berichten · %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus publicaciones · %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postinganmu · %@"
+          }
+        }
+      }
     },
     "Your content checked; interactions queued" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je berichten zijn gecontroleerd. Interacties staan in de wachtrij."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se revisaron tus publicaciones. Las interacciones están en cola."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postinganmu sudah diperiksa. Interaksi masih dalam antrean."
+          }
+        }
+      }
     },
     "Your conversations. Your people. Your year." : {
 
@@ -47123,19 +50605,114 @@
       }
     },
     "Your feed database and posts on relays will remain available." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je feedgegevens en berichten op relays blijven beschikbaar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los datos de tu feed y las publicaciones en los relés seguirán disponibles."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data feed dan postinganmu di relai tetap tersedia."
+          }
+        }
+      }
     },
     "Your highlights are ready to share." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hoogtepunten staan klaar om te delen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus momentos destacados están listos para compartir."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorotanmu siap dibagikan."
+          }
+        }
+      }
     },
     "Your history archive could not be opened or saved." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je geschiedenisarchief kon niet worden geopend of opgeslagen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo abrir o guardar tu archivo de historial."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arsip riwayatmu tidak dapat dibuka atau disimpan."
+          }
+        }
+      }
     },
     "Your history is saved. Resume to continue gathering the remaining sources." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je geschiedenis is opgeslagen. Ga verder om de overige bronnen op te halen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu historial está guardado. Continúa para recopilar lo que falta de las demás fuentes."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riwayatmu sudah tersimpan. Lanjutkan untuk mengambil data dari sumber yang tersisa."
+          }
+        }
+      }
     },
     "Your month scans are saved. Some extra checks remain; resume later to improve the report." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De maandresultaten zijn opgeslagen. Ga later verder met de extra controles om het overzicht aan te vullen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se guardaron los resultados de los meses. Quedan algunas comprobaciones; continúa más tarde para completar el resumen."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasil per bulan sudah tersimpan. Masih ada pemeriksaan tambahan; lanjutkan nanti untuk melengkapi laporan."
+          }
+        }
+      }
     },
     "Your most active day counts public posts, including replies, pictures, videos, voice messages and articles. Reactions, reposts and zaps are not posts. Edited articles count once on their original publication day. The daily average includes every calendar day covered by the report, including days without posts." : {
 
@@ -47166,7 +50743,26 @@
 
     },
     "Your most-voted poll" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je poll met de meeste stemmen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu encuesta con más votos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jajak pendapatmu dengan suara terbanyak"
+          }
+        }
+      }
     },
     "Your most-zapped post" : {
       "localizations" : {
@@ -47236,10 +50832,48 @@
       }
     },
     "Your Nostr year is ready" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je Nostr-jaaroverzicht is klaar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu resumen del año en Nostr está listo"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laporan tahunmu di Nostr sudah siap"
+          }
+        }
+      }
     },
     "Your people and highlights from %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je mensen en hoogtepunten van %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu gente y tus momentos destacados de %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orang-orang dan sorotanmu dari %@"
+          }
+        }
+      }
     },
     "Your photo is still here. You can retry or discard it." : {
 
@@ -47267,13 +50901,70 @@
       }
     },
     "Your posts and interactions" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je berichten en interacties"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus publicaciones e interacciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan dan interaksimu"
+          }
+        }
+      }
     },
     "Your posts, your people, your standout moments." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je berichten, je mensen, je hoogtepunten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus publicaciones, tu gente y tus mejores momentos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan, orang-orang, dan momen terbaikmu."
+          }
+        }
+      }
     },
     "Your preview is ready" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je voorbeeld is klaar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu vista previa está lista"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pratinjaumu sudah siap"
+          }
+        }
+      }
     },
     "Your private key controls your account. Never share it with anyone. Anyone with this key can fully access your account and post as you." : {
       "localizations" : {
@@ -47320,7 +51011,26 @@
       }
     },
     "Your reactions and reposts" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je reacties en reposts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus reacciones y republicaciones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reaksi dan repost-mu"
+          }
+        }
+      }
     },
     "Your recording is still here. You can retry or discard it." : {
 
@@ -47349,7 +51059,26 @@
       }
     },
     "Your saved progress is ready to continue." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kunt verder waar je was gebleven."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puedes continuar desde donde lo dejaste."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamu bisa melanjutkan dari bagian terakhir yang tersimpan."
+          }
+        }
+      }
     },
     "Your supporters" : {
       "localizations" : {
@@ -47440,10 +51169,49 @@
       }
     },
     "Your year on Nostr" : {
-      "comment" : "Side bar navigation button"
+      "comment" : "Side bar navigation button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je jaar op Nostr"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu año en Nostr"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setahunmu di Nostr"
+          }
+        }
+      }
     },
     "Your year report image" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afbeelding van je jaaroverzicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagen de tu resumen anual"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gambar laporan tahunanmu"
+          }
+        }
+      }
     },
     "Zap custom amount" : {
       "localizations" : {
@@ -47836,7 +51604,26 @@
       }
     },
     "Zaps you sent" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaps die je stuurde"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaps que enviaste"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zap yang kamu kirim"
+          }
+        }
+      }
     },
     "Zoom" : {
 

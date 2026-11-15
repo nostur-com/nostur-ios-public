@@ -688,50 +688,23 @@ private struct YearReviewAboutView: View {
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
 
-                VStack(alignment: .leading, spacing: 18) {
-                    YearReviewAboutRow(title: "Public activity only", icon: "text.bubble",
-                        detail: "Posts, photos, videos, voice messages and articles. Your private messages stay private.")
-                    YearReviewAboutRow(title: "Choose what you want to highlight", icon: "square.and.arrow.up",
-                        detail: "And who you want to include. Nothing is posted automatically.")
-                }
-                .yearReviewCard()
-
-                YearReviewAboutRow(title: "While gathering history", icon: "iphone",
-                    detail: "You can use Nostur while collection runs. Keep the app on screen; or, if you close it, continue later from saved progress.")
-                    .yearReviewCard()
-
                 if let report {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(report.ownPostCount, format: .number).font(.title2.bold()).monospacedDigit()
-                            Text("of your posts found").font(.subheadline).foregroundStyle(.secondary)
-                        }
-                        YearReviewAboutDetail(title: "History coverage", icon: "chart.bar") {
-                            YearReviewCoverageView(report: report, collection: collection)
-                        }
-                    }
-                    .yearReviewCard()
+                    YearReviewCoverageView(report: report, collection: collection)
+                        .yearReviewCard()
                 }
 
-                VStack(alignment: .leading, spacing: 14) {
-                    YearReviewAboutDetail(title: "How highlights are counted", icon: "trophy") {
-                        Text("Your most-loved post counts positive reaction events, like post details. People rankings count each person once per post. Supporters combine reactions, reposts and validated zaps.")
-                        Text("You got people talking includes direct replies, sub-replies and your own replies in the collected conversation. People are counted once per thread. Relationship highlights count direct exchanges.")
-                        Text("People rankings cover the report period with your trust filters applied. Most-loved post totals include all available positive reactions to posts from that year and update when more reactions are found.")
-                        Text("Posting rhythm counts public posts, including replies, polls, pictures, videos, voice messages and articles. Votes, reactions, reposts and zaps do not count. Edited articles count once on their original publication day. The daily average includes every calendar day covered by the report, including days without posts.")
-                        Text("The mentions highlight needs more than ten explicit mentions in public posts or comments. Threading tags alone do not count.")
-                    }
+                VStack(alignment: .leading, spacing: 18) {
+                    YearReviewAboutRow(title: "Missing something?", icon: "calendar",
+                        detail: "Open History to fetch a month or retry a source. Some older posts may no longer be available.")
                     Divider()
-                    YearReviewAboutDetail(title: "Relays & missing history", icon: "network") {
-                        Text("Collection is paced per relay and saves progress as it goes. Relays may omit old content or cap results, so your report only reflects the history we could find.")
-                    }
+                    YearReviewAboutRow(title: "While gathering history", icon: "iphone",
+                        detail: "You can keep using Nostur while it gathers history. If you close the app, continue later from where you left off.")
                     Divider()
-                    YearReviewAboutDetail(title: "Zap validation", icon: "bolt") {
-                        Text("Lightning totals use provider-authorized receipts. Anonymous zaps contribute to post totals without identifying a sender.")
-                        Text("Checking zap providers may fetch missing profiles from relays and contact Lightning services to verify who signed the receipts. Slow services and missing provider information can make this step take longer. Saved provider keys are reused.")
-                        Text("Verified receipts stay cached even if a Lightning address changes. Unresolved provider checks are normally retried after 24 hours; a changed address or a new signer can trigger an earlier check.")
-                        Text("Older outgoing receipts without a sender tag can be included when known locally, but may not be discoverable on relays. Receipts from historical providers we cannot authorize are excluded.")
-                    }
+                    YearReviewAboutRow(title: "Choose what you want to highlight", icon: "square.and.arrow.up",
+                        detail: "Hide highlights or people you’d rather leave out. Preview your image, then choose Prepare post to make an editable draft.")
+                    Divider()
+                    YearReviewAboutRow(title: "Public activity only", icon: "text.bubble",
+                        detail: "Your report uses public posts and interactions. Private messages aren’t included.")
                 }
                 .yearReviewCard()
             }
@@ -743,9 +716,9 @@ private struct YearReviewAboutView: View {
         .navigationTitle("About your year")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
+            ToolbarItem(placement: .cancellationAction) {
                 Button { dismiss() } label: {
-                    Label("Done", systemImage: "checkmark").labelStyle(.iconOnly)
+                    Label("Dismiss", systemImage: "xmark").labelStyle(.iconOnly)
                 }
             }
         }
@@ -770,64 +743,23 @@ private struct YearReviewAboutRow: View {
     }
 }
 
-private struct YearReviewAboutDetail<Content: View>: View {
-    @Environment(\.theme) private var theme
-    let title: LocalizedStringKey
-    let icon: String
-    let content: Content
-
-    init(title: LocalizedStringKey, icon: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.icon = icon
-        self.content = content()
-    }
-
-    var body: some View {
-        DisclosureGroup {
-            VStack(alignment: .leading, spacing: 10) { content }
-                .font(.footnote).foregroundStyle(.secondary).lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true).padding(.top, 10)
-        } label: {
-            Label { Text(title).font(.subheadline.weight(.semibold)) } icon: {
-                Image(systemName: icon).foregroundStyle(theme.accent).frame(width: 24)
-            }
-        }
-        .tint(theme.accent)
-    }
-}
-
 private struct YearReviewCoverageView: View {
     let report: YearReviewReport
     let collection: YearReviewCollection?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Trusted public activity · \(report.ownPostCount) of your posts found")
-            if let collection {
-                if collection.phase != .finished || !collection.failed.isEmpty || collection.estimatedResponses > 0 || report.unresolvedParents > 0 || collection.parentsLimited {
-                    Label("Partial history", systemImage: "info.circle")
-                } else {
-                    Label("Selected sources checked", systemImage: "checkmark.circle")
-                }
-                Text("\(collection.relays.count) relays · \(collection.requestsChecked) requests checked")
-                ForEach(collection.issues, id: \.self) { issue in Text(issue) }
-                if collection.estimatedResponses > 0 {
-                    Text("Some relays did not confirm exhaustive responses. More activity may exist elsewhere.")
-                }
-                if collection.invalidEvents > 0 {
-                    Text("\(collection.invalidEvents) invalid or unrelated events excluded")
-                }
-                if collection.parentsLimited { Text("The missing-parent lookup reached its limit. Some conversations remain unresolved.") }
-            } else {
-                Label("Saved history only · partial history", systemImage: "info.circle")
+            Label("History coverage", systemImage: "calendar")
+                .font(.subheadline.weight(.semibold))
+            Text("\(report.ownPostCount) posts found · Through \(report.period.cutoffDate, format: report.period.dateFormat)")
+                .font(.subheadline).foregroundStyle(.secondary)
+            if collection?.phase != .finished || collection?.failed.isEmpty != true
+                || collection?.estimatedResponses ?? 0 > 0 || collection?.parentsLimited == true
+                || report.unresolvedParents > 0 {
+                Text("Some activity may be missing.")
+                    .font(.subheadline).foregroundStyle(.secondary)
             }
-            if report.excludedAuthors > 0 { Text("\(report.excludedAuthors) authors excluded by trust or block filtering") }
-            if report.unverifiedZaps > 0 { Text("\(report.unverifiedZaps) zap receipts could not be validated and are excluded") }
-            if report.anonymousZaps > 0 { Text("\(report.anonymousZaps) anonymous zaps contribute only to post totals") }
-            if report.unresolvedParents > 0 { Text("\(report.unresolvedParents) replies still have missing parents") }
-            Text("Through \(report.period.cutoffDate, format: report.period.dateFormat)")
         }
-        .font(.footnote).foregroundStyle(.secondary)
     }
 }
 
