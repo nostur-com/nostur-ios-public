@@ -197,7 +197,11 @@ private struct AutomaticWoTRefreshStatus: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Automatically refreshes while charging on an unmetered connection, when iOS allows.", comment: "Explanation of automatic Web of Trust maintenance")
+            if WoTBackgroundRefresh.usesInAppSchedule {
+                Text("Automatically refreshes about once a day while Nostur is open on an unmetered connection.", comment: "Explanation of automatic Web of Trust maintenance on Mac")
+            } else {
+                Text("Automatically refreshes while charging on an unmetered connection, when iOS allows.", comment: "Explanation of automatic Web of Trust maintenance")
+            }
             if lastSuccess > 0 {
                 Text("Last automatic update: \(Date(timeIntervalSince1970: lastSuccess), format: .dateTime)", comment: "Date of the last completed automatic spam filter refresh")
             } else {

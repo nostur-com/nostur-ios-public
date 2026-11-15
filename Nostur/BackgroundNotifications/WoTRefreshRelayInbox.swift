@@ -22,14 +22,14 @@ final class WoTRefreshRelayInbox: @unchecked Sendable {
         init(authors: Set<String>, relay: String) { self.authors = authors; self.relay = relay }
     }
 
-    func fetch(authors: Set<String>, relay: RelayData, account: String) async throws -> [String: WoTRefreshContactList] {
+    func fetch(authors: Set<String>, relay: RelayData, account: String, execution: WoTBackgroundRefresh.Execution) async throws -> [String: WoTRefreshContactList] {
         try await collect(authors: authors, relay: relay.id, send: { id in
             req(RM.getAuthorContactsLists(pubkeys: authors.sorted(), limit: authors.count, subscriptionId: id),
                 activeSubscriptionId: id, relays: [relay], accountPubkey: account)
         }, close: { id in
             Task { @MainActor in ConnectionPool.shared.closeSubscription(id) }
         }, shouldContinue: {
-            await MainActor.run { UIApplication.shared.applicationState == .background }
+            await MainActor.run { execution.allows(UIApplication.shared.applicationState) }
         })
     }
 

@@ -7061,6 +7061,9 @@
         }
       }
     },
+    "Automatically refreshes about once a day while Nostur is open on an unmetered connection." : {
+      "comment" : "Explanation of automatic Web of Trust maintenance on Mac"
+    },
     "Automatically refreshes while charging on an unmetered connection, when iOS allows." : {
       "comment" : "Explanation of automatic Web of Trust maintenance"
     },

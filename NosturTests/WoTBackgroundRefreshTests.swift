@@ -3,8 +3,18 @@ import Testing
 import NostrEssentials
 @testable import Nostur
 
-@Suite("Charging Web of Trust maintenance", .serialized)
+@Suite("Automatic Web of Trust maintenance", .serialized)
 struct WoTBackgroundRefreshTests {
+    @Test("Mac refresh can run with an active window while iPhone refresh requires the background")
+    func executionState() {
+        #expect(WoTBackgroundRefresh.Execution.inApp.allows(.active))
+        #expect(WoTBackgroundRefresh.Execution.inApp.allows(.inactive))
+        #expect(WoTBackgroundRefresh.Execution.inApp.allows(.background))
+        #expect(!WoTBackgroundRefresh.Execution.background.allows(.active))
+        #expect(!WoTBackgroundRefresh.Execution.background.allows(.inactive))
+        #expect(WoTBackgroundRefresh.Execution.background.allows(.background))
+    }
+
     @Test("Resuming preserves completed lists and removes stale trust edges")
     func checkpointRoundTrip() throws {
         var checkpoint = WoTRefreshCheckpoint(account: "main", authors: ["alice", "bob"], dunbarNumber: 2,

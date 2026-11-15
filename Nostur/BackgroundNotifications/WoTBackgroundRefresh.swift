@@ -31,7 +31,22 @@ struct WoTRefreshCheckpoint: Codable {
 }
 
 enum WoTBackgroundRefresh {
+    enum Execution {
+        case background
+        case inApp
+
+        func allows(_ state: UIApplication.State) -> Bool {
+            self == .inApp || state == .background
+        }
+    }
+
     static let identifier = "com.nostur.wot-refresh"
+    static let usesInAppSchedule = IS_CATALYST || ProcessInfo.processInfo.isiOSAppOnMac
+    private static let refreshInterval: TimeInterval = 24 * 60 * 60
+    private static let macRetryInterval: TimeInterval = 10 * 60
+    @MainActor private static var macRefreshRunning = false
+    @MainActor private static var nextMacAttempt = Date.distantPast
+
     static func successKey(_ account: String) -> String { "wot_auto_refresh_success_\(account)" }
     static func pendingKey(_ account: String) -> String { "wot_auto_refresh_pending_\(account)" }
 
@@ -47,7 +62,7 @@ enum WoTBackgroundRefresh {
 
     @MainActor
     static func schedule() {
-        guard !IS_CATALYST,
+        guard !usesInAppSchedule,
               SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue,
               let account = UserDefaults.standard.string(forKey: SettingsStore.Keys.mainWoTaccountPubkey),
               !account.isEmpty else { return }
@@ -55,18 +70,41 @@ enum WoTBackgroundRefresh {
         let request = BGProcessingTaskRequest(identifier: identifier)
         request.requiresExternalPower = true
         request.requiresNetworkConnectivity = true
-        request.earliestBeginDate = Date(timeIntervalSince1970: max(Date().timeIntervalSince1970, lastSuccess + 86_400))
+        request.earliestBeginDate = Date(timeIntervalSince1970: max(Date().timeIntervalSince1970, lastSuccess + refreshInterval))
         do { try BGTaskScheduler.shared.submit(request) }
         catch { L.maintenance.error("Could not schedule WoT refresh: \(error.localizedDescription)") }
     }
 
     @MainActor
-    static func run() async -> Bool {
+    static func refreshOnMacIfNeeded() {
+        guard usesInAppSchedule, !macRefreshRunning, Date() >= nextMacAttempt,
+              SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue,
+              let account = UserDefaults.standard.string(forKey: SettingsStore.Keys.mainWoTaccountPubkey),
+              !account.isEmpty, refreshIsDue(account: account),
+              !WebOfTrust.shared.updatingWoT, !WebOfTrust.shared.rebuildQueued,
+              !Importer.shared.hasPendingImportPasses else { return }
+
+        macRefreshRunning = true
+        Task(priority: .utility) {
+            defer {
+                nextMacAttempt = Date().addingTimeInterval(macRetryInterval)
+                macRefreshRunning = false
+            }
+            _ = await run(execution: .inApp)
+        }
+    }
+
+    private static func refreshIsDue(account: String) -> Bool {
+        let lastSuccess = UserDefaults.standard.double(forKey: successKey(account))
+        return Date().timeIntervalSince1970 - lastSuccess >= refreshInterval
+    }
+
+    @MainActor
+    static func run(execution: Execution = .background) async -> Bool {
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue,
               let pubkey = UserDefaults.standard.string(forKey: SettingsStore.Keys.mainWoTaccountPubkey),
               let account = try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext()) else { return true }
-        let lastSuccess = UserDefaults.standard.double(forKey: successKey(pubkey))
-        guard Date().timeIntervalSince1970 - lastSuccess >= 86_400 else { return true }
+        guard refreshIsDue(account: pubkey) else { return true }
         let authors = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.privateFollowingPubkeys).subtracting([pubkey])
         guard authors.count > 10 else { return true }
         let dunbar = UserDefaults.standard.object(forKey: "wotDunbarNumber") as? Int ?? 1000
@@ -75,12 +113,12 @@ enum WoTBackgroundRefresh {
         guard !relays.isEmpty else { return false }
         // No synchronous network/Core Data waits in this UI-facing entry point.
         let work = Task.detached(priority: .utility) {
-            await refresh(account: pubkey, authors: authors, dunbar: dunbar, relays: relays)
+            await refresh(account: pubkey, authors: authors, dunbar: dunbar, relays: relays, execution: execution)
         }
         return await withTaskCancellationHandler { await work.value } onCancel: { work.cancel() }
     }
 
-    private static func refresh(account: String, authors: Set<String>, dunbar: Int, relays: Set<RelayData>) async -> Bool {
+    private static func refresh(account: String, authors: Set<String>, dunbar: Int, relays: Set<RelayData>, execution: Execution) async -> Bool {
         do {
             let directory = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
                 .appendingPathComponent("Nostur", isDirectory: true)
@@ -115,7 +153,7 @@ enum WoTBackgroundRefresh {
             await ConnectionPool.shared.connectFeedRelays(relays: relays)
             defer {
                 Task { @MainActor in
-                    if UIApplication.shared.applicationState == .background {
+                    if execution == .background, UIApplication.shared.applicationState == .background {
                         for relay in relays { ConnectionPool.shared.disconnectRelay(relay.id) }
                     }
                 }
@@ -124,19 +162,24 @@ enum WoTBackgroundRefresh {
             while !checkpoint.pending.isEmpty {
                 try Task.checkCancellation()
                 let canContinue = await MainActor.run {
-                    UIApplication.shared.applicationState == .background &&
+                    execution.allows(UIApplication.shared.applicationState) &&
                     SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue &&
-                    UserDefaults.standard.string(forKey: SettingsStore.Keys.mainWoTaccountPubkey) == account
+                    UserDefaults.standard.string(forKey: SettingsStore.Keys.mainWoTaccountPubkey) == account &&
+                    (execution == .background || !WebOfTrust.shared.updatingWoT)
                 }
                 guard canContinue, monitor.currentPath.status == .satisfied,
                       !monitor.currentPath.isExpensive, !monitor.currentPath.isConstrained else { return false }
+                if execution == .inApp, Importer.shared.hasPendingImportPasses {
+                    try await Task.sleep(nanoseconds: 1_000_000_000)
+                    continue
+                }
                 let batch = Array(checkpoint.pending.sorted().prefix(20))
                 var completed = false
                 // Query at most two relays. A batch needs EOSE from at least one;
                 // CLOSED, timeout, invalid signatures and oversized responses fail.
                 for relay in relays.sorted(by: { $0.url < $1.url }) {
                     try Task.checkCancellation()
-                    if let lists = try? await WoTRefreshRelayInbox.shared.fetch(authors: Set(batch), relay: relay, account: account) {
+                    if let lists = try? await WoTRefreshRelayInbox.shared.fetch(authors: Set(batch), relay: relay, account: account, execution: execution) {
                         checkpoint.merge(lists)
                         completed = true
                     }
@@ -148,7 +191,8 @@ enum WoTBackgroundRefresh {
             }
             try Task.checkCancellation()
             let stillValid = await MainActor.run {
-                guard UIApplication.shared.applicationState == .background,
+                guard execution.allows(UIApplication.shared.applicationState),
+                      execution == .background || !WebOfTrust.shared.updatingWoT,
                       SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue,
                       UserDefaults.standard.string(forKey: SettingsStore.Keys.mainWoTaccountPubkey) == account,
                       (UserDefaults.standard.object(forKey: "wotDunbarNumber") as? Int ?? 1000) == dunbar,

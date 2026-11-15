@@ -41,6 +41,7 @@ struct AppView: View {
                     }
                     .onReceive(AppState.shared.minuteTimer) { _ in
                         NewPostNotifier.shared.runCheck()
+                        WoTBackgroundRefresh.refreshOnMacIfNeeded()
                     }
                     .overlay {
                         if #available(iOS 16.0, *) {
