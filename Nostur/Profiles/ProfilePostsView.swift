@@ -63,7 +63,6 @@ struct ProfilePostsView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
             }
         }
-        .onDisappear { vm.cancel() }
     }
 }
 

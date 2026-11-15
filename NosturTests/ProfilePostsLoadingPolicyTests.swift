@@ -1,3 +1,4 @@
+import CoreData
 import Foundation
 import Testing
 @testable import Nostur
@@ -47,8 +48,8 @@ struct ProfilePostsLoadingPolicyTests {
         )
     }
 
-    @Test("Cached posts are not revealed without a matching import")
-    func noUnvalidatedCacheReveal() {
+    @Test("Relay completion distinguishes an empty response from a timeout")
+    func noImportTerminalDecision() {
         #expect(
             ProfilePostsLoadingPolicy.terminalDecision(
                 timedOut: false,
@@ -67,6 +68,45 @@ struct ProfilePostsLoadingPolicyTests {
                 receivedImport: true
             ) == .revealImportedPosts
         )
+    }
+
+    @Test("Completed profile requests can show newer standalone posts found by Search")
+    func completedRequestIncludesCachedStandalonePosts() async throws {
+        let context = bg()
+        try await context.perform {
+            let pubkey = UUID().uuidString
+            let olderPost = Event(context: context)
+            let newerPost = Event(context: context)
+            let reply = Event(context: context)
+            let events = [olderPost, newerPost, reply]
+            defer { events.forEach(context.delete) }
+
+            for (index, event) in events.enumerated() {
+                event.id = UUID().uuidString
+                event.pubkey = pubkey
+                event.kind = 1
+                event.created_at = Int64(index + 1)
+            }
+            reply.replyToRootId = olderPost.id
+
+            let request = Event.fetchRequest()
+            request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            let returnedIds: Set<String> = [olderPost.id, reply.id]
+
+            request.predicate = ProfilePostsLoadingPolicy.standalonePostsPredicate(
+                pubkey: pubkey, validatedEventIds: returnedIds, requestCompleted: false
+            )
+            let initialIds = try context.fetch(request).map(\.id)
+            #expect(initialIds == [olderPost.id])
+
+            for validatedIds in [returnedIds, []] {
+                request.predicate = ProfilePostsLoadingPolicy.standalonePostsPredicate(
+                    pubkey: pubkey, validatedEventIds: validatedIds, requestCompleted: true
+                )
+                let completedIds = try context.fetch(request).map(\.id)
+                #expect(completedIds == [newerPost.id, olderPost.id])
+            }
+        }
     }
 
     @Test("Profile requests use bounded preferred-relay fan-out")

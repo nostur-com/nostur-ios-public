@@ -41,6 +41,25 @@ struct ProfilePostsLoadingPolicy {
         return timedOut ? .timeout : .readyEmpty
     }
 
+    static func standalonePostsPredicate(
+        pubkey: String,
+        validatedEventIds: Set<String>,
+        requestCompleted: Bool
+    ) -> NSPredicate {
+        let standalonePosts = NSPredicate(
+            format: "pubkey == %@ AND kind IN %@ AND replyToId == nil AND replyToRootId == nil",
+            pubkey, PROFILE_KINDS.subtracting([5])
+        )
+        // A standalone post may already be available from Search or a feed,
+        // even when it didn't make the relay's latest batch of mixed events.
+        return requestCompleted ? standalonePosts : NSCompoundPredicate(
+            andPredicateWithSubpredicates: [
+                standalonePosts,
+                NSPredicate(format: "id IN %@", validatedEventIds)
+            ]
+        )
+    }
+
     static func paginationCandidateIds(
         validatedEventIds: Set<String>,
         visibleEventIds: Set<String>
@@ -135,6 +154,22 @@ class ProfilePostsViewModel: ObservableObject {
         .store(in: &subscriptions)
         
     }
+
+    deinit {
+        // A List can remove the spinner or individual post rows while this
+        // model is still loading. Only tear down here when the model is released.
+        connectionWaitTask?.cancel()
+        importRefreshTask?.cancel()
+        paginationRefreshTask?.cancel()
+
+        let subscriptionIds = [activeProfileSubscriptionId, activePaginationSubscriptionId].compactMap { $0 }
+        guard !subscriptionIds.isEmpty else { return }
+        Task { @MainActor in
+            for subscriptionId in subscriptionIds {
+                ConnectionPool.shared.closeSubscription(subscriptionId)
+            }
+        }
+    }
     
     // STEP 1: FETCH POSTS FROM RELAYS
     // Profile navigation is interactive. Prefixing this request with `prio-`
@@ -202,7 +237,7 @@ class ProfilePostsViewModel: ObservableObject {
                 }
             )
             self.profileRequestTracker?.start()
-            outboxReq(clientMessage, activeSubscriptionId: subscriptionId)
+            self.sendProfileRequest(clientMessage)
         }
 
         // requestTargetSnapshot serializes against connection-pool bookkeeping.
@@ -240,11 +275,23 @@ class ProfilePostsViewModel: ObservableObject {
             }
         }
     }
+
+    @MainActor
+    private func sendProfileRequest(_ message: NostrEssentials.ClientMessage) {
+        // Enqueue REQ on the same connection queue as CLOSE so teardown
+        // cannot pass a request that has yet to be sent to the pool.
+        ConnectionPool.shared.sendMessage(
+            NosturClientMessage(clientMessage: message, relayType: .READ),
+            subscriptionId: message.subscriptionId,
+            accountPubkey: AccountsState.shared.activeAccountPublicKey
+        )
+    }
     
     // STEP 2: FETCH RECEIVED POSTS FROM DB
     private func fetchPostsFromDB(
         generation: UInt64,
         forceReveal: Bool,
+        emptyState: State = .ready,
         onComplete: (() -> ())? = nil
     ) {
         let validatedEventIds = returnedEventIds
@@ -296,7 +343,11 @@ class ProfilePostsViewModel: ObservableObject {
                     fr.predicate = NSPredicate(format: "id IN %@ AND pubkey == %@ AND kind IN %@ AND mostRecentId == nil", validatedEventIds, self.pubkey, ARTICLE_KINDS)
                 }
                 else if self.type == .posts {
-                    fr.predicate = NSPredicate(format: "id IN %@ AND pubkey == %@ AND kind IN %@ AND replyToId == nil AND replyToRootId == nil", validatedEventIds, self.pubkey, PROFILE_KINDS.subtracting([5]))
+                    fr.predicate = ProfilePostsLoadingPolicy.standalonePostsPredicate(
+                        pubkey: self.pubkey,
+                        validatedEventIds: validatedEventIds,
+                        requestCompleted: forceReveal
+                    )
                 }
                 else {
                     fr.predicate = NSPredicate(format: "id IN %@ AND pubkey == %@ AND kind IN %@ AND (replyToId != nil OR replyToRootId != nil)", validatedEventIds, self.pubkey, PROFILE_KINDS_REPLIES.subtracting([5]))
@@ -317,7 +368,7 @@ class ProfilePostsViewModel: ObservableObject {
                     guard let self, self.requestGeneration == generation else { return }
                     if ProfilePostsLoadingPolicy.shouldReveal(postCount: posts.count, force: forceReveal) {
                         self.posts = Array(posts.prefix(ProfilePostsLoadingPolicy.firstPaintLimit))
-                        self.state = .ready
+                        self.state = posts.isEmpty ? emptyState : .ready
                     }
                     onComplete?()
                 }
@@ -368,19 +419,24 @@ class ProfilePostsViewModel: ObservableObject {
         case .finished: false
         case .timedOut: true
         }
-        switch ProfilePostsLoadingPolicy.terminalDecision(
+        let decision = ProfilePostsLoadingPolicy.terminalDecision(
             timedOut: timedOut,
             receivedImport: receivedImportForActiveRequest
-        ) {
-        case .timeout:
+        )
+        switch decision {
+        case .timeout where type != .posts:
             state = .timeout
             finishActiveRequestCompletion()
-        case .readyEmpty:
+        case .readyEmpty where type != .posts:
             posts = []
             state = .ready
             finishActiveRequestCompletion()
-        case .revealImportedPosts:
-            fetchPostsFromDB(generation: generation, forceReveal: true) { [weak self] in
+        default:
+            fetchPostsFromDB(
+                generation: generation,
+                forceReveal: true,
+                emptyState: decision == .timeout ? .timeout : .ready
+            ) { [weak self] in
                 self?.finishActiveRequestCompletion()
             }
         }
@@ -663,7 +719,7 @@ class ProfilePostsViewModel: ObservableObject {
                     }
                 )
                 self.paginationTracker?.start()
-                outboxReq(clientMessage, activeSubscriptionId: subscriptionId)
+                self.sendProfileRequest(clientMessage)
             }
         }
     }
