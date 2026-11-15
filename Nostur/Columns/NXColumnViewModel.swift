@@ -616,6 +616,7 @@ class NXColumnViewModel: ObservableObject {
                 }
                 else if case .posts(_) = viewState {
                     Task { @MainActor in
+                        guard self.isVisible else { return }
                         FeedsCoordinator.shared.registerColumn(self)
                         self.resume()
                     }
@@ -623,6 +624,7 @@ class NXColumnViewModel: ObservableObject {
             }
             else if !isPaused {
                 Task { @MainActor in
+                    guard !self.isVisible else { return }
                     FeedsCoordinator.shared.unregisterColumn(self)
                     self.pause()
                 }
@@ -1361,6 +1363,7 @@ class NXColumnViewModel: ObservableObject {
         // Set up gap filler, don't trigger yet here
         gapFiller = NXGapFiller(since: self.nextFetchSince, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
         isViewPaused = false
+        needsCatchUpOnViewResume = false
         guard isVisible else { return }
         self.resetCancellables()
         listenForExplorePubkeysChanged(config)
@@ -2360,6 +2363,7 @@ class NXColumnViewModel: ObservableObject {
     
     // only for pausing view updates (to fix to detail and back withAnimation { } issue_
     public var isViewPaused: Bool = false
+    private var needsCatchUpOnViewResume = false
     
     @MainActor
     public func pauseViewUpdates() {
@@ -2376,14 +2380,20 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     public func resumeViewUpdates() {
+        // SwiftUI can report appearance before the column's selection changes.
+        // Record that the List is present even if it cannot load yet.
+        let wasPaused = isViewPaused
+        isViewPaused = false
         guard isVisible else { return }
-        if isViewPaused {
-            isViewPaused = false
-            if let config {
+        if wasPaused, let config {
 #if DEBUG
-                recordFeedAction("RESUME view updates · \(feedActionDebugViewport())")
+            recordFeedAction("RESUME view updates · \(feedActionDebugViewport())")
 #endif
-                self.loadLocal(config)
+            if needsCatchUpOnViewResume, !isPaused, !AppState.shared.appIsInBackground || IS_CATALYST {
+                // Returning from detail should catch up above the reading row.
+                catchUp(config, awayFor: 0)
+            } else {
+                loadLocal(config)
             }
         }
         scheduleAlreadySeenReconciliation(removingVisiblePostsFor:
@@ -2490,7 +2500,7 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     public func resume() {
-        guard let config else { return }
+        guard let config, isVisible, !AppState.shared.appIsInBackground || IS_CATALYST else { return }
         let now = Date()
         if let lastResumeStartedAt, now.timeIntervalSince(lastResumeStartedAt) < 2.0 {
 #if DEBUG
@@ -2524,8 +2534,16 @@ class NXColumnViewModel: ObservableObject {
 
         // Resuming networking after backgrounding does not mean the feed's List
         // has reappeared. Only resumeViewUpdates() may unpause a detail source.
-        guard !isViewPaused else { return }
+        if isViewPaused {
+            needsCatchUpOnViewResume = true
+            return
+        }
+        catchUp(config, awayFor: awayFor)
+    }
 
+    @MainActor
+    private func catchUp(_ config: NXColumnConfig, awayFor: TimeInterval) {
+        needsCatchUpOnViewResume = false
         if !config.continue,
            case .posts(let nrPosts) = viewState,
            awayFor < LATEST_FEED_RESUME_REFRESH_AFTER {
@@ -2549,10 +2567,19 @@ class NXColumnViewModel: ObservableObject {
 #endif
 
         if config.continue {
-            self.loadLocal(config) { [weak self] in
-                Task {
-                    await self?.loadRemote(config)
+            // A local read can wait for a pending List update. Start the relay
+            // catch-up independently so that delay cannot block the request.
+            loadLocal(config)
+            let generation = feedSessionGeneration
+            Task { [weak self] in
+                guard let self, self.feedSessionGeneration == generation,
+                      self.isVisible, !self.isPaused,
+                      !AppState.shared.appIsInBackground || IS_CATALYST else { return }
+                if self.isViewPaused {
+                    self.needsCatchUpOnViewResume = true
+                    return
                 }
+                await self.loadRemote(config)
             }
         }
         else {
@@ -4438,8 +4465,9 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private func listenForPauseFeed(_ config: NXColumnConfig) {
         guard pauseFeedSub == nil else { return }
+        // AppView sends this on the main actor during the background transition.
+        // Deferring it can deliver the pause after a later foreground resume.
         pauseFeedSub = FeedsCoordinator.shared.pauseFeedsSubject
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 self?.pause()
             }
@@ -4519,9 +4547,11 @@ class NXColumnViewModel: ObservableObject {
 
         // Multi-column refresh is rotated by FeedFetchScheduler. The delayed
         // REQ is only needed when this is the single live column (iPhone/iPad).
+        realTimeReqTask?.cancel()
         if !FeedsCoordinator.shared.hasMultipleVisibleColumns {
             realTimeReqTask = Task { [weak self] in
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
+                guard !Task.isCancelled else { return }
                 self?.sendRealtimeReq(config)
             }
         }

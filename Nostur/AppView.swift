@@ -124,7 +124,7 @@ extension AppView {
                 AppState.shared.lastForegroundedAt = Date()
                 ConnectionPool.shared.connectAll()
                 sendNotification(.scenePhaseActive)
-                FeedsCoordinator.shared.resumeFeeds()
+                FeedsCoordinator.shared.resumeFeeds(afterForeground: true)
                 DMsVM.restoreSubscriptions()
                 ConversionVM.restoreSubscriptions()
                 NotificationsViewModel.restoreSubscriptions()

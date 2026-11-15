@@ -17,10 +17,10 @@ class FeedsCoordinator {
     lazy var fetchScheduler = FeedFetchScheduler()
     
     public var resumeFeedsSubject = PassthroughSubject<Void, Never>()
-    public func resumeFeeds() {
+    public func resumeFeeds(afterForeground: Bool = false) {
         resumeFeedsSubject.send()
         Task { @MainActor in
-            self.fetchScheduler.resumeAll()
+            self.fetchScheduler.resumeAll(afterForeground: afterForeground)
         }
     }
     
@@ -51,6 +51,7 @@ class FeedsCoordinator {
     }
     
     public var pauseFeedsSubject = PassthroughSubject<Void, Never>()
+    @MainActor
     public func pauseFeeds() {
         pauseFeedsSubject.send()
     }

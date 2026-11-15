@@ -300,6 +300,20 @@ final class NXFeedViewportTests: XCTestCase {
     }
 
     @MainActor
+    func testFeedAppearanceClearsViewPauseBeforeTabSelection() {
+        let vm = NXColumnViewModel()
+        vm.viewState = .posts([])
+        vm.pauseViewUpdates()
+        XCTAssertTrue(vm.isViewPaused)
+        XCTAssertFalse(vm.isVisible)
+
+        vm.resumeViewUpdates()
+        vm.isVisible = true
+
+        XCTAssertFalse(vm.isViewPaused)
+    }
+
+    @MainActor
     func testDetailNavigationPreservesReadRowsAndThreadContext() async throws {
         _ = AppState.shared
         _ = AccountsState.shared

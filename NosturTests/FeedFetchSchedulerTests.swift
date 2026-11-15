@@ -80,6 +80,44 @@ struct FeedFetchSchedulerTests {
         #expect(column.resumeCount == 1)
     }
 
+    @Test func foregroundResumesPausedColumnDuringReconnectCooldown() async {
+        let scheduler = makeScheduler()
+        defer { scheduler.shutdown() }
+        let column = MockFeedColumn()
+        column.onResume = { [weak column] in column?.isPausedForScheduling = false }
+        scheduler.register(column)
+
+        scheduler.resumeAll()
+        await scheduler.waitForScheduledWork()
+        column.isPausedForScheduling = true
+
+        scheduler.resumeAll(afterForeground: true)
+        scheduler.resumeAll()
+        await scheduler.waitForScheduledWork()
+        scheduler.tickNextColumn()
+
+        #expect(column.resumeCount == 2)
+        #expect(column.tickCount == 1)
+    }
+
+    @Test func foregroundResumeSurvivesPendingStartupForSameColumn() async {
+        let scheduler = makeScheduler()
+        defer { scheduler.shutdown() }
+        let column = MockFeedColumn()
+        scheduler.register(column)
+
+        var startupCount = 0
+        scheduler.scheduleNetworkStart(id: column.columnScheduleId) {
+            startupCount += 1
+        }
+        scheduler.resumeAll(afterForeground: true)
+        scheduler.resumeAll(afterForeground: true)
+        await scheduler.waitForScheduledWork()
+
+        #expect(startupCount == 1)
+        #expect(column.resumeCount == 1)
+    }
+
     @Test func desktopColumnsUseShortStartupStagger() async {
         let scheduler = makeScheduler()
         defer { scheduler.shutdown() }

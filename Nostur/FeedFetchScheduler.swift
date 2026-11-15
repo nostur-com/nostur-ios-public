@@ -43,8 +43,14 @@ final class FeedFetchScheduler {
         weak var column: FeedColumnScheduling?
     }
     
+    private enum WorkKind {
+        case startup
+        case resume
+    }
+
     private struct WorkItem {
         let id: UUID
+        let kind: WorkKind
         let work: () -> Void
     }
     
@@ -102,9 +108,10 @@ final class FeedFetchScheduler {
         refreshFetchLoop()
     }
     
-    func resumeAll() {
+    func resumeAll(afterForeground: Bool = false) {
         prune()
-        if shouldCoalesceResumeAll() {
+        // Foregrounding ends a real pause and must survive reconnect coalescing.
+        if !afterForeground && shouldCoalesceResumeAll() {
 #if DEBUG
             L.og.debug("☘️☘️ FeedFetchScheduler resumeAll coalesced -[LOG]-")
 #endif
@@ -112,7 +119,7 @@ final class FeedFetchScheduler {
         }
         lastResumeAllAt = Date()
         for column in orderedColumns() {
-            enqueue(id: column.columnScheduleId) { [weak column] in
+            enqueue(id: column.columnScheduleId, kind: .resume) { [weak column] in
                 column?.scheduledResume()
             }
         }
@@ -123,7 +130,7 @@ final class FeedFetchScheduler {
     }
     
     func scheduleNetworkStart(id: UUID, work: @escaping () -> Void) {
-        enqueue(id: id, work: work)
+        enqueue(id: id, kind: .startup, work: work)
         drainIfNeeded()
     }
     
@@ -164,9 +171,9 @@ final class FeedFetchScheduler {
         return false
     }
     
-    private func enqueue(id: UUID, work: @escaping () -> Void) {
-        if workQueue.contains(where: { $0.id == id }) { return }
-        workQueue.append(WorkItem(id: id, work: work))
+    private func enqueue(id: UUID, kind: WorkKind, work: @escaping () -> Void) {
+        if workQueue.contains(where: { $0.id == id && $0.kind == kind }) { return }
+        workQueue.append(WorkItem(id: id, kind: kind, work: work))
     }
     
     private func drainIfNeeded() {
