@@ -517,6 +517,10 @@ private struct BrowserBlockedRequestActions: View {
                 Text("Allow access, then retry on the site.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            if item.crypto != nil {
+                Text("Allow both today lets this site encrypt data and read encrypted data, including private messages and backups, until midnight.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             approvalButtons
                 .buttonStyle(.bordered)
         }
@@ -537,7 +541,9 @@ private struct BrowserBlockedRequestActions: View {
     @ViewBuilder
     private var buttons: some View {
         Button("Allow once") { browser.allowBlockedRequest(item.id, duration: .once) }
-        if item.kind != -1 {
+        if item.crypto != nil {
+            Button("Allow both today") { browser.allowBlockedRequest(item.id, duration: .today) }
+        } else if item.kind != -1 {
             Button("Allow today") { browser.allowBlockedRequest(item.id, duration: .today) }
         }
         Button("Always allow") { browser.allowBlockedRequest(item.id, duration: .always) }

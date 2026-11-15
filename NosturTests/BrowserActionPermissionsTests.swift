@@ -38,7 +38,7 @@ final class BrowserActionPermissionsTests: XCTestCase {
         XCTAssertTrue(reopened.grants(account: "account-a", origin: "https://one.test", now: midnight).isEmpty)
     }
 
-    func testDataPermissionExpiresAtMidnightAndIsScopedToOperationAccountAndOrigin() throws {
+    func testBothDataPermissionsExpireAtMidnightAndAreScopedToAccountAndOrigin() throws {
         let suite = "browser.data-permissions.test." + UUID().uuidString
         let preferences = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { preferences.removePersistentDomain(forName: suite) }
@@ -49,10 +49,10 @@ final class BrowserActionPermissionsTests: XCTestCase {
         let midnight = try XCTUnwrap(calendar.dateInterval(of: .day, for: now)?.end)
         let origin = "https://app.example"
         let account = "account"
-        permissions.allowDataToday(.encrypt, account: account, origin: origin, now: now, calendar: calendar)
+        permissions.allowDataToday(account: account, origin: origin, now: now, calendar: calendar)
         let grants = permissions.grants(account: account, origin: origin, now: now)
-        XCTAssertEqual(grants.map(\.kind), [BrowserDataPermission.encrypt.rawValue])
-        XCTAssertEqual(grants.first?.expiresAt, midnight)
+        XCTAssertEqual(Set(grants.map(\.kind)), [BrowserDataPermission.encrypt.rawValue, BrowserDataPermission.decrypt.rawValue])
+        XCTAssertEqual(grants.map(\.expiresAt), [midnight, midnight])
         XCTAssertTrue(permissions.grants(account: "other", origin: origin, now: now).isEmpty)
         XCTAssertTrue(permissions.grants(account: account, origin: "https://another.example", now: now).isEmpty)
         XCTAssertTrue(permissions.grants(account: account, origin: origin, now: midnight).isEmpty)

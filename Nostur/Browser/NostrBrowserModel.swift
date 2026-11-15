@@ -691,10 +691,11 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             preferences.set(true, forKey: key)
             permissions.revoke(kind: permission.rawValue, account: item.scope.accountPubkey, origin: item.scope.origin)
         } else {
-            permissions.allowDataToday(permission, account: item.scope.accountPubkey, origin: item.scope.origin)
+            permissions.allowDataToday(account: item.scope.accountPubkey, origin: item.scope.origin)
         }
         let matching = blockedRequests.filter {
-            $0.scope == item.scope && $0.crypto?.method.encrypts == crypto.method.encrypts
+            guard $0.scope == item.scope, let request = $0.crypto else { return false }
+            return duration == .today || request.method.encrypts == crypto.method.encrypts
         }
         let ids = Set(matching.map(\.id))
         let waiting = matching.filter { pendingCrypto[$0.id] != nil }

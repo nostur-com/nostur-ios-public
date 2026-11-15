@@ -7,7 +7,7 @@ import XCTest
 
 @MainActor
 final class BrowserSecurityBoundaryTests: XCTestCase {
-    func testEncryptedBackupPermissionsResumeAndStaySeparate() async throws {
+    func testBackupAndRestoreUseOneDayApproval() async throws {
         let key = String(repeating: "0", count: 63) + "1"
         let keys = try Keys(privateKeyHex: key)
         let fixture = try BrowserSecurityFixture(origin: "https://mutable.top", accountPubkey: keys.publicKeyHex,
@@ -29,25 +29,29 @@ final class BrowserSecurityBoundaryTests: XCTestCase {
             let cipher = try XCTUnwrap(requestedValue as? String)
             XCTAssertNotEqual(cipher, "private backup")
             XCTAssertEqual(fixture.browser.encryptionAllowed, method == "nip04")
-            XCTAssertFalse(fixture.browser.decryptionAllowed)
+            XCTAssertEqual(fixture.browser.decryptionAllowed, method == "nip04")
             async let restored = fixture.view.callAsyncJavaScript(
                 "return await nostr[method].decrypt(await nostr.getPublicKey(), cipher);",
                 arguments: ["method": method, "cipher": cipher], in: nil, contentWorld: .page)
-            try await fixture.waitUntil { fixture.browser.blockedRequests.first?.crypto?.method.encrypts == false }
-            let read = try XCTUnwrap(fixture.browser.blockedRequests.first)
-            fixture.browser.allowBlockedRequest(read.id, duration: .once)
+            if method == "nip44" {
+                try await fixture.waitUntil { fixture.browser.blockedRequests.first?.crypto?.method.encrypts == false }
+                let read = try XCTUnwrap(fixture.browser.blockedRequests.first)
+                fixture.browser.allowBlockedRequest(read.id, duration: .once)
+            }
             let plaintext = try await restored as? String
             XCTAssertEqual(plaintext, "private backup")
-            XCTAssertFalse(fixture.browser.decryptionAllowed)
+            XCTAssertEqual(fixture.browser.decryptionAllowed, method == "nip04")
             XCTAssertFalse(fixture.browser.activity.contains { $0.detail.contains("private backup") || $0.detail.contains(cipher) })
         }
-        XCTAssertEqual(fixture.browser.actionGrants.map(\.kind), [BrowserDataPermission.encrypt.rawValue])
+        XCTAssertEqual(Set(fixture.browser.actionGrants.map(\.kind)), [BrowserDataPermission.encrypt.rawValue, BrowserDataPermission.decrypt.rawValue])
         let subsequentBackup = try await fixture.view.callAsyncJavaScript(
             "return await nostr.nip44.encrypt(await nostr.getPublicKey(), 'another backup');",
             arguments: [:], in: nil, contentWorld: .page)
         XCTAssertNotNil(subsequentBackup as? String)
         fixture.browser.setEncryption(false)
         XCTAssertFalse(fixture.browser.encryptionAllowed)
+        XCTAssertTrue(fixture.browser.decryptionAllowed)
+        fixture.browser.setDecryption(false)
         XCTAssertTrue(fixture.browser.actionGrants.isEmpty)
     }
 

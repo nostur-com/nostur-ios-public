@@ -50,21 +50,24 @@ struct BrowserActionPermissions {
             guard kind == 27235, destination != origin,
                   BrowserSigningPolicy.origin(URL(string: destination)) == destination else { return }
         }
-        save(kind: kind, account: account, origin: origin, duration: duration, destination: destination, now: now, calendar: calendar)
+        save(keys: [destination ?? String(kind)], account: account, origin: origin, duration: duration, now: now, calendar: calendar)
     }
 
-    func allowDataToday(_ permission: BrowserDataPermission, account: String, origin: String,
+    func allowDataToday(account: String, origin: String,
                         now: Date = Date(), calendar: Calendar = .current) {
         guard !account.isEmpty, BrowserSigningPolicy.origin(URL(string: origin)) == origin else { return }
-        save(kind: permission.rawValue, account: account, origin: origin, duration: .today, destination: nil, now: now, calendar: calendar)
+        let keys = [BrowserDataPermission.encrypt, .decrypt].map { String($0.rawValue) }
+        save(keys: keys, account: account, origin: origin, duration: .today, now: now, calendar: calendar)
     }
 
-    private func save(kind: Int, account: String, origin: String, duration: BrowserGrantDuration,
-                      destination: String?, now: Date, calendar: Calendar) {
+    private func save(keys: [String], account: String, origin: String, duration: BrowserGrantDuration,
+                      now: Date, calendar: Calendar) {
         let expiry = duration == .always ? Date.distantFuture : calendar.dateInterval(of: .day, for: now)?.end
         guard let expiry else { return }
         var values = preferences.dictionary(forKey: key(account: account, origin: origin)) ?? [:]
-        values[destination ?? String(kind)] = expiry.timeIntervalSince1970
+        for grantKey in keys {
+            values[grantKey] = expiry.timeIntervalSince1970
+        }
         preferences.set(values, forKey: key(account: account, origin: origin))
     }
     func revoke(kind: Int, account: String, origin: String, destination: String? = nil) {
