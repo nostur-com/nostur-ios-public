@@ -2,12 +2,21 @@ import SwiftUI
 import Combine
 
 enum YearReviewFeature {
-    // Enable in release builds when Year in Review is ready for users.
-    #if DEBUG
-    static let isEnabled = true
-    #else
-    static let isEnabled = false
-    #endif
+    static var isEnabled: Bool {
+        #if DEBUG
+        true
+        #else
+        isReleased()
+        #endif
+    }
+
+    // Release access begins after December 10 in the device's local time.
+    static func isReleased(now: Date = .now, timeZone: TimeZone = .current) -> Bool {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        guard let launch = calendar.date(from: DateComponents(year: 2026, month: 12, day: 11)) else { return false }
+        return now >= launch
+    }
 }
 
 enum YearReviewDiscovery {

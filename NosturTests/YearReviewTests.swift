@@ -1204,6 +1204,20 @@ final class YearReviewTests: XCTestCase {
         return Set((enumerator?.allObjects as? [URL] ?? []).filter { $0.pathExtension == "json" }.map(\.path))
     }
 
+    func testReleaseAvailabilityStartsAfterDecember10InLocalTime() {
+        let zone = TimeZone(identifier: "Europe/Amsterdam")!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let launch = calendar.date(from: DateComponents(year: 2026, month: 12, day: 11))!
+        XCTAssertFalse(YearReviewFeature.isReleased(now: launch.addingTimeInterval(-1), timeZone: zone))
+        XCTAssertTrue(YearReviewFeature.isReleased(now: launch, timeZone: zone))
+        XCTAssertFalse(YearReviewFeature.isReleased(now: launch, timeZone: TimeZone(secondsFromGMT: 0)!))
+        XCTAssertTrue(YearReviewFeature.isReleased(now: launch.addingTimeInterval(365 * 86_400), timeZone: zone))
+        #if DEBUG
+        XCTAssertTrue(YearReviewFeature.isEnabled)
+        #endif
+    }
+
     func testSeasonalDiscoveryWindowAndTargetYearRespectLocalDates() {
         var calendar = Calendar(identifier: .gregorian)
         let zone = TimeZone(secondsFromGMT: 7200)!
