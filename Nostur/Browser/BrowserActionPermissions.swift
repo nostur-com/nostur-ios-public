@@ -6,9 +6,21 @@ struct BrowserActionGrant: Identifiable {
     var destination: String? = nil
     var id: String { destination ?? String(kind) }
     var isPermanent: Bool { expiresAt == .distantFuture }
+    var actionName: String { BrowserDataPermission(rawValue: kind)?.title ?? BrowserEventDescription.name(for: kind) }
 }
 
 enum BrowserGrantDuration { case once, today, always }
+
+enum BrowserDataPermission: Int {
+    case encrypt = -2
+    case decrypt = -3
+
+    init(encrypts: Bool) { self = encrypts ? .encrypt : .decrypt }
+
+    var title: String {
+        self == .encrypt ? String(localized: "Encrypt data") : String(localized: "Read encrypted data")
+    }
+}
 
 /// Native-only grants. A web page never supplies the account, origin or expiry.
 struct BrowserActionPermissions {
@@ -23,7 +35,7 @@ struct BrowserActionPermissions {
             guard let expiry = value as? Double, expiry.isFinite,
                   expiry > now.timeIntervalSince1970 else { return nil }
             let expiresAt = Date(timeIntervalSince1970: expiry)
-            if let kind = Int(key), BrowserSigningPolicy.canGrant(kind) {
+            if let kind = Int(key), BrowserSigningPolicy.canGrant(kind) || BrowserDataPermission(rawValue: kind) != nil {
                 return BrowserActionGrant(kind: kind, expiresAt: expiresAt)
             }
             guard key != origin, BrowserSigningPolicy.origin(URL(string: key)) == key else { return nil }
@@ -38,6 +50,17 @@ struct BrowserActionPermissions {
             guard kind == 27235, destination != origin,
                   BrowserSigningPolicy.origin(URL(string: destination)) == destination else { return }
         }
+        save(kind: kind, account: account, origin: origin, duration: duration, destination: destination, now: now, calendar: calendar)
+    }
+
+    func allowDataToday(_ permission: BrowserDataPermission, account: String, origin: String,
+                        now: Date = Date(), calendar: Calendar = .current) {
+        guard !account.isEmpty, BrowserSigningPolicy.origin(URL(string: origin)) == origin else { return }
+        save(kind: permission.rawValue, account: account, origin: origin, duration: .today, destination: nil, now: now, calendar: calendar)
+    }
+
+    private func save(kind: Int, account: String, origin: String, duration: BrowserGrantDuration,
+                      destination: String?, now: Date, calendar: Calendar) {
         let expiry = duration == .always ? Date.distantFuture : calendar.dateInterval(of: .day, for: now)?.end
         guard let expiry else { return }
         var values = preferences.dictionary(forKey: key(account: account, origin: origin)) ?? [:]
@@ -62,7 +85,7 @@ struct BrowserBlockedRequest: Identifiable {
     var event: BrowserUnsignedEvent? = nil
     var crypto: BrowserCryptoRequest? = nil
     var actionName: String {
-        if let crypto { return crypto.method.encrypts ? String(localized: "Encrypt data") : String(localized: "Read encrypted data") }
+        if let crypto { return BrowserDataPermission(encrypts: crypto.method.encrypts).title }
         if let event { return BrowserEventDescription.name(for: event) }
         return kind < 0 ? String(localized: "Account connection") : BrowserEventDescription.name(for: kind)
     }

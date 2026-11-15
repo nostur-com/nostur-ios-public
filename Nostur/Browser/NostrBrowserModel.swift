@@ -139,8 +139,8 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
     var accountChangesAllowed: Bool { capability("accountChanges") }
     var deletionsAllowed: Bool { capability("deletions") }
     var walletAllowed: Bool { capability("wallet") }
-    var encryptionAllowed: Bool { capability("encrypt") }
-    var decryptionAllowed: Bool { capability("decrypt") }
+    var encryptionAllowed: Bool { capability("encrypt") || actionGrants.contains { $0.kind == BrowserDataPermission.encrypt.rawValue } }
+    var decryptionAllowed: Bool { capability("decrypt") || actionGrants.contains { $0.kind == BrowserDataPermission.decrypt.rawValue } }
     private func capability(_ name: String) -> Bool {
         guard let key = preferenceKey(name) else { return false }
         return preferences.bool(forKey: key)
@@ -161,6 +161,8 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
                     || (name == "accountChanges" && BrowserSigningPolicy.isAccountChange(grant.kind))
                     || (name == "deletions" && BrowserSigningPolicy.isDeletion(grant.kind))
                     || (name == "wallet" && BrowserSigningPolicy.nwcKinds.contains(grant.kind))
+                    || (name == "encrypt" && grant.kind == BrowserDataPermission.encrypt.rawValue)
+                    || (name == "decrypt" && grant.kind == BrowserDataPermission.decrypt.rawValue)
                 if matches { permissions.revoke(kind: grant.kind, account: accountPubkey, origin: origin) }
             }
         }
@@ -425,7 +427,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         guard let origin else { return [] }
         return BrowserActionPermissions(preferences: preferences).grants(account: accountPubkey, origin: origin)
     }
-    private var allowedKinds: Set<Int> { Set(actionGrants.filter { $0.destination == nil }.map(\.kind)) }
+    private var allowedKinds: Set<Int> { Set(actionGrants.filter { $0.destination == nil && BrowserSigningPolicy.canGrant($0.kind) }.map(\.kind)) }
     private var httpDestinations: Set<String> { Set(actionGrants.compactMap(\.destination)) }
 
     func canAllow(_ item: BrowserBlockedRequest) -> Bool {
@@ -670,7 +672,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
 
     private func allowCrypto(_ item: BrowserBlockedRequest, duration: BrowserGrantDuration) {
         guard let crypto = item.crypto, let key = preferenceKey(crypto.method.encrypts ? "encrypt" : "decrypt") else { return }
-        if duration != .always {
+        if duration == .once {
             if pendingCrypto[item.id] != nil {
                 oneTimeApprovals.insert(item.id)
                 blockedRequests.removeAll { $0.id == item.id }
@@ -683,13 +685,22 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
             }
             return
         }
-        preferences.set(true, forKey: key)
-        let ids = blockedRequests.filter {
+        let permission = BrowserDataPermission(encrypts: crypto.method.encrypts)
+        let permissions = BrowserActionPermissions(preferences: preferences)
+        if duration == .always {
+            preferences.set(true, forKey: key)
+            permissions.revoke(kind: permission.rawValue, account: item.scope.accountPubkey, origin: item.scope.origin)
+        } else {
+            permissions.allowDataToday(permission, account: item.scope.accountPubkey, origin: item.scope.origin)
+        }
+        let matching = blockedRequests.filter {
             $0.scope == item.scope && $0.crypto?.method.encrypts == crypto.method.encrypts
-        }.map(\.id)
+        }
+        let ids = Set(matching.map(\.id))
+        let waiting = matching.filter { pendingCrypto[$0.id] != nil }
         blockedRequests.removeAll { ids.contains($0.id) }
-        for id in ids where pendingCrypto[id] != nil { authorizeCrypto(id) }
-        grantFeedback = String(localized: "Permission saved. This action is now allowed.")
+        for request in waiting { authorizeCrypto(request.id) }
+        grantFeedback = waiting.isEmpty ? String(localized: "Permission saved. Retry the action in the app.") : String(localized: "Permission saved. This action is now allowed.")
     }
 
     private func cryptoApproval(_ pending: PendingCrypto, id: UUID) -> BrowserCryptoApproval? {
@@ -709,7 +720,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
                 ? String(localized: "This site wants to encrypt data using your account.")
                 : String(localized: "This site wants to read encrypted data using your account.")
             blockedRequests.insert(BrowserBlockedRequest(id: id, scope: request.scope,
-                kind: request.request.method.encrypts ? -2 : -3, reason: reason, canAllow: true,
+                kind: BrowserDataPermission(encrypts: request.request.method.encrypts).rawValue, reason: reason, canAllow: true,
                 waiting: true, crypto: request.request), at: 0)
             record(reason, blocked: true, showNotice: false, id: id)
             armTimeout(id, seconds: approvalWaitSeconds)
@@ -759,7 +770,7 @@ final class NostrBrowserModel: NSObject, ObservableObject, WKNavigationDelegate,
         if currentScope() == request.scope {
             blockedRequests.removeAll { $0.id == id }
             blockedRequests.insert(BrowserBlockedRequest(id: id, scope: request.scope,
-                kind: request.request.method.encrypts ? -2 : -3, reason: reason, canAllow: false,
+                kind: BrowserDataPermission(encrypts: request.request.method.encrypts).rawValue, reason: reason, canAllow: false,
                 waiting: false, crypto: request.request), at: 0)
             blockedRequests = Array(blockedRequests.prefix(30))
         }

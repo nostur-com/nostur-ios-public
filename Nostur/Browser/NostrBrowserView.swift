@@ -517,12 +517,30 @@ private struct BrowserBlockedRequestActions: View {
                 Text("Allow access, then retry on the site.")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            HStack {
-                Button("Allow once") { browser.allowBlockedRequest(item.id, duration: .once) }
-                Button("Always allow") { browser.allowBlockedRequest(item.id, duration: .always) }
-            }
-            .buttonStyle(.bordered)
+            approvalButtons
+                .buttonStyle(.bordered)
         }
+    }
+
+    @ViewBuilder
+    private var approvalButtons: some View {
+        if #available(iOS 16, *) {
+            ViewThatFits(in: .horizontal) {
+                HStack { buttons }
+                VStack(alignment: .leading) { buttons }
+            }
+        } else {
+            VStack(alignment: .leading) { buttons }
+        }
+    }
+
+    @ViewBuilder
+    private var buttons: some View {
+        Button("Allow once") { browser.allowBlockedRequest(item.id, duration: .once) }
+        if item.kind != -1 {
+            Button("Allow today") { browser.allowBlockedRequest(item.id, duration: .today) }
+        }
+        Button("Always allow") { browser.allowBlockedRequest(item.id, duration: .always) }
     }
 }
 
@@ -589,7 +607,7 @@ private struct BrowserSavedPermissions: View {
                         if let destination = grant.destination {
                             Text("External service: \(destination)")
                         } else {
-                            Text(BrowserEventDescription.name(for: grant.kind))
+                            Text(grant.actionName)
                         }
                         Text(grant.isPermanent ? "Always allowed" : "Allowed today")
                             .font(.caption).foregroundStyle(.secondary)

@@ -38,6 +38,26 @@ final class BrowserActionPermissionsTests: XCTestCase {
         XCTAssertTrue(reopened.grants(account: "account-a", origin: "https://one.test", now: midnight).isEmpty)
     }
 
+    func testDataPermissionExpiresAtMidnightAndIsScopedToOperationAccountAndOrigin() throws {
+        let suite = "browser.data-permissions.test." + UUID().uuidString
+        let preferences = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { preferences.removePersistentDomain(forName: suite) }
+        let permissions = BrowserActionPermissions(preferences: preferences)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Europe/Amsterdam"))
+        let now = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 11, day: 15, hour: 18)))
+        let midnight = try XCTUnwrap(calendar.dateInterval(of: .day, for: now)?.end)
+        let origin = "https://app.example"
+        let account = "account"
+        permissions.allowDataToday(.encrypt, account: account, origin: origin, now: now, calendar: calendar)
+        let grants = permissions.grants(account: account, origin: origin, now: now)
+        XCTAssertEqual(grants.map(\.kind), [BrowserDataPermission.encrypt.rawValue])
+        XCTAssertEqual(grants.first?.expiresAt, midnight)
+        XCTAssertTrue(permissions.grants(account: "other", origin: origin, now: now).isEmpty)
+        XCTAssertTrue(permissions.grants(account: account, origin: "https://another.example", now: now).isEmpty)
+        XCTAssertTrue(permissions.grants(account: account, origin: origin, now: midnight).isEmpty)
+    }
+
     func testGrantsNeverBypassInputProtocolOrProtectedKindChecks() {
         let now: Int64 = 1_800_000_000
         func reject(_ event: BrowserUnsignedEvent, grants: Set<Int>) -> String? {

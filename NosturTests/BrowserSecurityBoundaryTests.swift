@@ -24,7 +24,7 @@ final class BrowserSecurityBoundaryTests: XCTestCase {
             try await fixture.waitUntil { fixture.browser.blockedRequests.first?.crypto != nil }
             let item = try XCTUnwrap(fixture.browser.blockedRequests.first)
             XCTAssertTrue(fixture.browser.canAllow(item))
-            fixture.browser.allowBlockedRequest(item.id, duration: method == "nip44" ? .once : .always)
+            fixture.browser.allowBlockedRequest(item.id, duration: method == "nip44" ? .once : .today)
             let requestedValue = try await requested
             let cipher = try XCTUnwrap(requestedValue as? String)
             XCTAssertNotEqual(cipher, "private backup")
@@ -41,8 +41,14 @@ final class BrowserSecurityBoundaryTests: XCTestCase {
             XCTAssertFalse(fixture.browser.decryptionAllowed)
             XCTAssertFalse(fixture.browser.activity.contains { $0.detail.contains("private backup") || $0.detail.contains(cipher) })
         }
+        XCTAssertEqual(fixture.browser.actionGrants.map(\.kind), [BrowserDataPermission.encrypt.rawValue])
+        let subsequentBackup = try await fixture.view.callAsyncJavaScript(
+            "return await nostr.nip44.encrypt(await nostr.getPublicKey(), 'another backup');",
+            arguments: [:], in: nil, contentWorld: .page)
+        XCTAssertNotNil(subsequentBackup as? String)
         fixture.browser.setEncryption(false)
         XCTAssertFalse(fixture.browser.encryptionAllowed)
+        XCTAssertTrue(fixture.browser.actionGrants.isEmpty)
     }
 
     func testPendingDecryptionCannotDeliverAfterMinimizing() async throws {
