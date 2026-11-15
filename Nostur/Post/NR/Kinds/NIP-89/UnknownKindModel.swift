@@ -28,7 +28,7 @@ class UnknownKindModel: ObservableObject {
                 guard let self else { return }
                 let apps = self.fetchApps(kind: unknownKind, context: context)
                 let suggestedApps = self.buildSuggestedApps(apps, kind: unknownKind, eventId: eventId, pubkey: pubkey, dTag: dTag)
-                let title = alt ?? "Unknown post type (kind: \(unknownKind))"
+                let title = alt ?? String(localized: "Unknown post type (kind: \(unknownKind))")
                 let state: ViewState = apps.isEmpty ? .timeout : .ready((suggestedApps, title))
                 DispatchQueue.main.async { [weak self] in
                     self?.state = state
