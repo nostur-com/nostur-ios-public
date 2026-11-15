@@ -1414,7 +1414,6 @@ public final class NewPostModel: ObservableObject {
                             savedEvent.flags = "awaiting_send"
                             savedEvent.cancellationId = cancellationId
                             ViewUpdates.shared.updateNRPost.send(savedEvent)
-                            PollArchive.remember(signedEvent)
                             DispatchQueue.main.async {
                                 _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
                             }
@@ -1451,7 +1450,6 @@ public final class NewPostModel: ObservableObject {
                     }
                 }
             }
-            PollArchive.remember(signedEvent)
             _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
         }
         finishDraftSend()

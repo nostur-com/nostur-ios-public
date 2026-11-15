@@ -126,6 +126,8 @@ class Unpublisher {
     }
     
     private func sendToRelays(_ nEvent: NEvent, skipDB: Bool = false, lockToThisRelay: RelayData? = nil) {
+        // Polls in the Undo queue are signed but have not been sent.
+        if nEvent.kind == .poll { PollArchive.remember(nEvent) }
         if nEvent.kind == .nwcRequest {
 #if DEBUG
             L.og.debug("⚡️ Sending .nwcRequest to NWC relay")

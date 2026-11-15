@@ -424,8 +424,8 @@ enum YearReviewLocalSeed {
                       context: NSManagedObjectContext) async throws -> Batch {
         try await context.perform {
             let request = Event.fetchRequest()
-            request.predicate = NSPredicate(format: "kind IN %@ AND created_at >= %lld AND created_at < %lld AND sig != nil AND (pubkey == %@ OR tagsSerialized CONTAINS %@ OR tagsSerialized CONTAINS %@ OR (kind == 9735 AND fromPubkey == %@))",
-                                            Array(YearReviewKinds.archived), period.start, period.end, owner, serializedP(owner), "[\"P\",\"" + owner + "\"", owner)
+            request.predicate = NSPredicate(format: "kind IN %@ AND created_at >= %lld AND created_at < %lld AND sig != nil AND (kind != 1068 OR flags == nil OR flags != %@) AND (pubkey == %@ OR tagsSerialized CONTAINS %@ OR tagsSerialized CONTAINS %@ OR (kind == 9735 AND fromPubkey == %@))",
+                                            Array(YearReviewKinds.archived), period.start, period.end, "awaiting_send", owner, serializedP(owner), "[\"P\",\"" + owner + "\"", owner)
             request.sortDescriptors = [NSSortDescriptor(key: "id", ascending: true)]
             request.fetchLimit = 200
             request.fetchOffset = offset
@@ -441,7 +441,7 @@ enum YearReviewLocalSeed {
         guard !ids.isEmpty else { return Batch(events: [], deletedIds: [], fetchedCount: 0) }
         return try await context.perform {
             let request = Event.fetchRequest()
-            request.predicate = NSPredicate(format: "id IN %@ AND sig != nil", ids)
+            request.predicate = NSPredicate(format: "id IN %@ AND sig != nil AND (kind != 1068 OR flags == nil OR flags != %@)", ids, "awaiting_send")
             request.fetchLimit = 200
             let fetched = try context.fetch(request)
             let values = Batch(events: fetched.filter { $0.deletedById == nil }.map(snapshot),

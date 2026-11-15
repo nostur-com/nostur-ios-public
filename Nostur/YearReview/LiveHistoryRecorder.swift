@@ -222,8 +222,8 @@ final class LiveHistoryRecorder: @unchecked Sendable {
             let after = cursor
             let batch = try await context.perform { () -> (events: [YearReviewEvent], deleted: Set<String>, last: String?) in
                 let request = Event.fetchRequest()
-                request.predicate = NSPredicate(format: "kind IN %@ AND id > %@ AND sig != nil AND otherId == nil AND groupId == nil AND NOT (kind == 7 AND kTag IN {4,14,15})",
-                    Array(YearReviewKinds.archived), after)
+                request.predicate = NSPredicate(format: "kind IN %@ AND id > %@ AND sig != nil AND (kind != 1068 OR flags == nil OR flags != %@) AND otherId == nil AND groupId == nil AND NOT (kind == 7 AND kTag IN {4,14,15})",
+                    Array(YearReviewKinds.archived), after, "awaiting_send")
                 request.sortDescriptors = [NSSortDescriptor(key: "id", ascending: true)]
                 request.fetchLimit = 200
                 let rows = try context.fetch(request)

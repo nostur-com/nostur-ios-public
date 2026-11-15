@@ -477,7 +477,7 @@ private struct YearReviewHistorySummary: View {
                             Text("Fetching \(activity.monthName)")
                         } else { Text(model.progressLabel) }
                     }
-                    if model.isDownloading { Text("You can keep browsing.") }
+                    if model.isDownloading { Text("You can keep using Nostur.") }
                 } else {
                     if model.report != nil && (model.archivedCounts.fromYou > 0 || model.archivedCounts.fromOthers > 0) {
                         Text("Saved report")
@@ -516,7 +516,7 @@ private struct YearReviewHistoryView: View {
                         Text(model.progressLabel).font(.subheadline.weight(.semibold))
                         YearReviewCollectionProgressView(model: model)
                         Button { model.pause() } label: { Label("Pause collection", systemImage: "pause.fill") }
-                        Text("You can keep browsing. Collection can continue while Nostur stays open.")
+                        Text("You can keep using Nostur. Collection can continue while Nostur stays open.")
                             .font(.footnote).foregroundStyle(.secondary)
                     } else if !model.isRunning {
                         YearReviewActionsView(hasHistory: model.collection != nil || model.lastFetchedDate != nil,
