@@ -177,7 +177,10 @@ class NewPostNotifier: ObservableObject {
             } else {
                 nil
             }
-            scheduleNewPostNotification(Array(Set(contacts)), singlePostText: singlePostText) // for lock home screen we kee separate notifications, so don't merge contacts
+            let newContacts = Array(Set(contacts))
+            Task { @MainActor in
+                await scheduleNewPostNotification(newContacts, singlePostText: singlePostText)
+            }
         }
     }
 }

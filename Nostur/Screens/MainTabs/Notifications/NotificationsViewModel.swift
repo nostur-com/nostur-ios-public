@@ -88,6 +88,8 @@ private func notificationMention(from event: Event, context: NSManagedObjectCont
     }()
 
     return Mention(
+        senderPubkey: event.pubkey,
+        createdAt: event.created_at,
         name: event.contact?.anyName ?? "",
         message: event.plainText,
         roomTitle: roomTitle
@@ -715,7 +717,9 @@ class NotificationsViewModel: ObservableObject {
                     // Show notification on Mac: ALWAYS (but only for main account)
                     // On iOS: Only if app is in background
                     if isMain && (IS_CATALYST || AppState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
-                        scheduleMentionNotification(mentionsForNotification, pubkey: self.pubkey ?? AccountsState.shared.activeAccountPublicKey)
+                        Task { @MainActor in
+                            await scheduleMentionNotification(mentionsForNotification, pubkey: accountData.publicKey)
+                        }
                     }
                 }
                 
@@ -729,9 +733,9 @@ class NotificationsViewModel: ObservableObject {
 #if DEBUG
         L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground() \(accountData.anyName)")
 #endif
-        await withCheckedContinuation { [weak self] continuation in
+        let result: (Int, [Mention])? = await withCheckedContinuation { [weak self] continuation in
             bg().perform {
-                guard let self else { continuation.resume(); return }
+                guard let self else { continuation.resume(returning: nil); return }
                 let fetchRequest = self.q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData)
                  
                 let unreadMentionsWithSpam = ((try? bg().fetch(fetchRequest)) ?? [])
@@ -785,23 +789,17 @@ class NotificationsViewModel: ObservableObject {
                 L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground() \(accountData.anyName): mentions for notifications: \(mentionsForNotification.count)")
 #endif
                 
-                DispatchQueue.main.async { [weak self] in
-                    guard let self else { continuation.resume(); return }
-                    if unreadMentionsCount != self.unreadMentions_ {
-                        if SettingsStore.shared.receiveLocalNotifications {
-                            
-                            // Show notification on Mac: ALWAYS
-                            // On iOS: Only if app is in background
-                            if (IS_CATALYST || AppState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
-                                scheduleMentionNotification(mentionsForNotification, pubkey: self.pubkey ?? AccountsState.shared.activeAccountPublicKey)
-                            }
-                        }
-                        
-                        self.unreadMentions_ = min(unreadMentionsCount,9999)
-                    }
-                    continuation.resume()
-                }
+                continuation.resume(returning: (unreadMentionsCount, mentionsForNotification))
             }
+        }
+        guard let (unreadMentionsCount, mentionsForNotification) = result, !Task.isCancelled else { return }
+        let countChanged = await MainActor.run {
+            guard unreadMentionsCount != self.unreadMentions_ else { return false }
+            self.unreadMentions_ = min(unreadMentionsCount, 9999)
+            return true
+        }
+        if countChanged && !mentionsForNotification.isEmpty {
+            await scheduleMentionNotification(mentionsForNotification, pubkey: accountData.publicKey)
         }
     }
     

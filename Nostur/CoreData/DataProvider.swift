@@ -43,6 +43,19 @@ class DataProvider: ObservableObject {
     
     private let inMemory: Bool
     private var notificationToken: NSObjectProtocol?
+    private var cloudKitEventToken: NSObjectProtocol?
+    private let cloudKitImportsLock = NSLock()
+    private var activeCloudKitImports: Set<UUID> = []
+
+    // CloudKit schedules imports. Give an import already in flight a brief
+    // chance to finish without holding up background refresh indefinitely.
+    func waitForActiveCloudKitImports() async {
+        let deadline = ProcessInfo.processInfo.systemUptime + 2
+        while cloudKitImportsLock.withLock({ !activeCloudKitImports.isEmpty }),
+              ProcessInfo.processInfo.systemUptime < deadline, !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+    }
     
     private init(inMemory: Bool = false) {
         self.inMemory = inMemory
@@ -96,6 +109,24 @@ class DataProvider: ObservableObject {
         
         // Update the container's list of store descriptions
         container.persistentStoreDescriptions = [cloudStoreDescription, localStoreDescription]
+
+        cloudKitEventToken = NotificationCenter.default.addObserver(
+            forName: NSPersistentCloudKitContainer.eventChangedNotification,
+            object: container,
+            queue: nil
+        ) { [weak self] notification in
+            guard let self,
+                  let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
+                    as? NSPersistentCloudKitContainer.Event,
+                  event.type == .import else { return }
+            self.cloudKitImportsLock.withLock {
+                if event.endDate == nil {
+                    self.activeCloudKitImports.insert(event.identifier)
+                } else {
+                    self.activeCloudKitImports.remove(event.identifier)
+                }
+            }
+        }
             
         // Load both stores
         var newError:NSError?

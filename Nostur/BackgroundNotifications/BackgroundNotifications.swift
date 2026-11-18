@@ -203,14 +203,38 @@ func requestNotificationPermission(redirectToSettings:Bool = false) {
     }
 }
 
+// Read the iCloud-backed store after any brief import wait. The view context
+// also sees local blocks and unblocks that are still waiting to be saved.
+@MainActor
+func notificationBlockedPubkeys(provider: DataProvider = .shared()) async -> Set<String>? {
+    await provider.waitForActiveCloudKitImports()
+    guard !Task.isCancelled else { return nil }
+    let context = provider.viewContext
+    let blockedPubkeys = try? await context.perform(schedule: .enqueued) {
+        try CloudBlocked.fetchBlockedPubkeys(context: context)
+    }
+    return Task.isCancelled ? nil : blockedPubkeys
+}
+
 // Schedule a local notification for 1 or more mentions
-func scheduleMentionNotification(_ mentions: [Mention], pubkey: String) {
+@MainActor
+func scheduleMentionNotification(_ candidates: [Mention], pubkey: String) async {
+    guard let blockedPubkeys = await notificationBlockedPubkeys(),
+          SettingsStore.shared.receiveLocalNotifications,
+          pubkey == AccountsState.shared.activeAccountPublicKey,
+          IS_CATALYST || AppState.shared.appIsInBackground else { return }
+    let timestampKey = accountSpecificKey(pubkey, forKey: "last_local_notification_timestamp")
+    let lastNotificationAt = UserDefaults.standard.integer(forKey: timestampKey)
+    let mentions = candidates.filter {
+        !blockedPubkeys.contains($0.senderPubkey) && $0.createdAt > lastNotificationAt
+    }
+    guard !mentions.isEmpty else { return }
 #if DEBUG
     L.og.debug("scheduleMentionNotification()")
 #endif
     
     // Remember timestamp so we only show newer notifications next time
-    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: accountSpecificKey(pubkey, forKey: "last_local_notification_timestamp"))
+    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: timestampKey)
     
     // Create the notificatgion
     let content = UNMutableNotificationContent()
@@ -224,23 +248,24 @@ func scheduleMentionNotification(_ mentions: [Mention], pubkey: String) {
     
     let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
     let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-    UNUserNotificationCenter.current().add(request)
+    try? await UNUserNotificationCenter.current().add(request)
 }
 
 struct Mention {
+    let senderPubkey: String
+    let createdAt: Int64
     let name: String
     let message: String
     let roomTitle: String?
-
-    init(name: String, message: String, roomTitle: String? = nil) {
-        self.name = name
-        self.message = message
-        self.roomTitle = roomTitle
-    }
 }
 
 // Schedule a local notification for 1 direct message
-func scheduleDMNotification(name: String, pubkey: String) {
+@MainActor
+func scheduleDMNotification(name: String, senderPubkey: String, pubkey: String) async {
+    guard let blockedPubkeys = await notificationBlockedPubkeys(),
+          !blockedPubkeys.contains(senderPubkey),
+          pubkey == AccountsState.shared.activeAccountPublicKey,
+          IS_CATALYST || AppState.shared.appIsInBackground else { return }
 #if DEBUG
     L.og.debug("scheduleDMNotification()")
 #endif
@@ -256,12 +281,18 @@ func scheduleDMNotification(name: String, pubkey: String) {
     
     let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
     let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-    UNUserNotificationCenter.current().add(request)
+    try? await UNUserNotificationCenter.current().add(request)
 }
 
 // Schedule a local notification New posts (notification bell)
 // singlePostText: if there is only 1 new post we can use it as body text of notification
-func scheduleNewPostNotification(_ contactsInfo: [ContactInfo], singlePostText: String? = nil) {
+@MainActor
+func scheduleNewPostNotification(_ candidates: [ContactInfo], singlePostText: String? = nil) async {
+    guard let blockedPubkeys = await notificationBlockedPubkeys(),
+          SettingsStore.shared.receiveLocalNotifications,
+          AppState.shared.appIsInBackground else { return }
+    let contactsInfo = candidates.filter { !blockedPubkeys.contains($0.pubkey) }
+    guard !contactsInfo.isEmpty else { return }
 #if DEBUG
     L.og.debug("scheduleNewPostNotification()")
 #endif
@@ -284,7 +315,7 @@ func scheduleNewPostNotification(_ contactsInfo: [ContactInfo], singlePostText: 
     
     let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
     let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-    UNUserNotificationCenter.current().add(request)
+    try? await UNUserNotificationCenter.current().add(request)
 }
 
 // Both normal completion and expiration may arrive concurrently.

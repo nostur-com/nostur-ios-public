@@ -173,6 +173,40 @@ struct BacklogTests {
         #expect(!result)
     }
 
+    @Test("Notification blocklist sees imported changes while the event importer is busy")
+    func notificationBlocklistDoesNotWaitForEventImporter() async throws {
+        let provider = DataProvider.preview
+        let contact = String(repeating: "b", count: 64)
+        let importContext = provider.newTaskContext()
+        let beforeImport = await notificationBlockedPubkeys(provider: provider)
+        #expect(beforeImport?.contains(contact) == false)
+
+        let release = DispatchSemaphore(value: 0)
+        await withCheckedContinuation { started in
+            bg().perform {
+                started.resume()
+                _ = release.wait(timeout: .now() + 3)
+            }
+        }
+        defer { release.signal() }
+
+        try await importContext.perform {
+            CloudBlocked.addBlock(pubkey: contact, context: importContext)
+            try importContext.save()
+        }
+        let started = ProcessInfo.processInfo.systemUptime
+        let afterImport = await notificationBlockedPubkeys(provider: provider)
+        #expect(ProcessInfo.processInfo.systemUptime - started < 1)
+        #expect(afterImport?.contains(contact) == true)
+
+        // A local unblock takes effect even before the next save.
+        let block = try #require(CloudBlocked.fetchBlock(byPubkey: contact, context: provider.viewContext))
+        provider.viewContext.delete(block)
+        let afterUnblock = await notificationBlockedPubkeys(provider: provider)
+        #expect(afterUnblock?.contains(contact) == false)
+        try provider.viewContext.save()
+    }
+
     @Test("Notification cancellation returns promptly while imports are blocked")
     func cancellationDoesNotWaitForImporter() async {
         let release = DispatchSemaphore(value: 0)

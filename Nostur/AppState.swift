@@ -23,7 +23,13 @@ class AppState: ObservableObject {
         }
         managePowerUsage()
         loadMutedWords()
-        loadBlockedPubkeys()
+        bgAppState.blockedPubkeys = CloudBlocked.blockedPubkeys(context: viewContext())
+        DataProvider.shared().cloudStoreRemoteChangeSubject
+            .debounce(for: .milliseconds(250), scheduler: DispatchQueue.main)
+            .sink { [weak self] in
+                Task { @MainActor [weak self] in self?.loadBlockedPubkeys() }
+            }
+            .store(in: &subscriptions)
         loadBlockedHashtags()
         loadPrivateNoteEventIds()
         loadPrivateNoteContactPubkeys()
@@ -113,11 +119,11 @@ class AppState: ObservableObject {
         
         // Send notification to update views if we deleted any blocks
         if didRemoveBlockUntilTask {
-            sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
+            loadBlockedPubkeys()
         }
     }
     
-    @objc func timerAction(_ timer: Timer) {
+    @MainActor @objc func timerAction(_ timer: Timer) {
         let pubkey = timer.userInfo as! String
         
         // Remove task from database
@@ -130,7 +136,7 @@ class AppState: ObservableObject {
             context().delete(block)
             
             // Update views
-            sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
+            loadBlockedPubkeys()
         }
         
         // Invalidate and remove the timer
@@ -172,7 +178,10 @@ class AppState: ObservableObject {
     
     @MainActor
     public func loadBlockedPubkeys() {
-        self.bgAppState.blockedPubkeys = CloudBlocked.blockedPubkeys()
+        guard let blockedPubkeys = try? CloudBlocked.fetchBlockedPubkeys(context: viewContext()),
+              blockedPubkeys != bgAppState.blockedPubkeys else { return }
+        bgAppState.blockedPubkeys = blockedPubkeys
+        sendNotification(.blockListUpdated, blockedPubkeys)
     }
     
     @MainActor
@@ -270,7 +279,12 @@ extension AppState {
 
 
 class BgAppState: ObservableObject {
-    public var blockedPubkeys: Set<String> = []
+    private let blockedPubkeysLock = NSLock()
+    private var storedBlockedPubkeys: Set<String> = []
+    public var blockedPubkeys: Set<String> {
+        get { blockedPubkeysLock.withLock { storedBlockedPubkeys } }
+        set { blockedPubkeysLock.withLock { storedBlockedPubkeys = newValue } }
+    }
     public var mutedRootIds: Set<String> = []
     public var blockedHashtags: Set<String> = [] // put lowercased here
     public var mutedWords: [String] = [] // TODO: Should be Set

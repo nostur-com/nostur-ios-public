@@ -550,17 +550,17 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                     return
                 }
 
-                // Don't create notification if blocked
-                guard !blocks().contains(nEvent.publicKey) else { return }
-
                 // Show notification on Mac: Only if the conversation is not currently in view
                 // On iOS: Only if app is in background
                 let conversationIsActive = IS_CATALYST && !AppState.shared.appIsInBackground && self.activeConversationId == conversationId
                 if !conversationIsActive && (IS_CATALYST || AppState.shared.appIsInBackground) {
                     let accountPubkey = self.accountPubkey
-                    bg().perform { [weak self] in // contactUsername() needs access to event from bg
-                        let name = contactUsername(fromPubkey: nEvent.publicKey, event: event)
-                        scheduleDMNotification(name: name, pubkey: accountPubkey)
+                    let senderPubkey = nEvent.publicKey
+                    bg().perform { // contactUsername() needs access to event from bg
+                        let name = contactUsername(fromPubkey: senderPubkey, event: event)
+                        Task { @MainActor in
+                            await scheduleDMNotification(name: name, senderPubkey: senderPubkey, pubkey: accountPubkey)
+                        }
                     }
                 }
             }

@@ -120,9 +120,13 @@ extension CloudBlocked : Identifiable {
     }
     
     static func blockedPubkeys(context: NSManagedObjectContext = context()) -> Set<String> {
+        (try? fetchBlockedPubkeys(context: context)) ?? []
+    }
+
+    static func fetchBlockedPubkeys(context: NSManagedObjectContext) throws -> Set<String> {
         let fr = CloudBlocked.fetchRequest()
         fr.predicate = NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.contact.rawValue)
-        return Set(((try? context.fetch(fr)) ?? []).compactMap { $0.pubkey_ })
+        return Set(try context.fetch(fr).compactMap(\.pubkey_))
     }
     
     static func blockedHashtags(context: NSManagedObjectContext = context()) -> Set<String> {
