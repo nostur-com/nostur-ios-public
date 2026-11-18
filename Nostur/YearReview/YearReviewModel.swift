@@ -242,9 +242,12 @@ final class YearReviewModel {
     }
 
     var hasNewHistorySources: Bool {
+        hasNewHistorySources(in: nil)
+    }
+
+    func hasNewHistorySources(in month: Int?) -> Bool {
         guard let collection, collection.period.year == year else { return false }
-        let saved = Set(collection.relays.map(\.url))
-        return selectedHistorySources.contains { !saved.contains($0.url) }
+        return collection.hasNewRelaySources(Set(selectedHistorySources.map(\.url)), month: month)
     }
 
     var canResume: Bool {
@@ -526,7 +529,7 @@ final class YearReviewModel {
                 }
                 if download {
                     var job = previous ?? YearReviewCollection(owner: owner, period: period, relays: sources, trusted: trust)
-                    job.reconcileRelays(sources)
+                    job.reconcileRelays(sources, month: month)
                     job.invalidEvents += invalidSeedEvents
                     if let month { job.prepareMonth(month) }
                     if month == nil && job.monthScope == nil && resume && job.pending.isEmpty && !job.failed.isEmpty {
@@ -753,6 +756,7 @@ final class YearReviewModel {
             if let month = queuedMonth {
                 queuedMonth = nil
                 let wasScoped = job.monthScope != nil
+                job.reconcileRelays(job.relays.map(\.relayData), month: month)
                 job.prepareMonth(month)
                 if !wasScoped { job.monthScope = nil }
                 priorityMonth = month

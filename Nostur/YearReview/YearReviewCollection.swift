@@ -182,6 +182,8 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
     var parentsLimited = false
     var pacing: YearReviewRelayPacing? = nil
     var monthScope: Int? = nil
+    // Older checkpoints used the same source selection for every included month.
+    var monthlyRelaySources: [String: Set<String>]? = nil
 
     init(owner: String, period: YearReviewPeriod, relays: [RelayData], trusted: Set<String>) {
         schemaVersion = Self.currentSchemaVersion
@@ -207,19 +209,51 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
     }
 
     /// Apply the current source selection without redoing work for unchanged relays.
-    mutating func reconcileRelays(_ selected: [RelayData]) {
-        let previousURLs = Set(relays.map(\.url))
+    mutating func reconcileRelays(_ selected: [RelayData], month: Int? = nil) {
+        if monthlyRelaySources == nil {
+            monthlyRelaySources = Dictionary(uniqueKeysWithValues: Self.monthWindows(period: period).map {
+                (String(monthNumber(at: $0.since)), Set(relays.map(\.url)))
+            })
+        }
+        if let month { period.includeMonth(month) }
+        let snapshot = self
         let selectedURLs = Set(selected.map(\.url))
-        pending.removeAll { !selectedURLs.contains($0.relay) }
-        failed.removeAll { !selectedURLs.contains($0.relay) }
-        sourceFailures?.removeAll { !selectedURLs.contains($0.work.relay) }
+        let isRemovedWork: (YearReviewWork) -> Bool = { work in
+            !selectedURLs.contains(work.relay)
+                && (month.map { snapshot.belongsToMonth(work, month: $0) } ?? true)
+        }
+        pending.removeAll(where: isRemovedWork)
+        failed.removeAll(where: isRemovedWork)
+        sourceFailures?.removeAll { isRemovedWork($0.work) }
         relays = selected.map { .init(url: $0.url, auth: $0.auth) }
 
-        let added = selected.filter { !previousURLs.contains($0.url) }
-        guard !added.isEmpty else { return }
-        let newWork = Self(owner: owner, period: period, relays: added, trusted: trusted).pending
+        let fresh = Self(owner: owner, period: period, relays: selected, trusted: trusted)
+        let newWork = fresh.pending.filter { work in
+            let workMonth = monthNumber(at: work.since)
+            return (month == nil || workMonth == month)
+                && !(monthlyRelaySources?[String(workMonth)] ?? []).contains(work.relay)
+                && !pending.contains(work) && !failed.contains(work)
+        }
+        for window in Self.monthWindows(period: period) {
+            let workMonth = monthNumber(at: window.since)
+            if month == nil || workMonth == month { monthlyRelaySources?[String(workMonth)] = selectedURLs }
+        }
         pending = newWork + pending
         if !newWork.isEmpty { phase = .primary }
+    }
+
+    func hasNewRelaySources(_ selected: Set<String>, month: Int? = nil) -> Bool {
+        Self.monthWindows(period: period).contains { window in
+            let workMonth = monthNumber(at: window.since)
+            let saved = monthlyRelaySources?[String(workMonth)] ?? Set(relays.map(\.url))
+            return (month == nil || workMonth == month) && !selected.isSubset(of: saved)
+        }
+    }
+
+    private func monthNumber(at timestamp: Int64) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: period.timeZoneIdentifier) ?? .current
+        return calendar.component(.month, from: Date(timeIntervalSince1970: Double(timestamp)))
     }
 
     func belongsToMonth(_ work: YearReviewWork, month: Int) -> Bool {

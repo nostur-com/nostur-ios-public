@@ -1593,7 +1593,7 @@ private struct YearReviewMonthActionsView: View {
     }
     private var actionTitle: LocalizedStringKey {
         if model.isDownloading { return "Fetch next" }
-        if model.hasNewHistorySources { return "Continue month" }
+        if model.hasNewHistorySources(in: month.month) { return "Continue month" }
         if month.own.failed + month.others.failed > 0 { return "Retry failed sources" }
         if month.own.finished && month.others.finished { return "Check for updates" }
         if month.own.completed + month.others.completed > 0 { return "Continue month" }

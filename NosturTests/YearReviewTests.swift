@@ -176,6 +176,52 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(job.monthlyReceived?["1"], 42)
     }
 
+    func testNewRelayForSingleMonthPreservesOtherMonthsAndSurvivesRestart() throws {
+        let kept = RelayData.new(url: "wss://kept.example", read: true)
+        let added = RelayData.new(url: "wss://added.example", read: true)
+        var job = YearReviewCollection(owner: owner, period: period, relays: [kept], trusted: [])
+        job.pending = []
+        job.phase = .finished
+        job.monthlyReceived = ["1": 12, "2": 24]
+        let before = job.monthProgress(active: [])
+
+        job.reconcileRelays([kept, added], month: 1)
+        job.prepareMonth(1)
+        XCTAssertEqual(job.monthProgress(active: []).filter { $0.month != 1 }, before.filter { $0.month != 1 })
+        XCTAssertTrue(job.pending.allSatisfy { $0.relay == added.url && job.belongsToMonth($0, month: 1) })
+        let scheduled = job.pending
+        job.reconcileRelays([kept, added], month: 1)
+        XCTAssertEqual(job.pending, scheduled)
+        XCTAssertFalse(job.hasNewRelaySources([kept.url, added.url], month: 1))
+        XCTAssertTrue(job.hasNewRelaySources([kept.url, added.url], month: 2))
+
+        job.pending = []
+        job.monthScope = nil
+        var restored = try JSONDecoder().decode(YearReviewCollection.self, from: JSONEncoder().encode(job))
+        XCTAssertTrue(restored.hasNewRelaySources([kept.url, added.url]))
+        restored.reconcileRelays([kept, added], month: 2)
+        XCTAssertTrue(restored.pending.allSatisfy { $0.relay == added.url && restored.belongsToMonth($0, month: 2) })
+        XCTAssertFalse(restored.pending.isEmpty)
+        restored.reconcileRelays([kept, added])
+        XCTAssertFalse(restored.hasNewRelaySources([kept.url, added.url]))
+        XCTAssertFalse(restored.pending.contains { restored.belongsToMonth($0, month: 1) })
+    }
+
+    func testSingleMonthRelayRemovalPreservesOtherMonthFailuresAndPendingWork() throws {
+        let kept = RelayData.new(url: "wss://kept.example", read: true)
+        let removed = RelayData.new(url: "wss://removed.example", read: true)
+        var job = YearReviewCollection(owner: owner, period: period, relays: [kept, removed], trusted: [])
+        let failed = try XCTUnwrap(job.pending.first { job.belongsToMonth($0, month: 2) && $0.relay == removed.url })
+        job.pending.removeAll { $0 == failed }
+        job.failed = [failed]
+        let before = job.monthProgress(active: [])
+        job.reconcileRelays([kept], month: 1)
+        XCTAssertEqual(job.monthProgress(active: []).filter { $0.month != 1 }, before.filter { $0.month != 1 })
+        job.reconcileRelays([kept])
+        XCTAssertFalse(job.pending.contains { $0.relay == removed.url })
+        XCTAssertTrue(job.failed.isEmpty)
+    }
+
     func testMonthRetryPreservesSuccessfulRequestsAndOtherMonths() throws {
         var job = YearReviewCollection(owner: owner, period: period,
             relays: [.new(url: "wss://relay.example", read: true)], trusted: [])
