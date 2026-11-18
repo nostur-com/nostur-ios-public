@@ -22,7 +22,7 @@ struct LinkPreviewView: View {
     
     var body: some View {
         previewContent
-            .modifier(BrowserPostLinkMenu(url: url, postSource: browserPostSource))
+            .modifier(BrowserPostLinkMenu(url: url, postSource: browserPostSource, showsPlainLink: !autoload))
     }
 
     @ViewBuilder

@@ -38,9 +38,27 @@ struct BrowserPostLinkMenu: ViewModifier {
     @Environment(\.theme) private var theme
     let url: URL
     var postSource: BrowserPostSource? = nil
+    var showsPlainLink = false
     @State private var showActions = false
+    @ScaledMetric(relativeTo: .title3) private var menuBaselineOffset = 5.0
 
     func body(content: Content) -> some View {
+        if showsPlainLink {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                link(content)
+                    .layoutPriority(1)
+                menu
+                    .alignmentGuide(.firstTextBaseline) { dimensions in
+                        dimensions[VerticalAlignment.center] + menuBaselineOffset
+                    }
+            }
+        } else {
+            link(content)
+                .overlay(alignment: .topTrailing) { menu }
+        }
+    }
+
+    private func link(_ content: Content) -> some View {
         content
             .contentShape(Rectangle())
             .highPriorityGesture(
@@ -59,20 +77,21 @@ struct BrowserPostLinkMenu: ViewModifier {
             .confirmationDialog("Open Link", isPresented: $showActions, titleVisibility: .visible) {
                 actions
             }
-            .overlay(alignment: .topTrailing) {
-                Menu {
-                    actions
-                } label: {
-                    Image(systemName: "ellipsis.circle.fill")
-                        .font(.title3)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(theme.accent, theme.background)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.borderless)
-                .accessibilityLabel("Link actions")
-            }
+    }
+
+    private var menu: some View {
+        Menu {
+            actions
+        } label: {
+            Image(systemName: "ellipsis.circle.fill")
+                .font(.title3)
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(theme.accent, theme.background)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("Link actions")
     }
 
     @ViewBuilder
