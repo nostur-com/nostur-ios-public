@@ -206,6 +206,22 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
         }
     }
 
+    /// Apply the current source selection without redoing work for unchanged relays.
+    mutating func reconcileRelays(_ selected: [RelayData]) {
+        let previousURLs = Set(relays.map(\.url))
+        let selectedURLs = Set(selected.map(\.url))
+        pending.removeAll { !selectedURLs.contains($0.relay) }
+        failed.removeAll { !selectedURLs.contains($0.relay) }
+        sourceFailures?.removeAll { !selectedURLs.contains($0.work.relay) }
+        relays = selected.map { .init(url: $0.url, auth: $0.auth) }
+
+        let added = selected.filter { !previousURLs.contains($0.url) }
+        guard !added.isEmpty else { return }
+        let newWork = Self(owner: owner, period: period, relays: added, trusted: trusted).pending
+        pending = newWork + pending
+        if !newWork.isEmpty { phase = .primary }
+    }
+
     func belongsToMonth(_ work: YearReviewWork, month: Int) -> Bool {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: period.timeZoneIdentifier) ?? .current
@@ -326,11 +342,16 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
 
     /// Calendar activity covers the whole month operation, including checkpoint
     /// writes and request handoffs, rather than only live relay subscriptions.
-    func calendarActivity(active: [YearReviewWork], running: Bool) -> [YearReviewWork] {
-        guard running, phase == .primary else { return [] }
-        let current = active.filter { Self.isPrimary($0.category) }
+    func calendarActivity(active: [YearReviewWork], scanningMonths: Bool) -> [YearReviewWork] {
+        guard scanningMonths, phase == .primary else { return [] }
+        let scope = monthScope
+        let isMonthWork: (YearReviewWork) -> Bool = { work in
+            guard Self.isPrimary(work.category) else { return false }
+            return scope.map { belongsToMonth(work, month: $0) } ?? true
+        }
+        let current = active.filter(isMonthWork)
         if !current.isEmpty { return current }
-        return pending.first(where: { Self.isPrimary($0.category) }).map { [$0] } ?? []
+        return pending.first(where: isMonthWork).map { [$0] } ?? []
     }
 
     func monthProgress(active: [YearReviewWork], received: [(YearReviewWork, Int)] = []) -> [YearReviewMonthProgress] {

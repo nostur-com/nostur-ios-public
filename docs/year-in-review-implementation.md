@@ -445,3 +445,10 @@ Posting rhythm also shows streaks of at least three consecutive posting days
 and breaks of at least seven days between saved posts. Calculations use the
 report time zone and reset across unselected months. The thread stories
 require at least five distinct reply days or four first exchanges respectively.
+
+Resuming or fetching an individual month reconciles the saved work list with the
+currently selected relays. New sources get their own pending checks, deselected
+sources are dropped from the work list, and unchanged sources keep their
+progress. A single-month run leaves pending work for other months in the
+checkpoint. The debug two-month and full-year calendars use separate
+checkpoints, but both read the same per-account event archive.

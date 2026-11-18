@@ -260,11 +260,11 @@ struct YearReviewView: View {
             } header: {
                 Text("Choose what to share")
             } footer: {
-                Text("Only selected cards and visible people appear in the shared image. Nothing is posted automatically.")
+                Text("Only the highlights and people you choose appear in the share image.")
             }
 
             Section {
-                Button("Export signed public history") { model.exportArchive() }
+                Button("Export public history") { model.exportArchive() }
                     .disabled(model.isExporting || model.isRunning || model.isDeleting)
                 if let url = model.exportURL {
                     ShareLink(item: url) { Label("Share history archive", systemImage: "square.and.arrow.up") }
@@ -503,6 +503,7 @@ private struct YearReviewHistoryView: View {
     let model: YearReviewModel
     @State private var selectedMonth: YearReviewMonthProgress?
     @State private var showSources = false
+    @State private var showHistoryInfo = false
     @State private var extraRelay = ""
     @State private var invalidRelay = false
 
@@ -513,19 +514,24 @@ private struct YearReviewHistoryView: View {
                     YearReviewMonthCalendarView(collection: model.collection, period: model.currentPeriod,
                         active: model.calendarActivity, activities: model.activeActivities, onSelect: { selectedMonth = $0 })
                     if model.isDownloading {
-                        Text(model.progressLabel).font(.subheadline.weight(.semibold))
-                        YearReviewCollectionProgressView(model: model)
-                        Button { model.pause() } label: { Label("Pause collection", systemImage: "pause.fill") }
-                        Text("You can keep using Nostur. Collection can continue while Nostur stays open.")
-                            .font(.footnote).foregroundStyle(.secondary)
+                        HStack(spacing: 12) {
+                            Button { model.pause() } label: {
+                                Label("Pause collection", systemImage: "pause.fill").labelStyle(.iconOnly)
+                            }
+                            .buttonStyle(.bordered)
+                            ProgressView().controlSize(.small)
+                            Text(model.progressLabel).font(.subheadline.weight(.semibold))
+                        }
+                        Text("You can keep using Nostur.").font(.footnote).foregroundStyle(.secondary)
                     } else if !model.isRunning {
                         YearReviewActionsView(hasHistory: model.collection != nil || model.lastFetchedDate != nil,
                             canResume: model.canResume,
-                            retryFailed: model.collection.map { $0.pending.isEmpty && !$0.failed.isEmpty } ?? false,
+                            retryFailed: !model.hasNewHistorySources && (model.collection.map { $0.pending.isEmpty && !$0.failed.isEmpty } ?? false),
                             disabled: model.isDeleting || model.viewer != AccountsState.shared.activeAccountPublicKey,
                             create: { showSources = true }, resume: { model.start(download: true, resume: true) })
-                        if let job = model.collection, job.phase == .finished && job.pending.isEmpty && job.failed.isEmpty {
-                            Text("Selected sources checked. Some history may still be missing.")
+                        if let job = model.collection, !model.hasNewHistorySources,
+                           job.phase == .finished && job.pending.isEmpty && job.failed.isEmpty {
+                            Text("Finished checking your selected relays.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                     }
@@ -541,6 +547,11 @@ private struct YearReviewHistoryView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Dismiss")
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button { showHistoryInfo = true } label: {
+                        Label("About history", systemImage: "info.circle").labelStyle(.iconOnly)
+                    }
                 }
             }
             .navigationDestination(isPresented: $showSources) {
@@ -561,6 +572,43 @@ private struct YearReviewHistoryView: View {
             .sheet(item: $selectedMonth) { month in
                 YearReviewMonthActionsView(model: model, initialMonth: month)
                     .environment(\.theme, theme)
+            }
+            .sheet(isPresented: $showHistoryInfo) {
+                YearReviewHistoryInfoView(model: model)
+            }
+        }
+    }
+}
+
+@available(iOS 17.0, *)
+private struct YearReviewHistoryInfoView: View {
+    @Environment(\.dismiss) private var dismiss
+    let model: YearReviewModel
+
+    var body: some View {
+        NavigationStack {
+            List {
+                YearReviewAboutRow(title: "Missing something?", icon: "calendar",
+                    detail: "Tap a month to look for more activity or retry a relay. Some older posts may no longer be available.")
+                YearReviewAboutRow(title: "While gathering history", icon: "iphone",
+                    detail: "You can keep using Nostur while it gathers history. If you close the app, continue later from where you left off.")
+                YearReviewAboutRow(title: "What the calendar counts", icon: "number",
+                    detail: "The calendar counts everything relays send, including repeats. Repeat copies don’t add to your report totals.")
+                if model.isDownloading {
+                    Section("Download details") {
+                        if model.activity == nil { Text(model.zapStatus ?? model.progressLabel) }
+                        YearReviewCollectionProgressView(model: model)
+                    }
+                }
+            }
+            .navigationTitle("About history")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button { dismiss() } label: {
+                        Label("Dismiss", systemImage: "xmark").labelStyle(.iconOnly)
+                    }
+                }
             }
         }
     }
@@ -635,7 +683,7 @@ private struct YearReviewSourcesView: View {
                     ))
                 }
             } footer: {
-                Text("Choose up to 20 relays. Nostur checks different relays in parallel, with one history request at a time per relay. Old relays may have history that your current relays no longer store.")
+                Text("Choose up to 20 relays. Relays you used before may still have older posts.")
             }
             Section {
                 TextField("wss://relay.example.com", text: $extraRelay)
@@ -657,9 +705,7 @@ private struct YearReviewSourcesView: View {
                     if !model.relayAuthOverrides.isEmpty {
                         Button("Use app authentication defaults") { model.resetHistoryRelayAuth() }
                     }
-                    Text("App relays inherit their Auth setting unless you change it here. Report-only relays start with Auth off.")
-                        .font(.footnote).foregroundStyle(.secondary)
-                    Text("Authenticate with your logged-in signing account. This identifies your public key to the relay, including when gathering a report for someone else.")
+                    Text("Some relays ask you to sign in. This shares the public key of the account you’re using, even when the report is about someone else.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
@@ -749,7 +795,7 @@ private struct YearReviewCoverageView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("History coverage", systemImage: "calendar")
+            Label("Activity found", systemImage: "calendar")
                 .font(.subheadline.weight(.semibold))
             Text("\(report.ownPostCount) posts found · Through \(report.period.cutoffDate, format: report.period.dateFormat)")
                 .font(.subheadline).foregroundStyle(.secondary)
@@ -1529,8 +1575,8 @@ private struct YearReviewMonthCell: View {
         if !month.available { return Text("Outside the selected period") }
         if pass.active { return interactionPass ? Text("Fetching interactions") : Text("Fetching your content") }
         if month.own.failed > 0 || month.others.failed > 0 { return Text("Some sources remain incomplete. Tap for relay details") }
-        if bothFinished { return Text("Both month passes checked") }
-        if month.own.finished { return Text("Your content checked; interactions queued") }
+        if bothFinished { return Text("Month checked") }
+        if month.own.finished { return Text("Posts checked. Interactions still to come.") }
         return Text("Queued")
     }
 }
@@ -1547,6 +1593,7 @@ private struct YearReviewMonthActionsView: View {
     }
     private var actionTitle: LocalizedStringKey {
         if model.isDownloading { return "Fetch next" }
+        if model.hasNewHistorySources { return "Continue month" }
         if month.own.failed + month.others.failed > 0 { return "Retry failed sources" }
         if month.own.finished && month.others.finished { return "Check for updates" }
         if month.own.completed + month.others.completed > 0 { return "Continue month" }
@@ -1563,7 +1610,6 @@ private struct YearReviewMonthActionsView: View {
                     LabeledContent("Interactions") {
                         YearReviewMonthPassStatus(pass: month.others)
                     }
-                    Text("\(month.received) items received, including duplicates").font(.caption).foregroundStyle(.secondary)
                 }
                 Section {
                     Button {
@@ -1571,16 +1617,17 @@ private struct YearReviewMonthActionsView: View {
                         dismiss()
                     } label: { Label(actionTitle, systemImage: "arrow.down.circle") }
                     .disabled(model.isRunning && (!model.isDownloading || month.own.active || month.others.active))
-                } footer: {
-                    Text("Downloaded items are kept. Continue and retry only request unfinished work for this month. Relay cooldowns still apply. Extra reference checks are available through Continue fetching on the report.")
                 }
                 if !month.failures.isEmpty {
                     Section {
                         NavigationLink("Incomplete source details") { YearReviewIncompleteSourcesView(month: month) }
                     }
                 }
-                Section("Relay sources") {
-                    ForEach(model.collection?.relays ?? model.relays.filter { model.selectedRelays.contains($0.url) }.map { YearReviewCollection.RelayDataSnapshot(url: $0.url, auth: $0.auth) }, id: \.url) { relay in
+                DisclosureGroup("Relay details") {
+                    Text("\(month.received) items received, including duplicates").font(.caption).foregroundStyle(.secondary)
+                    let sources = model.isDownloading
+                        ? model.collection?.relays ?? [] : model.selectedHistorySources.map { YearReviewCollection.RelayDataSnapshot(url: $0.url, auth: $0.auth) }
+                    ForEach(sources, id: \.url) { relay in
                         YearReviewMonthRelayStatus(collection: model.collection, month: month, relay: relay.url)
                     }
                 }
@@ -1617,7 +1664,8 @@ private struct YearReviewMonthRelayStatus: View {
             Text(relay).font(.subheadline).lineLimit(2)
             if let failure = month.failures.first(where: { $0.work.relay == relay }) {
                 Text(failure.reason).font(.caption).foregroundStyle(.secondary)
-            } else if let collection {
+            } else if let collection, collection.relays.contains(where: { $0.url == relay }),
+                      collection.period.contains(Int64(month.date.timeIntervalSince1970)) {
                 let pending = collection.pending.filter { $0.relay == relay && collection.belongsToMonth($0, month: month.month) }
                 if pending.isEmpty { Text("Month requests finished").font(.caption).foregroundStyle(.secondary) }
                 else { Text("\(pending.count) month requests remaining").font(.caption).foregroundStyle(.secondary) }
@@ -1641,7 +1689,7 @@ private struct YearReviewIncompleteSourcesView: View {
         List {
             Section {
                 Label("Saved history is kept", systemImage: "checkmark.shield")
-                Text("One failed request can pause a relay for the rest of this run. Other months may be skipped without being attempted. Other relays can still finish.")
+                Text("If a relay stops responding, Nostur may skip it for later months. Other relays can still finish.")
                     .font(.subheadline).foregroundStyle(.secondary)
             }
             ForEach(relays, id: \.self) { relay in
@@ -1649,17 +1697,13 @@ private struct YearReviewIncompleteSourcesView: View {
                     failures: month.failures.filter { $0.work.relay == relay },
                     timeZoneIdentifier: month.timeZoneIdentifier)
             }
-            Section {
-                Text("Use Continue gathering on the report screen to resume remaining checks and retry incomplete sources. Successful saved batches are kept. Items buffered in a failed request may need to be downloaded again.")
-                    .font(.footnote).foregroundStyle(.secondary)
-            }
         }
         .navigationTitle("Incomplete sources")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
+            ToolbarItem(placement: .cancellationAction) {
                 Button { dismiss() } label: {
-                    Label("Done", systemImage: "checkmark").labelStyle(.iconOnly)
+                    Label("Dismiss", systemImage: "xmark").labelStyle(.iconOnly)
                 }
             }
         }

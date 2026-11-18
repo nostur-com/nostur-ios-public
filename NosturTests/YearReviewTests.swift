@@ -146,6 +146,36 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(report.averagePostsPerDay, 3.0 / 92.0, accuracy: 0.00001)
     }
 
+    func testMonthUpdateChecksNewRelayWithoutRepeatingCompletedSources() {
+        let kept = RelayData.new(url: "wss://kept.example", read: true)
+        let removed = RelayData.new(url: "wss://removed.example", read: true)
+        let added = RelayData.new(url: "wss://added.example", read: true, auth: true)
+        var job = YearReviewCollection(owner: owner, period: period, relays: [kept, removed], trusted: [])
+        let removedWork = job.pending.filter { $0.relay == removed.url }
+        job.pending = []
+        job.failed = removedWork
+        job.phase = .finished
+        job.monthlyQueries = ["1-own": 1]
+        job.monthlyReceived = ["1": 42]
+
+        var authenticated = kept
+        authenticated.auth = true
+        job.reconcileRelays([authenticated, added])
+        let scheduled = job.pending
+        job.reconcileRelays([authenticated, added])
+        XCTAssertEqual(job.pending, scheduled)
+        job.prepareMonth(1)
+
+        XCTAssertTrue(job.failed.isEmpty)
+        XCTAssertEqual(job.relays.map(\.url), [kept.url, added.url])
+        XCTAssertTrue(job.relays.allSatisfy(\.auth))
+        XCTAssertEqual(Set(job.pending.map(\.relay)), [added.url])
+        XCTAssertEqual(job.nextBatch(excluding: []).map(\.relay), [added.url])
+        XCTAssertTrue(job.nextBatch(excluding: []).allSatisfy { job.belongsToMonth($0, month: 1) })
+        XCTAssertEqual(job.monthlyQueries?["1-own"], 1)
+        XCTAssertEqual(job.monthlyReceived?["1"], 42)
+    }
+
     func testMonthRetryPreservesSuccessfulRequestsAndOtherMonths() throws {
         var job = YearReviewCollection(owner: owner, period: period,
             relays: [.new(url: "wss://relay.example", read: true)], trusted: [])
@@ -599,22 +629,55 @@ final class YearReviewTests: XCTestCase {
         var job = YearReviewCollection(owner: owner, period: period,
             relays: [.new(url: "wss://relay.example.com", read: true)], trusted: [])
         let first = job.pending.first!
-        XCTAssertEqual(job.calendarActivity(active: [], running: true), [first])
+        XCTAssertEqual(job.calendarActivity(active: [], scanningMonths: true), [first])
         var pacing = YearReviewRelayPacing()
         pacing.started(first.relay)
         job.pacing = pacing
-        XCTAssertEqual(job.calendarActivity(active: [], running: true), [first])
+        XCTAssertEqual(job.calendarActivity(active: [], scanningMonths: true), [first])
         job.pending.removeFirst()
         job.recordMonthlyQuery(first)
         let next = job.pending.first!
-        let handoff = job.calendarActivity(active: [], running: true)
+        let handoff = job.calendarActivity(active: [], scanningMonths: true)
         XCTAssertEqual(handoff, [next])
         XCTAssertEqual(job.monthProgress(active: handoff).filter { $0.own.active }.count, 1)
-        XCTAssertTrue(job.calendarActivity(active: [next], running: false).isEmpty)
+        XCTAssertTrue(job.calendarActivity(active: [next], scanningMonths: false).isEmpty)
         job.pending.removeAll { $0.category == .authored }
         let interactions = job.pending.first!
-        XCTAssertEqual(job.calendarActivity(active: [], running: true), [interactions])
-        XCTAssertEqual(job.monthProgress(active: job.calendarActivity(active: [], running: true)).filter { $0.others.active }.count, 1)
+        XCTAssertEqual(job.calendarActivity(active: [], scanningMonths: true), [interactions])
+        XCTAssertEqual(job.monthProgress(active: job.calendarActivity(active: [], scanningMonths: true)).filter { $0.others.active }.count, 1)
+    }
+
+    @MainActor
+    func testSingleMonthCalendarStopsWhileBuildingReportWithOtherMonthsPending() throws {
+        guard #available(iOS 17.0, *) else { throw XCTSkip("Year in Review requires iOS 17") }
+        var job = YearReviewCollection(owner: owner, period: period,
+            relays: [.new(url: "wss://relay.example.com", read: true)], trusted: [])
+        job.prepareMonth(1)
+        let model = YearReviewModel.shared
+        let (previousCollection, previousStage, wasRunning) = (model.collection, model.stage, model.isRunning)
+        defer {
+            model.collection = previousCollection
+            model.stage = previousStage
+            model.isRunning = wasRunning
+        }
+        model.isRunning = true
+        model.stage = .posts
+        model.collection = job
+        let active = try XCTUnwrap(model.calendarActivity.first)
+        XCTAssertTrue(job.belongsToMonth(active, month: 1))
+
+        let snapshot = job
+        job.pending.removeAll { snapshot.belongsToMonth($0, month: 1) }
+        let otherMonth = try XCTUnwrap(job.pending.first)
+        model.collection = job
+        XCTAssertTrue(model.calendarActivity.isEmpty)
+        XCTAssertTrue(job.calendarActivity(active: [otherMonth], scanningMonths: true).isEmpty)
+
+        model.stage = .parents
+        job.monthScope = nil
+        model.collection = job
+        XCTAssertEqual(job.nextBatch(excluding: []).first, otherMonth)
+        XCTAssertTrue(model.calendarActivity.isEmpty)
     }
 
     func testFinalCollectionStagesUseBusyHeaderInsteadOfRestartingCalendar() {
@@ -625,7 +688,7 @@ final class YearReviewTests: XCTestCase {
             job.phase = phase
             let references = YearReviewWork(relay: "wss://relay.example.com", category: .references,
                 since: period.start, until: period.end - 1)
-            XCTAssertTrue(job.calendarActivity(active: [references], running: true).isEmpty)
+            XCTAssertTrue(job.calendarActivity(active: [references], scanningMonths: true).isEmpty)
         }
     }
 

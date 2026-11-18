@@ -244,6 +244,72 @@
         }
       }
     },
+    "About history" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca del historial"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentang riwayat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over je geschiedenis"
+          }
+        }
+      }
+    },
+    "Activity found" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actividad encontrada"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivitas yang ditemukan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gevonden activiteit"
+          }
+        }
+      }
+    },
+    "Adding up zaps…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sumando zaps…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menjumlahkan zap…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaps optellen…"
+          }
+        }
+      }
+    },
     "Beyond the usual crowd" : {
       "localizations" : {
         "nl" : {
@@ -310,6 +376,72 @@
         }
       }
     },
+    "Choose up to 20 relays. Relays you used before may still have older posts." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige hasta 20 relés. Los relés que usabas antes quizá aún tengan publicaciones antiguas."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih hingga 20 relay. Relay yang pernah kamu gunakan mungkin masih menyimpan postingan lama."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies maximaal 20 relays. Relays die je eerder gebruikte, hebben misschien nog oudere berichten."
+          }
+        }
+      }
+    },
+    "Download details" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles de la descarga"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail unduhan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloaddetails"
+          }
+        }
+      }
+    },
+    "Export public history" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar historial público"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekspor riwayat publik"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Openbare geschiedenis exporteren"
+          }
+        }
+      }
+    },
     "Fetch from selected relays" : {
       "localizations" : {
         "nl" : {
@@ -354,6 +486,28 @@
         }
       }
     },
+    "Finished checking your selected relays." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se han revisado los relés que elegiste."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay pilihanmu sudah selesai diperiksa."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je geselecteerde relays zijn gecontroleerd."
+          }
+        }
+      }
+    },
     "First exchanges found with %lld people in this thread" : {
       "localizations" : {
         "nl" : {
@@ -394,6 +548,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sembunyikan sorotan atau orang yang tidak ingin kamu sertakan. Pratinjau gambar, lalu pilih Siapkan postingan untuk membuat draf yang bisa diedit."
+          }
+        }
+      }
+    },
+    "If a relay stops responding, Nostur may skip it for later months. Other relays can still finish." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si un relé deja de responder, Nostur puede omitirlo en los meses siguientes. Los demás relés pueden seguir."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jika sebuah relay berhenti merespons, Nostur mungkin melewatinya untuk bulan-bulan berikutnya. Relay lain tetap bisa menyelesaikan unduhan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als een relay niet meer reageert, kan Nostur die voor latere maanden overslaan. De andere relays kunnen doorgaan."
           }
         }
       }
@@ -486,6 +662,28 @@
         }
       }
     },
+    "Month checked" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mes revisado"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bulan sudah diperiksa"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maand gecontroleerd"
+          }
+        }
+      }
+    },
     "More highlights" : {
       "localizations" : {
         "nl" : {
@@ -530,6 +728,28 @@
         }
       }
     },
+    "Only the highlights and people you choose appear in the share image." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En la imagen para compartir solo aparecen los momentos y las personas que elijas."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hanya sorotan dan orang yang kamu pilih yang muncul di gambar untuk dibagikan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Op de afbeelding die je deelt, staan alleen de hoogtepunten en mensen die je kiest."
+          }
+        }
+      }
+    },
     "Open History to fetch a month or retry a source. Some older posts may no longer be available." : {
       "localizations" : {
         "nl" : {
@@ -570,6 +790,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Menyusun percakapan…"
+          }
+        }
+      }
+    },
+    "Posts checked. Interactions still to come." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicaciones revisadas. Aún faltan las interacciones."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan sudah diperiksa. Interaksi menyusul."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten gecontroleerd. Interacties volgen nog."
           }
         }
       }
@@ -636,6 +878,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Langganan di kolom balasan"
+          }
+        }
+      }
+    },
+    "Relay details" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles del relé"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail relay"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relaydetails"
           }
         }
       }
@@ -728,6 +992,28 @@
         }
       }
     },
+    "Some relays ask you to sign in. This shares the public key of the account you’re using, even when the report is about someone else." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunos relés te piden que inicies sesión. Esto comparte la clave pública de la cuenta que estás usando, incluso si el resumen es sobre otra persona."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beberapa relay meminta kamu masuk. Kunci publik akun yang kamu gunakan akan dibagikan ke relay, meskipun rangkumannya tentang orang lain."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sommige relays vragen je om in te loggen. Daarbij deel je de publieke sleutel van het account dat je gebruikt, ook als het overzicht over iemand anders gaat."
+          }
+        }
+      }
+    },
     "Start with two random adjacent months" : {
       "localizations" : {
         "nl" : {
@@ -794,6 +1080,28 @@
         }
       }
     },
+    "Tap a month to look for more activity or retry a relay. Some older posts may no longer be available." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca un mes para buscar más actividad o volver a probar un relé. Puede que algunas publicaciones antiguas ya no estén disponibles."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ketuk bulan untuk mencari aktivitas lain atau mencoba relay lagi. Beberapa postingan lama mungkin sudah tidak tersedia."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tik op een maand om meer activiteit te zoeken of een relay opnieuw te proberen. Sommige oudere berichten zijn misschien niet meer beschikbaar."
+          }
+        }
+      }
+    },
     "Test report · %@ – %@" : {
       "localizations" : {
         "nl" : {
@@ -812,6 +1120,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Laporan uji · %1$@ – %2$@"
+          }
+        }
+      }
+    },
+    "The calendar counts everything relays send, including repeats. Repeat copies don’t add to your report totals." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El calendario cuenta todo lo que envían los relés, incluso los duplicados. Los duplicados no se suman al total del resumen."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalender menghitung semua yang dikirim relay, termasuk duplikat. Duplikat tidak menambah total rangkumanmu."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De kalender telt alles wat relays sturen, ook dubbele exemplaren. Dubbelen tellen niet mee in de totalen van je overzicht."
+          }
+        }
+      }
+    },
+    "What the calendar counts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qué cuenta el calendario"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yang dihitung kalender"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat de kalender telt"
           }
         }
       }

@@ -106,7 +106,7 @@ final class YearReviewModel {
             case .interactions: "Gathering replies and support…"
             case .references: "Finding missed interactions…"
             case .parents: "Filling in conversations…"
-            case .zaps: "Checking zap providers…"
+            case .zaps: "Adding up zaps…"
             case .analyzing: "Finding your highlights…"
             case .paused: "History collection paused"
             case .finished: "Your preview is ready"
@@ -137,7 +137,8 @@ final class YearReviewModel {
     var activeActivities: [YearReviewActivity] { activities.values.sorted { $0.work.relay < $1.work.relay } }
     var activity: YearReviewActivity? { activeActivities.first }
     var calendarActivity: [YearReviewWork] {
-        collection?.calendarActivity(active: activeActivities.map(\.work), running: isRunning) ?? []
+        let scanningMonths = isRunning && (stage == .posts || stage == .interactions)
+        return collection?.calendarActivity(active: activeActivities.map(\.work), scanningMonths: scanningMonths) ?? []
     }
     var lastResponse: (received: Int, added: Int)?
     var stage: Stage = .ready
@@ -151,7 +152,7 @@ final class YearReviewModel {
         default: "Preparing saved report…"
         }
     }
-    var progressLabel: LocalizedStringResource { stage == .zaps ? zapStatus ?? stage.label : stage.label }
+    var progressLabel: LocalizedStringResource { stage.label }
     var isRunning = false
     private(set) var isConfiguring = false
     var isDownloading = false
@@ -236,8 +237,19 @@ final class YearReviewModel {
     @ObservationIgnored private var generation = UUID()
     @ObservationIgnored private var previewRevision = 0
 
+    var selectedHistorySources: [RelayData] {
+        Array(relays.filter { selectedRelays.contains($0.url) }.prefix(20))
+    }
+
+    var hasNewHistorySources: Bool {
+        guard let collection, collection.period.year == year else { return false }
+        let saved = Set(collection.relays.map(\.url))
+        return selectedHistorySources.contains { !saved.contains($0.url) }
+    }
+
     var canResume: Bool {
-        collection?.period.year == year && (collection?.phase != .finished || !(collection?.failed.isEmpty ?? true))
+        collection?.period.year == year
+            && (hasNewHistorySources || collection?.phase != .finished || !(collection?.failed.isEmpty ?? true))
     }
 
     func configure(account: LoggedInAccount, contact: Contact? = nil, loadSaved: Bool = true) async {
@@ -471,7 +483,7 @@ final class YearReviewModel {
 #endif
         }
         var period = (resume || !download ? collection?.period : nil) ?? selectedPeriod(year: year)
-        let sources = Array(relays.filter { selectedRelays.contains($0.url) }.prefix(20))
+        let sources = selectedHistorySources
         task = Task { [self] in
             defer {
                 if generation == token { isRunning = false; isDownloading = false; queuedMonth = nil; activities.removeAll(); task = nil }
@@ -514,11 +526,7 @@ final class YearReviewModel {
                 }
                 if download {
                     var job = previous ?? YearReviewCollection(owner: owner, period: period, relays: sources, trusted: trust)
-                    // Authentication preferences can change before retrying a
-                    // checkpoint that previously failed with auth-required.
-                    job.relays = job.relays.map { saved in
-                        .init(url: saved.url, auth: relays.first(where: { $0.url == saved.url })?.auth ?? saved.auth)
-                    }
+                    job.reconcileRelays(sources)
                     job.invalidEvents += invalidSeedEvents
                     if let month { job.prepareMonth(month) }
                     if month == nil && job.monthScope == nil && resume && job.pending.isEmpty && !job.failed.isEmpty {
@@ -532,6 +540,7 @@ final class YearReviewModel {
                         else { job.phase = .parents }
                     }
                     try await collect(&job, archive: archive)
+                    stage = .parents
                     collection = job
                     period = job.period
                     let fetchedAt = Date.now
@@ -540,7 +549,7 @@ final class YearReviewModel {
                 }
                 try Task.checkCancellation()
                 // Local parent resolution also makes saved-history-only previews useful.
-                stage = .parents
+                if !download { stage = .parents }
                 let inventory = try await archive.inventory(owner: owner, period: period)
                 for ids in Array(inventory.missingParentIds.filter { YearReviewEvent.isHex($0, length: 64) }.prefix(20_000)).chunks(of: 128) {
                     try Task.checkCancellation()
@@ -756,7 +765,6 @@ final class YearReviewModel {
                 if !job.pending.contains(where: { job.belongsToMonth($0, month: month) }) {
                     job.monthScope = nil
                     try await archive.save(job, key: checkpointKey(job.period))
-                    collection = job
                     return // Other months and extra checks stay saved for later.
                 }
                 job.prioritizeMonth(month)
