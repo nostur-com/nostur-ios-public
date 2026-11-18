@@ -17,6 +17,7 @@ struct VineVideoPreview: View {
     @ObservedObject var typingTextModel: TypingTextModel
     var onRemove: () -> Void
 
+    @State private var caption = ""
     @State private var isPlaying = true
     @State private var isMuted = false
 
@@ -49,6 +50,8 @@ struct VineVideoPreview: View {
             .onTapGesture {
                 isPlaying.toggle()
             }
+            .onAppear { caption = typingTextModel.text }
+            .onReceive(typingTextModel.textChanges) { caption = $0 }
             .frame(maxWidth: .infinity)
     }
 
@@ -70,8 +73,8 @@ struct VineVideoPreview: View {
 
     @ViewBuilder
     private var captionOverlay: some View {
-        if !typingTextModel.text.isEmpty {
-            Text(typingTextModel.text)
+        if !caption.isEmpty {
+            Text(caption)
                 .font(.caption)
                 .foregroundStyle(.white)
                 .lineLimit(3)

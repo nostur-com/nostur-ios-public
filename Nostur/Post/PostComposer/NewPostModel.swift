@@ -12,37 +12,45 @@ import AVFoundation
 import NostrEssentials
 
 public final class TypingTextModel: ObservableObject {
-    var draft: String {
-        get { Drafts.shared.draft  }
-        set {
-            DispatchQueue.main.async {
-                Drafts.shared.draft = newValue
-            }
-        }
-    }
-    
-    @Published var anonMode: Bool = false
-    private var savedRealDraft: String = ""
-
-    @Published var text: String = "" {
+    @Published var anonMode = false
+    var text: String = "" {
         didSet {
-            if !anonMode { draft = text }
+            if oldValue.isEmpty != text.isEmpty
+                || (poll != nil && oldValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    != text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
+                objectWillChange.send()
+            }
+            textChanges.send(text)
         }
     }
+    let textChanges = PassthroughSubject<String, Never>()
+    private(set) var document = ComposerDraft()
+    @Published private(set) var documentRevision = 0
+    private var savedRealDraft = ComposerDraft()
 
-    func savedRealDraftSnapshotAndClear() {
-        savedRealDraft = draft
+    func loadDocument(_ document: ComposerDraft) {
+        self.document = document
+        documentRevision += 1
+        text = document.text
+    }
+
+    func rememberDocument(_ document: ComposerDraft) {
+        self.document = document
+    }
+
+    func savedRealDraftSnapshotAndClear(_ document: ComposerDraft) {
+        savedRealDraft = document
         anonMode = true
-        text = ""
+        loadDocument(ComposerDraft())
     }
 
     func restoreRealDraft() {
         anonMode = false
-        text = savedRealDraft
-        savedRealDraft = ""
+        loadDocument(savedRealDraft)
+        savedRealDraft = ComposerDraft()
     }
 
-    func clearAnonState() { anonMode = false; savedRealDraft = "" }
+    func clearAnonState() { anonMode = false; savedRealDraft = ComposerDraft() }
     @Published var pastedImages: [PostedImageMeta] = []
     @Published var pastedImageUploadStates: [String: ComposerMediaUploadState] = [:]
     @Published var isImportingSelectedVideo = false
@@ -63,15 +71,8 @@ public final class TypingTextModel: ObservableObject {
     @Published var uploading = false
     /// Present while this post is a NIP-88 poll. Nil for an ordinary note.
     @Published var poll: PollDraft? = nil
-    private var subscriptions = Set<AnyCancellable>()
-    
     init() {
-        if !draft.isEmpty { // Restore after Cancel
-            let isMentionPrefix = draft.hasPrefix("@") && draft.count < 20
-            if !isMentionPrefix {
-                text = draft
-            }
-        }
+        loadDocument(Drafts.shared.activeDocument)
     }
 }
 
@@ -187,8 +188,7 @@ public final class NewPostModel: ObservableObject {
     @Published var showMentioning = false // To reduce rerendering, use this flag instead of (vm.mentioning && !vm.filteredContactSearchResults.isEmpty)
     private var term: String = ""
     var nEvent: NEvent?
-    var lastHit: String = "NOHIT"
-    var textView: SystemTextView?
+    weak var textView: SystemTextView?
     
     @Published var uploadError: String?
     private var uploadedImageImetasById: [String: Imeta] = [:]
@@ -274,8 +274,12 @@ public final class NewPostModel: ObservableObject {
     @MainActor func enterAnonMode() {
         guard !anonMode else { return }
         guard !isPrivateReplyLocked else { return }
+        textView?.unmarkText()
+        flushDraft()
         anonMode = true
-        typingTextModel.savedRealDraftSnapshotAndClear()
+        typingTextModel.savedRealDraftSnapshotAndClear(typingTextModel.document)
+        selectedCustomEmojiURLByShortcode = [:]
+        resetCompletion()
         replyPrivacy = .publicReply
         typingTextModel.pastedImages = []
         typingTextModel.pastedVideos = []
@@ -288,6 +292,8 @@ public final class NewPostModel: ObservableObject {
         guard anonMode else { return }
         anonMode = false
         typingTextModel.restoreRealDraft()
+        selectedCustomEmojiURLByShortcode = typingTextModel.document.emojiURLs
+        resetCompletion()
     }
 
     @MainActor func requestAnonMode() {
@@ -325,27 +331,69 @@ public final class NewPostModel: ObservableObject {
             && didAutoFetchEmptyEmojiPickerForAccountPubkeys.contains(activeAccount.publicKey)
     }
     
+    private let completionDelay: TimeInterval
+    private var completionWork: DispatchWorkItem?
+    private var draftSaveWork: DispatchWorkItem?
+    private var draftNeedsSave = false
+    private var attachedDocumentRevision: Int?
+    private(set) var shownMention: ComposerCompletion?
+    private(set) var shownEmoji: ComposerCompletion?
+
     public init(dueTime: TimeInterval = 0.2) {
-        self.typingTextModel.$text
-            .removeDuplicates()
-            .map { value in
-                Just(value)
-                    .delay(
-                        for: .seconds(composerTextChangeDelay(
-                            for: value,
-                            defaultDelay: dueTime
-                        )),
-                        scheduler: DispatchQueue.main
-                    )
-            }
-            .switchToLatest()
-            .sink(receiveValue: { [weak self] value in
-                Importer.shared.delayProcessing()
-                self?.textChanged(value)
-            })
-            .store(in: &subscriptions)
+        completionDelay = dueTime
+        selectedCustomEmojiURLByShortcode = typingTextModel.document.emojiURLs
     }
-    
+
+    func editorDidChange(_ view: UITextView) {
+        guard view === textView, attachedDocumentRevision == typingTextModel.documentRevision else { return }
+        if !typingTextModel.text.utf16.elementsEqual(view.text.utf16) {
+            typingTextModel.text = view.text
+        }
+        scheduleDraftSave()
+        scheduleCompletion()
+    }
+
+    func scheduleCompletion() {
+        completionWork?.cancel()
+        guard let view = textView, !typingTextModel.anonMode else { return }
+        let work = DispatchWorkItem { [weak self, weak view] in
+            guard let self, let view, view === self.textView else { return }
+            self.refreshCompletion(in: view)
+        }
+        completionWork = work
+        let delay = min(completionDelay, 0.06)
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    private func resetCompletion() {
+        completionWork?.cancel()
+        cancelContactSearch()
+        shownMention = nil
+        shownEmoji = nil
+        if mentioning { mentioning = false }
+        if showMentioning { showMentioning = false }
+        if showCustomEmojiPicker { dismissCustomEmojiPicker() }
+    }
+
+    private func scheduleDraftSave() {
+        guard !typingTextModel.anonMode, draftSendState == .idle else { return }
+        draftNeedsSave = true
+        draftSaveWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.flushDraft() }
+        draftSaveWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
+    }
+
+    func flushDraft() {
+        draftSaveWork?.cancel()
+        draftSaveWork = nil
+        guard draftNeedsSave, !typingTextModel.anonMode, textView?.markedTextRange == nil else { return }
+        draftNeedsSave = false
+        let document = currentDocument()
+        typingTextModel.rememberDocument(document)
+        Drafts.shared.activeDocument = document
+    }
+
     var filteredContactSearchResults: [NRContact] {
         let terms = SearchModel.normalizedTerms(term)
         let matchingResults = terms.isEmpty
@@ -1247,13 +1295,15 @@ public final class NewPostModel: ObservableObject {
     @MainActor
     func _sendNow(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
         guard draftSendState == .idle else { return }
+        textView?.unmarkText()
         Importer.shared.delayProcessing()
         guard let account = activeAccount else { return }
         account.lastLoginAt = .now
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
         
         
-        guard var finalEvent = buildFinalEvent(imetas: imetas, replyTo: replyTo, quotePost: quotePost) else {
+        let document = currentDocument()
+        guard var finalEvent = buildFinalEvent(imetas: imetas, replyTo: replyTo, quotePost: quotePost, document: document) else {
             typingTextModel.sending = false
             if typingTextModel.poll != nil {
                 sendNotification(.anyStatus, (String(localized: "Couldn’t create this poll. Check the question and answers and try again."), "NewPost"))
@@ -1261,8 +1311,11 @@ public final class NewPostModel: ObservableObject {
             return
         }
         
-        // Need draft here because it might be cleared before we need it because async later
-        persistDraftMentionAttributes()
+        // Snapshot the same committed document that preview and publication read.
+        draftSaveWork?.cancel()
+        draftNeedsSave = false
+        typingTextModel.rememberDocument(document)
+        Drafts.shared.activeDocument = document
         Drafts.shared.preserveDraftForUndoSend()
         
         // MARK: - Private Reply (giftwrapped kind 1/1111/1244)
@@ -1498,13 +1551,16 @@ public final class NewPostModel: ObservableObject {
 
     @MainActor
     private func clearActiveDraftKeepingUndoSnapshot() {
-        typingTextModel.text = ""
+        draftSaveWork?.cancel()
+        draftNeedsSave = false
+        typingTextModel.loadDocument(ComposerDraft())
         Drafts.shared.clearActiveDraftAfterSchedulingSend()
     }
 
     @MainActor
     func sendNowAnon(replyTo: ReplyTo, onDismiss: @escaping () -> Void) async {
         guard draftSendState == .idle else { return }
+        textView?.unmarkText()
         let keys: Keys
         do { keys = try Keys.newKeys() }
         catch { typingTextModel.sending = false
@@ -1540,7 +1596,7 @@ public final class NewPostModel: ObservableObject {
         onDismiss()
     }
 
-    private func buildFinalEvent(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, isPreviewContext: Bool = false, anonPubkey: String? = nil) -> NEvent? {
+    private func buildFinalEvent(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, isPreviewContext: Bool = false, anonPubkey: String? = nil, document: ComposerDraft? = nil) -> NEvent? {
         guard var nEvent = self.nEvent else { return nil }
         let publicKey: String
         if let anonPubkey {
@@ -1560,13 +1616,8 @@ public final class NewPostModel: ObservableObject {
             }
         }
         
-        var content: String
-        if let attributedText = textView?.attributedText,
-           attributedText.string == typingTextModel.text {
-            content = replaceSemanticMentionsWithNpubs(attributedText)
-        } else {
-            content = typingTextModel.text
-        }
+        let document = document ?? currentDocument()
+        var content = replaceSemanticMentionsWithNpubs(document.semanticText)
 
         let publishingPoll = typingTextModel.poll != nil && anonPubkey == nil
 
@@ -1804,7 +1855,7 @@ public final class NewPostModel: ObservableObject {
         if anonPubkey == nil {
             let usedEmojiShortcodes = extractCustomEmojiShortcodes(from: content)
             for shortcode in usedEmojiShortcodes {
-                guard let emojiURL = selectedCustomEmojiURLByShortcode[shortcode] ?? customEmojiURLByShortcode[shortcode] else { continue }
+                guard let emojiURL = document.emojiURLs[shortcode] ?? customEmojiURLByShortcode[shortcode] else { continue }
                 let emojiTag = NostrTag(["emoji", shortcode, emojiURL.absoluteString])
                 let alreadyPresent = nEvent.tags.contains(where: {
                     $0.type == "emoji" && $0.tag[safe: 1] == shortcode && $0.tag[safe: 2] == emojiURL.absoluteString
@@ -1884,6 +1935,7 @@ public final class NewPostModel: ObservableObject {
     }
     
     func showPreview(quotePost: QuotePost? = nil, replyTo: ReplyTo? = nil) {
+        textView?.unmarkText()
         
         guard var finalNEventWithId = buildFinalEvent(imetas: [], replyTo: replyTo, quotePost: quotePost, isPreviewContext: true) else { return }
         if finalNEventWithId.id.isEmpty {
@@ -1909,46 +1961,38 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
-    func selectContactSearchResult(_ nrContact: NRContact) {
-        guard let textView = textView else { return }
-        guard let currentTerm = mentionTerm(textView.text, textView: textView) else { return }
+    func selectContactSearchResult(_ nrContact: NRContact, for query: ComposerCompletion) {
+        guard let textView, shownMention == query,
+              activeCompletion(trigger: "@", in: textView) == query else { return }
         let mentionName = nrContact.anyName
         let replacement = composerMention(
             name: mentionName,
             pubkey: nrContact.pubkey
         )
-        guard let replacementRange = autocompleteReplacementRange(
-            trigger: "@",
-            term: currentTerm,
-            textView: textView
-        ) else { return }
         guard textView.replaceTextStorageCharacters(
-            in: replacementRange,
+            in: query.range,
             with: replacement,
             undoActionName: "Mention"
         ) != nil else { return }
 
-        typingTextModel.text = textView.text
-
         // Update the available contacts and selected mentions
         availableContacts.insert(nrContact)
         typingTextModel.selectedMentions.insert(nrContact)
-        mentioning = false
-        cancelContactSearch()
+        resetCompletion()
         contactSearchResults = []
-        lastHit = mentionName
         term = ""
     }
     
-    public func textChanged(_ newText:String) {
-        guard textView != nil else { return }
-        persistDraftMentionAttributes()
-        if anonMode {
-            cancelContactSearch()
-            showCustomEmojiPicker = false
+    private func refreshCompletion(in textView: UITextView) {
+        guard textView.markedTextRange == nil, !anonMode else {
+            resetCompletion()
             return
         }
-        if let emojiTerm = customEmojiTerm(newText, textView: textView) {
+        if let query = activeCompletion(trigger: ":", in: textView) {
+            guard shownEmoji != query else { return }
+            shownEmoji = query
+            shownMention = nil
+            let emojiTerm = query.term
             mentioning = false
             cancelContactSearch()
             term = ""
@@ -1965,28 +2009,25 @@ public final class NewPostModel: ObservableObject {
             return
         }
         else if showCustomEmojiPicker {
-            showCustomEmojiPicker = false
-            emojiTypingTerm = ""
+            dismissCustomEmojiPicker()
         }
 
-        if let mentionTerm = mentionTerm(newText, textView: textView) {
-            if mentionTerm == lastHit {
-                mentioning = false
+        if let query = activeCompletion(trigger: "@", in: textView) {
+            guard shownMention != query else { return }
+            shownMention = query
+            mentioning = true
+            term = query.term
+            let normalizedTerm = query.term.trimmingCharacters(in: .whitespacesAndNewlines)
+            if normalizedTerm.isEmpty {
+                cancelContactSearch()
+                contactSearchResults = []
+            } else {
+                // Refine the previous results while the new bounded lookup is running.
+                searchContacts(normalizedTerm)
             }
-            else {
-                mentioning = true
-                term = mentionTerm
-                let normalizedTerm = mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !normalizedTerm.isEmpty {
-                    // Keep and synchronously refine the previous result set while
-                    // the next bounded database lookup is running.
-                    showMentioning = !filteredContactSearchResults.isEmpty
-                    self.searchContacts(normalizedTerm)
-                }
-            }
-            
         }
         else {
+            shownMention = nil
             if mentioning {
                 mentioning = false
             }
@@ -2000,26 +2041,20 @@ public final class NewPostModel: ObservableObject {
     }
 
     func dismissCustomEmojiPicker() {
+        shownEmoji = nil
         showCustomEmojiPicker = false
         emojiTypingTerm = ""
     }
 
-    func selectCustomEmoji(_ customEmoji: ComposerCustomEmoji) {
-        guard let textView = textView else { return }
-        guard let currentTerm = customEmojiTerm(textView.text, textView: textView) else { return }
+    func selectCustomEmoji(_ customEmoji: ComposerCustomEmoji, for query: ComposerCompletion) {
+        guard let textView, shownEmoji == query,
+              activeCompletion(trigger: ":", in: textView) == query else { return }
         let replacement = ":\(customEmoji.shortcode): "
-        guard let replacementRange = autocompleteReplacementRange(
-            trigger: ":",
-            term: currentTerm,
-            textView: textView
-        ) else { return }
         guard textView.replaceTextStorageCharacters(
-            in: replacementRange,
+            in: query.range,
             with: replacement,
             undoActionName: "Emoji"
         ) != nil else { return }
-
-        typingTextModel.text = textView.text
 
         selectedCustomEmojiURLByShortcode[customEmoji.shortcode] = customEmoji.url
         markCustomEmojiAsRecentlyUsed(customEmoji)
@@ -2033,7 +2068,6 @@ public final class NewPostModel: ObservableObject {
         contactSearchCancellationToken?.cancel()
         let cancellationToken = SearchCancellationToken()
         contactSearchCancellationToken = cancellationToken
-        Importer.shared.delayProcessing()
         contactSearchTask = Task { @MainActor [weak self] in
             let contactStage = await SearchModel.searchContacts(
                 mentionTerm,
@@ -2044,7 +2078,8 @@ public final class NewPostModel: ObservableObject {
                   !cancellationToken.isCancelled,
                   self.contactSearchRevision == searchRevision,
                   self.mentioning,
-                  self.term.trimmingCharacters(in: .whitespacesAndNewlines) == mentionTerm else {
+                  let view = self.textView, let shownMention = self.shownMention,
+                  activeCompletion(trigger: "@", in: view) == shownMention else {
                 return
             }
             self.contactSearchResults = contactStage.contacts
@@ -2411,67 +2446,62 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
-    func directMention(_ contact: NRContact) {
-        guard let textView else { return }
-        guard let pubkey = account()?.publicKey, pubkey != contact.pubkey else { return }
-        let mentionName = contact.anyName
-        let replacement = composerMention(
-            name: mentionName,
-            pubkey: contact.pubkey
-        )
-        let fullRange = NSRange(location: 0, length: textView.textStorage.length)
-        guard textView.replaceTextStorageCharacters(
-            in: fullRange,
-            with: replacement,
-            undoActionName: "Mention"
-        ) != nil else { return }
-        typingTextModel.text = textView.text
-        availableContacts.insert(contact)
-        typingTextModel.selectedMentions.insert(contact)
+    func prepareDocument(initialText: String?, directMention: NRContact?, accountPubkey: String?) {
+        guard initialText != nil || directMention != nil else { return }
+        var document = initialText.map { ComposerDraft(text: $0) } ?? typingTextModel.document
+        if let directMention, let accountPubkey, accountPubkey != directMention.pubkey {
+            let prefix = composerMention(name: directMention.anyName, pubkey: directMention.pubkey)
+            let offset = prefix.length
+            document.mentions = prefix.nosturMentionRuns().map {
+                ComposerMentionRecord(location: $0.range.location, length: $0.range.length, pubkey: $0.pubkey, text: $0.text)
+            } + document.mentions.map {
+                ComposerMentionRecord(location: $0.location + offset, length: $0.length, pubkey: $0.pubkey, text: $0.text)
+            }
+            document.text = prefix.string + document.text
+            availableContacts.insert(directMention)
+            typingTextModel.selectedMentions.insert(directMention)
+        }
+        selectedCustomEmojiURLByShortcode = document.emojiURLs
+        typingTextModel.loadDocument(document)
+        scheduleDraftSave()
     }
 
     func attachTextView(_ textView: SystemTextView) {
         self.textView = textView
-        restoreDraftMentionAttributes(in: textView)
+        attachedDocumentRevision = typingTextModel.documentRevision
     }
 
-    private func persistDraftMentionAttributes() {
-        guard !typingTextModel.anonMode,
-              let attributedText = textView?.attributedText,
-              attributedText.string == typingTextModel.text else { return }
-        Drafts.shared.draftMentions = attributedText.nosturMentionRuns().map {
-            ComposerMentionRecord(
-                location: $0.range.location,
-                length: $0.range.length,
-                pubkey: $0.pubkey,
-                text: $0.text
-            )
-        }
+    func detachTextView(_ textView: UITextView) {
+        guard self.textView === textView else { return }
+        flushDraft()
+        completionWork?.cancel()
+        self.textView = nil
     }
 
-    private func restoreDraftMentionAttributes(in textView: SystemTextView) {
-        let storage = textView.textStorage
-        guard storage.string == typingTextModel.text else { return }
+    func insertGIFURL(_ url: String) {
+        guard let textView else { return }
+        textView.unmarkText()
+        _ = textView.replaceTextStorageCharacters(
+            in: NSRange(location: textView.textStorage.length, length: 0),
+            with: url + "\n",
+            undoActionName: String(localized: "GIF")
+        )
+    }
 
-        for mention in Drafts.shared.draftMentions {
-            guard NSMaxRange(mention.range) <= storage.length,
-                  storage.attributedSubstring(from: mention.range).string == mention.text else { continue }
-            storage.addAttribute(
-                .nosturMentionPubkey,
-                value: mention.pubkey,
-                range: mention.range
-            )
-            storage.addAttribute(
-                .foregroundColor,
-                value: UIColor(Themes.default.theme.accent),
-                range: mention.range
-            )
-            storage.addAttribute(
-                .font,
-                value: UIFont.nosturBody().with(.traitBold),
-                range: mention.range
-            )
+    private func currentDocument() -> ComposerDraft {
+        let text = typingTextModel.text
+        let mentions: [ComposerMentionRecord]
+        if let textView, attachedDocumentRevision == typingTextModel.documentRevision, textView.markedTextRange == nil,
+           textView.text.utf16.elementsEqual(text.utf16) {
+            mentions = textView.textStorage.nosturMentionRuns().map {
+                ComposerMentionRecord(location: $0.range.location, length: $0.range.length, pubkey: $0.pubkey, text: $0.text)
+            }
+        } else if typingTextModel.document.text.utf16.elementsEqual(text.utf16) {
+            mentions = typingTextModel.document.mentions
+        } else {
+            mentions = []
         }
+        return ComposerDraft(text: text, mentions: mentions, emojiURLs: selectedCustomEmojiURLByShortcode)
     }
 
 #if DEBUG
@@ -2506,7 +2536,7 @@ func mentionTerm(_ text: String, textView: SystemTextView?) -> String? {
     return mentionQueryTerm(
         in: text,
         cursorUTF16Location: textView.selectedRange.location,
-        attributedText: textView.attributedText
+        attributedText: textView.textStorage
     )
 }
 
@@ -2517,12 +2547,13 @@ func mentionQueryTerm(
 ) -> String? {
     let nsText = text as NSString
     guard cursorUTF16Location <= nsText.length else { return nil }
-    let textUntilCursor = nsText.substring(to: cursorUTF16Location) as NSString
-    let atRange = textUntilCursor.range(of: "@", options: .backwards)
+    let start = max(0, cursorUTF16Location - 256)
+    let queryRange = NSRange(location: start, length: cursorUTF16Location - start)
+    let atRange = nsText.range(of: "@", options: .backwards, range: queryRange)
     guard atRange.location != NSNotFound else { return nil }
 
     if atRange.location > 0 {
-        let previousUTF16Unit = textUntilCursor.character(at: atRange.location - 1)
+        let previousUTF16Unit = nsText.character(at: atRange.location - 1)
         guard let scalar = UnicodeScalar(previousUTF16Unit),
               CharacterSet.whitespacesAndNewlines.contains(scalar) else {
             return nil
@@ -2553,37 +2584,35 @@ func mentionQueryTerm(
     return term
 }
 
-func composerTextChangeDelay(
-    for text: String,
-    defaultDelay: TimeInterval
-) -> TimeInterval {
-    let cursor = (text as NSString).length
-    return mentionQueryTerm(
-        in: text,
-        cursorUTF16Location: cursor
-    ) == nil ? defaultDelay : min(defaultDelay, 0.06)
-}
-
 func customEmojiTerm(_ text: String, textView: SystemTextView?) -> String? {
     guard let textView else { return nil }
     let cursorPosition = textView.selectedRange.location
     let nsText = text as NSString
     guard cursorPosition <= nsText.length else { return nil }
-    let textUntilCursor = nsText.substring(to: cursorPosition)
-    guard let colonRange = textUntilCursor.range(of: ":", options: .backwards) else { return nil }
-
-    if colonRange.lowerBound != textUntilCursor.startIndex {
-        let previousIndex = textUntilCursor.index(before: colonRange.lowerBound)
-        let previousCharacter = textUntilCursor[previousIndex]
-        guard previousCharacter.isWhitespace else { return nil }
+    let start = max(0, cursorPosition - 256)
+    let searchRange = NSRange(location: start, length: cursorPosition - start)
+    let colon = nsText.range(of: ":", options: .backwards, range: searchRange)
+    guard colon.location != NSNotFound else { return nil }
+    if colon.location > 0 {
+        guard let scalar = UnicodeScalar(nsText.character(at: colon.location - 1)),
+              CharacterSet.whitespacesAndNewlines.contains(scalar) else { return nil }
     }
 
-    let textAfterColon = String(textUntilCursor[colonRange.upperBound...])
-    if textAfterColon.contains(":") { return nil }
-    if textAfterColon.range(of: #"^[A-Za-z0-9_-]*$"#, options: .regularExpression) == nil {
-        return nil
-    }
+    let textAfterColon = nsText.substring(with: NSRange(location: NSMaxRange(colon), length: cursorPosition - NSMaxRange(colon)))
+    guard textAfterColon.range(of: #"^[A-Za-z0-9_-]*$"#, options: .regularExpression) != nil else { return nil }
     return textAfterColon
+}
+
+struct ComposerCompletion: Equatable {
+    let term: String
+    let range: NSRange
+}
+
+private func activeCompletion(trigger: String, in textView: UITextView) -> ComposerCompletion? {
+    guard textView.markedTextRange == nil, textView.selectedRange.length == 0 else { return nil }
+    let term = trigger == "@" ? mentionTerm(textView.text, textView: textView) : customEmojiTerm(textView.text, textView: textView)
+    guard let term, let range = autocompleteReplacementRange(trigger: trigger, term: term, textView: textView) else { return nil }
+    return ComposerCompletion(term: term, range: range)
 }
 
 func autocompleteReplacementRange(

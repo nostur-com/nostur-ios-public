@@ -87,7 +87,6 @@ public struct HighlightRule {
 }
 
 internal protocol HighlightingTextEditor {
-    var text: String { get set }
     var shouldBecomeFirstResponder: Bool { get set }
     var highlightRules: [HighlightRule] { get }
 }
@@ -102,7 +101,11 @@ public typealias OnTextChangeCallback = (_ editorContent: String) -> Void
 extension HighlightingTextEditor {
     var placeholderFont: SystemColorAlias { SystemColorAlias() }
 
-    static func getHighlightedText(text: String, highlightRules: [HighlightRule]) -> NSMutableAttributedString {
+    static func getHighlightedText(
+        text: String,
+        highlightRules: [HighlightRule],
+        matchedRanges: [[NSRange]]? = nil
+    ) -> NSMutableAttributedString {
         let highlightedString = NSMutableAttributedString(string: text)
         let all = NSRange(location: 0, length: text.utf16.count)
 
@@ -112,28 +115,28 @@ extension HighlightingTextEditor {
         highlightedString.addAttribute(.font, value: editorFont, range: all)
         highlightedString.addAttribute(.foregroundColor, value: editorTextColor, range: all)
 
-        highlightRules.forEach { rule in
-            let matches = rule.pattern.matches(in: text, options: [], range: all)
-            matches.forEach { match in
+        for (index, rule) in highlightRules.enumerated() {
+            let ranges = matchedRanges?[index] ?? rule.pattern.matches(in: text, range: all).map(\.range)
+            ranges.forEach { matchRange in
                 rule.formattingRules.forEach { formattingRule in
 
                     var font = SystemFontAlias()
-                    highlightedString.enumerateAttributes(in: match.range, options: []) { attributes, _, _ in
+                    highlightedString.enumerateAttributes(in: matchRange, options: []) { attributes, _, _ in
                         let fontAttribute = attributes.first { $0.key == .font }!
                         // swiftlint:disable:next force_cast
                         let previousFont = fontAttribute.value as! SystemFontAlias
                         font = previousFont.with(formattingRule.fontTraits)
                     }
-                    highlightedString.addAttribute(.font, value: font, range: match.range)
+                    highlightedString.addAttribute(.font, value: font, range: matchRange)
 
-                    let matchRange = Range<String.Index>(match.range, in: text)!
-                    let matchContent = String(text[matchRange])
                     guard let key = formattingRule.key,
-                          let calculateValue = formattingRule.calculateValue else { return }
+                          let calculateValue = formattingRule.calculateValue,
+                          let stringRange = Range(matchRange, in: text) else { return }
+                    let matchContent = String(text[stringRange])
                     highlightedString.addAttribute(
                         key,
-                        value: calculateValue(matchContent, matchRange),
-                        range: match.range
+                        value: calculateValue(matchContent, stringRange),
+                        range: matchRange
                     )
                 }
             }

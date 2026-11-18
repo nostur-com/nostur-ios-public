@@ -531,21 +531,23 @@ struct ComposePost: View {
                             }
                             .modifier(ReplyComposerScrollAnchor(enabled: startsAtReplyEditor))
                         }
-                        .offset(y: (vm.showMentioning || vm.showCustomEmojiPicker) && (replyTo != nil) ? -150 : 0)
                         .overlay(alignment: .bottom) {
                             MediaUploadProgress(uploader: vm.uploader) // @TODO: Make progress independent of Uploader type (NIP96 / Blossom)
                                 .frame(height: geo.size.height * 0.60)
                                 .background(theme.listBackground)
                         }
-                        .overlay(alignment: .bottom) {
-                            MentionChoices(vm: vm)
-                                .frame(height: geo.size.height * 0.60)
+                        .safeAreaInset(edge: .bottom, spacing: 0) {
+                            if vm.showMentioning || vm.showCustomEmojiPicker {
+                                Group {
+                                    if vm.showMentioning {
+                                        MentionChoices(vm: vm)
+                                    } else {
+                                        CustomEmojiChoices(vm: vm)
+                                    }
+                                }
+                                .frame(height: min(220, geo.size.height * 0.40))
                                 .background(theme.listBackground)
-                        }
-                        .overlay(alignment: .bottom) {
-                            CustomEmojiChoices(vm: vm)
-                                .frame(height: geo.size.height * 0.60)
-                                .background(theme.listBackground)
+                            }
                         }
                         .nbNavigationDestination(item: $vm.previewNRPost, destination: { nrPost in
                             VStack(alignment: .leading) {
@@ -664,7 +666,9 @@ struct ComposePost: View {
             Importer.shared.delayProcessing()
             guard !didLoad else { return }
             didLoad = true
-            vm.activeAccount = account()
+            let activeAccount = account()
+            vm.prepareDocument(initialText: initialText, directMention: directMention, accountPubkey: activeAccount?.publicKey)
+            vm.activeAccount = activeAccount
             if #available(iOS 16.0, *), kind == .shortVoiceMessage {
                 var voiceMessageNEvent = NEvent(content: "")
                 voiceMessageNEvent.kind = .shortVoiceMessage
@@ -701,14 +705,15 @@ struct ComposePost: View {
             else {
                 vm.nEvent = NEvent(content: "")
             }
-            if let initialText {
-                vm.typingTextModel.text = initialText
-            }
             if !initialImages.isEmpty {
                 vm.typingTextModel.pastedImages = initialImages
             }
             ConnectionPool.shared.connectAllWrite()
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            vm.flushDraft()
+        }
+        .onDisappear { vm.flushDraft() }
         .alert("Reply anonymously", isPresented: $vm.showAnonExplainer) {
             Button("Continue anonymously") {
                 UserDefaults.standard.set(true, forKey: "anonReplyExplainerAccepted")
@@ -736,7 +741,7 @@ struct ComposePost: View {
     
     @ViewBuilder
     var textEntry: some View {
-        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: kind, showAudioRecorder: $showAudioRecorder)
+        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: kind, showAudioRecorder: $showAudioRecorder)
     }
 }
 

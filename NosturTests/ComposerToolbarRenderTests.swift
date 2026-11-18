@@ -11,12 +11,9 @@ final class ComposerToolbarRenderTests: XCTestCase {
         // XCTest discovery can invoke an @available test class on older runtimes.
         guard #available(iOS 27.0, *) else { throw XCTSkip("iOS 27 toolbar styling regression") }
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
-        let previousDraft = Drafts.shared.draft
-        let previousMentions = Drafts.shared.draftMentions
-        defer {
-            Drafts.shared.draft = previousDraft
-            Drafts.shared.draftMentions = previousMentions
-        }
+        let previousDraft = Drafts.shared.activeDocument
+        Drafts.shared.activeDocument = ComposerDraft()
+        defer { Drafts.shared.activeDocument = previousDraft }
         let model = NewPostModel()
         let host = UIHostingController(rootView: NBNavigationStack {
             Entry(vm: model, photoPickerShown: .constant(false), videoPickerShown: .constant(false), gifSheetShown: .constant(false), cameraSheetShown: .constant(false), onDismiss: {}, replyToKind: nil, kind: .textNote, showAudioRecorder: .constant(false))
@@ -27,9 +24,18 @@ final class ComposerToolbarRenderTests: XCTestCase {
         let window = UIWindow(windowScene: scene)
         window.rootViewController = host
         window.makeKeyAndVisible()
-        defer { window.endEditing(true); window.isHidden = true }
-        for (index, text) in ["", "Draft", "Draft with more text"].enumerated() {
-            model.typingTextModel.text = text
+        defer {
+            window.endEditing(true)
+            model.flushDraft()
+            window.isHidden = true
+        }
+        window.layoutIfNeeded()
+        let textView = try XCTUnwrap(model.textView)
+        for (index, insertion) in ["", "Draft", " with more text"].enumerated() {
+            if !insertion.isEmpty { textView.insertText(insertion) }
+            let text = ["", "Draft", "Draft with more text"][index]
+            XCTAssertEqual(textView.text, text)
+            XCTAssertEqual(model.typingTextModel.text, text)
             try await Task.sleep(for: .milliseconds(500))
             window.layoutIfNeeded()
             let format = UIGraphicsImageRendererFormat()

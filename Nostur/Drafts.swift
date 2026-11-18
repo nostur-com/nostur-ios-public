@@ -18,6 +18,24 @@ struct ComposerMentionRecord: Codable, Equatable {
     }
 }
 
+struct ComposerDraft: Codable, Equatable {
+    var text: String = ""
+    var mentions: [ComposerMentionRecord] = []
+    var emojiURLs: [String: URL] = [:]
+
+    var semanticText: NSAttributedString {
+        let result = NSMutableAttributedString(string: text)
+        for mention in mentions {
+            let range = mention.range
+            guard range.location >= 0, range.location <= result.length,
+                  range.length > 0, range.length <= result.length - range.location,
+                  result.attributedSubstring(from: range).string.utf16.elementsEqual(mention.text.utf16) else { continue }
+            result.addAttribute(.nosturMentionPubkey, value: mention.pubkey, range: range)
+        }
+        return result
+    }
+}
+
 class Drafts {
     
     static let shared = Drafts()
@@ -28,67 +46,71 @@ class Drafts {
     
     private init() {}
     
-    public var draft: String {
-        get { UserDefaults.standard.string(forKey: "simple_draft") ?? "" }
-        set {
-            if newValue != draft {
-                draftMentions = []
-            }
-            UserDefaults.standard.setValue(newValue, forKey: "simple_draft")
-        }
+    var activeDocument: ComposerDraft {
+        get { document(for: "simple_draft") }
+        set { save(newValue, for: "simple_draft") }
     }
-    public var restoreDraft: String {
-        get { UserDefaults.standard.string(forKey: "undo_send_restore_draft") ?? "" }
+
+    private var undoDocument: ComposerDraft {
+        get { document(for: "undo_send_restore_draft") }
+        set { save(newValue, for: "undo_send_restore_draft") }
+    }
+
+    var draft: String {
+        get { activeDocument.text }
         set {
-            if newValue != restoreDraft {
-                restoreDraftMentions = []
-            }
-            UserDefaults.standard.setValue(newValue, forKey: "undo_send_restore_draft")
+            guard !activeDocument.text.utf16.elementsEqual(newValue.utf16) else { return }
+            activeDocument = ComposerDraft(text: newValue)
         }
     }
 
-    public var draftMentions: [ComposerMentionRecord] {
-        get { mentionRecords(forKey: "simple_draft_mentions") }
-        set { setMentionRecords(newValue, forKey: "simple_draft_mentions") }
+    var restoreDraft: String {
+        get { undoDocument.text }
+        set {
+            guard !undoDocument.text.utf16.elementsEqual(newValue.utf16) else { return }
+            undoDocument = ComposerDraft(text: newValue)
+        }
     }
 
-    public var restoreDraftMentions: [ComposerMentionRecord] {
-        get { mentionRecords(forKey: "undo_send_restore_draft_mentions") }
-        set { setMentionRecords(newValue, forKey: "undo_send_restore_draft_mentions") }
+    var draftMentions: [ComposerMentionRecord] {
+        get { activeDocument.mentions }
+        set { activeDocument.mentions = newValue }
+    }
+
+    var restoreDraftMentions: [ComposerMentionRecord] {
+        get { undoDocument.mentions }
+        set { undoDocument.mentions = newValue }
     }
 
     func preserveDraftForUndoSend() {
-        let mentions = draftMentions
-        restoreDraft = draft
-        restoreDraftMentions = mentions
+        undoDocument = activeDocument
     }
 
     func clearActiveDraftAfterSchedulingSend() {
-        draft = ""
+        activeDocument = ComposerDraft()
     }
 
     func restoreDraftAfterUndoSend() {
-        let mentions = restoreDraftMentions
-        draft = restoreDraft
-        draftMentions = mentions
-        restoreDraft = ""
+        activeDocument = undoDocument
+        undoDocument = ComposerDraft()
     }
 
-    private func mentionRecords(forKey key: String) -> [ComposerMentionRecord] {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let records = try? JSONDecoder().decode([ComposerMentionRecord].self, from: data) else {
-            return []
+    private func document(for key: String) -> ComposerDraft {
+        let defaults = UserDefaults.standard
+        if let data = defaults.data(forKey: key + "_document"),
+           let document = try? JSONDecoder().decode(ComposerDraft.self, from: data) {
+            return document
         }
-        return records
+        let mentions = defaults.data(forKey: key + "_mentions")
+            .flatMap { try? JSONDecoder().decode([ComposerMentionRecord].self, from: $0) } ?? []
+        return ComposerDraft(text: defaults.string(forKey: key) ?? "", mentions: mentions)
     }
 
-    private func setMentionRecords(_ records: [ComposerMentionRecord], forKey key: String) {
-        guard !records.isEmpty else {
-            UserDefaults.standard.removeObject(forKey: key)
-            return
-        }
-        guard let data = try? JSONEncoder().encode(records) else { return }
-        UserDefaults.standard.set(data, forKey: key)
+    private func save(_ document: ComposerDraft, for key: String) {
+        guard let data = try? JSONEncoder().encode(document) else { return }
+        let defaults = UserDefaults.standard
+        defaults.set(data, forKey: key + "_document")
+        defaults.removeObject(forKey: key)
+        defaults.removeObject(forKey: key + "_mentions")
     }
-    
 }

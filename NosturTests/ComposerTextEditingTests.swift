@@ -113,19 +113,9 @@ struct ComposerTextEditingTests {
         ) == nil)
     }
 
-    @Test func activeMentionQueriesUseShorterDebounce() {
-        #expect(composerTextChangeDelay(
-            for: "Ordinary composer text",
-            defaultDelay: 0.2
-        ) == 0.2)
-        #expect(composerTextChangeDelay(
-            for: "Testing @tes",
-            defaultDelay: 0.2
-        ) == 0.06)
-        #expect(composerTextChangeDelay(
-            for: "Testing @Space ",
-            defaultDelay: 0.2
-        ) == 0.06)
+    @Test func mentionLookupIgnoresTriggersFarFromTheCaret() {
+        let text = "Testing @old " + String(repeating: "a", count: 400)
+        #expect(mentionQueryTerm(in: text, cursorUTF16Location: text.utf16.count) == nil)
     }
 
     @Test func semanticMentionPublishesUsingItsPubkey() throws {
@@ -250,6 +240,33 @@ struct ComposerTextEditingTests {
         #expect(textView.attributedText.nosturMentionRuns().first?.pubkey == pubkey)
     }
 
+    @Test func programmaticReplacementAndUndoReportTheRestoredSelection() throws {
+        let textView = UndoableTextView()
+        textView.text = "Before @fa after"
+        let range = (textView.text as NSString).range(of: "@fa")
+        let caret = NSRange(location: NSMaxRange(range), length: 0)
+        textView.selectedRange = caret
+        var reportedText = ""
+        var reportedSelection = NSRange()
+        textView.onProgrammaticEdit = { view, _, _ in
+            reportedText = view.text
+            reportedSelection = view.selectedRange
+        }
+
+        let insertion = try #require(textView.replaceTextStorageCharacters(
+            in: range, with: "replacement", undoActionName: "Mention"
+        ))
+        #expect(reportedText == "Before replacement after")
+        #expect(reportedSelection == insertion)
+
+        textView.testUndoManager.undo()
+        #expect(reportedText == "Before @fa after")
+        #expect(reportedSelection == caret)
+        textView.testUndoManager.redo()
+        #expect(reportedText == "Before replacement after")
+        #expect(reportedSelection == insertion)
+    }
+
     @Test func draftUndoRoundTripKeepsSemanticMentionIdentity() {
         let drafts = Drafts.shared
         let originalDraft = drafts.draft
@@ -287,6 +304,27 @@ struct ComposerTextEditingTests {
         #expect(drafts.restoreDraftMentions.isEmpty)
     }
 
+    @Test func savedDocumentRestoresMentionAndEmojiIdentity() throws {
+        let drafts = Drafts.shared
+        let previous = drafts.activeDocument
+        defer { drafts.activeDocument = previous }
+        let pubkey = String(repeating: "01", count: 32)
+        let mention = ComposerMentionRecord(location: 0, length: 7, pubkey: pubkey, text: "@Fabian")
+        let emojiURL = try #require(URL(string: "https://example.com/emoji.png"))
+        let document = ComposerDraft(text: "@Fabian :parrot:", mentions: [mention], emojiURLs: ["parrot": emojiURL])
+        drafts.activeDocument = document
+
+        let model = TypingTextModel()
+        #expect(model.document == document)
+        #expect(model.document.semanticText.nosturMentionRuns().first?.pubkey == pubkey)
+
+        model.savedRealDraftSnapshotAndClear(document)
+        #expect(model.text.isEmpty)
+        #expect(drafts.activeDocument == document)
+        model.restoreRealDraft()
+        #expect(model.document == document)
+    }
+
     @Test func openingAnotherComposerDoesNotClearUndoSendDraft() async {
         let drafts = Drafts.shared
         let originalDraft = drafts.draft
@@ -322,6 +360,9 @@ struct ComposerTextEditingTests {
             replacementText: "x"
         )
 
+        #expect(textView.attributedText.nosturMentionRuns().first?.pubkey == pubkey)
+        textView.textStorage.replaceCharacters(in: NSRange(location: 3, length: 0), with: "x")
+        coordinator.textViewDidChange(textView)
         #expect(textView.attributedText.nosturMentionRuns().isEmpty)
     }
 
@@ -347,6 +388,42 @@ struct ComposerTextEditingTests {
             at: mentionRange.location,
             effectiveRange: nil
         ) as? UIColor == UIColor.systemBlue)
+    }
+
+    @Test func deferredHighlightingLeavesLiveSelectionUntouchedAfterBlockEdits() {
+        let textView = SelectionTrackingTextView()
+        textView.text = "Before 😀 replace me after"
+        let coordinator = makeEditor(text: textView.text).makeCoordinator()
+
+        for (selectedText, replacement) in [("replace me", "pasted\nblock"), ("block ", "")] {
+            let range = (textView.text as NSString).range(of: selectedText)
+            textView.selectedRange = range
+            _ = coordinator.textView(textView, shouldChangeTextIn: range, replacementText: replacement)
+            textView.textStorage.replaceCharacters(in: range, with: replacement)
+            coordinator.textViewDidChange(textView)
+
+            // The native editor can finish updating the caret after reporting the text change.
+            let caret = NSRange(location: range.location + replacement.utf16.count, length: 0)
+            textView.selectedRange = caret
+            textView.selectionWrites = 0
+            coordinator.applyHighlighting(to: textView)
+
+            #expect(textView.selectedRange == caret)
+            #expect(textView.selectionWrites == 0)
+        }
+        #expect(textView.text == "Before 😀 pasted\nafter")
+    }
+
+    @Test func installingADocumentPlacesTheCaretAtTheEnd() {
+        let textView = UITextView()
+        textView.text = "Before 😀 after"
+        textView.selectedRange = NSRange(location: 10, length: 3)
+        let coordinator = makeEditor(text: "Short").makeCoordinator()
+
+        coordinator.installInitialText(in: textView)
+
+        #expect(textView.text == "Short")
+        #expect(textView.selectedRange == NSRange(location: 5, length: 0))
     }
 
     @Test func highlightingPreservesSemanticMentionIdentity() {
@@ -393,7 +470,7 @@ struct ComposerTextEditingTests {
         highlightRules: [HighlightRule] = []
     ) -> HighlightedTextEditor {
         HighlightedTextEditor(
-            text: .constant(text),
+            initialDocument: ComposerDraft(text: text),
             showVoiceRecorderButton: .constant(false),
             pastedImages: .constant([]),
             pastedVideos: .constant([]),
@@ -404,7 +481,20 @@ struct ComposerTextEditingTests {
 }
 
 @MainActor
-private final class UndoableTextView: UITextView {
+private final class SelectionTrackingTextView: UITextView {
+    var selectionWrites = 0
+
+    override var selectedRange: NSRange {
+        get { super.selectedRange }
+        set {
+            selectionWrites += 1
+            super.selectedRange = newValue
+        }
+    }
+}
+
+@MainActor
+private final class UndoableTextView: NosturTextView {
     let testUndoManager = UndoManager()
 
     override var undoManager: UndoManager? {

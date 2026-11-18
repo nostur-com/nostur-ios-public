@@ -25,7 +25,6 @@ struct Entry: View {
     
     private var replyTo: ReplyTo?
     private var quotePost: QuotePost?
-    private var directMention: NRContact?
     private var onDismiss: () -> Void
     private var replyToKind: Int64?
     private var kind: NEventKind?
@@ -77,10 +76,9 @@ struct Entry: View {
         return false
     }
     
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, showAudioRecorder: Binding<Bool>) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, showAudioRecorder: Binding<Bool>) {
         self.replyTo = replyTo
         self.quotePost = quotePost
-        self.directMention = directMention
         self.vm = vm
         self.typingTextModel = vm.typingTextModel
         self.onDismiss = onDismiss
@@ -167,7 +165,7 @@ struct Entry: View {
             }
             
             HighlightedTextEditor(
-                text: $typingTextModel.text,
+                initialDocument: typingTextModel.document,
                 kind: kind,
                 showVoiceRecorderButton: $showVoiceRecorderButton,
                 pastedImages: $typingTextModel.pastedImages,
@@ -201,20 +199,18 @@ struct Entry: View {
                 pollTapped: canAttachPoll ? togglePoll : nil,
                 isPollActive: typingTextModel.poll != nil
             )
+            .onEditorEvents(
+                onChange: vm.editorDidChange,
+                onSelectionChange: vm.scheduleCompletion,
+                onBeginComposition: vm.flushDraft,
+                onDetach: vm.detachTextView
+            )
             .introspect { editor in
-                // Needed so we can update cursors position on @mention autocomplete
-                if (vm.textView == nil) {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                        vm.attachTextView(editor.textView)
-                        if let directMention = directMention {
-                            vm.directMention(directMention)
-                        }
-                    }
-                }
+                vm.attachTextView(editor.textView)
             }
+            .id(typingTextModel.documentRevision)
             .background(alignment: .topLeading) {
                 Text(self.PLACEHOLDER).foregroundColor(.gray)
-                    .opacity(typingTextModel.text == "" ? 1 : 1)
                     .modifier {
                         if #available(iOS 26.0, *) {
                             $0.offset(x: 4.0, y: 5.0)
@@ -229,7 +225,7 @@ struct Entry: View {
             .sheet(isPresented: $gifSheetShown) {
                 NBNavigationStack {
                     GifSearcher { gifUrl in
-                        typingTextModel.text += gifUrl + "\n"
+                        vm.insertGIFURL(gifUrl)
                     }
                     .environment(\.theme, theme)
                 }
@@ -392,18 +388,7 @@ struct Entry: View {
 //                showVoiceRecorderButton = false
 //            }
         }
-        .onValueChange(typingTextModel.pastedImages) { oldValue, newValue in
-            guard oldValue.count != newValue.count else { return }
-            // Fix keyboard spacing by removing keyboard (forcing layout fixed after keyboard comes back)
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                                        to: nil, from: nil, for: nil)
-        }
-//        .onChange(of: typingTextModel.text) { newText in
-//            guard showVoiceRecorderButton else { return }
-//            if !newText.isEmpty {
-//                showVoiceRecorderButton = false
-//            }
-//        }
+
     }
     
     private var importingSelectedImagesView: some View {

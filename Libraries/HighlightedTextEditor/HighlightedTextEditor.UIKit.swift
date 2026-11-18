@@ -8,6 +8,7 @@
 
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 extension NSAttributedString.Key {
     static let nosturMentionPubkey = NSAttributedString.Key("com.nostur.composer.mention-pubkey")
@@ -49,13 +50,9 @@ public typealias PrivateReplyTappedCallback = () -> Void
 public typealias PollTappedCallback = () -> Void
 
 protocol PastedMediaDelegate: UITextViewDelegate {
-    func didPasteImage(_ image: UIImage)
-    func didPasteGif(_ data: Data)
-    func didPasteVideo(_ video: URL)
-    
-    func didPastePlaceholderForGif(_ info: (UIImage, UUID))
+    func didPasteImageData(_ data: Data, type: PostedImageMeta.ImageType, remoteGIF: URL?)
     func didFetchActualGif(_ info: (Data, UUID))
-    
+
     func photoPickerTapped()
     func videoTapped()
     func gifsTapped()
@@ -67,47 +64,82 @@ protocol PastedMediaDelegate: UITextViewDelegate {
 }
 
 class NosturTextView: UITextView {
-    var pastedMediaDelegate: PastedMediaDelegate?
+    var onBeginComposition: (() -> Void)?
+    var onProgrammaticEdit: ((UITextView, NSRange, Int) -> Void)?
+    private var pastedMediaDelegate: PastedMediaDelegate? { delegate as? PastedMediaDelegate }
 
-    override var delegate: UITextViewDelegate? {
-        get { pastedMediaDelegate }
-        set { pastedMediaDelegate = newValue as? PastedMediaDelegate }
+    override func setMarkedText(_ markedText: String?, selectedRange: NSRange) {
+        if markedTextRange == nil, markedText != nil {
+            onBeginComposition?()
+        }
+        super.setMarkedText(markedText, selectedRange: selectedRange)
     }
 
-    // This gets called when user presses menu "Paste" option
-    override func paste(_ sender: Any?) {
-        if let gifData = UIPasteboard.general.data(forPasteboardType: "com.compuserve.gif") {
-            pastedMediaDelegate?.didPasteGif(gifData)
+    override func unmarkText() {
+        let hadMarkedText = markedTextRange != nil
+        super.unmarkText()
+        if hadMarkedText, markedTextRange == nil {
+            delegate?.textViewDidChange?(self)
         }
-        else if let url = UIPasteboard.general.value(forPasteboardType: "public.url") as? URL, url.absoluteString.hasSuffix(".gif") {
-            if let image = UIPasteboard.general.image { // First get placeholder image
-                let placeholderId = UUID()
-                pastedMediaDelegate?.didPastePlaceholderForGif((image, placeholderId))
-                
-                // then fetch gif
-                URLSession.shared.dataTask(with: url) { data, response, error in
-                    if let data = data {
-                        DispatchQueue.main.async {
-                            self.pastedMediaDelegate?.didFetchActualGif((data, placeholderId))
-                        }
+    }
+
+    private var mediaPasteTask: Task<Void, Never>?
+
+    override func paste(_ sender: Any?) {
+        let pasteboard = UIPasteboard.general
+        if pastedMediaDelegate != nil, pasteboard.hasImages {
+            let remoteGIF = pasteboard.hasURLs ? pasteboard.url : nil
+            if pasteImage(from: pasteboard.itemProviders, remoteGIF: remoteGIF) { return }
+        }
+        super.paste(sender)
+    }
+
+    override func paste(itemProviders: [NSItemProvider]) {
+        if pasteImage(from: itemProviders, remoteGIF: nil) { return }
+        super.paste(itemProviders: itemProviders)
+    }
+
+    private func pasteImage(from providers: [NSItemProvider], remoteGIF: URL?) -> Bool {
+        guard pastedMediaDelegate != nil,
+              let provider = providers.first(where: {
+                  $0.hasItemConformingToTypeIdentifier(UTType.gif.identifier) || $0.canLoadObject(ofClass: UIImage.self)
+              }) else { return false }
+        let previousPaste = mediaPasteTask
+        mediaPasteTask = Task { @MainActor [weak self] in
+            await previousPaste?.value
+            guard self?.pastedMediaDelegate != nil else { return }
+            let gif: Data? = await withCheckedContinuation { continuation in
+                if provider.hasItemConformingToTypeIdentifier(UTType.gif.identifier) {
+                    provider.loadDataRepresentation(forTypeIdentifier: UTType.gif.identifier) { data, _ in
+                        continuation.resume(returning: data)
                     }
-                }.resume()
-            } // no placeholder image? probably pasting something else then
-            else {
-                super.paste(sender)
+                } else {
+                    continuation.resume(returning: nil)
+                }
+            }
+            if let gif {
+                self?.pastedMediaDelegate?.didPasteImageData(gif, type: .gif, remoteGIF: nil)
+                return
+            }
+            guard provider.canLoadObject(ofClass: UIImage.self) else { return }
+            let imageData: Data? = await withCheckedContinuation { continuation in
+                provider.loadObject(ofClass: UIImage.self) { image, _ in
+                    continuation.resume(returning: (image as? UIImage)?.pngData())
+                }
+            }
+            if let imageData {
+                let gifURL = remoteGIF.flatMap { url in
+                    ["https", "http"].contains(url.scheme?.lowercased() ?? "") && url.pathExtension.lowercased() == "gif"
+                        ? url : nil
+                }
+                self?.pastedMediaDelegate?.didPasteImageData(imageData, type: .png, remoteGIF: gifURL)
             }
         }
-        else if let image = UIPasteboard.general.image {
-            pastedMediaDelegate?.didPasteImage(image)
-        }
-        else {
-            // Call the normal paste action
-            super.paste(sender)
-        }
+        return true
     }
-    
+
     override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-        if action == #selector(paste(_:)) && UIPasteboard.general.image != nil {
+        if action == #selector(paste(_:)) && UIPasteboard.general.hasImages {
             return true
         } else {
             return super.canPerformAction(action, withSender: sender)
@@ -168,7 +200,8 @@ extension UITextView {
     func replaceTextStorageCharacters(
         in range: NSRange,
         with replacement: NSAttributedString,
-        undoActionName: String? = nil
+        undoActionName: String? = nil,
+        restoringSelection: NSRange? = nil
     ) -> NSRange? {
         guard markedTextRange == nil else { return nil }
         guard range.location <= textStorage.length,
@@ -184,7 +217,7 @@ extension UITextView {
             location: range.location + replacement.length,
             length: 0
         )
-        selectedRange = insertionPoint
+        selectedRange = restoringSelection ?? insertionPoint
 
         if let undoActionName, let undoManager {
             let undoRange = NSRange(location: range.location, length: replacement.length)
@@ -192,12 +225,13 @@ extension UITextView {
                 _ = textView.replaceTextStorageCharacters(
                     in: undoRange,
                     with: replacedText,
-                    undoActionName: undoActionName
+                    undoActionName: undoActionName,
+                    restoringSelection: selectionBeforeReplacement
                 )
-                textView.selectedRange = selectionBeforeReplacement
             }
             undoManager.setActionName(undoActionName)
         }
+        (self as? NosturTextView)?.onProgrammaticEdit?(self, range, replacement.length)
         return insertionPoint
     }
 }
@@ -209,7 +243,11 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         public let scrollView: SystemScrollView?
     }
     
-    @Binding var text: String
+    let initialDocument: ComposerDraft
+    var onEditorChange: ((UITextView) -> Void)?
+    var onSelectionChange: (() -> Void)?
+    var onBeginComposition: (() -> Void)?
+    var onEditorDetach: ((UITextView) -> Void)?
     
     @Binding var pastedImages: [PostedImageMeta]
     @Binding var pastedVideos: [PostedVideoMeta]
@@ -217,7 +255,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     
     var shouldBecomeFirstResponder: Bool
     
-    let textView = NosturTextView()
     let highlightRules: [HighlightRule]
     var photoPickerTapped: PhotoPickerTappedCallback?
     var videoPickerTapped: VideoPickerTappedCallback?
@@ -236,8 +273,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     private(set) var onCommit: OnCommitCallback?
     private(set) var introspect: IntrospectCallback?
     
-    public init(
-        text: Binding<String>,
+    init(
+        initialDocument: ComposerDraft,
         kind: NEventKind? = nil,
         showVoiceRecorderButton: Binding<Bool>,
         pastedImages: Binding<[PostedImageMeta]>,
@@ -256,7 +293,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         pollTapped: PollTappedCallback? = nil,
         isPollActive: Bool = false
     ) {
-        _text = text
+        self.initialDocument = initialDocument
         _showVoiceRecorderButton = showVoiceRecorderButton
         _pastedImages = pastedImages
         _pastedVideos = pastedVideos
@@ -281,7 +318,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     public func makeUIView(context: Context) -> UITextView {
-//        _ = textView.layoutManager // force an UITextView to fallback to Text Kit 1 - Maybe fixes crashes on iOS17 beta
+        let textView = NosturTextView()
         
         if #available(iOS 17.0, *) {
             // Local edits no longer replace the full attributed string, so the
@@ -293,19 +330,26 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         textView.isScrollEnabled = true
         textView.backgroundColor = UIColor.clear
         textView.delegate = context.coordinator
-        textView.pastedMediaDelegate = context.coordinator
+        textView.onBeginComposition = { [weak coordinator = context.coordinator] in
+            coordinator?.parent.onBeginComposition?()
+        }
+        textView.onProgrammaticEdit = { [weak coordinator = context.coordinator] view, range, length in
+            coordinator?.commitEdit(in: view, replacing: range, withLength: length)
+        }
         if kind != .shortVideos {
             if #available(iOS 26.0, *) {
-                makeToolbar26(textView, context: context)
+                makeToolbar26(textView)
             }
             else {
-                makeToolbar(textView, context: context)
+                makeToolbar(textView)
             }
         }
-        textView.font = UIFont.nosturBody()
+        textView.font = context.coordinator.baseFont
         textView.adjustsFontForContentSizeCategory = true
         
+        context.coordinator.installInitialText(in: textView)
         updateTextViewModifiers(textView)
+        runIntrospect(textView)
         if (shouldBecomeFirstResponder) {
             textView.becomeFirstResponder()
         }
@@ -313,20 +357,15 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     public func updateUIView(_ uiView: UITextView, context: Context) {
-        uiView.isScrollEnabled = false
-        context.coordinator.updatingUIView = true
         context.coordinator.parent = self
-        uiView.font = UIFont.nosturBody()
-        
-        uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Themes.default.theme.listBackground)
         
         // Only turn off, never turn on
         if !showVoiceRecorderButton && context.coordinator.isShowingVoiceRecorderButton {
             if #available(iOS 26.0, *) {
-                makeToolbar26(uiView, context: context)
+                makeToolbar26(uiView)
             }
             else {
-                makeToolbar(uiView, context: context)
+                makeToolbar(uiView)
             }
             context.coordinator.isShowingVoiceRecorderButton = false
             
@@ -344,10 +383,10 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
 
         if didPrivateReplyActionChange || didPrivateReplyStateChange || didPollChange {
             if #available(iOS 26.0, *) {
-                makeToolbar26(uiView, context: context)
+                makeToolbar26(uiView)
             }
             else {
-                makeToolbar(uiView, context: context)
+                makeToolbar(uiView)
             }
             context.coordinator.lastHasPrivateReplyAction = hasPrivateReplyAction
             context.coordinator.lastPrivateReplyActive = isPrivateReplyActive
@@ -359,35 +398,29 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             uiView.reloadInputViews()
         }
         
-        // While the user is editing, UITextView owns its text storage. SwiftUI
-        // updates normally echo text that is already in the view, so only replace
-        // characters when the binding contains a genuine external change.
-        if uiView.markedTextRange == nil {
-            if uiView.text != text {
-                let mentionRuns = uiView.attributedText.nosturMentionRuns()
-                let highlightedText = HighlightedTextEditor.getHighlightedText(
-                    text: text,
-                    highlightRules: highlightRules
-                )
-                uiView.textStorage.setAttributedString(highlightedText)
-                context.coordinator.restoreMentionRuns(mentionRuns, in: uiView)
-                context.coordinator.didHighlightAllText(text)
-            } else {
-                context.coordinator.applyHighlighting(to: uiView)
-            }
-        }
-        updateTextViewModifiers(uiView)
-        runIntrospect(uiView)
-        uiView.isScrollEnabled = true
-        if let selectedRange = context.coordinator.selectedRange {
-            let textLength = uiView.attributedText.length
-            let location = min(selectedRange.location, textLength)
-            let length = min(selectedRange.length, textLength - location)
-            uiView.selectedRange = NSRange(location: location, length: length)
-        }
-        context.coordinator.updatingUIView = false
+        context.coordinator.updateBaseFont(of: uiView)
+        context.coordinator.updateBackground(of: uiView)
     }
-    
+
+    public static func dismantleUIView(_ uiView: UITextView, coordinator: Coordinator) {
+        coordinator.parent.onEditorDetach?(uiView)
+        uiView.delegate = nil
+    }
+
+    func onEditorEvents(
+        onChange: @escaping (UITextView) -> Void,
+        onSelectionChange: @escaping () -> Void,
+        onBeginComposition: @escaping () -> Void,
+        onDetach: @escaping (UITextView) -> Void
+    ) -> Self {
+        var editor = self
+        editor.onEditorChange = onChange
+        editor.onSelectionChange = onSelectionChange
+        editor.onBeginComposition = onBeginComposition
+        editor.onEditorDetach = onDetach
+        return editor
+    }
+
     private func runIntrospect(_ textView: UITextView) {
         guard let introspect = introspect else { return }
         let internals = Internals(textView: textView, scrollView: nil)
@@ -401,7 +434,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     @available(iOS 26.0, *)
-    private func makeToolbar26(_ uiView: UITextView, context: Context) {
+    private func makeToolbar26(_ uiView: UITextView) {
         let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         flexibleSpace.hidesSharedBackground = false
         
@@ -412,12 +445,12 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             privateReplyButton.setImage(UIImage(systemName: isPrivateReplyActive ? "lock.fill" : "lock.open"), for: .normal)
             privateReplyButton.tintColor = UIColor(Themes.default.theme.accent)
             privateReplyButton.isEnabled = !isPrivateReplyLocked
-            privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
+            privateReplyButton.addTarget(uiView, action: #selector(NosturTextView.privateReplyTapped), for: .touchUpInside)
             let privateReply = UIBarButtonItem(customView: privateReplyButton)
             barButtons.append(privateReply)
         }
 
-        if let pollItem = pollBarButton() {
+        if let pollItem = pollBarButton(for: uiView) {
             barButtons.append(pollItem)
         }
 
@@ -434,7 +467,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             let voiceRecordingButton = UIButton(type: .system)
             voiceRecordingButton.setImage(UIImage(systemName: "mic"), for: .normal)
             voiceRecordingButton.tintColor = UIColor(Themes.default.theme.accent)
-            voiceRecordingButton.addTarget(self, action: #selector(textView.voiceMessageTapped), for: .touchUpInside)
+            voiceRecordingButton.addTarget(uiView, action: #selector(NosturTextView.voiceMessageTapped), for: .touchUpInside)
             let voiceRecording = UIBarButtonItem(customView: voiceRecordingButton)
             barButtons.append(voiceRecording)
         }
@@ -442,14 +475,14 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         let cameraButton = UIButton(type: .system)
         cameraButton.setImage(UIImage(systemName: "camera"), for: .normal)
         cameraButton.tintColor = UIColor(Themes.default.theme.accent)
-        cameraButton.addTarget(self, action: #selector(textView.cameraTapped), for: .touchUpInside)
+        cameraButton.addTarget(uiView, action: #selector(NosturTextView.cameraTapped), for: .touchUpInside)
         let camera = UIBarButtonItem(customView: cameraButton)
         barButtons.append(camera)
         
         let photoButton = UIButton(type: .system)
         photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
         photoButton.tintColor = UIColor(Themes.default.theme.accent)
-        photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
+        photoButton.addTarget(uiView, action: #selector(NosturTextView.photoPickerTapped), for: .touchUpInside)
         let photos = UIBarButtonItem(customView: photoButton)
         barButtons.append(photos)
         
@@ -457,7 +490,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             let videoButton = UIButton(type: .system)
             videoButton.setImage(UIImage(systemName: "video"), for: .normal)
             videoButton.tintColor = UIColor(Themes.default.theme.accent)
-            videoButton.addTarget(self, action: #selector(textView.videoTapped), for: .touchUpInside)
+            videoButton.addTarget(uiView, action: #selector(NosturTextView.videoTapped), for: .touchUpInside)
             let videos = UIBarButtonItem(customView: videoButton)
             barButtons.append(videos)
             
@@ -469,7 +502,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             gifButton.imageView?.contentMode = .scaleAspectFit
             gifButton.sizeToFit()
             
-            gifButton.addTarget(self, action: #selector(textView.gifsTapped), for: .touchUpInside)
+            gifButton.addTarget(uiView, action: #selector(NosturTextView.gifsTapped), for: .touchUpInside)
             let gifs = UIBarButtonItem(customView: gifButton)
             barButtons.append(gifs)
         }
@@ -485,7 +518,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         uiView.inputAccessoryView = doneToolbar
     }
     
-    private func makeToolbar(_ uiView: UITextView, context: Context) {
+    private func makeToolbar(_ uiView: UITextView) {
         let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
         let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
@@ -498,12 +531,12 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             privateReplyButton.setImage(UIImage(systemName: isPrivateReplyActive ? "lock.fill" : "lock.open"), for: .normal)
             privateReplyButton.tintColor = UIColor(Themes.default.theme.accent)
             privateReplyButton.isEnabled = !isPrivateReplyLocked
-            privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
+            privateReplyButton.addTarget(uiView, action: #selector(NosturTextView.privateReplyTapped), for: .touchUpInside)
             let privateReply = UIBarButtonItem(customView: privateReplyButton)
             barButtons.append(privateReply)
         }
 
-        if let pollItem = pollBarButton() {
+        if let pollItem = pollBarButton(for: uiView) {
             if barButtons.count != 0 {
                 barButtons.append(fixedSpace)
             }
@@ -523,7 +556,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             let voiceRecordingButton = UIButton(type: .system)
             voiceRecordingButton.setImage(UIImage(systemName: "mic"), for: .normal)
             voiceRecordingButton.tintColor = UIColor(Themes.default.theme.accent)
-            voiceRecordingButton.addTarget(self, action: #selector(textView.voiceMessageTapped), for: .touchUpInside)
+            voiceRecordingButton.addTarget(uiView, action: #selector(NosturTextView.voiceMessageTapped), for: .touchUpInside)
             let voiceRecording = UIBarButtonItem(customView: voiceRecordingButton)
             
             if barButtons.count != 0 {
@@ -535,7 +568,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         let cameraButton = UIButton(type: .system)
         cameraButton.setImage(UIImage(systemName: "camera"), for: .normal)
         cameraButton.tintColor = UIColor(Themes.default.theme.accent)
-        cameraButton.addTarget(self, action: #selector(textView.cameraTapped), for: .touchUpInside)
+        cameraButton.addTarget(uiView, action: #selector(NosturTextView.cameraTapped), for: .touchUpInside)
         let camera = UIBarButtonItem(customView: cameraButton)
         
         if barButtons.count != 0 {
@@ -547,7 +580,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             let photoButton = UIButton(type: .system)
             photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
             photoButton.tintColor = UIColor(Themes.default.theme.accent)
-            photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
+            photoButton.addTarget(uiView, action: #selector(NosturTextView.photoPickerTapped), for: .touchUpInside)
             let photos = UIBarButtonItem(customView: photoButton)
             
             barButtons.append(fixedSpace)
@@ -557,7 +590,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
                 let videoButton = UIButton(type: .system)
                 videoButton.setImage(UIImage(systemName: "video"), for: .normal)
                 videoButton.tintColor = UIColor(Themes.default.theme.accent)
-                videoButton.addTarget(self, action: #selector(textView.videoTapped), for: .touchUpInside)
+                videoButton.addTarget(uiView, action: #selector(NosturTextView.videoTapped), for: .touchUpInside)
                 let videos = UIBarButtonItem(customView: videoButton)
                 
                 barButtons.append(fixedSpace)
@@ -573,7 +606,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             gifButton.imageView?.contentMode = .scaleAspectFit
             gifButton.sizeToFit()
             
-            gifButton.addTarget(self, action: #selector(textView.gifsTapped), for: .touchUpInside)
+            gifButton.addTarget(uiView, action: #selector(NosturTextView.gifsTapped), for: .touchUpInside)
             let gifs = UIBarButtonItem(customView: gifButton)
             
             barButtons.append(fixedSpace)
@@ -591,13 +624,13 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         uiView.inputAccessoryView = doneToolbar
     }
 
-    private func pollBarButton() -> UIBarButtonItem? {
+    private func pollBarButton(for uiView: UITextView) -> UIBarButtonItem? {
         guard pollTapped != nil else { return nil }
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: isPollActive ? "chart.bar.fill" : "chart.bar.xaxis"), for: .normal)
         button.tintColor = UIColor(Themes.default.theme.accent)
         button.accessibilityLabel = isPollActive ? "Remove poll" : "Poll"
-        button.addTarget(self, action: #selector(textView.pollTapped), for: .touchUpInside)
+        button.addTarget(uiView, action: #selector(NosturTextView.pollTapped), for: .touchUpInside)
         return UIBarButtonItem(customView: button)
     }
     
@@ -610,25 +643,19 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         var lastIsPollActive = false
         var lastHasPollAction = false
         
-        func didPasteImage(_ image: UIImage) {
-            if let gifData = image.gifData() {
-                self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, data: gifData, type: .gif, uniqueId: UUID().uuidString))
-            }
-            else {
-                guard let pngData = image.pngData() else { return }
-                self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, data: pngData, type: .png, uniqueId: UUID().uuidString))
-            }
+        func didPasteImageData(_ data: Data, type: PostedImageMeta.ImageType, remoteGIF: URL?) {
+            let id = UUID()
+            parent.pastedImages.append(PostedImageMeta(
+                index: parent.pastedImages.count, data: data, type: type,
+                uniqueId: id.uuidString, isGifPlaceholder: remoteGIF != nil
+            ))
+            guard let remoteGIF else { return }
+            URLSession.shared.dataTask(with: remoteGIF) { [weak self] data, _, _ in
+                guard let data else { return }
+                DispatchQueue.main.async { self?.didFetchActualGif((data, id)) }
+            }.resume()
         }
-        
-        func didPasteGif(_ data: Data) {
-            self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, data: data, type: .gif, uniqueId: UUID().uuidString))
-        }
-        
-        func didPastePlaceholderForGif(_ info: (UIImage, UUID)) {
-            guard let pngData = info.0.pngData() else { return }
-            self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, data: pngData, type: .png, uniqueId: info.1.uuidString, isGifPlaceholder: true))
-        }
-        
+
         func didFetchActualGif(_ info: (Data, UUID)) {
             // Replace placeholder first frame with actual gif
             self.parent.pastedImages = self.parent.pastedImages
@@ -638,10 +665,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
                     }
                     return meta
                 }
-        }
-        
-        func didPasteVideo(_ video: URL) {
-            self.parent.pastedVideos.append(PostedVideoMeta(index: self.parent.pastedVideos.count, videoURL: video))
         }
         
         func photoPickerTapped() {
@@ -687,14 +710,12 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         }
         
         var parent: HighlightedTextEditor
-        // Store offsets rather than UITextPosition objects. Replacing attributedText
-        // rebuilds the text storage, which can invalidate UITextRange on newer iOS
-        // versions and cause the insertion point to jump to the end.
-        var selectedRange: NSRange?
-        var updatingUIView = false
+        private(set) var baseFont = UIFont.nosturBody()
         private var applyingHighlighting = false
-        private var pendingEditedRange: NSRange?
-        private var lastHighlightedText: String?
+        private var pendingEdit: (range: NSRange, insertedLength: Int, oldLength: Int, mentions: [NSRange])?
+        private var dirtyHighlightRange: NSRange?
+        private var highlightWork: DispatchWorkItem?
+        private var highlightRevision = 0
         
         init(_ markdownEditorView: HighlightedTextEditor) {
             self.parent = markdownEditorView
@@ -708,47 +729,86 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         func applyHighlighting(to textView: UITextView, editedRange: NSRange? = nil) {
             guard !applyingHighlighting, textView.markedTextRange == nil else { return }
             let storage = textView.textStorage
-            if editedRange == nil, lastHighlightedText == storage.string {
-                return
-            }
-
-            let mentionRuns = textView.attributedText.nosturMentionRuns()
             let targetRange = highlightingRange(
                 in: storage.string as NSString,
                 editedRange: editedRange
             )
-            guard targetRange.length > 0 else {
-                lastHighlightedText = storage.string
-                return
-            }
+            guard targetRange.length > 0 else { return }
             let targetText = (storage.string as NSString).substring(with: targetRange)
+            applyHighlighting(to: textView, in: targetRange, text: targetText)
+        }
+
+        private func applyHighlighting(to textView: UITextView, in targetRange: NSRange, text targetText: String, matchedRanges: [[NSRange]]? = nil) {
+            let storage = textView.textStorage
             let highlightedText = HighlightedTextEditor.getHighlightedText(
                 text: targetText,
-                highlightRules: parent.highlightRules
+                highlightRules: parent.highlightRules,
+                matchedRanges: matchedRanges
             )
             guard highlightedText.string == targetText else { return }
 
             applyingHighlighting = true
             defer { applyingHighlighting = false }
+            let accent = UIColor(Themes.default.theme.accent)
+            let mentionFont = baseFont.with(.traitBold)
+            storage.enumerateAttribute(.nosturMentionPubkey, in: targetRange) { value, range, _ in
+                guard let pubkey = value as? String else { return }
+                highlightedText.addAttributes([
+                    .nosturMentionPubkey: pubkey,
+                    .foregroundColor: accent,
+                    .font: mentionFont
+                ], range: NSRange(location: range.location - targetRange.location, length: range.length))
+            }
             storage.beginEditing()
             highlightedText.enumerateAttributes(
                 in: NSRange(location: 0, length: highlightedText.length)
             ) { attributes, range, _ in
-                storage.setAttributes(
-                    attributes,
-                    range: NSRange(
-                        location: targetRange.location + range.location,
-                        length: range.length
-                    )
-                )
+                let storageRange = NSRange(location: targetRange.location + range.location, length: range.length)
+                var changedRanges: [NSRange] = []
+                storage.enumerateAttributes(in: storageRange) { existing, subrange, _ in
+                    if !NSDictionary(dictionary: existing).isEqual(to: attributes) {
+                        changedRanges.append(subrange)
+                    }
+                }
+                for changedRange in changedRanges {
+                    storage.setAttributes(attributes, range: changedRange)
+                }
             }
             storage.endEditing()
-            restoreMentionRuns(mentionRuns, in: textView)
-            lastHighlightedText = storage.string
+
         }
 
-        func didHighlightAllText(_ text: String) {
-            lastHighlightedText = text
+        func installInitialText(in textView: UITextView) {
+            let document = parent.initialDocument
+            let text = NSMutableAttributedString(attributedString: document.semanticText)
+            text.addAttributes([.font: baseFont, .foregroundColor: UIColor.label], range: NSRange(location: 0, length: text.length))
+            let storage = textView.textStorage
+            storage.setAttributedString(text)
+            if text.length > 0 {
+                textView.selectedRange = NSRange(location: text.length, length: 0)
+            }
+            if storage.length > 0 {
+                dirtyHighlightRange = NSRange(location: 0, length: storage.length)
+                scheduleHighlighting(in: textView)
+            }
+        }
+
+        func updateBaseFont(of textView: UITextView) {
+            guard textView.markedTextRange == nil else { return }
+            let font = UIFont.nosturBody()
+            guard font != baseFont else { return }
+            baseFont = font
+            textView.font = font
+            dirtyHighlightRange = NSRange(location: 0, length: textView.textStorage.length)
+            scheduleHighlighting(in: textView)
+        }
+
+        func updateBackground(of textView: UITextView) {
+            let backgroundColor: UIColor = textView.text.isEmpty && textView.markedTextRange == nil
+                ? .clear : UIColor(Themes.default.theme.listBackground)
+            if textView.backgroundColor != backgroundColor {
+                textView.backgroundColor = backgroundColor
+            }
         }
 
         private func highlightingRange(
@@ -768,85 +828,121 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             )
         }
 
-        func restoreMentionRuns(_ runs: [NosturMentionAttributeRun], in textView: UITextView) {
-            let storage = textView.textStorage
-            for run in runs {
-                guard NSMaxRange(run.range) <= storage.length,
-                      storage.attributedSubstring(from: run.range).string == run.text else { continue }
-
-                storage.addAttribute(.nosturMentionPubkey, value: run.pubkey, range: run.range)
-                storage.addAttribute(
-                    .foregroundColor,
-                    value: UIColor(Themes.default.theme.accent),
-                    range: run.range
-                )
-                storage.addAttribute(
-                    .font,
-                    value: UIFont.nosturBody().with(.traitBold),
-                    range: run.range
-                )
-            }
-        }
-
         public func textView(
             _ textView: UITextView,
             shouldChangeTextIn range: NSRange,
             replacementText text: String
         ) -> Bool {
-            pendingEditedRange = NSRange(
-                location: range.location,
-                length: (text as NSString).length
-            )
-
-            // Editing inside an attributed mention turns it back into ordinary
-            // text, preventing a changed label from retaining the old pubkey.
             let storage = textView.textStorage
-            let inspectionRange: NSRange
-            if range.length > 0 {
-                inspectionRange = range
-            } else if range.location < storage.length {
-                inspectionRange = NSRange(location: range.location, length: 1)
-            } else {
-                return true
+            let length = storage.length
+            guard range.location <= length, range.length <= length - range.location else { return true }
+            let inspectionStart = max(0, range.location - 1)
+            let inspectionEnd = min(length, NSMaxRange(range) + 1)
+            let inspection = NSRange(location: inspectionStart, length: inspectionEnd - inspectionStart)
+            let fullRange = NSRange(location: 0, length: length)
+            var mentions: [NSRange] = []
+            storage.enumerateAttribute(.nosturMentionPubkey, in: inspection) { pubkey, run, _ in
+                guard pubkey != nil else { return }
+                var mention = NSRange()
+                _ = storage.attribute(.nosturMentionPubkey, at: run.location, longestEffectiveRange: &mention, in: fullRange)
+                let touchesInterior = range.length == 0
+                    ? range.location > mention.location && range.location < NSMaxRange(mention)
+                    : NSIntersectionRange(range, mention).length > 0
+                if touchesInterior { mentions.append(mention) }
             }
-
-            var mentionRanges: [NSRange] = []
-            for location in inspectionRange.location..<NSMaxRange(inspectionRange) {
-                var effectiveRange = NSRange()
-                if storage.attribute(
-                    .nosturMentionPubkey,
-                    at: location,
-                    effectiveRange: &effectiveRange
-                ) != nil,
-                   !mentionRanges.contains(effectiveRange) {
-                    mentionRanges.append(effectiveRange)
-                }
-            }
-            for mentionRange in mentionRanges {
-                storage.removeAttribute(.nosturMentionPubkey, range: mentionRange)
-            }
+            pendingEdit = (range, text.utf16.count, length, mentions)
             return true
         }
-        
-        
+
         public func textViewDidChange(_ textView: UITextView) {
             guard !applyingHighlighting else { return }
-            textView.backgroundColor = textView.text.isEmpty && textView.markedTextRange == nil ? UIColor.clear : UIColor(Themes.default.theme.listBackground)
-            
-            // For Multistage Text Input
-            guard textView.markedTextRange == nil else { return }
+            if textView.markedTextRange != nil {
+                updateBackground(of: textView)
+                return
+            }
+            let storage = textView.textStorage
+            let edit = pendingEdit
+            pendingEdit = nil
+            if let edit, storage.length == edit.oldLength - edit.range.length + edit.insertedLength {
+                // Plain typing at a token boundary can inherit the token's attributes.
+                let inserted = NSRange(location: edit.range.location, length: edit.insertedLength)
+                var invalidated = inserted
+                if !edit.mentions.isEmpty {
+                    for mention in edit.mentions {
+                        invalidated = NSUnionRange(invalidated, adjustedRange(mention, replacing: edit.range, withLength: edit.insertedLength))
+                    }
+                }
+                if invalidated.length > 0, !edit.mentions.isEmpty || (edit.range.length == 0 && inserted.length > 0) {
+                    applyingHighlighting = true
+                    storage.removeAttribute(.nosturMentionPubkey, range: invalidated)
+                    applyingHighlighting = false
+                }
+                commitEdit(in: textView, replacing: edit.range, withLength: edit.insertedLength)
+            } else {
+                dirtyHighlightRange = NSRange(location: 0, length: storage.length)
+                reportEdit(in: textView)
+            }
+        }
 
-            let editedRange = pendingEditedRange
-            pendingEditedRange = nil
-            applyHighlighting(to: textView, editedRange: editedRange)
-            parent.text = textView.text
-            selectedRange = textView.selectedRange
-        }
-        
         public func textViewDidChangeSelection(_ textView: UITextView) {
-            guard !updatingUIView else { return }
-            selectedRange = textView.selectedRange
+            guard !applyingHighlighting else { return }
+            parent.onSelectionChange?()
         }
+
+        func commitEdit(in textView: UITextView, replacing range: NSRange, withLength length: Int) {
+            let inserted = NSRange(location: range.location, length: length)
+            if let dirty = dirtyHighlightRange {
+                dirtyHighlightRange = NSUnionRange(adjustedRange(dirty, replacing: range, withLength: length), inserted)
+            } else {
+                dirtyHighlightRange = inserted
+            }
+            reportEdit(in: textView)
+        }
+
+        private func adjustedRange(_ oldRange: NSRange, replacing edit: NSRange, withLength length: Int) -> NSRange {
+            let delta = length - edit.length
+            let start = oldRange.location < edit.location ? oldRange.location : max(edit.location, oldRange.location + delta)
+            let end = NSMaxRange(oldRange) <= edit.location ? NSMaxRange(oldRange) : max(edit.location + length, NSMaxRange(oldRange) + delta)
+            return NSRange(location: start, length: max(0, end - start))
+        }
+
+        private func reportEdit(in textView: UITextView) {
+            updateBackground(of: textView)
+            parent.onEditorChange?(textView)
+            scheduleHighlighting(in: textView)
+        }
+
+        private func scheduleHighlighting(in textView: UITextView) {
+            highlightRevision += 1
+            let revision = highlightRevision
+            highlightWork?.cancel()
+            let work = DispatchWorkItem { [weak self, weak textView] in
+                guard let self, let textView, textView.markedTextRange == nil,
+                      let dirty = self.dirtyHighlightRange else { return }
+                let text = textView.textStorage.string as NSString
+                let range = self.highlightingRange(in: text, editedRange: dirty)
+                guard range.length > 8_192 else {
+                    self.dirtyHighlightRange = nil
+                    self.applyHighlighting(to: textView, editedRange: dirty)
+                    return
+                }
+
+                let source = text.substring(with: range)
+                let patterns = self.parent.highlightRules.map(\.pattern)
+                DispatchQueue.global(qos: .userInitiated).async { [weak self, weak textView] in
+                    let sourceRange = NSRange(location: 0, length: source.utf16.count)
+                    let matches = patterns.map { $0.matches(in: source, range: sourceRange).map(\.range) }
+                    DispatchQueue.main.async {
+                        guard let self, let textView, self.highlightRevision == revision, textView.markedTextRange == nil else { return }
+                        self.dirtyHighlightRange = nil
+                        self.applyHighlighting(to: textView, in: range, text: source, matchedRanges: matches)
+                    }
+                }
+            }
+            highlightWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.035, execute: work)
+        }
+
     }
 }
 

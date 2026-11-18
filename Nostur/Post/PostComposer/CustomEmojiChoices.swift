@@ -154,8 +154,10 @@ struct CustomEmojiChoices: View {
 
     @ViewBuilder
     private func emojiButton(_ customEmoji: ComposerCustomEmoji) -> some View {
+        let query = vm.shownEmoji
         Button {
-            vm.selectCustomEmoji(customEmoji)
+            guard let query else { return }
+            vm.selectCustomEmoji(customEmoji, for: query)
         } label: {
             VStack(spacing: 6) {
                 NIP30EmojiImage(url: customEmoji.url, size: 28) { bytes in

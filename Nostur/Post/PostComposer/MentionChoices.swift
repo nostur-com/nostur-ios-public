@@ -11,7 +11,7 @@ struct MentionChoices: View {
     @ObservedObject var vm: NewPostModel
     
     var body: some View {
-        if vm.showMentioning {
+        if vm.showMentioning, let query = vm.shownMention {
             VStack(spacing: 0) {
                 HStack {
                     Text("Choose to tag:")
@@ -38,7 +38,7 @@ struct MentionChoices: View {
                     LazyVStack {
                         ForEach(vm.filteredContactSearchResults) { nrContact in
                             NRContactSearchResultRow(nrContact: nrContact, onSelect: {
-                                vm.selectContactSearchResult(nrContact)
+                                vm.selectContactSearchResult(nrContact, for: query)
                             })
                             HStack {
                                 Spacer()
