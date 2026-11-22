@@ -56,8 +56,6 @@ struct NRContentTextRendererInner: View {
     
     @State private var text: NSAttributedString?
     @State private var nxText: AttributedString?
-    @State private var textWidth: CGFloat
-    @State private var textHeight: CGFloat
     @State private var shouldShowMoreButton: Bool
     @State private var reparsedOutput: NSAttributedString? = nil
     @State private var reparsedNxOutput: AttributedString? = nil
@@ -73,9 +71,6 @@ struct NRContentTextRendererInner: View {
         self.nxViewingContext = nxViewingContext
         self.theme = theme
         self.browserPostSource = browserPostSource
-        
-        _textWidth = State(wrappedValue: availableWidth)
-        _textHeight = State(wrappedValue: 60)
         
         if nxViewingContext.isDisjoint(with: SELECTABLE_TEXT_CONTEXTS), let nxOutput = attributedStringWithPs.nxOutput { // Not selectable, but faster
             _nxText = State(wrappedValue: nxOutput)
@@ -162,7 +157,7 @@ struct NRContentTextRendererInner: View {
             else {
                 if #available(iOS 16.0, *) { // because 15.0 doesn't have sizeThatFits(_ proposal: ProposedViewSize...
                     
-                    NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight, browserPostSource: browserPostSource, onTap: {
+                    NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, browserPostSource: browserPostSource, onTap: {
                             // Expand truncated text before navigating
                             if shouldShowMoreButton {
                                 showMore = true
@@ -183,11 +178,6 @@ struct NRContentTextRendererInner: View {
                         }
                         .onReceive(receiveNotification(.dynamicTextChanged)) { _ in
                             reparseSelectableText()
-                        }
-                        .frame(height: textHeight, alignment: .topLeading) // <-- Fixes clipped text height, stuck at initial 60, this problem only happens inside LazyVStack
-                        .onChange(of: availableWidth) { newWidth in
-                            guard newWidth != textWidth else { return }
-                            textWidth = newWidth
                         }
                         .frame(maxWidth: .infinity, alignment: .topLeading)
                         .onChange(of: showMore) { [oldValue = self.showMore] newValue in

@@ -364,22 +364,16 @@ struct NRTextFixed: UIViewRepresentable {
     private let plain: Bool
     private var fontColor: Color
     private var accentColor: Color
-    @Binding var textWidth: CGFloat
-    @Binding var textHeight: CGFloat
-    private let textCutOffFixerHeight: CGFloat // to fix text cutoff need to add  some height  always as workaround
     public var onTap: (() -> Void)? = nil
     private let browserPostSource: BrowserPostSource?
     
-    init(text attributedString: NSAttributedString, plain: Bool = false, fontColor: Color, accentColor: Color, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>, browserPostSource: BrowserPostSource? = nil, onTap: (() -> Void)? = nil) {
+    init(text attributedString: NSAttributedString, plain: Bool = false, fontColor: Color, accentColor: Color, browserPostSource: BrowserPostSource? = nil, onTap: (() -> Void)? = nil) {
         self.browserPostSource = browserPostSource
         self.attributedString = attributedString
         self.onTap = onTap
         self.plain = plain
         self.fontColor = fontColor
         self.accentColor = accentColor
-        _textWidth = textWidth
-        _textHeight = textHeight
-        textCutOffFixerHeight = 4 // Need to add 4 or sometimes text cuts off, not sure why
     }
     
     func makeUIView(context: Context) -> UITextView {
@@ -423,19 +417,6 @@ struct NRTextFixed: UIViewRepresentable {
 
         view.addGestureRecognizer(tap)
         
-        if #available(iOS 16.0, *) {
-            DispatchQueue.main.async {
-                self.textHeight = attributedString.boundingRect(
-                    with: CGSize(width: self.textWidth, height: .greatestFiniteMagnitude),
-                    options: [.usesLineFragmentOrigin, .usesFontLeading],
-                    context: nil
-                ).height + textCutOffFixerHeight
-            }
-        }
-        else {
-            self.setHeightIfNeeded(uiView: view)
-        }
-        
         return view
     }
 
@@ -462,47 +443,18 @@ struct NRTextFixed: UIViewRepresentable {
         if (self.attributedString != uiView.attributedText) {
             uiView.attributedText = self.attributedString
             (uiView as? NIP30InlineEmojiTextView)?.updateCustomEmojiOverlays()
-        
-            if #available(iOS 16.0, *) {
-                DispatchQueue.main.async {
-                    self.textHeight = attributedString.boundingRect(
-                        with: CGSize(width: self.textWidth, height: .greatestFiniteMagnitude),
-                        options: [.usesLineFragmentOrigin, .usesFontLeading],
-                        context: nil
-                    ).height + textCutOffFixerHeight
-                }
-            }
-            else {
-                self.setHeightIfNeeded(uiView: uiView)
-            }
         }
     }
-    
-    private func setHeightIfNeeded(uiView: UITextView) {
-//      DispatchQueue.main.async {
-//          let idealSize = uiView.sizeThatFits(CGSize(
-//            width: self.textWidth,
-//            height: .infinity
-//          ))
-//          if idealSize.height > 60 && height != idealSize.height {
-//              self.textHeight = idealSize.height
-//          }
-//      }
-    }
-    
+
     @available(iOS 16.0, *)
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
-//        let dimensions = proposal.replacingUnspecifiedDimensions(
-//           by: CGSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
-//        )
+        // Measure at the width actually assigned by SwiftUI, including reply
+        // indentation. A cached height can lose a line when the width changes.
+        guard let width = proposal.width, width.isFinite, width > 0 else { return nil }
+        let size = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: ceil(size.height))
+    }
 
-        return CGSize(width: textWidth, height: textHeight)
-    }
-    
-    func sizeThatFits(_ proposal: CGSize, uiView: UITextView) -> CGSize {
-        return CGSize(width: textWidth, height: textHeight)
-    }
-    
     func makeCoordinator() -> NRTextFixed.Coordinator {
             Coordinator(self)
     }
@@ -632,7 +584,7 @@ struct NRTextFixedTester: View {
                 .frame(width: textWidth, height: textHeight)
                 .fixedSize(horizontal: false, vertical: true)
             
-            NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight)
+            NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor)
             .onAppear {
                 textWidth = availableWidth - 20
                 text = NRTextParser.shared.parseText(fastTags: nrPost.fastTags, text: nrPost.content ?? "").output ?? NSAttributedString(string: "")
