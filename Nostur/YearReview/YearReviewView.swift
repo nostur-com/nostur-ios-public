@@ -1599,6 +1599,11 @@ private struct YearReviewMonthActionsView: View {
         if month.own.completed + month.others.completed > 0 { return "Continue month" }
         return "Fetch month"
     }
+    private var showsUpdateAction: Bool {
+        let hasHistory = month.own.completed + month.others.completed + month.own.failed + month.others.failed > 0
+        let primaryIsUpdate = month.own.finished && month.others.finished && !model.hasNewHistorySources(in: month.month)
+        return hasHistory && !primaryIsUpdate
+    }
 
     var body: some View {
         NavigationStack {
@@ -1617,6 +1622,15 @@ private struct YearReviewMonthActionsView: View {
                         dismiss()
                     } label: { Label(actionTitle, systemImage: "arrow.down.circle") }
                     .disabled(model.isRunning && (!model.isDownloading || month.own.active || month.others.active))
+                    if showsUpdateAction {
+                        Button {
+                            model.fetchMonth(month.month, refresh: true)
+                            dismiss()
+                        } label: {
+                            Label("Check for updates", systemImage: "arrow.clockwise")
+                        }
+                        .disabled(model.isRunning)
+                    }
                 }
                 if !month.failures.isEmpty {
                     Section {
