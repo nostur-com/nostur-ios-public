@@ -166,10 +166,6 @@ struct EmbeddedVideoView: View {
                             .frame(width: 90, height: 90)
                             .opacity(0.8)
                             .foregroundColor(theme.accent)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                vm.startPlaying()
-                            }
                     }
                     else {
                         HStack(spacing: 5) {
@@ -182,6 +178,11 @@ struct EmbeddedVideoView: View {
                                 }
                         }
                     }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard vm.downloadProgress == 0 else { return }
+                    vm.startPlaying()
                 }
         case .playingInPIP:
             Color.black
@@ -229,10 +230,6 @@ struct EmbeddedVideoView: View {
                             .frame(width: 90, height: 90)
                             .opacity(0.8)
                             .foregroundColor(theme.accent)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                vm.startPlaying()
-                            }
                     }
                     else {
                         HStack(spacing: 5) {
@@ -255,6 +252,11 @@ struct EmbeddedVideoView: View {
                             .background(.black)
                             .padding(5)
                     }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard vm.downloadProgress == 0 else { return }
+                    vm.startPlaying()
                 }
 
         default:
