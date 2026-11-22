@@ -1494,6 +1494,82 @@ final class NXFeedViewportTests: XCTestCase {
         stabilizer.suspendPositionTracking()
     }
 
+    func testRetainedPrependRecoveryRequiresMatchingRowsAndStaysClearOfTail() {
+        XCTAssertTrue(NXFeedViewport.isPrependKeepingRows(
+            oldIDs: ["reading", "older"], newIDs: ["new", "reading", "older"], anchorID: "reading"
+        ))
+        XCTAssertFalse(NXFeedViewport.isPrependKeepingRows(
+            oldIDs: ["reading", "older"], newIDs: ["new", "reading", "replacement"], anchorID: "reading"
+        ))
+        XCTAssertFalse(NXFeedViewport.isPrependKeepingRows(
+            oldIDs: ["reading", "older"], newIDs: ["new", "reading", "older"], anchorID: "older"
+        ))
+        XCTAssertFalse(NXFeedViewport.shouldApplyPrependOffset(
+            offsetAtStart: -118, currentOffset: 4422.7, correction: 1606.7,
+            contentHeight: 10006, contentHeightAtStart: 4507, viewportHeight: 956
+        ))
+        XCTAssertTrue(NXFeedViewport.shouldApplyPrependOffset(
+            offsetAtStart: -118, currentOffset: 4422.7, correction: 1606.7,
+            contentHeight: 10006, contentHeightAtStart: 4507, viewportHeight: 956,
+            hasStableRetainedPrependGeometry: true
+        ))
+        XCTAssertFalse(NXFeedViewport.shouldApplyPrependOffset(
+            offsetAtStart: -118, currentOffset: 4422.7, correction: 5000,
+            contentHeight: 10006, contentHeightAtStart: 4507, viewportHeight: 956,
+            hasStableRetainedPrependGeometry: true
+        ))
+    }
+
+    @MainActor
+    func testMorningCatchUpKeepsFirstOldPostAfterLargePrependResizes() async throws {
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 460, height: 956), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        collection.contentInset = UIEdgeInsets(top: 118, left: 0, bottom: 83, right: 0)
+        let source = NXFeedAppendTestSource()
+        source.count = 28
+        source.rowHeights = Array(repeating: 161, count: 28)
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        collection.delegate = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = -118
+        collection.layoutIfNeeded()
+        let oldIDs = (0..<28).map { "old-\($0)" }
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        stabilizer.updateItemIDs(oldIDs)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), "old-0")
+        stabilizer.performAnchored(reason: NXFeedViewport.prependCoverReason) {
+            source.count = 72
+            source.rowHeights = Array(repeating: CGFloat(4540.6666667 / 44), count: 44)
+                + Array(repeating: 161, count: 28)
+            collection.reloadData()
+            collection.layoutIfNeeded()
+            stabilizer.updateItemIDs((0..<44).map { "new-\($0)" } + oldIDs)
+        }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(collection.contentOffset.y, 4422.6666667, accuracy: 1)
+        source.rowHeights = Array(repeating: CGFloat(6147.3333333 / 44), count: 44)
+            + Array(repeating: CGFloat(3858.6666667 / 28), count: 28)
+        layout.invalidateLayout()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 4422.6666667
+        try await Task.sleep(nanoseconds: 300_000_000)
+        XCTAssertEqual(collection.contentOffset.y, 6029.3333333, accuracy: 1)
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), "old-0")
+        XCTAssertFalse(stabilizer.hasActivePrependCover)
+        stabilizer.suspendPositionTracking()
+    }
+
     @MainActor
     func testTailTrimmingPrependFinishesPinAfterInsertedRowsGrow() async throws {
         let layout = UICollectionViewFlowLayout()

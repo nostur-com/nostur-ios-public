@@ -732,6 +732,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                         removedCount: removedCount,
                         anchorID: post.id
                     ),
+                tracksRetainedPrepend: NXFeedViewport.shouldCoverPrepend(updateReasons: updateReasons)
+                    && leadingRowsBefore == leadingNonPostRowCount
+                    && NXFeedViewport.isPrependKeepingRows(oldIDs: oldIDs, newIDs: itemIDs, anchorID: post.id),
+                expectedRetainedPrependCellCount: cellsBefore.map { $0 + addedCount },
                 expectedBannerCellCount: leadingRowsBefore != leadingNonPostRowCount
                     ? cellsBefore.map { $0 + addedCount - removedCount + leadingNonPostRowCount - leadingRowsBefore }
                     : nil
@@ -759,6 +763,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         prependMinimumCellCount: Int? = nil,
         limitsPrependTravel: Bool = true,
         tracksTrimmedPrepend: Bool = false,
+        tracksRetainedPrepend: Bool = false,
+        expectedRetainedPrependCellCount: Int? = nil,
         expectedBannerCellCount: Int? = nil
     ) {
         anchorGeneration += 1
@@ -785,7 +791,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             guard let self else { return }
             var didBringOnScreen = false
             var progress = NXFeedSettleProgress()
-            var trimmedPrependProgress = NXFeedSettleProgress()
+            var committedPrependProgress = NXFeedSettleProgress()
 #if DEBUG
             var offsetAfterYield: CGFloat?
             var correctionCount = 0
@@ -847,9 +853,13 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     scrollView.layoutIfNeeded()
                 }
 
-                if tracksTrimmedPrepend {
-                    trimmedPrependProgress.observe(
-                        geometry: cellsLanded ? self.settleGeometry(anchorID: anchor.id, in: scrollView) : nil,
+                if tracksTrimmedPrepend || tracksRetainedPrepend {
+                    // Count footer cells too; the minimum post count intentionally
+                    // excludes them and cannot establish an exact pure snapshot.
+                    let exactSnapshotLanded = !tracksRetainedPrepend
+                        || expectedRetainedPrependCellCount.map { renderedCount == $0 } == true
+                    committedPrependProgress.observe(
+                        geometry: cellsLanded && exactSnapshotLanded ? self.settleGeometry(anchorID: anchor.id, in: scrollView) : nil,
                         corrected: false
                     )
                 }
@@ -864,7 +874,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                         prependTravel: prependContentHeightAtStart.map {
                             (offsetAtStart: startingOffset ?? scrollView.contentOffset.y, contentHeightAtStart: $0)
                         },
-                        hasStableTrimmedPrependGeometry: trimmedPrependProgress.stableSamples >= 3
+                        hasStableTrimmedPrependGeometry: tracksTrimmedPrepend && committedPrependProgress.stableSamples >= 3,
+                        hasStableRetainedPrependGeometry: tracksRetainedPrepend && committedPrependProgress.stableSamples >= 3
                     )
                 } else {
                     result = .unavailable
@@ -1022,7 +1033,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         in scrollView: UIScrollView,
         bringOnScreen: Bool = false,
         prependTravel: (offsetAtStart: CGFloat, contentHeightAtStart: CGFloat)? = nil,
-        hasStableTrimmedPrependGeometry: Bool = false
+        hasStableTrimmedPrependGeometry: Bool = false,
+        hasStableRetainedPrependGeometry: Bool = false
     ) -> RestoreResult {
         guard let itemIndex = itemIDs.firstIndex(of: anchor.id) else { return .unavailable }
         let sectionCounts = sectionCounts(in: scrollView)
@@ -1065,7 +1077,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
             contentHeight: scrollView.contentSize.height,
             contentHeightAtStart: prependTravel.contentHeightAtStart,
             viewportHeight: scrollView.bounds.height,
-            hasStableTrimmedPrependGeometry: hasStableTrimmedPrependGeometry
+            hasStableTrimmedPrependGeometry: hasStableTrimmedPrependGeometry,
+            hasStableRetainedPrependGeometry: hasStableRetainedPrependGeometry
            ) {
             guard let clamped = NXFeedViewport.prependOffsetClamp(
                 offsetAtStart: prependTravel.offsetAtStart,

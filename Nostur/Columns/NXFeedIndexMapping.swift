@@ -278,6 +278,14 @@ enum NXFeedViewport {
             && newIDs.dropFirst(insertedCount).elementsEqual(oldIDs.dropLast(removedCount))
     }
 
+    /// A pure prepend retains the previous first row and all rows after it.
+    /// Its measured anchor can move by multiple screens as inserted rows resolve.
+    static func isPrependKeepingRows(oldIDs: [String], newIDs: [String], anchorID: String) -> Bool {
+        !oldIDs.isEmpty && newIDs.count > oldIDs.count
+            && oldIDs.first == anchorID
+            && newIDs.suffix(oldIDs.count).elementsEqual(oldIDs)
+    }
+
     /// Furthest `contentOffset.y` a prepend may use: where it started, plus the
     /// height the list has actually gained, plus a small estimate slack.
     static func prependOffsetLimit(
@@ -306,7 +314,8 @@ enum NXFeedViewport {
         contentHeightAtStart: CGFloat,
         slack: CGFloat = 80,
         viewportHeight: CGFloat = 956,
-        hasStableTrimmedPrependGeometry: Bool = false
+        hasStableTrimmedPrependGeometry: Bool = false,
+        hasStableRetainedPrependGeometry: Bool = false
     ) -> Bool {
         let allowedOffset = prependOffsetLimit(
             offsetAtStart: offsetAtStart,
@@ -330,6 +339,13 @@ enum NXFeedViewport {
         }
         let clearOfTail = projected <= contentHeight - viewport * 1.5
         guard clearOfTail else { return false }
+        // A catch-up can insert many screens of posts while old estimates shrink.
+        // Once the exact pure-prepend snapshot and anchor geometry are stable,
+        // net content growth is no longer a valid bound on that anchor's travel.
+        if hasStableRetainedPrependGeometry,
+           currentOffset > offsetAtStart + slack {
+            return true
+        }
         // The first sample is still at the pre-insert offset, so a pin taller
         // than the screen is allowed. Once that pin has moved us, only a short
         // correction may continue. Another full screen is a stale frame.
