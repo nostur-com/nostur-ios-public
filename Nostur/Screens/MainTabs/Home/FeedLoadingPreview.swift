@@ -5,6 +5,7 @@ import UIKit
 /// page is revealed. It does not instantiate posts or start feed requests.
 struct FeedLoadingPreview<Title: View>: View {
     @Environment(\.theme) private var theme
+    @Environment(\.feedPageIsExposed) private var isExposed
     @ObservedObject private var settings: SettingsStore = .shared
     private let fullWidthOverride: Bool?
     private let title: Title
@@ -17,43 +18,47 @@ struct FeedLoadingPreview<Title: View>: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                HStack(spacing: 12) {
-                    title
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                    Spacer(minLength: 8)
-                    ProgressView()
-                        .accessibilityLabel("Loading feed")
-                }
-                .padding(16)
-
-                if let message {
-                    Text(message)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 12)
-                }
-
+        if isExposed {
+            GeometryReader { geometry in
                 VStack(spacing: 0) {
-                    ForEach(0..<5) { index in
-                        FeedLoadingPreviewRow(fullWidth: fullWidthOverride ?? settings.fullWidthImages,
-                                              lineCount: [3, 2, 4, 2, 3][index],
-                                              showFooter: settings.rowFooterEnabled,
-                                              footerButtons: settings.footerButtons.map { String($0) })
-                            .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 12) {
+                        title
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(1)
+                        Spacer(minLength: 8)
+                        ProgressView()
+                            .accessibilityLabel("Loading feed")
                     }
+                    .padding(16)
+
+                    if let message {
+                        Text(message)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 12)
+                    }
+
+                    VStack(spacing: 0) {
+                        ForEach(0..<5) { index in
+                            FeedLoadingPreviewRow(fullWidth: fullWidthOverride ?? settings.fullWidthImages,
+                                                  lineCount: [3, 2, 4, 2, 3][index],
+                                                  showFooter: settings.rowFooterEnabled,
+                                                  footerButtons: settings.footerButtons.map { String($0) })
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .accessibilityHidden(true)
                 }
-                .accessibilityHidden(true)
+                .frame(width: geometry.size.width, alignment: .topLeading)
+                .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(width: geometry.size.width, alignment: .topLeading)
-            .fixedSize(horizontal: false, vertical: true)
+            .background(theme.listBackground)
+            .clipped()
+            .accessibilityElement(children: .combine)
+        } else {
+            Color.clear
         }
-        .background(theme.listBackground)
-        .clipped()
-        .accessibilityElement(children: .combine)
     }
 }
 

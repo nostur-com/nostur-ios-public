@@ -109,7 +109,7 @@ private struct FeedPanTestHost: View {
         List {
             FeedPanTestText().frame(height: 200)
         }
-        .modifier(FeedSwipeModifier(motion: motion, isEnabled: true, canSwipe: { _ in true }, onSwipe: { _ in }))
+        .modifier(FeedSwipeModifier(motion: motion, isEnabled: true, canSwipeBackward: true, canSwipeForward: true, onSwipe: { _ in }))
     }
 }
 

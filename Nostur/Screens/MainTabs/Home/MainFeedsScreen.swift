@@ -134,19 +134,6 @@ struct MainFeedsScreen: View {
                            listId: selectedSubTab == "List" ? selectedList?.subscriptionId ?? selectedListId : nil)
     }
 
-    private func pagePosition(for feed: FeedSwipeSelection) -> Int {
-        let feeds = orderedFeeds
-        guard let index = feeds.firstIndex(of: feed),
-              let selectedIndex = feeds.firstIndex(of: selectedFeed) else {
-            return feed == selectedFeed ? 0 : 1_000
-        }
-        return index - selectedIndex
-    }
-
-    private func canSwipeFeed(by offset: Int) -> Bool {
-        selectedTab == "Main" && selectedFeed.adjacent(in: orderedFeeds, offset: offset) != nil
-    }
-
     private func swipeFeed(by offset: Int) {
         guard selectedTab == "Main",
               let next = selectedFeed.adjacent(in: orderedFeeds, offset: offset) else { return }
@@ -183,6 +170,18 @@ struct MainFeedsScreen: View {
     }
     
     var body: some View {
+        // Decode/sort once per screen update, never once per page or pan sample.
+        let feedOrder = orderedFeeds
+        let selection = selectedFeed
+        let selectedIndex = feedOrder.firstIndex(of: selection)
+        let pagePositions = feedOrder.enumerated().reduce(into: [String: Int]()) { positions, entry in
+            if let selectedIndex { positions[entry.element.id] = entry.offset - selectedIndex }
+        }
+        let pagePosition = { (feed: FeedSwipeSelection) in
+            pagePositions[feed.id] ?? (feed == selection ? 0 : 1_000)
+        }
+        let canSwipeBackward = selectedIndex.map { $0 > 0 } ?? false
+        let canSwipeForward = selectedIndex.map { $0 + 1 < feedOrder.count } ?? false
 #if DEBUG
         let _ = nxLogChanges(of: Self.self)
 #endif
@@ -402,7 +401,7 @@ struct MainFeedsScreen: View {
                     .onReceive(receiveNotification(.didSend)) { _ in
                         didSend = true
                     }
-                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Following")), motion: feedSwipeMotion))
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(.init(tab: "Following")), motion: feedSwipeMotion))
                 }
                 else {
                     if let followingConfig {
@@ -411,7 +410,7 @@ struct MainFeedsScreen: View {
                         }
                         // Keep inactive columns mounted, but only the visible one may receive scroll/hits
                         // so tabBarMinimizeBehavior can bind to a single primary scroller.
-                        .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Following")), motion: feedSwipeMotion))
+                        .modifier(FeedPagePosition(relativeIndex: pagePosition(.init(tab: "Following")), motion: feedSwipeMotion))
                         .allowsHitTesting(selectedSubTab == "Following")
                         .zIndex(selectedSubTab == "Following" ? 1 : 0)
                     }
@@ -421,7 +420,7 @@ struct MainFeedsScreen: View {
                     AvailableWidthContainer {
                         NXColumnView(config: pictureConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Picture", showLoadingPreview: true)
                     }
-                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Picture")), motion: feedSwipeMotion))
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(.init(tab: "Picture")), motion: feedSwipeMotion))
                     .allowsHitTesting(selectedSubTab == "Picture")
                     .zIndex(selectedSubTab == "Picture" ? 1 : 0)
                 }
@@ -430,7 +429,7 @@ struct MainFeedsScreen: View {
                     AvailableWidthContainer {
                         NXColumnView(config: yakConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Yak", showLoadingPreview: true)
                     }
-                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Yak")), motion: feedSwipeMotion))
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(.init(tab: "Yak")), motion: feedSwipeMotion))
                     .allowsHitTesting(selectedSubTab == "Yak")
                     .zIndex(selectedSubTab == "Yak" ? 1 : 0)
                 }
@@ -439,7 +438,7 @@ struct MainFeedsScreen: View {
                     AvailableWidthContainer {
                         NXColumnView(config: vineConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Vine", showLoadingPreview: true)
                     }
-                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Vine")), motion: feedSwipeMotion))
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(.init(tab: "Vine")), motion: feedSwipeMotion))
                     .allowsHitTesting(selectedSubTab == "Vine")
                     .zIndex(selectedSubTab == "Vine" ? 1 : 0)
                 }
@@ -451,7 +450,7 @@ struct MainFeedsScreen: View {
                         NXColumnView(config: config, isVisible: isActiveList, showLoadingPreview: true)
                     }
                     .id(config.id)
-                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "List", listId: config.id)), motion: feedSwipeMotion))
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(.init(tab: "List", listId: config.id)), motion: feedSwipeMotion))
                     .allowsHitTesting(isActiveList)
                     .zIndex(isActiveList ? 1 : 0)
                 }
@@ -462,7 +461,7 @@ struct MainFeedsScreen: View {
                         NXColumnView(config: exploreConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Explore", showLoadingPreview: true)
                     }
                     .id(exploreConfig.id)
-                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Explore")), motion: feedSwipeMotion))
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(.init(tab: "Explore")), motion: feedSwipeMotion))
                     .allowsHitTesting(selectedSubTab == "Explore")
                     .zIndex(selectedSubTab == "Explore" ? 1 : 0)
                 }
@@ -481,7 +480,7 @@ struct MainFeedsScreen: View {
                         }
                     }
                 }
-                .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "DiscoverLists")), motion: feedSwipeMotion))
+                .modifier(FeedPagePosition(relativeIndex: pagePosition(.init(tab: "DiscoverLists")), motion: feedSwipeMotion))
 
                 AvailableWidthContainer {
                     if selectedSubTab == "Streams" {
@@ -497,7 +496,7 @@ struct MainFeedsScreen: View {
                         }
                     }
                 }
-                .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Streams")), motion: feedSwipeMotion))
+                .modifier(FeedPagePosition(relativeIndex: pagePosition(.init(tab: "Streams")), motion: feedSwipeMotion))
 
                 // Only instantiate discovery content after selection, as before.
                 // An inactive page previews its name without starting network work.
@@ -526,10 +525,10 @@ struct MainFeedsScreen: View {
                             }
                         }
                     }
-                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: feed), motion: feedSwipeMotion))
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(feed), motion: feedSwipeMotion))
                 }
             }
-            .modifier(FeedSwipeModifier(motion: feedSwipeMotion, isEnabled: selectedTab == "Main", canSwipe: canSwipeFeed, onSwipe: swipeFeed))
+            .modifier(FeedSwipeModifier(motion: feedSwipeMotion, isEnabled: selectedTab == "Main", canSwipeBackward: canSwipeBackward, canSwipeForward: canSwipeForward, onSwipe: swipeFeed))
             .modifier {
     
                 // On 26.0 the new post button is integrated in the new tab bar (or in the custom tabbar on Tahoe)
@@ -667,7 +666,7 @@ struct MainFeedsScreen: View {
             if #available(iOS 26.0, *) {
                 $0.toolbar {
                     ToolbarTitleMenu {
-                        ForEach(orderedFeeds) { feed in
+                        ForEach(feedOrder) { feed in
                             Button {
                                 selectFeed(feed)
                             } label: {

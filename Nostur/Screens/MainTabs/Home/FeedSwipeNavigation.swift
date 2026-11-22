@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import UIKit
 
 struct FeedSwipeSelection: Equatable, Identifiable {
@@ -18,14 +19,31 @@ struct FeedSwipeSelection: Equatable, Identifiable {
 /// Dragging must not rebuild the feed screen or change column visibility.
 @MainActor
 final class FeedSwipeMotion: ObservableObject {
-    @Published var translation: CGFloat = 0
+    @Published private(set) var translation: CGFloat = 0
+
+    func updateTranslation(_ value: CGFloat) {
+        guard translation != value else { return }
+        translation = value
+    }
+}
+
+private struct FeedPageExposureKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    var feedPageIsExposed: Bool {
+        get { self[FeedPageExposureKey.self] }
+        set { self[FeedPageExposureKey.self] = newValue }
+    }
 }
 
 struct FeedPagePosition: ViewModifier {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let relativeIndex: Int
-    @ObservedObject var motion: FeedSwipeMotion
+    let motion: FeedSwipeMotion
+    @State private var translation: CGFloat = 0
 
     func body(content: Content) -> some View {
         GeometryReader { geometry in
@@ -33,10 +51,19 @@ struct FeedPagePosition: ViewModifier {
                 .frame(width: geometry.size.width, height: geometry.size.height)
                 .background(theme.listBackground)
                 .offset(x: UIDevice.current.userInterfaceIdiom == .phone
-                        ? CGFloat(relativeIndex) * geometry.size.width + motion.translation : 0)
+                        ? CGFloat(relativeIndex) * geometry.size.width + (abs(relativeIndex) <= 1 ? translation : 0) : 0)
         }
         .opacity(UIDevice.current.userInterfaceIdiom == .phone
                  ? (abs(relativeIndex) <= 1 ? 1 : 0) : (relativeIndex == 0 ? 1 : 0))
+        .environment(\.feedPageIsExposed, abs(relativeIndex) <= 1)
+        .onReceive(motion.$translation.removeDuplicates()) { value in
+            guard abs(relativeIndex) <= 1, translation != value else { return }
+            translation = value
+        }
+        .onValueChange(relativeIndex) { _, newIndex in
+            guard abs(newIndex) <= 1, translation != motion.translation else { return }
+            translation = motion.translation
+        }
         .allowsHitTesting(relativeIndex == 0)
         .accessibilityHidden(relativeIndex != 0)
         .transaction { if reduceMotion { $0.animation = nil } }
@@ -45,9 +72,10 @@ struct FeedPagePosition: ViewModifier {
 
 struct FeedSwipeModifier: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @ObservedObject var motion: FeedSwipeMotion
+    let motion: FeedSwipeMotion
     let isEnabled: Bool
-    let canSwipe: (Int) -> Bool
+    let canSwipeBackward: Bool
+    let canSwipeForward: Bool
     let onSwipe: (Int) -> Void
 
     func body(content: Content) -> some View {
@@ -61,19 +89,24 @@ struct FeedSwipeModifier: ViewModifier {
                 .allowsHitTesting(false)
             }
         .clipped()
-        .onDisappear { motion.translation = 0 }
+        .onDisappear { motion.updateTranslation(0) }
+    }
+
+    private func canSwipe(_ direction: Int) -> Bool {
+        direction > 0 ? canSwipeForward : canSwipeBackward
     }
 
     private func dragChanged(_ translation: CGFloat) {
         let direction = translation < 0 ? 1 : -1
-        motion.translation = canSwipe(direction) ? translation : translation * 0.18
+        motion.updateTranslation(canSwipe(direction) ? translation : translation * 0.18)
     }
 
     private func dragEnded(translation: CGFloat, velocity: CGFloat, width: CGFloat, cancelled: Bool) {
+        guard motion.translation != 0 else { return }
         let direction = FeedPanGesturePolicy.destination(translation: translation, velocity: velocity,
                                                         width: width, cancelled: cancelled)
         withAnimation(reduceMotion ? .easeOut(duration: 0.1) : .interactiveSpring(response: 0.32, dampingFraction: 1)) {
-            motion.translation = 0
+            motion.updateTranslation(0)
             if let direction, canSwipe(direction) { onSwipe(direction) }
         }
     }
@@ -195,7 +228,8 @@ struct FeedPanAttachment: UIViewRepresentable {
             switch recognizer.state {
             case .began, .changed: onChanged(translation)
             case .ended: onEnded(translation, recognizer.velocity(in: nil).x, marker?.bounds.width ?? 0, false)
-            case .cancelled, .failed: onEnded(translation, 0, marker?.bounds.width ?? 0, true)
+            case .cancelled: onEnded(translation, 0, marker?.bounds.width ?? 0, true)
+            case .failed: break // Rejected vertical scrolling must not publish paging updates.
             default: break
             }
         }
