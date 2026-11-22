@@ -445,15 +445,15 @@ final class YearReviewModel {
         archivedCounts.fromOthers += result.addedFromOthers
     }
 
-    func fetchMonth(_ month: Int) {
+    func fetchMonth(_ month: Int, refresh: Bool = false) {
         if isRunning {
-            if isDownloading { queuedMonth = month }
+            if isDownloading && !refresh { queuedMonth = month }
             return
         }
-        start(download: true, resume: true, month: month)
+        start(download: true, resume: true, month: month, refreshMonth: refresh)
     }
 
-    func start(download: Bool, resume: Bool = false, month: Int? = nil) {
+    func start(download: Bool, resume: Bool = false, month: Int? = nil, refreshMonth: Bool = false) {
         refreshHistoryRelayAuth()
         guard !isConfiguring, !isRunning, !isDeleting, let archive, !owner.isEmpty else { return }
         if download && selectedRelays.isEmpty {
@@ -531,7 +531,7 @@ final class YearReviewModel {
                     var job = previous ?? YearReviewCollection(owner: owner, period: period, relays: sources, trusted: trust)
                     job.reconcileRelays(sources, month: month)
                     job.invalidEvents += invalidSeedEvents
-                    if let month { job.prepareMonth(month) }
+                    if let month { job.prepareMonth(month, refresh: refreshMonth) }
                     if month == nil && job.monthScope == nil && resume && job.pending.isEmpty && !job.failed.isEmpty {
                         let retryCategories = Set(job.failed.map(\.category))
                         job.pending = job.failed

@@ -240,6 +240,29 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(restored.monthScope, 1)
     }
 
+    func testMonthRefreshRechecksSuccessfulSourcesAlongsideFailures() throws {
+        var job = YearReviewCollection(owner: owner, period: period,
+            relays: [.new(url: "wss://one.example", read: true), .new(url: "wss://two.example", read: true)], trusted: [])
+        let initial = job
+        let monthWork = job.pending.filter { initial.belongsToMonth($0, month: 1) }
+        let completed = try XCTUnwrap(monthWork.first)
+        let failed = try XCTUnwrap(monthWork.last)
+        job.pending.removeAll { $0 == completed || $0 == failed }
+        job.failed = [failed]
+        job.recordMonthlyQuery(completed)
+        job.monthlyReceived = ["1": 42]
+        let before = job.monthProgress(active: [])
+
+        job.prepareMonth(1, refresh: true)
+
+        XCTAssertEqual(job.pending.filter { job.belongsToMonth($0, month: 1) }, monthWork)
+        XCTAssertTrue(job.failed.isEmpty)
+        XCTAssertEqual(job.monthProgress(active: []).filter { $0.month != 1 }, before.filter { $0.month != 1 })
+        XCTAssertEqual(job.monthlyReceived?["1"], 42)
+        XCTAssertEqual(job.monthlyQueries?["1-own"], 1)
+        XCTAssertEqual(job.monthScope, 1)
+    }
+
     func testMonthRefreshFailureDoesNotFailOtherMonths() throws {
         var job = YearReviewCollection(owner: owner, period: period,
             relays: [.new(url: "wss://relay.example", read: true)], trusted: [])

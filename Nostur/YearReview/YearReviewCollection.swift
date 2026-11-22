@@ -262,14 +262,16 @@ struct YearReviewCollection: Codable, Equatable, Sendable {
         return Self.isPrimary(work.category) && calendar.component(.month, from: Date(timeIntervalSince1970: Double(work.until))) == month
     }
 
-    /// Retry only failed buckets, retaining successful requests and all other months.
-    mutating func prepareMonth(_ month: Int) {
+    /// Continue unfinished work, or recheck every selected source when refreshing.
+    /// Both actions preserve the other months and previously archived events.
+    mutating func prepareMonth(_ month: Int, refresh: Bool = false) {
         period.includeMonth(month)
         let snapshot = self
+        if refresh { pending.removeAll { snapshot.belongsToMonth($0, month: month) } }
         let retry = failed.filter { snapshot.belongsToMonth($0, month: month) }
         failed.removeAll { snapshot.belongsToMonth($0, month: month) }
         sourceFailures?.removeAll { snapshot.belongsToMonth($0.work, month: month) }
-        pending.append(contentsOf: retry)
+        if !refresh { pending.append(contentsOf: retry) }
         if !pending.contains(where: { belongsToMonth($0, month: month) }) {
             let fresh = Self(owner: owner, period: period, relays: relays.map(\.relayData), trusted: trusted)
             pending.append(contentsOf: fresh.pending.filter { fresh.belongsToMonth($0, month: month) })
