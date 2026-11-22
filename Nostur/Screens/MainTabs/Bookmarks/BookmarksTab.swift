@@ -53,15 +53,19 @@ struct BookmarksTab: View {
                 ZStack {
                     theme.listBackground
                     
-                    AvailableWidthContainer {
-                        switch selectedSubTab {
-                            case "Bookmarks":
-                                BookmarksScreen(vm: bookmarksVM, isAtRoot: navPath.count == 0)
-                            case "Private Notes":
-                                PrivateNotesScreen(isAtRoot: navPath.count == 0)
-                            default:
-                                Text("🥪")
+                    GeometryReader { viewport in
+                        Group {
+                            switch selectedSubTab {
+                                case "Bookmarks":
+                                    BookmarksScreen(vm: bookmarksVM, isAtRoot: navPath.count == 0)
+                                case "Private Notes":
+                                    PrivateNotesScreen(isAtRoot: navPath.count == 0)
+                                default:
+                                    Text("🥪")
+                            }
                         }
+                        .frame(width: viewport.size.width)
+                        .environment(\.availableWidth, viewport.size.width)
                     }
                     .padding(.top, GUTTER)
                 }
