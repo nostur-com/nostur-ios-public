@@ -23,6 +23,9 @@ struct MainFeedsScreen: View {
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @AppStorage("selected_listId") private var selectedListId = ""
+    @AppStorage("home_feed_order") private var storedFeedOrder = "[]"
+    @State private var showingFeedOrder = false
+    @State private var feedSwipeMotion = FeedSwipeMotion()
     
     @AppStorage("enable_zapped_feed") private var enableZappedFeed: Bool = true
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
@@ -96,6 +99,88 @@ struct MainFeedsScreen: View {
     }
     
     @State private var showLiveEventsBanner = false
+
+    private var availableFeeds: [FeedSwipeSelection] {
+        let hasFollowing = la.viewFollowingPublicKeys.count > 10
+        var tabs = ["Following"]
+        if hasFollowing && enablePictureFeed { tabs.append("Picture") }
+        if hasFollowing && enableYakFeed { tabs.append("Yak") }
+        if hasFollowing && enableVineFeed { tabs.append("Vine") }
+        // Match the title menu on current iOS and the tab strip on older iOS.
+        if AVAILABLE_26 && hasFollowing && enableStreamsFeed { tabs.append("Streams") }
+        var feeds = tabs.map { FeedSwipeSelection(tab: $0) }
+        feeds += lists.map { FeedSwipeSelection(tab: "List", listId: $0.subscriptionId) }
+        if hasFollowing && enableEmojiFeed { feeds.append(.init(tab: "Emoji")) }
+        if hasFollowing && enableZappedFeed { feeds.append(.init(tab: "Zapped")) }
+        if hasFollowing && enableHotFeed { feeds.append(.init(tab: "Hot")) }
+        if enableDiscoverListsFeed { feeds.append(.init(tab: "DiscoverLists")) }
+        if !AVAILABLE_26 && hasFollowing && enableStreamsFeed { feeds.append(.init(tab: "Streams")) }
+        if hasFollowing && enableGalleryFeed { feeds.append(.init(tab: "Gallery")) }
+        if enableExploreFeed { feeds.append(.init(tab: "Explore")) }
+        if hasFollowing && enableArticleFeed { feeds.append(.init(tab: "Articles")) }
+        return feeds
+    }
+
+    private var orderedFeeds: [FeedSwipeSelection] {
+        FeedMenuOrder(rawValue: storedFeedOrder).ordered(availableFeeds)
+    }
+
+    private var customFeedNames: [String: String] {
+        lists.reduce(into: [:]) { $0[$1.subscriptionId] = $1.name_ }
+    }
+
+    private var selectedFeed: FeedSwipeSelection {
+        FeedSwipeSelection(tab: selectedSubTab,
+                           listId: selectedSubTab == "List" ? selectedList?.subscriptionId ?? selectedListId : nil)
+    }
+
+    private func pagePosition(for feed: FeedSwipeSelection) -> Int {
+        let feeds = orderedFeeds
+        guard let index = feeds.firstIndex(of: feed),
+              let selectedIndex = feeds.firstIndex(of: selectedFeed) else {
+            return feed == selectedFeed ? 0 : 1_000
+        }
+        return index - selectedIndex
+    }
+
+    private func canSwipeFeed(by offset: Int) -> Bool {
+        selectedTab == "Main" && selectedFeed.adjacent(in: orderedFeeds, offset: offset) != nil
+    }
+
+    private func swipeFeed(by offset: Int) {
+        guard selectedTab == "Main",
+              let next = selectedFeed.adjacent(in: orderedFeeds, offset: offset) else { return }
+        selectFeed(next)
+    }
+
+    private var discoveryFeeds: [FeedSwipeSelection] {
+        availableFeeds.filter { ["Emoji", "Zapped", "Hot", "Articles", "Gallery"].contains($0.tab) }
+    }
+
+    private func discoveryFeedIsLoading(_ tab: String) -> Bool {
+        switch tab {
+        case "Hot": hotVM.state == .initializing || hotVM.state == .loading
+        case "Zapped": zappedVM.state == .initializing || zappedVM.state == .loading
+        case "Emoji": emojiVM.state == .initializing || emojiVM.state == .loading
+        case "Gallery": galleryVM.state == .initializing || galleryVM.state == .loading
+        case "Streams": streamsVM.state == .initializing || streamsVM.state == .loading
+        case "DiscoverLists": discoverListsVM.state == .initializing || discoverListsVM.state == .loading
+        case "Articles": articlesVM.articles.isEmpty && !articlesVM.nothingFound
+        default: false
+        }
+    }
+
+    private func selectFeed(_ feed: FeedSwipeSelection) {
+        if feed.tab == "Gallery" && IS_CATALYST {
+            navigateOnDetail(ViewPath.Gallery(vm: galleryVM))
+            return
+        }
+        if let listId = feed.listId {
+            selectedList = lists.first { $0.subscriptionId == listId }
+            selectedListId = listId
+        }
+        selectedSubTab = feed.tab
+    }
     
     var body: some View {
 #if DEBUG
@@ -317,15 +402,16 @@ struct MainFeedsScreen: View {
                     .onReceive(receiveNotification(.didSend)) { _ in
                         didSend = true
                     }
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Following")), motion: feedSwipeMotion))
                 }
                 else {
                     if let followingConfig {
                         AvailableWidthContainer {
-                            NXColumnView(config: followingConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Following")
+                            NXColumnView(config: followingConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Following", showLoadingPreview: true)
                         }
                         // Keep inactive columns mounted, but only the visible one may receive scroll/hits
                         // so tabBarMinimizeBehavior can bind to a single primary scroller.
-                        .opacity(selectedSubTab == "Following" ? 1.0 : 0)
+                        .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Following")), motion: feedSwipeMotion))
                         .allowsHitTesting(selectedSubTab == "Following")
                         .zIndex(selectedSubTab == "Following" ? 1 : 0)
                     }
@@ -333,27 +419,27 @@ struct MainFeedsScreen: View {
                 
                 if let pictureConfig, la.viewFollowingPublicKeys.count > 10  {
                     AvailableWidthContainer {
-                        NXColumnView(config: pictureConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Picture")
+                        NXColumnView(config: pictureConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Picture", showLoadingPreview: true)
                     }
-                    .opacity(selectedSubTab == "Picture" ? 1.0 : 0)
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Picture")), motion: feedSwipeMotion))
                     .allowsHitTesting(selectedSubTab == "Picture")
                     .zIndex(selectedSubTab == "Picture" ? 1 : 0)
                 }
                 
                 if let yakConfig, la.viewFollowingPublicKeys.count > 10  {
                     AvailableWidthContainer {
-                        NXColumnView(config: yakConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Yak")
+                        NXColumnView(config: yakConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Yak", showLoadingPreview: true)
                     }
-                    .opacity(selectedSubTab == "Yak" ? 1.0 : 0)
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Yak")), motion: feedSwipeMotion))
                     .allowsHitTesting(selectedSubTab == "Yak")
                     .zIndex(selectedSubTab == "Yak" ? 1 : 0)
                 }
                 
                 if let vineConfig, la.viewFollowingPublicKeys.count > 10  {
                     AvailableWidthContainer {
-                        NXColumnView(config: vineConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Vine")
+                        NXColumnView(config: vineConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Vine", showLoadingPreview: true)
                     }
-                    .opacity(selectedSubTab == "Vine" ? 1.0 : 0)
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Vine")), motion: feedSwipeMotion))
                     .allowsHitTesting(selectedSubTab == "Vine")
                     .zIndex(selectedSubTab == "Vine" ? 1 : 0)
                 }
@@ -362,10 +448,10 @@ struct MainFeedsScreen: View {
                 ForEach(columnConfigs) { config in
                     let isActiveList = selectedTab == "Main" && selectedSubTab == "List" && selectedList?.subscriptionId == config.id
                     AvailableWidthContainer {
-                        NXColumnView(config: config, isVisible: isActiveList)
+                        NXColumnView(config: config, isVisible: isActiveList, showLoadingPreview: true)
                     }
                     .id(config.id)
-                    .opacity(isActiveList ? 1.0 : 0)
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "List", listId: config.id)), motion: feedSwipeMotion))
                     .allowsHitTesting(isActiveList)
                     .zIndex(isActiveList ? 1 : 0)
                 }
@@ -373,58 +459,77 @@ struct MainFeedsScreen: View {
                 // EXPLORE
                 if enableExploreFeed, let exploreConfig = exploreConfig {
                     AvailableWidthContainer {
-                        NXColumnView(config: exploreConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Explore")
+                        NXColumnView(config: exploreConfig, isVisible: selectedTab == "Main" && selectedSubTab == "Explore", showLoadingPreview: true)
                     }
                     .id(exploreConfig.id)
-                    .opacity(selectedSubTab == "Explore" ? 1.0 : 0)
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Explore")), motion: feedSwipeMotion))
                     .allowsHitTesting(selectedSubTab == "Explore")
                     .zIndex(selectedSubTab == "Explore" ? 1 : 0)
                 }
                 
-                // DISCOVER LISTS / FOLLOW PACKS
-                if selectedSubTab == "DiscoverLists" {
-                    AvailableWidthContainer {
-                        DiscoverLists()
-                            .environmentObject(discoverListsVM)
+                AvailableWidthContainer {
+                    if selectedSubTab == "DiscoverLists" {
+                        DiscoverLists().environmentObject(discoverListsVM)
+                            .overlay {
+                                if discoveryFeedIsLoading("DiscoverLists") {
+                                    FeedLoadingPreview { FeedMenuLabel(feed: .init(tab: "DiscoverLists")) }
+                                }
+                            }
+                    } else {
+                        FeedLoadingPreview {
+                            FeedMenuLabel(feed: .init(tab: "DiscoverLists"))
+                        }
                     }
                 }
-                
-                // DISCOVER LISTS / FOLLOW PACKS
-                if selectedSubTab == "Streams" {
-                    AvailableWidthContainer {
-                        Streams()
-                            .environmentObject(streamsVM)
+                .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "DiscoverLists")), motion: feedSwipeMotion))
+
+                AvailableWidthContainer {
+                    if selectedSubTab == "Streams" {
+                        Streams().environmentObject(streamsVM)
+                            .overlay {
+                                if discoveryFeedIsLoading("Streams") {
+                                    FeedLoadingPreview { FeedMenuLabel(feed: .init(tab: "Streams")) }
+                                }
+                            }
+                    } else {
+                        FeedLoadingPreview {
+                            FeedMenuLabel(feed: .init(tab: "Streams"))
+                        }
                     }
                 }
-                
-                // ZAPPED/HOT/ARTICLES/GALLERY
-                if la.viewFollowingPublicKeys.count > 10 {
+                .modifier(FeedPagePosition(relativeIndex: pagePosition(for: .init(tab: "Streams")), motion: feedSwipeMotion))
+
+                // Only instantiate discovery content after selection, as before.
+                // An inactive page previews its name without starting network work.
+                ForEach(discoveryFeeds) { feed in
                     GeometryReader { geometry in
                         Group {
-                            switch selectedSubTab {
-                            case "Emoji":
-                                EmojiFeed()
-                                    .environmentObject(emojiVM)
-                            case "Zapped":
-                                Zapped()
-                                    .environmentObject(zappedVM)
-                            case "Hot":
-                                Hot()
-                                    .environmentObject(hotVM)
-                            case "Articles":
-                                ArticlesFeed()
-                                    .environmentObject(articlesVM)
-                            case "Gallery":
-                                Gallery()
-                                    .environmentObject(galleryVM)
-                            default:
-                                EmptyView()
+                            if selectedSubTab == feed.tab {
+                                switch feed.tab {
+                                case "Emoji": EmojiFeed().environmentObject(emojiVM)
+                                case "Zapped": Zapped().environmentObject(zappedVM)
+                                case "Hot": Hot().environmentObject(hotVM)
+                                case "Articles": ArticlesFeed().environmentObject(articlesVM)
+                                case "Gallery": Gallery().environmentObject(galleryVM)
+                                default: EmptyView()
+                                }
+                            } else {
+                                FeedLoadingPreview {
+                                    FeedMenuLabel(feed: feed)
+                                }
                             }
                         }
                         .environment(\.availableWidth, geometry.size.width)
+                        .overlay {
+                            if selectedSubTab == feed.tab && discoveryFeedIsLoading(feed.tab) {
+                                FeedLoadingPreview { FeedMenuLabel(feed: feed) }
+                            }
+                        }
                     }
+                    .modifier(FeedPagePosition(relativeIndex: pagePosition(for: feed), motion: feedSwipeMotion))
                 }
             }
+            .modifier(FeedSwipeModifier(motion: feedSwipeMotion, isEnabled: selectedTab == "Main", canSwipe: canSwipeFeed, onSwipe: swipeFeed))
             .modifier {
     
                 // On 26.0 the new post button is integrated in the new tab bar (or in the custom tabbar on Tahoe)
@@ -463,6 +568,13 @@ struct MainFeedsScreen: View {
                         .frame(height: showLiveEventsBanner ? 50 : 0)
                 }
             }
+        }
+
+        .sheet(isPresented: $showingFeedOrder) {
+            FeedOrderSheet(storedOrder: $storedFeedOrder,
+                           availableFeeds: availableFeeds,
+                           customFeedNames: customFeedNames)
+                .environment(\.theme, theme)
         }
 
         .onAppear {
@@ -554,82 +666,21 @@ struct MainFeedsScreen: View {
         .modifier {
             if #available(iOS 26.0, *) {
                 $0.toolbar {
-                      ToolbarTitleMenu {
-                          Button("Following", systemImage: "person.circle") { selectedSubTab = "Following" }
-                          
-                          if la.viewFollowingPublicKeys.count > 10 && enablePictureFeed {
-                              Button("Photos", systemImage: "photo") { selectedSubTab = "Picture" }
-                          }
-                          
-                          if la.viewFollowingPublicKeys.count > 10 && enableYakFeed {
-                              Button("Yaks", systemImage: "waveform.circle") { selectedSubTab = "Yak" }
-                          }
-                          
-                          if la.viewFollowingPublicKeys.count > 10 && enableVineFeed {
-                              if #available(iOS 17.0, *) {
-                                  Button("Divines", systemImage: "person.crop.square.badge.video") { selectedSubTab = "Vine" }
-                              } else {
-                                  Button("Divines", systemImage: "video.bubble.left") { selectedSubTab = "Vine" }
-                              }
-                          }
-                          
-                          if la.viewFollowingPublicKeys.count > 10 && enableStreamsFeed {
-                              Button("Live Streams", systemImage: "dot.radiowaves.left.and.right") { selectedSubTab = "Streams" }
-                          }
-                          
-                          Divider()
-                          
-                          ForEach(lists) { list in
-                              Button(list.name ?? "(no title)", systemImage: "star") {
-                                  selectedSubTab = "List"
-                                  selectedList = list
-                                  selectedListId = list.subscriptionId }
-                          }
-                          
-                          Divider()
-                          
-                          if la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed {
-                              Button { selectedSubTab = "Emoji" } label: {
-                                  Label {
-                                      Text("Funny")
-                                  } icon: {
-                                      Image("LaughterIcon")
-                                          .renderingMode(.template)
-                                  }
-                              }
-                          }
-                          
-                          if la.viewFollowingPublicKeys.count > 10 && enableZappedFeed {
-                              Button("Zapped", systemImage: "bolt") { selectedSubTab = "Zapped" }
-                          }
-                          
-                          if la.viewFollowingPublicKeys.count > 10 && enableHotFeed {
-                              Button("Hot", systemImage: "flame") { selectedSubTab = "Hot" }
-                          }
-                          
-                          if enableDiscoverListsFeed {
-                              Button("Follow Packs & Lists", systemImage: "person.2.crop.square.stack") { selectedSubTab = "DiscoverLists" }
-                          }
-                          
-                          if la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed {
-                              Button("Gallery", systemImage: "photo.on.rectangle.angled") {
-                                  if IS_CATALYST { // On macOS we open the Gallery in the detail pane
-                                      navigateOnDetail(ViewPath.Gallery(vm: galleryVM))
-                                  }
-                                  else {
-                                      selectedSubTab = "Gallery"
-                                  }
-                              }
-                          }
-                          
-                          if enableExploreFeed {
-                              Button("Explore", systemImage: "binoculars") { selectedSubTab = "Explore" }
-                          }
-                          
-                          if la.viewFollowingPublicKeys.count > 10 && enableArticleFeed {
-                              Button("Reads", systemImage: "newspaper") { selectedSubTab = "Articles" }
-                          }
-                      }
+                    ToolbarTitleMenu {
+                        ForEach(orderedFeeds) { feed in
+                            Button {
+                                selectFeed(feed)
+                            } label: {
+                                FeedMenuLabel(feed: feed, customName: customFeedNames[feed.listId ?? ""])
+                            }
+                        }
+                        Divider()
+                        Button {
+                            showingFeedOrder = true
+                        } label: {
+                            Label("Reorder Feeds…", systemImage: "arrow.up.arrow.down")
+                        }
+                    }
                   }
             }
             else {

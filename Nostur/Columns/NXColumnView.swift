@@ -23,11 +23,13 @@ struct NXColumnView<HeaderContent: View>: View {
     
     private var config: NXColumnConfig
     private var isVisible: Bool
+    private var showLoadingPreview: Bool
     private var header: HeaderContent
     
-    init(config: NXColumnConfig, isVisible: Bool, @ViewBuilder header: () -> HeaderContent) {
+    init(config: NXColumnConfig, isVisible: Bool, showLoadingPreview: Bool = false, @ViewBuilder header: () -> HeaderContent) {
         self.config = config
         self.isVisible = isVisible
+        self.showLoadingPreview = showLoadingPreview
         self.header = header()
     }
 
@@ -145,15 +147,21 @@ struct NXColumnView<HeaderContent: View>: View {
         ZStack {
             switch(viewModel.viewState) {
             case .loading:
-                ZStack(alignment: .center) {
-                    theme.listBackground
-                    VStack(spacing: 14) {
-                        CenteredProgressView()
-                        if let mediaLoadingMessage {
-                            Text(mediaLoadingMessage)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
+                if showLoadingPreview {
+                    FeedLoadingPreview(message: mediaLoadingMessage) {
+                        Text(verbatim: config.name)
+                    }
+                } else {
+                    ZStack(alignment: .center) {
+                        theme.listBackground
+                        VStack(spacing: 14) {
+                            CenteredProgressView()
+                            if let mediaLoadingMessage {
+                                Text(mediaLoadingMessage)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
                         }
                     }
                 }
@@ -514,7 +522,7 @@ struct FeedListViewTester: View {
 
 extension NXColumnView where HeaderContent == EmptyView {
     
-    init(config: NXColumnConfig, isVisible: Bool) {
-        self.init(config: config, isVisible: isVisible, header: { EmptyView() })
+    init(config: NXColumnConfig, isVisible: Bool, showLoadingPreview: Bool = false) {
+        self.init(config: config, isVisible: isVisible, showLoadingPreview: showLoadingPreview, header: { EmptyView() })
     }
 }
