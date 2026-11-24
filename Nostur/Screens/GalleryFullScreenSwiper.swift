@@ -38,6 +38,7 @@ struct GalleryFullScreenSwiper: View {
     private let maxScale: CGFloat = 4.0
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
+    @State private var pinchStart: GalleryPinchZoom?
     @State private var position: CGSize = .zero
     @State private var newPosition: CGSize = .zero
 
@@ -86,7 +87,7 @@ struct GalleryFullScreenSwiper: View {
                         .highPriorityGesture(TapGesture().onEnded({ _ in
                             withAnimation {
                                 mediaPostPreview.toggle()
-                                scale = 1.0
+                                resetZoomAndPan()
                             }
                         }))
                 }
@@ -142,6 +143,7 @@ struct GalleryFullScreenSwiper: View {
     private func resetZoomAndPan() {
         scale = 1.0
         lastScale = 1.0
+        pinchStart = nil
         position = .zero
         newPosition = .zero
     }
@@ -228,9 +230,7 @@ struct GalleryFullScreenSwiper: View {
         .contentShape(Rectangle())
         .onTapGesture(count: 2) {
             withAnimation {
-                self.scale = 1.0
-                self.position = .zero
-                self.newPosition = .zero
+                resetZoomAndPan()
             }
         }
         .id(item.id)
@@ -367,6 +367,7 @@ struct GalleryFullScreenSwiper: View {
     private var dismissDragGesture: some Gesture {
         DragGesture(minimumDistance: 10, coordinateSpace: .local)
             .onChanged { value in
+                guard pinchStart == nil else { return }
                 // Only start on a mostly-vertical downward drag when not zoomed (much)
                 if !isDraggingToDismiss {
                     guard scale <= 1.3 && value.translation.height > 0 && abs(value.translation.height) > abs(value.translation.width)
@@ -405,6 +406,44 @@ struct GalleryFullScreenSwiper: View {
     }
     
     private var zoomGesture: some Gesture {
+        if #available(iOS 17.0, *) {
+            return AnyGesture(MagnifyGesture()
+                .onChanged { value in
+                    if pinchStart == nil {
+                        pinchStart = GalleryPinchZoom(scale: scale, position: position, anchor: value.startLocation)
+                    }
+                    guard let pinchStart else { return }
+                    let requestedScale = pinchStart.scale * value.magnification
+                    if requestedScale < minScale {
+                        scale = minScale * sqrt(requestedScale / minScale)
+                    }
+                    else if requestedScale > maxScale {
+                        scale = maxScale * sqrt(requestedScale / maxScale)
+                    }
+                    else {
+                        scale = requestedScale
+                    }
+                    position = pinchStart.position(at: scale, viewport: fullScreenSize)
+                }
+                .onEnded { _ in
+                    guard let start = pinchStart else { return }
+                    let finalScale = min(maxScale, max(minScale, scale))
+                    let finalPosition = start.position(at: finalScale, viewport: fullScreenSize)
+                    withAnimation(.spring(duration: 0.3)) {
+                        scale = finalScale
+                        position = clampedPosition(finalPosition)
+                    }
+                    newPosition = position
+                    pinchStart = nil
+                }
+                .map { _ in () })
+        }
+        else {
+            return AnyGesture(legacyZoomGesture.map { _ in () })
+        }
+    }
+
+    private var legacyZoomGesture: some Gesture {
         MagnificationGesture()
             .onChanged { value in
                 let delta = value / self.lastScale
@@ -441,14 +480,14 @@ struct GalleryFullScreenSwiper: View {
     private var panGesture: some Gesture {
         DragGesture()
             .onChanged { value in
-                if scale > 1.0 {
+                if scale > 1.0, pinchStart == nil {
                     // When zoomed, allow free panning
                     self.position.width = self.newPosition.width + value.translation.width
                     self.position.height = self.newPosition.height + value.translation.height
                 }
             }
             .onEnded { value in
-                if scale > 1.0 {
+                if scale > 1.0, pinchStart == nil {
                     // Keep the image on screen, snap back if dragged too far
                     let clamped = self.clampedPosition(self.position)
                     withAnimation(.spring(duration: 0.3)) {
