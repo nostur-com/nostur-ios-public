@@ -404,6 +404,67 @@ final class NXFeedViewportTests: XCTestCase {
     }
 
     @MainActor
+    func testHomeReachesContentTopWithLeadingBannerAndStaysThereAfterPromptLayout() async throws {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 200)
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 300, height: 600), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        collection.contentInset.top = 64
+        let source = NXFeedAppendTestSource()
+        source.count = 16 // One already-seen banner followed by fifteen posts.
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        stabilizer.updateItemIDs((0..<15).map { "post-\($0)" }, leadingNonPostRowCount: 1)
+        collection.contentOffset.y = 700
+        stabilizer.rememberAnchor(id: "post-3")
+
+        // The old first-post target leaves the banner above the viewport, so
+        // the very next sample hides the report prompt after Home announces top.
+        collection.scrollToItem(at: IndexPath(item: 1, section: 0), at: .top, animated: false)
+        XCTAssertFalse(NXFeedViewport.isOffsetAtTop(contentOffsetY: collection.contentOffset.y,
+            insetTop: collection.adjustedContentInset.top))
+
+        let reachedTop = await stabilizer.scrollToContentTop()
+        XCTAssertTrue(reachedTop)
+        XCTAssertEqual(collection.contentOffset.y, -64, accuracy: 0.5)
+        XCTAssertTrue(collection.indexPathsForVisibleItems.contains(IndexPath(item: 0, section: 0)))
+        stabilizer.rememberContentTop() // The normal viewport callback after Home.
+
+        // Showing the prompt resizes the feed. A later top check and another
+        // Home tap must keep it eligible, without pinning the first post again.
+        collection.frame.size.height -= 100
+        collection.contentInset.top += 30
+        collection.layoutIfNeeded()
+        try await Task.sleep(nanoseconds: 250_000_000)
+        XCTAssertTrue(YearReviewDiscovery.canPresent(isVisible: true,
+            isAtTop: NXFeedViewport.isOffsetAtTop(contentOffsetY: collection.contentOffset.y,
+                insetTop: collection.adjustedContentInset.top), unreadCount: 0, isRestoring: false),
+            "After prompt layout: offset \(collection.contentOffset.y), inset \(collection.adjustedContentInset.top)")
+        let reachedTopAgain = await stabilizer.scrollToContentTop()
+        XCTAssertTrue(reachedTopAgain)
+        XCTAssertEqual(collection.contentOffset.y, -94, accuracy: 0.5)
+        // Choosing a post leaves the top target; a later inset change must not
+        // unexpectedly bring the user back to the report prompt.
+        stabilizer.rememberAnchor(id: "post-3")
+        collection.contentOffset.y = 600
+        collection.contentInset.top += 20
+        collection.layoutIfNeeded()
+        XCTAssertGreaterThan(collection.contentOffset.y, 400)
+        stabilizer.suspendPositionTracking()
+    }
+
+    @MainActor
     func testDelayedBannerInsertionPinsReadingRowWithoutChangingPostIDs() async throws {
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: 300, height: 200)
