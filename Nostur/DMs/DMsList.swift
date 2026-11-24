@@ -62,7 +62,7 @@ struct DMsInnerList: View {
                                     .onTapGesture {
                                         // mark as read
                                         push(DMConversation(dmState: dmState, parentDMsVM: vm))
-                                        dmState.markedReadAt_ = .now
+                                        dmState.markRead()
                                         vm.updateUnreadsCount()
                                     }
                                 }
@@ -82,7 +82,7 @@ struct DMsInnerList: View {
                                     .contentShape(Rectangle())
                                     .onTapGesture {
                                         push(DMConversation(dmState: dmState, parentDMsVM: vm))
-                                        dmState.markedReadAt_ = .now
+                                        dmState.markRead()
                                         vm.updateUnreadsCount()
                                     }
                                 }

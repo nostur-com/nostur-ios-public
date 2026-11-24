@@ -24,6 +24,7 @@ class AppState: ObservableObject {
         managePowerUsage()
         loadMutedWords()
         bgAppState.blockedPubkeys = CloudBlocked.blockedPubkeys(context: viewContext())
+        ReadStateSync.shared.start()
         DataProvider.shared().cloudStoreRemoteChangeSubject
             .debounce(for: .milliseconds(250), scheduler: DispatchQueue.main)
             .sink { [weak self] in

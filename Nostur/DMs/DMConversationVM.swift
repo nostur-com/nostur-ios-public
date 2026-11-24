@@ -1238,8 +1238,7 @@ class ConversionVM: ObservableObject {
     
     @MainActor
     public func markAsRead() {
-        self.dmState?.markedReadAt_ = Date.now
-//        DataProvider.shared().saveToDisk(.all)
+        self.dmState?.markRead()
     }
 
     private func sendWrappedEventToDMRelays(_ wrappedEvent: NostrEssentials.Event, relays: Set<String>) {

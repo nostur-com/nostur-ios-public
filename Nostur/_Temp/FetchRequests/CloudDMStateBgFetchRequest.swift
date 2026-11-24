@@ -60,6 +60,17 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
                 guard let accountPubkey = dmState.accountPubkey_ else { return true }
                 return !uniqueDMStates.insert(accountPubkey + "-" + dmState.conversationId).inserted
             }
+        // A newer message timestamp does not imply newer read progress. Preserve
+        // each duplicate's read cursor before deleting it.
+        for duplicate in toDelete {
+            guard let survivor = sortedDMStates.first(where: {
+                $0.accountPubkey_ == duplicate.accountPubkey_ &&
+                $0.conversationId == duplicate.conversationId
+            }), survivor !== duplicate,
+                  let readAt = duplicate.markedReadAt_,
+                  readAt > (survivor.markedReadAt_ ?? .distantPast) else { continue }
+            survivor.markedReadAt_ = readAt
+        }
 #if DEBUG
         L.cloud.debug("CloudDMStateFetchRequest: deleted \(toDelete.count) DM conversation states")
 #endif
