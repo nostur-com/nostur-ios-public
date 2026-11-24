@@ -979,6 +979,85 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(restored.delay(for: "second", now: now), 2)
     }
 
+    func testSuccessfulRelayResponseResetsCooldownAcrossOutOfOrderSaves() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let archive = YearReviewArchive(owner: owner, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        let now = Date(timeIntervalSince1970: 1_000)
+        var pacing = YearReviewRelayPacing()
+        pacing.failed("relay", now: now)
+        pacing.failed("relay", now: now.addingTimeInterval(60))
+        let failed = pacing
+        try await archive.savePacing(failed)
+        let recoveredAt = now.addingTimeInterval(200)
+        pacing.started("relay", now: recoveredAt, jitter: 0)
+        pacing.succeeded("relay", now: recoveredAt.addingTimeInterval(1))
+        try await archive.savePacing(pacing)
+        try await archive.savePacing(failed)
+        var restored = try await archive.load(YearReviewRelayPacing.self, key: "relay-pacing")!
+        XCTAssertEqual(restored.delay(for: "relay", now: recoveredAt), 2)
+        XCTAssertEqual(restored.failures["relay", default: 0], 0)
+        restored.failed("relay", now: recoveredAt.addingTimeInterval(10))
+        XCTAssertEqual(restored.delay(for: "relay", now: recoveredAt.addingTimeInterval(10)), 60)
+    }
+
+    @MainActor
+    func testHealthyAppSocketRecoversConnectionCooldownButPreservesQueryBackoff() async throws {
+        guard #available(iOS 17.0, *) else { throw XCTSkip("Year in Review requires iOS 17") }
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let archive = YearReviewArchive(owner: owner, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        let pool = ConnectionPool()
+        pool.queue = DispatchQueue(label: "history-cooldown-recovery")
+        let relays = ["healthy", "limited", "offline"].map { RelayData.new(url: "wss://\($0).example", read: true) }
+        let connections = relays.map { Nostur.RelayConnection($0, queue: pool.queue) }
+        await withCheckedContinuation { continuation in
+            pool.queue.async(flags: .barrier) {
+                for (relay, connection) in zip(relays, connections) { pool.connections[relay.id] = connection }
+                connections[0].isSocketConnected = true
+                connections[1].isSocketConnected = true
+                continuation.resume()
+            }
+        }
+        var pacing = YearReviewRelayPacing()
+        pacing.failed(relays[0].url, scope: .connection)
+        pacing.failed(relays[1].url, scope: .request)
+        pacing.failed(relays[2].url, scope: .connection)
+        try await archive.savePacing(pacing)
+        var job = YearReviewCollection(owner: owner, period: period, relays: relays, trusted: [])
+        job.pacing = pacing
+        let pending = job.pending
+        try await YearReviewModel.shared.recoverConnectedHistoryRelays(&job, archive: archive, pool: pool)
+        XCTAssertEqual(job.pacing?.delay(for: relays[0].url), 0)
+        XCTAssertGreaterThan(job.pacing?.delay(for: relays[1].url) ?? 0, 3)
+        XCTAssertGreaterThan(job.pacing?.delay(for: relays[2].url) ?? 0, 3)
+        XCTAssertEqual(job.pending, pending)
+        try await archive.savePacing(pacing) // A delayed older write must not restore the recovered cooldown.
+        let persisted = try await archive.load(YearReviewRelayPacing.self, key: "relay-pacing")
+        XCTAssertEqual(persisted?.delay(for: relays[0].url), 0)
+        XCTAssertFalse(persisted?.canRecoverConnection(relays[0].url, legacyFailures: []) ?? true)
+    }
+
+    func testLegacyCooldownAllowsOneHealthySocketRecoveryExceptKnownRateLimits() throws {
+        var old = YearReviewRelayPacing()
+        old.nextRequest["relay"] = Date.now.addingTimeInterval(120)
+        old.failures["relay"] = 3
+        var restored = try JSONDecoder().decode(YearReviewRelayPacing.self, from: JSONEncoder().encode(old))
+        XCTAssertNil(restored.failureScopes)
+        XCTAssertTrue(restored.canRecoverConnection("relay", legacyFailures: []))
+        let work = YearReviewWork(relay: "relay", category: .incoming, since: 1, until: 2)
+        for reason in ["rate-limited: slow down", "auth-required: sign in", "blocked: access denied", "Connection failed (HTTP 429)"] {
+            let failure = YearReviewSourceFailure(work: work, status: .failed, reason: reason,
+                trigger: work, received: 0, date: .now)
+            XCTAssertFalse(restored.canRecoverConnection("relay", legacyFailures: [failure]))
+        }
+        restored.recoveredConnection("relay")
+        XCTAssertEqual(restored.delay(for: "relay"), 0)
+        XCTAssertFalse(restored.canRecoverConnection("relay", legacyFailures: []))
+        restored.failed("relay", scope: .request)
+        XCTAssertFalse(restored.canRecoverConnection("relay", legacyFailures: []))
+    }
+
     func testRelayPacingAndPersistentExponentialCooldown() throws {
         let now = Date(timeIntervalSince1970: 1000)
         var pacing = YearReviewRelayPacing()
@@ -2209,8 +2288,226 @@ final class YearReviewTests: XCTestCase {
             else { XCTFail("Expected the network watchdog") }
             timedOut.fulfill()
         }
-        XCTAssertTrue(inbox.route(text: "[\"EOSE\",\"year-c\",[\"finish\"]]", relay: "wss://relay.example.com"))
         await fulfillment(of: [timedOut], timeout: 0.5)
+    }
+
+    func testTimelyEOSEDoesNotBecomeRelayTimeoutWhileDecoderIsBlocked() async throws {
+        let worker = DispatchQueue(label: "year-review-eose-backpressure")
+        let entered = expectation(description: "decoder blocked")
+        let gate = DispatchSemaphore(value: 0)
+        worker.async { entered.fulfill(); _ = gate.wait(timeout: .now() + 5) }
+        defer { gate.signal() }
+        await fulfillment(of: [entered], timeout: 1)
+        let inbox = YearReviewRelayInbox(worker: worker)
+        let complete = expectation(description: "page after decoding")
+        let event = try signedEvent()
+        inbox.register(id: "year-e", relay: "wss://relay.example.com", timeout: 0.03) { result in
+            if case .success(let page) = result { XCTAssertEqual(page.events.count, 1) }
+            else { XCTFail("Timely EOSE must survive delayed decoding") }
+            complete.fulfill()
+        }
+        let payload = "[\"EVENT\",\"year-e\",\(String(decoding: try JSONEncoder().encode(event), as: UTF8.self))]"
+        XCTAssertTrue(inbox.route(text: payload, relay: "wss://relay.example.com"))
+        XCTAssertTrue(inbox.route(text: "[\"EOSE\",\"year-e\"]", relay: "wss://relay.example.com"))
+        try await Task.sleep(nanoseconds: 80_000_000)
+        XCTAssertEqual(inbox.receivedCount("year-e"), 1)
+        gate.signal()
+        await fulfillment(of: [complete], timeout: 1)
+    }
+
+    func testBlockedHistoryProcessingHasSeparateLocalFailure() async {
+        let worker = DispatchQueue(label: "year-review-processing-timeout")
+        let gate = DispatchSemaphore(value: 0)
+        worker.async { _ = gate.wait(timeout: .now() + 5) }
+        defer { gate.signal() }
+        let inbox = YearReviewRelayInbox(worker: worker)
+        let complete = expectation(description: "local processing timeout")
+        inbox.register(id: "year-e", relay: "wss://relay.example.com", timeout: 0.03, processingTimeout: 0.08) { result in
+            if case .failure(YearReviewError.processingTimeout) = result { }
+            else { XCTFail("Local decoding delays must not be reported as relay failures") }
+            complete.fulfill()
+        }
+        XCTAssertTrue(inbox.route(text: "[\"EOSE\",\"year-e\"]", relay: "wss://relay.example.com"))
+        await fulfillment(of: [complete], timeout: 0.5)
+    }
+
+    func testConnectionFailureDistinguishesUnavailableServerFromRateLimiting() async {
+        let inbox = YearReviewRelayInbox()
+        let complete = expectation(description: "classified failures")
+        complete.expectedFulfillmentCount = 2
+        for status in [503, 429] {
+            let id = "year-\(status)"
+            inbox.register(id: id, relay: "wss://relay.example.com") { result in
+                if case .failure(let error) = result {
+                    if status == 503 {
+                        if case YearReviewError.relayConnection = error { }
+                        else { XCTFail("HTTP 503 must be a connection failure") }
+                    } else {
+                        if case YearReviewError.relay = error { }
+                        else { XCTFail("HTTP 429 must retain relay backoff") }
+                    }
+                } else { XCTFail("Expected connection failure") }
+                complete.fulfill()
+            }
+            inbox.connectionFailed(ids: [id], relay: "wss://relay.example.com",
+                error: URLError(.badServerResponse), httpStatus: status)
+        }
+        await fulfillment(of: [complete], timeout: 1)
+    }
+
+    func testConnectionFailureReportsHTTPStatusOnlyForItsRequests() async {
+        let inbox = YearReviewRelayInbox()
+        let failed = expectation(description: "connection error")
+        let complete = expectation(description: "other request finishes")
+        inbox.register(id: "year-a", relay: "wss://relay.example.com") { result in
+            if case .failure(let error) = result { XCTAssertTrue(error.localizedDescription.contains("503")) }
+            else { XCTFail("Expected a connection failure") }
+            failed.fulfill()
+        }
+        inbox.register(id: "year-b", relay: "wss://relay.example.com") { result in
+            if case .success = result { }
+            else { XCTFail("Another connection must remain independent") }
+            complete.fulfill()
+        }
+        inbox.connectionFailed(ids: ["year-a"], relay: "wss://relay.example.com",
+            error: URLError(.badServerResponse), httpStatus: 503)
+        await fulfillment(of: [failed], timeout: 0.5)
+        XCTAssertNotNil(inbox.receivedCount("year-b"))
+        XCTAssertTrue(inbox.route(text: "[\"EOSE\",\"year-b\"]", relay: "wss://relay.example.com"))
+        await fulfillment(of: [complete], timeout: 0.5)
+    }
+
+    @MainActor
+    func testHistoryReusesAppConnectionAndPreservesFeedSubscription() async throws {
+        let pool = ConnectionPool()
+        pool.queue = DispatchQueue(label: "year-review-app-connection")
+        let relay = RelayData.new(url: "wss://history.example.invalid", read: true)
+        let appConnection = Nostur.RelayConnection(relay, queue: pool.queue)
+        _ = pool.retainEphemeralConnection(relay)
+        defer { pool.releaseEphemeralConnection(relay) }
+        await withCheckedContinuation { continuation in
+            pool.queue.async(flags: .barrier) {
+                pool.connections[relay.id] = appConnection
+                appConnection.isSocketConnected = true
+                appConnection.nreqSubscriptions = ["Following-test", "year-test"]
+                continuation.resume()
+            }
+        }
+        let selected = try await pool.historyConnection(for: relay)
+        XCTAssertTrue(selected.connection === appConnection)
+        XCTAssertFalse(selected.retainedEphemeral)
+        selected.connection.closeAndDropSubscription("year-test")
+        let remaining = await withCheckedContinuation { continuation in
+            pool.queue.async {
+                continuation.resume(returning: (appConnection.nreqSubscriptions, appConnection.isSocketConnected))
+            }
+        }
+        XCTAssertEqual(remaining.0, ["Following-test"])
+        XCTAssertTrue(remaining.1)
+        // Another caller's temporary connection still owns its original retain.
+        XCTAssertFalse(pool.removeIdleEphemeralConnection(relay.id))
+    }
+
+    @MainActor
+    func testHistoryPrefersConnectedOutboxOverDisconnectedAppConnection() async throws {
+        let pool = ConnectionPool()
+        pool.queue = DispatchQueue(label: "year-review-outbox-connection")
+        let relay = RelayData.new(url: "wss://history.example.invalid", read: true)
+        let appConnection = Nostur.RelayConnection(relay, queue: pool.queue)
+        await withCheckedContinuation { continuation in
+            pool.queue.async(flags: .barrier) {
+                pool.connections[relay.id] = appConnection
+                continuation.resume()
+            }
+        }
+        let outbox: Nostur.RelayConnection = await withCheckedContinuation { continuation in
+            pool.addOutboxConnection(relay) { connection in
+                connection.isSocketConnected = true
+                continuation.resume(returning: connection)
+            }
+        }
+        let selected = try await pool.historyConnection(for: relay)
+        XCTAssertTrue(selected.connection === outbox)
+        XCTAssertFalse(selected.retainedEphemeral)
+    }
+
+    @MainActor
+    func testHistoryReusesAvailableAppConnectionAndAvoidsWalletSockets() async throws {
+        let pool = ConnectionPool()
+        pool.queue = DispatchQueue(label: "year-review-available-connection")
+        let relay = RelayData.new(url: "wss://history.example.invalid", read: true)
+        let appConnection = Nostur.RelayConnection(relay, queue: pool.queue)
+        await withCheckedContinuation { continuation in
+            pool.queue.async(flags: .barrier) {
+                pool.connections[relay.id] = appConnection
+                continuation.resume()
+            }
+        }
+        let existing = try await pool.historyConnection(for: relay)
+        XCTAssertTrue(existing.connection === appConnection)
+        XCTAssertFalse(existing.retainedEphemeral)
+        let wallet = Nostur.RelayConnection(relay, isNWC: true, queue: pool.queue)
+        await withCheckedContinuation { continuation in
+            pool.queue.async(flags: .barrier) {
+                pool.connections[relay.id] = wallet
+                wallet.isSocketConnected = true
+                continuation.resume()
+            }
+        }
+        let fallback = try await pool.historyConnection(for: relay)
+        XCTAssertFalse(fallback.connection === wallet)
+        XCTAssertTrue(fallback.retainedEphemeral)
+        XCTAssertFalse(pool.removeIdleEphemeralConnection(relay.id))
+        pool.releaseEphemeralConnection(relay)
+        XCTAssertTrue(pool.removeIdleEphemeralConnection(relay.id))
+    }
+
+    @MainActor
+    func testHistoryConnectionLookupCancelsAndTimesOutWhilePoolQueueIsBlocked() async {
+        let pool = ConnectionPool()
+        pool.queue = DispatchQueue(label: "year-review-held-lookup")
+        let relay = RelayData.new(url: "wss://history.example.invalid", read: true)
+        let entered = expectation(description: "pool queue blocked")
+        let gate = DispatchSemaphore(value: 0)
+        pool.queue.async { entered.fulfill(); _ = gate.wait(timeout: .now() + 5) }
+        defer { gate.signal() }
+        await fulfillment(of: [entered], timeout: 1)
+        let lookup = Task { @MainActor in try await pool.historyConnection(for: relay) }
+        await Task.yield()
+        let started = Date.now
+        lookup.cancel()
+        do {
+            _ = try await lookup.value
+            XCTFail("Cancelled lookup must not retain a socket")
+        } catch is CancellationError { }
+        catch { XCTFail("Unexpected cancellation error: \(error)") }
+        do {
+            _ = try await pool.historyConnection(for: relay, lookupTimeout: 0.03)
+            XCTFail("Blocked lookup must remain bounded")
+        } catch YearReviewError.connectionBusy { }
+        catch { XCTFail("Unexpected timeout error: \(error)") }
+        XCTAssertLessThan(Date.now.timeIntervalSince(started), 0.5)
+    }
+
+    @MainActor
+    func testHistoryConnectionStaysRetainedAndResponsiveWithBlockedPoolQueue() async {
+        let pool = ConnectionPool()
+        pool.queue = DispatchQueue(label: "year-review-blocked-connection-pool")
+        let relay = RelayData.new(url: "wss://history.example.invalid", read: true)
+        let entered = expectation(description: "pool queue blocked")
+        let gate = DispatchSemaphore(value: 0)
+        pool.queue.async { entered.fulfill(); _ = gate.wait(timeout: .now() + 5) }
+        defer { gate.signal() }
+        await fulfillment(of: [entered], timeout: 1)
+        let started = Date.now
+        let connection = pool.retainEphemeralConnection(relay)
+        XCTAssertFalse(pool.removeIdleEphemeralConnection(relay.id))
+        XCTAssertTrue(pool.retainEphemeralConnection(relay) === connection)
+        pool.releaseEphemeralConnection(relay)
+        XCTAssertFalse(pool.removeIdleEphemeralConnection(relay.id))
+        pool.releaseEphemeralConnection(relay)
+        XCTAssertTrue(pool.removeIdleEphemeralConnection(relay.id))
+        XCTAssertLessThan(Date.now.timeIntervalSince(started), 0.5)
     }
 
     func testSupplementaryBudgetsDoNotStopMonthPassesAndRenewOnResume() {

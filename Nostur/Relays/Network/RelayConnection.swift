@@ -782,6 +782,11 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                       let delay = self.retryState.fail(socket: ObjectIdentifier(webSocketTask), now: ProcessInfo.processInfo.systemUptime)
                 else { return } // Duplicate failure or callback from a replaced/planned-disconnect socket.
 
+                let historyRequests = Set(self.nreqSubscriptions)
+                    .union(self.outQueue.compactMap(\.subscriptionId))
+                    .filter { $0.hasPrefix("year-") }
+                YearReviewRelayInbox.shared.connectionFailed(ids: historyRequests, relay: self.url,
+                    error: error, httpStatus: (webSocketTask.response as? HTTPURLResponse)?.statusCode)
                 self.outQueue = retryMessage.map { [$0] } ?? []
                 webSocketTask.cancel()
                 self.reqDrainScheduled = false

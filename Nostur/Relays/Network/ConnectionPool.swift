@@ -175,6 +175,7 @@ public class ConnectionPool: ObservableObject {
     
     // .ephemeralConnections should be read/mutated from main context
     private var ephemeralConnections: [CanonicalRelayUrl: RelayConnection] = [:]
+    @MainActor private var ephemeralConnectionUsers: [CanonicalRelayUrl: Int] = [:]
     
     // .outboxConnections should be read/mutated from connection context
     private var outboxConnections: [CanonicalRelayUrl: RelayConnection] = [:]
@@ -540,6 +541,63 @@ public class ConnectionPool: ObservableObject {
             return newConnection
         }
     }
+
+    @MainActor
+    func retainEphemeralConnection(_ relay: RelayData) -> RelayConnection {
+        let connection = addEphemeralConnection(relay)
+        ephemeralConnectionUsers[relay.id, default: 0] += 1
+        return connection
+    }
+
+    @MainActor
+    func historyConnection(for relay: RelayData, lookupTimeout: TimeInterval = 18) async throws
+        -> (connection: RelayConnection, retainedEphemeral: Bool) {
+        if let connection = try await existingHistoryConnection(for: relay, lookupTimeout: lookupTimeout) {
+            return (connection, false)
+        }
+        return (retainEphemeralConnection(relay), true)
+    }
+
+    @MainActor
+    func existingHistoryConnection(for relay: RelayData, connectedOnly: Bool = false,
+                                   lookupTimeout: TimeInterval = 18) async throws -> RelayConnection? {
+        // Stream cancellation lets account changes and Pause finish even if the
+        // connection queue is occupied. Looking up a socket has no side effects.
+        let lookup = AsyncStream<Result<RelayConnection?, Error>>(bufferingPolicy: .bufferingOldest(1)) { continuation in
+            queue.async { [weak self] in
+                let candidates = [self?.connections[relay.id], self?.outboxConnections[relay.id]]
+                    .compactMap { $0 }
+                    .filter { !$0.isNC && !$0.isNWC }
+                let existing = candidates.first { $0.isSocketConnected }
+                    ?? (connectedOnly ? nil : candidates.first { $0.isSocketConnecting } ?? candidates.first)
+                continuation.yield(.success(existing))
+                continuation.finish()
+            }
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + lookupTimeout) {
+                continuation.yield(.failure(YearReviewError.connectionBusy))
+                continuation.finish()
+            }
+        }
+        var iterator = lookup.makeAsyncIterator()
+        guard let result = await iterator.next() else { throw CancellationError() }
+        try Task.checkCancellation()
+        return try result.get()
+    }
+
+    @MainActor
+    func releaseEphemeralConnection(_ relay: RelayData) {
+        let remaining = ephemeralConnectionUsers[relay.id, default: 0] - 1
+        if remaining > 0 { ephemeralConnectionUsers[relay.id] = remaining }
+        else { ephemeralConnectionUsers.removeValue(forKey: relay.id) }
+    }
+
+    @MainActor
+    @discardableResult
+    func removeIdleEphemeralConnection(_ url: String) -> Bool {
+        guard ephemeralConnectionUsers[url, default: 0] == 0 else { return false }
+        ephemeralConnections.removeValue(forKey: url)?.disconnect()
+        return true
+    }
     
     // Same as addConnection() but should use from connection queue, not @MainActor
     public func addOutboxConnection(_ relayData: RelayData, completion: ((RelayConnection) -> Void )? = nil) {
@@ -856,17 +914,8 @@ public class ConnectionPool: ObservableObject {
     @MainActor
     private func removeAfterDelay(_ url: String) {
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(35)) { [weak self] in
-            if let (_ ,connection) = self?.ephemeralConnections.first(where: { (key: String, value: RelayConnection) in
-                key == url
-            }) {
-#if DEBUG
-                L.sockets.debug("Removing ephemeral relay \(url)")
-#endif
-                connection.disconnect()
-                if (self?.ephemeralConnections.keys.contains(url) ?? false) {
-                    self?.ephemeralConnections.removeValue(forKey: url)
-                }
-            }
+            guard let self else { return }
+            if !self.removeIdleEphemeralConnection(url) { self.removeAfterDelay(url) }
         }
     }
     
@@ -1344,6 +1393,7 @@ public class ConnectionPool: ObservableObject {
             Task { @MainActor in
                 let staleEphemeral = self.ephemeralConnections.filter { !$1.isConnected && $1.lastMessageReceivedAt?.timeIntervalSinceNow ?? 0 < -300 } // 5 minutes
                 for (url, connection) in staleEphemeral {
+                    guard self.ephemeralConnectionUsers[url, default: 0] == 0 else { continue }
                     connection.disconnect()
                     self.ephemeralConnections.removeValue(forKey: url)
 #if DEBUG

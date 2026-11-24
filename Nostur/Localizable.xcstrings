@@ -28541,6 +28541,28 @@
         }
       }
     },
+    "Nostur is busy preparing the relay connection. Continue fetching to try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur está preparando la conexión con el relé. Continúa la descarga para intentarlo de nuevo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur sedang menyiapkan koneksi relay. Lanjutkan pengunduhan untuk mencoba lagi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur is bezig met het voorbereiden van de relayverbinding. Ga door met ophalen om het opnieuw te proberen."
+          }
+        }
+      }
+    },
     "Nostur Pro" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -43973,6 +43995,28 @@
         }
       }
     },
+    "The relay could not open a WebSocket connection (HTTP %lld). Try again later." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo abrir una conexión WebSocket con el relé (HTTP %lld). Inténtalo más tarde."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koneksi WebSocket ke relay tidak dapat dibuka (HTTP %lld). Coba lagi nanti."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De WebSocketverbinding met de relay kon niet worden geopend (HTTP %lld). Probeer het later opnieuw."
+          }
+        }
+      }
+    },
     "The relay did not acknowledge authentication." : {
       "localizations" : {
         "es" : {
@@ -43995,6 +44039,28 @@
         }
       }
     },
+    "The relay did not finish sending history within %lld seconds." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relé no terminó de enviar el historial en %lld segundos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay belum selesai mengirim riwayat dalam %lld detik."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De relay heeft het verzenden van de geschiedenis niet binnen %lld seconden afgerond."
+          }
+        }
+      }
+    },
     "The relay did not supply an authentication challenge." : {
       "localizations" : {
         "es" : {
@@ -44013,6 +44079,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "De relay heeft geen authenticatiechallenge verstuurd."
+          }
+        }
+      }
+    },
+    "The relay finished sending history, but Nostur could not process it in time. Continue fetching to try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El relé terminó de enviar el historial, pero Nostur no pudo procesarlo a tiempo. Continúa la descarga para intentarlo de nuevo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay sudah selesai mengirim riwayat, tetapi Nostur belum sempat memprosesnya. Lanjutkan pengunduhan untuk mencoba lagi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De relay is klaar met verzenden, maar Nostur kon de geschiedenis niet op tijd verwerken. Ga door met ophalen om het opnieuw te proberen."
           }
         }
       }

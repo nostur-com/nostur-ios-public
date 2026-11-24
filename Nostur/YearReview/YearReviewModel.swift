@@ -530,6 +530,7 @@ final class YearReviewModel {
                 if download {
                     var job = previous ?? YearReviewCollection(owner: owner, period: period, relays: sources, trusted: trust)
                     job.reconcileRelays(sources, month: month)
+                    try await recoverConnectedHistoryRelays(&job, archive: archive)
                     job.invalidEvents += invalidSeedEvents
                     if let month { job.prepareMonth(month, refresh: refreshMonth) }
                     if month == nil && job.monthScope == nil && resume && job.pending.isEmpty && !job.failed.isEmpty {
@@ -733,6 +734,21 @@ final class YearReviewModel {
         return keys
     }
 
+    func recoverConnectedHistoryRelays(_ job: inout YearReviewCollection, archive: YearReviewArchive,
+                                      pool: ConnectionPool = .shared) async throws {
+        var pacing = job.pacing ?? YearReviewRelayPacing()
+        if let stored = try await archive.load(YearReviewRelayPacing.self, key: "relay-pacing") { pacing.merge(stored) }
+        let previous = pacing
+        for relay in job.relays where pacing.delay(for: relay.url) > 3
+            && pacing.canRecoverConnection(relay.url, legacyFailures: job.sourceFailures ?? []) {
+            let connection = try await pool.existingHistoryConnection(for: relay.relayData, connectedOnly: true)
+            try Task.checkCancellation()
+            if connection != nil { pacing.recoveredConnection(relay.url) }
+        }
+        job.pacing = pacing
+        if pacing != previous { try await archive.savePacing(pacing) }
+    }
+
     private func collect(_ job: inout YearReviewCollection, archive: YearReviewArchive) async throws {
         var requestsThisRun = 0
         var priorityMonth = job.monthScope
@@ -744,8 +760,7 @@ final class YearReviewModel {
         var failuresThisRun: [String: YearReviewSourceFailure] = [:]
         if let previous = try await archive.load(YearReviewRelayPacing.self, key: "relay-pacing") {
             var pacing = job.pacing ?? YearReviewRelayPacing()
-            for (relay, date) in previous.nextRequest { pacing.nextRequest[relay] = max(date, pacing.nextRequest[relay, default: .distantPast]) }
-            for (relay, count) in previous.failures { pacing.failures[relay] = max(count, pacing.failures[relay, default: 0]) }
+            pacing.merge(previous)
             job.pacing = pacing
         }
         livePacing = job.pacing ?? YearReviewRelayPacing()
@@ -889,6 +904,8 @@ final class YearReviewModel {
                     job.pacing = livePacing
                     switch response.result {
                     case .success(let page):
+                        livePacing.succeeded(work.relay)
+                        job.pacing = livePacing
                         activities[work.relay]?.received = page.events.count
                         activities[work.relay]?.step = .saving
                         activities[work.relay]?.startedAt = .now
@@ -925,7 +942,12 @@ final class YearReviewModel {
                         if job.phase == .references { job.referenceQueriesChecked = (job.referenceQueriesChecked ?? 0) + 1 }
                         job.recordMonthlyQuery(work)
                     case .failure(let error):
-                        livePacing.failed(work.relay)
+                        if case YearReviewError.processingTimeout = error { throw error }
+                        if case YearReviewError.connectionBusy = error { throw error }
+                        let scope: YearReviewRelayPacing.FailureScope
+                        if case YearReviewError.relayConnection = error { scope = .connection }
+                        else { scope = .request }
+                        livePacing.failed(work.relay, scope: scope)
                         job.pacing = livePacing
                         unavailableThisRun.insert(work.relay)
                         let received = activities[work.relay]?.received ?? 0

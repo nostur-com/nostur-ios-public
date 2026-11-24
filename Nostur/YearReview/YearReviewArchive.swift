@@ -5,12 +5,20 @@ enum YearReviewError: LocalizedError {
     case database(String)
     case archiveLimit
     case relay(String)
+    case relayConnection(String)
+    case responseTimeout(Int)
+    case processingTimeout
+    case connectionBusy
 
     var errorDescription: String? {
         switch self {
         case .database: return String(localized: "Your history archive could not be opened or saved.")
         case .archiveLimit: return String(localized: "This history collection reached its storage limit. Your saved history is still available.")
         case .relay(let message): return message
+        case .relayConnection(let message): return message
+        case .responseTimeout(let seconds): return String(localized: "The relay did not finish sending history within \(seconds) seconds.")
+        case .processingTimeout: return String(localized: "The relay finished sending history, but Nostur could not process it in time. Continue fetching to try again.")
+        case .connectionBusy: return String(localized: "Nostur is busy preparing the relay connection. Continue fetching to try again.")
         }
     }
 }
@@ -120,11 +128,10 @@ actor YearReviewArchive {
     }
 
     /// Parallel relay dispatches may persist snapshots in either order.
-    /// Never allow an older snapshot to shorten another relay’s pacing/cooldown.
+    /// Keep each relay's latest result, including successful recovery.
     func savePacing(_ incoming: YearReviewRelayPacing) throws {
         var merged = try load(YearReviewRelayPacing.self, key: "relay-pacing") ?? YearReviewRelayPacing()
-        for (relay, date) in incoming.nextRequest { merged.nextRequest[relay] = max(date, merged.nextRequest[relay, default: .distantPast]) }
-        for (relay, count) in incoming.failures { merged.failures[relay] = max(count, merged.failures[relay, default: 0]) }
+        merged.merge(incoming)
         try save(merged, key: "relay-pacing")
     }
 

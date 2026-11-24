@@ -23,6 +23,7 @@ final class YearReviewRelayInbox: @unchecked Sendable {
         // Reservations under lock; payload decoding and events on worker only.
         var reservedEvents = 0
         var reservedBytes = 0
+        var eoseReceived = false
         var events: [YearReviewEvent] = []
         let authenticate: ((String, @escaping (String) -> Void) -> Void)?
         let retry: (() -> Void)?
@@ -43,7 +44,7 @@ final class YearReviewRelayInbox: @unchecked Sendable {
         self.worker = worker
     }
 
-    func register(id: String, relay: String, timeout: TimeInterval = 18,
+    func register(id: String, relay: String, timeout: TimeInterval = 18, processingTimeout: TimeInterval = 60,
                   authenticate: ((String, @escaping (String) -> Void) -> Void)? = nil,
                   retry: (() -> Void)? = nil, completion: @escaping (Result<YearReviewRelayPage, Error>) -> Void) {
         lock.lock()
@@ -51,7 +52,11 @@ final class YearReviewRelayInbox: @unchecked Sendable {
         lock.unlock()
         // A saturated decoding queue must not delay the network watchdog.
         DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + timeout) { [weak self] in
-            self?.finish(id, .failure(YearReviewError.relay(String(localized: "The history request did not complete with EOSE within \(Int(timeout)) seconds, including connection setup and response processing."))))
+            self?.finish(id, .failure(YearReviewError.responseTimeout(Int(timeout))), unlessEOSEReceived: true)
+        }
+        // Keep local decoding bounded, independently of the relay's response deadline.
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + max(timeout, processingTimeout)) { [weak self] in
+            self?.finish(id, .failure(YearReviewError.processingTimeout))
         }
     }
 
@@ -67,11 +72,33 @@ final class YearReviewRelayInbox: @unchecked Sendable {
         finish(id, .failure(CancellationError()))
     }
 
-    private func finish(_ id: String, _ result: Result<YearReviewRelayPage, Error>) {
+    private func finish(_ id: String, _ result: Result<YearReviewRelayPage, Error>, unlessEOSEReceived: Bool = false) {
         lock.lock()
+        if unlessEOSEReceived, pending[id]?.eoseReceived == true {
+            lock.unlock()
+            return
+        }
         let request = pending.removeValue(forKey: id)
         lock.unlock()
         request?.completion(result)
+    }
+
+    func connectionFailed(ids: Set<String>, relay: String, error: Error, httpStatus: Int?) {
+        let reason: String
+        if let httpStatus, httpStatus != 101 {
+            reason = String(localized: "The relay could not open a WebSocket connection (HTTP \(httpStatus)). Try again later.")
+        } else {
+            reason = error.localizedDescription
+        }
+        let canonical = normalizeRelayUrl(relay)
+        lock.lock()
+        let matching = ids.filter { pending[$0]?.relay == canonical }
+        lock.unlock()
+        for id in matching {
+            let connectionFailure = httpStatus.map { (500...599).contains($0) } ?? true
+            let failure = connectionFailure ? YearReviewError.relayConnection(reason) : .relay(reason)
+            finish(id, .failure(failure), unlessEOSEReceived: true)
+        }
     }
 
     @discardableResult
@@ -92,6 +119,9 @@ final class YearReviewRelayInbox: @unchecked Sendable {
             request.reservedEvents += 1
             request.reservedBytes += byteCount
             exceedsLimit = request.reservedEvents > 1_000 || request.reservedBytes > 16_000_000 || byteCount > 768_000
+        }
+        if let request, request.relay == canonicalRelay, type == "EOSE" {
+            request.eoseReceived = true
         }
         lock.unlock()
         // Late history payloads must not fall through to the live database.
@@ -225,7 +255,8 @@ final class YearReviewRelayInbox: @unchecked Sendable {
         let message = String(decoding: data, as: UTF8.self)
         // ConnectionPool owns/reuses these connections. Do not disconnect a relay
         // that another feature may also use when this one request finishes.
-        let connection = ConnectionPool.shared.addEphemeralConnection(relay)
+        let selected = try await ConnectionPool.shared.historyConnection(for: relay)
+        let connection = selected.connection
         let authPubkey = relay.auth ? resolveAuthAccount(relay)?.publicKey : nil
         let authenticate: ((String, @escaping (String) -> Void) -> Void)? = authPubkey.map { pubkey in
             { challenge, submitted in
@@ -251,23 +282,30 @@ final class YearReviewRelayInbox: @unchecked Sendable {
         }
         defer {
             progressTask?.cancel()
-            connection.completeReqSubscription(id)
-            connection.sendMessage("[\"CLOSE\",\"\(id)\"]")
+            connection.closeAndDropSubscription(id)
+            if selected.retainedEphemeral { ConnectionPool.shared.releaseEphemeralConnection(relay) }
         }
-        return try await withTaskCancellationHandler(operation: {
-            try await withCheckedThrowingContinuation { continuation in
-                shared.register(id: id, relay: relay.url, authenticate: authenticate,
-                                retry: {
-                                    guard shared.receivedCount(id) != nil else { return }
-                                    connection.sendMessage(message, subscriptionId: id)
-                                }) { continuation.resume(with: $0) }
-                if Task.isCancelled {
-                    shared.cancel(id)
-                } else {
-                    if !connection.isConnected { connection.connect() }
-                    connection.sendMessage(message, subscriptionId: id)
+        do {
+            return try await withTaskCancellationHandler(operation: {
+                try await withCheckedThrowingContinuation { continuation in
+                    shared.register(id: id, relay: relay.url, authenticate: authenticate,
+                                    retry: {
+                                        guard shared.receivedCount(id) != nil else { return }
+                                        connection.sendMessage(message, subscriptionId: id)
+                                    }) { continuation.resume(with: $0) }
+                    if Task.isCancelled {
+                        shared.cancel(id)
+                    } else {
+                        if !connection.isConnected { connection.connect() }
+                        connection.sendMessage(message, subscriptionId: id)
+                    }
                 }
+            }, onCancel: { shared.cancel(id) })
+        } catch let error as YearReviewError {
+            if case .responseTimeout = error, !connection.isConnected {
+                throw YearReviewError.relayConnection(error.localizedDescription)
             }
-        }, onCancel: { shared.cancel(id) })
+            throw error
+        }
     }
 }
