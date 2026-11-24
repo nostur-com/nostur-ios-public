@@ -388,10 +388,41 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     /// Home means the beginning of the list, including any rows before the first
     /// post. Pinning the first post instead skips the already-seen banner and
     /// makes the next viewport sample contradict the optimistic at-top flag.
-    func scrollToContentTop() async -> Bool {
+    func scrollToContentTop(animated: Bool = false) async -> Bool {
         guard let scrollView else { return false }
         beginProgrammaticScroll()
         parked = nil
+        var restoreSelfSizing: (() -> Void)?
+        defer { restoreSelfSizing?() }
+        if animated, prependSnapshot == nil, scrollView.window != nil {
+            if #available(iOS 16.0, *), let collectionView = scrollView as? UICollectionView {
+                let previous = collectionView.selfSizingInvalidation
+                collectionView.selfSizingInvalidation = .disabled
+                restoreSelfSizing = { collectionView.selfSizingInvalidation = previous }
+            }
+            scrollView.setContentOffset(
+                CGPoint(x: scrollView.contentOffset.x, y: -scrollView.adjustedContentInset.top),
+                animated: true
+            )
+            // Await UIKit without blocking the main actor. The target is the
+            // content edge, including leading banners, rather than the first post.
+            for _ in 0..<40 {
+                if Task.isCancelled || scrollView.isDragging || scrollView.isTracking { break }
+                if abs(scrollView.contentOffset.y + scrollView.adjustedContentInset.top) <= 0.5 { break }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+        guard !Task.isCancelled, !scrollView.isDragging, !scrollView.isTracking else {
+            scrollView.setContentOffset(scrollView.contentOffset, animated: false)
+            if let live = visibleAnchor(in: scrollView) {
+                rememberAnchor(id: live.id, visibleTopOffset: live.visibleTopOffset)
+            }
+            liftNavigationCover()
+            cancelProgrammaticScroll()
+            return false
+        }
+        restoreSelfSizing?()
+        restoreSelfSizing = nil
         await finishProgrammaticScroll {
             scrollView.setContentOffset(
                 CGPoint(x: scrollView.contentOffset.x, y: -scrollView.adjustedContentInset.top),
@@ -1536,6 +1567,7 @@ private struct NXReadSyncTestButton: View {
 
 struct NXPostsFeed: View {
     
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.theme) private var theme
     @Environment(\.availableWidth) private var availableWidth
     @Environment(\.availableHeight) private var availableHeight
@@ -2325,7 +2357,7 @@ struct NXPostsFeed: View {
             syncLayoutPostIDs()
             scrollView.layoutIfNeeded()
             if scrollToIndex == 0 {
-                vmInner.isAtTop = await layoutStabilizer.scrollToContentTop()
+                vmInner.isAtTop = await layoutStabilizer.scrollToContentTop(animated: !reduceMotion)
                 vmInner.readingPostID = nil
                 if vmInner.isAtTop {
                     Task { @MainActor in vm.prefetch(targetPost) }

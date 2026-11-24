@@ -404,6 +404,75 @@ final class NXFeedViewportTests: XCTestCase {
     }
 
     @MainActor
+    func testFinalUnreadScrollAnimatesToContentEdgeWhileImportQueueIsBlocked() async throws {
+        let entered = expectation(description: "import context occupied")
+        let gate = DispatchSemaphore(value: 0)
+        let importer = Task { await bg().perform { entered.fulfill(); _ = gate.wait(timeout: .now() + 5) } }
+        defer { gate.signal(); importer.cancel() }
+        await fulfillment(of: [entered], timeout: 1)
+
+        let scrollView = NXFeedAnimatedTopTestScrollView(frame: CGRect(x: 0, y: 0, width: 320, height: 600))
+        scrollView.contentInsetAdjustmentBehavior = .never
+        scrollView.contentInset.top = 64
+        scrollView.contentSize = CGSize(width: 320, height: 3000)
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = scrollView.bounds
+        window.addSubview(scrollView)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        scrollView.contentOffset.y = 180 // Near the first post, with a banner above it.
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: scrollView)
+        var completed = false
+        let jump = Task { @MainActor in
+            let result = await stabilizer.scrollToContentTop(animated: true)
+            completed = true
+            return result
+        }
+        await Task.yield()
+        XCTAssertEqual(scrollView.lastAnimatedTarget?.y, -64)
+        XCTAssertEqual(scrollView.contentOffset.y, 180, accuracy: 0.5,
+            "The final unread must animate instead of immediately setting the final offset")
+        XCTAssertFalse(completed, "Do not publish at-top before the native animation lands")
+
+        let started = Date.now
+        let uiResponsive = await Task { @MainActor in true }.value
+        XCTAssertTrue(uiResponsive)
+        XCTAssertLessThan(Date.now.timeIntervalSince(started), 0.5)
+        scrollView.completeNativeAnimation()
+        let reachedTop = await jump.value
+        XCTAssertTrue(reachedTop)
+        XCTAssertEqual(scrollView.contentOffset.y, -64, accuracy: 0.5)
+        stabilizer.suspendPositionTracking()
+    }
+
+    @MainActor
+    func testCancelledFinalUnreadAnimationDoesNotForceAJumpToTop() async throws {
+        let scrollView = NXFeedAnimatedTopTestScrollView(frame: CGRect(x: 0, y: 0, width: 320, height: 600))
+        scrollView.contentInsetAdjustmentBehavior = .never
+        scrollView.contentSize = CGSize(width: 320, height: 3000)
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = scrollView.bounds
+        window.addSubview(scrollView)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        scrollView.contentOffset.y = 160
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: scrollView)
+        let jump = Task { @MainActor in await stabilizer.scrollToContentTop(animated: true) }
+        await Task.yield()
+        XCTAssertNotNil(scrollView.lastAnimatedTarget)
+        jump.cancel()
+        let reachedTop = await jump.value
+        XCTAssertFalse(reachedTop)
+        XCTAssertEqual(scrollView.contentOffset.y, 160, accuracy: 0.5)
+        XCTAssertFalse(stabilizer.isProgrammaticScrollPending)
+        stabilizer.suspendPositionTracking()
+    }
+
+    @MainActor
     func testHomeReachesContentTopWithLeadingBannerAndStaysThereAfterPromptLayout() async throws {
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: 300, height: 200)
@@ -1943,5 +2012,21 @@ private final class NXFeedMissingGeometryCollection: UICollectionView {
     override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
         guard indexPath.item != invalidItem else { return nil }
         return super.layoutAttributesForItem(at: indexPath)
+    }
+}
+
+/// Hold UIKit's animation open so tests can check the pending and cancelled
+/// states without relying on display-frame timing.
+@MainActor
+private final class NXFeedAnimatedTopTestScrollView: UIScrollView {
+    private(set) var lastAnimatedTarget: CGPoint?
+
+    override func setContentOffset(_ contentOffset: CGPoint, animated: Bool) {
+        if animated { lastAnimatedTarget = contentOffset }
+        else { super.setContentOffset(contentOffset, animated: false) }
+    }
+
+    func completeNativeAnimation() {
+        if let target = lastAnimatedTarget { super.setContentOffset(target, animated: false) }
     }
 }
