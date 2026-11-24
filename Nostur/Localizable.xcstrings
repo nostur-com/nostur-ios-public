@@ -6662,6 +6662,29 @@
         }
       }
     },
+    "Additional relays" : {
+      "comment" : "Collapsed heading for the Autopilot broadcast relay list in the post composer.",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays adicionales"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay tambahan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra relays"
+          }
+        }
+      }
+    },
     "Advanced" : {
       "localizations" : {
         "es" : {

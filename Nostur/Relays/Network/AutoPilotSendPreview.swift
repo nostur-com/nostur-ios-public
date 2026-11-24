@@ -12,14 +12,23 @@ struct AutoPilotSendPreview: View {
     public let nEvent: NEvent
     
     @StateObject private var vm = RelayAutoPilotPreviewModel()
+    @State private var isExpanded = true
     
     var body: some View {
         ZStack {
             if !vm.relays.isEmpty {
-                VStack(alignment: .leading) {
-                    Text("Autopilot will broadcast to the following additional relays")
-                    ForEach(vm.relays, id: \.self) { relay in
-                        Text("\(relay)")
+                DisclosureGroup(isExpanded: $isExpanded) {
+                    VStack(alignment: .leading) {
+                        ForEach(vm.relays, id: \.self) { relay in
+                            Text(relay)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } label: {
+                    if isExpanded {
+                        Text("Autopilot will broadcast to the following additional relays")
+                    } else {
+                        Text("Additional relays", comment: "Collapsed heading for the Autopilot broadcast relay list in the post composer.")
                     }
                 }
                 .font(.footnote)
