@@ -156,6 +156,47 @@ final class ProfileImageSafetyTests: XCTestCase {
         XCTAssertLessThan(response.image.size.width * response.image.scale, 2999)
     }
 
+    @MainActor
+    func testGalleryUpgradesCachedFeedImageToOriginalPixels() async throws {
+        // Same canvas as the reported screenshot; use local data to avoid network dependence.
+        let source = try XCTUnwrap(CGImageSourceCreateWithData(try makeGIF(width: 2028, height: 1100) as CFData, nil))
+        let bitmap = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        let data = try XCTUnwrap(UIImage(cgImage: bitmap).pngData())
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).png")
+        try data.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let vm = MediaViewVM()
+        let previewLoaded = await vm.load(url, forceLoad: true, targetSize: CGSize(width: 200, height: 400))
+        XCTAssertTrue(previewLoaded)
+        await Task.yield()
+        guard case .image(let preview) = vm.state else {
+            return XCTFail("Expected feed preview")
+        }
+        XCTAssertLessThan(try XCTUnwrap(preview.uiImage.cgImage).width, 2028)
+        XCTAssertTrue(preview.needsFullResolution)
+
+        let loaded = await vm.load(url, forceLoad: true, fullResolution: true, preserveCurrentImage: true)
+        XCTAssertTrue(loaded)
+        await Task.yield()
+        guard case .image(let original) = vm.state else {
+            return XCTFail("Expected full-resolution image")
+        }
+        XCTAssertEqual(original.uiImage.cgImage?.width, 2028)
+        XCTAssertEqual(original.uiImage.cgImage?.height, 1100)
+        XCTAssertFalse(original.needsFullResolution)
+    }
+
+    func testFullscreenUpgradeUsesOrientedPixelsInsteadOfPoints() {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 3
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 100, height: 50), format: format).image { _ in }
+        XCTAssertFalse(ImageInfo(uiImage: image, realDimensions: CGSize(width: 300, height: 150)).needsFullResolution)
+        let rotated = UIImage(cgImage: image.cgImage!, scale: 3, orientation: .right)
+        XCTAssertFalse(ImageInfo(uiImage: rotated, realDimensions: CGSize(width: 150, height: 300)).needsFullResolution)
+        XCTAssertTrue(ImageInfo(uiImage: image, realDimensions: CGSize(width: 2028, height: 1100)).needsFullResolution)
+    }
+
     func testLargerAnimationOffersWorkingOverride() async throws {
         let data = try makeGIF(width: 2, height: 2, frameCount: 401)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).gif")

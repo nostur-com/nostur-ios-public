@@ -750,7 +750,7 @@ struct MediaPlaceholder: View {
                         vm.state = .image(imageInfo)
                         if fullScreen,
                            !usePFPpipeline,
-                           needsFullscreenUpgrade(imageInfo) {
+                           imageInfo.needsFullResolution {
                             load(forceLoad: true, preserveCurrentImage: true)
                         }
                     }
@@ -843,6 +843,7 @@ struct MediaPlaceholder: View {
                 usePFPpipeline: usePFPpipeline,
                 targetSize: imageRequestTargetSize,
                 cropToTarget: cropImageRequestToTarget && !fullScreen,
+                fullResolution: fullScreen,
                 preserveCurrentImage: preserveCurrentImage,
                 blossomAuthorPubkey: recoverFromBlossom ? galleryItem.pubkey : nil,
                 fallbackURLs: galleryItem.fallbackURLs,
@@ -852,25 +853,6 @@ struct MediaPlaceholder: View {
         }
     }
 
-    private func needsFullscreenUpgrade(_ imageInfo: ImageInfo) -> Bool {
-        guard let targetSize = imageRequestTargetSize,
-              imageInfo.realDimensions.width > 0,
-              imageInfo.realDimensions.height > 0
-        else { return false }
-
-        let imageAspect = imageInfo.realDimensions.width / imageInfo.realDimensions.height
-        let targetAspect = targetSize.width / targetSize.height
-        let fittedSize = if imageAspect > targetAspect {
-            CGSize(width: targetSize.width, height: targetSize.width / imageAspect)
-        }
-        else {
-            CGSize(width: targetSize.height * imageAspect, height: targetSize.height)
-        }
-
-        return imageInfo.uiImage.size.width + 1 < fittedSize.width
-            || imageInfo.uiImage.size.height + 1 < fittedSize.height
-    }
-    
     @MainActor // Pause is because onDisappear, and will resume automatically on onAppear
     private func pauseLoad() {
         guard case .loading(let progress) = vm.state else { return }

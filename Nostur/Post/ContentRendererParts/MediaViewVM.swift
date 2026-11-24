@@ -26,6 +26,7 @@ class MediaViewVM: ObservableObject {
         usePFPpipeline: Bool = false,
         targetSize: CGSize? = nil,
         cropToTarget: Bool = false,
+        fullResolution: Bool = false,
         preserveCurrentImage: Bool = false,
         blossomAuthorPubkey: String? = nil,
         fallbackURLs: [URL] = [],
@@ -89,7 +90,8 @@ class MediaViewVM: ObservableObject {
             overrideLowDataMode: forceLoad,
             targetSize: targetSize,
             contentMode: cropToTarget ? .aspectFill : .aspectFit,
-            crop: cropToTarget
+            crop: cropToTarget,
+            fullResolution: fullResolution
         )
         let pipeline = if url.scheme == "blossom" {
             ImageProcessing.shared.blossom
@@ -262,6 +264,7 @@ class MediaViewVM: ObservableObject {
                         usePFPpipeline: usePFPpipeline,
                         targetSize: targetSize,
                         cropToTarget: cropToTarget,
+                        fullResolution: fullResolution,
                         preserveCurrentImage: false,
                         reportFailure: false
                     ) {
@@ -387,6 +390,19 @@ struct ImageInfo: Equatable {
     let id = UUID()
     let uiImage: UIImage
     let realDimensions: CGSize
+
+    /// Compare source pixels, not UIImage points or the unzoomed display frame.
+    var needsFullResolution: Bool {
+        var pixels = uiImage.cgImage.map { CGSize(width: $0.width, height: $0.height) }
+            ?? CGSize(width: uiImage.size.width * uiImage.scale, height: uiImage.size.height * uiImage.scale)
+        switch uiImage.imageOrientation {
+        case .left, .leftMirrored, .right, .rightMirrored:
+            pixels = CGSize(width: pixels.height, height: pixels.width)
+        default:
+            break
+        }
+        return pixels.width + 1 < realDimensions.width || pixels.height + 1 < realDimensions.height
+    }
 }
 
 struct GifInfo: Equatable {

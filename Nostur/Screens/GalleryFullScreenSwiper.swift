@@ -175,7 +175,8 @@ struct GalleryFullScreenSwiper: View {
             let prefetchRequest = makeImageRequest(
                 items[currentIndex + 1].url,
                 label: "prefetchNextImage",
-                targetSize: fullScreenSize
+                targetSize: fullScreenSize,
+                fullResolution: true
             )
             ImageProcessing.shared.contentPrefetcher.startPrefetching(with: [prefetchRequest])
         }

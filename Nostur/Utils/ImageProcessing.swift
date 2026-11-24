@@ -472,7 +472,8 @@ func makeImageRequest(
     overrideLowDataMode: Bool = false,
     targetSize: CGSize? = nil,
     contentMode: ImageProcessingOptions.ContentMode = .aspectFit,
-    crop: Bool = false
+    crop: Bool = false,
+    fullResolution: Bool = false
 ) -> ImageRequest {
 #if DEBUG
     L.og.debug("ImageRequest: \(url.absoluteString), \(label) -[LOG]-")
@@ -484,7 +485,7 @@ func makeImageRequest(
         userInfo[.imageIdKey] = "blossom:" + uri.hash
     }
     return ImageRequest(url: url,
-                 processors: [
+                 processors: fullResolution ? [] : [
                     .resize(
                         size: CGSize(
                             width: max(1, targetSize.width),
