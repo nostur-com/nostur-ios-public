@@ -35,7 +35,7 @@ struct GalleryFullScreenSwiper: View {
     
     // Zoom and pan state
     private let minScale: CGFloat = 1.0 // fit-to-screen
-    private let maxScale: CGFloat = 4.0
+    private let maxScale: CGFloat = 8.0
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var pinchStart: GalleryPinchZoom?
