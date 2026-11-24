@@ -24,6 +24,27 @@ private actor NXFeedTestGate {
 
 final class NXFeedViewportTests: XCTestCase {
 
+#if DEBUG
+    @MainActor
+    func testJumpDiagnosticsRecordLargeOffsetAndSizeChanges() {
+        let scrollView = UIScrollView(frame: CGRect(x: 0, y: 0, width: 320, height: 600))
+        let window = UIWindow(frame: scrollView.bounds)
+        window.addSubview(scrollView)
+        scrollView.contentSize = CGSize(width: 320, height: 2000)
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: scrollView)
+        var actions: [String] = []
+        stabilizer.onDebugAction = { actions.append($0) }
+
+        scrollView.contentOffset.y = 900
+        scrollView.contentSize.height = 6000
+
+        XCTAssertTrue(actions.contains { $0.contains("SCROLL displacement · y 0.0→900.0") })
+        XCTAssertTrue(actions.contains { $0.contains("LAYOUT size · 2000.0→6000.0") })
+        stabilizer.suspendPositionTracking()
+    }
+#endif
+
     @MainActor
     func testUnreadReconciliationDropsAbsentRowsAndPreservesQueuedPrepends() async {
         let posts = await bg().perform {

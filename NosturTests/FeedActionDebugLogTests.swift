@@ -77,12 +77,12 @@ struct FeedActionDebugLogTests {
         #expect(log.entries.last?.message == "event 44")
     }
 
-    @Test("Jump reports keep only the preceding ten seconds and include diagnostic context")
+    @Test("Jump reports keep the preceding two minutes and include diagnostic context")
     func jumpReportWindow() {
         let log = FeedActionDebugLog()
-        let now = Date(timeIntervalSince1970: 100)
-        log.recordSynchronouslyForTesting("stale event", at: now.addingTimeInterval(-11))
-        log.recordSynchronouslyForTesting("boundary event", at: now.addingTimeInterval(-10))
+        let now = Date(timeIntervalSince1970: 200)
+        log.recordSynchronouslyForTesting("stale event", at: now.addingTimeInterval(-121))
+        log.recordSynchronouslyForTesting("boundary event", at: now.addingTimeInterval(-120))
         log.recordSynchronouslyForTesting("prepend before jump", at: now.addingTimeInterval(-1))
         let report = log.jumpReport(feedName: "Following", currentState: "anchor abc · y 123", at: now)
         #expect(!report.contains("stale event"))
@@ -92,7 +92,7 @@ struct FeedActionDebugLogTests {
         #expect(report.contains("anchor abc · y 123"))
         #expect(report.contains("TEST_BUILD_ID"))
         #expect(report.contains("Platform:"))
-        #expect(!log.jumpReport(feedName: "Following", currentState: "idle", at: now.addingTimeInterval(20)).contains("prepend before jump"))
+        #expect(!log.jumpReport(feedName: "Following", currentState: "idle", at: now.addingTimeInterval(130)).contains("prepend before jump"))
         log.clear()
         #expect(!log.jumpReport(feedName: "Following", currentState: "idle", at: now).contains("boundary event"))
     }
@@ -113,6 +113,25 @@ struct FeedActionDebugLogTests {
         #expect(report.contains("burst-349 end"))
         #expect(report.contains("just before capture"))
         #expect(log.entries.count == 60)
+    }
+
+    @Test("Searching after a jump does not evict the earlier viewport change")
+    func retainsJumpBeforeSearch() {
+        let log = FeedActionDebugLog()
+        let now = Date(timeIntervalSince1970: 200)
+        log.recordSynchronouslyForTesting("RESUME · before the jump", at: now.addingTimeInterval(-90))
+        log.recordSynchronouslyForTesting("SETTLE timeout · original jump", at: now.addingTimeInterval(-75))
+        for index in 0..<600 {
+            let message = index.isMultiple(of: 2) ? "NEAR TAIL · search-\(index)" : "PAGE skip · search-\(index)"
+            log.recordSynchronouslyForTesting(message, at: now.addingTimeInterval(-60 + Double(index) / 10))
+        }
+        let report = log.jumpReport(feedName: "Explore", currentState: "search stopped", at: now)
+        #expect(report.contains("Preceding 120 seconds"))
+        #expect(report.contains("300 actions"))
+        #expect(report.contains("RESUME · before the jump"))
+        #expect(report.contains("SETTLE timeout · original jump"))
+        #expect(report.contains("PAGE skip · search-599"))
+        #expect(!log.jumpReport(feedName: "Explore", currentState: "idle", at: now.addingTimeInterval(130)).contains("original jump"))
     }
 
     @Test("Uses strict two- and four-second performance thresholds")

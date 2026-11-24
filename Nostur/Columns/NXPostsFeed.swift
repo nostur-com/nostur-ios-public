@@ -949,7 +949,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         let afterYield = offsetAfterYield.map { String(format: "%.1f", $0) } ?? "?"
         let end = scrollView.map { String(format: "%.1f", $0.contentOffset.y) } ?? "?"
         let outcome = timedOut ? "timeout" : "done"
-        let live = timedOut ? " · \(anchorSummary(in: scrollView))" : ""
+        let live = " · \(anchorSummary(in: scrollView))"
         onDebugAction?(
             "SETTLE \(outcome) · \(correctionCount)× · y \(start)→\(end) · afterYield \(afterYield) · anchor \(shortID(anchor.id)) @ \(String(format: "%.1f", anchor.visibleTopOffset)) · \(viewportDebugSummary())\(live)"
         )
@@ -1286,6 +1286,9 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         Task { @MainActor [weak self] in
             await Task.yield()
             guard let self, self.anchorGeneration == generation else { return }
+#if DEBUG
+            self.onDebugAction?("SETTLE reveal · \(self.viewportDebugSummary()) · \(self.anchorSummary(in: self.scrollView))")
+#endif
             self.removePrependSnapshot()
             self.onPrependCoverEnded?()
         }
@@ -1313,20 +1316,44 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 self?.handleAdjustedContentInsetChange(in: scrollView)
             }
         })
-        scrollObservations.append(scrollView.observe(\.contentOffset, options: [.new]) { [weak self] scrollView, _ in
+        scrollObservations.append(scrollView.observe(\.contentOffset, options: [.old, .new]) { [weak self] scrollView, change in
             MainActor.assumeIsolated {
-                self?.handleContentOffsetChange(in: scrollView)
+                self?.handleContentOffsetChange(in: scrollView, previousOffsetY: change.oldValue?.y)
             }
         })
-        scrollObservations.append(scrollView.observe(\.contentSize, options: [.new]) { [weak self] scrollView, _ in
+        scrollObservations.append(scrollView.observe(\.contentSize, options: [.old, .new]) { [weak self] scrollView, change in
             MainActor.assumeIsolated {
+#if DEBUG
+                if let self, let before = change.oldValue?.height,
+                   scrollView.window != nil,
+                   abs(scrollView.contentSize.height - before) >= max(200, scrollView.bounds.height / 2) {
+                    self.onDebugAction?(String(
+                        format: "LAYOUT size · %.1f→%.1f · drag %@ · decelerating %@ · settling %@ · %@",
+                        before, scrollView.contentSize.height,
+                        scrollView.isDragging.description, scrollView.isDecelerating.description,
+                        (self.settleTask != nil).description, self.viewportDebugSummary()
+                    ))
+                }
+#endif
                 self?.evaluateApproachingBottom(in: scrollView)
             }
         })
     }
 
-    private func handleContentOffsetChange(in scrollView: UIScrollView) {
+    private func handleContentOffsetChange(in scrollView: UIScrollView, previousOffsetY: CGFloat?) {
         let newOffsetY = scrollView.contentOffset.y
+#if DEBUG
+        if let previousOffsetY, scrollView.window != nil,
+           !isProgrammaticScrollInProgress,
+           abs(newOffsetY - previousOffsetY) >= max(200, scrollView.bounds.height / 2) {
+            onDebugAction?(String(
+                format: "SCROLL displacement · y %.1f→%.1f · drag %@ · decelerating %@ · settling %@ · cover %@ · cached live %@",
+                previousOffsetY, newOffsetY, scrollView.isDragging.description,
+                scrollView.isDecelerating.description, (settleTask != nil).description,
+                (prependSnapshot != nil).description, lastLive.map { shortID($0.id) } ?? "none"
+            ))
+        }
+#endif
         let isFinger = scrollView.isDragging || scrollView.isTracking
         if isFinger || scrollView.isDecelerating {
             lastUserScrollAt = CACurrentMediaTime()

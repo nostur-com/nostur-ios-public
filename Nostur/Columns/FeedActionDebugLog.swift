@@ -75,7 +75,7 @@ final class FeedActionDebugLog: ObservableObject {
     private static let visibilityKey = "feed_action_debug_overlay"
     private static let maximumEntries = 60
     private static let maximumJumpEntries = 300
-    static let jumpHistoryDuration: TimeInterval = 10
+    static let jumpHistoryDuration: TimeInterval = 120
     private static let maximumFirstRenderEntries = 24
 
     @Published private(set) var entries: [Entry] = []
@@ -128,7 +128,12 @@ final class FeedActionDebugLog: ObservableObject {
         jumpEntries.removeAll { $0.date < date.addingTimeInterval(-Self.jumpHistoryDuration) }
         jumpEntries.append(Entry(date: date, message: message))
         if jumpEntries.count > Self.maximumJumpEntries {
-            jumpEntries.removeFirst(jumpEntries.count - Self.maximumJumpEntries)
+            // Searching for a displaced post produces a lot of pagination noise.
+            // Keep the earlier viewport mutations that may explain the original jump.
+            let routine = jumpEntries.firstIndex {
+                $0.message.hasPrefix("NEAR TAIL ·") || $0.message.hasPrefix("PAGE skip ·")
+            }
+            jumpEntries.remove(at: routine ?? jumpEntries.startIndex)
         }
     }
 
@@ -178,7 +183,8 @@ final class FeedActionDebugLog: ObservableObject {
         let recent = jumpEntries.filter {
             $0.date >= date.addingTimeInterval(-Self.jumpHistoryDuration) && $0.date <= date
         }
-        let lines = recent.isEmpty ? "(no actions in the preceding 10 seconds)" : recent.map(\.line).joined(separator: "\n")
+        let historySeconds = Int(Self.jumpHistoryDuration)
+        let lines = recent.isEmpty ? "(no actions in the preceding \(historySeconds) seconds)" : recent.map(\.line).joined(separator: "\n")
         return """
         FEED JUMP · user-reported
         Captured: \(date.ISO8601Format())
@@ -186,7 +192,8 @@ final class FeedActionDebugLog: ObservableObject {
         \(Self.environmentReport)
         Current: \(currentState)
         \(measurementTitle): \(firstRenderReport)
-        Preceding 10 seconds · \(recent.count) actions (maximum \(Self.maximumJumpEntries)):
+        Preceding \(historySeconds) seconds · \(recent.count) actions (maximum \(Self.maximumJumpEntries)):
+        Routine pagination entries may be omitted to preserve earlier viewport changes.
         \(lines)
         """
     }
