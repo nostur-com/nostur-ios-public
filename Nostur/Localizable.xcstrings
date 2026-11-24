@@ -16437,6 +16437,7 @@
       }
     },
     "Dismiss year report reminder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -21032,6 +21033,7 @@
       }
     },
     "Hide highlights or people you’d rather leave out. Preview your image, then choose Prepare post to make an editable draft." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -26664,6 +26666,7 @@
       }
     },
     "My profile" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -29761,6 +29764,7 @@
       }
     },
     "Open History to fetch a month or retry a source. Some older posts may no longer be available." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -33417,6 +33421,7 @@
       }
     },
     "Public activity only" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -43921,6 +43926,7 @@
       }
     },
     "The history request did not complete with EOSE within %lld seconds, including connection setup and response processing." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -50540,6 +50546,7 @@
       }
     },
     "You can keep using Nostur." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -51298,6 +51305,7 @@
       }
     },
     "Your Nostr year is ready" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
