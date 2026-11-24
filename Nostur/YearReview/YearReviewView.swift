@@ -218,7 +218,7 @@ struct YearReviewView: View {
                         Text(verbatim: String(year)).tag(year)
                     }
                 }
-                .disabled(model.isRunning)
+                .disabled(model.isRunning || model.isConfiguring)
             }
 #if DEBUG
             Section("Testing") {
@@ -491,7 +491,7 @@ private struct YearReviewHistorySummary: View {
             Spacer(minLength: 8)
             Button(action: openHistory) { Label("History", systemImage: "calendar") }
                 .buttonStyle(.bordered)
-                .disabled(model.owner.isEmpty || model.isDeleting)
+                .disabled(model.owner.isEmpty || model.isDeleting || model.isConfiguring)
         }
     }
 }
@@ -719,7 +719,7 @@ private struct YearReviewAboutView: View {
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     let report: YearReviewReport?
-    let collection: YearReviewCollection?
+    let collection: YearReviewReportCoverage?
 
     var body: some View {
         ScrollView {
@@ -791,7 +791,7 @@ private struct YearReviewAboutRow: View {
 
 private struct YearReviewCoverageView: View {
     let report: YearReviewReport
-    let collection: YearReviewCollection?
+    let collection: YearReviewReportCoverage?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -799,7 +799,7 @@ private struct YearReviewCoverageView: View {
                 .font(.subheadline.weight(.semibold))
             Text("\(report.ownPostCount) posts found · Through \(report.period.cutoffDate, format: report.period.dateFormat)")
                 .font(.subheadline).foregroundStyle(.secondary)
-            if collection?.phase != .finished || collection?.failed.isEmpty != true
+            if collection?.phase != .finished || collection?.hasIncompleteSources != false
                 || collection?.estimatedResponses ?? 0 > 0 || collection?.parentsLimited == true
                 || report.unresolvedParents > 0 {
                 Text("Some activity may be missing.")
@@ -1230,7 +1230,7 @@ private struct YearReviewShareContent: View {
     let enabledCards: Set<YearReviewCard>
     var cardsToRender: Set<YearReviewCard>? = nil
     let hiddenPeople: Set<String>
-    let collection: YearReviewCollection?
+    let collection: YearReviewReportCoverage?
     let previews: [String: YearReviewPostPreview]
 
     var body: some View {
@@ -1246,7 +1246,7 @@ private struct YearReviewShareContent: View {
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Through \(report.period.cutoffDate, format: report.period.dateFormat)")
-                    if collection == nil || collection?.phase != .finished || collection?.estimatedResponses ?? 0 > 0 || !(collection?.failed.isEmpty ?? true) || report.unresolvedParents > 0 || collection?.parentsLimited == true {
+                    if collection == nil || collection?.phase != .finished || collection?.estimatedResponses ?? 0 > 0 || collection?.hasIncompleteSources == true || report.unresolvedParents > 0 || collection?.parentsLimited == true {
                         Text("Partial history")
                     }
                 }

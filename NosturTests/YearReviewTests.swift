@@ -1626,6 +1626,166 @@ final class YearReviewTests: XCTestCase {
         return try JSONDecoder().decode(YearReviewEvent.self, from: JSONEncoder().encode(signed))
     }
 
+    private func storeReportSnapshot(archive: YearReviewArchive, pubkey: String,
+                                     period requestedPeriod: YearReviewPeriod? = nil) async throws -> YearReviewSavedReport {
+        let period = requestedPeriod ?? self.period
+        let revision = try await archive.reportRevision()
+        let report = try await archive.report(owner: pubkey, period: period, trusted: [], blocked: [])
+        let saved = YearReviewSavedReport(version: YearReviewSavedReport.currentVersion, owner: pubkey,
+            revision: revision, report: report,
+            previews: ["post": .init(text: "A preview", thumbnail: URL(string: "https://example.com/photo.jpg"), extraCount: 0, isVideo: false)],
+            names: [alice: "Alice"], pictures: [:], collection: nil,
+            counts: try await archive.archivedCounts(), lastFetchedDate: nil, trusted: [], blocked: [], zapperKeys: [:])
+        try await archive.save(saved, key: "cached-report-test")
+        return saved
+    }
+
+    func testReportCoverageMigratesLegacyCheckpointWithoutRetainingRequests() throws {
+        var collection = YearReviewCollection(owner: owner, period: period,
+            relays: [.new(url: "wss://relay.example", read: true)], trusted: [alice])
+        collection.failed = [collection.pending[0]]
+        collection.estimatedResponses = 4
+        collection.parentsLimited = true
+        let legacy = try JSONEncoder().encode(collection)
+        let coverage = try JSONDecoder().decode(YearReviewReportCoverage.self, from: legacy)
+        XCTAssertEqual(coverage, YearReviewReportCoverage(collection))
+        let compact = try JSONEncoder().encode(coverage)
+        let fields = try XCTUnwrap(JSONSerialization.jsonObject(with: compact) as? [String: Any])
+        XCTAssertEqual(Set(fields.keys), ["phase", "hasIncompleteSources", "estimatedResponses", "parentsLimited"])
+        XCTAssertLessThan(compact.count, 200)
+        XCTAssertEqual(try JSONDecoder().decode(YearReviewReportCoverage.self, from: compact), coverage)
+    }
+
+    func testSavedReportRestoresExpandedTestMonthsBeforeLoadingFullCheckpoint() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let event = try signedEvent()
+        let archive = YearReviewArchive(owner: event.pubkey, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        let selection = YearReviewPeriod(year: 2026, now: Date(timeIntervalSince1970: 1_800_000_000),
+            timeZone: TimeZone(secondsFromGMT: 0)!, monthLimit: 2, monthStart: 8)
+        var expanded = selection
+        expanded.includeMonth(1)
+        var collection = YearReviewCollection(owner: event.pubkey, period: expanded,
+            relays: [.new(url: "wss://relay.example", read: true)], trusted: [])
+        collection.pending.append(.init(relay: "wss://relay.example", category: .references,
+            since: expanded.start, until: expanded.end - 1, ids: [alice, bob]))
+        try await archive.save(collection, key: "collection-2026")
+        _ = try await storeReportSnapshot(archive: archive, pubkey: event.pubkey, period: expanded)
+        let cached = try await archive.savedReport(key: "cached-report-test", period: selection,
+            trusted: [], blocked: [], restoringSavedSelection: true)
+        XCTAssertEqual(cached?.snapshot.report.period, expanded)
+        XCTAssertEqual(cached?.isCurrent, true)
+        let strict = try await archive.savedReport(key: "cached-report-test", period: selection, trusted: [], blocked: [])
+        XCTAssertNil(strict)
+        let restored = try await archive.load(YearReviewCollection.self, key: "collection-2026")
+        XCTAssertEqual(restored, collection)
+    }
+
+    func testSavedReportSurvivesRestartAndDistinguishesDuplicatesFromNewHistory() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let event = try signedEvent()
+        let file = directory.appendingPathComponent("archive.sqlite")
+        let archive = YearReviewArchive(owner: event.pubkey, fileURL: file)
+        _ = try await archive.ingest([event], source: "relay")
+        let saved = try await storeReportSnapshot(archive: archive, pubkey: event.pubkey)
+
+        let reopened = YearReviewArchive(owner: event.pubkey, fileURL: file)
+        let cached = try await reopened.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertEqual(cached?.snapshot.report, saved.report)
+        XCTAssertEqual(cached?.snapshot.previews, saved.previews)
+        XCTAssertEqual(cached?.snapshot.names, saved.names)
+        XCTAssertEqual(cached?.snapshot.counts, saved.counts)
+        XCTAssertEqual(cached?.isCurrent, true)
+
+        _ = try await reopened.ingest([event], source: "another-relay")
+        let duplicate = try await reopened.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertEqual(duplicate?.isCurrent, true)
+
+        let another = try signedEvent(content: "New history")
+        _ = try await reopened.ingest([another], source: "relay")
+        let updating = try await reopened.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertEqual(updating?.isCurrent, false)
+        XCTAssertEqual(updating?.snapshot.report, saved.report)
+    }
+
+    @MainActor
+    func testSavedReportLoadsPromptlyWhileImporterIsBlocked() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let event = try signedEvent()
+        let archive = YearReviewArchive(owner: event.pubkey, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        _ = try await archive.ingest([event], source: "relay")
+        _ = try await storeReportSnapshot(archive: archive, pubkey: event.pubkey)
+        let entered = expectation(description: "importer blocked")
+        let gate = DispatchSemaphore(value: 0)
+        holdImporter(entered: entered, gate: gate)
+        defer { gate.signal() }
+        await fulfillment(of: [entered], timeout: 1)
+        let started = Date.now
+        let cached = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertEqual(cached?.isCurrent, true)
+        XCTAssertLessThan(Date.now.timeIntervalSince(started), 0.5)
+    }
+
+    func testSavedReportRejectsChangedFiltersPeriodAndCorruptCache() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let event = try signedEvent()
+        let archive = YearReviewArchive(owner: event.pubkey, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        _ = try await archive.ingest([event], source: "relay")
+        _ = try await storeReportSnapshot(archive: archive, pubkey: event.pubkey)
+        let blocked = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [alice])
+        let trust = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [alice], blocked: [])
+        let otherPeriod = YearReviewPeriod(year: 2026, timeZone: TimeZone(secondsFromGMT: 0)!, monthLimit: 2, monthStart: 9)
+        let selection = try await archive.savedReport(key: "cached-report-test", period: otherPeriod, trusted: [], blocked: [])
+        XCTAssertNil(blocked)
+        XCTAssertNil(trust)
+        XCTAssertNil(selection)
+        let newZapKeys = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [],
+            blocked: [], zapperKeys: [alice: [bob]])
+        XCTAssertEqual(newZapKeys?.isCurrent, false)
+        try await archive.save("Unrecognized cache format", key: "cached-report-test")
+        let corrupt = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertNil(corrupt)
+    }
+
+    func testSavedReportInvalidatesForDeletedHistoryAndZapProviderUpdates() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let keys = try Keys.newKeys()
+        let event = try signedEvent(keys: keys)
+        let file = directory.appendingPathComponent("archive.sqlite")
+        let archive = YearReviewArchive(owner: event.pubkey, fileURL: file)
+        _ = try await archive.ingest([event], source: "relay")
+        _ = try await storeReportSnapshot(archive: archive, pubkey: event.pubkey)
+        try await archive.save([alice: Set([bob])], key: "zap-providers")
+        let providers = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertEqual(providers?.isCurrent, false)
+
+        try await archive.recordLocalDeletions([event.id])
+        let localDeletion = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertNil(localDeletion)
+        _ = try await storeReportSnapshot(archive: archive, pubkey: event.pubkey)
+        let before = try await archive.reportRevision()
+        try await archive.recordLocalDeletions([event.id])
+        let after = try await archive.reportRevision()
+        XCTAssertEqual(before, after)
+
+        let deletion = try signedEvent(content: "", kind: 5, keys: keys, tags: [["e", event.id]])
+        _ = try await archive.ingest([deletion], source: "relay")
+        let remoteDeletion = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertNil(remoteDeletion)
+
+        _ = try await storeReportSnapshot(archive: archive, pubkey: event.pubkey)
+        var database: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(file.path, &database), SQLITE_OK)
+        XCTAssertEqual(sqlite3_exec(database, "DELETE FROM events", nil, nil, nil), SQLITE_OK)
+        sqlite3_close(database)
+        let manualDeletion = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertNil(manualDeletion)
+    }
+
     func testArchivedCountsUseAuthorAndSurviveResumeWithoutDuplicates() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

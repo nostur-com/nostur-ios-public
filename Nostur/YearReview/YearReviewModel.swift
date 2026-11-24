@@ -132,7 +132,7 @@ final class YearReviewModel {
     var postPreviews: [String: YearReviewPostPreview] = [:]
     var report: YearReviewReport?
     var collection: YearReviewCollection?
-    var reportCollection: YearReviewCollection?
+    var reportCollection: YearReviewReportCoverage?
     var activities: [String: YearReviewActivity] = [:]
     var activeActivities: [YearReviewActivity] { activities.values.sorted { $0.work.relay < $1.work.relay } }
     var activity: YearReviewActivity? { activeActivities.first }
@@ -236,6 +236,7 @@ final class YearReviewModel {
     @ObservationIgnored private var trusted: Set<String> = []
     @ObservationIgnored private var generation = UUID()
     @ObservationIgnored private var previewRevision = 0
+    @ObservationIgnored private var savedReportNeedsRefresh = false
 
     var selectedHistorySources: [RelayData] {
         Array(relays.filter { selectedRelays.contains($0.url) }.prefix(20))
@@ -300,6 +301,7 @@ final class YearReviewModel {
         trusted = selectedTrust
         ownerProvider = selectedProvider
         report = nil
+        savedReportNeedsRefresh = false
         collection = nil
         reportCollection = nil
         archivedCounts = YearReviewArchivedCounts()
@@ -360,22 +362,6 @@ final class YearReviewModel {
             return url
         })
         selectedRelays = Set(relays.prefix(3).map(\.url)).union(receiveRelays)
-        do {
-            if let archive {
-                let saved = try await archive.load(YearReviewCollection.self, key: checkpointKey(selectedPeriod(year: year)))
-                guard generation == token else { return }
-                if saved?.schemaVersion == YearReviewCollection.currentSchemaVersion, saved?.owner == owner {
-                    collection = saved
-                    if let saved {
-                        for relay in saved.relays where !relays.contains(where: { $0.url == relay.url }) {
-                            relays.append(relay.relayData)
-                        }
-                        selectedRelays = Set(saved.relays.map(\.url))
-                    }
-                }
-            }
-        } catch { if generation == token { errorMessage = error.localizedDescription } }
-        guard generation == token else { return }
         let preferences = YearReviewPreferences.load(owner: owner)
         relayAuthOverrides = preferences?.relayAuthOverrides ?? [:]
         enabledCards = preferences?.selectedCards ?? YearReviewCard.defaultSelection
@@ -390,13 +376,30 @@ final class YearReviewModel {
         } else {
             selectedRelays.formUnion(receiveRelays)
         }
+        do {
+            if let archive {
+                try await restoreSavedReport(archive: archive, period: selectedPeriod(year: year), token: token)
+                let saved = try await archive.load(YearReviewCollection.self, key: checkpointKey(selectedPeriod(year: year)))
+                guard generation == token else { return }
+                if saved?.schemaVersion == YearReviewCollection.currentSchemaVersion, saved?.owner == owner {
+                    collection = saved
+                    if let saved {
+                        for relay in saved.relays where !relays.contains(where: { $0.url == relay.url }) {
+                            relays.append(relay.relayData)
+                        }
+                        if preferences == nil { selectedRelays = Set(saved.relays.map(\.url)).union(receiveRelays) }
+                    }
+                }
+            }
+        } catch { if generation == token { errorMessage = error.localizedDescription } }
+        guard generation == token else { return }
         refreshHistoryRelayAuth()
         isConfiguring = false
         if loadSaved, !Task.isCancelled { loadSavedReportIfNeeded() }
     }
 
     func loadSavedReportIfNeeded() {
-        guard report == nil, !isRunning, !owner.isEmpty else { return }
+        guard report == nil || savedReportNeedsRefresh, !isRunning, !owner.isEmpty else { return }
         start(download: false)
     }
 
@@ -493,6 +496,28 @@ final class YearReviewModel {
             }
             do {
                 stage = .local
+                var savedZapKeys: [String: Set<String>] = [:]
+                if !download {
+                    let revision = previewRevision
+                    savedZapKeys = try await savedZapProviderKeys(archive: archive)
+                    let cached = try await archive.savedReport(key: "report-\(checkpointKey(period))",
+                        period: period, trusted: trust, blocked: CloudBlocked.blockedPubkeys(),
+                        zapperKeys: savedZapKeys,
+                        restoringSavedSelection: collection == nil)
+                    try Task.checkCancellation()
+                    guard generation == token else { return }
+                    if let cached, previewRevision == revision,
+                       cached.snapshot.blocked == CloudBlocked.blockedPubkeys() {
+                        let saved = cached.snapshot
+                        displaySavedReport(saved)
+                        if cached.isCurrent {
+                            savedReportNeedsRefresh = false
+                            stage = .finished
+                            prepareHighlightedDetails(report: saved.report, archive: archive)
+                            return
+                        }
+                    }
+                }
                 let counts = try await archive.archivedCounts()
                 try Task.checkCancellation()
                 guard generation == token else { return }
@@ -572,12 +597,10 @@ final class YearReviewModel {
                 stage = .zaps
                 let zapperKeys: [String: Set<String>]
                 if download {
-                    zapperKeys = try await resolveZapProviders(archive: archive, period: period, sources: sources, context: context)
+                    _ = try await resolveZapProviders(archive: archive, period: period, sources: sources, context: context)
+                    zapperKeys = try await savedZapProviderKeys(archive: archive)
                 } else {
-                    var savedKeys = try await archive.load([String: Set<String>].self, key: "zap-providers") ?? [:]
-                    let shared = await YearReviewZapProviderCache.shared.snapshot()
-                    for (recipient, keys) in shared.keys { savedKeys[recipient, default: []].formUnion(keys) }
-                    zapperKeys = savedKeys
+                    zapperKeys = savedZapKeys
                 }
                 stage = .analyzing
                 let reportTrust = download ? collection?.trusted ?? trust : trust
@@ -585,34 +608,85 @@ final class YearReviewModel {
                 let ownPosts = try await archive.inventory(owner: owner, period: period).ownPostIds
                 try await seedCachedPostReactions(ids: ownPosts, archive: archive)
                 try await seedCachedPollVotes(ids: ownPosts, archive: archive)
+                let blocked = CloudBlocked.blockedPubkeys()
+                let archiveRevision = try await archive.reportRevision()
                 let report = try await archive.report(owner: owner, period: period, trusted: reportTrust,
-                                                     blocked: CloudBlocked.blockedPubkeys(), zapperKeys: zapperKeys)
+                                                     blocked: blocked, zapperKeys: zapperKeys)
                 try Task.checkCancellation()
                 guard generation == token else { return }
                 guard previewRevision == revision else { stage = .paused; return }
                 let previews = try await loadPostPreviews(report: report, archive: archive)
+                let refreshedCounts = try await archive.archivedCounts()
                 try Task.checkCancellation()
                 guard generation == token, previewRevision == revision else { return }
                 postPreviews = previews
                 self.report = report
-                reportCollection = collection
-                archivedCounts = try await archive.archivedCounts()
+                reportCollection = collection.map(YearReviewReportCoverage.init)
+                savedReportNeedsRefresh = false
+                archivedCounts = refreshedCounts
                 let people = report.people
-                names = Dictionary(uniqueKeysWithValues: Set(people).map {
-                    ($0, Contact.fetchByPubkey($0, context: Nostur.context())?.anyName ?? String(npub($0).prefix(16)) + "…")
-                })
-                pictures = Dictionary(uniqueKeysWithValues: Set(people).compactMap { key in
-                    Contact.fetchByPubkey(key, context: Nostur.context())?.pictureUrl.map { (key, $0) }
-                })
+                loadReportPeople(people)
                 stage = .finished
                 prepareHighlightedDetails(report: report, archive: archive)
-                if download { resolveMissingProfiles(people: people) }
+                let saved = YearReviewSavedReport(version: YearReviewSavedReport.currentVersion,
+                    owner: owner, revision: archiveRevision, report: report, previews: previews,
+                    names: names, pictures: pictures, collection: reportCollection, counts: archivedCounts,
+                    lastFetchedDate: lastFetchedDate, trusted: reportTrust, blocked: blocked, zapperKeys: zapperKeys)
+                // A derived cache failure must not discard a successfully prepared report.
+                try? await archive.save(saved, key: "report-\(checkpointKey(period))")
+                if download, generation == token, previewRevision == revision { resolveMissingProfiles(people: people) }
             } catch is CancellationError {
                 if generation == token { stage = .paused }
             } catch {
                 if generation == token { errorMessage = error.localizedDescription; stage = .paused }
             }
         }
+    }
+
+    private func savedZapProviderKeys(archive: YearReviewArchive) async throws -> [String: Set<String>] {
+        var keys = try await archive.load([String: Set<String>].self, key: "zap-providers") ?? [:]
+        let shared = await YearReviewZapProviderCache.shared.snapshot()
+        for (recipient, signers) in shared.keys { keys[recipient, default: []].formUnion(signers) }
+        return keys
+    }
+
+    private func restoreSavedReport(archive: YearReviewArchive, period: YearReviewPeriod, token: UUID) async throws {
+        let revision = previewRevision
+        let keys = try await savedZapProviderKeys(archive: archive)
+        let cached = try await archive.savedReport(key: "report-\(checkpointKey(period))",
+            period: period, trusted: trusted, blocked: CloudBlocked.blockedPubkeys(),
+            zapperKeys: keys, restoringSavedSelection: true)
+        guard !Task.isCancelled, generation == token, year == period.year, previewRevision == revision,
+              let cached, cached.snapshot.blocked == CloudBlocked.blockedPubkeys() else { return }
+        displaySavedReport(cached.snapshot)
+        savedReportNeedsRefresh = !cached.isCurrent
+        stage = .finished
+        if cached.isCurrent { prepareHighlightedDetails(report: cached.snapshot.report, archive: archive) }
+        // Compact older snapshots after publishing the report. The resumable
+        // request queue remains in its separate collection checkpoint.
+        try? await archive.save(cached.snapshot, key: "report-\(checkpointKey(period))")
+    }
+
+    private func displaySavedReport(_ saved: YearReviewSavedReport) {
+        postPreviews = saved.previews
+        report = saved.report
+        reportCollection = saved.collection
+        archivedCounts = saved.counts
+        lastFetchedDate = saved.lastFetchedDate
+        loadReportPeople(saved.report.people, fallbackNames: saved.names, fallbackPictures: saved.pictures)
+    }
+
+    private func loadReportPeople(_ people: Set<String>, fallbackNames: [String: String] = [:],
+                                  fallbackPictures: [String: URL] = [:]) {
+        var names: [String: String] = [:]
+        var pictures: [String: URL] = [:]
+        for pubkey in people {
+            let contact = Contact.fetchByPubkey(pubkey, context: Nostur.context())
+            names[pubkey] = contact?.anyName ?? fallbackNames[pubkey] ?? String(npub(pubkey).prefix(16)) + "…"
+            pictures[pubkey] = contact?.pictureUrl ?? fallbackPictures[pubkey]
+        }
+        self.names = names
+        self.pictures = pictures
     }
 
     // Metadata goes through the normal importer and profile cache, independently of analysis.
@@ -1120,6 +1194,7 @@ final class YearReviewModel {
         profileTask?.cancel()
         previewRevision += 1
         report = nil
+        savedReportNeedsRefresh = false
         reportCollection = nil
         if !isRunning { stage = .ready }
     }
@@ -1138,12 +1213,14 @@ final class YearReviewModel {
         guard !isConfiguring, !isRunning, let archive else { return }
         profileTask?.cancel()
         report = nil
+        savedReportNeedsRefresh = false
         collection = nil
         reportCollection = nil
         stage = .ready
         let requestedYear = year
         let token = generation
         do {
+            try await restoreSavedReport(archive: archive, period: selectedPeriod(year: requestedYear), token: token)
             let saved = try await archive.load(YearReviewCollection.self, key: checkpointKey(selectedPeriod(year: requestedYear)))
             if generation == token, year == requestedYear, saved?.schemaVersion == YearReviewCollection.currentSchemaVersion { collection = saved }
         } catch { errorMessage = error.localizedDescription }

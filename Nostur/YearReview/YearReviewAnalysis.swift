@@ -196,7 +196,7 @@ struct YearReviewPeriod: Codable, Equatable, Sendable {
     }
 }
 
-struct YearReviewPerson: Identifiable, Equatable, Sendable {
+struct YearReviewPerson: Codable, Identifiable, Equatable, Sendable {
     let pubkey: String
     var sent = 0
     var received = 0
@@ -212,14 +212,14 @@ struct YearReviewPerson: Identifiable, Equatable, Sendable {
     var id: String { pubkey }
 }
 
-struct YearReviewPostPreview: Equatable, Sendable {
+struct YearReviewPostPreview: Codable, Equatable, Sendable {
     let text: String
     let thumbnail: URL?
     let extraCount: Int
     let isVideo: Bool
 }
 
-struct YearReviewPost: Identifiable, Equatable, Sendable {
+struct YearReviewPost: Codable, Identifiable, Equatable, Sendable {
     let id: String
     let content: String
     var replies: Int
@@ -231,12 +231,12 @@ struct YearReviewPost: Identifiable, Equatable, Sendable {
     var millisats: Int64 = 0
 }
 
-struct YearReviewActiveDay: Equatable, Sendable {
+struct YearReviewActiveDay: Codable, Equatable, Sendable {
     let date: Date
     let posts: Int
 }
 
-struct YearReviewPollActivity: Equatable, Sendable {
+struct YearReviewPollActivity: Codable, Equatable, Sendable {
     let created: Int
     let voters: Int
     let votedIn: Int
@@ -244,13 +244,13 @@ struct YearReviewPollActivity: Equatable, Sendable {
     let mostVotedCount: Int
 }
 
-struct YearReviewThreadStory: Equatable, Sendable {
+struct YearReviewThreadStory: Codable, Equatable, Sendable {
     let post: YearReviewPost
     let activeDays: [Date]
     let newConversations: Int
 }
 
-struct YearReviewReport: Equatable, Sendable {
+struct YearReviewReport: Codable, Equatable, Sendable {
     let period: YearReviewPeriod
     let gang: [YearReviewPerson]
     let conversation: YearReviewPost?

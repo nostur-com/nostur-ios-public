@@ -30,9 +30,72 @@ struct YearReviewImportResult: Sendable {
     var invalid = 0
 }
 
-struct YearReviewArchivedCounts: Sendable, Equatable {
+struct YearReviewArchivedCounts: Codable, Sendable, Equatable {
     var fromYou = 0
     var fromOthers = 0
+}
+
+struct YearReviewReportRevision: Codable, Equatable, Sendable {
+    let contents: Int64
+    let exclusions: Int64
+}
+
+struct YearReviewReportCoverage: Codable, Equatable, Sendable {
+    let phase: YearReviewCollection.Phase
+    let hasIncompleteSources: Bool
+    let estimatedResponses: Int
+    let parentsLimited: Bool
+
+    init(_ collection: YearReviewCollection) {
+        phase = collection.phase
+        hasIncompleteSources = !collection.failed.isEmpty
+        estimatedResponses = collection.estimatedResponses
+        parentsLimited = collection.parentsLimited
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case phase, hasIncompleteSources, estimatedResponses, parentsLimited, failed
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        phase = try values.decode(YearReviewCollection.Phase.self, forKey: .phase)
+        estimatedResponses = try values.decode(Int.self, forKey: .estimatedResponses)
+        parentsLimited = try values.decode(Bool.self, forKey: .parentsLimited)
+        if let incomplete = try values.decodeIfPresent(Bool.self, forKey: .hasIncompleteSources) {
+            hasIncompleteSources = incomplete
+        } else {
+            // Read older snapshots without decoding their full request queues.
+            let failures = try values.nestedUnkeyedContainer(forKey: .failed)
+            hasIncompleteSources = !failures.isAtEnd
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(phase, forKey: .phase)
+        try values.encode(hasIncompleteSources, forKey: .hasIncompleteSources)
+        try values.encode(estimatedResponses, forKey: .estimatedResponses)
+        try values.encode(parentsLimited, forKey: .parentsLimited)
+    }
+}
+
+struct YearReviewSavedReport: Codable, Sendable {
+    // Increment when the analysis or saved preview format changes.
+    static let currentVersion = 1
+    let version: Int
+    let owner: String
+    let revision: YearReviewReportRevision
+    let report: YearReviewReport
+    let previews: [String: YearReviewPostPreview]
+    let names: [String: String]
+    let pictures: [String: URL]
+    let collection: YearReviewReportCoverage?
+    let counts: YearReviewArchivedCounts
+    let lastFetchedDate: Date?
+    let trusted: Set<String>
+    let blocked: Set<String>
+    let zapperKeys: [String: Set<String>]
 }
 
 struct YearReviewDetailPage: Sendable {
@@ -101,7 +164,50 @@ actor YearReviewArchive {
         try execute(database, "CREATE INDEX IF NOT EXISTS thread_refs_target ON thread_refs(target)")
         try execute(database, "CREATE TABLE IF NOT EXISTS detail_refs (event_id TEXT NOT NULL, target TEXT NOT NULL, PRIMARY KEY(event_id, target))")
         try execute(database, "CREATE INDEX IF NOT EXISTS detail_refs_target ON detail_refs(target)")
+        try execute(database, """
+            CREATE TABLE IF NOT EXISTS report_state (id INTEGER PRIMARY KEY, revision INTEGER NOT NULL, exclusions INTEGER NOT NULL);
+            INSERT OR IGNORE INTO report_state(id, revision, exclusions) VALUES (1, 0, 0);
+            CREATE TRIGGER IF NOT EXISTS report_event_insert AFTER INSERT ON events
+                BEGIN UPDATE report_state SET revision = revision + 1, exclusions = exclusions + (NEW.kind = 5) WHERE id = 1; END;
+            CREATE TRIGGER IF NOT EXISTS report_event_delete AFTER DELETE ON events
+                BEGIN UPDATE report_state SET revision = revision + 1, exclusions = exclusions + 1 WHERE id = 1; END;
+            CREATE TRIGGER IF NOT EXISTS report_event_update AFTER UPDATE ON events
+                BEGIN UPDATE report_state SET revision = revision + 1, exclusions = exclusions + 1 WHERE id = 1; END;
+            CREATE TRIGGER IF NOT EXISTS report_metadata_insert AFTER INSERT ON metadata
+                WHEN NEW.key IN ('local-deletions', 'zap-providers')
+                BEGIN UPDATE report_state SET revision = revision + 1, exclusions = exclusions + (NEW.key = 'local-deletions') WHERE id = 1; END;
+            CREATE TRIGGER IF NOT EXISTS report_metadata_update AFTER UPDATE ON metadata
+                WHEN NEW.key IN ('local-deletions', 'zap-providers')
+                BEGIN UPDATE report_state SET revision = revision + 1, exclusions = exclusions + (NEW.key = 'local-deletions') WHERE id = 1; END;
+            """)
         return try operation(database)
+    }
+
+    func reportRevision() throws -> YearReviewReportRevision {
+        try withDatabase { database in
+            let query = try statement(database, "SELECT revision, exclusions FROM report_state WHERE id = 1")
+            defer { sqlite3_finalize(query) }
+            guard sqlite3_step(query) == SQLITE_ROW else { throw YearReviewError.database("report revision") }
+            return YearReviewReportRevision(contents: sqlite3_column_int64(query, 0), exclusions: sqlite3_column_int64(query, 1))
+        }
+    }
+
+    func savedReport(key: String, period: YearReviewPeriod, trusted: Set<String>, blocked: Set<String>,
+                     zapperKeys: [String: Set<String>] = [:],
+                     restoringSavedSelection: Bool = false) throws -> (snapshot: YearReviewSavedReport, isCurrent: Bool)? {
+        // A cache from an older app version can always be rebuilt from the archive.
+        guard let saved = try? load(YearReviewSavedReport.self, key: key),
+              saved.version == YearReviewSavedReport.currentVersion,
+              saved.owner == owner,
+              saved.trusted == trusted, saved.blocked == blocked else { return nil }
+        let savedPeriod = saved.report.period
+        let sameSelection = savedPeriod.year == period.year
+            && savedPeriod.timeZoneIdentifier == period.timeZoneIdentifier
+            && savedPeriod.monthLimit == period.monthLimit && savedPeriod.monthStart == period.monthStart
+        let revision = try reportRevision()
+        guard (restoringSavedSelection ? sameSelection : savedPeriod == period),
+              saved.revision.exclusions == revision.exclusions else { return nil }
+        return (saved, saved.revision == revision && saved.zapperKeys == zapperKeys)
     }
 
     private func execute(_ database: OpaquePointer, _ sql: String) throws {
@@ -523,6 +629,7 @@ actor YearReviewArchive {
     func recordLocalDeletions(_ ids: Set<String>) throws {
         guard !ids.isEmpty else { return }
         let existing = try load(Set<String>.self, key: "local-deletions") ?? []
+        guard !ids.isSubset(of: existing) else { return }
         try save(existing.union(ids), key: "local-deletions")
     }
 
