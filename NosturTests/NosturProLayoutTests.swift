@@ -461,6 +461,7 @@ final class NosturProLayoutTests: XCTestCase {
     }
 
     func testFirstPhoneSetupSeedsNotificationsAndPreservesSavedColumns() throws {
+        try XCTSkipIf(IS_CATALYST, "Phone defaults")
         let suite = "NosturProColumnsTests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
@@ -490,7 +491,47 @@ final class NosturProLayoutTests: XCTestCase {
         defaults.removeObject(forKey: "mac_columns_serialized")
         let macVM = MacColumnsVM(defaults: defaults)
         macVM.restoreConfiguredColumns(defaultPhoneAccount: nil)
-        XCTAssertTrue(macVM.columns.isEmpty, "Keep the existing Catalyst default")
+        XCTAssertTrue(macVM.columns.isEmpty, "Other iOS layouts do not seed desktop columns")
+    }
+
+    func testMacSetupSeedsNotificationsAndExploreAndPreservesSavedColumns() throws {
+        try XCTSkipUnless(IS_CATALYST, "Mac defaults")
+        let suite = "NosturProMacColumnsTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let vm = MacColumnsVM(defaults: defaults)
+        vm.restoreConfiguredColumns(defaultPhoneAccount: nil)
+        XCTAssertEqual(vm.columns.map(\.type), [.notifications(nil), .explore],
+                       "Following is the main column, followed by Notifications and Explore")
+        let savedColumns = vm.columns
+        let relaunched = MacColumnsVM(defaults: defaults)
+        relaunched.restoreConfiguredColumns(defaultPhoneAccount: nil)
+        XCTAssertEqual(relaunched.columns, savedColumns)
+
+        relaunched.columns = [MacColumnConfig(type: .hot)]
+        relaunched.saveState()
+        relaunched.restoreConfiguredColumns(defaultPhoneAccount: nil)
+        XCTAssertEqual(relaunched.columns.map(\.type), [.hot])
+
+        relaunched.columns = []
+        relaunched.saveState()
+        relaunched.restoreConfiguredColumns(defaultPhoneAccount: nil)
+        XCTAssertTrue(relaunched.columns.isEmpty, "Intentionally removed columns must not reappear")
+    }
+
+    func testPlatformProDefaultPreservesExplicitPreference() {
+        let suite = "NosturProPlatformDefaultTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let settings = SettingsStore(defaults: defaults)
+        XCTAssertEqual(settings.proMode, IS_CATALYST)
+        XCTAssertEqual(settings.usesProColumns, IS_CATALYST)
+        XCTAssertNil(defaults.object(forKey: SettingsStore.Keys.proMode))
+
+        settings.proMode = false
+        XCTAssertFalse(SettingsStore(defaults: defaults).proMode)
+        settings.proMode = true
+        XCTAssertTrue(SettingsStore(defaults: defaults).proMode)
     }
 
     func testFoldUnfoldKeepsPreferenceButOnlyActivatesExpandedColumns() throws {
@@ -537,7 +578,8 @@ final class NosturProLayoutTests: XCTestCase {
         XCTAssertFalse(IS_DESKTOP_COLUMNS())
     }
 
-    func testFreshInstallDefaultsToProOnFirstUnfoldAndPreservesOptOut() {
+    func testFreshInstallDefaultsToProOnFirstUnfoldAndPreservesOptOut() throws {
+        try XCTSkipIf(IS_CATALYST, "Phone defaults")
         let suite = "NosturProDefaultTests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }

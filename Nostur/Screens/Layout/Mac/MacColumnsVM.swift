@@ -143,7 +143,16 @@ class MacColumnsVM: ObservableObject {
     
     @MainActor
     func restoreConfiguredColumns(defaultPhoneAccount: String?) {
-        // A saved empty array is intentional. Seed only a first-time phone setup.
+        // A saved empty array is intentional. Seed only a first-time setup.
+        // Following is already supplied by the main column.
+        if macListstateSerialized.isEmpty, IS_CATALYST {
+            columns = [
+                MacColumnConfig(type: .notifications(nil)),
+                MacColumnConfig(type: .explore)
+            ]
+            saveState()
+            return
+        }
         if macListstateSerialized.isEmpty, let defaultPhoneAccount {
             columns = [MacColumnConfig(type: .notifications(defaultPhoneAccount))]
             saveState()

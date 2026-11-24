@@ -392,7 +392,7 @@ final class SettingsStore: ObservableObject {
 
     var proMode: Bool {
         set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.proMode) }
-        get { defaults.bool(forKey: Keys.proMode) }
+        get { defaults.object(forKey: Keys.proMode) as? Bool ?? IS_CATALYST }
     }
     
     /// Mac Catalyst only. Changes update fonts and notify the UI to reparse post text.
