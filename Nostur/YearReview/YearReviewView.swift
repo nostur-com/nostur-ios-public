@@ -141,8 +141,9 @@ struct YearReviewView: View {
         }
         .sheet(isPresented: $showInfo) {
             NavigationStack {
-                YearReviewAboutView(report: model.report, collection: model.reportCollection)
+                YearReviewAboutView(year: model.year, report: model.report, collection: model.reportCollection)
             }
+            .presentationBackgroundCompat(theme.background)
         }
         .sheet(isPresented: $showProfilePicker) {
             NavigationStack {
@@ -800,47 +801,34 @@ private struct YearReviewSourcesView: View {
 private struct YearReviewAboutView: View {
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
+    let year: Int
     let report: YearReviewReport?
     let collection: YearReviewReportCoverage?
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Image(systemName: "sparkles")
-                        .font(.title2).foregroundStyle(theme.accent)
-                        .frame(width: 48, height: 48)
-                        .background(theme.accent.opacity(0.12), in: Circle())
-                    Text("A year worth sharing").font(.title.bold())
-                    Text("Your posts, your people, your standout moments.")
-                        .font(.subheadline).foregroundStyle(.secondary)
+            VStack(spacing: 28) {
+                YearReviewAboutHero(year: year)
+                YearReviewAboutGuide()
+                YearReviewAboutHistory(report: report, collection: collection)
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "globe")
+                        .foregroundStyle(theme.accent)
+                        .accessibilityHidden(true)
+                    Text("Your report uses public posts and interactions. Private messages aren’t included.")
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-
-                if let report {
-                    YearReviewCoverageView(report: report, collection: collection)
-                        .yearReviewCard()
-                }
-
-                VStack(alignment: .leading, spacing: 18) {
-                    YearReviewAboutRow(title: "Missing something?", icon: "calendar",
-                        detail: "Open History to fetch a month or retry a source. Some older posts may no longer be available.")
-                    Divider()
-                    YearReviewAboutRow(title: "While gathering history", icon: "iphone",
-                        detail: "You can keep using Nostur while it gathers history. If you close the app, continue later from where you left off.")
-                    Divider()
-                    YearReviewAboutRow(title: "Choose what you want to highlight", icon: "square.and.arrow.up",
-                        detail: "Hide highlights or people you’d rather leave out. Preview your image, then choose Prepare post to make an editable draft.")
-                    Divider()
-                    YearReviewAboutRow(title: "Public activity only", icon: "text.bubble",
-                        detail: "Your report uses public posts and interactions. Private messages aren’t included.")
-                }
-                .yearReviewCard()
+                .font(.caption)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(20)
-            .frame(maxWidth: 650, alignment: .leading)
+            .padding(.horizontal, 24)
+            .padding(.top, 8)
+            .padding(.bottom, 28)
+            .frame(maxWidth: 520)
             .frame(maxWidth: .infinity)
         }
-        .background(theme.listBackground)
+        .background(theme.background)
         .navigationTitle("About your year")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -850,6 +838,119 @@ private struct YearReviewAboutView: View {
                 }
             }
         }
+    }
+}
+
+private struct YearReviewAboutHero: View {
+    @Environment(\.theme) private var theme
+    let year: Int
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ZStack {
+                Ellipse()
+                    .fill(theme.accent.opacity(0.09))
+                    .frame(width: 210, height: 62)
+                    .rotationEffect(.degrees(-8))
+                Text(verbatim: String(year))
+                    .font(.system(size: 60, weight: .heavy, design: .rounded))
+                    .tracking(-2)
+                    .foregroundStyle(LinearGradient(colors: [theme.accent, theme.primary],
+                        startPoint: .topLeading, endPoint: .bottomTrailing))
+                Image(systemName: "sparkles")
+                    .font(.system(size: 22, weight: .medium))
+                    .rotationEffect(.degrees(12))
+                    .offset(x: 98, y: -25)
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 15))
+                    .rotationEffect(.degrees(-18))
+                    .offset(x: -105, y: 16)
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 17))
+                    .rotationEffect(.degrees(10))
+                    .offset(x: 106, y: 24)
+            }
+            .foregroundStyle(theme.accent)
+            .frame(height: 96)
+            .accessibilityHidden(true)
+            Text("A year worth sharing")
+                .font(.title2.weight(.bold))
+                .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
+            Text("Your posts, your people, your standout moments.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct YearReviewAboutGuide: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            YearReviewAboutFeature(icon: "calendar", title: "Find your moments",
+                detail: "Open History to look for more posts and interactions.")
+            YearReviewAboutFeature(icon: "slider.horizontal.3", title: "Choose what you want to highlight",
+                detail: "Hide highlights or people, then preview your image.")
+            YearReviewAboutFeature(icon: "paperplane", title: "Share your year",
+                detail: "Choose Prepare post to make a draft you can edit.")
+        }
+    }
+}
+
+private struct YearReviewAboutFeature: View {
+    @Environment(\.theme) private var theme
+    let icon: String
+    let title: LocalizedStringKey
+    let detail: LocalizedStringKey
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 19, weight: .medium))
+                .foregroundStyle(theme.accent)
+                .frame(width: 44, height: 44)
+                .background(theme.accent.opacity(0.09), in: RoundedRectangle(cornerRadius: 14))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(title).font(.headline)
+                Text(detail)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct YearReviewAboutHistory: View {
+    @Environment(\.theme) private var theme
+    let report: YearReviewReport?
+    let collection: YearReviewReportCoverage?
+
+    var body: some View {
+        DisclosureGroup {
+            VStack(alignment: .leading, spacing: 16) {
+                if let report {
+                    YearReviewCoverageView(report: report, collection: collection)
+                }
+                Text("You can keep using Nostur while it gathers history. If you close the app, continue later from where you left off.")
+                Text("Some older posts may no longer be available.")
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 12)
+        } label: {
+            Label("About history", systemImage: "info.circle")
+                .font(.subheadline.weight(.medium))
+        }
+        .tint(theme.accent)
+        .padding(.top, 4)
     }
 }
 

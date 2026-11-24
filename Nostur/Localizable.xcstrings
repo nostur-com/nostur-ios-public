@@ -11143,6 +11143,28 @@
         }
       }
     },
+    "Choose Prepare post to make a draft you can edit." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige Preparar publicación para crear un borrador que puedas editar."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih Siapkan postingan untuk membuat draf yang dapat Anda edit."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies ‘Bereid bericht voor’ om een concept te maken dat je kunt aanpassen."
+          }
+        }
+      }
+    },
     "Choose relays for a new refresh" : {
       "localizations" : {
         "es" : {
@@ -19695,6 +19717,28 @@
         }
       }
     },
+    "Find your moments" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encuentra tus momentos"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temukan momen Anda"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vind je momenten"
+          }
+        }
+      }
+    },
     "Finding missed interactions…" : {
       "localizations" : {
         "es" : {
@@ -21005,6 +21049,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verberg hoogtepunten of personen die je liever weglaat. Bekijk de afbeelding en kies daarna Bericht voorbereiden om een bewerkbaar concept te maken."
+          }
+        }
+      }
+    },
+    "Hide highlights or people, then preview your image." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oculta momentos destacados o personas y luego revisa la vista previa de tu imagen."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sembunyikan sorotan atau orang, lalu pratinjau gambar Anda."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verberg hoogtepunten of personen en bekijk daarna je afbeelding."
           }
         }
       }
@@ -29712,6 +29778,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Geschiedenis om een maand op te halen of een bron opnieuw te proberen. Sommige oudere berichten zijn mogelijk niet meer beschikbaar."
+          }
+        }
+      }
+    },
+    "Open History to look for more posts and interactions." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre Historial para buscar más publicaciones e interacciones."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka Riwayat untuk mencari lebih banyak postingan dan interaksi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Geschiedenis om meer berichten en interacties te vinden."
           }
         }
       }
@@ -41991,6 +42079,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beberapa item privat yang ada tidak dapat dibaca. Penyimpanan dinonaktifkan agar item tersebut tidak hilang."
+          }
+        }
+      }
+    },
+    "Some older posts may no longer be available." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es posible que algunas publicaciones antiguas ya no estén disponibles."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beberapa postingan lama mungkin sudah tidak tersedia."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sommige oudere berichten zijn mogelijk niet meer beschikbaar."
           }
         }
       }
