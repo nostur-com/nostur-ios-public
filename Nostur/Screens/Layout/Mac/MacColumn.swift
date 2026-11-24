@@ -17,7 +17,6 @@ struct MacColumn: View {
     var config: MacColumnConfig
     
     @State private var columnType = MacColumnType.unconfigured // use instead of config.type
-    @State private var selectedAccount: CloudAccount? = nil
     private var selectedFeed: CloudFeed? {
         if case .cloudFeed(let cloudFeedId) = columnType {
             return vm.availableFeeds.first(where: { $0.id?.uuidString == cloudFeedId })
@@ -203,14 +202,8 @@ struct MacColumn: View {
             }
         }
         else {
-            NXForm { // Needs to be wrapped in
-                AccountPicker(selectedAccount: $selectedAccount)
-            }
-            .onValueChange(selectedAccount) { oldValue, newValue in
-                guard oldValue != newValue, let pubkey = newValue?.publicKey else { return }
-                vm.updateColumn(
-                    MacColumnConfig(id: config.id, type: .notifications(pubkey))
-                )
+            ColumnAccountSelection { pubkey in
+                columnType.wrappedValue = .notifications(pubkey)
             }
         }
     }
@@ -221,25 +214,14 @@ struct MacColumn: View {
             ContentTypeColumn(pubkey: accountPubkey, navPath: $navPath, columnType: $columnType)
         }
         else {
-            NXForm { // Needs to be wrapped in
-                AccountPicker(selectedAccount: $selectedAccount)
-            }
-            .onValueChange(selectedAccount) { oldValue, newValue in
-                guard oldValue != newValue, let pubkey = newValue?.publicKey else { return }
-                
-                switch self.columnType {
-                case .yaks(_):
-                    vm.updateColumn(
-                        MacColumnConfig(id: config.id, type: .yaks(pubkey))
-                    )
-                case .vines(_):
-                    vm.updateColumn(
-                        MacColumnConfig(id: config.id, type: .vines(pubkey))
-                    )
-                default: // .photos(_)
-                    vm.updateColumn(
-                        MacColumnConfig(id: config.id, type: .photos(pubkey))
-                    )
+            ColumnAccountSelection { pubkey in
+                switch columnType.wrappedValue {
+                case .yaks:
+                    columnType.wrappedValue = .yaks(pubkey)
+                case .vines:
+                    columnType.wrappedValue = .vines(pubkey)
+                default: // .photos
+                    columnType.wrappedValue = .photos(pubkey)
                 }
             }
         }
@@ -252,15 +234,44 @@ struct MacColumn: View {
             DMsColumn(pubkey: accountPubkey, navPath: $navPath, columnType: $columnType, config: config)
         }
         else {
-            NXForm { // Needs to be wrapped in
-                AccountPicker(selectedAccount: $selectedAccount)
+            ColumnAccountSelection { pubkey in
+                columnType.wrappedValue = .DMs(pubkey)
             }
-            .onValueChange(selectedAccount) { oldValue, newValue in
-                guard oldValue != newValue, let pubkey = newValue?.publicKey else { return }
-                
-                vm.updateColumn(
-                    MacColumnConfig(id: config.id, type: .DMs(pubkey))
-                )
+        }
+    }
+}
+
+
+/// Show the choices directly instead of making users open a navigation-link picker.
+private struct ColumnAccountSelection: View {
+    let onSelect: (String) -> Void
+
+    @Environment(\.theme) private var theme
+    @State private var accounts: [CloudAccount] = []
+
+    var body: some View {
+        NXForm {
+            Section("Account") {
+                ForEach(accounts) { account in
+                    Button {
+                        onSelect(account.publicKey)
+                    } label: {
+                        HStack {
+                            PFP(pubkey: account.publicKey, account: account, size: 30)
+                            Text(account.anyName)
+                            Spacer()
+                        }
+                        .foregroundColor(theme.primary)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .onAppear {
+            accounts = AccountsState.shared.accounts.sorted {
+                $0.publicKey == AccountsState.shared.activeAccountPublicKey &&
+                $1.publicKey != AccountsState.shared.activeAccountPublicKey
             }
         }
     }
