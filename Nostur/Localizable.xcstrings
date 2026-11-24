@@ -16888,6 +16888,9 @@
         }
       }
     },
+    "Drag feeds into the order you prefer. This order is used in the menu and when swiping between feeds." : {
+
+    },
     "Drag handles to trim video" : {
       "localizations" : {
         "es" : {
@@ -18967,6 +18970,9 @@
           }
         }
       }
+    },
+    "Feed Order" : {
+      "comment" : "Heading above the draggable feeds"
     },
     "Feed preview" : {
       "localizations" : {
@@ -24385,6 +24391,9 @@
           }
         }
       }
+    },
+    "Loading feed" : {
+
     },
     "Loading indicator" : {
       "comment" : "Setting on settings screen",
@@ -36853,6 +36862,12 @@
         }
       }
     },
+    "Reorder Feeds" : {
+
+    },
+    "Reorder Feeds…" : {
+
+    },
     "Replaces your following list across Nostr apps." : {
       "localizations" : {
         "es" : {
@@ -37884,6 +37899,9 @@
       }
     },
     "Reset" : {
+
+    },
+    "Reset Feed Order" : {
 
     },
     "Reset Zoom" : {
