@@ -157,46 +157,32 @@ extension CloudDMState: Identifiable {
 
     @MainActor
     func updateUnread() {
-        guard contactPubkey_ != nil || participantPubkeys_ != nil else { return }
-        guard let accountPubkey = accountPubkey_ else { return }
-        
-        let unreadSince = markedReadAt_ ?? Date.distantPast
-        let conversationId = self.conversationId
-        
-        bg().perform {
-            let fr = Event.fetchRequest()
-            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            fr.predicate = NSPredicate(format: "kind IN %@ AND groupId == %@ AND NOT pubkey = %@", [4,14], conversationId, accountPubkey)
-            let allReceived = (try? bg().fetch(fr)) ?? []
-            let viewUnread = allReceived.count { $0.date > unreadSince }
-            
-            Task { @MainActor in
-                self.objectWillChange.send()
-                self.cachedViewUnread = viewUnread
-            }
-        }
+        Task { @MainActor in _ = await getUnread() }
     }
-    
-    @MainActor
-    func getUnread() async -> Int {
-        guard contactPubkey_ != nil || participantPubkeys_ != nil else { return 0 }
-        guard let accountPubkey = accountPubkey_ else { return 0 }
 
-        let unreadSince = markedReadAt_ ?? Date.distantPast
+    @MainActor
+    func getUnread(in eventContext: NSManagedObjectContext = bg()) async -> Int {
+        guard contactPubkey_ != nil || participantPubkeys_ != nil,
+              let accountPubkey = accountPubkey_ else { return 0 }
         let conversationId = self.conversationId
-        
-        return await withBgContext { bgContext in
-            let fr = Event.fetchRequest()
-            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            fr.predicate = NSPredicate(format: "kind IN %@ AND groupId == %@ AND NOT pubkey = %@", [4,14], conversationId, accountPubkey)
-            let allReceived = (try? bgContext.fetch(fr)) ?? []
-            let viewUnread = allReceived.count { $0.date > unreadSince }
-            
-            Task { @MainActor in
-                self.objectWillChange.send()
-                self.cachedViewUnread = viewUnread
+        // A cloud merge may advance the cursor while the importer queue is busy.
+        // Requery before publishing so a late result cannot restore an old badge.
+        while !Task.isCancelled && !isDeleted {
+            let unreadSince = markedReadAt_ ?? .distantPast
+            let count: Int = await eventContext.perform {
+                let request = Event.fetchRequest()
+                request.predicate = NSPredicate(
+                    format: "kind IN %@ AND groupId == %@ AND pubkey != %@ AND created_at > %f",
+                    [4, 14], conversationId, accountPubkey, unreadSince.timeIntervalSince1970
+                )
+                return (try? eventContext.count(for: request)) ?? 0
             }
-            return viewUnread
+            guard !isDeleted else { return 0 }
+            guard unreadSince == (markedReadAt_ ?? .distantPast) else { continue }
+            objectWillChange.send()
+            cachedViewUnread = count
+            return count
         }
+        return 0
     }
 }

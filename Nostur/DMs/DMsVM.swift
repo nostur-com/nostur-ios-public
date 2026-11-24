@@ -125,19 +125,32 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     @Published var unreadNewRequestsCount: Int = 0
     @Published var unreadNewRequestsNotWoTCount: Int = 0
 
+    @MainActor private var unreadUpdateGeneration = 0
+
     @MainActor
     private func updateUnreads() async {
-        self.objectWillChange.send()
+        unreadUpdateGeneration += 1
+        let generation = unreadUpdateGeneration
+        let pubkey = accountPubkey
+        let accepted = conversationRows
+        let requests = requestRows
+        let readPositions = (accepted + requests).map { ($0, $0.markedReadAt_) }
         var unreadCount = 0
-        for conversationRow in conversationRows {
+        for conversationRow in accepted {
             unreadCount += await conversationRow.getUnread()
         }
-        self.unread = unreadCount
-
         var newRequestsCount = 0
-        for requestRow in requestRows {
+        for requestRow in requests {
             newRequestsCount += await requestRow.getUnread()
         }
+        guard generation == unreadUpdateGeneration, accountPubkey == pubkey else { return }
+        guard accepted.map(\.objectID) == conversationRows.map(\.objectID),
+              requests.map(\.objectID) == requestRows.map(\.objectID),
+              readPositions.allSatisfy({ !$0.0.isDeleted && $0.0.markedReadAt_ == $0.1 }) else {
+            updateUnreadsCount()
+            return
+        }
+        self.unread = unreadCount
         self.unreadNewRequestsCount = newRequestsCount
 
         self.unreadNewRequestsNotWoTCount = requestRowsNotWoT.count
@@ -237,10 +250,22 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 Self.register(self)
             }
             self?.setupAccountChangedListener()
-            if IS_CATALYST {
-                self?.setupBadgeNotifications()
-            }
+            self?.setupReadStateListener()
         }
+    }
+
+    @MainActor
+    private func setupReadStateListener() {
+        ReadStateSync.shared.changedAccounts
+            .filter { [weak self] pubkeys in self.map { pubkeys.contains($0.accountPubkey) } ?? false }
+            .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    guard let self, self.ready else { return }
+                    self.loadConversations(fullReload: true)
+                }
+            }
+            .store(in: &subscriptions)
     }
 
     // For .shared/main account
@@ -639,7 +664,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     public func markAcceptedAsRead() {
         objectWillChange.send()
         for dmState in conversationRows {
-            dmState.markedReadAt_ = Date.now
+            dmState.markRead()
         }
         self.updateUnreadsCount()
     }
@@ -648,11 +673,11 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     public func markRequestsAsRead() {
         objectWillChange.send()
         for dmState in requestRows {
-            dmState.markedReadAt_ = Date.now
+            dmState.markRead()
         }
         if showNotWoT {
             for dmState in requestRowsNotWoT {
-                dmState.markedReadAt_ = Date.now
+                dmState.markRead()
             }
         }
         self.updateUnreadsCount()
@@ -812,25 +837,4 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         )
     }
 
-    private func setupBadgeNotifications() { // Copy pasta from NotificationsViewModel
-        guard self.isMain else { return }
-
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.badge, .provisional]) { [weak self] granted, error in
-            guard let self else { return }
-            if error == nil {
-                // Provisional authorization granted.
-                self.objectWillChange
-                    .sink { [weak self] _ in
-                        guard let self else { return }
-                        let notificationsCount = NotificationsViewModel.shared.unread
-                        setAppIconBadgeCount((self.unread + self.unreadNewRequestsCount) + notificationsCount, center: center)
-                    }
-                    .store(in: &self.subscriptions)
-
-                let notificationsCount = NotificationsViewModel.shared.unread
-                setAppIconBadgeCount((self.unread + self.unreadNewRequestsCount) + notificationsCount)
-            }
-        }
-    }
 }

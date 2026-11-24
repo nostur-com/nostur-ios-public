@@ -113,7 +113,14 @@ class NotificationsViewModel: ObservableObject {
             self.accountDataCache = account?.toStruct()
         }
     }
-    private var accountDataCache: AccountData?
+    private let accountDataLock = NSLock()
+    private var storedAccountData: AccountData?
+    private var accountDataCache: AccountData? {
+        get { accountDataLock.withLock { storedAccountData } }
+        set { accountDataLock.withLock { storedAccountData = newValue } }
+    }
+    private var readStateSubscription: AnyCancellable?
+    private var pendingReadKeys = Set<PartialKeyPath<CloudAccount>>()
     private var pubkey: String?
     
     private var lastLocalNotificationAt: Int {
@@ -134,6 +141,7 @@ class NotificationsViewModel: ObservableObject {
     @MainActor
     public func load(_ pubkey: String) {
         self.pubkey = pubkey
+        pendingReadKeys.removeAll()
         self.didLoad = true
 #if DEBUG
         L.og.debug("NotificationViewModel.load(\(pubkey))");
@@ -165,6 +173,7 @@ class NotificationsViewModel: ObservableObject {
         setupCheckNeedsUpdateListeners()
         setupRestoreRelaySubSubscriptions()
         setupAccountChangedListener()
+        if let account { bindReadState(to: account, sync: .shared) }
         if IS_CATALYST {
             setupBadgeNotifications()
         }
@@ -461,48 +470,82 @@ class NotificationsViewModel: ObservableObject {
         NotificationsViewModel.shared.sharedRestoreSubscriptionsSubject.send()
     }
     
-    public func checkImmediately(reason: String, force: Bool = false) {
-        bg().perform { [weak self] in
-            guard let self else { return }
-            guard let accountData = self.accountDataCache else {
-#if DEBUG
-                L.og.debug("⏱️⏱️ NotificationsViewModel.checkImmediately(\(reason)) skipped: accountData missing")
-#endif
-                return
+    @MainActor
+    func bindReadState(to account: CloudAccount, sync: ReadStateSync) {
+        self.account = account
+        self.pubkey = account.publicKey
+        readStateSubscription = sync.changedAccounts
+            .filter { [weak self] pubkeys in self?.pubkey.map(pubkeys.contains) ?? false }
+            .handleEvents(receiveOutput: { [weak self] _ in
+                // Invalidate queued results immediately; debounce only the recount.
+                self?.accountDataCache = self?.account?.toStruct()
+            })
+            .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.checkImmediately(reason: "readStateChanged", force: true, refreshSubscriptions: false)
             }
-#if DEBUG
-            L.og.debug("⏱️⏱️ NotificationsViewModel.checkImmediately(\(reason))")
-#endif
-            self.needsUpdate = true
-            self.checkForEverything(accountData: accountData, force: force)
+    }
+
+    @MainActor
+    func isReadSnapshotCurrent(_ snapshot: AccountData) -> Bool {
+        guard let account, !account.isDeleted, accountDataCache == snapshot else { return false }
+        // A merge can precede the coordinator's observer callback. Check the live
+        // main-context cursors too before publishing a count or scheduling a banner.
+        return account.publicKey == snapshot.publicKey &&
+            account.lastSeenPostCreatedAt == snapshot.lastSeenPostCreatedAt &&
+            account.lastSeenRepostCreatedAt == snapshot.lastSeenRepostCreatedAt &&
+            account.lastSeenReactionCreatedAt == snapshot.lastSeenReactionCreatedAt &&
+            account.lastSeenZapCreatedAt == snapshot.lastSeenZapCreatedAt
+    }
+
+    @MainActor
+    func isBackgroundMentionSnapshotCurrent(_ snapshot: AccountData, in context: NSManagedObjectContext = viewContext()) -> Bool {
+        // Background refresh can run before AppView has loaded this model.
+        guard pubkey == nil || pubkey == snapshot.publicKey,
+              !pendingReadKeys.contains(\CloudAccount.lastSeenPostCreatedAt),
+              let current = try? CloudAccount.fetchAccount(publicKey: snapshot.publicKey, context: context)
+        else { return false }
+        return current.lastSeenPostCreatedAt == snapshot.lastSeenPostCreatedAt
+    }
+
+    public func checkImmediately(reason: String, force: Bool = false, refreshSubscriptions: Bool = true) {
+        Task { @MainActor [weak self] in
+            guard let self, let pubkey = self.pubkey else { return }
+            let request = CloudAccount.fetchRequest()
+            request.predicate = NSPredicate(format: "publicKey_ == %@", pubkey)
+            if let account = try? viewContext().fetch(request).first {
+                self.account = account
+            }
+            guard let accountData = self.accountDataCache else { return }
+            bg().perform { [weak self] in
+                guard let self else { return }
+                self.needsUpdate = true
+                self.checkForEverything(accountData: accountData, force: force, refreshSubscriptions: refreshSubscriptions)
+            }
         }
     }
-    
+
+    @MainActor
     private func setupBadgeNotifications() {
-        // Only do badges for the main VM
-        guard self.id == NotificationsViewModel.shared.id else { return }
-        guard badgeSubcription == nil else { return }
-        
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.badge, .provisional]) { [weak self] granted, error in
-            guard let self else { return }
-            if error == nil {
-                // Provisional authorization granted.
-                badgeSubcription = self.unreadPublisher // TODO: Also do .unreadPublisher for DMs to fix badge/unread mismatch
-                    .sink { [weak self] _ in
-                        guard let self else { return }
-                        let dmsCount = (DMsVM.shared.unread + DMsVM.shared.unreadNewRequestsCount)
-                        setAppIconBadgeCount(self.unread + dmsCount, center: center)
-                    }
-                
-                Task { @MainActor in
-                    let dmsCount = (DMsVM.shared.unread + DMsVM.shared.unreadNewRequestsCount)
-                    setAppIconBadgeCount(self.unread + dmsCount)
-                }
+        guard isMain, badgeSubcription == nil else { return }
+        Task { @MainActor [weak self] in
+            let center = UNUserNotificationCenter.current()
+            guard (try? await center.requestAuthorization(options: [.badge, .provisional])) == true,
+                  let self, self.badgeSubcription == nil else { return }
+            // Use emitted values: objectWillChange runs before @Published stores
+            // its new value and used to leave the dock badge one update behind.
+            self.badgeSubcription = Publishers.CombineLatest3(
+                self.unreadPublisher.prepend(self.unread),
+                DMsVM.shared.$unread,
+                DMsVM.shared.$unreadNewRequestsCount
+            )
+            .receive(on: RunLoop.main)
+            .sink { notifications, messages, requests in
+                setAppIconBadgeCount(notifications + messages + requests, center: center)
             }
         }
     }
-    
+
     // From now, stays active
     private func relayCheckNewestNotifications() {
         guard let accountPubkey = self.pubkey else { return }
@@ -595,7 +638,7 @@ class NotificationsViewModel: ObservableObject {
         timer?.tolerance = 5.0
     }
     
-    private func checkForEverything(accountData: AccountData, force: Bool = false) {
+    private func checkForEverything(accountData: AccountData, force: Bool = false, refreshSubscriptions: Bool = true) {
         guard (!AppState.shared.appIsInBackground || IS_CATALYST) else {
 #if DEBUG
             L.og.debug("NotificationViewModel.checkForEverything() \(self.pubkey): skipping, app in background.");
@@ -618,7 +661,7 @@ class NotificationsViewModel: ObservableObject {
         L.og.debug("💜 NotificationsViewModel.checkForEverything() \(accountData.publicKey) needsUpdate, updating unread counts...")
 #endif
 
-        self.relayCheckNewestNotifications() // or wait 3 seconds?
+        if refreshSubscriptions { self.relayCheckNewestNotifications() }
         
         bg().perform { [weak self] in self?.checkForUnreadMentions(accountData: accountData) }
         bg().perform { [weak self] in
@@ -710,7 +753,8 @@ class NotificationsViewModel: ObservableObject {
             .map { notificationMention(from: $0, context: bg()) }
         
         DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+            guard let self, self.isReadSnapshotCurrent(accountData),
+                  !self.pendingReadKeys.contains(\CloudAccount.lastSeenPostCreatedAt) else { return }
             if unreadMentionsCount != self.unreadMentions_ {
                 if SettingsStore.shared.receiveLocalNotifications {
                     
@@ -794,7 +838,8 @@ class NotificationsViewModel: ObservableObject {
         }
         guard let (unreadMentionsCount, mentionsForNotification) = result, !Task.isCancelled else { return }
         let countChanged = await MainActor.run {
-            guard unreadMentionsCount != self.unreadMentions_ else { return false }
+            guard self.isBackgroundMentionSnapshotCurrent(accountData),
+                  unreadMentionsCount != self.unreadMentions_ else { return false }
             self.unreadMentions_ = min(unreadMentionsCount, 9999)
             return true
         }
@@ -826,7 +871,8 @@ class NotificationsViewModel: ObservableObject {
             .count
         
         DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+            guard let self, self.isReadSnapshotCurrent(accountData),
+                  !self.pendingReadKeys.contains(\CloudAccount.lastSeenRepostCreatedAt) else { return }
             if unreadReposts != self.unreadReposts_ {
                 self.unreadReposts_ = min(unreadReposts,9999)
             }
@@ -856,7 +902,8 @@ class NotificationsViewModel: ObservableObject {
             .count
         
         DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+            guard let self, self.isReadSnapshotCurrent(accountData),
+                  !self.pendingReadKeys.contains(\CloudAccount.lastSeenReactionCreatedAt) else { return }
             if unreadReactions != self.unreadReactions_ {
                 self.unreadReactions_ = min(unreadReactions,9999)
             }
@@ -882,7 +929,8 @@ class NotificationsViewModel: ObservableObject {
             .count
         
         DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+            guard let self, self.isReadSnapshotCurrent(accountData),
+                  !self.pendingReadKeys.contains(\CloudAccount.lastSeenZapCreatedAt) else { return }
             if unreadZaps != self.unreadZaps_ {
                 self.unreadZaps_ = min(unreadZaps,9999)
             }
@@ -920,11 +968,28 @@ class NotificationsViewModel: ObservableObject {
     
     // -- MARK: Mark as read
     
+    @MainActor
+    private func applyReadTimestamp(_ timestamp: Int64, keyPath: ReferenceWritableKeyPath<CloudAccount, Int64>, accountID: NSManagedObjectID) {
+        guard let account, account.objectID == accountID, !account.isDeleted else { return }
+        account[keyPath: keyPath] = max(account[keyPath: keyPath], timestamp)
+        pendingReadKeys.remove(keyPath)
+        ReadStateSync.shared.reconcile([account])
+        accountDataCache = account.toStruct()
+        guard let context = account.managedObjectContext else { return }
+        context.perform {
+            guard context.hasChanges else { return }
+            do { try context.save() }
+            catch { L.og.error("Could not save notification read state: \(error)") }
+        }
+    }
+
     @MainActor public func markMentionsAsRead() {
         self.unreadMentions_ = 0
         guard let account = self.account else { return }
         let accountData = account.toStruct()
         self.accountDataCache = accountData
+        pendingReadKeys.insert(\CloudAccount.lastSeenPostCreatedAt)
+        let accountID = account.objectID
         let lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
         
         bg().perform { [weak self] in
@@ -933,12 +998,9 @@ class NotificationsViewModel: ObservableObject {
             r.fetchLimit = 1
             
             if let mostRecent = try? bg().fetch(r).first {
-                if lastSeenPostCreatedAt != mostRecent.created_at {
-                    let mostRecentCreated_at = mostRecent.created_at
-                    DispatchQueue.main.async { [weak self] in
-                        self?.account?.lastSeenPostCreatedAt = mostRecentCreated_at
-                        self?.accountDataCache = self?.account?.toStruct()
-                    }
+                let mostRecentCreated_at = mostRecent.created_at
+                DispatchQueue.main.async { [weak self] in
+                    self?.applyReadTimestamp(mostRecentCreated_at, keyPath: \CloudAccount.lastSeenPostCreatedAt, accountID: accountID)
                 }
             }
             else {
@@ -946,17 +1008,11 @@ class NotificationsViewModel: ObservableObject {
                 L.og.info("🔴🔴 markMentionsAsRead() - Falling back to 2 days before (should not happen)")
 #endif
                 let twoDaysAgoOrNewer = max(lastSeenPostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
-                if lastSeenPostCreatedAt != twoDaysAgoOrNewer {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.account?.lastSeenPostCreatedAt = twoDaysAgoOrNewer
-                        self?.accountDataCache = self?.account?.toStruct()
-                    }
+                DispatchQueue.main.async { [weak self] in
+                    self?.applyReadTimestamp(twoDaysAgoOrNewer, keyPath: \CloudAccount.lastSeenPostCreatedAt, accountID: accountID)
                 }
             }
             DataProvider.shared().saveToDiskNow(.bgContext)
-            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
-                self?.unreadMentions_ = 0
-            }
         }
     }
     
@@ -972,9 +1028,6 @@ class NotificationsViewModel: ObservableObject {
             )
 
             DataProvider.shared().saveToDiskNow(.bgContext)
-            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
-                self?.unreadNewPosts_ = 0
-            }
         }
     }
     
@@ -983,6 +1036,8 @@ class NotificationsViewModel: ObservableObject {
         guard let account = self.account else { return }
         let accountData = account.toStruct()
         self.accountDataCache = accountData
+        pendingReadKeys.insert(\CloudAccount.lastSeenRepostCreatedAt)
+        let accountID = account.objectID
         let lastSeenRepostCreatedAt = account.lastSeenRepostCreatedAt
         
         bg().perform { [weak self] in
@@ -991,27 +1046,18 @@ class NotificationsViewModel: ObservableObject {
             r.fetchLimit = 1
             
             if let mostRecent = try? bg().fetch(r).first {
-                if lastSeenRepostCreatedAt != mostRecent.created_at {
-                    let mostRecentCreated_at = mostRecent.created_at
-                    DispatchQueue.main.async { [weak self] in
-                        self?.account?.lastSeenRepostCreatedAt = mostRecentCreated_at
-                        self?.accountDataCache = self?.account?.toStruct()
-                    }
+                let mostRecentCreated_at = mostRecent.created_at
+                DispatchQueue.main.async { [weak self] in
+                    self?.applyReadTimestamp(mostRecentCreated_at, keyPath: \CloudAccount.lastSeenRepostCreatedAt, accountID: accountID)
                 }
             }
             else {
                 let twoDaysAgoOrNewer = max(lastSeenRepostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
-                if lastSeenRepostCreatedAt != twoDaysAgoOrNewer {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.account?.lastSeenRepostCreatedAt = twoDaysAgoOrNewer
-                        self?.accountDataCache = self?.account?.toStruct()
-                    }
+                DispatchQueue.main.async { [weak self] in
+                    self?.applyReadTimestamp(twoDaysAgoOrNewer, keyPath: \CloudAccount.lastSeenRepostCreatedAt, accountID: accountID)
                 }
             }
             DataProvider.shared().saveToDiskNow(.bgContext)
-            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
-                self?.unreadReposts_ = 0
-            }
         }
     }
     
@@ -1020,6 +1066,8 @@ class NotificationsViewModel: ObservableObject {
         guard let account = self.account else { return }
         let accountData = account.toStruct()
         self.accountDataCache = accountData
+        pendingReadKeys.insert(\CloudAccount.lastSeenReactionCreatedAt)
+        let accountID = account.objectID
         let lastSeenReactionCreatedAt = account.lastSeenReactionCreatedAt
         
         bg().perform { [weak self] in
@@ -1031,27 +1079,18 @@ class NotificationsViewModel: ObservableObject {
                 .first(where: { !$0.isSpam && !self.isDMReaction($0) })
             
             if let mostRecent {
-                if lastSeenReactionCreatedAt != mostRecent.created_at {
-                    let mostRecentCreated_at = mostRecent.created_at
-                    DispatchQueue.main.async { [weak self] in
-                        self?.account?.lastSeenReactionCreatedAt = mostRecentCreated_at
-                        self?.accountDataCache = self?.account?.toStruct()
-                    }
+                let mostRecentCreated_at = mostRecent.created_at
+                DispatchQueue.main.async { [weak self] in
+                    self?.applyReadTimestamp(mostRecentCreated_at, keyPath: \CloudAccount.lastSeenReactionCreatedAt, accountID: accountID)
                 }
             }
             else {
                 let twoDaysAgoOrNewer = max(lastSeenReactionCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
-                if lastSeenReactionCreatedAt != twoDaysAgoOrNewer {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.account?.lastSeenReactionCreatedAt = twoDaysAgoOrNewer
-                        self?.accountDataCache = self?.account?.toStruct()
-                    }
+                DispatchQueue.main.async { [weak self] in
+                    self?.applyReadTimestamp(twoDaysAgoOrNewer, keyPath: \CloudAccount.lastSeenReactionCreatedAt, accountID: accountID)
                 }
             }
             DataProvider.shared().saveToDiskNow(.bgContext)
-            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
-                self?.unreadReactions_ = 0
-            }
         }
     }
     
@@ -1061,6 +1100,8 @@ class NotificationsViewModel: ObservableObject {
         guard let account = self.account else { return }
         let accountData = account.toStruct()
         self.accountDataCache = accountData
+        pendingReadKeys.insert(\CloudAccount.lastSeenZapCreatedAt)
+        let accountID = account.objectID
         let lastSeenZapCreatedAt = account.lastSeenZapCreatedAt
         
         bg().perform { [weak self] in
@@ -1070,21 +1111,15 @@ class NotificationsViewModel: ObservableObject {
             r.fetchLimit = 1
             
             if let mostRecent = try? bg().fetch(r).first {
-                if lastSeenZapCreatedAt != mostRecent.created_at {
-                    let mostRecentCreated_at = mostRecent.created_at
-                    DispatchQueue.main.async { [weak self] in
-                        self?.account?.lastSeenZapCreatedAt = mostRecentCreated_at
-                        self?.accountDataCache = self?.account?.toStruct()
-                    }
+                let mostRecentCreated_at = mostRecent.created_at
+                DispatchQueue.main.async { [weak self] in
+                    self?.applyReadTimestamp(mostRecentCreated_at, keyPath: \CloudAccount.lastSeenZapCreatedAt, accountID: accountID)
                 }
             }
             else {
                 let twoDaysAgoOrNewer = max(lastSeenZapCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
-                if lastSeenZapCreatedAt != twoDaysAgoOrNewer {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.account?.lastSeenZapCreatedAt = twoDaysAgoOrNewer
-                        self?.accountDataCache = self?.account?.toStruct()
-                    }
+                DispatchQueue.main.async { [weak self] in
+                    self?.applyReadTimestamp(twoDaysAgoOrNewer, keyPath: \CloudAccount.lastSeenZapCreatedAt, accountID: accountID)
                 }
             }
             
@@ -1095,10 +1130,6 @@ class NotificationsViewModel: ObservableObject {
             )
 
             DataProvider.shared().saveToDiskNow(.bgContext)
-            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
-                self?.unreadZaps_ = 0
-                self?.unreadFailedZaps_ = 0
-            }
         }
     }
     
