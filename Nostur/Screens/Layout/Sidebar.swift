@@ -144,14 +144,10 @@ struct SideBar: View {
                             navigateToOnMain(YearReviewPath(year: YearReviewPeriod.defaultYear()))
                             showSidebar = false
                         } label: {
-                            Label {
-                                Text("Your year on Nostr", comment: "Side bar navigation button")
-                                    .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
-                            } icon: {
-                                Image(systemName: "sparkles").frame(width: Self.ICON_WIDTH)
-                            }
-                            .padding(.vertical, Self.BUTTON_VPADDING)
-                            .contentShape(Rectangle())
+                            YearReviewSidebarLabel(owner: account.publicKey, isSidebarVisible: showSidebar)
+                                .id(account.publicKey)
+                                .padding(.vertical, Self.BUTTON_VPADDING)
+                                .contentShape(Rectangle())
                         }
                     }
                     Button {

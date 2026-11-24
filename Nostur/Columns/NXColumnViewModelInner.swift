@@ -145,7 +145,12 @@ class NXColumnViewModelInner {
         scrollToIndexSubject.send(nil)
     }
 
-    public var isAtTop: Bool = true
+    let isAtTopPublisher = CurrentValueSubject<Bool, Never>(true)
+    public var isAtTop: Bool = true {
+        didSet {
+            if isAtTop != oldValue { isAtTopPublisher.send(isAtTop) }
+        }
+    }
     
     public var updateIsAtTopSubject = PassthroughSubject<Void, Never>()
     

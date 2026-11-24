@@ -97,6 +97,10 @@ struct YearReviewView: View {
                 .disabled(!hasShareableCard)
             }
         }
+        .onAppear {
+            YearReviewDiscovery.markOpened(owner: account.pubkey,
+                year: initialYear ?? YearReviewPeriod.defaultYear())
+        }
         .task(id: account.pubkey) {
             model.refreshHistoryRelayAuth()
             guard openedAccount != account.pubkey || model.viewer != account.pubkey || model.isConfiguring else { return }
@@ -142,32 +146,23 @@ struct YearReviewView: View {
         }
         .sheet(isPresented: $showProfilePicker) {
             NavigationStack {
-                ContactsSearch(followingPubkeys: account.account.followingPubkeys, prompt: "Search profiles", onSelectContact: { contact in
-                    showProfilePicker = false
-                    Task { await model.configure(account: account, contact: contact) }
-                })
-                .navigationTitle("Choose a profile")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button { showProfilePicker = false } label: {
-                            Label("Done", systemImage: "checkmark").labelStyle(.iconOnly)
-                        }
-                    }
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            showProfilePicker = false
-                            Task { await model.configure(account: account) }
-                        } label: {
-                            Label("My profile", systemImage: "person.crop.circle").labelStyle(.iconOnly)
-                        }
-                    }
-                }
+                YearReviewProfilePicker(activeAccount: account.account, selectedPubkey: model.owner,
+                    onSelectAccount: { selected in
+                        showProfilePicker = false
+                        guard selected.publicKey != model.owner else { return }
+                        Task { await model.configure(account: account, reportAccount: selected) }
+                    }, onSelectContact: { contact in
+                        showProfilePicker = false
+                        guard contact.pubkey != model.owner else { return }
+                        Task { await model.configure(account: account, contact: contact) }
+                    }, onDismiss: { showProfilePicker = false })
             }
+            .presentationBackgroundCompat(theme.background)
         }
         .sheet(isPresented: $showHistory) {
             YearReviewHistoryView(model: model)
                 .environment(\.theme, theme)
+                .presentationBackgroundCompat(theme.background)
         }
         .sheet(isPresented: $showRefreshSources) {
             NavigationStack {
@@ -462,6 +457,93 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
 enum YearReviewShareFormat: String, Codable { case report, gang }
 
 @available(iOS 17.0, *)
+@MainActor
+private struct YearReviewProfilePicker: View {
+    @Environment(\.theme) private var theme
+    let activeAccount: CloudAccount
+    let selectedPubkey: String
+    let onSelectAccount: (CloudAccount) -> Void
+    let onSelectContact: (Contact) -> Void
+    let onDismiss: () -> Void
+    @State private var accounts: [CloudAccount] = []
+
+    var body: some View {
+        List {
+            Section("Your accounts") {
+                ForEach(accounts, id: \.publicKey) { profile in
+                    Button { onSelectAccount(profile) } label: {
+                        HStack(spacing: 12) {
+                            PFP(pubkey: profile.publicKey, account: profile, size: 44)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(profile.anyName)
+                                    .font(.body.weight(.semibold))
+                                    .foregroundStyle(theme.primary)
+                                Text(profile.npub)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(theme.accent)
+                                .opacity(profile.publicKey == selectedPubkey ? 1 : 0)
+                                .accessibilityHidden(true)
+                        }
+                        .padding(.vertical, 4)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(profile.publicKey == selectedPubkey ? .isSelected : [])
+                    .listRowBackground(theme.listBackground)
+                }
+            }
+            Section {
+                NavigationLink {
+                    ContactsSearch(followingPubkeys: activeAccount.followingPubkeys,
+                        prompt: "Search profiles", onSelectContact: onSelectContact)
+                        .navigationTitle("Find another profile")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) { dismissButton }
+                        }
+                } label: {
+                    Label("Find another profile", systemImage: "magnifyingglass")
+                }
+                .listRowBackground(theme.listBackground)
+            }
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackgroundHidden()
+        .background(theme.background)
+        .navigationTitle("Choose a profile")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { dismissButton }
+        }
+        .onAppear {
+            var available = AccountsState.shared.accounts
+            if !available.contains(where: { $0.publicKey == activeAccount.publicKey }) {
+                available.append(activeAccount)
+            }
+            accounts = available.sorted { lhs, rhs in
+                let leftActive = lhs.publicKey == activeAccount.publicKey
+                let rightActive = rhs.publicKey == activeAccount.publicKey
+                if leftActive != rightActive { return leftActive }
+                if lhs.lastLoginAt != rhs.lastLoginAt { return lhs.lastLoginAt > rhs.lastLoginAt }
+                return lhs.publicKey < rhs.publicKey
+            }
+        }
+    }
+
+    private var dismissButton: some View {
+        Button(action: onDismiss) {
+            Label("Dismiss", systemImage: "xmark").labelStyle(.iconOnly)
+        }
+    }
+}
+
+@available(iOS 17.0, *)
 private struct YearReviewHistorySummary: View {
     let model: YearReviewModel
     let openHistory: () -> Void
@@ -477,7 +559,6 @@ private struct YearReviewHistorySummary: View {
                             Text("Fetching \(activity.monthName)")
                         } else { Text(model.progressLabel) }
                     }
-                    if model.isDownloading { Text("You can keep using Nostur.") }
                 } else {
                     if model.report != nil && (model.archivedCounts.fromYou > 0 || model.archivedCounts.fromOthers > 0) {
                         Text("Saved report")
@@ -522,7 +603,8 @@ private struct YearReviewHistoryView: View {
                             ProgressView().controlSize(.small)
                             Text(model.progressLabel).font(.subheadline.weight(.semibold))
                         }
-                        Text("You can keep using Nostur.").font(.footnote).foregroundStyle(.secondary)
+                        Button("Continue in background") { dismiss() }
+                            .buttonStyle(.bordered)
                     } else if !model.isRunning {
                         YearReviewActionsView(hasHistory: model.collection != nil || model.lastFetchedDate != nil,
                             canResume: model.canResume,
@@ -541,7 +623,7 @@ private struct YearReviewHistoryView: View {
                 }
                 .padding(20)
             }
-            .background(theme.listBackground)
+            .background(theme.background)
             .navigationTitle("History")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

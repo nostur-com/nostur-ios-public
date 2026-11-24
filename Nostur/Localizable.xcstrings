@@ -13409,6 +13409,28 @@
         }
       }
     },
+    "Continue in background" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar en segundo plano"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lanjutkan di latar belakang"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doorgaan op de achtergrond"
+          }
+        }
+      }
+    },
     "Continue month" : {
       "localizations" : {
         "es" : {
@@ -19584,6 +19606,28 @@
       },
       "shouldTranslate" : false
     },
+    "Find another profile" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar otro perfil"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cari profil lain"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een ander profiel zoeken"
+          }
+        }
+      }
+    },
     "Find author" : {
       "comment" : "Navigation title of Find author screen",
       "localizations" : {
@@ -23237,6 +23281,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : ""
+          }
+        }
+      }
+    },
+    "Later" : {
+      "comment" : "Hide the Year in Review feed reminder for three days",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más tarde"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nanti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Later"
           }
         }
       }
@@ -50608,6 +50675,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je account en gekozen antwoorden zijn openbaar op Nostr. Als je je stem wijzigt, worden de resultaten bijgewerkt, maar eerdere stemmen kunnen openbaar blijven."
+          }
+        }
+      }
+    },
+    "Your accounts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus cuentas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akun Anda"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je accounts"
           }
         }
       }

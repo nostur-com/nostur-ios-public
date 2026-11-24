@@ -256,20 +256,21 @@ final class YearReviewModel {
             && (hasNewHistorySources || collection?.phase != .finished || !(collection?.failed.isEmpty ?? true))
     }
 
-    func configure(account: LoggedInAccount, contact: Contact? = nil, loadSaved: Bool = true) async {
+    func configure(account: LoggedInAccount, contact: Contact? = nil, reportAccount: CloudAccount? = nil, loadSaved: Bool = true) async {
         // Snapshot managed values on the main actor before any suspension.
         let cloudAccount = account.account
         let selectedViewer = cloudAccount.publicKey
-        let selectedOwner = contact?.pubkey ?? selectedViewer
-        let selectedName = contact?.anyName ?? cloudAccount.anyName
-        let selectedPicture = contact?.pictureUrl ?? (contact == nil ? URL(string: cloudAccount.picture) : nil)
+        let profileAccount = reportAccount ?? cloudAccount
+        let selectedOwner = contact?.pubkey ?? profileAccount.publicKey
+        let selectedName = contact?.anyName ?? profileAccount.anyName
+        let selectedPicture = contact?.pictureUrl ?? (contact == nil ? profileAccount.pictureUrl : nil)
         let contactTrust = contact.map { Set($0.followingPubkeys) } ?? []
-        let selectedTrust = contactTrust.isEmpty ? cloudAccount.followingPubkeys : contactTrust
-        let advertisedRelays = cloudAccount.accountRelays.map { RelayData.new(url: $0.url, read: true) }
+        let selectedTrust = contactTrust.isEmpty ? profileAccount.followingPubkeys : contactTrust
+        let advertisedRelays = profileAccount.accountRelays.map { RelayData.new(url: $0.url, read: true) }
         let isOtherProfile = contact != nil
         let selectedProvider = YearReviewZapProvider(pubkey: selectedOwner, keys: [],
-            lud16: contact?.lud16 ?? (isOtherProfile ? nil : cloudAccount.lud16),
-            lud06: contact?.lud06 ?? (isOtherProfile ? nil : cloudAccount.lud06))
+            lud16: contact?.lud16 ?? (contact == nil ? profileAccount.lud16 : nil),
+            lud06: contact?.lud06 ?? (contact == nil ? profileAccount.lud06 : nil))
         guard isConfiguring || owner != selectedOwner || viewer != selectedViewer else {
             refreshHistoryRelayAuth()
             return

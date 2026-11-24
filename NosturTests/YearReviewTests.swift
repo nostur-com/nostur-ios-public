@@ -1429,6 +1429,61 @@ final class YearReviewTests: XCTestCase {
         #endif
     }
 
+    @MainActor
+    func testDiscoveryLaterPersistsForThreeDaysAndOpeningSuppressesReminder() {
+        let suite = "YearReviewDiscoveryTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let state = YearReviewDiscoveryState(defaults: defaults, resetsOnLaunch: false)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        XCTAssertTrue(state.shouldPrompt(owner: owner, year: 2026, now: now))
+        state.remindLater(owner: owner, year: 2026, now: now, calendar: calendar)
+        let relaunched = YearReviewDiscoveryState(defaults: defaults, resetsOnLaunch: false)
+        XCTAssertFalse(relaunched.shouldPrompt(owner: owner, year: 2026, now: now.addingTimeInterval(3 * 86_400 - 1)))
+        XCTAssertTrue(relaunched.shouldPrompt(owner: owner, year: 2026, now: now.addingTimeInterval(3 * 86_400)))
+        XCTAssertTrue(relaunched.shouldPrompt(owner: alice, year: 2026, now: now))
+        relaunched.markOpened(owner: owner, year: 2026)
+        let opened = YearReviewDiscoveryState(defaults: defaults, resetsOnLaunch: false)
+        XCTAssertFalse(opened.shouldPrompt(owner: owner, year: 2026, now: now.addingTimeInterval(30 * 86_400)))
+        XCTAssertTrue(opened.hasOpened(owner: owner, year: 2026))
+        XCTAssertTrue(opened.hasOpened(owner: owner, year: 2027))
+        XCTAssertFalse(opened.shouldPrompt(owner: owner, year: 2027, now: now))
+        XCTAssertFalse(opened.hasOpened(owner: alice, year: 2026))
+    }
+
+    @MainActor
+    func testDebugDiscoveryResetsEachLaunchWithoutChangingReleasePreferences() {
+        let suite = "YearReviewDiscoveryTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let release = YearReviewDiscoveryState(defaults: defaults, resetsOnLaunch: false)
+        release.markOpened(owner: owner, year: 2026)
+        let firstLaunch = YearReviewDiscoveryState(defaults: defaults, resetsOnLaunch: true)
+        XCTAssertTrue(firstLaunch.shouldPrompt(owner: owner, year: 2026))
+        firstLaunch.markOpened(owner: owner, year: 2026)
+        firstLaunch.remindLater(owner: alice, year: 2026)
+        XCTAssertFalse(firstLaunch.shouldPrompt(owner: owner, year: 2026))
+        XCTAssertFalse(firstLaunch.shouldPrompt(owner: alice, year: 2026))
+        let nextLaunch = YearReviewDiscoveryState(defaults: defaults, resetsOnLaunch: true)
+        XCTAssertTrue(nextLaunch.shouldPrompt(owner: owner, year: 2026))
+        XCTAssertTrue(nextLaunch.shouldPrompt(owner: alice, year: 2026))
+        XCTAssertTrue(release.hasOpened(owner: owner, year: 2026))
+        XCTAssertFalse(release.hasOpened(owner: alice, year: 2026))
+    }
+
+    func testDiscoveryOnlyAppearsOnVisibleCaughtUpFeedAtTop() {
+        XCTAssertTrue(YearReviewDiscovery.canPresent(isVisible: true, isAtTop: true, unreadCount: 0, isRestoring: false))
+        XCTAssertFalse(YearReviewDiscovery.canPresent(isVisible: false, isAtTop: true, unreadCount: 0, isRestoring: false))
+        XCTAssertFalse(YearReviewDiscovery.canPresent(isVisible: true, isAtTop: false, unreadCount: 0, isRestoring: false))
+        XCTAssertFalse(YearReviewDiscovery.canPresent(isVisible: true, isAtTop: true, unreadCount: 1, isRestoring: false))
+        XCTAssertFalse(YearReviewDiscovery.canPresent(isVisible: true, isAtTop: true, unreadCount: 0, isRestoring: true))
+        #if DEBUG
+        XCTAssertNotNil(YearReviewDiscovery.promptYear())
+        #endif
+    }
+
     func testSeasonalDiscoveryWindowAndTargetYearRespectLocalDates() {
         var calendar = Calendar(identifier: .gregorian)
         let zone = TimeZone(secondsFromGMT: 7200)!
@@ -1437,8 +1492,8 @@ final class YearReviewTests: XCTestCase {
             let date = calendar.date(from: DateComponents(year: y, month: month, day: day, hour: hour))!
             return YearReviewDiscovery.seasonalYear(now: date, timeZone: zone)
         }
-        XCTAssertNil(year(2026, 12, 17))
-        XCTAssertEqual(year(2026, 12, 18, hour: 0), 2026)
+        XCTAssertNil(year(2026, 12, 10))
+        XCTAssertEqual(year(2026, 12, 11, hour: 0), 2026)
         XCTAssertEqual(year(2026, 12, 31), 2026)
         XCTAssertEqual(year(2027, 1, 1), 2026)
         XCTAssertEqual(year(2027, 1, 14, hour: 23), 2026)
