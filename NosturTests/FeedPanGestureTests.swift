@@ -71,30 +71,15 @@ final class FeedPanGestureTests: XCTestCase {
 
         let views = descendants(of: window)
         let text = try XCTUnwrap(views.compactMap { $0 as? UITextView }.first)
-        let marker = try XCTUnwrap(views.compactMap { $0 as? FeedPanAttachment.MarkerView }.first)
-        XCTAssertNotNil(marker.window)
-        XCTAssertGreaterThan(marker.bounds.width, 300)
-        let coordinator = try XCTUnwrap(marker.coordinator)
-        var ancestor: UIView? = marker
-        var chain: [String] = []
-        while let view = ancestor {
-            chain.append("\(type(of: view)) next=\(String(describing: view.next.map { type(of: $0) }))")
-            ancestor = view.superview
-        }
-        let pans = views.flatMap { $0.gestureRecognizers ?? [] }.filter {
-            $0 is UIPanGestureRecognizer && $0.delegate is FeedPanAttachment.Coordinator
-        }
-        let recognizerSummary = views.flatMap { view in
-            (view.gestureRecognizers ?? []).map {
-                "\(type(of: $0)) delegate=\(String(describing: $0.delegate)) host=\(type(of: view))"
-            }
-        }.joined(separator: "\n")
-        XCTAssertEqual(pans.count, 1, "Use a single continuous pan for both swipe directions. idiom=\(UIDevice.current.userInterfaceIdiom.rawValue) pan=\(coordinator.pan) chain=\(chain)\n\(recognizerSummary)")
-        let pan = try XCTUnwrap(pans.first)
-        let gestureHost = try XCTUnwrap(pan.view)
-        XCTAssertTrue(text.isDescendant(of: gestureHost), "Post text touches must reach the feed pan")
-        XCTAssertTrue(pan.isEnabled)
-        XCTAssertGreaterThan(gestureHost.bounds.width, 300)
+        let horizontal = try XCTUnwrap(views.compactMap { $0 as? UIScrollView }.first {
+            $0.bounds.width > 0 && $0.contentSize.width > $0.bounds.width * 1.5
+        })
+        XCTAssertTrue(text.isDescendant(of: horizontal), "Native text must be inside the horizontal pager")
+        XCTAssertTrue(horizontal.isScrollEnabled)
+        XCTAssertGreaterThan(horizontal.bounds.width, 300)
+        XCTAssertFalse(views.flatMap { $0.gestureRecognizers ?? [] }.contains {
+            $0.delegate is FeedPanAttachment.Coordinator
+        }, "Native paging must not compete with the legacy feed pan")
     }
 
     private func descendants(of view: UIView) -> [UIView] {

@@ -41,13 +41,19 @@ final class FeedPagingPerformanceTests: XCTestCase {
         let parentBodies = recorder.parentBodies
         let postBodies = recorder.postBodies
         XCTAssertEqual(postBodies.count, 20)
+        let pager = try nativePager(in: window)
+        let start = pager.contentOffset
+        var motionUpdates = 0
+        let subscription = motion.$translation.dropFirst().sink { _ in motionUpdates += 1 }
         for sample in 1...120 {
-            motion.updateTranslation(-CGFloat(sample))
+            pager.setContentOffset(.init(x: start.x + CGFloat(sample), y: start.y), animated: false)
             window.layoutIfNeeded()
             try await Task.sleep(nanoseconds: 2_000_000)
         }
-        motion.updateTranslation(0)
+        pager.setContentOffset(start, animated: false)
         try await settle(window)
+        XCTAssertEqual(motionUpdates, 0, "Native scroll frames must not publish Combine drag state")
+        withExtendedLifetime(subscription) { }
         XCTAssertEqual(recorder.parentBodies, parentBodies, "Drag samples must stay outside feed-screen state")
         XCTAssertEqual(recorder.postBodies, postBodies, "Only page offsets may update during a drag")
     }
@@ -60,14 +66,23 @@ final class FeedPagingPerformanceTests: XCTestCase {
         try await settle(window)
         XCTAssertEqual(Set(recorder.titleBodies.keys), Set([-1, 0, 1]))
         let initialBodies = recorder.titleBodies
+        let pager = try nativePager(in: window)
+        let start = pager.contentOffset
         for sample in 1...60 {
-            motion.updateTranslation(-CGFloat(sample))
+            pager.setContentOffset(.init(x: start.x + CGFloat(sample), y: start.y), animated: false)
             window.layoutIfNeeded()
             try await Task.sleep(nanoseconds: 2_000_000)
         }
-        motion.updateTranslation(0)
+        pager.setContentOffset(start, animated: false)
         try await settle(window)
         XCTAssertEqual(recorder.titleBodies, initialBodies, "Paging must not rebuild the loading rows")
+    }
+
+    private func nativePager(in view: UIView) throws -> UIScrollView {
+        func descendants(_ view: UIView) -> [UIView] { [view] + view.subviews.flatMap(descendants) }
+        return try XCTUnwrap(descendants(view).compactMap { $0 as? UIScrollView }.first {
+            $0.bounds.width > 0 && $0.contentSize.width > $0.bounds.width * 2
+        })
     }
 
     private func host(motion: FeedSwipeMotion, recorder: FeedPagingRenderRecorder, loading: Bool) throws -> UIWindow {
@@ -123,7 +138,8 @@ private struct FeedPagingPerformanceHost: View {
             }
         }
         .modifier(FeedSwipeModifier(motion: motion, isEnabled: true,
-                                    canSwipeBackward: true, canSwipeForward: true, onSwipe: { _ in }))
+                                    canSwipeBackward: true, canSwipeForward: true, onSwipe: { _ in },
+                                    pageCount: 20, selectedIndex: 10, selectionID: "10"))
     }
 }
 

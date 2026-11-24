@@ -39,6 +39,7 @@ extension EnvironmentValues {
 }
 
 struct FeedPagePosition: ViewModifier {
+    @Environment(\.feedNativePagingOrigin) private var nativeOrigin
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let relativeIndex: Int
@@ -51,17 +52,18 @@ struct FeedPagePosition: ViewModifier {
                 .frame(width: geometry.size.width, height: geometry.size.height)
                 .background(theme.listBackground)
                 .offset(x: UIDevice.current.userInterfaceIdiom == .phone
-                        ? CGFloat(relativeIndex) * geometry.size.width + (abs(relativeIndex) <= 1 ? translation : 0) : 0)
+                        ? CGFloat(relativeIndex + (nativeOrigin ?? 0)) * geometry.size.width
+                            + (nativeOrigin == nil && abs(relativeIndex) <= 1 ? translation : 0) : 0)
         }
         .opacity(UIDevice.current.userInterfaceIdiom == .phone
                  ? (abs(relativeIndex) <= 1 ? 1 : 0) : (relativeIndex == 0 ? 1 : 0))
         .environment(\.feedPageIsExposed, abs(relativeIndex) <= 1)
         .onReceive(motion.$translation.removeDuplicates()) { value in
-            guard abs(relativeIndex) <= 1, translation != value else { return }
+            guard nativeOrigin == nil, abs(relativeIndex) <= 1, translation != value else { return }
             translation = value
         }
         .onValueChange(relativeIndex) { _, newIndex in
-            guard abs(newIndex) <= 1, translation != motion.translation else { return }
+            guard nativeOrigin == nil, abs(newIndex) <= 1, translation != motion.translation else { return }
             translation = motion.translation
         }
         .allowsHitTesting(relativeIndex == 0)
@@ -77,8 +79,15 @@ struct FeedSwipeModifier: ViewModifier {
     let canSwipeBackward: Bool
     let canSwipeForward: Bool
     let onSwipe: (Int) -> Void
+    var pageCount: Int = 3
+    var selectedIndex: Int = 1
+    var selectionID: String = ""
 
     func body(content: Content) -> some View {
+        if #available(iOS 18.0, *), UIDevice.current.userInterfaceIdiom == .phone {
+            FeedNativePager(content: content, isEnabled: isEnabled, pageCount: pageCount,
+                            selectedIndex: selectedIndex, selectionID: selectionID, onSwipe: onSwipe)
+        } else {
         content
             .background {
                 FeedPanAttachment(isEnabled: isEnabled, onChanged: dragChanged,
@@ -90,6 +99,7 @@ struct FeedSwipeModifier: ViewModifier {
             }
         .clipped()
         .onDisappear { motion.updateTranslation(0) }
+        }
     }
 
     private func canSwipe(_ direction: Int) -> Bool {

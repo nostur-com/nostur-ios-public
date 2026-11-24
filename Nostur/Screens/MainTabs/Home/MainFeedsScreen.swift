@@ -528,7 +528,7 @@ struct MainFeedsScreen: View {
                     .modifier(FeedPagePosition(relativeIndex: pagePosition(feed), motion: feedSwipeMotion))
                 }
             }
-            .modifier(FeedSwipeModifier(motion: feedSwipeMotion, isEnabled: selectedTab == "Main", canSwipeBackward: canSwipeBackward, canSwipeForward: canSwipeForward, onSwipe: swipeFeed))
+            .modifier(FeedSwipeModifier(motion: feedSwipeMotion, isEnabled: selectedTab == "Main", canSwipeBackward: canSwipeBackward, canSwipeForward: canSwipeForward, onSwipe: swipeFeed, pageCount: selectedIndex == nil ? 1 : feedOrder.count, selectedIndex: selectedIndex ?? 0, selectionID: selection.id))
             .modifier {
     
                 // On 26.0 the new post button is integrated in the new tab bar (or in the custom tabbar on Tahoe)
