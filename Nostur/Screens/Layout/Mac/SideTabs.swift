@@ -19,6 +19,9 @@ struct SideTabs: View {
         VStack(alignment: .center) {
             if let account = account() {
                 PFP(pubkey: account.publicKey, account: account, size: 30)
+                    .overlay(alignment: .topTrailing) {
+                        AccountNotificationBadge(pubkey: account.publicKey, combinesAccounts: true)
+                    }
                     .padding(10)
                     .onTapGesture {
                         showSidebar = true

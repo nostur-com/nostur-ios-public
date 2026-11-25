@@ -61,6 +61,9 @@ struct SideBar: View {
                             Circle()
                                 .strokeBorder(theme.listBackground, lineWidth: 3)
                         )
+                        .overlay(alignment: .topTrailing) {
+                            AccountNotificationBadge(pubkey: account.publicKey)
+                        }
                         .onTapGesture(perform: openProfile)
                         .offset(x: 10, y: 37)
                 })

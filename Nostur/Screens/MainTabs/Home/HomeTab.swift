@@ -106,10 +106,11 @@ struct HomeTabRoot: View {
                                     }
                                     .accessibilityLabel("Account menu")
                                     .overlay(alignment: .topTrailing) {
-                                        if !IS_CATALYST {
-                                            UnreadCountBadge(count: dm.unread + dm.unreadNewRequestsCount)
-                                                .offset(x: 8, y: -4)
-                                        }
+                                        AccountNotificationBadge(
+                                            pubkey: la.account.publicKey,
+                                            combinesAccounts: true,
+                                            additionalUnread: IS_CATALYST ? 0 : dm.unread + dm.unreadNewRequestsCount
+                                        )
                                     }
                                     .padding(.top, 4)
                                     .padding(.trailing, 8)
@@ -184,6 +185,10 @@ struct HomeTabRoot: View {
                                         showSidebar = true
                                     }
                                     .accessibilityLabel("Account menu")
+                                    .overlay(alignment: .topTrailing) {
+                                        AccountNotificationBadge(pubkey: la.account.publicKey, combinesAccounts: true)
+                                    }
+                                    .padding(.trailing, 8)
 
                                 // Shortcut to open a new just posted post
                                 if newPost != nil {

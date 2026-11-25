@@ -346,6 +346,9 @@ struct Search: View {
             .accessibilityLabel("Account menu")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { showSidebar = true }
+            .overlay(alignment: .topTrailing) {
+                AccountNotificationBadge(pubkey: la.account.publicKey, combinesAccounts: true)
+            }
     }
 
     private func receiveProfileScan(_ value: String) {

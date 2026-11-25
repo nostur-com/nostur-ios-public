@@ -36,15 +36,17 @@ struct FastAccountSwitcher: View, Equatable {
 //        }
 #endif
         HStack(spacing:5) {
-            ForEach(fewAccounts.indices, id:\.self) { index in
-                PFP(pubkey: fewAccounts[index].publicKey, account: fewAccounts[index], size: 25)
+            ForEach(fewAccounts, id: \.objectID) { account in
+                PFP(pubkey: account.publicKey, account: account, size: 25)
+                    .overlay(alignment: .topTrailing) {
+                        AccountNotificationBadge(pubkey: account.publicKey)
+                    }
                     .padding(5)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        if let account = fewAccounts[safe: index] { // Swift runtime failure: Index out of bounds + 0 (<compiler-generated>:0) . Added check because maybe tap gesture fires too late??
-                            accountsState.changeAccount(account)
-                            showSidebar = false
-                        }
+                        guard !account.isDeleted, account.managedObjectContext != nil else { return }
+                        accountsState.changeAccount(account)
+                        showSidebar = false
                     }
             }
         }

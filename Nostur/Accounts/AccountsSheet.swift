@@ -101,6 +101,9 @@ struct AccountRow: View {
         if !account.isDeleted && account.managedObjectContext != nil {
             HStack(alignment: .center, spacing: 10) {
                 PFP(pubkey: account.publicKey, account: account, size: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+                    .overlay(alignment: .topTrailing) {
+                        AccountNotificationBadge(pubkey: account.publicKey)
+                    }
                 VStack(alignment: .leading) {
                     HStack {
                         VStack(alignment: .leading) {
