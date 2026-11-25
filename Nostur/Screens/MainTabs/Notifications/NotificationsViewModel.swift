@@ -135,6 +135,7 @@ class NotificationsViewModel: ObservableObject {
     }
     
     // Shared is for the main / currently logged in account
+    static let publicNotificationKinds = [1,1111,1222,1244,6,16,7,20,1068,9735,9802,30023,34235,1311]
     static let shared = NotificationsViewModel()
     private var sharedRestoreSubscriptionsSubject = PassthroughSubject<Void, Never>()
     
@@ -292,6 +293,11 @@ class NotificationsViewModel: ObservableObject {
         unreadMentions + (muteNewPosts ? 0 : unreadNewPosts) + (muteReactions ? 0 : unreadReactions) + (muteZaps ? 0 : (unreadZaps + unreadFailedZaps)) + (muteFollows ? 0 : unreadNewFollowers) + (muteReposts ? 0 : unreadReposts) + unreadRelayConfig
     }
     
+    @MainActor
+    func unread(for pubkey: String) -> Int {
+        self.pubkey == pubkey ? unread : 0
+    }
+
     public var unreadPublisher = PassthroughSubject<Int, Never>()
     
     public var unreadMentions: Int { unreadMentions_ }
@@ -554,7 +560,7 @@ class NotificationsViewModel: ObservableObject {
         let sinceNTimestamp = NTimestamp(date: ago)
         
         // Public req for notifications
-        req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,16,7,20,1068,9735,9802,30023,34235,1311],
+        req(RM.getMentions(pubkeys: [accountPubkey], kinds: Self.publicNotificationKinds,
                            subscriptionId: "-OPEN-Notifications-\(self.id)", since: sinceNTimestamp),
             activeSubscriptionId: "-OPEN-Notifications-\(self.id)")
         
@@ -597,7 +603,7 @@ class NotificationsViewModel: ObservableObject {
             self.needsUpdate = true
             
             DispatchQueue.main.async {
-                req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,16,7,20,1068,9735,9802,30023,34235,1311], subscriptionId: "Notifications-CATCHUP-\(self.id)", since: since))
+                req(RM.getMentions(pubkeys: [accountPubkey], kinds: Self.publicNotificationKinds, subscriptionId: "Notifications-CATCHUP-\(self.id)", since: since))
                 
                 // Separate req for kind 4, because possibly needs auth
                 // 2 days ago to deal with NIP-17 randomized created_at
@@ -647,6 +653,17 @@ class NotificationsViewModel: ObservableObject {
         }
         shouldBeBg()
         
+        defer {
+            if isMain && refreshSubscriptions {
+                // Enqueue behind the active account's local count queries.
+                bg().perform {
+                    Task { @MainActor in
+                        OtherAccountNotifications.shared.schedule(afterChecking: accountData.publicKey)
+                    }
+                }
+            }
+        }
+
         guard needsUpdate else { return }
                 
         guard !Importer.shared.isImporting || force else {
@@ -708,41 +725,8 @@ class NotificationsViewModel: ObservableObject {
     public func checkForUnreadMentions(accountData: AccountData) {
         //TODO: Should check if there is actual mention in .content
         shouldBeBg()
-        let fetchRequest = q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData)
-         
-        let unreadMentions = ((try? bg().fetch(fetchRequest)) ?? [])
-            .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notifications now.
-        
-            // Hellthread handling
-            .filter {
-            
-                // check if actual mention is in content (if there are more than 20 Ps, potential hellthread)
-                if $0.fastPs.count > 20 {
-                    // but always allow if its a root post
-                    if $0.replyToId == nil && $0.replyToRootId == nil {
-                        return true
-                    }
-                    
-                    // but always allow if direct reply to own post
-                    if let replyToId = $0.replyToId {
-                        if let replyTo = Event.fetchEvent(id: replyToId, context: bg()) {
-                            if replyTo.pubkey == accountData.publicKey { // direct reply to our post
-                                return true
-                            }
-                            // direct reply to someone elses post, check if we are actually mentioned in content. (we don't check old [0], [1] style...)
-                            return $0.content != nil && $0.content!.contains(accountData.npub)
-                        }
-                        // We don't have our own event? Maybe new app user
-                        return false // fallback to false
-                    }
-                    
-                    // our npub is in content? (we don't check old [0], [1] style...)
-                    return $0.content != nil && $0.content!.contains(accountData.npub)
-                }
-                
-                return true
-            }
-            
+        let unreadMentions = q.unreadMentions(accountData: accountData, context: bg())
+
         let unreadMentionsCount = unreadMentions.count
         
         // For notifications we don't need to total unread, we need total new since last notification, because we don't want to repeat the same notification
@@ -896,11 +880,8 @@ class NotificationsViewModel: ObservableObject {
     
     private func checkForUnreadReactions(accountData: AccountData) {
         shouldBeBg()
-        let fetchRequest = q.unreadReactionsQuery(resultType: .managedObjectResultType, accountData: accountData)
-        let unreadReactions = ((try? bg().fetch(fetchRequest)) ?? [])
-            .filter { !$0.isSpam && !isDMReaction($0) } // Need to filter so can't use .countResultType
-            .count
-        
+        let unreadReactions = q.unreadReactionCount(accountData: accountData, context: bg())
+
         DispatchQueue.main.async { [weak self] in
             guard let self, self.isReadSnapshotCurrent(accountData),
                   !self.pendingReadKeys.contains(\CloudAccount.lastSeenReactionCreatedAt) else { return }
@@ -910,16 +891,6 @@ class NotificationsViewModel: ObservableObject {
         }
     }
 
-    // Giftwrapped DM reactions can still leak into normal reaction queries.
-    // Treat as DM reaction if the reaction itself has a groupId or if its target event is a DM kind/group.
-    private func isDMReaction(_ event: Event) -> Bool {
-        guard event.kind == 7 else { return false }
-        if event.groupId != nil { return true }
-        guard let reactionToId = event.reactionToId,
-              let target = Event.fetchEvent(id: reactionToId, context: bg()) else { return false }
-        return target.groupId != nil || [4, 14, 15].contains(target.kind)
-    }
-    
     private func checkForUnreadZaps(accountData: AccountData) {
         shouldBeBg()
         
@@ -1076,7 +1047,7 @@ class NotificationsViewModel: ObservableObject {
             r.fetchLimit = NotificationFetchRequests.FETCH_LIMIT
             
             let mostRecent = ((try? bg().fetch(r)) ?? [])
-                .first(where: { !$0.isSpam && !self.isDMReaction($0) })
+                .first(where: { !$0.isSpam && !self.q.isDMReaction($0, context: bg()) })
             
             if let mostRecent {
                 let mostRecentCreated_at = mostRecent.created_at
@@ -1178,6 +1149,60 @@ class NotificationFetchRequests {
     
     static let FETCH_LIMIT = 999
     
+    func unreadMentions(accountData: AccountData, context: NSManagedObjectContext) -> [Event] {
+        let fetchRequest = unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData)
+
+        return ((try? context.fetch(fetchRequest)) ?? [])
+            .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notifications now.
+
+            // Hellthread handling
+            .filter {
+
+                // check if actual mention is in content (if there are more than 20 Ps, potential hellthread)
+                if $0.fastPs.count > 20 {
+                    // but always allow if its a root post
+                    if $0.replyToId == nil && $0.replyToRootId == nil {
+                        return true
+                    }
+
+                    // but always allow if direct reply to own post
+                    if let replyToId = $0.replyToId {
+                        if let replyTo = Event.fetchEvent(id: replyToId, context: context) {
+                            if replyTo.pubkey == accountData.publicKey { // direct reply to our post
+                                return true
+                            }
+                            // direct reply to someone elses post, check if we are actually mentioned in content. (we don't check old [0], [1] style...)
+                            return $0.content != nil && $0.content!.contains(accountData.npub)
+                        }
+                        // We don't have our own event? Maybe new app user
+                        return false // fallback to false
+                    }
+
+                    // our npub is in content? (we don't check old [0], [1] style...)
+                    return $0.content != nil && $0.content!.contains(accountData.npub)
+                }
+
+                return true
+            }
+    }
+
+    func unreadReactionCount(accountData: AccountData, context: NSManagedObjectContext) -> Int {
+        let request = unreadReactionsQuery(resultType: .managedObjectResultType, accountData: accountData)
+        return ((try? context.fetch(request)) ?? [])
+            .filter { !$0.isSpam && !isDMReaction($0, context: context) }
+            .count
+    }
+
+    // Giftwrapped DM reactions can still leak into normal reaction queries.
+    // Treat as DM reaction if the reaction itself has a groupId or if its target event is a DM kind/group.
+    fileprivate func isDMReaction(_ event: Event, context: NSManagedObjectContext) -> Bool {
+        guard event.kind == 7 else { return false }
+        if event.groupId != nil { return true }
+        guard let reactionToId = event.reactionToId,
+              let target = Event.fetchEvent(id: reactionToId, context: context) else { return false }
+        return target.groupId != nil || [4, 14, 15].contains(target.kind)
+    }
+
     func unreadMentionsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<Event> {
         let mutedRootIds = AppState.shared.bgAppState.mutedRootIds
         let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
