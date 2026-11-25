@@ -19,18 +19,20 @@ struct PostPreview: View {
     @ObservedObject public var vm: NewPostModel
     @ObservedObject public var typingTextModel: TypingTextModel
     public let onDismiss: () -> Void
+    private let onEdit: (() -> Void)?
     @State private var postPreviewWidth: CGFloat? = nil
 
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
     
-    init(nrPost: NRPost, kind: NEventKind = .textNote, replyTo: ReplyTo?, quotePost: QuotePost?, vm: NewPostModel, onDismiss: @escaping () -> Void) {
+    init(nrPost: NRPost, kind: NEventKind = .textNote, replyTo: ReplyTo?, quotePost: QuotePost?, vm: NewPostModel, onDismiss: @escaping () -> Void, onEdit: (() -> Void)? = nil) {
         self.nrPost = nrPost
         self.kind = kind
         self.replyTo = replyTo
         self.quotePost = quotePost
         self.vm = vm
         self.onDismiss = onDismiss
+        self.onEdit = onEdit
         self.typingTextModel = vm.typingTextModel
     }
     
@@ -102,6 +104,14 @@ struct PostPreview: View {
             .background(theme.listBackground)
         }
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                if let onEdit {
+                    Button(action: onEdit) {
+                        Label("Edit", systemImage: "pencil").labelStyle(.iconOnly)
+                    }
+                    .disabled(typingTextModel.sending || typingTextModel.uploading)
+                }
+            }
             ToolbarItem(placement: .confirmationAction) {
                 Button {
                     dispatchSend()

@@ -422,6 +422,7 @@ struct NewPostInfo: Identifiable, Hashable {
     var directMention: NRContact? = nil
     var initialText: String? = nil
     var initialImages: [PostedImageMeta] = []
+    var startsInPreview = false
 }
 
 struct ReplyTo: Identifiable, Hashable {

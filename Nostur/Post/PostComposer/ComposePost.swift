@@ -21,6 +21,8 @@ struct ComposePost: View {
     public var highlight: NewHighlight?
     public var initialText: String?
     public var initialImages: [PostedImageMeta] = []
+    public var startsInPreview = false
+    @State private var leftStartingPreview = false
     
     @State private var isAuthorSelectionShown = false
     
@@ -95,7 +97,26 @@ struct ComposePost: View {
         let _ = nxLogChanges(of: Self.self)
 #endif
         Container { // Needed because else we are stuck in ProgressView() forever
-            if let account = vm.activeAccount {
+            if startsInPreview && !leftStartingPreview {
+                GeometryReader { geometry in
+                    if let nrPost = vm.previewNRPost {
+                        preview(nrPost, width: geometry.size.width, onEdit: {
+                            vm.previewNRPost = nil
+                            leftStartingPreview = true
+                        })
+                    } else {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(action: onDismiss) {
+                            Label("Dismiss", systemImage: "xmark").labelStyle(.iconOnly)
+                        }
+                    }
+                }
+            } else if let account = vm.activeAccount {
                 if showAudioRecorder {
                     // spacing 0 so only the composer top pad separates parent from composer;
                     // that pad is filled by composerThreadBridge (matches PostLayout connect .top).
@@ -550,23 +571,14 @@ struct ComposePost: View {
                             }
                         }
                         .nbNavigationDestination(item: $vm.previewNRPost, destination: { nrPost in
-                            VStack(alignment: .leading) {
-                                PostPreview(nrPost: nrPost, kind: kind, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
-                                    .environment(\.theme, theme)
-                                    .environment(\.availableWidth, geo.size.width)
-                                    .environmentObject(la)
-                                    .onAppear { // Fix keyboard spacing by removing keyboard (forcing layout fixed after keyboard comes back)
-                                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                                                            to: nil, from: nil, for: nil)
-                                    }
-                                    .onDisappear {
-                                        vm.previewNRPost = nil
-                                    }
-                                
-                                if let nEvent = vm.previewNEvent, showAutoPilotPreview {
-                                    AutoPilotSendPreview(nEvent: nEvent)
+                            preview(nrPost, width: geo.size.width)
+                                .onAppear {
+                                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                                        to: nil, from: nil, for: nil)
                                 }
-                            }                            
+                                .onDisappear {
+                                    vm.previewNRPost = nil
+                                }
                         })
                         .sheet(isPresented: $videoPickerShown) {
                             VideoPickerView(selectedVideoURL: $selectedVideoURL, isLoading: $vm.typingTextModel.isImportingSelectedVideo, importError: $vm.typingTextModel.videoImportError)
@@ -708,6 +720,9 @@ struct ComposePost: View {
             if !initialImages.isEmpty {
                 vm.typingTextModel.pastedImages = initialImages
             }
+            if startsInPreview {
+                vm.showPreview(quotePost: quotePost, replyTo: replyTo)
+            }
             ConnectionPool.shared.connectAllWrite()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
@@ -727,6 +742,18 @@ struct ComposePost: View {
         .environmentObject(VideoPostPlaybackCoordinator())
     }
     
+    private func preview(_ nrPost: NRPost, width: CGFloat, onEdit: (() -> Void)? = nil) -> some View {
+        VStack(alignment: .leading) {
+            PostPreview(nrPost: nrPost, kind: kind, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: onDismiss, onEdit: onEdit)
+                .environment(\.theme, theme)
+                .environment(\.availableWidth, width)
+                .environmentObject(la)
+            if let nEvent = vm.previewNEvent, showAutoPilotPreview {
+                AutoPilotSendPreview(nEvent: nEvent)
+            }
+        }
+    }
+
     /// Gap between parent post and composer PFP; bridge line height must match.
     private static let composerThreadBridgeHeight: CGFloat = 10
     

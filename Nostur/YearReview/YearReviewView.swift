@@ -188,7 +188,7 @@ struct YearReviewView: View {
             YearReviewSharePreview(content: draft.content, colorScheme: colorScheme) { image, people in
                 guard let attachment = shareCardComposerImage(image, altText: draft.caption) else { return }
                 let text = people.isEmpty ? draft.caption : draft.caption + "\n\n" + String(localized: "With \(people)")
-                pendingSharePost = NewPostInfo(kind: .textNote, initialText: text, initialImages: [attachment])
+                pendingSharePost = NewPostInfo(kind: .textNote, initialText: text, initialImages: [attachment], startsInPreview: true)
                 shareDraft = nil
             }
             .environment(\.theme, theme)

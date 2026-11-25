@@ -80,14 +80,14 @@ struct WithAppSheets: ViewModifier {
                 NBNavigationStack {
                     if la.account.isNC {
                         WithNSecBunkerConnection {
-                            ComposePost(directMention: newPostInfo.directMention, onDismiss: { asm.newPostInfo = nil }, kind: newPostInfo.kind, initialText: newPostInfo.initialText, initialImages: newPostInfo.initialImages)
+                            ComposePost(directMention: newPostInfo.directMention, onDismiss: { asm.newPostInfo = nil }, kind: newPostInfo.kind, initialText: newPostInfo.initialText, initialImages: newPostInfo.initialImages, startsInPreview: newPostInfo.startsInPreview)
                                 .environmentObject(la)
                                 .presentationBackgroundCompat(theme.listBackground)
                         }
                         .environment(\.theme, theme)
                     }
                     else {
-                        ComposePost(directMention: newPostInfo.directMention, onDismiss: { asm.newPostInfo = nil }, kind: newPostInfo.kind, initialText: newPostInfo.initialText, initialImages: newPostInfo.initialImages)
+                        ComposePost(directMention: newPostInfo.directMention, onDismiss: { asm.newPostInfo = nil }, kind: newPostInfo.kind, initialText: newPostInfo.initialText, initialImages: newPostInfo.initialImages, startsInPreview: newPostInfo.startsInPreview)
                             .environmentObject(la)
                             .environment(\.theme, theme)
                             .presentationBackgroundCompat(theme.listBackground)
