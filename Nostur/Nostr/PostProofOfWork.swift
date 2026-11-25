@@ -3,28 +3,42 @@ import Foundation
 import NostrEssentials
 
 enum PostProofOfWork {
-    static let enabledKey = "post_proof_of_work_enabled"
-    static let secondsKey = "post_proof_of_work_seconds"
+    static let secondsKey = "post_proof_of_work_duration"
     static let hashRateKey = "post_proof_of_work_hash_rate"
-    static let timeRange = 0.25...2.5
+    static let timeRange = 0.0...2.5
     static let defaultSeconds = 0.25
+    static let timeoutSeconds: Double = 25
 
     static func clampedSeconds(_ seconds: Double) -> Double {
-        guard seconds.isFinite else { return defaultSeconds }
-        return min(timeRange.upperBound, max(timeRange.lowerBound, seconds))
+        guard seconds.isFinite, seconds > 0 else { return 0 }
+        return min(timeRange.upperBound, max(defaultSeconds, seconds))
+    }
+
+    static func savedSeconds(in defaults: UserDefaults = .standard) -> Double {
+        if let duration = defaults.object(forKey: secondsKey) as? Double {
+            return clampedSeconds(duration)
+        }
+        // Preserve the choice from the old switch and duration slider.
+        guard defaults.bool(forKey: "post_proof_of_work_enabled") else { return 0 }
+        return clampedSeconds(defaults.object(forKey: "post_proof_of_work_seconds") as? Double ?? defaultSeconds)
     }
 
     static var configuredTarget: Int? {
         let defaults = UserDefaults.standard
-        guard defaults.bool(forKey: enabledKey) else { return nil }
-        let seconds = defaults.object(forKey: secondsKey) as? Double ?? defaultSeconds
-        return target(for: seconds, hashRate: defaults.double(forKey: hashRateKey))
+        return target(for: savedSeconds(in: defaults), hashRate: defaults.double(forKey: hashRateKey))
     }
 
     static func target(for seconds: Double, hashRate: Double) -> Int? {
-        guard hashRate.isFinite, hashRate > 0 else { return nil }
-        let bits = log2(hashRate) + log2(clampedSeconds(seconds))
+        let duration = clampedSeconds(seconds)
+        guard duration > 0, hashRate.isFinite, hashRate > 0 else { return nil }
+        let bits = log2(hashRate) + log2(duration)
         return Int(min(30, max(1, bits.rounded(.down))))
+    }
+
+    static func postsPerTimeout(target: Int, hashRate: Double) -> Double {
+        let chancePerAttempt = pow(2, -Double(target))
+        let attempts = floor(hashRate * timeoutSeconds)
+        return exp(-attempts * log1p(-chancePerAttempt))
     }
 
     private enum MiningError: Error {
@@ -34,7 +48,7 @@ enum PostProofOfWork {
 
     static func difficulty(of event: NEvent) -> Int? {
         guard !event.id.isEmpty, event.tags.contains(where: { tag in
-            tag.type == "nonce" && !tag.value.isEmpty && tag.value.utf8.allSatisfy { (48...57).contains($0) }
+            tag.type == "nonce" && !tag.value.isEmpty
         }), let serialized = try? event.serializedForID() else { return nil }
 
         let digest = CryptoKit.SHA256.hash(data: serialized)
@@ -93,7 +107,7 @@ enum PostProofOfWork {
         event.tags.append(NostrTag(["nonce", "0", targetText]))
         let template = try MiningTemplate(taggedEvent: event, target: target)
 
-        let deadline = ProcessInfo.processInfo.systemUptime + 25
+        let deadline = ProcessInfo.processInfo.systemUptime + timeoutSeconds
         var nonce: UInt64 = 0
         while true {
             if nonce.isMultiple(of: 1024) {

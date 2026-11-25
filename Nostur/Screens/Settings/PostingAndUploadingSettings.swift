@@ -17,7 +17,7 @@ struct PostingAndUploadingSettings: View {
     
     @State private var blossomConfiguratorShown = false
     @State private var proofOfWorkShown = false
-    @AppStorage(PostProofOfWork.enabledKey) private var proofOfWorkEnabled = false
+    @AppStorage(PostProofOfWork.secondsKey) private var proofOfWorkSeconds = PostProofOfWork.savedSeconds()
     
     var body: some View {
         NXForm {
@@ -58,7 +58,7 @@ struct PostingAndUploadingSettings: View {
                     HStack {
                         Text("Proof of Work")
                         Spacer()
-                        (proofOfWorkEnabled ? Text("On") : Text("Off"))
+                        (PostProofOfWork.clampedSeconds(proofOfWorkSeconds) > 0 ? Text("On") : Text("Off"))
                             .foregroundStyle(.secondary)
                     }
                 }

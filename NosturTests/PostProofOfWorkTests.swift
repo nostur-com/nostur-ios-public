@@ -13,7 +13,30 @@ final class PostProofOfWorkTests: XCTestCase {
         XCTAssertEqual(PostProofOfWork.target(for: 2.5, hashRate: 900_000), 21)
         XCTAssertEqual(PostProofOfWork.clampedSeconds(5), 2.5)
         XCTAssertEqual(PostProofOfWork.target(for: 5, hashRate: 900_000), 21)
+        XCTAssertNil(PostProofOfWork.target(for: 0, hashRate: 900_000))
         XCTAssertNil(PostProofOfWork.target(for: 4, hashRate: 0))
+    }
+
+    func testSliderPreservesPreviouslyEnabledAndDisabledSettings() throws {
+        let suite = "proof-of-work-\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        XCTAssertEqual(PostProofOfWork.savedSeconds(in: defaults), 0)
+        defaults.set(1.5, forKey: "post_proof_of_work_seconds")
+        XCTAssertEqual(PostProofOfWork.savedSeconds(in: defaults), 0)
+        defaults.set(true, forKey: "post_proof_of_work_enabled")
+        XCTAssertEqual(PostProofOfWork.savedSeconds(in: defaults), 1.5)
+        defaults.set(0.0, forKey: PostProofOfWork.secondsKey)
+        XCTAssertEqual(PostProofOfWork.savedSeconds(in: defaults), 0)
+    }
+
+    func testTimeoutOddsUseTheActualTargetAndMeasuredRate() {
+        let hashRate = pow(2, 20.0) / 2.5
+        let oddsAtMaximum = PostProofOfWork.postsPerTimeout(target: 20, hashRate: hashRate)
+        let oddsAtLowerTarget = PostProofOfWork.postsPerTimeout(target: 19, hashRate: hashRate)
+        XCTAssertEqual(oddsAtMaximum, 22_027, accuracy: 2)
+        XCTAssertGreaterThan(oddsAtLowerTarget, oddsAtMaximum)
     }
 
     func testBenchmarkReturnsAUsableRate() async throws {
@@ -48,6 +71,17 @@ final class PostProofOfWorkTests: XCTestCase {
         var event = try JSONDecoder().decode(NEvent.self, from: Data(json.utf8))
         XCTAssertEqual(PostProofOfWork.difficulty(of: event), 18)
         event.content += " Edited."
+        XCTAssertNil(PostProofOfWork.difficulty(of: event))
+    }
+
+    func testAmethystPostHas24BitsWithAnAlphanumericNonce() throws {
+        let json = #"""
+        {"sig":"9817520a2c8983b5aff1c93744f6543385ea92f55ebffec87ffdf778e2b0ba376400da14e694d9b8cc1d2ae270125f3a4e05b93a591d1fc29d70d3f793f503b2","content":"Posting from Amethyst iOS with pow","id":"00000098d8bdb5531c7b1426d80838916584acc218943da9cf8a66f371852514","created_at":1795628034,"tags":[["client","Amethyst"],["nonce","001zUi","24"]],"pubkey":"460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c","kind":1}
+        """#
+        var event = try JSONDecoder().decode(NEvent.self, from: Data(json.utf8))
+        XCTAssertEqual(PostProofOfWork.difficulty(of: event), 24)
+
+        event.tags[1] = NostrTag(["nonce", "001zUj", "24"])
         XCTAssertNil(PostProofOfWork.difficulty(of: event))
     }
 

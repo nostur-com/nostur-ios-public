@@ -3,8 +3,7 @@ import SwiftUI
 struct PostProofOfWorkSettings: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
-    @AppStorage(PostProofOfWork.enabledKey) private var enabled = false
-    @AppStorage(PostProofOfWork.secondsKey) private var savedSeconds = PostProofOfWork.defaultSeconds
+    @AppStorage(PostProofOfWork.secondsKey) private var savedSeconds = PostProofOfWork.savedSeconds()
     @AppStorage(PostProofOfWork.hashRateKey) private var hashRate = 0.0
     @State private var isMeasuring = true
 
@@ -16,13 +15,6 @@ struct PostProofOfWorkSettings: View {
 
     var body: some View {
         NXForm {
-            Section {
-                Toggle("Add Proof of Work", isOn: $enabled)
-                    .disabled(isMeasuring && hashRate == 0)
-            } footer: {
-                Text("Some relays require this to accept your posts.")
-            }
-
             Section {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
@@ -37,21 +29,32 @@ struct PostProofOfWorkSettings: View {
                     Slider(value: timeSelection, in: PostProofOfWork.timeRange, step: 0.25) {
                         Text("Time per post")
                     } minimumValueLabel: {
-                        timeLabel(PostProofOfWork.timeRange.lowerBound)
+                        Text("Off")
                     } maximumValueLabel: {
                         timeLabel(PostProofOfWork.timeRange.upperBound)
                     }
                     .accessibilityValue(timeLabel(seconds))
                 }
-                .disabled(!enabled)
+                .disabled(seconds == 0 && hashRate == 0)
             } footer: {
-                if isMeasuring {
-                    Text("Estimating time…")
-                } else if let bits = PostProofOfWork.target(for: seconds, hashRate: hashRate) {
-                    let estimate = pow(2, Double(bits)) / hashRate
-                    Text("About \(estimate, format: .number.precision(.fractionLength(0...2))) sec per post · \(bits) bits")
-                } else {
-                    Text("Couldn’t estimate the time. Reopen this screen to try again.")
+                VStack(alignment: .leading, spacing: 8) {
+                    if let bits = PostProofOfWork.target(for: seconds, hashRate: hashRate) {
+                        let estimate = pow(2, Double(bits)) / hashRate
+                        let posts = PostProofOfWork.postsPerTimeout(target: bits, hashRate: hashRate)
+                        let timeout = Int(PostProofOfWork.timeoutSeconds)
+                        Text("About \(estimate, format: .number.precision(.fractionLength(0...2))) sec per post · \(bits) bits")
+                        if posts >= 1_000_000_000_000 {
+                            Text("Fewer than 1 in a trillion posts might take longer than \(timeout) seconds to post.")
+                        } else {
+                            Text("About 1 in \(posts, format: .number.precision(.significantDigits(1...2))) posts might take longer than \(timeout) seconds to post.")
+                        }
+                    } else if isMeasuring {
+                        Text("Estimating time…")
+                    } else if hashRate == 0 {
+                        Text("Couldn’t estimate the time. Reopen this screen to try again.")
+                    } else {
+                        Text("Some relays require Proof of Work to accept your posts.")
+                    }
                 }
             }
         }
@@ -73,6 +76,6 @@ struct PostProofOfWorkSettings: View {
     }
 
     private func timeLabel(_ seconds: Double) -> Text {
-        Text("\(seconds, format: .number.precision(.fractionLength(0...2))) sec")
+        seconds == 0 ? Text("Off") : Text("\(seconds, format: .number.precision(.fractionLength(0...2))) sec")
     }
 }
