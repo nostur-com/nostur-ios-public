@@ -1905,6 +1905,9 @@
         }
       }
     },
+    "%@ posts per day" : {
+
+    },
     "%@ reads posts from" : {
       "localizations" : {
         "es" : {
@@ -2048,6 +2051,9 @@
           }
         }
       }
+    },
+    "%@ sec" : {
+
     },
     "%@ Send sats" : {
       "localizations" : {
@@ -2416,6 +2422,9 @@
       },
       "shouldTranslate" : false
     },
+    "%lld bits" : {
+      "comment" : "Measured NIP-13 proof-of-work difficulty in bits"
+    },
     "%lld columns" : {
 
     },
@@ -2516,6 +2525,9 @@
           }
         }
       }
+    },
+    "%lld days" : {
+
     },
     "%lld emojis" : {
       "localizations" : {
@@ -2710,6 +2722,9 @@
           }
         }
       }
+    },
+    "%lld new items saved" : {
+
     },
     "%lld newer posts already seen" : {
       "localizations" : {
@@ -5095,6 +5110,16 @@
         }
       }
     },
+    "About %@ sec per post · %lld bits" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "About %1$@ sec per post · %2$lld bits"
+          }
+        }
+      }
+    },
     "About badge publishing" : {
       "localizations" : {
         "es" : {
@@ -6400,6 +6425,9 @@
         }
       }
     },
+    "Add Proof of Work" : {
+
+    },
     "Add public note (optional)" : {
       "localizations" : {
         "es" : {
@@ -6711,6 +6739,9 @@
           }
         }
       }
+    },
+    "Adding Proof of Work…" : {
+
     },
     "Adding up zaps…" : {
       "localizations" : {
@@ -11237,6 +11268,9 @@
         }
       }
     },
+    "Choose relays" : {
+
+    },
     "Choose relays for a new refresh" : {
       "localizations" : {
         "es" : {
@@ -14478,6 +14512,9 @@
     "Couldn’t edit photo" : {
 
     },
+    "Couldn’t estimate the time. Reopen this screen to try again." : {
+
+    },
     "Couldn’t load all poll results. Try again." : {
       "localizations" : {
         "es" : {
@@ -14503,6 +14540,9 @@
     "Couldn't load this profile. Check your connection and try again." : {
 
     },
+    "Couldn’t repost. Try again." : {
+
+    },
     "Couldn’t retrieve another page" : {
       "localizations" : {
         "es" : {
@@ -14524,6 +14564,15 @@
           }
         }
       }
+    },
+    "Couldn’t send your message. Try again." : {
+
+    },
+    "Couldn’t send your reaction. Try again." : {
+
+    },
+    "Couldn’t send your vote. Try again." : {
+
     },
     "Couldn’t sign relay authentication" : {
       "localizations" : {
@@ -14548,6 +14597,7 @@
       }
     },
     "Couldn’t sign your vote. Try again." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -17199,6 +17249,9 @@
       },
       "shouldTranslate" : false
     },
+    "Edit" : {
+
+    },
     "Edit badge" : {
       "localizations" : {
         "es" : {
@@ -18483,6 +18536,9 @@
           }
         }
       }
+    },
+    "Estimating time…" : {
+
     },
     "Event deletion request" : {
       "localizations" : {
@@ -19864,6 +19920,9 @@
         }
       }
     },
+    "Find more activity" : {
+
+    },
     "Find more Emoji sets" : {
       "localizations" : {
         "es" : {
@@ -19885,6 +19944,9 @@
           }
         }
       }
+    },
+    "Find my highlights" : {
+
     },
     "Find your moments" : {
       "localizations" : {
@@ -24968,6 +25030,9 @@
         }
       }
     },
+    "Longest posting streak" : {
+
+    },
     "Longest posting streak: %lld days" : {
       "localizations" : {
         "es" : {
@@ -26853,9 +26918,6 @@
       }
     },
     "My nostr in %@" : {
-
-    },
-    "My Nostr in %@" : {
 
     },
     "My posting rhythm" : {
@@ -28846,6 +28908,9 @@
           }
         }
       }
+    },
+    "Nostur couldn’t finish preparing this post. Your draft was saved." : {
+
     },
     "Nostur crops the image to a square and creates the required sizes automatically." : {
       "localizations" : {
@@ -32272,6 +32337,9 @@
         }
       }
     },
+    "Post wasn’t sent" : {
+
+    },
     "Post.noun" : {
       "comment" : "Navigation title when viewing a Post",
       "localizations" : {
@@ -33612,6 +33680,9 @@
           }
         }
       }
+    },
+    "Proof of Work" : {
+
     },
     "pubkey: %@" : {
       "localizations" : {
@@ -37826,6 +37897,9 @@
         }
       }
     },
+    "Reposting…" : {
+
+    },
     "reposts" : {
       "comment" : "Label for reposts count, example: (7) reposts",
       "localizations" : {
@@ -38812,6 +38886,9 @@
           }
         }
       }
+    },
+    "Revisit the posts and conversations that made your year on Nostr." : {
+
     },
     "Room presence" : {
       "localizations" : {
@@ -39968,6 +40045,9 @@
         }
       }
     },
+    "Send Now" : {
+
+    },
     "Send payment test" : {
       "localizations" : {
         "es" : {
@@ -40079,6 +40159,12 @@
           }
         }
       }
+    },
+    "Sending message" : {
+
+    },
+    "Sending post..." : {
+
     },
     "Sending to: %@" : {
       "extractionState" : "stale",
@@ -42205,6 +42291,9 @@
         }
       }
     },
+    "Signing post..." : {
+
+    },
     "Signing request expired." : {
       "localizations" : {
         "es" : {
@@ -42477,6 +42566,9 @@
         }
       }
     },
+    "Some relays didn’t finish. Tap an orange month for details." : {
+
+    },
     "Some relays may require authentication" : {
       "localizations" : {
         "es" : {
@@ -42498,6 +42590,9 @@
           }
         }
       }
+    },
+    "Some relays require this to accept your posts." : {
+
     },
     "Some sources remain incomplete. Tap for relay details" : {
       "localizations" : {
@@ -46260,6 +46355,9 @@
         }
       }
     },
+    "Time per post" : {
+
+    },
     "Time-out" : {
       "localizations" : {
         "es" : {
@@ -48863,6 +48961,9 @@
         }
       }
     },
+    "View history" : {
+
+    },
     "View on web" : {
       "localizations" : {
         "es" : {
@@ -49496,6 +49597,9 @@
           }
         }
       }
+    },
+    "We didn’t find enough activity for a recap yet." : {
+
     },
     "We Don't Need No Stinkin' Badges" : {
       "comment" : "Setting on settings screen",
@@ -51084,6 +51188,7 @@
       }
     },
     "You posted an average of %@ times per day and your most active day was %@ with %lld posts." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
