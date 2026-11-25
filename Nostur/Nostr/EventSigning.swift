@@ -76,6 +76,60 @@ func localSignNEvent(_ nEvent: NEvent, pk: String) throws -> NEvent {
     return nEvent
 }
 
+@MainActor
+func signMinedEvent(_ event: NEvent, account: CloudAccount) async throws -> NEvent {
+    try Task.checkCancellation()
+    guard account.isFullAccount, !account.isDeleted, event.publicKey == account.publicKey else {
+        throw SignError.accountNotFound
+    }
+    let signed = if account.isNC {
+        try await MinedEventSignatureRequest().sign(event, account: account)
+    } else {
+        try account.signEvent(event)
+    }
+    try Task.checkCancellation()
+    guard !event.id.isEmpty, signed.id == event.id, (try? signed.verified(logInvalidID: false)) == true else {
+        throw SignError.signingFailure
+    }
+    return signed
+}
+
+@MainActor
+private final class MinedEventSignatureRequest {
+    private let id = "sign-event-\(UUID().uuidString)"
+    private var pending: CheckedContinuation<NEvent, Error>?
+
+    func sign(_ event: NEvent, account: CloudAccount) async throws -> NEvent {
+        let timeout = Task {
+            do {
+                try await Task.sleep(nanoseconds: 15_000_000_000)
+                finish(.failure(SignError.timeout))
+            } catch { }
+        }
+        defer {
+            timeout.cancel()
+            RemoteSignerManager.shared.cancelSignatureRequest(id)
+        }
+        return try await withTaskCancellationHandler {
+            try Task.checkCancellation()
+            return try await withCheckedThrowingContinuation { continuation in
+                pending = continuation
+                RemoteSignerManager.shared.requestSignature(forEvent: event, usingAccount: account, requestID: id) { [weak self] signed in
+                    Task { @MainActor in self?.finish(.success(signed)) }
+                }
+            }
+        } onCancel: {
+            Task { @MainActor in self.finish(.failure(CancellationError())) }
+        }
+    }
+
+    private func finish(_ result: Result<NEvent, Error>) {
+        guard let pending else { return }
+        self.pending = nil
+        pending.resume(with: result)
+    }
+}
+
 enum SignError: Error, LocalizedError, Equatable {
     
     static func == (lhs: SignError, rhs: SignError) -> Bool {

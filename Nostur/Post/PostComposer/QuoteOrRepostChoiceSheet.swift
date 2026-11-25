@@ -13,24 +13,34 @@ struct QuoteOrRepostChoiceSheet: View {
     
     public let quoteOrRepost: QuoteOrRepost
     @Binding public var quotePost: QuotePost?
+    @State private var repostTask: Task<Void, Never>?
+    @State private var repostFailed = false
     
     var body: some View {
         // repost
-        HStack(alignment: .center, spacing: 20) {
-            
-            Group {
-                Button(String(localized:"Repost", comment:"Button to Repost a post"), systemImage: "arrow.2.squarepath") {
-                    self.repost()
-                    dismiss()
+        VStack(spacing: 10) {
+            HStack(alignment: .center, spacing: 20) {
+                Group {
+                    Button(String(localized:"Repost", comment:"Button to Repost a post"), systemImage: "arrow.2.squarepath") {
+                        self.repost()
+                    }
+
+                    Button(String(localized: "Quote", comment:"Button to Quote a post"), systemImage: "square.and.pencil") {
+                        self.quoteThisPost()
+                        dismiss()
+                    }
                 }
-                
-                Button(String(localized: "Quote", comment:"Button to Quote a post"), systemImage: "square.and.pencil") {
-                    self.quoteThisPost()
-                    dismiss()
-                }
+                .buttonStyleGlassProminent(tint: theme.accent)
+                .disabled(repostTask != nil)
             }
-//            .buttonStyleGlassProminent()
-            .buttonStyleGlassProminent(tint: theme.accent)
+            if repostTask != nil {
+                ProgressView("Reposting…")
+                    .font(.footnote)
+            } else if repostFailed {
+                Text("Couldn’t repost. Try again.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
         }
         .controlSize(.large)
         .fontWeightBold()
@@ -46,12 +56,18 @@ struct QuoteOrRepostChoiceSheet: View {
                 }
             }
         }
+        .onDisappear { repostTask?.cancel() }
         
     }
     
-    private func repost() {
-        guard let account = account() else { return }
-        guard isFullAccount(account) else { showReadOnlyMessage(); return }
+    @MainActor private func repost() {
+        guard let account = account() else { dismiss(); return }
+        guard isFullAccount(account) else { showReadOnlyMessage(); dismiss(); return }
+        if let target = PostProofOfWork.configuredTarget {
+            repostWithProof(account: account, target: target)
+            return
+        }
+        dismiss()
         Importer.shared.delayProcessing()
         let accountPublicKey = account.publicKey
         let cancellationId = UUID()
@@ -133,6 +149,53 @@ struct QuoteOrRepostChoiceSheet: View {
                 }
             }
         }
+    }
+
+    @MainActor
+    private func repostWithProof(account: CloudAccount, target: Int) {
+        guard repostTask == nil else { return }
+        repostFailed = false
+        let post = quoteOrRepost.nrPost
+        let pubkey = account.publicKey
+        let includeClientTag = SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(pubkey)
+        repostTask = Task { @MainActor in
+            defer { repostTask = nil }
+            do {
+                let events: (repost: NEvent, original: NEvent)? = await withBgContext { _ in
+                    guard let original = post.event else { return nil }
+                    var repost = EventMessageBuilder.makeRepost(original: original, embedOriginal: true)
+                    repost.publicKey = pubkey
+                    if includeClientTag { repost.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE])) }
+                    return (repost, original.toNEvent())
+                }
+                guard let events else { throw SignError.signingFailure }
+                let mined = try await PostProofOfWork.mine(events.repost, target: target)
+                let signed = try await signMinedEvent(mined, account: account)
+                queueRepost(signed, original: events.original)
+                dismiss()
+            } catch is CancellationError {
+                return
+            } catch {
+                repostFailed = true
+            }
+        }
+    }
+
+    @MainActor
+    private func queueRepost(_ signed: NEvent, original: NEvent) {
+        let cancellationId = UUID()
+        let context = bg()
+        context.perform {
+            let saved = Event.saveEvent(event: signed, flags: "awaiting_send", context: context)
+            saved.cancellationId = cancellationId
+            DataProvider.shared().saveToDiskNow(.bgContext)
+            DispatchQueue.main.async {
+                sendNotification(.newPostSaved, saved)
+            }
+        }
+        Unpublisher.shared.publishNow(original)
+        _ = Unpublisher.shared.publish(signed, cancellationId: cancellationId)
+        sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: original.id))
     }
     
     private func quoteThisPost() {

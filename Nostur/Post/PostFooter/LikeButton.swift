@@ -47,9 +47,8 @@ struct LikeButton: View {
                 
                 switch postAction.type {
                 case .reacted(let uuid, let reactionContent):
-                    if reactionContent == "+" {
-                        footerAttributes.ourReactions.insert("+")
-                    }
+                    guard reactionContent == "+" else { return }
+                    footerAttributes.ourReactions.insert("+")
                     unpublishLikeId = uuid
                 case .unreacted(let reactionContent):
                     if reactionContent == "+" {
@@ -62,8 +61,10 @@ struct LikeButton: View {
             })
     }
     
+    @MainActor
     private func tap() {
-        if footerAttributes.ourReactions.contains("+") && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+        if footerAttributes.ourReactions.contains("+"),
+           let pendingID = unpublishLikeId, Unpublisher.shared.cancelPreparingReaction(pendingID) || Unpublisher.shared.cancel(pendingID) {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
             nrPost.unlike()
@@ -95,6 +96,9 @@ struct LikeButton: View {
                 return
             }
             
+            if let cancellationId = unpublishLikeId,
+               nrPost.queueReactionWithProof(likeNEvent, account: account, cancellationId: cancellationId) { return }
+
             if account.isNC {
                 likeNEvent = likeNEvent.withId()
                 RemoteSignerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in

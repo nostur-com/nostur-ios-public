@@ -181,8 +181,16 @@ final class PollViewModel: ObservableObject {
                 tags.append(NostrTag(["p", author]))
             }
             tags.append(contentsOf: ordered.map { NostrTag(["response", $0]) })
-            let event = NEvent(publicKey: accountPubkey, content: "", kind: .pollResponse, tags: tags)
-            let signed = try await PollSigningRequest.sign(event, accountPubkey: accountPubkey)
+            var event = NEvent(publicKey: accountPubkey, content: "", kind: .pollResponse, tags: tags)
+            let signed: NEvent
+            if let target = PostProofOfWork.configuredTarget {
+                event = try await PostProofOfWork.mine(event, target: target)
+                guard AccountsState.shared.activeAccountPublicKey == accountPubkey,
+                      !poll.hasEnded(at: Int(Date().timeIntervalSince1970)) else { return false }
+                signed = try await signMinedEvent(event, account: account)
+            } else {
+                signed = try await PollSigningRequest.sign(event, accountPubkey: accountPubkey)
+            }
             guard AccountsState.shared.activeAccountPublicKey == accountPubkey,
                   !poll.hasEnded(at: Int(Date().timeIntervalSince1970)) else { return false }
             guard signed.publicKey == accountPubkey, signed.kind == event.kind,
@@ -199,7 +207,7 @@ final class PollViewModel: ObservableObject {
             Unpublisher.shared.publishNow(signed, skipDB: true)
             return true
         } catch {
-            self.error = String(localized: "Couldn’t sign your vote. Try again.")
+            self.error = String(localized: "Couldn’t send your vote. Try again.")
             return false
         }
     }

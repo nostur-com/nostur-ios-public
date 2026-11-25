@@ -63,9 +63,8 @@ struct ReactionButtonInner: View {
                 
                 switch postAction.type {
                 case .reacted(let uuid, let reactionContent):
-                    if !isActivated && reactionContent == self.reactionContent {
-                        isActivated = true
-                    }
+                    guard reactionContent == self.reactionContent else { return }
+                    isActivated = true
                     unpublishLikeId = uuid
                 case .unreacted(let reactionContent):
                     if isActivated && reactionContent == self.reactionContent {
@@ -82,7 +81,7 @@ struct ReactionButtonInner: View {
     private func tap() {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
-        if unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+        if let pendingID = unpublishLikeId, Unpublisher.shared.cancelPreparingReaction(pendingID) || Unpublisher.shared.cancel(pendingID) {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
             nrPost.unlike(self.reactionContent)
@@ -110,6 +109,9 @@ struct ReactionButtonInner: View {
                 return
             }
             
+            if let cancellationId = unpublishLikeId,
+               nrPost.queueReactionWithProof(likeNEvent, account: account, cancellationId: cancellationId) { return }
+
             if account.isNC {
                 likeNEvent = likeNEvent.withId()
                 RemoteSignerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
@@ -166,9 +168,8 @@ struct VideoReactionButton: View {
                 
                 switch postAction.type {
                 case .reacted(let uuid, let reactionContent):
-                    if !isActivated && reactionContent == self.reactionContent {
-                        isActivated = true
-                    }
+                    guard reactionContent == self.reactionContent else { return }
+                    isActivated = true
                     unpublishLikeId = uuid
                 case .unreacted(let reactionContent):
                     if isActivated && reactionContent == self.reactionContent {
@@ -185,7 +186,7 @@ struct VideoReactionButton: View {
     private func tap() {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
-        if unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+        if let pendingID = unpublishLikeId, Unpublisher.shared.cancelPreparingReaction(pendingID) || Unpublisher.shared.cancel(pendingID) {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
             nrPost.unlike(self.reactionContent)
@@ -213,6 +214,9 @@ struct VideoReactionButton: View {
                 return
             }
             
+            if let cancellationId = unpublishLikeId,
+               nrPost.queueReactionWithProof(likeNEvent, account: account, cancellationId: cancellationId) { return }
+
             if account.isNC {
                 likeNEvent = likeNEvent.withId()
                 RemoteSignerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in

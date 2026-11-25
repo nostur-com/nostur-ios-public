@@ -72,14 +72,15 @@ struct EmojiButton: View {
                     guard postAction.eventId == nrPost.id else { return }
                     
                     switch postAction.type {
-                    case .reacted(let uuid, _):
+                    case .reacted(let uuid, let reactionContent):
                         if selectedEmoji == "" {
                             checkForAlreadyCustomEmojiReaction()
                         }
-                        unpublishLikeId = uuid
+                        if reactionContent == (selectedEmoji.isEmpty ? "+" : selectedEmoji) { unpublishLikeId = uuid }
                     case .unreacted(let reactionContent):
-                        guard selectedEmoji != "" && reactionContent == selectedEmoji else { return }
-                        footerAttributes.ourReactions.remove(selectedEmoji)
+                        guard reactionContent == (selectedEmoji.isEmpty ? "+" : selectedEmoji) else { return }
+                        footerAttributes.ourReactions.remove(reactionContent)
+                        selectedEmoji = ""
                         unpublishLikeId = nil
                     default:
                         break
@@ -96,9 +97,11 @@ struct EmojiButton: View {
                 }
     }
     
+    @MainActor
     private func tap(reactionContent: String = "+") {
         // UNREACT
-        if (footerAttributes.ourReactions.contains("+") || selectedEmoji != "") && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+        if (footerAttributes.ourReactions.contains("+") || selectedEmoji != ""),
+           let pendingID = unpublishLikeId, Unpublisher.shared.cancelPreparingReaction(pendingID) || Unpublisher.shared.cancel(pendingID) {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
             nrPost.unlike(reactionContent)
@@ -128,6 +131,9 @@ struct EmojiButton: View {
                 return
             }
             
+            if let cancellationId = unpublishLikeId,
+               nrPost.queueReactionWithProof(likeNEvent, account: account, cancellationId: cancellationId) { return }
+
             if account.isNC {
                 likeNEvent = likeNEvent.withId()
                 RemoteSignerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
@@ -222,14 +228,15 @@ struct VideoEmojiButton: View {
             guard postAction.eventId == nrPost.id else { return }
             
             switch postAction.type {
-            case .reacted(let uuid, _):
+            case .reacted(let uuid, let reactionContent):
                 if selectedEmoji == "" {
                     checkForAlreadyCustomEmojiReaction()
                 }
-                unpublishLikeId = uuid
+                if reactionContent == (selectedEmoji.isEmpty ? "+" : selectedEmoji) { unpublishLikeId = uuid }
             case .unreacted(let reactionContent):
-                guard selectedEmoji != "" && reactionContent == selectedEmoji else { return }
-                footerAttributes.ourReactions.remove(selectedEmoji)
+                guard reactionContent == (selectedEmoji.isEmpty ? "+" : selectedEmoji) else { return }
+                footerAttributes.ourReactions.remove(reactionContent)
+                selectedEmoji = ""
                 unpublishLikeId = nil
             default:
                 break
@@ -246,9 +253,11 @@ struct VideoEmojiButton: View {
         }
     }
     
+    @MainActor
     private func tap(reactionContent: String = "+") {
         // UNREACT
-        if (footerAttributes.ourReactions.contains("+") || selectedEmoji != "") && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+        if (footerAttributes.ourReactions.contains("+") || selectedEmoji != ""),
+           let pendingID = unpublishLikeId, Unpublisher.shared.cancelPreparingReaction(pendingID) || Unpublisher.shared.cancel(pendingID) {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
             nrPost.unlike(reactionContent)
@@ -278,6 +287,9 @@ struct VideoEmojiButton: View {
                 return
             }
             
+            if let cancellationId = unpublishLikeId,
+               nrPost.queueReactionWithProof(likeNEvent, account: account, cancellationId: cancellationId) { return }
+
             if account.isNC {
                 likeNEvent = likeNEvent.withId()
                 RemoteSignerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in

@@ -34,6 +34,7 @@ class Unpublisher {
     static let publishDelay: TimeInterval = 9
     var timer: Timer?
     var queue: [Unpublished] = []
+    @MainActor private var preparingReactions: [UUID: Task<Void, Never>] = [:]
     
     static let shared = Unpublisher()
     
@@ -82,6 +83,29 @@ class Unpublisher {
 
     func publishPreparedPost(_ event: NEvent, lockToThisRelay: RelayData?, onDispatched: @escaping @MainActor () -> Void) {
         sendToRelays(event, lockToThisRelay: lockToThisRelay, clearComposerDraft: false, onDispatched: onDispatched)
+    }
+
+    @MainActor
+    func prepareReaction(_ event: NEvent, target: Int, account: CloudAccount, cancellationId: UUID,
+                         onFailure: @escaping () -> Void) {
+        preparingReactions[cancellationId] = Task { @MainActor in
+            do {
+                let mined = try await PostProofOfWork.mine(event, target: target)
+                let signed = try await signMinedEvent(mined, account: account)
+                guard preparingReactions.removeValue(forKey: cancellationId) != nil else { return }
+                _ = publish(signed, cancellationId: cancellationId)
+            } catch {
+                guard preparingReactions.removeValue(forKey: cancellationId) != nil else { return }
+                onFailure()
+            }
+        }
+    }
+
+    @MainActor
+    func cancelPreparingReaction(_ id: UUID) -> Bool {
+        guard let task = preparingReactions.removeValue(forKey: id) else { return false }
+        task.cancel()
+        return true
     }
     
     func cancel(_ cancellationId: UUID, eventId: String? = nil) -> Bool {

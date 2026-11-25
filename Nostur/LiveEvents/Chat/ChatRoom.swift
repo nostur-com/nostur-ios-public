@@ -28,6 +28,8 @@ struct ChatRoom: View {
     @State private var replyingTo: NRChatMessage?
     @State private var quoting: NRChatMessage?
     @State private var composerFocusRequest = 0
+    @State private var isPreparingMessage = false
+    @State private var sendFailed = false
     
     @Namespace private var bottom
     
@@ -229,6 +231,16 @@ struct ChatRoom: View {
                                     onSubmit: submitMessage
                                 )
                                 .frame(maxWidth: .infinity)
+                                .disabled(isPreparingMessage)
+                                if isPreparingMessage {
+                                    ProgressView()
+                                        .accessibilityLabel(Text("Sending message"))
+                                }
+                            }
+                            if sendFailed {
+                                Text("Couldn’t send your message. Try again.")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -265,10 +277,11 @@ struct ChatRoom: View {
         }
     }
     
-    private func submitMessage() {
+    @MainActor private func submitMessage() {
         // Create and send chat message (via unpublisher?)
         guard let account = self.account, account.privateKey != nil else { AppSheetsModel.shared.readOnlySheetVisible = true; return }
-        guard !message.isEmpty else { return }
+        guard !message.isEmpty, !isPreparingMessage else { return }
+        sendFailed = false
 
         let semanticMessage = semanticChatMessage(
             message: message,
@@ -310,23 +323,45 @@ struct ChatRoom: View {
             nEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
         }
         
-        if account.isNC {
+        if let target = PostProofOfWork.configuredTarget {
+            isPreparingMessage = true
+            let originalMessage = message
+            let originalAttributedMessage = attributedMessage
+            let referenceID = replyingTo?.id ?? quoting?.id
+            Task { @MainActor in
+                defer { isPreparingMessage = false }
+                do {
+                    let mined = try await PostProofOfWork.mine(nEvent, target: target)
+                    let signed = try await signMinedEvent(mined, account: account)
+                    publishMessage(signed)
+                    if message == originalMessage, attributedMessage == originalAttributedMessage,
+                       (replyingTo?.id ?? quoting?.id) == referenceID {
+                        clearMessage()
+                    }
+                } catch {
+                    sendFailed = true
+                }
+            }
+        }
+        else if account.isNC {
             nEvent = nEvent.withId()
             RemoteSignerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
-                // Save own chat to DB so reopen can load without relying only on relays
-                Unpublisher.shared.publishNow(signedEvent, skipDB: false)
-                sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
+                publishMessage(signedEvent)
             })
             
             clearMessage()
         }
         else {
             guard let signedEvent = try? account.signEvent(nEvent) else { return }
-            // Save own chat to DB so reopen can load without relying only on relays
-            Unpublisher.shared.publishNow(signedEvent, skipDB: false)
-            sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
+            publishMessage(signedEvent)
             clearMessage()
         }
+    }
+
+    private func publishMessage(_ event: NEvent) {
+        // Save our chat messages so they are available when reopening the room.
+        Unpublisher.shared.publishNow(event)
+        sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: event))
     }
 
     private func mentionChoices(for term: String, account: CloudAccount) -> [NRContact] {

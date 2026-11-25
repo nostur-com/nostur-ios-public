@@ -1341,6 +1341,21 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             accountCache.removeReaction(self.id, reactionType: reactionContent)
         }
     }
+
+    @MainActor
+    func queueReactionWithProof(_ event: NEvent, account: CloudAccount, cancellationId: UUID) -> Bool {
+        guard let target = PostProofOfWork.configuredTarget else { return false }
+        let reactionCache = accountCache()
+        Unpublisher.shared.prepareReaction(event, target: target, account: account, cancellationId: cancellationId) {
+            if AccountsState.shared.activeAccountPublicKey == event.publicKey {
+                self.unlike(event.content)
+            } else {
+                reactionCache?.removeReaction(self.id, reactionType: event.content)
+            }
+            sendNotification(.anyStatus, (String(localized: "Couldn’t send your reaction. Try again."), "APP_NOTICE"))
+        }
+        return true
+    }
     
     @MainActor public func unpublish() {
         guard let cancellationId = ownPostAttributes.cancellationId else { return }
