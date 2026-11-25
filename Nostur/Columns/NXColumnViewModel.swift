@@ -785,7 +785,7 @@ class NXColumnViewModel: ObservableObject {
                         guard let self else { return }
                         // A row may represent a whole reply chain, so reconcile the
                         // exact component seen in the other column using the same
-                        // idle animated removal as read state from another device.
+                        // anchored removal as read state from another device.
                         let otherColumnShortId = String(postId.prefix(8))
                         var seenShortIds = Deduplicator.shared.onScreenSeen
                         seenShortIds.insert(otherColumnShortId)
@@ -1080,28 +1080,63 @@ class NXColumnViewModel: ObservableObject {
         }.map(\.id))
         guard !readIDs.isEmpty else { return true }
         let removedIDs = readIDs.subtracting(visibleIDs)
-        isApplyingReadRemoval = true
-        // Let List own animated deletion, as in the debug experiment. Combining
-        // this with our anchored-update offset correction can move the viewport twice.
-        withAnimation(.easeInOut(duration: 0.25)) {
+        // Count-only changes do not invalidate the List's row estimates.
+        if removedIDs.isEmpty {
             vmInner.updateUnreadIds { unreadIDs in
-                for id in readIDs { unreadIDs[id] = removedIDs.contains(id) ? nil : 0 }
+                for id in readIDs { unreadIDs[id] = 0 }
             }
-            if !removedIDs.isEmpty {
-                viewState = .posts(posts.filter { !removedIDs.contains($0.id) })
-            }
+            vmInner.updateIsAtTopSubject.send()
+            return true
         }
-        vmInner.updateIsAtTopSubject.send()
+        // An offscreen deletion can re-estimate every row in another Mac column.
+        // Let the coordinator photograph and pin that column's live viewport;
+        // combining List animation with our correction would move it twice.
+        guard let performAnchoredFeedUpdate = vmInner.performAnchoredFeedUpdate else { return false }
+        performAnchoredFeedUpdate(NXFeedViewport.unreadRemovalCoverReason) { [weak self] in
+            guard let self else { return [] }
+            guard self.isVisible, !self.isViewPaused, self.hasLiveFeedViewport,
+                  !self.isApplyingReadRemoval, !self.isFeedActivelyScrolling,
+                  !self.vmInner.isPerformingScroll,
+                  !self.vmInner.isPerformingScrollToFirstUnread else {
+                self.scheduleAlreadySeenReconciliation(removingVisiblePostsFor: externallyReadIDs)
+                return self.currentNRPostsOnScreen.map(\.id)
+            }
+            // The update may have waited behind a scroll or another mutation.
+            // Recompute both the snapshot and visibility at execution time.
+            let currentPosts = self.currentNRPostsOnScreen
+            let visibleIDs = self.currentVisiblePostIds()
+            guard !visibleIDs.isEmpty else {
+                self.scheduleAlreadySeenReconciliation(removingVisiblePostsFor: externallyReadIDs)
+                return currentPosts.map(\.id)
+            }
+            let readIDs = Set(currentPosts.filter {
+                self.vmInner.unreadIds[$0.id, default: 0] > 0 && externallyReadIDs.contains($0.shortId)
+            }.map(\.id))
+            let removedIDs = readIDs.subtracting(visibleIDs)
+            if !removedIDs.isEmpty { self.isApplyingReadRemoval = true }
+            withTransaction(Transaction(animation: nil)) {
+                self.vmInner.updateUnreadIds { unreadIDs in
+                    for id in readIDs { unreadIDs[id] = removedIDs.contains(id) ? nil : 0 }
+                }
+                if !removedIDs.isEmpty {
+                    self.viewState = .posts(currentPosts.filter { !removedIDs.contains($0.id) })
+                }
+            }
+            self.vmInner.updateIsAtTopSubject.send()
 #if DEBUG
-        recordFeedAction("external read removal · removed \(removedIDs.count) · kept visible \(readIDs.count - removedIDs.count) · \(removalGeometry())")
+            self.recordFeedAction("external read removal · anchored · removed \(removedIDs.count) · kept visible \(readIDs.count - removedIDs.count) · \(self.removalGeometry())")
 #endif
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 350_000_000)
-            guard let self else { return }
-            self.isApplyingReadRemoval = false
-            let waiting = self.postsWaitingForReadRemoval
-            self.postsWaitingForReadRemoval.removeAll()
-            waiting.forEach { $0() }
+            if !removedIDs.isEmpty {
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 350_000_000)
+                    guard let self else { return }
+                    self.isApplyingReadRemoval = false
+                    let waiting = self.postsWaitingForReadRemoval
+                    self.postsWaitingForReadRemoval.removeAll()
+                    waiting.forEach { $0() }
+                }
+            }
+            return self.currentNRPostsOnScreen.map(\.id)
         }
         return true
     }

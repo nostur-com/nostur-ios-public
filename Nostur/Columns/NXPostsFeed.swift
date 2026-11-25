@@ -142,6 +142,8 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     private var flushTask: Task<Void, Never>?
     private var settleTask: Task<Void, Never>?
     private var isProgrammaticScrollInProgress = false
+    private var unreadLandingProtection: (id: String, expiresAt: CFTimeInterval)?
+    private var unreadLayoutRepairTask: Task<Void, Never>?
     private var isSuspended = false
     private var parked: NXFeedPark.Post?
     /// Last successful live top-edge sample. Never a settle fallback.
@@ -229,6 +231,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 
     func rememberAnchor(id: String, visibleTopOffset: CGFloat = 0) {
+        cancelUnreadLandingProtection()
         isParkedAtContentTop = false
         parked = NXFeedPark.Post(id: id, visibleTopOffset: visibleTopOffset)
         if let scrollView {
@@ -294,6 +297,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 
     func beginProgrammaticScroll() {
+        cancelUnreadLandingProtection()
         isParkedAtContentTop = false
         isProgrammaticScrollInProgress = true
         settleTask?.cancel()
@@ -393,8 +397,10 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         beginProgrammaticScroll()
         parked = nil
         var restoreSelfSizing: (() -> Void)?
+        var startedNativeAnimation = false
         defer { restoreSelfSizing?() }
         if animated, prependSnapshot == nil, scrollView.window != nil {
+            startedNativeAnimation = true
             if #available(iOS 16.0, *), let collectionView = scrollView as? UICollectionView {
                 let previous = collectionView.selfSizingInvalidation
                 collectionView.selfSizingInvalidation = .disabled
@@ -412,7 +418,15 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 try? await Task.sleep(nanoseconds: 50_000_000)
             }
         }
-        guard !Task.isCancelled, !scrollView.isDragging, !scrollView.isTracking else {
+        let reachedNativeTarget = abs(scrollView.contentOffset.y + scrollView.adjustedContentInset.top) <= 5
+        guard !Task.isCancelled, !scrollView.isDragging, !scrollView.isTracking,
+              !startedNativeAnimation || reachedNativeTarget else {
+#if DEBUG
+            if startedNativeAnimation, !reachedNativeTarget, !Task.isCancelled,
+               !scrollView.isDragging, !scrollView.isTracking {
+                onDebugAction?("UNREAD top timeout · kept current position · \(viewportDebugSummary())")
+            }
+#endif
             scrollView.setContentOffset(scrollView.contentOffset, animated: false)
             if let live = visibleAnchor(in: scrollView) {
                 rememberAnchor(id: live.id, visibleTopOffset: live.visibleTopOffset)
@@ -535,7 +549,47 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         liftNavigationCover()
 
         isProgrammaticScrollInProgress = false
+        if !Task.isCancelled, isItemAtVisibleTop(id: id) {
+            // List can publish a delayed estimate replacement after a clean
+            // landing. Protect only this recent navigation, never an old park.
+            unreadLandingProtection = (id, CACurrentMediaTime() + 2)
+        }
         scheduleFlush()
+    }
+
+    private func cancelUnreadLandingProtection() {
+        unreadLandingProtection = nil
+        unreadLayoutRepairTask?.cancel()
+        unreadLayoutRepairTask = nil
+    }
+
+    private func scheduleUnreadLayoutRepair(in scrollView: UIScrollView) {
+        guard let protection = unreadLandingProtection,
+              CACurrentMediaTime() <= protection.expiresAt,
+              !isSuspended, !isLayoutUpdating,
+              !isUserScrollingOrRecently(in: scrollView),
+              unreadLayoutRepairTask == nil else { return }
+        unreadLayoutRepairTask = Task { @MainActor [weak self] in
+            // Let UIKit finish its own offset compensation before measuring.
+            await Task.yield()
+            guard !Task.isCancelled, let self else { return }
+            self.unreadLayoutRepairTask = nil
+            guard let current = self.unreadLandingProtection, current.id == protection.id,
+                  CACurrentMediaTime() <= current.expiresAt,
+                  !self.isSuspended, !self.isLayoutUpdating,
+                  let scrollView = self.scrollView, scrollView.window != nil,
+                  !self.isUserScrollingOrRecently(in: scrollView),
+                  let displacement = self.visibleTopMisalignment(for: current.id, in: scrollView),
+                  displacement.isFinite,
+                  abs(displacement) > NXUnreadNavigation.pinTolerance else { return }
+#if DEBUG
+            self.onDebugAction?(
+                "UNREAD late layout · pin \(self.shortID(current.id)) · displacement \(String(format: "%.1f", displacement)) · \(self.viewportDebugSummary())"
+            )
+#endif
+            self.coverViewport(in: scrollView)
+            self.startSettling(anchor: (current.id, 0), extended: true, bringOnScreen: false)
+        }
     }
 
     func isItemAtVisibleTop(id: String) -> Bool {
@@ -695,7 +749,18 @@ final class NXFeedLayoutStabilizer: ObservableObject {
         let liveBefore = scrollView.flatMap { visibleAnchor(in: $0) }.map {
             NXFeedPark.Post(id: $0.id, visibleTopOffset: $0.visibleTopOffset)
         }
-        let parkedBefore = liveBefore ?? parked
+        let recentUnread: NXFeedPark.Post?
+        if let protection = unreadLandingProtection,
+           CACurrentMediaTime() <= protection.expiresAt,
+           oldIDs.contains(protection.id),
+           let scrollView, !isUserScrollingOrRecently(in: scrollView) {
+            // A page can arrive in the same layout turn as a late resize,
+            // before its repair task runs. Preserve the successful landing.
+            recentUnread = NXFeedPark.Post(id: protection.id, visibleTopOffset: 0)
+        } else {
+            recentUnread = nil
+        }
+        let parkedBefore = recentUnread ?? liveBefore ?? parked
         if let parkedBefore {
             parked = parkedBefore
         }
@@ -1301,6 +1366,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
     }
 
     private func cancelPendingWork() {
+        cancelUnreadLandingProtection()
         anchorGeneration += 1
         flushTask?.cancel()
         flushTask = nil
@@ -1406,6 +1472,9 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                     ))
                 }
 #endif
+                if change.oldValue?.height != scrollView.contentSize.height {
+                    self?.scheduleUnreadLayoutRepair(in: scrollView)
+                }
                 self?.evaluateApproachingBottom(in: scrollView)
             }
         })
@@ -1427,6 +1496,7 @@ final class NXFeedLayoutStabilizer: ObservableObject {
 #endif
         let isFinger = scrollView.isDragging || scrollView.isTracking
         if isFinger || scrollView.isDecelerating {
+            cancelUnreadLandingProtection()
             isParkedAtContentTop = false
             lastUserScrollAt = CACurrentMediaTime()
         }
@@ -2358,7 +2428,8 @@ struct NXPostsFeed: View {
             scrollView.layoutIfNeeded()
             if scrollToIndex == 0 {
                 vmInner.isAtTop = await layoutStabilizer.scrollToContentTop(animated: !reduceMotion)
-                vmInner.readingPostID = nil
+                vmInner.readingPostID = vmInner.isAtTop ? nil
+                    : (layoutStabilizer.liveVisiblePostID() ?? vmInner.readingPostID)
                 if vmInner.isAtTop {
                     Task { @MainActor in vm.prefetch(targetPost) }
                     performIDCollectionUpdates(for: targetPost, vm: vm)
