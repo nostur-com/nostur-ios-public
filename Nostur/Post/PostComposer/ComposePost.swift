@@ -679,7 +679,8 @@ struct ComposePost: View {
             guard !didLoad else { return }
             didLoad = true
             let activeAccount = account()
-            vm.prepareDocument(initialText: initialText, directMention: directMention, accountPubkey: activeAccount?.publicKey)
+            vm.prepareDocument(initialText: initialText, directMention: directMention, accountPubkey: activeAccount?.publicKey,
+                               restoreProofDraft: kind == .textNote && replyTo == nil && quotePost == nil)
             vm.activeAccount = activeAccount
             if #available(iOS 16.0, *), kind == .shortVoiceMessage {
                 var voiceMessageNEvent = NEvent(content: "")

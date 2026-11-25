@@ -252,6 +252,7 @@ struct KindResolver: View {
     }
     
     private func enqueue() {
+        guard nrPost.pendingProofPostID == nil else { return }
         if !nrPost.missingPs.isEmpty {
             bg().perform {
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
@@ -272,6 +273,7 @@ struct KindResolver: View {
     }
     
     private func dequeue() {
+        guard nrPost.pendingProofPostID == nil else { return }
         if !nrPost.missingPs.isEmpty {
             QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
         }

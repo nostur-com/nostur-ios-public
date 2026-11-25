@@ -2669,6 +2669,7 @@ private struct MacColumnScrollEdgeEffectModifier: ViewModifier {
 
 
 func performIDCollectionUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
+    guard nrPost.pendingProofPostID == nil else { return }
     if nrPost.postOrThreadAttributes.parentPosts.isEmpty {
         if (nrPost.kind == 6 || nrPost.kind == 16), let firstQuoteId = nrPost.firstQuoteId {
             vm.markShortIdsSeen([nrPost.shortId, String(firstQuoteId.prefix(8))])
@@ -2685,6 +2686,7 @@ func performIDCollectionUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
 
 @MainActor
 func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
+    guard nrPost.pendingProofPostID == nil else { return }
     let vmInner = vm.vmInner
     vm.newestMarkedAsRead = max(nrPost.createdAt, vm.newestMarkedAsRead ?? .distantPast)
     // Early exit if no unread items to process
@@ -2727,7 +2729,7 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
         // Mark remaining posts in feed as read (optimize this heavy operation)
         if let appearedIndex = vm.currentNRPostsOnScreen.firstIndex(where: { $0.id == nrPost.id }) {
             for i in appearedIndex..<vm.currentNRPostsOnScreen.count {
-                if unreadIds[vm.currentNRPostsOnScreen[i].id] != 0 {
+                if vm.currentNRPostsOnScreen[i].pendingProofPostID == nil, unreadIds[vm.currentNRPostsOnScreen[i].id] != 0 {
                     unreadIds[vm.currentNRPostsOnScreen[i].id] = 0
 #if DEBUG
                     rowIdsMarkedRead.insert(vm.currentNRPostsOnScreen[i].id)

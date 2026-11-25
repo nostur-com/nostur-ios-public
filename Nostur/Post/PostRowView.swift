@@ -41,7 +41,17 @@ struct PostRowDeletable: View {
 //#if DEBUG
 //        let _ = nxLogChanges(of: Self.self)
 //#endif
-        if !ignoreBlock && (postRowDeletableAttributes.blocked || postRowDeletableAttributes.muted) {
+        if nrPost.pendingProofPostID != nil {
+            VStack(alignment: .leading, spacing: 6) {
+                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true,
+                             missingReplyTo: missingReplyTo, connect: connect, isVisible: isVisible)
+                    .environment(\.nxViewingContext, [.preview])
+                    .allowsHitTesting(false)
+                OwnPostFooter(nrPost: nrPost)
+                    .padding(.bottom, 8)
+            }
+        }
+        else if !ignoreBlock && (postRowDeletableAttributes.blocked || postRowDeletableAttributes.muted) {
             HStack {
                 if postRowDeletableAttributes.blocked {
                     Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")

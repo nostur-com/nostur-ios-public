@@ -38,7 +38,7 @@ struct Box<Content: View>: View {
 
         // Compute static values upfront to avoid body recomputation
         let isDeleted = nrPost?.postRowDeletableAttributes.deletedById != nil
-        self.navMode = isDeleted ? .noNavigation : (navMode ?? .background)
+        self.navMode = isDeleted || nrPost?.pendingProofPostID != nil ? .noNavigation : (navMode ?? .background)
 
         self.padding = (nrPost?.kind == 30023) ? 20 : 5
         self.content = content()

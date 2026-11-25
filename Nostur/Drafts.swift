@@ -22,6 +22,7 @@ struct ComposerDraft: Codable, Equatable {
     var text: String = ""
     var mentions: [ComposerMentionRecord] = []
     var emojiURLs: [String: URL] = [:]
+    var poll: PollDraft?
 
     var semanticText: NSAttributedString {
         let result = NSMutableAttributedString(string: text)
@@ -44,7 +45,28 @@ class Drafts {
     // PostComposer will then show a toggle "Lock post to this relay"
     public var lockToThisRelay: RelayData? = nil
     
-    private init() {}
+    private struct ProofPostDraft: Codable {
+        let id: UUID
+        let document: ComposerDraft
+        var canRestore = false
+    }
+
+    private var proofPostDrafts: [ProofPostDraft] {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: "proof_post_drafts") else { return [] }
+            return (try? JSONDecoder().decode([ProofPostDraft].self, from: data)) ?? []
+        }
+        set {
+            UserDefaults.standard.set(try? JSONEncoder().encode(newValue), forKey: "proof_post_drafts")
+        }
+    }
+
+    private init() {
+        // A send that was still preparing when the app quit can be reopened as a draft.
+        if !proofPostDrafts.isEmpty {
+            proofPostDrafts = proofPostDrafts.map { ProofPostDraft(id: $0.id, document: $0.document, canRestore: true) }
+        }
+    }
     
     var activeDocument: ComposerDraft {
         get { document(for: "simple_draft") }
@@ -93,6 +115,31 @@ class Drafts {
     func restoreDraftAfterUndoSend() {
         activeDocument = undoDocument
         undoDocument = ComposerDraft()
+    }
+
+    func rememberPendingProofPost(id: UUID, draft: ComposerDraft) {
+        proofPostDrafts.append(ProofPostDraft(id: id, document: draft))
+    }
+
+    func finishPendingProofPost(id: UUID, restore: Bool) {
+        var drafts = proofPostDrafts
+        guard let index = drafts.firstIndex(where: { $0.id == id }) else { return }
+        if restore {
+            drafts[index].canRestore = true
+        } else {
+            drafts.remove(at: index)
+        }
+        proofPostDrafts = drafts
+    }
+
+    func loadRecoveredProofPostIfNeeded() -> ComposerDraft? {
+        guard activeDocument == ComposerDraft() else { return nil }
+        var drafts = proofPostDrafts
+        guard let index = drafts.firstIndex(where: { $0.canRestore }) else { return nil }
+        let recovered = drafts.remove(at: index).document
+        activeDocument = recovered
+        proofPostDrafts = drafts
+        return recovered
     }
 
     private func document(for key: String) -> ComposerDraft {

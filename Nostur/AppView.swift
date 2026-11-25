@@ -28,6 +28,9 @@ struct AppView: View {
             case .loggedIn(let loggedInAccount):
                 NosturMainView()
                     .modifier(NostrBrowserPresentation(account: loggedInAccount))
+                    .background {
+                        PostPreparationFailureAlert()
+                    }
                     .environment(\.theme, themes.theme)
                     .tint(themes.theme.accent)
                     .accentColor(themes.theme.accent)

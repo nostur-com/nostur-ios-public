@@ -31,7 +31,7 @@ class Unpublisher {
         case contactList
     }
     
-    let PUBLISH_DELAY: Double = 9.0 // SECONDS
+    static let publishDelay: TimeInterval = 9
     var timer: Timer?
     var queue: [Unpublished] = []
     
@@ -79,6 +79,10 @@ class Unpublisher {
     func publishNow(_ nEvent: NEvent, skipDB: Bool = false, lockToThisRelay: RelayData? = nil) {
         sendToRelays(nEvent, skipDB: skipDB, lockToThisRelay: lockToThisRelay)
     }
+
+    func publishPreparedPost(_ event: NEvent, lockToThisRelay: RelayData?, onDispatched: @escaping @MainActor () -> Void) {
+        sendToRelays(event, lockToThisRelay: lockToThisRelay, clearComposerDraft: false, onDispatched: onDispatched)
+    }
     
     func cancel(_ cancellationId: UUID, eventId: String? = nil) -> Bool {
         let beforeCount = queue.count
@@ -104,7 +108,7 @@ class Unpublisher {
         guard !queue.isEmpty else { return }
         
         queue
-            .filter { $0.createdAt < Date.now.addingTimeInterval(-(PUBLISH_DELAY)) }
+            .filter { $0.createdAt < Date.now.addingTimeInterval(-Self.publishDelay) }
             .forEach({ [weak self] item in
                 self?.sendToRelays(item.nEvent, lockToThisRelay: item.lockToThisRelay)
                 self?.queue.removeAll { q in
@@ -125,7 +129,8 @@ class Unpublisher {
         DataProvider.shared().saveToDisk()
     }
     
-    private func sendToRelays(_ nEvent: NEvent, skipDB: Bool = false, lockToThisRelay: RelayData? = nil) {
+    private func sendToRelays(_ nEvent: NEvent, skipDB: Bool = false, lockToThisRelay: RelayData? = nil,
+                              clearComposerDraft: Bool = true, onDispatched: (@MainActor () -> Void)? = nil) {
         // Polls in the Undo queue are signed but have not been sent.
         if nEvent.kind == .poll { PollArchive.remember(nEvent) }
         if nEvent.kind == .nwcRequest {
@@ -170,7 +175,7 @@ class Unpublisher {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     
                     // Clear draft
-                    if Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment, .shortVideos, .comment, .poll]).contains(nEvent.kind) {
+                    if clearComposerDraft && Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment, .shortVideos, .comment, .poll]).contains(nEvent.kind) {
                         Drafts.shared.draft = ""
                         Drafts.shared.restoreDraft = ""
                     }
@@ -208,7 +213,7 @@ class Unpublisher {
                     }
                 }
                 
-                if ([1,1111,1222,1244,6,20,1068,9802,30023,34235].contains(savedEvent.kind)) {
+                if ([1,1111,1222,1244,6,20,22,1068,9802,30023,34235,34236].contains(savedEvent.kind)) {
                     // Extract plain scalar values from managed object while on bg thread
                     let savedKind = savedEvent.kind
                     let savedPubkey = savedEvent.pubkey
@@ -238,7 +243,7 @@ class Unpublisher {
                 DispatchQueue.main.async {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     // Clear draft
-                    if Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment, .shortVideos, .poll]).contains(nEvent.kind) {
+                    if clearComposerDraft && Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment, .shortVideos, .poll]).contains(nEvent.kind) {
                         Drafts.shared.draft = ""
                         Drafts.shared.restoreDraft = ""
                     }
@@ -255,6 +260,9 @@ class Unpublisher {
                 )
                 savedEvent.flags = "sent"
                 DataProvider.shared().saveToDiskNow(.bgContext)
+            }
+            if let onDispatched {
+                DispatchQueue.main.async { onDispatched() }
             }
         }
     }

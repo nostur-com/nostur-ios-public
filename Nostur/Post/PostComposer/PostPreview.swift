@@ -163,9 +163,9 @@ struct PostPreview: View {
     }
 }
 
-func createPreviewEvent(_ event: NEvent, isPrivate: Bool = false) -> Event {
+func createPreviewEvent(_ event: NEvent, isPrivate: Bool = false, insertIntoContext: Bool = true) -> Event {
     let context = bg()
-    let previewEvent = Event(context: context)
+    let previewEvent = insertIntoContext ? Event(context: context) : Event(entity: Event.entity(), insertInto: nil)
     previewEvent.insertedAt = Date.now
     previewEvent.id = event.id
     previewEvent.kind = Int64(event.kind.id)

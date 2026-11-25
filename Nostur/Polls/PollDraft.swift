@@ -1,13 +1,13 @@
 import Foundation
 
 /// Composer state for a new NIP-88 poll. Option ids stay stable while the person edits.
-struct PollDraft: Equatable {
-    struct Answer: Identifiable, Equatable {
+struct PollDraft: Codable, Equatable {
+    struct Answer: Identifiable, Codable, Equatable {
         let id: String
         var label: String
     }
 
-    enum Duration: String, CaseIterable, Identifiable, Equatable {
+    enum Duration: String, CaseIterable, Identifiable, Codable, Equatable {
         case hour
         case day
         case threeDays

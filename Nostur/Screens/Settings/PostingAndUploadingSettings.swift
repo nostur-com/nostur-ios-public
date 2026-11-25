@@ -16,6 +16,8 @@ struct PostingAndUploadingSettings: View {
     @AppStorage("media_upload_service") private var mediaUploadService = ""
     
     @State private var blossomConfiguratorShown = false
+    @State private var proofOfWorkShown = false
+    @AppStorage(PostProofOfWork.enabledKey) private var proofOfWorkEnabled = false
     
     var body: some View {
         NXForm {
@@ -50,6 +52,23 @@ struct PostingAndUploadingSettings: View {
             
             Section(header: Text("Posting", comment:"Setting heading on settings screen")) {
                 PostingToggle()
+                Button {
+                    proofOfWorkShown = true
+                } label: {
+                    HStack {
+                        Text("Proof of Work")
+                        Spacer()
+                        (proofOfWorkEnabled ? Text("On") : Text("Off"))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .sheet(isPresented: $proofOfWorkShown) {
+                    NBNavigationStack {
+                        PostProofOfWorkSettings()
+                    }
+                    .nbUseNavigationStack(.never)
+                    .presentationBackgroundCompat(theme.listBackground)
+                }
             }
         }
     }

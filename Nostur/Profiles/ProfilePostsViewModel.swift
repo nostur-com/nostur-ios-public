@@ -140,6 +140,15 @@ class ProfilePostsViewModel: ObservableObject {
             }
         }
         .store(in: &subscriptions)
+
+        receiveNotification(.pendingProofPost).sink { [weak self] notification in
+            guard let self, let pending = notification.object as? PendingProofPostPresentation,
+                  pending.relay == nil, pending.post.pubkey == pubkey else { return }
+            let isReply = pending.post.replyToPostOrZapId != nil
+            guard (isReply && self.type == .replies) || (!isReply && self.type == .posts) else { return }
+            self.posts.insert(pending.post, at: 0)
+        }
+        .store(in: &subscriptions)
         
         receiveNotification(.unpublishedNRPost).sink { [weak self] notification in
             let nrPost = notification.object as! NRPost
@@ -474,7 +483,7 @@ class ProfilePostsViewModel: ObservableObject {
     // And: after user scrolls we prefetch the next 50 posts
     // We detect this by using .task on the 6th post
     public func prefetch(_ post: NRPost, at index: Int) {
-        guard self.posts[safe: index]?.id == post.id else { return }
+        guard post.pendingProofPostID == nil, self.posts[safe: index]?.id == post.id else { return }
         
         if index == 5 {
             self.prefetchOnSixthPost()
@@ -507,7 +516,7 @@ class ProfilePostsViewModel: ObservableObject {
         
         guard index % 5 == 0 else { return }
         
-        let nextIds = self.posts.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
+        let nextIds = self.posts.dropFirst(max(0,index - 1)).prefix(5).filter { $0.pendingProofPostID == nil }.map(\.id)
         guard !nextIds.isEmpty else { return }
 #if DEBUG
         L.fetching.debug("🔢 Fetching counts for \(nextIds.count) posts, pubkey: \(self.pubkey)")

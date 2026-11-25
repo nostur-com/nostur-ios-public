@@ -298,6 +298,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var galleryItems: [GalleryItem] = []
     var previewWeights: PreviewWeights?
     var plainTextOnly = false
+    private(set) var pendingProofPostID: UUID?
     var flags: String {
         get { ownPostAttributes.flags }
         set {
@@ -360,8 +361,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var verified = false
     var isPrivateZap = false
     
-    init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil, rNRContacts: [NRContact] = [], maxEmbeddedDepth: Int = NRPost.defaultEmbeddedDepthLimit) {
-        var isAwaiting = false
+    init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil, rNRContacts: [NRContact] = [], maxEmbeddedDepth: Int = NRPost.defaultEmbeddedDepthLimit, pendingProofPostID: UUID? = nil) {
+        self.pendingProofPostID = pendingProofPostID
+        var isAwaiting = pendingProofPostID != nil // Local previews never enter the event relation queue.
         
         self.event = event // Only touch this in BG context!!!
         let bgContext = event.managedObjectContext ?? bg()

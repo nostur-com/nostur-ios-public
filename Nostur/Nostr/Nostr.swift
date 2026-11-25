@@ -70,7 +70,7 @@ struct NMessage: Decodable {
     }()
 }
 
-public struct NTimestamp: Codable {
+public struct NTimestamp: Codable, Sendable {
     public let timestamp: Int
 
     public init(date: Date) {
@@ -96,7 +96,7 @@ public struct NTimestamp: Codable {
     }
 }
 
-public enum NEventKind: Codable, Equatable, Hashable {
+public enum NEventKind: Codable, Equatable, Hashable, Sendable {
     case setMetadata
     case textNote
     case recommendServer
@@ -264,7 +264,7 @@ public enum NEventKind: Codable, Equatable, Hashable {
     }
 }
 
-public struct NostrTag: Codable {
+public struct NostrTag: Codable, Sendable {
     let tag: [String]
     var type: String { tag.first ?? "" }
     var id: String { tag[safe: 1] ?? "" }
@@ -309,7 +309,7 @@ struct NSerializableEvent: Encodable {
     }
 }
 
-public struct NEvent: Codable {
+public struct NEvent: Codable, Sendable {
     
     public var id: String = ""
     public var publicKey: String
@@ -379,28 +379,22 @@ public struct NEvent: Codable {
         self.signature = signature
     }
     
-    mutating func withId() -> NEvent {
-
-        let serializableEvent = NSerializableEvent(publicKey: self.publicKey, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
-
+    func serializedForID(publicKey: String? = nil) throws -> Data {
+        let serializableEvent = NSerializableEvent(publicKey: publicKey ?? self.publicKey, createdAt: createdAt, kind: kind, tags: tags, content: content)
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
-        let serializedEvent = try! encoder.encode(serializableEvent)
-        let sha256Serialized = SHA256.hash(data: serializedEvent)
+        return try encoder.encode(serializableEvent)
+    }
 
+    mutating func withId() -> NEvent {
+        let sha256Serialized = SHA256.hash(data: try! serializedForID())
         self.id = String(bytes:sha256Serialized.bytes)
         
         return self
     }
 
     mutating func sign(_ keys: Keys) throws -> NEvent {
-
-        let serializableEvent = NSerializableEvent(publicKey: keys.publicKeyHex, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
-
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .withoutEscapingSlashes
-        let serializedEvent = try! encoder.encode(serializableEvent)
-        let sha256Serialized = SHA256.hash(data: serializedEvent)
+        let sha256Serialized = SHA256.hash(data: try serializedForID(publicKey: keys.publicKeyHex))
 
         let sig = try! keys.signature(for: sha256Serialized)
 
@@ -416,13 +410,7 @@ public struct NEvent: Codable {
     }
 
     func verified(logInvalidID: Bool = true) throws -> Bool {
-//        L.og.debug("✍️ VERIFYING SIG ✍️")
-        let serializableEvent = NSerializableEvent(publicKey: self.publicKey, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
-
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .withoutEscapingSlashes
-        let serializedEvent = try! encoder.encode(serializableEvent)
-        let sha256Serialized = SHA256.hash(data: serializedEvent)
+        let sha256Serialized = SHA256.hash(data: try serializedForID())
 
         guard self.id == String(bytes:sha256Serialized.bytes) else {
 #if DEBUG

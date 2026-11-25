@@ -1310,7 +1310,26 @@ public final class NewPostModel: ObservableObject {
             }
             return
         }
-        
+
+        if !isReplyInPrivate, !typingTextModel.anonMode, let target = PostProofOfWork.configuredTarget {
+            guard beginDraftSend() else { return }
+            var recoveryDraft = document
+            for attachment in imetas where !recoveryDraft.text.contains(attachment.url) {
+                if !recoveryDraft.text.isEmpty { recoveryDraft.text += "\n" }
+                recoveryDraft.text += attachment.url
+            }
+            let relay = lockToSingleRelay ? Drafts.shared.lockToThisRelay : nil
+            PostProofOfWorkOutbox.shared.queue(finalEvent, target: target, account: account,
+                                              relay: relay, replyToID: replyTo?.nrPost.id, draft: recoveryDraft) {
+                Self.recordPublishedInteractions(replyTo: replyTo, quotePost: quotePost)
+            }
+            finishDraftSend()
+            clearActiveDraftKeepingUndoSnapshot()
+            onDismiss()
+            sendNotification(.didSend)
+            return
+        }
+
         // Snapshot the same committed document that preview and publication read.
         draftSaveWork?.cancel()
         draftNeedsSave = false
@@ -1508,6 +1527,13 @@ public final class NewPostModel: ObservableObject {
         finishDraftSend()
         clearActiveDraftKeepingUndoSnapshot()
 
+        Self.recordPublishedInteractions(replyTo: replyTo, quotePost: quotePost)
+        onDismiss()
+        sendNotification(.didSend)
+    }
+
+    @MainActor
+    private static func recordPublishedInteractions(replyTo: ReplyTo?, quotePost: QuotePost?) {
         if let replyTo {
             InteractionRecorder.shared.recordDirectInteraction(with: replyTo.nrPost.pubkey, kind: .reply)
             let shouldRepublish = !replyTo.nrPost.isRestricted && !replyTo.nrPost.isPrivate
@@ -1545,8 +1571,6 @@ public final class NewPostModel: ObservableObject {
                 }
             }
         }
-        onDismiss()
-        sendNotification(.didSend)
     }
 
     @MainActor
@@ -2446,8 +2470,17 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
-    func prepareDocument(initialText: String?, directMention: NRContact?, accountPubkey: String?) {
-        guard initialText != nil || directMention != nil else { return }
+    func prepareDocument(initialText: String?, directMention: NRContact?, accountPubkey: String?, restoreProofDraft: Bool = false) {
+        if initialText == nil, directMention == nil {
+            if restoreProofDraft {
+                if let recovered = Drafts.shared.loadRecoveredProofPostIfNeeded() {
+                    selectedCustomEmojiURLByShortcode = recovered.emojiURLs
+                    typingTextModel.loadDocument(recovered)
+                }
+                typingTextModel.poll = typingTextModel.document.poll
+            }
+            return
+        }
         var document = initialText.map { ComposerDraft(text: $0) } ?? typingTextModel.document
         if let directMention, let accountPubkey, accountPubkey != directMention.pubkey {
             let prefix = composerMention(name: directMention.anyName, pubkey: directMention.pubkey)
@@ -2501,7 +2534,7 @@ public final class NewPostModel: ObservableObject {
         } else {
             mentions = []
         }
-        return ComposerDraft(text: text, mentions: mentions, emojiURLs: selectedCustomEmojiURLByShortcode)
+        return ComposerDraft(text: text, mentions: mentions, emojiURLs: selectedCustomEmojiURLByShortcode, poll: typingTextModel.poll)
     }
 
 #if DEBUG

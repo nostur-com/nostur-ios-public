@@ -58,6 +58,10 @@ struct Kind1: View {
         self.isEmbedded = isEmbedded
         self.grouped = grouped
         self.forceAutoload = forceAutoload
+        if nrPost.pendingProofPostID != nil {
+            _showMore = State(initialValue: true)
+            _clipBottomHeight = State(initialValue: 28_000)
+        }
 //        _clipBottomHeight = State(wrappedValue: isEmbedded ? 300.0 : 900.0)
     }
     

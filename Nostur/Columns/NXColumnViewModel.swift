@@ -1778,6 +1778,7 @@ class NXColumnViewModel: ObservableObject {
     private func listenForOwnNewPostSaved(_ config: NXColumnConfig) {
         guard newPostSavedSub == nil else { return }
         newPostSavedSub = receiveNotification(.newPostSaved)
+            .merge(with: receiveNotification(.pendingProofPost))
             .sink { [weak self] notification in
                 guard let self else { return }
 
@@ -1790,6 +1791,28 @@ class NXColumnViewModel: ObservableObject {
                     (config.account?.followingPubkeys ?? []).union(Set([config.accountPubkey ?? ""]))
                 default:
                     []
+                }
+
+                if let pending = notification.object as? PendingProofPostPresentation {
+                    let post = pending.post
+                    if let relay = pending.relay {
+                        guard case .relays(let feed) = config.columnType,
+                              feed.relaysData.contains(where: { $0.id == relay.id }) else { return }
+                    } else {
+                        guard pubkeys.contains(post.pubkey) else { return }
+                        let isPicture = post.kind == 20 || (post.kind == 1 && post.kTag == "20")
+                        switch config.columnType {
+                        case .yak where post.kind != 1222 && post.kind != 1244: return
+                        case .vine where post.kind != 34236: return
+                        case .picture where !isPicture: return
+                        case .following(let feed):
+                            guard !isPicture else { return }
+                            if feed.kinds.isEmpty && currentSeparateFeedKindsToRemove().contains(Int(post.kind)) { return }
+                        default: break
+                        }
+                    }
+                    self.putOnScreen([post], config: config, revealAtTop: self.isVisible)
+                    return
                 }
 
                 let currentIdsOnScreen = self.currentIdsOnScreen
@@ -2478,12 +2501,13 @@ class NXColumnViewModel: ObservableObject {
         guard let config else { return }
         guard let feedId = config.feed?.id?.uuidString else { return }
 
-        let onScreenIds: [String] = config.continue ? self.currentNRPostsOnScreen.map { $0.id } : []
-        let parentIds: Set<String> = config.continue ? Set(currentNRPostsOnScreen.flatMap { $0.parentPosts.map {  $0.id } }) : []
+        let savedPosts = config.continue ? currentNRPostsOnScreen.filter { $0.pendingProofPostID == nil } : []
+        let onScreenIds = savedPosts.map(\.id)
+        let parentIds = Set(savedPosts.flatMap { $0.parentPosts.map(\.id) })
         var scrollToId: String? = nil
         
         if config.continue {
-            for post in self.currentNRPostsOnScreen {
+            for post in savedPosts {
                 if vmInner.unreadIds[post.id] == nil {
                     scrollToId = post.id
                     break
@@ -4848,14 +4872,15 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public func prefetch(_ post: NRPost) {
         guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
-        guard !post.ownPostAttributes.isGoingToSend else { return } // don't prefetch unsent
+        guard post.pendingProofPostID == nil, !post.ownPostAttributes.isGoingToSend else { return } // don't prefetch unsent
         
         if case .posts(let nrPosts) = viewState {
             guard let index = nrPosts.firstIndex(of: post) else { return }
             let before = max(index - 2, 0)
             let after = min(index + 2, nrPosts.count - 1)
 
-            let rangeOfPostsIds = Array(nrPosts[before...after]).compactMap { post in
+            let rangeOfPostsIds: [String] = Array(nrPosts[before...after]).compactMap { post in
+                guard post.pendingProofPostID == nil else { return nil }
                 if (post.kind == 6 || post.kind == 16) {
                     return post.firstQuoteId
                 }
@@ -5355,6 +5380,13 @@ extension NXColumnViewModel {
     @MainActor
     public func putOnScreen(_ addedPosts: [NRPost], config: NXColumnConfig, insertAtEnd: Bool = false, revealAtTop: Bool = false, completion: (() -> Void)? = nil) {
 
+        // A deferred insert can run after Undo removed the temporary post.
+        if addedPosts.count == 1, let pendingID = addedPosts.first?.pendingProofPostID,
+           !PostProofOfWorkOutbox.shared.posts.contains(where: { $0.id == pendingID }) {
+            completion?()
+            return
+        }
+
         if isApplyingReadRemoval {
             let generation = feedSessionGeneration
             postsWaitingForReadRemoval.append { [weak self] in
@@ -5460,7 +5492,7 @@ extension NXColumnViewModel {
                 
                 // Update unread count. Held posts were counted when they arrived.
                 vmInner.updateUnreadIds { unreadIds in
-                    for post in postsToPrepend {
+                    for post in postsToPrepend where post.pendingProofPostID == nil {
                         if unreadIds[post.id] == nil {
                             unreadIds[post.id] = 1 + post.parentPosts.count
                         }
@@ -5475,7 +5507,9 @@ extension NXColumnViewModel {
                     vmInner.cancelPendingFeedSettle?()
                     vmInner.holdUnreadAboveReadingPost = false
                     vmInner.readingPostID = nil
-                    vmInner.unreadIds = [:]
+                    if onlyNewAddedPosts.first?.pendingProofPostID == nil {
+                        vmInner.unreadIds = [:]
+                    }
                     vmInner.isAtTop = true
                     vmInner.updateIsAtTopSubject.send()
                     withTransaction(Transaction(animation: nil)) {

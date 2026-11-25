@@ -67,7 +67,10 @@ struct OwnPostFooter: View {
     }
     
     var body: some View {
-        if (own.isGoingToSend) {
+        if let id = nrPost.pendingProofPostID {
+            PendingProofPostActions(id: id)
+        }
+        else if (own.isGoingToSend) {
             HStack {
                 if own.flags == "nsecbunker_unsigned" {
                     Text(showRetrySigning ? "**Signing failed**" : "**Signing post...**")

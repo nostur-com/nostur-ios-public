@@ -133,6 +133,8 @@ extension Notification.Name {
     static var newSingleRelayPostSaved: Notification.Name {
         return Notification.Name("newSingleRelayPostSaved")
     }
+
+    static let pendingProofPost = Notification.Name("pendingProofPost")
     
     static var publishingEvent: Notification.Name {
         return Notification.Name("publishingEvent")

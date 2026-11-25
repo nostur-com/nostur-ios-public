@@ -24,6 +24,7 @@ struct PostDetailsMenuSheet: View {
     @State private var pubkeysInPost: Set<String> = []
     
     @State private var rawSource: String? = nil
+    @State private var proofOfWorkDifficulty: Int?
     
     @ObservedObject private var footerAttributes: FooterAttributes
     
@@ -49,6 +50,19 @@ struct PostDetailsMenuSheet: View {
             }
             .listRowBackground(theme.background)
             
+            if let difficulty = proofOfWorkDifficulty {
+                Section {
+                    HStack {
+                        Text("Proof of Work")
+                        Spacer()
+                        Text("\(difficulty) bits", comment: "Measured NIP-13 proof-of-work difficulty in bits")
+                            .foregroundStyle(.secondary)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+                .listRowBackground(theme.background)
+            }
+
             Section {
                 Button(action: {
                     if let rawSource {
@@ -183,9 +197,11 @@ struct PostDetailsMenuSheet: View {
     }
     
     private func loadRawSource() async {
-        rawSource = await withBgContext { _ in
-            return nrPost.event?.toNEvent().eventJson()
+        let details: (String?, Int?) = await withBgContext { _ in
+            guard let event = nrPost.event?.toNEvent() else { return (nil, nil) }
+            return (event.eventJson(), PostProofOfWork.difficulty(of: event))
         }
+        (rawSource, proofOfWorkDifficulty) = details
     }
     
     private func rebroadcast() {
