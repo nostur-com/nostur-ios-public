@@ -113,6 +113,10 @@ struct YearReviewActivity: Equatable, Sendable {
     var received = 0
     var startedAt: Date = .now
 
+    var isReceivingMonth: Bool {
+        YearReviewCollection.isPrimary(work.category) && received > 0 && (step == .fetching || step == .saving)
+    }
+
     var monthName: String {
         var style = Date.FormatStyle.dateTime.month(.wide).year()
         style.timeZone = TimeZone(identifier: timeZoneIdentifier) ?? .current
@@ -145,7 +149,7 @@ struct YearReviewMonthProgress: Identifiable, Equatable, Sendable {
         var failed = 0
         var failedRelays: [String] = []
         var active = false
-        var finished: Bool { pending == 0 && failed == 0 }
+        var finished: Bool { pending == 0 && failed == 0 && !active }
         var fraction: Double { Double(completed) / Double(max(1, completed + pending + failed)) }
     }
     let month: Int
@@ -156,6 +160,8 @@ struct YearReviewMonthProgress: Identifiable, Equatable, Sendable {
     var own: Pass
     var others: Pass
     var failures: [YearReviewSourceFailure] = []
+    var interactionPass: Bool { !own.active && (others.active || own.pending == 0) }
+    var currentPass: Pass { interactionPass ? others : own }
     var id: Int { month }
 }
 
@@ -481,7 +487,7 @@ enum YearReviewLocalSeed {
                       context: NSManagedObjectContext) async throws -> Batch {
         try await context.perform {
             let request = Event.fetchRequest()
-            request.predicate = NSPredicate(format: "kind IN %@ AND created_at >= %lld AND created_at < %lld AND sig != nil AND (kind != 1068 OR flags == nil OR flags != %@) AND (pubkey == %@ OR tagsSerialized CONTAINS %@ OR tagsSerialized CONTAINS %@ OR (kind == 9735 AND fromPubkey == %@))",
+            request.predicate = NSPredicate(format: "kind IN %@ AND created_at >= %lld AND created_at < %lld AND sig != nil AND otherId == nil AND groupId == nil AND (kind != 1068 OR flags == nil OR flags != %@) AND (pubkey == %@ OR tagsSerialized CONTAINS %@ OR tagsSerialized CONTAINS %@ OR (kind == 9735 AND fromPubkey == %@))",
                                             Array(YearReviewKinds.archived), period.start, period.end, "awaiting_send", owner, serializedP(owner), "[\"P\",\"" + owner + "\"", owner)
             request.sortDescriptors = [NSSortDescriptor(key: "id", ascending: true)]
             request.fetchLimit = 200
@@ -498,7 +504,7 @@ enum YearReviewLocalSeed {
         guard !ids.isEmpty else { return Batch(events: [], deletedIds: [], fetchedCount: 0) }
         return try await context.perform {
             let request = Event.fetchRequest()
-            request.predicate = NSPredicate(format: "id IN %@ AND sig != nil AND (kind != 1068 OR flags == nil OR flags != %@)", ids, "awaiting_send")
+            request.predicate = NSPredicate(format: "id IN %@ AND sig != nil AND otherId == nil AND groupId == nil AND (kind != 1068 OR flags == nil OR flags != %@)", ids, "awaiting_send")
             request.fetchLimit = 200
             let fetched = try context.fetch(request)
             let values = Batch(events: fetched.filter { $0.deletedById == nil }.map(snapshot),

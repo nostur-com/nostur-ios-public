@@ -347,6 +347,9 @@
     "-%@" : {
       "shouldTranslate" : false
     },
+    "–" : {
+
+    },
     "—" : {
 
     },
@@ -389,6 +392,9 @@
       },
       "shouldTranslate" : false
     },
+    ". " : {
+
+    },
     ". %lld items received, including duplicates" : {
       "localizations" : {
         "es" : {
@@ -407,6 +413,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : ". %lld items ontvangen, inclusief duplicaten"
+          }
+        }
+      }
+    },
+    ". Unique saved items: %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ". Elementos guardados únicos: %lld"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ". Item tersimpan unik: %lld"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ". Unieke bewaarde items: %lld"
           }
         }
       }
@@ -3371,6 +3399,28 @@
         }
       }
     },
+    "%lld saved" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld guardados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld tersimpan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld bewaard"
+          }
+        }
+      }
+    },
     "%lld viewers" : {
       "localizations" : {
         "es" : {
@@ -5123,6 +5173,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Over openbare stemmen"
+          }
+        }
+      }
+    },
+    "About relay-restricted content" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca del contenido restringido a relés"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentang konten terbatas pada relay"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over relaybeperkte inhoud"
           }
         }
       }
@@ -11971,7 +12043,30 @@
         }
       }
     },
+    "Collecting your posts, month by month." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilando tus publicaciones, mes a mes."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengumpulkan postingan Anda, bulan demi bulan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je berichten worden maand voor maand verzameld."
+          }
+        }
+      }
+    },
     "Collecting your public posts, month by month." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -15598,7 +15693,30 @@
         }
       }
     },
+    "Delete this account's collected history?" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar el historial recopilado de esta cuenta?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus riwayat yang dikumpulkan untuk akun ini?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De verzamelde geschiedenis van dit account verwijderen?"
+          }
+        }
+      }
+    },
     "Delete this account's collected public history?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -16998,6 +17116,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gebruik voor elk antwoord een andere tekst."
+          }
+        }
+      }
+    },
+    "Each month shows unique saved items. While receiving data, its title shows the received count, including repeats." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada mes muestra los elementos guardados sin duplicados. Mientras recibe datos, el título muestra la cantidad recibida, incluidos los repetidos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setiap bulan menampilkan item tersimpan yang unik. Saat menerima data, judulnya menampilkan jumlah yang diterima, termasuk duplikat."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elke maand toont unieke bewaarde items. Tijdens het ontvangen toont de titel het ontvangen aantal, inclusief dubbelen."
           }
         }
       }
@@ -22176,6 +22316,28 @@
         }
       }
     },
+    "Include relay-restricted content" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluir contenido restringido a relés"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sertakan konten terbatas pada relay"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relaybeperkte inhoud meenemen"
+          }
+        }
+      }
+    },
     "Included hashtags" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -22214,6 +22376,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mencakup orang di luar Web of Trust Anda"
+          }
+        }
+      }
+    },
+    "Includes posts shared only with specific relays, plus replies, reactions and references to them." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluye publicaciones compartidas solo con determinados relés, además de sus respuestas, reacciones y referencias."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencakup postingan yang hanya dibagikan ke relay tertentu, beserta balasan, reaksi, dan referensinya."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevat berichten die alleen met bepaalde relays worden gedeeld, plus reacties en verwijzingen naar die berichten."
           }
         }
       }
@@ -33044,6 +33228,28 @@
         }
       }
     },
+    "Private messages are always excluded. Relay-restricted posts and interactions are included only if you enable them in Year settings." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los mensajes privados siempre se excluyen. Las publicaciones e interacciones restringidas a relés solo se incluyen si las activas en los ajustes del año."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pesan pribadi selalu dikecualikan. Postingan dan interaksi terbatas pada relay hanya disertakan jika diaktifkan di pengaturan tahun."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privéberichten worden altijd uitgesloten. Relaybeperkte berichten en interacties worden alleen meegenomen als je dit inschakelt in de jaarinstellingen."
+          }
+        }
+      }
+    },
     "Private note" : {
       "comment" : "Label for private note edit field",
       "localizations" : {
@@ -33475,6 +33681,7 @@
       }
     },
     "Public history archive" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -36150,6 +36357,28 @@
         }
       }
     },
+    "Relay-restricted content" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenido restringido a relés"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konten terbatas pada relay"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relaybeperkte inhoud"
+          }
+        }
+      }
+    },
     "Relays" : {
       "comment" : "Navigation title for relays screen\nRelay settings heading",
       "localizations" : {
@@ -37277,6 +37506,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Melden maken voor %@"
+          }
+        }
+      }
+    },
+    "Report content" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenido del informe"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konten laporan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inhoud van het rapport"
           }
         }
       }
@@ -38800,6 +39051,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opgeslagen geschiedenis blijft bewaard"
+          }
+        }
+      }
+    },
+    "Saved items" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elementos guardados"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Item tersimpan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewaarde items"
           }
         }
       }
@@ -42707,7 +42980,30 @@
         }
       }
     },
+    "Starting with history already saved on this device." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comenzamos con el historial ya guardado en este dispositivo."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memulai dari riwayat yang sudah tersimpan di perangkat ini."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We beginnen met de geschiedenis die al op dit apparaat staat."
+          }
+        }
+      }
+    },
     "Starting with public history already saved on this device." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -43723,6 +44019,28 @@
         }
       }
     },
+    "The archive keeps this history either way. Changing the switch rebuilds your report from saved data." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo conserva este historial en ambos casos. Al cambiar la opción, el informe se vuelve a crear con los datos guardados."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arsip tetap menyimpan riwayat ini. Mengubah opsi ini akan membuat ulang laporan dari data tersimpan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het archief bewaart deze geschiedenis in beide gevallen. Als je de schakelaar wijzigt, wordt je rapport opnieuw opgebouwd uit bewaarde gegevens."
+          }
+        }
+      }
+    },
     "The article feed shows articles from people you follow in the selected time frame" : {
       "localizations" : {
         "es" : {
@@ -43771,6 +44089,7 @@
 
     },
     "The calendar counts everything relays send, including repeats. Repeat copies don’t add to your report totals." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -44706,6 +45025,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Blokir ini dapat dilihat semua orang."
+          }
+        }
+      }
+    },
+    "These can appear in your report and share image. Private messages are always excluded." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pueden aparecer en tu informe y en la imagen para compartir. Los mensajes privados siempre se excluyen."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konten ini dapat muncul dalam laporan dan gambar yang dibagikan. Pesan pribadi selalu dikecualikan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze kunnen in je rapport en deelafbeelding verschijnen. Privéberichten worden altijd uitgesloten."
           }
         }
       }
@@ -51573,6 +51914,7 @@
       }
     },
     "Your report uses public posts and interactions. Private messages aren’t included." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {

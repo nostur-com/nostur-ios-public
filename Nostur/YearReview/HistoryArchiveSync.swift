@@ -184,7 +184,7 @@ actor HistoryArchiveSyncEngine {
                     let batch = try JSONDecoder().decode(HistoryArchiveBatch.self, from: data)
                     guard batch.version == 1, batch.owner == owner, batch.generation == value.generation,
                           batch.events.count <= 200, batch.deletions.count <= 200,
-                          batch.events.allSatisfy({ Self.publicEvent($0) && $0.verified() }),
+                          batch.events.allSatisfy({ Self.historyEvent($0) && $0.verified() }),
                           batch.deletions.allSatisfy({ YearReviewEvent.isHex($0, length: 64) }) else {
                         throw YearReviewError.database("invalid cloud batch")
                     }
@@ -202,7 +202,7 @@ actor HistoryArchiveSyncEngine {
             if page.events.isEmpty { break }
             let groups = Dictionary(grouping: page.events, by: Self.month)
             for (month, allEvents) in groups {
-                let events = allEvents.filter(Self.publicEvent)
+                let events = allEvents.filter(Self.historyEvent)
                 if events.isEmpty { continue }
                 let folder = generation.appendingPathComponent(month, isDirectory: true)
                 try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -263,8 +263,8 @@ actor HistoryArchiveSyncEngine {
         }
     }
 
-    private static func publicEvent(_ event: YearReviewEvent) -> Bool {
-        YearReviewKinds.archived.contains(event.kind) && !(event.kind == 7 && event.tagValues("k").contains(where: { ["4", "14", "15"].contains($0) }))
+    private static func historyEvent(_ event: YearReviewEvent) -> Bool {
+        event.isHistoryEvent
     }
 
     private static func month(_ event: YearReviewEvent) -> String {

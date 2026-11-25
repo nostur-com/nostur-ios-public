@@ -16,6 +16,19 @@ struct YearReviewEvent: Codable, Equatable, Sendable, Identifiable {
         case createdAt = "created_at"
     }
 
+    var isRestricted: Bool { tags.contains { $0.first == "-" } }
+
+    var isHistoryEvent: Bool {
+        YearReviewKinds.archived.contains(kind)
+            && !(kind == 7 && tagValues("k").contains { ["4", "14", "15"].contains($0) })
+    }
+
+    var isPublicHistoryEvent: Bool { isHistoryEvent && !isRestricted }
+
+    func isEligibleForReport(includeRestricted: Bool) -> Bool {
+        isHistoryEvent && (includeRestricted || !isRestricted)
+    }
+
     var parentId: String? {
         guard YearReviewKinds.replies.contains(kind) else { return nil }
         if kind == 1111 || kind == 1244 { return tagValues("a").first ?? tagValues("e").first }
@@ -118,14 +131,6 @@ struct YearReviewPeriod: Codable, Equatable, Sendable {
         start = Int64(limitedStart.timeIntervalSince1970)
         end = max(start, Int64(min(now, limitedEnd).timeIntervalSince1970))
         isYearToDate = now < endDate || limitedEnd < endDate
-    }
-
-    static func testMonthStart(year: Int, now: Date = .now, timeZone: TimeZone = .current, choice: Int) -> Int {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = timeZone
-        let currentYear = calendar.component(.year, from: now)
-        let lastMonth = year < currentYear ? 12 : year == currentYear ? calendar.component(.month, from: now) : 1
-        return 1 + max(0, choice) % max(1, lastMonth - 1)
     }
 
     func contains(_ timestamp: Int64) -> Bool {
@@ -301,25 +306,32 @@ enum YearReviewAnalyzer {
 
     static func analyze(events: [YearReviewEvent], owner: String, period: YearReviewPeriod,
                         trusted: Set<String>, blocked: Set<String>, locallyDeleted: Set<String> = [],
-                        zapperKeys: [String: Set<String>] = [:]) -> YearReviewReport {
+                        zapperKeys: [String: Set<String>] = [:], includeRestricted: Bool = false) -> YearReviewReport {
         let unique = Dictionary(events.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return try! analyze(scan: { visit in unique.values.forEach(visit) }, owner: owner, period: period,
-                            trusted: trusted, blocked: blocked, locallyDeleted: locallyDeleted, zapperKeys: zapperKeys)
+                            trusted: trusted, blocked: blocked, locallyDeleted: locallyDeleted, zapperKeys: zapperKeys,
+                            includeRestricted: includeRestricted)
     }
 
     /// Two streaming passes retain compact content references, never full archive JSON.
     static func analyze(scan: (_ visit: (YearReviewEvent) -> Void) throws -> Void,
                         owner: String, period: YearReviewPeriod, trusted: Set<String>, blocked: Set<String>,
-                        locallyDeleted: Set<String>, zapperKeys: [String: Set<String>],
+                        locallyDeleted: Set<String>, zapperKeys: [String: Set<String>], includeRestricted: Bool = false,
                         verifiedZap: ((YearReviewEvent) -> YearReviewZap?)? = nil) throws -> YearReviewReport {
         var index: [String: ContentIndex] = [:]
         var polls: [String: NostrPoll] = [:]
         var latest: [String: String] = [:]
         var versions: [String: Set<String>] = [:]
         var deletions: [(String, [String], Int64)] = []
+        var restrictedContent = Set<String>()
         try scan { event in
             if event.kind == 5 { deletions.append((event.pubkey, event.tagValues("e") + event.tagValues("a"), event.createdAt)); return }
-            guard YearReviewKinds.content.contains(event.kind), event.createdAt < period.end else { return }
+            if !includeRestricted, event.isRestricted, YearReviewKinds.content.contains(event.kind) {
+                restrictedContent.insert(event.id)
+                if let coordinate = event.coordinate { restrictedContent.insert(coordinate) }
+            }
+            guard event.isEligibleForReport(includeRestricted: includeRestricted), YearReviewKinds.content.contains(event.kind),
+                  event.createdAt < period.end else { return }
             if event.kind == 1068 {
                 let poll = NostrPoll(id: event.id, createdAt: Int(event.createdAt), tags: event.tags)
                 if poll.isSupported { polls[event.id] = poll }
@@ -394,7 +406,11 @@ enum YearReviewAnalyzer {
         var pollVotes: [String: [String: PollVote]] = [:]
         let pollCutoff = Int(min(period.end - 1, Int64(Date.now.timeIntervalSince1970)))
         try scan { event in
-            guard !deleted.contains(event.id), deletionAuthors[event.id]?.contains(event.pubkey) != true else { return }
+            guard event.isEligibleForReport(includeRestricted: includeRestricted),
+                  !deleted.contains(event.id), deletionAuthors[event.id]?.contains(event.pubkey) != true else { return }
+            if YearReviewKinds.support.contains(event.kind),
+               let target = event.tagValues("e").last ?? event.tagValues("a").last,
+               restrictedContent.contains(target) { return }
             if event.kind == 1018 {
                 guard !blocked.contains(event.pubkey), let target = event.tagValues("e").first,
                       let poll = polls[target], !deleted.contains(target),
@@ -485,6 +501,7 @@ enum YearReviewAnalyzer {
                     pending.append(contentsOf: [ancestor.parent, ancestor.root].compactMap { $0 })
                 }
                 if let reference = event.parentId {
+                    guard !restrictedContent.contains(reference) else { return }
                     guard let parentId = canonical(reference), let parent = index[parentId] else { unresolved += 1; return }
                     if parent.pubkey != event.pubkey && allowed.contains(parent.pubkey) {
                         if event.pubkey == owner { people[parent.pubkey, default: YearReviewPerson(pubkey: parent.pubkey)].sent += 1 }

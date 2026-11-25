@@ -82,7 +82,7 @@ struct YearReviewReportCoverage: Codable, Equatable, Sendable {
 
 struct YearReviewSavedReport: Codable, Sendable {
     // Increment when the analysis or saved preview format changes.
-    static let currentVersion = 1
+    static let currentVersion = 2 // Rebuild reports made before restricted-post filtering.
     let version: Int
     let owner: String
     let revision: YearReviewReportRevision
@@ -96,6 +96,7 @@ struct YearReviewSavedReport: Codable, Sendable {
     let trusted: Set<String>
     let blocked: Set<String>
     let zapperKeys: [String: Set<String>]
+    var includeRestrictedContent: Bool? = nil
 }
 
 struct YearReviewDetailPage: Sendable {
@@ -160,6 +161,9 @@ actor YearReviewArchive {
         // Migrate existing archives once, including history captured before sync existed.
         try execute(database, "INSERT OR IGNORE INTO sync_outbox(event_id) SELECT id FROM events WHERE NOT EXISTS (SELECT 1 FROM metadata WHERE key = 'sync-outbox-v1')")
         try execute(database, "INSERT OR IGNORE INTO metadata(key, json) VALUES ('sync-outbox-v1', 'true')")
+        try execute(database, "CREATE TABLE IF NOT EXISTS account_refs (event_id TEXT NOT NULL, target TEXT NOT NULL, PRIMARY KEY(event_id, target))")
+        try execute(database, "CREATE INDEX IF NOT EXISTS account_refs_target ON account_refs(target)")
+        try execute(database, "CREATE TABLE IF NOT EXISTS account_posts (target TEXT NOT NULL, event_id TEXT NOT NULL, PRIMARY KEY(target, event_id))")
         try execute(database, "CREATE TABLE IF NOT EXISTS thread_refs (event_id TEXT NOT NULL, target TEXT NOT NULL, PRIMARY KEY(event_id, target))")
         try execute(database, "CREATE INDEX IF NOT EXISTS thread_refs_target ON thread_refs(target)")
         try execute(database, "CREATE TABLE IF NOT EXISTS detail_refs (event_id TEXT NOT NULL, target TEXT NOT NULL, PRIMARY KEY(event_id, target))")
@@ -194,11 +198,12 @@ actor YearReviewArchive {
 
     func savedReport(key: String, period: YearReviewPeriod, trusted: Set<String>, blocked: Set<String>,
                      zapperKeys: [String: Set<String>] = [:],
-                     restoringSavedSelection: Bool = false) throws -> (snapshot: YearReviewSavedReport, isCurrent: Bool)? {
+                     restoringSavedSelection: Bool = false, includeRestricted: Bool = false) throws -> (snapshot: YearReviewSavedReport, isCurrent: Bool)? {
         // A cache from an older app version can always be rebuilt from the archive.
         guard let saved = try? load(YearReviewSavedReport.self, key: key),
               saved.version == YearReviewSavedReport.currentVersion,
               saved.owner == owner,
+              (saved.includeRestrictedContent ?? false) == includeRestricted,
               saved.trusted == trusted, saved.blocked == blocked else { return nil }
         let savedPeriod = saved.report.period
         let sameSelection = savedPeriod.year == period.year
@@ -253,6 +258,49 @@ actor YearReviewArchive {
         }
     }
 
+    /// Count unique account-related events, including account/post references. Calendar boundaries
+    /// use the report's time zone, independently of its selected fetch months.
+    /// This describes saved data rather than the report's changing cutoff time.
+    func monthlyArchivedCounts(year: Int, timeZone: TimeZone) async throws -> [Int: Int] {
+        try await ensureAccountIndex()
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        guard let start = calendar.date(from: DateComponents(year: year, month: 1, day: 1)),
+              let end = calendar.date(byAdding: .year, value: 1, to: start) else { return [:] }
+        let monthCases = (1...11).compactMap { month -> String? in
+            guard let boundary = calendar.date(from: DateComponents(year: year, month: month + 1, day: 1)) else { return nil }
+            return "WHEN e.created_at < \(Int64(boundary.timeIntervalSince1970)) THEN \(month)"
+        }.joined(separator: " ")
+        return try withDatabase { database in
+            let query = try statement(database, """
+                WITH related(id) AS (
+                    SELECT id FROM events WHERE pubkey = ?
+                    UNION SELECT event_id FROM account_refs WHERE target = ?
+                    UNION SELECT r.event_id FROM account_refs r
+                        JOIN account_posts p ON p.target = r.target
+                        JOIN events own ON own.id = p.event_id WHERE own.pubkey = ?
+                )
+                SELECT CASE \(monthCases) ELSE 12 END AS month, COUNT(*)
+                FROM events e JOIN related r ON r.id = e.id
+                WHERE e.created_at >= ? AND e.created_at < ? GROUP BY month
+                """)
+            defer { sqlite3_finalize(query) }
+            bind(owner, at: 1, to: query)
+            bind("p:" + owner, at: 2, to: query)
+            bind(owner, at: 3, to: query)
+            sqlite3_bind_int64(query, 4, Int64(start.timeIntervalSince1970))
+            sqlite3_bind_int64(query, 5, Int64(end.timeIntervalSince1970))
+            var counts = Dictionary(uniqueKeysWithValues: (1...12).map { ($0, 0) })
+            var status = sqlite3_step(query)
+            while status == SQLITE_ROW {
+                counts[Int(sqlite3_column_int(query, 0))] = Int(sqlite3_column_int64(query, 1))
+                status = sqlite3_step(query)
+            }
+            guard status == SQLITE_DONE else { throw YearReviewError.database("monthly counts") }
+            return counts
+        }
+    }
+
     func ingest(_ events: [YearReviewEvent], source: String) throws -> YearReviewImportResult {
         try withDatabase { database in
             if statistics == nil {
@@ -272,6 +320,7 @@ actor YearReviewArchive {
                 var result = YearReviewImportResult()
                 for event in events {
                     try Task.checkCancellation()
+                    guard event.isHistoryEvent else { result.invalid += 1; continue }
                     guard let json = try? JSONEncoder().encode(event), json.count <= 512_000,
                           let string = String(data: json, encoding: .utf8) else {
                         result.invalid += 1
@@ -311,6 +360,7 @@ actor YearReviewArchive {
                         else { result.addedFromOthers += 1 }
                     }
                     try indexThread(event, database: database)
+                    try indexAccount(event, database: database)
                     sqlite3_reset(provenance)
                     bind(event.id, at: 1, to: provenance)
                     bind(source, at: 2, to: provenance)
@@ -324,6 +374,66 @@ actor YearReviewArchive {
                 throw error
             }
         }
+    }
+
+    private func indexAccount(_ event: YearReviewEvent, database: OpaquePointer) throws {
+        var references = Set<String>()
+        for tag in event.tags where tag.count >= 2 {
+            switch tag[0] {
+            case "p", "P": references.insert("p:" + tag[1])
+            case "e", "E", "q": references.insert((YearReviewEvent.isCoordinate(tag[1]) ? "a:" : "e:") + tag[1])
+            case "a", "A": references.insert("a:" + tag[1])
+            default: break
+            }
+        }
+        var targets = Set<String>()
+        if event.pubkey == owner, YearReviewKinds.content.contains(event.kind) {
+            targets.insert("e:" + event.id)
+            if let coordinate = event.coordinate { targets.insert("a:" + coordinate) }
+        }
+        for (table, values) in [("account_refs", references), ("account_posts", targets)] where !values.isEmpty {
+            let insert = try statement(database, "INSERT OR IGNORE INTO \(table)(event_id, target) VALUES (?, ?)")
+            defer { sqlite3_finalize(insert) }
+            for value in values {
+                sqlite3_reset(insert)
+                bind(event.id, at: 1, to: insert)
+                bind(value, at: 2, to: insert)
+                guard sqlite3_step(insert) == SQLITE_DONE else { throw YearReviewError.database("account index") }
+            }
+        }
+    }
+
+    /// Existing archives may contain unrelated feed/cache events. Index their
+    /// relationships once in bounded pages without deleting useful context.
+    private func ensureAccountIndex() async throws {
+        if try load(Bool.self, key: "account-index-complete-v1") == true { return }
+        var cursor = try load(String.self, key: "account-index-cursor-v1") ?? ""
+        while true {
+            try Task.checkCancellation()
+            let last: String? = try withDatabase { database in
+                let query = try statement(database, "SELECT json FROM events WHERE id > ? ORDER BY id LIMIT 200")
+                defer { sqlite3_finalize(query) }
+                bind(cursor, at: 1, to: query)
+                try execute(database, "BEGIN IMMEDIATE")
+                defer { try? execute(database, "ROLLBACK") }
+                var last: String?
+                var status = sqlite3_step(query)
+                while status == SQLITE_ROW {
+                    let event = try JSONDecoder().decode(YearReviewEvent.self, from: Data(text(query, 0).utf8))
+                    try indexAccount(event, database: database)
+                    last = event.id
+                    status = sqlite3_step(query)
+                }
+                guard status == SQLITE_DONE else { throw YearReviewError.database("account index migration") }
+                try execute(database, "COMMIT")
+                return last
+            }
+            guard let last else { break }
+            cursor = last
+            try save(cursor, key: "account-index-cursor-v1")
+            await Task.yield()
+        }
+        try save(true, key: "account-index-complete-v1")
     }
 
     private func indexThread(_ event: YearReviewEvent, database: OpaquePointer) throws {
@@ -382,7 +492,7 @@ actor YearReviewArchive {
 
     /// Only the opened highlight's descendants and directly related interactions.
     /// Quotes are support, not thread edges; recursive UNION also terminates cycles.
-    func detailPage(to id: String, coordinate: String? = nil, after cursor: String = "") async throws -> YearReviewDetailPage {
+    func detailPage(to id: String, coordinate: String? = nil, after cursor: String = "", includeRestricted: Bool = false) async throws -> YearReviewDetailPage {
         try await ensureThreadIndex()
         let deleted = try deletionIds()
         return try withDatabase { database in
@@ -400,7 +510,7 @@ actor YearReviewArchive {
             while status == SQLITE_ROW {
                 let event = try JSONDecoder().decode(YearReviewEvent.self, from: Data(text(query, 0).utf8))
                 last = event.id
-                if !deleted.contains(event.id) {
+                if event.isEligibleForReport(includeRestricted: includeRestricted), !deleted.contains(event.id) {
                     events.append(event)
                     if sqlite3_column_int(query, 1) != 0 { replyIds.insert(event.id) }
                 }
@@ -465,7 +575,7 @@ actor YearReviewArchive {
     }
 
     /// All verified positive reaction events currently known for this exact post.
-    func reactionCount(to id: String, blocked: Set<String>) async throws -> Int {
+    func reactionCount(to id: String, blocked: Set<String>, includeRestricted: Bool = false) async throws -> Int {
         try await ensureThreadIndex()
         let deleted = try deletionIds()
         let coordinate = try event(id: id)?.coordinate
@@ -478,7 +588,7 @@ actor YearReviewArchive {
             var status = sqlite3_step(query)
             while status == SQLITE_ROW {
                 let event = try JSONDecoder().decode(YearReviewEvent.self, from: Data(text(query, 0).utf8))
-                if event.content != "-", (event.tagValues("e").last == id || event.tagValues("e").isEmpty && coordinate != nil && event.tagValues("a").last == coordinate),
+                if event.isEligibleForReport(includeRestricted: includeRestricted), event.content != "-", (event.tagValues("e").last == id || event.tagValues("e").isEmpty && coordinate != nil && event.tagValues("a").last == coordinate),
                    !blocked.contains(event.pubkey), !deleted.contains(event.id),
                    !event.tagValues("k").contains(where: { ["4", "14", "15"].contains($0) }) { count += 1 }
                 status = sqlite3_step(query)
@@ -548,13 +658,13 @@ actor YearReviewArchive {
     }
 
     func report(owner: String, period: YearReviewPeriod, trusted: Set<String>, blocked: Set<String>,
-                zapperKeys: [String: Set<String>] = [:]) throws -> YearReviewReport {
+                zapperKeys: [String: Set<String>] = [:], includeRestricted: Bool = false) throws -> YearReviewReport {
         let deleted = try deletionIds()
         return try withDatabase { database in
             try execute(database, "BEGIN")
             do {
                 let report = try YearReviewAnalyzer.analyze(scan: { try scan(database: database, before: Int64.max, visit: $0) },
-                    owner: owner, period: period, trusted: trusted, blocked: blocked, locallyDeleted: deleted, zapperKeys: zapperKeys,
+                    owner: owner, period: period, trusted: trusted, blocked: blocked, locallyDeleted: deleted, zapperKeys: zapperKeys, includeRestricted: includeRestricted,
                     verifiedZap: { receipt in
                         // A derived cache failure must never change receipt eligibility.
                         do { return try self.verifiedZap(receipt, authorized: zapperKeys, database: database) }
@@ -588,7 +698,7 @@ actor YearReviewArchive {
         return validated
     }
 
-    func zapSigners(period: YearReviewPeriod, relevantTo owner: String? = nil, blocked: Set<String> = []) throws -> [String: Set<String>] {
+    func zapSigners(period: YearReviewPeriod, relevantTo owner: String? = nil, blocked: Set<String> = [], includeRestricted: Bool = false) throws -> [String: Set<String>] {
         let deleted = try deletionIds()
         return try withDatabase { database in
             let query = try statement(database, "SELECT e.json, z.json FROM events e LEFT JOIN verified_zaps z ON z.receipt_id = e.id AND z.version = ? WHERE e.kind = 9735 AND e.created_at >= ? AND e.created_at < ?")
@@ -604,7 +714,7 @@ actor YearReviewArchive {
                     continue
                 }
                 let event = try JSONDecoder().decode(YearReviewEvent.self, from: Data(text(query, 0).utf8))
-                if !period.contains(event.createdAt) || deleted.contains(event.id) { status = sqlite3_step(query); continue }
+                if !event.isEligibleForReport(includeRestricted: includeRestricted) || !period.contains(event.createdAt) || deleted.contains(event.id) { status = sqlite3_step(query); continue }
                 if let recipient = event.tagValues("p").first, YearReviewEvent.isHex(recipient, length: 64), !blocked.contains(recipient) {
                     if let owner {
                         // Preflight checks structure/signatures/invoice only. Supplying the
@@ -743,8 +853,13 @@ actor YearReviewArchive {
                 var status = sqlite3_step(request)
                 while status == SQLITE_ROW {
                     try Task.checkCancellation()
-                    if !deleted.contains(text(request, 1)) {
-                        try handle.write(contentsOf: Data((text(request, 0) + "\n").utf8))
+                    try autoreleasepool {
+                        guard !deleted.contains(text(request, 1)) else { return }
+                        let json = text(request, 0)
+                        let event = try JSONDecoder().decode(YearReviewEvent.self, from: Data(json.utf8))
+                        // This action is explicitly an export of public history.
+                        guard event.isPublicHistoryEvent else { return }
+                        try handle.write(contentsOf: Data((json + "\n").utf8))
                     }
                     status = sqlite3_step(request)
                 }

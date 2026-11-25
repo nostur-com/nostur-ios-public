@@ -1,6 +1,7 @@
 import Foundation
 
-/// All kinds remain public; gift wraps, DMs and decrypted rumors are excluded.
+/// History kinds retained in the private archive. Report policy decides whether
+/// relay-restricted events are included; gift wraps, DMs and rumors stay excluded.
 enum YearReviewKinds {
     static let content: Set<Int> = [1, 20, 21, 22, 1068, 1111, 1222, 1244, 9802, 30023, 34235, 34236]
     static let replies: Set<Int> = [1, 1111, 1244]

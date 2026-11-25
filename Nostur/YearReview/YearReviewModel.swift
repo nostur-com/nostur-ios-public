@@ -13,6 +13,7 @@ struct YearReviewPreferences: Codable, Equatable {
     let selectedRelays: Set<String>
     let relays: [YearReviewCollection.RelayDataSnapshot]
     var relayAuthOverrides: [String: Bool]? = nil
+    var includeRestrictedContent: Bool? = nil
 
     var selectedCards: Set<YearReviewCard> {
         if (cardSelectionVersion ?? 0) < 2 { return YearReviewCard.defaultSelection }
@@ -56,6 +57,7 @@ extension YearReviewPreferences {
         selectedRelays = try values.decode(Set<String>.self, forKey: .selectedRelays)
         relays = try values.decode([YearReviewCollection.RelayDataSnapshot].self, forKey: .relays)
         relayAuthOverrides = try values.decodeIfPresent([String: Bool].self, forKey: .relayAuthOverrides)
+        includeRestrictedContent = try values.decodeIfPresent(Bool.self, forKey: .includeRestrictedContent)
     }
 }
 
@@ -88,8 +90,8 @@ final class YearReviewModel {
         var detail: LocalizedStringResource {
             switch self {
             case .ready, .paused: "Your saved progress is ready to continue."
-            case .local: "Starting with public history already saved on this device."
-            case .posts: "Collecting your public posts, month by month."
+            case .local: "Starting with history already saved on this device."
+            case .posts: "Collecting your posts, month by month."
             case .interactions: "Collecting conversations, reactions, reposts and zaps."
             case .references: "Finding replies, reactions, reposts, quotes and zaps linked directly to your posts."
             case .parents: "Loading missing posts so replies can be matched to the right people."
@@ -121,13 +123,25 @@ final class YearReviewModel {
     var hiddenPeople: Set<String> = [] { didSet { savePreferences() } }
     var selectedShareFormat = YearReviewShareFormat.report { didSet { savePreferences() } }
     var relayAuthOverrides: [String: Bool] = [:]
+    var includeRestrictedContent = false {
+        didSet {
+            guard oldValue != includeRestrictedContent else { return }
+            savePreferences()
+            guard !restoringPreferences else { return }
+            detailTask?.cancel()
+            reactionRefresh?.cancel()
+            invalidatePreview()
+            loadSavedReportIfNeeded()
+        }
+    }
     @ObservationIgnored private var restoringPreferences = false
 
     private func savePreferences() {
         guard !owner.isEmpty, !restoringPreferences else { return }
         YearReviewPreferences(cards: enabledCards, hiddenPeople: hiddenPeople,
             shareFormat: selectedShareFormat, selectedRelays: selectedRelays,
-            relays: relays.map { .init(url: $0.url, auth: $0.auth) }, relayAuthOverrides: relayAuthOverrides).save(owner: owner)
+            relays: relays.map { .init(url: $0.url, auth: $0.auth) }, relayAuthOverrides: relayAuthOverrides,
+            includeRestrictedContent: includeRestrictedContent).save(owner: owner)
     }
     var postPreviews: [String: YearReviewPostPreview] = [:]
     var report: YearReviewReport?
@@ -141,6 +155,7 @@ final class YearReviewModel {
         return collection?.calendarActivity(active: activeActivities.map(\.work), scanningMonths: scanningMonths) ?? []
     }
     var lastResponse: (received: Int, added: Int)?
+    private(set) var newlySavedDuringDownload = 0
     var stage: Stage = .ready
     var zapStatus: LocalizedStringResource?
     var savedReportProgressLabel: LocalizedStringResource {
@@ -167,31 +182,8 @@ final class YearReviewModel {
     var ownerPicture: URL?
     var owner = ""
     var viewer = ""
-#if DEBUG
-    private var debugMonthChoice: Int = {
-        let key = "year-review-test-month-choice"
-        if let value = UserDefaults.standard.object(forKey: key) as? Int { return value }
-        let value = Int.random(in: 0..<1_000_000)
-        UserDefaults.standard.set(value, forKey: key)
-        return value
-    }()
-    var debugTwoMonths = UserDefaults.standard.bool(forKey: "year-review-two-months") {
-        didSet {
-            UserDefaults.standard.set(debugTwoMonths, forKey: "year-review-two-months")
-            if !isRunning { collection = nil; invalidatePreview() }
-        }
-    }
-#endif
-
     private func selectedPeriod(year: Int) -> YearReviewPeriod {
-#if DEBUG
-        let firstMonth = UserDefaults.standard.object(forKey: "year-review-test-month-start-\(year)") as? Int
-            ?? YearReviewPeriod.testMonthStart(year: year, choice: debugMonthChoice)
-        return YearReviewPeriod(year: year, monthLimit: debugTwoMonths ? 2 : nil,
-            monthStart: debugTwoMonths ? firstMonth : nil)
-#else
         YearReviewPeriod(year: year)
-#endif
     }
 
     var currentPeriod: YearReviewPeriod { collection?.period ?? report?.period ?? selectedPeriod(year: year) }
@@ -313,6 +305,7 @@ final class YearReviewModel {
         stage = .ready
         activities.removeAll()
         lastResponse = nil
+        newlySavedDuringDownload = 0
         await HistoryArchiveSync.shared.start()
         let selectedArchive = await YearReviewArchives.shared.archive(owner: selectedOwner)
         guard generation == token else { return }
@@ -365,6 +358,7 @@ final class YearReviewModel {
         selectedRelays = Set(relays.prefix(3).map(\.url)).union(receiveRelays)
         let preferences = YearReviewPreferences.load(owner: owner)
         relayAuthOverrides = preferences?.relayAuthOverrides ?? [:]
+        includeRestrictedContent = preferences?.includeRestrictedContent ?? false
         enabledCards = preferences?.selectedCards ?? YearReviewCard.defaultSelection
         hiddenPeople = preferences?.hiddenPeople ?? []
         selectedShareFormat = preferences?.shareFormat ?? .report
@@ -471,23 +465,17 @@ final class YearReviewModel {
         queuedMonth = nil
         activities.removeAll()
         lastResponse = nil
+        newlySavedDuringDownload = 0
         errorMessage = nil
         // Keep the previous report and its coverage together until the replacement is ready.
         exportURL = nil
         let token = generation
         let owner = owner
         let trust = trusted
+        let includeRestricted = includeRestrictedContent
         let previous = resume ? collection : nil
         if download && !resume {
             collection = nil
-#if DEBUG
-            if debugTwoMonths {
-                debugMonthChoice = Int.random(in: 0..<1_000_000)
-                UserDefaults.standard.set(debugMonthChoice, forKey: "year-review-test-month-choice")
-                UserDefaults.standard.set(YearReviewPeriod.testMonthStart(year: year, choice: debugMonthChoice),
-                    forKey: "year-review-test-month-start-\(year)")
-            }
-#endif
         }
         var period = (resume || !download ? collection?.period : nil) ?? selectedPeriod(year: year)
         let sources = selectedHistorySources
@@ -504,7 +492,7 @@ final class YearReviewModel {
                     let cached = try await archive.savedReport(key: "report-\(checkpointKey(period))",
                         period: period, trusted: trust, blocked: CloudBlocked.blockedPubkeys(),
                         zapperKeys: savedZapKeys,
-                        restoringSavedSelection: collection == nil)
+                        restoringSavedSelection: collection == nil, includeRestricted: includeRestricted)
                     try Task.checkCancellation()
                     guard generation == token else { return }
                     if let cached, previewRevision == revision,
@@ -612,7 +600,7 @@ final class YearReviewModel {
                 let blocked = CloudBlocked.blockedPubkeys()
                 let archiveRevision = try await archive.reportRevision()
                 let report = try await archive.report(owner: owner, period: period, trusted: reportTrust,
-                                                     blocked: blocked, zapperKeys: zapperKeys)
+                                                     blocked: blocked, zapperKeys: zapperKeys, includeRestricted: includeRestricted)
                 try Task.checkCancellation()
                 guard generation == token else { return }
                 guard previewRevision == revision else { stage = .paused; return }
@@ -632,7 +620,8 @@ final class YearReviewModel {
                 let saved = YearReviewSavedReport(version: YearReviewSavedReport.currentVersion,
                     owner: owner, revision: archiveRevision, report: report, previews: previews,
                     names: names, pictures: pictures, collection: reportCollection, counts: archivedCounts,
-                    lastFetchedDate: lastFetchedDate, trusted: reportTrust, blocked: blocked, zapperKeys: zapperKeys)
+                    lastFetchedDate: lastFetchedDate, trusted: reportTrust, blocked: blocked, zapperKeys: zapperKeys,
+                    includeRestrictedContent: includeRestricted)
                 // A derived cache failure must not discard a successfully prepared report.
                 try? await archive.save(saved, key: "report-\(checkpointKey(period))")
                 if download, generation == token, previewRevision == revision { resolveMissingProfiles(people: people) }
@@ -656,7 +645,7 @@ final class YearReviewModel {
         let keys = try await savedZapProviderKeys(archive: archive)
         let cached = try await archive.savedReport(key: "report-\(checkpointKey(period))",
             period: period, trusted: trusted, blocked: CloudBlocked.blockedPubkeys(),
-            zapperKeys: keys, restoringSavedSelection: true)
+            zapperKeys: keys, restoringSavedSelection: true, includeRestricted: includeRestrictedContent)
         guard !Task.isCancelled, generation == token, year == period.year, previewRevision == revision,
               let cached, cached.snapshot.blocked == CloudBlocked.blockedPubkeys() else { return }
         displaySavedReport(cached.snapshot)
@@ -720,7 +709,8 @@ final class YearReviewModel {
 
     private func resolveZapProviders(archive: YearReviewArchive, period: YearReviewPeriod,
                                      sources: [RelayData], context: NSManagedObjectContext) async throws -> [String: Set<String>] {
-        let signers = try await archive.zapSigners(period: period, relevantTo: owner, blocked: CloudBlocked.blockedPubkeys())
+        let signers = try await archive.zapSigners(period: period, relevantTo: owner, blocked: CloudBlocked.blockedPubkeys(),
+            includeRestricted: includeRestrictedContent)
         let recipients = Set(signers.keys)
         zapStatus = "Preparing zap totals…"
         defer { zapStatus = nil }
@@ -987,6 +977,7 @@ final class YearReviewModel {
                         let matching = page.events.filter { work.accepts($0, owner: batchOwner) }
                         let result = try await archive.ingest(matching, source: work.relay)
                         lastResponse = (received: page.events.count, added: result.added)
+                        if YearReviewCollection.isPrimary(work.category) { newlySavedDuringDownload += result.added }
                         recordArchived(result)
                         job.invalidEvents += result.invalid + page.events.count - matching.count
                         if let index = job.pending.firstIndex(of: work) { job.pending.remove(at: index) }
@@ -1156,7 +1147,8 @@ final class YearReviewModel {
         reactionRefresh = Task {
             do {
                 try await seedCachedPostReactions(ids: [post.id], archive: archive)
-                let count = try await archive.reactionCount(to: post.id, blocked: CloudBlocked.blockedPubkeys())
+                let count = try await archive.reactionCount(to: post.id, blocked: CloudBlocked.blockedPubkeys(),
+                    includeRestricted: includeRestrictedContent)
                 guard !Task.isCancelled, generation == token, report?.mostReacted?.id == post.id else { return }
                 report?.mostReacted?.reactions = count
             } catch is CancellationError { }
@@ -1173,7 +1165,8 @@ final class YearReviewModel {
             do {
                 for post in posts {
                     try Task.checkCancellation()
-                    try await YearReviewDetailHydrator.restore(post: post, archive: archive, blocked: blocked, context: bg())
+                    try await YearReviewDetailHydrator.restore(post: post, archive: archive, blocked: blocked, context: bg(),
+                        includeRestricted: includeRestrictedContent)
                 }
             } catch is CancellationError { }
             catch { if generation == token { errorMessage = error.localizedDescription } }
@@ -1184,7 +1177,8 @@ final class YearReviewModel {
     func loadArchivedDetails(for post: YearReviewPost, displayedPost: NRPost?) async throws {
         guard let archive else { return }
         let blocked = AppState.shared.bgAppState.blockedPubkeys
-        try await YearReviewDetailHydrator.restore(post: post, archive: archive, blocked: blocked, context: bg())
+        try await YearReviewDetailHydrator.restore(post: post, archive: archive, blocked: blocked, context: bg(),
+            includeRestricted: includeRestrictedContent)
         displayedPost?.loadGroupedReplies()
         refreshMostLovedCount()
     }

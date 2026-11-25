@@ -49,7 +49,7 @@ actor YearReviewArchives {
 
 }
 
-/// Original public relay payloads are copied before duplicate detection or import
+/// Original eligible relay payloads are copied before duplicate detection or import
 /// transforms. The socket callback never waits for decoding, signatures or disk.
 final class LiveHistoryRecorder: @unchecked Sendable {
     struct Entry: Sendable {
@@ -172,7 +172,7 @@ final class LiveHistoryRecorder: @unchecked Sendable {
             do { try await writer(batch) }
             catch {
                 // Do not let a failed archive write authorize database pruning.
-                L.maintenance.error("Public history archive write failed: \(error.localizedDescription)")
+                L.maintenance.error("History archive write failed: \(error.localizedDescription)")
                 retainFailed(batch)
                 _ = finish(error: error)
                 return
@@ -187,8 +187,7 @@ final class LiveHistoryRecorder: @unchecked Sendable {
               let fields = message[2] as? [String: Any],
               let json = try? JSONSerialization.data(withJSONObject: fields),
               let event = try? JSONDecoder().decode(YearReviewEvent.self, from: json),
-              YearReviewKinds.archived.contains(event.kind),
-              !(event.kind == 7 && event.tagValues("k").contains(where: { ["4", "14", "15"].contains($0) })) else { return nil }
+              event.isHistoryEvent else { return nil }
         return event
     }
 

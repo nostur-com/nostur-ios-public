@@ -16,6 +16,7 @@ struct YearReviewView: View {
     @State private var invalidRelay = false
     @State private var showDelete = false
     @State private var showInfo = false
+    @State private var showRestrictedInfo = false
     @State private var showProfilePicker = false
     @State private var shareDraft: YearReviewShareDraft?
     @State private var showHistory = false
@@ -41,14 +42,6 @@ struct YearReviewView: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Choose a profile for this report")
                     .accessibilityValue(model.ownerName)
-#if DEBUG
-                    if model.debugTwoMonths {
-                        Label {
-                            Text("Test report · \(Date(timeIntervalSince1970: TimeInterval(model.currentPeriod.start)), format: model.currentPeriod.monthFormat) – \(model.currentPeriod.cutoffDate, format: model.currentPeriod.monthFormat)")
-                        } icon: { Image(systemName: "hammer") }
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-#endif
                 }
                 YearReviewHistorySummary(model: model, openHistory: { showHistory = true })
                 if !model.isRunning, (model.report?.ownPostCount ?? 0) == 0, !hasShareableCard,
@@ -119,11 +112,6 @@ struct YearReviewView: View {
             model.loadSavedReportIfNeeded()
             YearReviewDiscovery.markOpened(owner: account.pubkey, year: model.year)
         }
-#if DEBUG
-        .onChange(of: model.debugTwoMonths) { _, _ in
-            Task { await model.selectYear() }
-        }
-#endif
         .onChange(of: model.year) { _, _ in
             if model.owner == account.pubkey { YearReviewDiscovery.markOpened(owner: account.pubkey, year: model.year) }
             Task { await model.selectYear() }
@@ -134,7 +122,7 @@ struct YearReviewView: View {
         .onReceive(ViewUpdates.shared.postDeleted.receive(on: DispatchQueue.main)) { deletion in
             model.recordDeletion(deletion.toDeleteId)
         }
-        .confirmationDialog("Delete this account's collected public history?", isPresented: $showDelete, titleVisibility: .visible) {
+        .confirmationDialog("Delete this account's collected history?", isPresented: $showDelete, titleVisibility: .visible) {
             Button("Delete collected history", role: .destructive) { model.deleteArchive() }
         } message: {
             Text("Your feed database and posts on relays will remain available.")
@@ -144,6 +132,10 @@ struct YearReviewView: View {
                 YearReviewAboutView(year: model.year, report: model.report, collection: model.reportCollection)
             }
             .presentationBackgroundCompat(theme.background)
+        }
+        .sheet(isPresented: $showRestrictedInfo) {
+            YearReviewRestrictedContentInfoView()
+                .environment(\.theme, theme)
         }
         .sheet(isPresented: $showProfilePicker) {
             NavigationStack {
@@ -216,14 +208,6 @@ struct YearReviewView: View {
                 }
                 .disabled(model.isRunning || model.isConfiguring)
             }
-#if DEBUG
-            Section("Testing") {
-                Toggle("Start with two random adjacent months", isOn: $model.debugTwoMonths)
-                    .disabled(model.isRunning)
-                Text("Starts with two months. Tap another month in the calendar to add it. Test progress is saved separately from full-year progress.")
-                    .font(.footnote).foregroundStyle(.secondary)
-            }
-#endif
 
             Section {
                 NavigationLink {
@@ -234,6 +218,19 @@ struct YearReviewView: View {
                 .disabled(model.isRunning)
             } header: {
                 Text("Gather your history")
+            }
+
+            Section {
+                HStack(spacing: 12) {
+                    Toggle("Include relay-restricted content", isOn: $model.includeRestrictedContent)
+                        .disabled(model.isRunning || model.isConfiguring || model.isDeleting)
+                    Button { showRestrictedInfo = true } label: {
+                        Label("About relay-restricted content", systemImage: "info.circle").labelStyle(.iconOnly)
+                    }
+                    .buttonStyle(.borderless)
+                }
+            } header: {
+                Text("Report content")
             }
 
             Section {
@@ -588,13 +585,27 @@ private struct YearReviewHistoryView: View {
     @State private var showHistoryInfo = false
     @State private var extraRelay = ""
     @State private var invalidRelay = false
+    @State private var monthlyCounts: [Int: Int]? = nil
+
+    private struct CountsRequest: Hashable {
+        let owner: String
+        let year: Int
+        let timeZone: String
+        let busy: Bool
+    }
 
     var body: some View {
+        let period = model.currentPeriod
+        let countsRequest = CountsRequest(owner: model.owner, year: period.year,
+            timeZone: period.timeZoneIdentifier,
+            busy: model.isConfiguring || model.isDeleting)
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    YearReviewMonthCalendarView(collection: model.collection, period: model.currentPeriod,
-                        active: model.calendarActivity, activities: model.activeActivities, onSelect: { selectedMonth = $0 })
+                    YearReviewMonthCalendarView(collection: model.collection, period: period,
+                        active: model.calendarActivity, activities: model.activeActivities,
+                        savedCounts: monthlyCounts,
+                        onSelect: { selectedMonth = $0 })
                     if model.isDownloading {
                         HStack(spacing: 12) {
                             Button { model.pause() } label: {
@@ -612,9 +623,16 @@ private struct YearReviewHistoryView: View {
                             retryFailed: !model.hasNewHistorySources && (model.collection.map { $0.pending.isEmpty && !$0.failed.isEmpty } ?? false),
                             disabled: model.isDeleting || model.viewer != AccountsState.shared.activeAccountPublicKey,
                             create: { showSources = true }, resume: { model.start(download: true, resume: true) })
+                        if model.stage == .finished, model.newlySavedDuringDownload > 0 {
+                            Label("\(model.newlySavedDuringDownload) new items saved", systemImage: "checkmark.circle")
+                                .font(.subheadline).foregroundStyle(theme.accent)
+                        }
                         if let job = model.collection, !model.hasNewHistorySources,
                            job.phase == .finished && job.pending.isEmpty && job.failed.isEmpty {
                             Text("Finished checking your selected relays.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        } else if let job = model.collection, job.failed.contains(where: { YearReviewCollection.isPrimary($0.category) }) {
+                            Text("Some relays didn’t finish. Tap an orange month for details.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                     }
@@ -653,12 +671,34 @@ private struct YearReviewHistoryView: View {
                     }
             }
             .sheet(item: $selectedMonth) { month in
-                YearReviewMonthActionsView(model: model, initialMonth: month)
+                YearReviewMonthActionsView(model: model, initialMonth: month, savedCounts: $monthlyCounts)
                     .environment(\.theme, theme)
             }
             .sheet(isPresented: $showHistoryInfo) {
                 YearReviewHistoryInfoView(model: model)
             }
+        }
+        .task(id: countsRequest) {
+            monthlyCounts = nil
+            guard !countsRequest.busy, YearReviewEvent.isHex(countsRequest.owner, length: 64) else { return }
+            let archive = await YearReviewArchives.shared.archive(owner: countsRequest.owner)
+            var lastRevision: YearReviewReportRevision?
+            do {
+                while !Task.isCancelled {
+                    let revision = try await archive.reportRevision()
+                    if revision != lastRevision {
+                        let counts = try await archive.monthlyArchivedCounts(year: countsRequest.year,
+                            timeZone: TimeZone(identifier: countsRequest.timeZone) ?? .current)
+                        try Task.checkCancellation()
+                        monthlyCounts = counts
+                        lastRevision = revision
+                    }
+                    // Pick up new local or iCloud history while this sheet is open.
+                    // No relay requests; unchanged archives only need a revision read.
+                    try await Task.sleep(nanoseconds: 5_000_000_000)
+                }
+            } catch is CancellationError { }
+            catch { L.maintenance.error("History month counts unavailable: \(error.localizedDescription)") }
         }
     }
 }
@@ -676,7 +716,7 @@ private struct YearReviewHistoryInfoView: View {
                 YearReviewAboutRow(title: "While gathering history", icon: "iphone",
                     detail: "You can keep using Nostur while it gathers history. If you close the app, continue later from where you left off.")
                 YearReviewAboutRow(title: "What the calendar counts", icon: "number",
-                    detail: "The calendar counts everything relays send, including repeats. Repeat copies don’t add to your report totals.")
+                    detail: "Each month shows unique saved items. While receiving data, its title shows the received count, including repeats.")
                 if model.isDownloading {
                     Section("Download details") {
                         if model.activity == nil { Text(model.zapStatus ?? model.progressLabel) }
@@ -798,6 +838,40 @@ private struct YearReviewSourcesView: View {
     }
 }
 
+@available(iOS 17.0, *)
+private struct YearReviewRestrictedContentInfoView: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("Includes posts shared only with specific relays, plus replies, reactions and references to them.")
+                    Text("These can appear in your report and share image. Private messages are always excluded.")
+                    Text("The archive keeps this history either way. Changing the switch rebuilds your report from saved data.")
+                        .foregroundStyle(.secondary)
+                }
+                .padding(24)
+                .frame(maxWidth: 520, alignment: .leading)
+                .frame(maxWidth: .infinity)
+            }
+            .background(theme.background)
+            .navigationTitle("Relay-restricted content")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button { dismiss() } label: {
+                        Label("Dismiss", systemImage: "xmark").labelStyle(.iconOnly)
+                    }
+                }
+            }
+        }
+        .presentationBackgroundCompat(theme.background)
+        .presentationDetents([.medium, .large])
+    }
+}
+
 private struct YearReviewAboutView: View {
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
@@ -815,7 +889,7 @@ private struct YearReviewAboutView: View {
                     Image(systemName: "globe")
                         .foregroundStyle(theme.accent)
                         .accessibilityHidden(true)
-                    Text("Your report uses public posts and interactions. Private messages aren’t included.")
+                    Text("Private messages are always excluded. Relay-restricted posts and interactions are included only if you enable them in Year settings.")
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -1664,8 +1738,19 @@ private struct YearReviewMonthCalendarView: View {
     let period: YearReviewPeriod
     let active: [YearReviewWork]
     let activities: [YearReviewActivity]
+    let savedCounts: [Int: Int]?
     let onSelect: (YearReviewMonthProgress) -> Void
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
+
+    private var receivingMonths: Set<Int> {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: period.timeZoneIdentifier) ?? .current
+        return Set(activities.compactMap { activity in
+            guard activity.isReceivingMonth,
+                  active.contains(activity.work) else { return nil }
+            return calendar.component(.month, from: Date(timeIntervalSince1970: Double(activity.work.until)))
+        })
+    }
 
     private var months: [YearReviewMonthProgress] {
         if let collection { return Array(collection.monthProgress(active: active, received: activities.map { ($0.work, $0.received) }).reversed()) }
@@ -1680,10 +1765,14 @@ private struct YearReviewMonthCalendarView: View {
     }
 
     var body: some View {
+        let receiving = receivingMonths
         VStack(alignment: .leading, spacing: 10) {
             LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(months) { month in
-                    Button { onSelect(month) } label: { YearReviewMonthCell(month: month) }
+                    Button { onSelect(month) } label: {
+                        YearReviewMonthCell(month: month, isReceiving: receiving.contains(month.month),
+                            savedCount: savedCounts?[month.month])
+                    }
                         .buttonStyle(.plain).disabled(!month.available)
                 }
             }
@@ -1699,9 +1788,19 @@ private struct YearReviewMonthCalendarView: View {
 @available(iOS 17.0, *)
 private struct YearReviewMonthCell: View {
     let month: YearReviewMonthProgress
+    let isReceiving: Bool
+    let savedCount: Int?
 
-    private var interactionPass: Bool { month.own.pending == 0 }
-    private var pass: YearReviewMonthProgress.Pass { interactionPass ? month.others : month.own }
+    private var accessibilityCount: Text {
+        guard month.available else { return Text("") }
+        let saved = savedCount.map { Text(". Unique saved items: \($0)") }
+            ?? (Text(". ") + Text("Reading saved history…"))
+        if isReceiving { return saved + Text(". \(month.received) items received, including duplicates") }
+        return saved
+    }
+
+    private var interactionPass: Bool { month.interactionPass }
+    private var pass: YearReviewMonthProgress.Pass { month.currentPass }
     private var tint: Color { interactionPass ? .green : .orange }
     private var bothFinished: Bool { month.own.finished && month.others.finished }
     private var incomplete: Bool { month.own.failed > 0 || month.others.failed > 0 }
@@ -1720,8 +1819,13 @@ private struct YearReviewMonthCell: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Text(month.date, format: monthStyle)
-                .font(.caption.weight(.semibold))
+            Group {
+                if isReceiving { Text("\(month.received) received") }
+                else { Text(month.date, format: monthStyle) }
+            }
+            .font(.caption.weight(.semibold))
+            .monospacedDigit()
+            .lineLimit(1).minimumScaleFactor(0.7)
             ZStack {
                 if !month.available {
                     Image(systemName: "minus").foregroundStyle(.tertiary)
@@ -1738,7 +1842,7 @@ private struct YearReviewMonthCell: View {
                 }
             }
             .frame(height: 20)
-            Text(month.available ? String(localized: "\(month.received) received") : "–")
+            YearReviewSavedMonthCount(available: month.available, count: savedCount)
                 .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
                 .lineLimit(1).minimumScaleFactor(0.7)
             ProgressView(value: month.available ? (pass.active ? pass.fraction : month.own.finished ? 1 : 0) : 0)
@@ -1751,7 +1855,7 @@ private struct YearReviewMonthCell: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(month.date, format: monthStyle))
-        .accessibilityValue(accessibilityStatus + Text(". \(month.received) items received, including duplicates"))
+        .accessibilityValue(accessibilityStatus + accessibilityCount)
     }
 
     private var accessibilityStatus: Text {
@@ -1765,10 +1869,45 @@ private struct YearReviewMonthCell: View {
 }
 
 @available(iOS 17.0, *)
+private struct YearReviewSavedMonthCount: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let available: Bool
+    let count: Int?
+
+    var body: some View {
+        Group {
+            if !available {
+                Text("–")
+            } else if let count {
+                Text("\(count) saved")
+                    .transition(.opacity)
+            } else {
+                Text("\(0) saved")
+                    .hidden()
+                    .overlay {
+                        Capsule()
+                            .fill(.secondary)
+                            .frame(width: 52, height: 7)
+                            .phaseAnimator(reduceMotion ? [false] : [false, true]) { content, dimmed in
+                                content.opacity(dimmed ? 0.12 : 0.28)
+                            } animation: { _ in
+                                .easeInOut(duration: 1.1)
+                            }
+                    }
+                    .transition(.opacity)
+            }
+        }
+        .frame(minHeight: 14)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: count)
+    }
+}
+
+@available(iOS 17.0, *)
 private struct YearReviewMonthActionsView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var model: YearReviewModel
     let initialMonth: YearReviewMonthProgress
+    @Binding var savedCounts: [Int: Int]?
 
     private var month: YearReviewMonthProgress {
         model.collection?.monthProgress(active: model.calendarActivity, received: model.activeActivities.map { ($0.work, $0.received) })
@@ -1792,6 +1931,9 @@ private struct YearReviewMonthActionsView: View {
         NavigationStack {
             List {
                 Section {
+                    if let count = savedCounts?[month.month] {
+                        LabeledContent("Saved items") { Text(count, format: .number) }
+                    }
                     LabeledContent("Your content") {
                         YearReviewMonthPassStatus(pass: month.own)
                     }

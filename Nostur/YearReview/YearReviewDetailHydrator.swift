@@ -6,9 +6,10 @@ import NostrEssentials
 /// access and normal import handlers run inside the supplied context's perform.
 enum YearReviewDetailHydrator {
     static func restore(post: YearReviewPost, archive: YearReviewArchive, blocked: Set<String>,
-                        context: NSManagedObjectContext) async throws {
+                        context: NSManagedObjectContext, includeRestricted: Bool = false) async throws {
         try Task.checkCancellation()
-        guard let snapshot = try await archive.event(id: post.id) else { return }
+        guard let snapshot = try await archive.event(id: post.id),
+              snapshot.isEligibleForReport(includeRestricted: includeRestricted) else { return }
         try await context.perform {
             if Event.fetchEvent(id: post.id, context: context) == nil {
                 let original = try JSONDecoder().decode(NEvent.self, from: JSONEncoder().encode(snapshot))
@@ -22,7 +23,7 @@ enum YearReviewDetailHydrator {
         }
         while true {
             try Task.checkCancellation()
-            let page = try await archive.detailPage(to: post.id, coordinate: post.coordinate, after: cursor)
+            let page = try await archive.detailPage(to: post.id, coordinate: post.coordinate, after: cursor, includeRestricted: includeRestricted)
             guard page.cursor != cursor else { break }
             cursor = page.cursor
             for offset in stride(from: 0, to: page.events.count, by: 25) {

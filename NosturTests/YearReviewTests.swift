@@ -35,8 +35,10 @@ final class YearReviewTests: XCTestCase {
                                kind: kind, tags: tags + replyTags, content: content, sig: "")
     }
 
-    private func analyze(_ events: [YearReviewEvent], trusted: Set<String> = [], blocked: Set<String> = []) -> YearReviewReport {
-        YearReviewAnalyzer.analyze(events: events, owner: owner, period: period, trusted: trusted, blocked: blocked)
+    private func analyze(_ events: [YearReviewEvent], trusted: Set<String> = [], blocked: Set<String> = [],
+                         includeRestricted: Bool = false) -> YearReviewReport {
+        YearReviewAnalyzer.analyze(events: events, owner: owner, period: period, trusted: trusted, blocked: blocked,
+                                  includeRestricted: includeRestricted)
     }
 
     func testConversationStoriesUseSavedHistoryAndDistinctReplyDays() {
@@ -238,6 +240,50 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(job.monthScope, 1)
         let restored = try JSONDecoder().decode(YearReviewCollection.self, from: JSONEncoder().encode(job))
         XCTAssertEqual(restored.monthScope, 1)
+    }
+
+    func testMonthRetryShowsActivePassDespiteEarlierCompletedQueries() throws {
+        var job = YearReviewCollection(owner: owner, period: period,
+            relays: [.new(url: "wss://relay.example", read: true)], trusted: [])
+        let retry = try XCTUnwrap(job.pending.first { job.belongsToMonth($0, month: 1) && $0.category == .authored })
+        job.pending = []
+        job.failed = [retry]
+        job.monthlyQueries = ["1-own": 1000, "1-others": 400]
+        job.phase = .finished
+        job.prepareMonth(1)
+        let active = job.calendarActivity(active: [retry], scanningMonths: true)
+        let progress = try XCTUnwrap(job.monthProgress(active: active, received: [(retry, 17)]).first { $0.month == 1 })
+        XCTAssertTrue(progress.currentPass.active)
+        XCTAssertFalse(progress.interactionPass)
+        XCTAssertFalse(progress.own.finished)
+        XCTAssertEqual(progress.received, 17)
+        // Saving/checkpoint handoffs must prioritize a live pass even after its
+        // pending request was removed from the checkpoint snapshot.
+        job.pending = []
+        let saving = try XCTUnwrap(job.monthProgress(active: active).first { $0.month == 1 })
+        XCTAssertTrue(saving.currentPass.active)
+        XCTAssertFalse(saving.interactionPass)
+        XCTAssertFalse(saving.own.finished)
+        XCTAssertTrue(job.monthProgress(active: active).filter { $0.month != 1 }.allSatisfy { !$0.own.active && !$0.others.active })
+    }
+
+    func testMonthlyReceivedFeedbackRemainsVisibleWhileSavingRetryResponse() throws {
+        guard #available(iOS 17.0, *) else { throw XCTSkip("Year in Review requires iOS 17") }
+        let job = YearReviewCollection(owner: owner, period: period,
+            relays: [.new(url: "wss://relay.example", read: true)], trusted: [])
+        let work = try XCTUnwrap(job.pending.first)
+        var activity = YearReviewActivity(work: work, timeZoneIdentifier: period.timeZoneIdentifier, step: .fetching)
+        XCTAssertFalse(activity.isReceivingMonth)
+        activity.received = 17
+        XCTAssertTrue(activity.isReceivingMonth)
+        activity.step = .saving
+        XCTAssertTrue(activity.isReceivingMonth)
+        activity.step = .pacing
+        XCTAssertFalse(activity.isReceivingMonth)
+        let references = YearReviewWork(relay: work.relay, category: .references, since: work.since, until: work.until)
+        var supplementary = YearReviewActivity(work: references, timeZoneIdentifier: period.timeZoneIdentifier, step: .saving)
+        supplementary.received = 17
+        XCTAssertFalse(supplementary.isReceivingMonth)
     }
 
     func testMonthRefreshRechecksSuccessfulSourcesAlongsideFailures() throws {
@@ -891,16 +937,11 @@ final class YearReviewTests: XCTestCase {
     }
 
 
-    func testRandomAdjacentMonthsNeverSelectFutureMonthsAndScopeRequests() {
+    func testLegacyLimitedPeriodScopesRequestsAndKeepsOtherMonthsTappable() {
         let zone = TimeZone(secondsFromGMT: 0)!
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = zone
         let now = calendar.date(from: DateComponents(year: 2026, month: 10, day: 3))!
-        let choices = (0..<100).map { YearReviewPeriod.testMonthStart(year: 2026, now: now, timeZone: zone, choice: $0) }
-        XCTAssertEqual(Set(choices), Set(1...9))
-        XCTAssertEqual(YearReviewPeriod.testMonthStart(year: 2025, now: now, timeZone: zone, choice: 10), 11)
-        let january = calendar.date(from: DateComponents(year: 2026, month: 1, day: 15))!
-        XCTAssertEqual(YearReviewPeriod.testMonthStart(year: 2026, now: january, timeZone: zone, choice: 99), 1)
         let limited = YearReviewPeriod(year: 2026, now: now, timeZone: zone, monthLimit: 2, monthStart: 9)
         let september = calendar.date(from: DateComponents(year: 2026, month: 9, day: 1))!
         XCTAssertEqual(limited.start, Int64(september.timeIntervalSince1970))
@@ -1240,9 +1281,9 @@ final class YearReviewTests: XCTestCase {
         let second = YearReviewArchives(directory: root.appendingPathComponent("second"))
         let a = HistoryArchiveSyncEngine(archives: first, localRoot: root.appendingPathComponent("state-a"), cloudRoot: cloud)
         let b = HistoryArchiveSyncEngine(archives: second, localRoot: root.appendingPathComponent("state-b"), cloudRoot: cloud)
-        let event = try signedEvent()
-        let january = try signedEvent(timestamp: period.start + 1)
-        let march = try signedEvent(timestamp: period.start + 70 * 86400)
+        let event = try signedEvent(tags: [["p", owner]])
+        let january = try signedEvent(tags: [["p", owner]], timestamp: period.start + 1)
+        let march = try signedEvent(tags: [["p", owner]], timestamp: period.start + 70 * 86400)
         let archiveA = await first.archive(owner: owner)
         let archiveB = await second.archive(owner: owner)
         _ = try await archiveA.ingest([event, january, march], source: "relay")
@@ -1253,12 +1294,18 @@ final class YearReviewTests: XCTestCase {
         let found = try await archiveB.events(before: period.end)
         XCTAssertEqual(Set(found.map(\.id)), Set([event.id, january.id, march.id]))
         XCTAssertEqual(cloudJSONFiles(cloud), initialFiles) // Downloads are not echoed back.
-        let other = try signedEvent(content: "second device")
+        let other = try signedEvent(content: "second device", tags: [["p", owner]])
         _ = try await archiveB.ingest([other, event], source: "relay")
         try await b.sync()
         try await a.sync()
         let merged = try await archiveA.events(before: period.end)
         XCTAssertEqual(merged.count, 4)
+        let monthlyA = try await archiveA.monthlyArchivedCounts(year: period.year,
+            timeZone: TimeZone(secondsFromGMT: 0)!)
+        let monthlyB = try await archiveB.monthlyArchivedCounts(year: period.year,
+            timeZone: TimeZone(secondsFromGMT: 0)!)
+        XCTAssertEqual(monthlyA, monthlyB)
+        XCTAssertEqual(monthlyA.values.reduce(0, +), 4)
         let outboxB = try await archiveB.syncPage(after: 0)
         XCTAssertEqual(outboxB.events.map(\.id), [other.id])
         let finalFiles = cloudJSONFiles(cloud)
@@ -1700,15 +1747,16 @@ final class YearReviewTests: XCTestCase {
     }
 
     private func storeReportSnapshot(archive: YearReviewArchive, pubkey: String,
-                                     period requestedPeriod: YearReviewPeriod? = nil) async throws -> YearReviewSavedReport {
+                                     period requestedPeriod: YearReviewPeriod? = nil, includeRestricted: Bool = false) async throws -> YearReviewSavedReport {
         let period = requestedPeriod ?? self.period
         let revision = try await archive.reportRevision()
-        let report = try await archive.report(owner: pubkey, period: period, trusted: [], blocked: [])
+        let report = try await archive.report(owner: pubkey, period: period, trusted: [], blocked: [], includeRestricted: includeRestricted)
         let saved = YearReviewSavedReport(version: YearReviewSavedReport.currentVersion, owner: pubkey,
             revision: revision, report: report,
             previews: ["post": .init(text: "A preview", thumbnail: URL(string: "https://example.com/photo.jpg"), extraCount: 0, isVideo: false)],
             names: [alice: "Alice"], pictures: [:], collection: nil,
-            counts: try await archive.archivedCounts(), lastFetchedDate: nil, trusted: [], blocked: [], zapperKeys: [:])
+            counts: try await archive.archivedCounts(), lastFetchedDate: nil, trusted: [], blocked: [], zapperKeys: [:],
+            includeRestrictedContent: includeRestricted)
         try await archive.save(saved, key: "cached-report-test")
         return saved
     }
@@ -1859,6 +1907,111 @@ final class YearReviewTests: XCTestCase {
         XCTAssertNil(manualDeletion)
     }
 
+    func testMonthlySavedCountsOnlyIncludeAccountAndPostReferencesIncludingLegacyArchives() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("archive.sqlite")
+        let keys = try Keys.newKeys()
+        let archive = YearReviewArchive(owner: keys.publicKeyHex, fileURL: file)
+        let oldPost = try signedEvent(keys: keys, timestamp: period.start - 1)
+        let article = try signedEvent(kind: 30023, keys: keys, tags: [["d", "article"]])
+        let unrelated = try signedEvent()
+        let context = try signedEvent(content: "parent of my reply")
+        let ownReply = try signedEvent(keys: keys, tags: [["e", context.id]])
+        let mention = try signedEvent(tags: [["p", keys.publicKeyHex]])
+        let reaction = try signedEvent(kind: 7, tags: [["e", article.id], ["p", keys.publicKeyHex]])
+        let quote = try signedEvent(tags: [["q", article.coordinate!]])
+        let comment = try signedEvent(kind: 1111, tags: [["E", article.id]])
+        let zap = try signedEvent(kind: 9735, tags: [["P", keys.publicKeyHex]])
+        let oldReference = try signedEvent(tags: [["e", oldPost.id]])
+        let unrelatedReaction = try signedEvent(kind: 7, tags: [["e", unrelated.id]])
+        _ = try await archive.ingest([oldPost, article, unrelated, context, ownReply, mention,
+            reaction, quote, comment, zap, oldReference, unrelatedReaction, reaction], source: "local-cache")
+        let counts = try await archive.monthlyArchivedCounts(year: period.year, timeZone: TimeZone(secondsFromGMT: 0)!)
+        XCTAssertEqual(counts.values.reduce(0, +), 8)
+        // Simulate an archive written before the relationship index existed.
+        var database: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(file.path, &database), SQLITE_OK)
+        XCTAssertEqual(sqlite3_exec(database, "DROP TABLE account_refs; DROP TABLE account_posts; DELETE FROM metadata WHERE key LIKE 'account-index-%'", nil, nil, nil), SQLITE_OK)
+        sqlite3_close(database)
+        let reopened = YearReviewArchive(owner: keys.publicKeyHex, fileURL: file)
+        let migrated = try await reopened.monthlyArchivedCounts(year: period.year, timeZone: TimeZone(secondsFromGMT: 0)!)
+        XCTAssertEqual(migrated, counts)
+        let retained = try await reopened.event(id: unrelated.id)
+        XCTAssertEqual(retained, unrelated) // Counting does not delete archive context.
+    }
+
+    func testMonthlySavedCountsRecognizePostReferencesWhenOwnPostArrivesLater() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let keys = try Keys.newKeys()
+        let archive = YearReviewArchive(owner: keys.publicKeyHex, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        let post = try signedEvent(keys: keys)
+        let reference = try signedEvent(tags: [["e", post.id]])
+        _ = try await archive.ingest([reference], source: "relay")
+        let before = try await archive.monthlyArchivedCounts(year: period.year, timeZone: TimeZone(secondsFromGMT: 0)!)
+        XCTAssertEqual(before.values.reduce(0, +), 0)
+        _ = try await archive.ingest([post, reference], source: "icloud:other-device")
+        let after = try await archive.monthlyArchivedCounts(year: period.year, timeZone: TimeZone(secondsFromGMT: 0)!)
+        XCTAssertEqual(after.values.reduce(0, +), 2)
+    }
+
+    func testMonthlySavedCountsDeduplicateRelaysCloudCopiesAndSurviveReopen() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("archive.sqlite")
+        let keys = try Keys.newKeys()
+        let archive = YearReviewArchive(owner: keys.publicKeyHex, fileURL: file)
+        var calendar = Calendar(identifier: .gregorian)
+        let zone = TimeZone(secondsFromGMT: 0)!
+        calendar.timeZone = zone
+        func timestamp(_ month: Int) -> Int64 {
+            Int64(calendar.date(from: DateComponents(year: 2026, month: month, day: 10))!.timeIntervalSince1970)
+        }
+        let january = try signedEvent(keys: keys, timestamp: timestamp(1))
+        let reaction = try signedEvent(kind: 7, tags: [["e", january.id]], timestamp: timestamp(1))
+        let march = try signedEvent(kind: 9802, keys: keys, timestamp: timestamp(3))
+        _ = try await archive.ingest([january, reaction, january], source: "wss://first.example")
+        _ = try await archive.ingest([reaction, january], source: "wss://second.example")
+        let before = try await archive.monthlyArchivedCounts(year: 2026, timeZone: zone)
+        XCTAssertEqual(before[1], 2)
+        XCTAssertEqual(before[3], 0)
+        _ = try await archive.ingest([march, january], source: "icloud:other-device.json")
+        let reopened = YearReviewArchive(owner: keys.publicKeyHex, fileURL: file)
+        let counts = try await reopened.monthlyArchivedCounts(year: 2026, timeZone: zone)
+        XCTAssertEqual(counts.count, 12)
+        XCTAssertEqual(counts[1], 2)
+        XCTAssertEqual(counts[3], 1)
+        XCTAssertEqual(counts.values.reduce(0, +), 3)
+        try await reopened.delete()
+        let empty = try await reopened.monthlyArchivedCounts(year: 2026, timeZone: zone)
+        XCTAssertEqual(empty.values.reduce(0, +), 0)
+    }
+
+    func testMonthlySavedCountsRespectLocalMonthAndYearBoundaries() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let keys = try Keys.newKeys()
+        let archive = YearReviewArchive(owner: keys.publicKeyHex, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        let zone = TimeZone(identifier: "Europe/Amsterdam")!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
+            calendar.date(from: DateComponents(year: year, month: month, day: day))!
+        }
+        let first = Int64(date(2026, 1, 1).timeIntervalSince1970)
+        let april = Int64(date(2026, 4, 1).timeIntervalSince1970)
+        let nextDay = date(2026, 4, 2)
+        let events = try [first - 1, first, april - 1, april, Int64(nextDay.timeIntervalSince1970),
+                          Int64(date(2027, 1, 1).timeIntervalSince1970)].map { try signedEvent(keys: keys, timestamp: $0) }
+        _ = try await archive.ingest(events, source: "relay")
+        let counts = try await archive.monthlyArchivedCounts(year: 2026, timeZone: zone)
+        XCTAssertEqual(counts[1], 1)
+        XCTAssertEqual(counts[3], 1)
+        XCTAssertEqual(counts[4], 2)
+        XCTAssertEqual(counts.values.reduce(0, +), 4)
+    }
+
     func testArchivedCountsUseAuthorAndSurviveResumeWithoutDuplicates() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -1945,12 +2098,13 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(restored, event)
     }
 
-    func testEverydayCaptureExcludesPrivateEventsAndRejectsTamperedSignatures() async throws {
+    func testEverydayCaptureRetainsRestrictedButExcludesPrivateAndTamperedEvents() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
         let archives = YearReviewArchives(directory: directory)
         let recorder = LiveHistoryRecorder(archives: archives)
         let events = [try signedEvent(kind: 4), try signedEvent(kind: 1059),
+            try signedEvent(tags: [["-"]]), try signedEvent(kind: 7, tags: [["-"]]),
             try signedEvent(kind: 7, tags: [["k", "14"], ["e", String(repeating: "e", count: 64)]])]
         for event in events { recorder.receive(text: try liveMessage(event), source: "test", owner: owner) }
         let signed = try signedEvent()
@@ -1960,7 +2114,7 @@ final class YearReviewTests: XCTestCase {
         try await recorder.flush()
         let archive = await archives.archive(owner: owner)
         let counts = try await archive.archivedCounts()
-        XCTAssertEqual(counts, YearReviewArchivedCounts())
+        XCTAssertEqual(counts, YearReviewArchivedCounts(fromYou: 0, fromOthers: 2))
     }
 
     @MainActor
@@ -2080,6 +2234,204 @@ final class YearReviewTests: XCTestCase {
         try await restored.delete()
         let empty = try await restored.events(before: period.end)
         XCTAssertTrue(empty.isEmpty)
+    }
+
+    func testReportExcludesRestrictedPostsRepliesReactionsAndPrivateKinds() {
+        let publicPost = note("public", by: owner)
+        let publicHyphen = note("public-hyphen", by: owner, content: "-")
+        let protected = YearReviewKinds.content.map { kind in
+            note("restricted-\(kind)", by: owner, tags: [["-"]], kind: kind)
+        }
+        let events = [publicPost, publicHyphen]
+            + protected
+            + [note("restricted-reply", by: alice, parent: publicPost.id, tags: [["-"]]),
+               note("restricted-like", by: alice, content: "+", tags: [["e", publicPost.id], ["-"]], kind: 7),
+               note("dm-like", by: alice, content: "+", tags: [["e", publicPost.id], ["k", "14"]], kind: 7),
+               note("dm", by: owner, kind: 4), note("rumor", by: owner, kind: 14),
+               note("wrap", by: owner, kind: 1059),
+               note("like-protected", by: alice, content: "+", tags: [["e", "restricted-1"]], kind: 7)]
+        let report = analyze(events, trusted: [alice])
+        XCTAssertEqual(report.ownPostCount, 2)
+        XCTAssertEqual(report.mostActiveDay?.posts, 2)
+        XCTAssertNil(report.mostReacted)
+        XCTAssertNil(report.conversation)
+        XCTAssertTrue(report.people.isEmpty)
+        XCTAssertEqual(report.polls?.created ?? 0, 0)
+        XCTAssertFalse(publicHyphen.isRestricted, "A hyphen in content is not the restriction tag")
+    }
+
+    func testArchiveRetainsRestrictedButRejectsPrivateMessageReactions() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let archive = YearReviewArchive(owner: owner, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        let restricted = try signedEvent(tags: [["-"]])
+        let restrictedReaction = try signedEvent(content: "+", kind: 7, tags: [["-", "restricted"]])
+        let dmReaction = try signedEvent(content: "+", kind: 7, tags: [["k", "14"]])
+        let publicPost = try signedEvent(content: "-")
+        let result = try await archive.ingest([restricted, restrictedReaction, dmReaction, publicPost], source: "relay")
+        XCTAssertEqual(result.invalid, 1)
+        XCTAssertEqual(result.added, 3)
+        let stored = try await archive.events(before: period.end)
+        XCTAssertEqual(Set(stored.map(\.id)), Set([restricted.id, restrictedReaction.id, publicPost.id]))
+    }
+
+    func testRestrictedContentOptInIncludesPostsAndTheirInteractionsButNeverDMs() {
+        let events = [note("public", by: owner), note("restricted", by: owner, tags: [["-"]]),
+            note("restricted-reply", by: alice, parent: "restricted", tags: [["-"]]),
+            note("public-reply", by: bob, parent: "restricted"),
+            note("restricted-reaction", by: bob, content: "+", tags: [["e", "public"], ["-"]], kind: 7),
+            note("public-reaction", by: alice, content: "+", tags: [["e", "restricted"]], kind: 7),
+            note("quote", by: bob, tags: [["q", "restricted"]]),
+            note("dm-reaction", by: alice, content: "+", tags: [["e", "public"], ["k", "14"]], kind: 7),
+            note("dm", by: owner, kind: 4), note("rumor", by: owner, kind: 14), note("wrap", by: owner, kind: 1059)]
+        let publicReport = analyze(events, trusted: [alice, bob])
+        XCTAssertEqual(publicReport.ownPostCount, 1)
+        XCTAssertTrue(publicReport.people.isEmpty)
+        XCTAssertNil(publicReport.conversation)
+        let full = analyze(events, trusted: [alice, bob], includeRestricted: true)
+        XCTAssertEqual(full.ownPostCount, 2)
+        XCTAssertEqual(full.conversation?.id, "restricted")
+        XCTAssertEqual(full.conversation?.replies, 2)
+        XCTAssertEqual(full.mostReacted?.reactions, 1)
+        XCTAssertEqual(full.amplifiedBy.first?.quotes, 1)
+        XCTAssertEqual(full.people, Set([alice, bob]))
+    }
+
+    func testRestrictedPreferenceDefaultsOffAndPersistsPerProfile() throws {
+        let suite = "year-review-restricted-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var preferences = YearReviewPreferences(cards: [], hiddenPeople: [], shareFormat: .report,
+            selectedRelays: [], relays: [])
+        let legacy = try JSONDecoder().decode(YearReviewPreferences.self, from: JSONEncoder().encode(preferences))
+        XCTAssertFalse(legacy.includeRestrictedContent ?? false)
+        preferences.includeRestrictedContent = true
+        preferences.save(owner: owner, defaults: defaults)
+        XCTAssertEqual(YearReviewPreferences.load(owner: owner, defaults: defaults)?.includeRestrictedContent, true)
+        XCTAssertFalse(YearReviewPreferences.load(owner: alice, defaults: defaults)?.includeRestrictedContent ?? false)
+        preferences.includeRestrictedContent = false
+        preferences.save(owner: owner, defaults: defaults)
+        XCTAssertEqual(YearReviewPreferences.load(owner: owner, defaults: defaults)?.includeRestrictedContent, false)
+    }
+
+    func testRestrictedReportCachesCannotBeReusedForTheOtherScope() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let keys = try Keys.newKeys()
+        let archive = YearReviewArchive(owner: keys.publicKeyHex, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        let publicPost = try signedEvent(keys: keys)
+        let restricted = try signedEvent(keys: keys, tags: [["-"]])
+        _ = try await archive.ingest([publicPost, restricted], source: "relay")
+        _ = try await storeReportSnapshot(archive: archive, pubkey: keys.publicKeyHex, includeRestricted: true)
+        let full = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [], includeRestricted: true)
+        XCTAssertEqual(full?.snapshot.report.ownPostCount, 2)
+        let blocked = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertNil(blocked)
+        _ = try await storeReportSnapshot(archive: archive, pubkey: keys.publicKeyHex)
+        let publicOnly = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertEqual(publicOnly?.snapshot.report.ownPostCount, 1)
+        let needsRebuild = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [], includeRestricted: true)
+        XCTAssertNil(needsRebuild)
+    }
+
+    func testRestrictedDetailPagesAndReactionCountsFollowReportScope() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let archive = YearReviewArchive(owner: owner, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        let post = try signedEvent()
+        let reply = try signedEvent(tags: [["e", post.id, "", "reply"], ["-"]])
+        let reaction = try signedEvent(content: "+", kind: 7, tags: [["e", post.id], ["-"]])
+        _ = try await archive.ingest([post, reply, reaction], source: "relay")
+        let publicPage = try await archive.detailPage(to: post.id)
+        let fullPage = try await archive.detailPage(to: post.id, includeRestricted: true)
+        XCTAssertTrue(publicPage.events.isEmpty)
+        XCTAssertEqual(Set(fullPage.events.map(\.id)), Set([reply.id, reaction.id]))
+        let publicCount = try await archive.reactionCount(to: post.id, blocked: [])
+        let fullCount = try await archive.reactionCount(to: post.id, blocked: [], includeRestricted: true)
+        XCTAssertEqual(publicCount, 0)
+        XCTAssertEqual(fullCount, 1)
+    }
+
+    func testPublicHistoryExportOmitsRetainedRestrictedEvents() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let archive = YearReviewArchive(owner: owner, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        let publicPost = try signedEvent()
+        let restricted = try signedEvent(tags: [["-"]])
+        _ = try await archive.ingest([publicPost, restricted], source: "relay")
+        let url = try await archive.export()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let lines = try String(contentsOf: url, encoding: .utf8).split(separator: "\n")
+        let exported = try lines.map { try JSONDecoder().decode(YearReviewEvent.self, from: Data($0.utf8)) }
+        XCTAssertEqual(exported.map(\.id), [publicPost.id])
+    }
+
+    func testLegacyReportCacheBeforeRestrictedFilteringIsRejected() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let event = try signedEvent()
+        let archive = YearReviewArchive(owner: event.pubkey, fileURL: directory.appendingPathComponent("archive.sqlite"))
+        _ = try await archive.ingest([event], source: "relay")
+        let current = try await storeReportSnapshot(archive: archive, pubkey: event.pubkey)
+        let legacy = YearReviewSavedReport(version: 1, owner: current.owner, revision: current.revision,
+            report: current.report, previews: current.previews, names: current.names, pictures: current.pictures,
+            collection: current.collection, counts: current.counts, lastFetchedDate: current.lastFetchedDate,
+            trusted: current.trusted, blocked: current.blocked, zapperKeys: current.zapperKeys)
+        try await archive.save(legacy, key: "cached-report-test")
+        let restored = try await archive.savedReport(key: "cached-report-test", period: period, trusted: [], blocked: [])
+        XCTAssertNil(restored, "An older report must be rebuilt using the public-only policy")
+    }
+
+    func testCloudMixedBatchRetainsRestrictedHistoryButReportDefaultsPublic() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let keys = try Keys.newKeys()
+        let owner = keys.publicKeyHex
+        let cloud = root.appendingPathComponent("cloud")
+        let directory = cloud.appendingPathComponent(owner + "/initial/2026-01")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let restricted = try signedEvent(keys: keys, tags: [["-"]])
+        let publicPost = try signedEvent(keys: keys)
+        let batch = HistoryArchiveBatch(version: 1, owner: owner, generation: "initial", events: [restricted, publicPost], deletions: [])
+        try JSONEncoder().encode(batch).write(to: directory.appendingPathComponent("legacy.json"))
+        let archives = YearReviewArchives(directory: root.appendingPathComponent("local"))
+        let sync = HistoryArchiveSyncEngine(archives: archives, localRoot: root.appendingPathComponent("state"), cloudRoot: cloud)
+        try await sync.sync()
+        let archive = await archives.archive(owner: owner)
+        let events = try await archive.events(before: period.end)
+        XCTAssertEqual(Set(events.map(\.id)), Set([publicPost.id, restricted.id]))
+        let publicReport = try await archive.report(owner: owner, period: period, trusted: [], blocked: [])
+        let fullReport = try await archive.report(owner: owner, period: period, trusted: [], blocked: [], includeRestricted: true)
+        XCTAssertEqual(publicReport.ownPostCount, 1)
+        XCTAssertEqual(fullReport.ownPostCount, 2)
+        let outbox = try await archive.syncPage(after: 0)
+        XCTAssertTrue(outbox.events.isEmpty)
+    }
+
+    func testDatabaseSeedExcludesPrivateAndGroupContexts() async throws {
+        let context = DataProvider.shared().newTaskContext()
+        let author = try Keys.newKeys().publicKeyHex
+        let start = period.start
+        let ids = (0..<3).map { _ in UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased() }
+        for parentsOnly in [false, true] {
+            await context.perform {
+                for index in ids.indices {
+                    let event = Event(context: context)
+                    event.id = ids[index]
+                    event.pubkey = author
+                    event.created_at = start + 1
+                    event.kind = 1
+                    event.sig = "fixture"
+                    event.content = "seed privacy"
+                    if index == 1 { event.otherId = "private-message" }
+                    if index == 2 { event.groupId = "private-group" }
+                }
+            }
+            let batch: YearReviewLocalSeed.Batch
+            if parentsOnly { batch = try await YearReviewLocalSeed.parents(ids: ids, context: context) }
+            else { batch = try await YearReviewLocalSeed.batch(owner: author, period: period, offset: 0, context: context) }
+            XCTAssertEqual(batch.events.map(\.id), [ids[0]])
+        }
     }
 
     func testArchiveRejectsTamperedEventsAndPrivateKinds() async throws {

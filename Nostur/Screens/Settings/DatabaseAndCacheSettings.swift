@@ -255,7 +255,7 @@ private struct HistoryArchiveStorageSection: View {
                 }
             }
         } header: {
-            Text("Public history archive")
+            Text("History archive")
         } footer: {
             Text("Public history is stored locally and syncs in batches through iCloud Drive when available.")
         }
