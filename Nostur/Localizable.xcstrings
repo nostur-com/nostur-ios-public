@@ -14860,6 +14860,28 @@
         }
       }
     },
+    "Created with Nostur" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creado con Nostur"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibuat dengan Nostur"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemaakt met Nostur"
+          }
+        }
+      }
+    },
     "Creates a public list on nostr relays" : {
       "localizations" : {
         "es" : {

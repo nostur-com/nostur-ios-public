@@ -1210,6 +1210,7 @@ final class YearReviewModel {
         report = nil
         savedReportNeedsRefresh = false
         collection = nil
+        lastFetchedDate = nil
         reportCollection = nil
         stage = .ready
         let requestedYear = year
