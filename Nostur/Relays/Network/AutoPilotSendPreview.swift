@@ -12,7 +12,7 @@ struct AutoPilotSendPreview: View {
     public let nEvent: NEvent
     
     @StateObject private var vm = RelayAutoPilotPreviewModel()
-    @State private var isExpanded = true
+    @State private var isExpanded = false
     
     var body: some View {
         ZStack {
