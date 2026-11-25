@@ -24,6 +24,7 @@ struct SideBar: View {
     @State private var npub = ""
     @State private var showProfileShare = false
     @ObservedObject private var browserSession = NostrBrowserSession.shared
+    @ObservedObject private var yearReviewEarlyAccess = YearReviewEarlyAccess.shared
     
     static let ICON_WIDTH = 30.0
     static let MENU_TEXT_WIDTH = NOSTUR_SIDEBAR_WIDTH - 70.0
@@ -138,7 +139,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                     }
-                    if #available(iOS 17.0, *), YearReviewFeature.isEnabled {
+                    if #available(iOS 17.0, *), yearReviewEarlyAccess.isUnlocked || YearReviewFeature.isEnabled {
                         Button {
                             if selectedTab() != "Main" { setSelectedTab("Main") }
                             navigateToOnMain(YearReviewPath(year: YearReviewPeriod.defaultYear()))
@@ -345,6 +346,8 @@ struct SideBar: View {
                     .foregroundColor(Color.red) // So we can quickly check if we are in debug or release build
 #endif
                     .opacity(0.5)
+                    .contentShape(Rectangle())
+                    .onTapGesture { yearReviewEarlyAccess.tapVersion() }
 #if DEBUG
                 Text("Test build \(TEST_BUILD_ID)")
                     .font(.system(.footnote, design: .monospaced).weight(.semibold))

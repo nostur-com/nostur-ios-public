@@ -2,12 +2,19 @@ import SwiftUI
 import Combine
 
 enum YearReviewFeature {
+    static let earlyAccessKey = "year-review-early-access"
+
     static var isEnabled: Bool {
         #if DEBUG
         true
         #else
-        isReleased()
+        isAvailableInRelease()
         #endif
+    }
+
+    static func isAvailableInRelease(now: Date = .now, timeZone: TimeZone = .current,
+                                    defaults: UserDefaults = .standard) -> Bool {
+        defaults.bool(forKey: earlyAccessKey) || isReleased(now: now, timeZone: timeZone)
     }
 
     // Release access begins after December 10 in the device's local time.
@@ -16,6 +23,27 @@ enum YearReviewFeature {
         calendar.timeZone = timeZone
         guard let launch = calendar.date(from: DateComponents(year: 2026, month: 12, day: 11)) else { return false }
         return now >= launch
+    }
+}
+
+@MainActor
+final class YearReviewEarlyAccess: ObservableObject {
+    static let shared = YearReviewEarlyAccess()
+    @Published private(set) var isUnlocked: Bool
+    private var taps = 0
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        isUnlocked = defaults.bool(forKey: YearReviewFeature.earlyAccessKey)
+    }
+
+    func tapVersion() {
+        guard !isUnlocked else { return }
+        taps += 1
+        guard taps == 9 else { return }
+        defaults.set(true, forKey: YearReviewFeature.earlyAccessKey)
+        isUnlocked = true
     }
 }
 
@@ -103,6 +131,7 @@ final class YearReviewDiscoveryState: ObservableObject {
 @available(iOS 17.0, *)
 @MainActor
 struct YearReviewSeasonalPrompt: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let owner: String
     let containerID: String
     let feedState: NXColumnViewModelInner
@@ -111,6 +140,15 @@ struct YearReviewSeasonalPrompt: View {
     @ObservedObject private var unreadState: NXColumnUnreadState
     @State private var now = Date.now
     @State private var isAtTop = false
+    @State private var displayedYear: Int? = nil
+
+    private var eligibleYear: Int? {
+        guard let year = YearReviewDiscovery.promptYear(now: now),
+              YearReviewDiscovery.canPresent(isVisible: isVisible, isAtTop: isAtTop,
+                  unreadCount: unreadState.unreadCount, isRestoring: feedState.isPreparingForScrollRestore),
+              discovery.shouldPrompt(owner: owner, year: year, now: now) else { return nil }
+        return year
+    }
 
     init(owner: String, containerID: String, feedState: NXColumnViewModelInner, isVisible: Bool) {
         self.owner = owner
@@ -122,12 +160,14 @@ struct YearReviewSeasonalPrompt: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if let year = YearReviewDiscovery.promptYear(now: now),
-               YearReviewDiscovery.canPresent(isVisible: isVisible, isAtTop: isAtTop,
-                   unreadCount: unreadState.unreadCount, isRestoring: feedState.isPreparingForScrollRestore),
-               discovery.shouldPrompt(owner: owner, year: year, now: now) {
+            if let year = displayedYear {
                 YearReviewSeasonalCard(owner: owner, year: year, containerID: containerID)
+                    .transition(.opacity)
             }
+        }
+        .onChange(of: eligibleYear, initial: true) { _, year in
+            let animation: Animation? = isVisible && !reduceMotion ? .easeInOut(duration: 0.25) : nil
+            withAnimation(animation) { displayedYear = year }
         }
         .onReceive(feedState.isAtTopPublisher.removeDuplicates().receive(on: DispatchQueue.main)) { isAtTop = $0 }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)

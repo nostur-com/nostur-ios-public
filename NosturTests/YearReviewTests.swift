@@ -1430,6 +1430,24 @@ final class YearReviewTests: XCTestCase {
     }
 
     @MainActor
+    func testNineVersionTapsUnlockReleaseAccessAndPersistAcrossLaunches() {
+        let suite = "YearReviewEarlyAccessTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let state = YearReviewEarlyAccess(defaults: defaults)
+        let beforeRelease = Date(timeIntervalSince1970: 1_790_000_000)
+        for _ in 0..<8 { state.tapVersion() }
+        XCTAssertFalse(state.isUnlocked)
+        XCTAssertFalse(YearReviewFeature.isAvailableInRelease(now: beforeRelease, defaults: defaults))
+        state.tapVersion()
+        XCTAssertTrue(state.isUnlocked)
+        XCTAssertTrue(YearReviewFeature.isAvailableInRelease(now: beforeRelease, defaults: defaults))
+        XCTAssertTrue(YearReviewEarlyAccess(defaults: defaults).isUnlocked)
+        state.tapVersion()
+        XCTAssertTrue(state.isUnlocked)
+    }
+
+    @MainActor
     func testDiscoveryLaterPersistsForThreeDaysAndOpeningSuppressesReminder() {
         let suite = "YearReviewDiscoveryTests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
