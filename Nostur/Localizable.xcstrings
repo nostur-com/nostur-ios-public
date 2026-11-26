@@ -347,6 +347,28 @@
     "-%@" : {
       "shouldTranslate" : false
     },
+    "A year of cooking" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un año entre fogones"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setahun memasak"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een jaar in de keuken"
+          }
+        }
+      }
+    },
     "Choose at least one relay in Relay settings." : {
       "localizations" : {
         "es" : {
@@ -453,6 +475,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lettertype"
+          }
+        }
+      }
+    },
+    "I was cooking" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estuve cocinando"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aku rajin memasak"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik stond in de keuken"
+          }
+        }
+      }
+    },
+    "In my own words" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En mis propias palabras"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dengan kata-kataku sendiri"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In mijn eigen woorden"
+          }
+        }
+      }
+    },
+    "In their own words" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En sus propias palabras"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dengan kata-katanya sendiri"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In eigen woorden"
+          }
+        }
+      }
+    },
+    "In your own words" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En tus propias palabras"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dengan kata-katamu sendiri"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In je eigen woorden"
           }
         }
       }
@@ -570,6 +680,28 @@
         }
       }
     },
+    "Recipes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recetas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resep"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recepten"
+          }
+        }
+      }
+    },
     "Refresh history" : {
       "localizations" : {
         "es" : {
@@ -657,6 +789,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thema"
+          }
+        }
+      }
+    },
+    "You were cooking" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estuviste cocinando"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamu rajin memasak"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je stond in de keuken"
           }
         }
       }
@@ -16330,6 +16484,9 @@
         }
       }
     },
+    "Didot" : {
+
+    },
     "Direct Message Settings" : {
       "localizations" : {
         "es" : {
@@ -21246,6 +21403,9 @@
       },
       "shouldTranslate" : false
     },
+    "Gill Sans" : {
+
+    },
     "gmmm broken %@" : {
       "localizations" : {
         "es" : {
@@ -21484,6 +21644,9 @@
           }
         }
       }
+    },
+    "Helvetica Condensed" : {
+
     },
     "hex" : {
       "comment" : "Short label for the word 'hexadecimal'",
@@ -29288,6 +29451,9 @@
           }
         }
       }
+    },
+    "Nostur" : {
+
     },
     "Nostur %@ (Build: %@)" : {
       "localizations" : {
@@ -39387,6 +39553,9 @@
       }
     },
     "Revisit the posts and conversations that made your year on Nostr." : {
+
+    },
+    "Rockwell" : {
 
     },
     "Room presence" : {

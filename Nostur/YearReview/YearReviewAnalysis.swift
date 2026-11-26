@@ -58,6 +58,27 @@ struct YearReviewEvent: Codable, Equatable, Sendable, Identifiable {
         return "\(kind):\(pubkey):\(tagValues("d").first ?? "")"
     }
 
+    /// Zap Cooking publishes recipes as kind 30023 with an exact `zapcooking` or `nostrcooking` tag.
+    /// Category tags such as `zapcooking-easy` stay articles, matching Zap Cooking's own filter.
+    var isZapCookingRecipe: Bool {
+        kind == 30023 && tagValues("t").contains { ["zapcooking", "nostrcooking"].contains($0.lowercased()) }
+    }
+
+    var writingTitle: String {
+        if let title = tagValues("title").first?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty {
+            return String(title.prefix(120))
+        }
+        guard let line = content.split(whereSeparator: \.isNewline).lazy
+            .map({ $0.trimmingCharacters(in: .whitespaces) })
+            .first(where: { !$0.isEmpty }) else { return "" }
+        let stripped = line.first == "#" ? line.drop { $0 == "#" || $0.isWhitespace } : Substring(line)
+        return String(stripped.prefix(120))
+    }
+
+    static func wordCount(_ content: String) -> Int {
+        content.split { $0.isWhitespace }.count
+    }
+
     var preview: String {
         let title = tagValues("title").first
         if let title, !title.isEmpty { return String(title.prefix(600)) }
@@ -249,6 +270,19 @@ struct YearReviewPollActivity: Codable, Equatable, Sendable {
     let mostVotedCount: Int
 }
 
+struct YearReviewPublication: Codable, Equatable, Sendable, Identifiable {
+    let post: YearReviewPost
+    let title: String
+
+    var id: String { post.id }
+}
+
+struct YearReviewPublications: Codable, Equatable, Sendable {
+    let count: Int
+    let words: Int
+    let highlights: [YearReviewPublication]
+}
+
 struct YearReviewThreadStory: Codable, Equatable, Sendable {
     let post: YearReviewPost
     let activeDays: [Date]
@@ -283,6 +317,8 @@ struct YearReviewReport: Codable, Equatable, Sendable {
     var polls: YearReviewPollActivity? = nil
     var returningThread: YearReviewThreadStory? = nil
     var newConversations: YearReviewThreadStory? = nil
+    var articles: YearReviewPublications? = nil
+    var recipes: YearReviewPublications? = nil
 
     var averagePostsPerDay: Double { Double(ownPostCount) / Double(period.calendarDays) }
 
@@ -302,6 +338,9 @@ enum YearReviewAnalyzer {
         let coordinate: String?
         let publishedAt: Int64
         let preview: String
+        let recipe: Bool
+        let words: Int
+        let title: String
     }
 
     static func analyze(events: [YearReviewEvent], owner: String, period: YearReviewPeriod,
@@ -336,8 +375,11 @@ enum YearReviewAnalyzer {
                 let poll = NostrPoll(id: event.id, createdAt: Int(event.createdAt), tags: event.tags)
                 if poll.isSupported { polls[event.id] = poll }
             }
+            let longform = event.pubkey == owner && event.kind == 30023
             index[event.id] = ContentIndex(pubkey: event.pubkey, parent: event.parentId, root: event.rootId, createdAt: event.createdAt,
-                kind: event.kind, coordinate: event.coordinate, publishedAt: event.tagValues("published_at").first.flatMap(Int64.init).flatMap { $0 > 0 && $0 <= event.createdAt ? $0 : nil } ?? event.createdAt, preview: event.pubkey == owner ? event.preview : "")
+                kind: event.kind, coordinate: event.coordinate, publishedAt: event.tagValues("published_at").first.flatMap(Int64.init).flatMap { $0 > 0 && $0 <= event.createdAt ? $0 : nil } ?? event.createdAt, preview: event.pubkey == owner ? event.preview : "",
+                recipe: longform && event.isZapCookingRecipe, words: longform ? YearReviewEvent.wordCount(event.content) : 0,
+                title: longform ? event.writingTitle : "")
             if let address = event.coordinate {
                 versions[address, default: []].insert(event.id)
                 if let old = latest[address], let existing = index[old],
@@ -607,6 +649,7 @@ enum YearReviewAnalyzer {
             guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
             day = next
         }
+        let publications = publicationSummaries(index: index, posts: posts, owner: owner, period: period, canonical: canonical)
         return YearReviewReport(period: period, gang: Array(gang.prefix(5)), conversation: best { Int64($0.replies) },
             mentionedBy: mentionedBy, ownPostCount: posts.count, unresolvedParents: unresolved, excludedAuthors: excluded.count,
             mostActiveDay: mostActiveDay, longestPostingStreak: longestStreak, longestPostingBreak: longestBreak, mostReacted: best { Int64($0.reactions) }, mostZapped: best { Int64($0.zaps) }, mostZapValue: best { $0.millisats },
@@ -616,7 +659,40 @@ enum YearReviewAnalyzer {
             liked: rank(Array(liked.values)) { $0.reactions }, zappedBy: rank(all) { $0.zaps },
             zapped: rank(Array(zapped.values)) { $0.zaps }, amplifiedBy: rank(all) { $0.reposts + $0.quotes },
             unverifiedZaps: unverifiedZaps, anonymousZaps: anonymousZaps, polls: pollActivity,
-            returningThread: returningThread, newConversations: newConversations)
+            returningThread: returningThread, newConversations: newConversations, articles: publications.articles, recipes: publications.recipes)
+    }
+
+    /// Articles and Zap Cooking recipes are the latest kind 30023 version whose publish date falls in the year.
+    /// Recipes are the tagged subset and are not also counted as articles.
+    private static func publicationSummaries(index: [String: ContentIndex], posts: [String: YearReviewPost], owner: String,
+                                             period: YearReviewPeriod, canonical: (String) -> String?)
+        -> (articles: YearReviewPublications?, recipes: YearReviewPublications?) {
+        struct Piece {
+            let post: YearReviewPost
+            let title: String
+            let recipe: Bool
+            let words: Int
+            let publishedAt: Int64
+        }
+        var pieces: [Piece] = []
+        pieces.reserveCapacity(posts.count)
+        for (id, item) in index where item.kind == 30023 && item.pubkey == owner && period.contains(item.publishedAt) && canonical(id) == id {
+            guard let post = posts[id] else { continue }
+            pieces.append(Piece(post: post, title: item.title, recipe: item.recipe, words: item.words, publishedAt: item.publishedAt))
+        }
+        func summarize(_ items: [Piece]) -> YearReviewPublications? {
+            guard !items.isEmpty else { return nil }
+            let ranked = items.filter { !$0.title.isEmpty }.sorted { lhs, rhs in
+                if lhs.post.reactions != rhs.post.reactions { return lhs.post.reactions > rhs.post.reactions }
+                if lhs.post.zaps != rhs.post.zaps { return lhs.post.zaps > rhs.post.zaps }
+                if lhs.post.millisats != rhs.post.millisats { return lhs.post.millisats > rhs.post.millisats }
+                if lhs.publishedAt != rhs.publishedAt { return lhs.publishedAt > rhs.publishedAt }
+                return lhs.post.id < rhs.post.id
+            }
+            let highlights = ranked.prefix(3).map { YearReviewPublication(post: $0.post, title: $0.title) }
+            return YearReviewPublications(count: items.count, words: items.reduce(0) { $0 + $1.words }, highlights: highlights)
+        }
+        return (summarize(pieces.filter { !$0.recipe }), summarize(pieces.filter(\.recipe)))
     }
 
     static func mentions(_ event: YearReviewEvent, pubkey: String) -> Bool {

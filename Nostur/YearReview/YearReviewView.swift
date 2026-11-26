@@ -158,6 +158,7 @@ struct YearReviewView: View {
                 shareDraft = nil
             }
             .environment(\.theme, theme)
+            .presentationBackgroundCompat(theme.listBackground)
         }
     }
 
@@ -260,13 +261,13 @@ enum YearReviewVoice: Equatable {
 }
 
 enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
-    case gang, activeDay, polls, conversation, mostReacted, mostZapped, mostZapValue, supporters, mentions
+    case gang, activeDay, polls, articles, recipes, conversation, mostReacted, mostZapped, mostZapValue, supporters, mentions
     case mostInteracted, mostTalked, replyGuy, reactedBy, liked, zappedBy, zapped, amplifiedBy
     case returningThread, newConversations
     static let defaultSelection: Set<Self> = Set(allCases)
     var id: String { rawValue }
     static func ordered(_ cards: [Self]) -> [Self] {
-        let featured: [Self] = [.activeDay, .returningThread, .newConversations, .gang, .conversation, .mostReacted, .mostZapped]
+        let featured: [Self] = [.activeDay, .articles, .recipes, .returningThread, .newConversations, .gang, .conversation, .mostReacted, .mostZapped]
         let primary = featured.filter { cards.contains($0) }
         return primary + cards.filter { !primary.contains($0) }
     }
@@ -283,6 +284,8 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
         case .gang: "Nostr Gang"
         case .activeDay: "Posting rhythm"
         case .polls: "Poll highlights"
+        case .articles: "In their own words"
+        case .recipes: "Recipes"
         case .conversation: "Conversation starter"
         case .mostReacted: "Most-loved post"
         case .mostZapped: "Most-zapped post"
@@ -302,7 +305,14 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    func title(for voice: YearReviewVoice) -> LocalizedStringKey {
+    func title(for voice: YearReviewVoice, recipeCount: Int = 0) -> LocalizedStringKey {
+        if self == .recipes, recipeCount > 5 {
+            switch voice {
+            case .reader: return "You were cooking"
+            case .author: return "I was cooking"
+            case .neutral: return "A year of cooking"
+            }
+        }
         switch voice {
         case .neutral(let ownerName):
             if self == .amplifiedBy, !ownerName.isEmpty { return "Who spread \(ownerName)'s words?" }
@@ -312,6 +322,8 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
             case .gang: return "Your Nostr Gang"
             case .activeDay: return "Your posting rhythm"
             case .polls: return "You put it to a vote"
+            case .articles: return "In your own words"
+            case .recipes: return title
             case .conversation: return "You got people talking"
             case .mostReacted: return "Your most-loved post"
             case .mostZapped: return "Your most-zapped post"
@@ -333,6 +345,8 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
             case .gang: return "My Nostr Gang"
             case .activeDay: return "My posting rhythm"
             case .polls: return "I put it to a vote"
+            case .articles: return "In my own words"
+            case .recipes: return title
             case .conversation: return "I got people talking"
             case .mostReacted: return "My most-loved post"
             case .mostZapped: return "My most-zapped post"
@@ -357,6 +371,8 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
         case .gang, .mostInteracted: "person.3.fill"
         case .activeDay: "calendar"
         case .polls: "chart.bar.xaxis"
+        case .articles: "book"
+        case .recipes: "fork.knife"
         case .conversation, .mostTalked, .replyGuy: "bubble.left.and.bubble.right.fill"
         case .mostReacted, .reactedBy, .liked: "heart.fill"
         case .mostZapped, .mostZapValue, .zappedBy, .zapped: "bolt.fill"
@@ -368,7 +384,15 @@ enum YearReviewCard: String, CaseIterable, Identifiable, Codable {
         }
     }
     func hasHighlight(in report: YearReviewReport) -> Bool {
-        post(in: report) != nil || (self == .activeDay && report.mostActiveDay != nil) || (self == .polls && report.polls != nil)
+        post(in: report) != nil || (self == .activeDay && report.mostActiveDay != nil) || (self == .polls && report.polls != nil) || publications(in: report) != nil
+    }
+
+    func publications(in report: YearReviewReport) -> YearReviewPublications? {
+        switch self {
+        case .articles: report.articles
+        case .recipes: report.recipes
+        default: nil
+        }
     }
 
     func post(in report: YearReviewReport) -> YearReviewPost? {
@@ -506,7 +530,7 @@ private struct YearReviewProfileHeading: View {
                 if showsYearToDate { Text("\(String(year)) so far") }
                 else { Text(verbatim: String(year)) }
             }
-            .font(isCover ? .system(.largeTitle, design: .rounded).weight(.black) : .title2.weight(.semibold))
+            .font(isCover ? .largeTitle.bold() : .title2.weight(.semibold))
             .accessibilityAddTraits(.isHeader)
             Button(action: selectProfile) {
                 HStack(spacing: 8) {
@@ -1289,7 +1313,7 @@ private struct YearReviewHighlightsView: View {
             YearReviewCollapsedCard(card: card, voice: voice, show: { toggleCard(card) })
                 .transition(.opacity)
         } else {
-            YearReviewHighlightCard(card: card, voice: voice, story: YearReviewConversationStoryContent(card: card, report: report), post: card.post(in: report), activeDay: card == .activeDay ? report.mostActiveDay : nil, averagePostsPerDay: report.averagePostsPerDay, postingRuns: YearReviewPostingRuns(streak: report.longestPostingStreak, gap: report.longestPostingBreak), pollActivity: card == .polls ? report.polls : nil, dateFormat: report.period.dateFormat,
+            YearReviewHighlightCard(card: card, voice: voice, story: YearReviewConversationStoryContent(card: card, report: report), post: card.post(in: report), activeDay: card == .activeDay ? report.mostActiveDay : nil, averagePostsPerDay: report.averagePostsPerDay, postingRuns: YearReviewPostingRuns(streak: report.longestPostingStreak, gap: report.longestPostingBreak), pollActivity: card == .polls ? report.polls : nil, publications: card.publications(in: report), publicationPreviews: previews, dateFormat: report.period.dateFormat,
                 people: card.people(in: report).filter { !hiddenPeople.contains($0.pubkey) },
                 names: names, pictures: pictures, preview: card.post(in: report).flatMap { previews[$0.id] }, openPost: openPost, openProfile: openProfile, featured: featured,
                 hide: toggleCard.map { toggle in { toggle(card) } })
@@ -1333,6 +1357,8 @@ private struct YearReviewHighlightCard: View {
     let averagePostsPerDay: Double
     let postingRuns: YearReviewPostingRuns
     let pollActivity: YearReviewPollActivity?
+    let publications: YearReviewPublications?
+    let publicationPreviews: [String: YearReviewPostPreview]
     let dateFormat: Date.FormatStyle
     let people: [YearReviewPerson]
     let names: [String: String]
@@ -1346,7 +1372,7 @@ private struct YearReviewHighlightCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .top, spacing: 12) {
-                Label { Text(card.title(for: voice)).font(featured ? .title2.bold() : .title3.bold()) } icon: {
+                Label { Text(card.title(for: voice, recipeCount: publications?.count ?? 0)).font(featured ? .title2.bold() : .title3.bold()) } icon: {
                     Image(systemName: card.icon).foregroundStyle(theme.accent)
                 }
                 if let hide {
@@ -1366,11 +1392,15 @@ private struct YearReviewHighlightCard: View {
             if let pollActivity {
                 YearReviewPollActivityContent(activity: pollActivity)
             }
+            if let publications {
+                YearReviewPublicationContent(publications: publications, isRecipe: card == .recipes,
+                    previews: publicationPreviews, open: openPost)
+            }
             story
             if let post {
                 if card == .polls { Text("Your most-voted poll").font(.subheadline).foregroundStyle(.secondary) }
                 YearReviewPostMetric(card: card, post: post, voters: pollActivity?.mostVotedCount ?? 0)
-                    .font(.system(featured ? .largeTitle : .title2, design: .rounded).weight(.black))
+                    .font(featured ? .largeTitle.bold() : .title2.bold())
                     .foregroundStyle(theme.accent)
                 if let openPost {
                     Button { openPost(post) } label: {
@@ -1430,6 +1460,113 @@ private struct YearReviewConversationStoryContent: View {
             }
         default: EmptyView()
         }
+    }
+}
+
+private struct YearReviewPublicationContent: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.colorScheme) private var colorScheme
+    let publications: YearReviewPublications
+    let isRecipe: Bool
+    let previews: [String: YearReviewPostPreview]
+    let open: ((YearReviewPost) -> Void)?
+    var posterFont: YearReviewPosterFont?
+
+    private var accent: Color {
+        guard isRecipe, posterFont == nil else { return theme.accent }
+        return colorScheme == .dark ? Color(red: 1, green: 0.70, blue: 0.43)
+            : Color(red: 0.63, green: 0.29, blue: 0.14)
+    }
+
+    private var countLabel: Text {
+        if isRecipe {
+            return publications.count == 1 ? Text("1 recipe") : Text("\(publications.count) recipes")
+        }
+        return publications.count == 1 ? Text("1 article") : Text("\(publications.count) articles")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 3) {
+                countLabel
+                    .font(posterFont?.font(size: 34, weight: .bold) ?? .largeTitle.bold())
+                    .foregroundStyle(accent)
+                if !isRecipe, publications.words > 1 {
+                    Text("About \(publications.words.formatted()) words")
+                        .font(posterFont?.font(size: 14, weight: .regular) ?? .subheadline)
+                        .foregroundStyle(theme.secondary)
+                }
+            }
+
+            if let spotlight = publications.highlights.first {
+                if isRecipe {
+                    publication(spotlight, isSpotlight: true)
+                        .padding(14)
+                        .background(accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+                } else {
+                    publication(spotlight, isSpotlight: true)
+                        .padding(.leading, 12)
+                        .overlay(alignment: .leading) {
+                            Capsule().fill(accent.opacity(0.55)).frame(width: 3)
+                        }
+                }
+            }
+            ForEach(publications.highlights.dropFirst()) { item in
+                publication(item, isSpotlight: false)
+            }
+        }
+    }
+
+    @ViewBuilder private func publication(_ item: YearReviewPublication, isSpotlight: Bool) -> some View {
+        let label = YearReviewPublicationLabel(title: item.title,
+            thumbnail: isSpotlight ? previews[item.id]?.thumbnail : nil,
+            recipeAccent: isRecipe ? accent : nil, featured: isSpotlight,
+            isLink: open != nil, posterFont: posterFont)
+        if let open {
+            Button { open(item.post) } label: { label }
+                .buttonStyle(.plain)
+        } else {
+            label
+        }
+    }
+}
+
+private struct YearReviewPublicationLabel: View {
+    @Environment(\.theme) private var theme
+    let title: String
+    let thumbnail: URL?
+    let recipeAccent: Color?
+    let featured: Bool
+    let isLink: Bool
+    let posterFont: YearReviewPosterFont?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            if let thumbnail {
+                MinimalMediaThumbnail(url: thumbnail, extraCount: 0, isVideo: false)
+                    .accessibilityHidden(true)
+            } else if featured, let recipeAccent {
+                Image(systemName: "fork.knife")
+                    .font(.title3)
+                    .foregroundStyle(recipeAccent)
+                    .frame(width: 36, height: 36)
+                    .accessibilityHidden(true)
+            }
+            Text(title)
+                .font(posterFont?.font(size: featured ? 21 : 15, weight: featured ? .bold : .regular)
+                    ?? (featured ? .title3.weight(.semibold) : .subheadline))
+                .foregroundStyle(theme.primary)
+                .lineLimit(3)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if isLink {
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(theme.secondary)
+                    .accessibilityHidden(true)
+            }
+        }
+        .contentShape(Rectangle())
     }
 }
 
@@ -1493,7 +1630,7 @@ private struct YearReviewActiveDayContent: View {
         VStack(alignment: .leading, spacing: 4) {
             if streak >= 7 {
                 Text("\(streak) days")
-                    .font(posterFont?.font(size: 36, weight: .black) ?? .system(.largeTitle, design: .rounded).weight(.black))
+                    .font(posterFont?.font(size: 36, weight: .black) ?? .largeTitle.bold())
                     .foregroundStyle(theme.accent)
                 Text("Longest posting streak").font(.subheadline.weight(.semibold))
                 HStack(spacing: 4) {
@@ -1508,7 +1645,7 @@ private struct YearReviewActiveDayContent: View {
                     .font(.subheadline)
             } else {
                 Text(value, format: format)
-                    .font(posterFont?.font(size: 36, weight: .black) ?? .system(.largeTitle, design: .rounded).weight(.black))
+                    .font(posterFont?.font(size: 36, weight: .black) ?? .largeTitle.bold())
                     .foregroundStyle(theme.accent)
                 Text(unit).font(.subheadline.weight(.semibold))
             }
@@ -1628,13 +1765,14 @@ private struct YearReviewPersonRow: View {
 }
 
 private enum YearReviewPosterTheme: String, CaseIterable, Identifiable {
-    case nostur, newsprint, electric, cobalt, rose
+    case nostur, newsprint, electric, cobalt, rose, hashtagNostr
 
     var id: Self { self }
 
     var title: LocalizedStringKey {
         switch self {
         case .nostur: "Nostur"
+        case .hashtagNostr: "nostr protocol"
         case .newsprint: "Newsprint"
         case .electric: "Electric"
         case .cobalt: "Cobalt"
@@ -1645,6 +1783,7 @@ private enum YearReviewPosterTheme: String, CaseIterable, Identifiable {
     func palette(using appTheme: Theme) -> Theme {
         switch self {
         case .nostur: appTheme
+        case .hashtagNostr: palette(background: 0x16202A, surface: 0x22303D, ink: 0xF3F8FC, muted: 0xBCCFDE, accent: 0x70C9F8)
         case .newsprint: palette(background: 0xF5EFE3, surface: 0xEBE2D1, ink: 0x23211D, muted: 0x514C44, accent: 0x962B22)
         case .electric: palette(background: 0x171821, surface: 0x25293A, ink: 0xF7FAE7, muted: 0xCCD1B8, accent: 0xE2FD47)
         case .cobalt: palette(background: 0x102DA8, surface: 0x1739BD, ink: 0xFFFFFF, muted: 0xDAE5FF, accent: 0x9EEFFF)
@@ -1652,9 +1791,10 @@ private enum YearReviewPosterTheme: String, CaseIterable, Identifiable {
         }
     }
 
-    var mark: String {
+    var mark: String? {
         switch self {
         case .nostur: "sparkles"
+        case .hashtagNostr: nil
         case .newsprint: "asterisk"
         case .electric: "bolt.fill"
         case .cobalt: "plus"
@@ -1734,6 +1874,7 @@ private struct YearReviewSharePreview: View {
     @State private var renderFailed = false
     @State private var renderAttempt = 0
     @Environment(\.locale) private var locale
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let content: YearReviewShareContent
     let colorScheme: ColorScheme
     @Binding var hiddenPeople: Set<String>
@@ -1786,29 +1927,38 @@ private struct YearReviewSharePreview: View {
         }
     }
 
+    private var imageArrival: AnyTransition {
+        reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 if selected.isDisjoint(with: currentContent.shareableCards) {
                     Text("Choose at least one highlight.").padding()
+                } else if renderFailed {
+                    VStack(spacing: 12) {
+                        Text("The share image could not be created. Please try again.")
+                        Button("Try again") { renderAttempt += 1 }
+                    }.padding()
+                } else if let image {
+                    Image(uiImage: image).resizable().scaledToFit()
+                        .accessibilityLabel("Your year report image")
+                        .transition(.asymmetric(insertion: imageArrival, removal: .opacity))
                 } else {
-                    if let rendered, rendered.request.hiddenPeople == hiddenPeople {
-                        Image(uiImage: rendered.image).resizable().scaledToFit()
-                            .accessibilityLabel("Your year report image")
-                    }
-                    if renderFailed {
-                        VStack(spacing: 12) {
-                            Text("The share image could not be created. Please try again.")
-                            Button("Try again") { renderAttempt += 1 }
-                        }.padding()
-                    } else if image == nil {
-                        ProgressView("Preparing preview…").padding()
-                    }
+                    YearReviewSharePreparing(year: content.report.period.year, name: content.ownerName,
+                        ownReport: content.voice == .author, font: posterFont)
+                        .environment(\.theme, posterTheme.palette(using: theme))
+                        .transition(.opacity)
                 }
             }
+            .animation(.spring(duration: 0.72, bounce: reduceMotion ? 0 : 0.08), value: image != nil)
+            .scrollContentBackground(.hidden)
             .background(theme.listBackground)
             .navigationTitle("Share your year")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(theme.listBackground, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Dismiss")
@@ -1870,6 +2020,8 @@ private struct YearReviewSharePreview: View {
                 if let image { ActivityView(activityItems: [image]) }
             }
         }
+        .background(theme.listBackground.ignoresSafeArea())
+        .presentationBackgroundCompat(theme.listBackground)
         .task(id: request) { [request] in
             let cards = request.cards
             renderFailed = false
@@ -1883,11 +2035,129 @@ private struct YearReviewSharePreview: View {
             let image = await ShareCardRenderer.render(poster
                 .environment(\.theme, palette)
                 .environment(\.colorScheme, colorScheme)
-                .environment(\.locale, locale))
+                .environment(\.locale, locale), maximumPixelDimension: 8192)
             guard !Task.isCancelled else { return }
-            if let image { rendered = (request, image) }
-            else { renderFailed = true }
+            if let image {
+                withAnimation(.spring(duration: 0.72, bounce: reduceMotion ? 0 : 0.08)) {
+                    rendered = (request, image)
+                }
+            } else {
+                renderFailed = true
+            }
         }
+    }
+}
+
+@available(iOS 17.0, *)
+private struct YearReviewSharePreparing: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let year: Int
+    let name: String
+    let ownReport: Bool
+    let font: YearReviewPosterFont
+
+    var body: some View {
+        Group {
+            if reduceMotion {
+                poster(sweep: 1)
+            } else {
+                TimelineView(.animation(minimumInterval: 1.0 / 30)) { timeline in
+                    let cycle = timeline.date.timeIntervalSinceReferenceDate
+                        .truncatingRemainder(dividingBy: 2.2) / 2.2
+                    poster(sweep: cycle)
+                }
+            }
+        }
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Preparing preview…")
+    }
+
+    private var yearFont: Font { font.font(size: 92, weight: .black) }
+
+    private func poster(sweep: Double) -> some View {
+        ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(theme.background)
+            LinearGradient(colors: [theme.accent.opacity(0.2), .clear],
+                startPoint: .topLeading, endPoint: .bottomTrailing)
+            sheen(sweep: sweep)
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .center, spacing: 12) {
+                    Group {
+                        if ownReport { Text("My year on Nostr") }
+                        else { Text("\(name)'s year on Nostr") }
+                    }
+                    .font(font.font(size: 16, weight: .bold))
+                    .foregroundStyle(theme.secondary)
+                    .lineLimit(2)
+                    Spacer(minLength: 0)
+                    Image("NosturLogoCreature")
+                        .resizable().renderingMode(.template).scaledToFit()
+                        .frame(width: 20, height: 24)
+                        .foregroundStyle(theme.accent)
+                        .offset(y: reduceMotion ? 0 : CGFloat(sin(sweep * .pi * 2)) * -4)
+                        .accessibilityHidden(true)
+                }
+                Text(verbatim: String(year))
+                    .font(yearFont)
+                    .tracking(font == .mono ? -3 : -6)
+                    .foregroundStyle(theme.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .opacity(0.35 + 0.65 * min(sweep / 0.35, 1))
+                if !name.isEmpty {
+                    Text(name)
+                        .font(font.font(size: 24, weight: .bold))
+                        .foregroundStyle(theme.primary)
+                        .lineLimit(2)
+                        .opacity(sweep > 0.12 ? 1 : 0.35)
+                }
+                VStack(alignment: .leading, spacing: 16) {
+                    printedLine(fraction: lineFraction(sweep, lead: 0.08))
+                    printedLine(fraction: lineFraction(sweep, lead: 0.24))
+                    printedLine(fraction: lineFraction(sweep, lead: 0.4))
+                }
+                .padding(.top, 6)
+                Spacer(minLength: 0)
+            }
+            .padding(26)
+        }
+        .containerRelativeFrame(.horizontal) { length, _ in min(max(length - 36, 240), 420) }
+        .frame(height: 540)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .strokeBorder(theme.primary.opacity(0.08), lineWidth: 1)
+        }
+        .shadow(color: theme.accent.opacity(0.16), radius: 26, y: 14)
+    }
+
+    private func sheen(sweep: Double) -> some View {
+        GeometryReader { geo in
+            LinearGradient(colors: [.clear, theme.accent.opacity(0.28), .clear],
+                startPoint: .top, endPoint: .bottom)
+                .frame(height: geo.size.height * 0.3)
+                .offset(y: -geo.size.height * 0.3 + CGFloat(sweep) * geo.size.height * 1.3)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private func lineFraction(_ sweep: Double, lead: Double) -> CGFloat {
+        CGFloat(min(max((sweep - lead) / 0.42, 0), 1))
+    }
+
+    private func printedLine(fraction: CGFloat) -> some View {
+        GeometryReader { geo in
+            Capsule()
+                .fill(theme.accent.opacity(0.55))
+                .frame(width: max(geo.size.width * fraction, fraction > 0 ? 8 : 0), height: 2)
+        }
+        .frame(height: 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -2001,6 +2271,8 @@ private struct YearReviewPosterBackdrop: View {
             switch appearance {
             case .nostur:
                 LinearGradient(colors: [theme.accent.opacity(0.12), .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
+            case .hashtagNostr:
+                Rectangle().fill(theme.accent).frame(height: 6)
             case .newsprint:
                 VStack {
                     Rectangle().fill(theme.accent).frame(height: 4)
@@ -2058,7 +2330,7 @@ private struct YearReviewPosterHeader: View {
     let picture: URL?
     let showsYearToDateLabel: Bool
     let font: YearReviewPosterFont
-    let mark: String
+    let mark: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -2068,7 +2340,18 @@ private struct YearReviewPosterHeader: View {
                     else { Text("\(name)'s year on Nostr") }
                 }.font(font.font(size: 16, weight: .bold))
                 Spacer()
-                Image(systemName: mark).font(.system(size: 27, weight: .bold)).foregroundStyle(theme.accent).rotationEffect(.degrees(12))
+                if let mark {
+                    Image(systemName: mark)
+                        .font(.system(size: 27, weight: .bold))
+                        .foregroundStyle(theme.accent)
+                        .rotationEffect(.degrees(12))
+                } else {
+                    Image("HashtagNostr")
+                        .resizable().renderingMode(.original).scaledToFit()
+                        .frame(width: 40, height: 40)
+                        .overlay { Rectangle().strokeBorder(theme.accent.opacity(0.35), lineWidth: 1) }
+                        .accessibilityHidden(true)
+                }
             }
             Text(verbatim: String(year))
                 .font(font.font(size: 108, weight: .black)).tracking(font == .mono ? -3 : -7)
@@ -2101,7 +2384,7 @@ private struct YearReviewPosterSection: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 9) {
                 Image(systemName: card.icon).foregroundStyle(theme.accent)
-                Text(card.title(for: voice)).font(font.font(size: 19, weight: .bold))
+                Text(card.title(for: voice, recipeCount: report.recipes?.count ?? 0)).font(font.font(size: 19, weight: .bold))
             }
             YearReviewConversationStoryContent(card: card, report: report)
             if card == .gang {
@@ -2113,6 +2396,10 @@ private struct YearReviewPosterSection: View {
                 }
                 if card == .polls, let activity = report.polls {
                     YearReviewPollActivityContent(activity: activity)
+                }
+                if let publications = card.publications(in: report) {
+                    YearReviewPublicationContent(publications: publications, isRecipe: card == .recipes,
+                        previews: previews, open: nil, posterFont: font)
                 }
                 if let post = card.post(in: report) {
                     if card != .returningThread && card != .newConversations {
@@ -2527,7 +2814,7 @@ private struct YearReviewIncompleteSourcesView: View {
     }
 
     var body: some View {
-        List {
+        NXList {
             Section {
                 Label("Saved history is kept", systemImage: "checkmark.shield")
                 Text("If a relay stops responding, Nostur may skip it for later months. Other relays can still finish.")

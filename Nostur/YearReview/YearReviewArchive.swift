@@ -82,7 +82,7 @@ struct YearReviewReportCoverage: Codable, Equatable, Sendable {
 
 struct YearReviewSavedReport: Codable, Sendable {
     // Increment when the analysis or saved preview format changes.
-    static let currentVersion = 2 // Rebuild reports made before restricted-post filtering.
+    static let currentVersion = 3 // Rebuild snapshots that predate separate article and recipe highlights.
     let version: Int
     let owner: String
     let revision: YearReviewReportRevision

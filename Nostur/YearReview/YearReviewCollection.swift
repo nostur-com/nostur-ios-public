@@ -587,7 +587,9 @@ extension YearReviewPostPreview {
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if [30023, 1222, 1244].contains(snapshot.kind) { text = snapshot.preview }
         if text.isEmpty && images.isEmpty && videos.isEmpty { text = snapshot.preview }
-        return YearReviewPostPreview(text: text, thumbnail: images.first ?? videos.first,
-            extraCount: max(0, images.count + videos.count - 1), isVideo: images.isEmpty)
+        let cover = snapshot.kind == 30023 ? snapshot.tagValues("image").first.flatMap(URL.init(string:)) : nil
+        let publicCover = cover.flatMap { ["https", "http"].contains($0.scheme?.lowercased() ?? "") ? $0 : nil }
+        return YearReviewPostPreview(text: text, thumbnail: publicCover ?? images.first ?? videos.first,
+            extraCount: max(0, images.count + videos.count - 1), isVideo: publicCover == nil && images.isEmpty)
     }
 }

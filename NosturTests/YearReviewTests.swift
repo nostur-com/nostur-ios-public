@@ -51,6 +51,39 @@ final class YearReviewTests: XCTestCase {
         }
     }
 
+    @MainActor
+    func testVeryTallShareImageFitsBitmapLimitAndRendersBothEnds() async throws {
+        guard #available(iOS 16.0, *) else { throw XCTSkip("Share images require iOS 16") }
+        let content = VStack(spacing: 0) {
+            Color.red.frame(height: 1700)
+            Color.blue.frame(height: 1700)
+        }
+        .frame(width: 320)
+        let rendered = await ShareCardRenderer.render(content, maximumPixelDimension: 8192)
+        let image = try XCTUnwrap(rendered?.cgImage)
+        XCTAssertLessThanOrEqual(image.height, 8192)
+        XCTAssertGreaterThan(image.height, 8100)
+        XCTAssertEqual(Double(image.width) / Double(image.height), 320.0 / 3400, accuracy: 0.001)
+
+        func pixel(at y: Int) throws -> [UInt8] {
+            let sample = try XCTUnwrap(image.cropping(to: CGRect(x: image.width / 2, y: y, width: 1, height: 1)))
+            var bytes = [UInt8](repeating: 0, count: 4)
+            try bytes.withUnsafeMutableBytes { buffer in
+                let context = try XCTUnwrap(CGContext(data: buffer.baseAddress, width: 1, height: 1,
+                    bitsPerComponent: 8, bytesPerRow: 4, space: CGColorSpaceCreateDeviceRGB(),
+                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue))
+                context.draw(sample, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+            }
+            return bytes
+        }
+        let top = try pixel(at: 10)
+        let bottom = try pixel(at: image.height - 10)
+        XCTAssertGreaterThan(top[0], top[2])
+        XCTAssertGreaterThan(bottom[2], bottom[0])
+        XCTAssertEqual(top[3], 255)
+        XCTAssertEqual(bottom[3], 255)
+    }
+
     func testYearToDateLabelEndsDecember15InReportTimeZone() {
         let zone = TimeZone(identifier: "Europe/Amsterdam")!
         var calendar = Calendar(identifier: .gregorian)
@@ -459,18 +492,28 @@ final class YearReviewTests: XCTestCase {
         {"cardSelectionVersion":4,"cards":["replyRegular","returningThread"],"hiddenPeople":["hidden"],"shareFormat":"report","selectedRelays":["wss://relay.example"],"relays":[]}
         """.utf8)
         let preferences = try JSONDecoder().decode(YearReviewPreferences.self, from: data)
-        XCTAssertEqual(preferences.selectedCards, [.returningThread])
+        XCTAssertEqual(preferences.selectedCards, [.returningThread, .articles, .recipes])
         XCTAssertEqual(preferences.hiddenPeople, ["hidden"])
         XCTAssertEqual(preferences.selectedRelays, ["wss://relay.example"])
+    }
+
+    func testWritingPreferenceMigratesToSeparatePublicationCards() throws {
+        let data = Data("""
+        {"cardSelectionVersion":5,"cards":["writing","activeDay"],"hiddenPeople":[],"shareFormat":"report","selectedRelays":[],"relays":[]}
+        """.utf8)
+        let preferences = try JSONDecoder().decode(YearReviewPreferences.self, from: data)
+        XCTAssertEqual(preferences.selectedCards, [.activeDay, .articles, .recipes])
     }
 
     func testNewPollCardDefaultsPreserveExistingHiddenCards() {
         var preferences = YearReviewPreferences(cards: [.activeDay], hiddenPeople: [], shareFormat: .report, selectedRelays: [], relays: [])
         preferences.cardSelectionVersion = 2
-        XCTAssertEqual(preferences.selectedCards, [.activeDay, .polls, .returningThread, .newConversations])
+        XCTAssertEqual(preferences.selectedCards, [.activeDay, .polls, .returningThread, .newConversations, .articles, .recipes])
         preferences.cardSelectionVersion = 3
-        XCTAssertEqual(preferences.selectedCards, [.activeDay, .returningThread, .newConversations])
+        XCTAssertEqual(preferences.selectedCards, [.activeDay, .returningThread, .newConversations, .articles, .recipes])
         preferences.cardSelectionVersion = 4
+        XCTAssertEqual(preferences.selectedCards, [.activeDay, .articles, .recipes])
+        preferences.cardSelectionVersion = 5
         XCTAssertEqual(preferences.selectedCards, [.activeDay])
     }
 
@@ -1190,6 +1233,50 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(result.mostReacted?.reactions, 1)
         let deletion = note("delete", by: owner, tags: [["a", address]], timestamp: period.start + 3, kind: 5)
         XCTAssertEqual(analyze([old, updated, deletion]).ownPostCount, 0)
+    }
+
+    func testPublicationCardsSeparatelyRankArticlesAndZapCookingRecipes() throws {
+        let article = note("article", by: owner, content: "One two three", tags: [["d", "essay"], ["title", "A long essay"]], kind: 30023)
+        let revised = note("article-revised", by: owner, content: "One two three four", tags: [["d", "essay"], ["title", "A long essay"]], timestamp: period.start + 4, kind: 30023)
+        let recipe = note("recipe", by: owner, content: "Salt\nPepper", tags: [["d", "soup"], ["title", "Soup"], ["t", "ZapCooking"]], timestamp: period.start + 2, kind: 30023)
+        let legacy = note("legacy", by: owner, content: "Eggs", tags: [["d", "eggs"], ["title", "Eggs"], ["t", "NostrCooking"]], timestamp: period.start + 3, kind: 30023)
+        let categoryOnly = note("tagged-article", by: owner, content: "Not a recipe", tags: [["d", "notes"], ["title", "Kitchen notes"], ["t", "zapcooking-easy"], ["client", "Zap Cooking"]], timestamp: period.start + 5, kind: 30023)
+        let lastYear = note("old-article", by: owner, content: "Old words", tags: [["d", "old"], ["title", "Last year"], ["published_at", String(period.start - 10)]], kind: 30023)
+        let gated = note("gated", by: owner, content: "Secret", tags: [["d", "gated"], ["title", "Secret"], ["t", "zapcooking"]], kind: 35000)
+        let notePost = note("plain", by: owner, content: "Hello")
+        let loved = note("love", by: alice, content: "+", tags: [["a", "30023:" + owner + ":soup"]], kind: 7)
+        let report = analyze([article, revised, recipe, legacy, categoryOnly, lastYear, gated, notePost, loved], trusted: [alice])
+        let articles = try XCTUnwrap(report.articles)
+        let recipes = try XCTUnwrap(report.recipes)
+        XCTAssertEqual(report.ownPostCount, 5)
+        XCTAssertEqual(articles.count, 2)
+        XCTAssertEqual(recipes.count, 2)
+        XCTAssertEqual(articles.words, 4 + 3)
+        XCTAssertEqual(articles.highlights.map(\.title), ["Kitchen notes", "A long essay"])
+        XCTAssertEqual(recipes.highlights.map(\.title), ["Soup", "Eggs"])
+        XCTAssertEqual(recipes.highlights.first?.id, "recipe")
+        XCTAssertEqual(recipes.highlights.first?.post.reactions, 1)
+        XCTAssertTrue(YearReviewCard.articles.hasHighlight(in: report))
+        XCTAssertTrue(YearReviewCard.recipes.hasHighlight(in: report))
+        XCTAssertFalse(YearReviewCard.articles.hasHighlight(in: analyze([recipe])))
+        XCTAssertFalse(YearReviewCard.recipes.hasHighlight(in: analyze([article])))
+        XCTAssertFalse(YearReviewKinds.archived.contains(35000))
+
+        let deleted = note("delete-essay", by: owner, tags: [["a", "30023:" + owner + ":essay"]], timestamp: period.start + 6, kind: 5)
+        let afterDeletion = analyze([article, revised, recipe, legacy, categoryOnly, deleted], trusted: [alice])
+        XCTAssertEqual(afterDeletion.articles?.count, 1)
+        XCTAssertEqual(afterDeletion.articles?.highlights.map(\.title), ["Kitchen notes"])
+        XCTAssertNil(analyze([notePost]).articles)
+        XCTAssertNil(analyze([notePost]).recipes)
+
+        let saved = try JSONEncoder().encode(report)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: saved) as? [String: Any])
+        object.removeValue(forKey: "articles")
+        object.removeValue(forKey: "recipes")
+        let stripped = try JSONSerialization.data(withJSONObject: object)
+        let legacyReport = try JSONDecoder().decode(YearReviewReport.self, from: stripped)
+        XCTAssertNil(legacyReport.articles)
+        XCTAssertNil(legacyReport.recipes)
     }
 
     func testSupportersAndOutgoingReactionsExcludeSpamSelfAndDuplicates() {

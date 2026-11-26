@@ -618,18 +618,34 @@ struct ShareCardCanvas<Content: View>: View {
 enum ShareCardRenderer {
     static func render<Content: View>(
         _ content: Content,
-        scale: CGFloat = 3
+        scale: CGFloat = 3,
+        maximumPixelDimension: CGFloat? = nil
     ) async -> UIImage? {
         let renderer = ImageRenderer(content: content.fixedSize(horizontal: false, vertical: true))
-        renderer.scale = scale
-        _ = renderer.uiImage
+
+        func snapshot() -> UIImage? {
+            var outputScale = scale
+            if let maximumPixelDimension {
+                // Read the laid-out size before allocating an export bitmap.
+                renderer.render { size, _ in
+                    let longestSide = max(size.width, size.height)
+                    if longestSide > 0 {
+                        outputScale = min(scale, maximumPixelDimension / longestSide)
+                    }
+                }
+            }
+            renderer.scale = outputScale
+            return renderer.uiImage
+        }
+
+        _ = snapshot()
 
         do {
             try await Task.sleep(nanoseconds: 650_000_000)
         } catch {
             return nil
         }
-        return renderer.uiImage
+        return snapshot()
     }
 }
 

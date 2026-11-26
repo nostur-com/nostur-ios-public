@@ -5,7 +5,7 @@ import NostrEssentials
 import CoreData
 
 struct YearReviewPreferences: Codable, Equatable {
-    var cardSelectionVersion: Int? = 4
+    var cardSelectionVersion: Int? = 6
     var relayDefaultsVersion: Int? = 1
     let cards: Set<YearReviewCard>
     let hiddenPeople: Set<String>
@@ -20,6 +20,7 @@ struct YearReviewPreferences: Codable, Equatable {
         var selected = cards
         if (cardSelectionVersion ?? 0) < 3 { selected.insert(.polls) }
         if (cardSelectionVersion ?? 0) < 4 { selected.formUnion([.returningThread, .newConversations]) }
+        if (cardSelectionVersion ?? 0) < 5 { selected.formUnion([.articles, .recipes]) }
         return selected
     }
 
@@ -51,7 +52,10 @@ extension YearReviewPreferences {
         cardSelectionVersion = try values.decodeIfPresent(Int.self, forKey: .cardSelectionVersion)
         relayDefaultsVersion = try values.decodeIfPresent(Int.self, forKey: .relayDefaultsVersion)
         // Ignore retired card IDs without losing the rest of the saved preferences.
-        cards = Set(try values.decode([String].self, forKey: .cards).compactMap(YearReviewCard.init(rawValue:)))
+        let storedCards = try values.decode([String].self, forKey: .cards)
+        var decodedCards = Set(storedCards.compactMap(YearReviewCard.init(rawValue:)))
+        if storedCards.contains("writing") { decodedCards.formUnion([.articles, .recipes]) }
+        cards = decodedCards
         hiddenPeople = try values.decode(Set<String>.self, forKey: .hiddenPeople)
         shareFormat = try values.decode(YearReviewShareFormat.self, forKey: .shareFormat)
         selectedRelays = try values.decode(Set<String>.self, forKey: .selectedRelays)
@@ -1079,7 +1083,9 @@ final class YearReviewModel {
     }
 
     private func loadPostPreviews(report: YearReviewReport, archive: YearReviewArchive) async throws -> [String: YearReviewPostPreview] {
-        let ids = Set([report.conversation, report.mostReacted, report.mostZapped, report.mostZapValue, report.polls?.mostVoted, report.returningThread?.post, report.newConversations?.post].compactMap { $0?.id })
+        let posts = [report.conversation, report.mostReacted, report.mostZapped, report.mostZapValue, report.polls?.mostVoted, report.returningThread?.post, report.newConversations?.post]
+        let publications = (report.articles?.highlights ?? []) + (report.recipes?.highlights ?? [])
+        let ids = Set(posts.compactMap { $0?.id } + publications.map(\.id))
         var events: [YearReviewEvent] = []
         for id in ids { if let event = try await archive.event(id: id) { events.append(event) } }
         let snapshots = events
