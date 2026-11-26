@@ -5120,6 +5120,16 @@
         }
       }
     },
+    "About 1 in %@ posts might take longer than %lld seconds to post." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "About 1 in %1$@ posts might take longer than %2$lld seconds to post."
+          }
+        }
+      }
+    },
     "About badge publishing" : {
       "localizations" : {
         "es" : {
@@ -5180,6 +5190,28 @@
         }
       }
     },
+    "About limited posts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca de las publicaciones limitadas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentang postingan terbatas"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over beperkte posts"
+          }
+        }
+      }
+    },
     "About public votes" : {
       "localizations" : {
         "es" : {
@@ -5203,6 +5235,7 @@
       }
     },
     "About relay-restricted content" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -6424,9 +6457,6 @@
           }
         }
       }
-    },
-    "Add Proof of Work" : {
-
     },
     "Add public note (optional)" : {
       "localizations" : {
@@ -22331,6 +22361,28 @@
         }
       }
     },
+    "In your recap" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En tu resumen"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dalam rangkumanmu"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In je jaaroverzicht"
+          }
+        }
+      }
+    },
     "Include author" : {
       "comment" : "Button to include author in Highlight",
       "localizations" : {
@@ -22350,6 +22402,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voeg auteur toe"
+          }
+        }
+      }
+    },
+    "Include limited posts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluir publicaciones limitadas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sertakan postingan terbatas"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beperkte posts opnemen"
           }
         }
       }
@@ -22401,6 +22475,7 @@
       }
     },
     "Include relay-restricted content" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -22465,6 +22540,7 @@
       }
     },
     "Includes posts shared only with specific relays, plus replies, reactions and references to them." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -24021,6 +24097,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "limiet bereikt"
+          }
+        }
+      }
+    },
+    "Limited posts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicaciones limitadas"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan terbatas"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beperkte posts"
           }
         }
       }
@@ -33318,7 +33416,11 @@
         }
       }
     },
+    "Private messages" : {
+
+    },
     "Private messages are always excluded. Relay-restricted posts and interactions are included only if you enable them in Year settings." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -33336,6 +33438,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Privéberichten worden altijd uitgesloten. Relaybeperkte berichten en interacties worden alleen meegenomen als je dit inschakelt in de jaarinstellingen."
+          }
+        }
+      }
+    },
+    "Private messages stay out of your recap. You can include limited posts in Year settings." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los mensajes privados quedan fuera de tu resumen. Puedes incluir publicaciones limitadas en los ajustes del año."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pesan pribadi tidak disertakan dalam rangkumanmu. Kamu bisa menyertakan postingan terbatas di pengaturan tahun."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privéberichten blijven buiten je jaaroverzicht. Je kunt beperkte posts opnemen via de jaarinstellingen."
           }
         }
       }
@@ -36451,6 +36575,7 @@
       }
     },
     "Relay-restricted content" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -42512,6 +42637,28 @@
         }
       }
     },
+    "Some posts are shared only on certain relays." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunas publicaciones solo se comparten en ciertos relés."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beberapa postingan hanya dibagikan di relay tertentu."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sommige posts worden alleen op bepaalde relays gedeeld."
+          }
+        }
+      }
+    },
     "Some private blocks could not be read by this device." : {
       "localizations" : {
         "es" : {
@@ -42591,7 +42738,7 @@
         }
       }
     },
-    "Some relays require this to accept your posts." : {
+    "Some relays require Proof of Work to accept your posts." : {
 
     },
     "Some sources remain incomplete. Tap for relay details" : {
@@ -44137,6 +44284,7 @@
       }
     },
     "The archive keeps this history either way. Changing the switch rebuilds your report from saved data." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -45147,6 +45295,7 @@
       }
     },
     "These can appear in your report and share image. Private messages are always excluded." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -47228,6 +47377,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schakel uit om je batterijlading te besparen en vertrouw de relays voor het valideren van berichten"
+          }
+        }
+      }
+    },
+    "Turn this on to include those posts and activity like replies and reactions. They may appear in your shared image." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa esta opción para incluir esas publicaciones y sus respuestas y reacciones. Pueden aparecer en la imagen que compartas."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktifkan opsi ini untuk menyertakan postingan tersebut beserta aktivitas seperti balasan dan reaksi. Semua itu bisa muncul di gambar yang kamu bagikan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet dit aan om die posts en activiteit zoals antwoorden en reacties op te nemen. Ze kunnen op je gedeelde afbeelding verschijnen."
           }
         }
       }
@@ -51988,6 +52159,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je reacties en reposts"
+          }
+        }
+      }
+    },
+    "Your recap never includes private messages." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu resumen nunca incluye mensajes privados."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rangkumanmu tidak pernah menyertakan pesan pribadi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privéberichten komen nooit in je jaaroverzicht."
           }
         }
       }

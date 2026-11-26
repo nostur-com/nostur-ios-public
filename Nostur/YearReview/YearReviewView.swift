@@ -221,10 +221,10 @@ struct YearReviewView: View {
 
             Section {
                 HStack(spacing: 12) {
-                    Toggle("Include relay-restricted content", isOn: $model.includeRestrictedContent)
+                    Toggle("Include limited posts", isOn: $model.includeRestrictedContent)
                         .disabled(model.isRunning || model.isConfiguring || model.isDeleting)
                     Button { showRestrictedInfo = true } label: {
-                        Label("About relay-restricted content", systemImage: "info.circle").labelStyle(.iconOnly)
+                        Label("About limited posts", systemImage: "info.circle").labelStyle(.iconOnly)
                     }
                     .buttonStyle(.borderless)
                 }
@@ -957,17 +957,19 @@ private struct YearReviewRestrictedContentInfoView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("Includes posts shared only with specific relays, plus replies, reactions and references to them.")
-                    Text("These can appear in your report and share image. Private messages are always excluded.")
-                    Text("The archive keeps this history either way. Changing the switch rebuilds your report from saved data.")
-                        .foregroundStyle(.secondary)
+                    Text("Some posts are shared only on certain relays.")
+                        .font(.body)
+                    YearReviewAboutRow(title: "In your recap", icon: "photo",
+                        detail: "Turn this on to include those posts and activity like replies and reactions. They may appear in your shared image.")
+                    YearReviewAboutRow(title: "Private messages", icon: "lock",
+                        detail: "Your recap never includes private messages.")
                 }
                 .padding(24)
                 .frame(maxWidth: 520, alignment: .leading)
                 .frame(maxWidth: .infinity)
             }
             .background(theme.background)
-            .navigationTitle("Relay-restricted content")
+            .navigationTitle("Limited posts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -999,7 +1001,7 @@ private struct YearReviewAboutView: View {
                     Image(systemName: "globe")
                         .foregroundStyle(theme.accent)
                         .accessibilityHidden(true)
-                    Text("Private messages are always excluded. Relay-restricted posts and interactions are included only if you enable them in Year settings.")
+                    Text("Private messages stay out of your recap. You can include limited posts in Year settings.")
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
