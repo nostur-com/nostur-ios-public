@@ -29,7 +29,7 @@ struct Settings: View {
             NavigationLink {
                 AppearanceSettings()
             } label: {
-                Label("Appearance", systemImage: "switch.2")
+                settingsLabel(Text("Appearance"), systemImage: "switch.2")
             }
             
   
@@ -37,13 +37,13 @@ struct Settings: View {
                 NavigationLink {
                     PostingAndUploadingSettings()
                 } label: {
-                    Label("Posting & Media Uploading", systemImage: "icloud.and.arrow.up")
+                    settingsLabel(Text("Posting & Media Uploading"), systemImage: "icloud.and.arrow.up")
                 }
                 
                 NavigationLink {
                     ZapsSettings()
                 } label: {
-                    Label("Zaps", systemImage: "bolt")
+                    settingsLabel(Text("Zaps"), systemImage: "bolt")
                 }
             }
             
@@ -51,13 +51,13 @@ struct Settings: View {
                 NavigationLink {
                     RelaysAndConnectionsSettings()
                 } label: {
-                    Label("Relay Connections", systemImage: "point.3.filled.connected.trianglepath.dotted")
+                    settingsLabel(Text("Relay Connections"), systemImage: "point.3.filled.connected.trianglepath.dotted")
                 }
                 
                 NavigationLink {
                     SpamFilteringSettings()
                 } label: {
-                    Label("Spam Filtering", systemImage: "checkmark.shield")
+                    settingsLabel(Text("Spam Filtering"), systemImage: "checkmark.shield")
                 }
             }
                   
@@ -75,7 +75,7 @@ struct Settings: View {
             NavigationLink {
                 DatabaseAndCacheSettings()
             } label: {
-                Label("Database & Cache", systemImage: "cylinder.split.1x2")
+                settingsLabel(Text("Database & Cache"), systemImage: "cylinder.split.1x2")
             }
 
             
@@ -90,7 +90,7 @@ struct Settings: View {
                     NavigationLink {
                         PrivateKeySettings()
                     } label: {
-                        Label("Private key", systemImage: "key.fill")
+                        settingsLabel(Text("Private key"), systemImage: "key.fill")
                     }
 
                     Button(role: .destructive) {
@@ -112,6 +112,15 @@ struct Settings: View {
             .presentationBackgroundCompat(theme.listBackground)
         }
 
+    }
+
+    private func settingsLabel(_ title: Text, systemImage: String) -> some View {
+        Label {
+            title
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(theme.accent)
+        }
     }
 }
 
