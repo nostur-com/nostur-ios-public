@@ -2222,6 +2222,23 @@ struct NXPostsFeed: View {
 #endif
             return
         }
+        // A tap after reaching the banner should use its existing reveal action.
+        let scrollView: UIScrollView? = vm.collectionView ?? vm.tableView
+        if vm.alreadySeenNewerCount > 0,
+           !vmInner.isPerformingScroll,
+           !layoutStabilizer.isProgrammaticScrollPending,
+           !layoutStabilizer.hasActivePrependCover,
+           let scrollView,
+           NXFeedViewport.shouldTreatOffsetAsUserAtTop(
+               hasWindow: scrollView.window != nil,
+               contentOffsetY: scrollView.contentOffset.y,
+               insetTop: scrollView.adjustedContentInset.top,
+               isPreparingRestore: vmInner.isPreparingForScrollRestore
+           ) {
+            vm.showAlreadySeenNewerPosts()
+            return
+        }
+
         if vmInner.unreadCount == 0 {
 #if DEBUG
             vm.recordFeedAction("UNREAD tap · counter 0 · scroll to top")
