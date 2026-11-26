@@ -39,6 +39,36 @@ final class LinkPreviewDownloadTests: XCTestCase {
         await fulfillment(of: [finished], timeout: 2)
     }
 
+    func testYouTubeChannelReadsMetadataAfterLargeScripts() async {
+        let padding = String(repeating: " ", count: 900_000)
+        PreviewURLProtocol.body = Data("""
+            <script>\(padding)</script>
+            <meta property="og:title" content="Orange Scarf">
+            <meta property="og:image" content="https://yt3.googleusercontent.com/channel-image">
+            """.utf8)
+        let finished = expectation(description: "Channel HTML metadata parsed")
+        let url = URL(string: "https://www.youtube.com/@The_Orange_Scarf")!
+        fetchMetaTags(url: url, configuration: configuration()) { result in
+            let tags = try? result.get()
+            XCTAssertEqual(tags?["title"], "Orange Scarf")
+            XCTAssertEqual(tags?["image"], "https://yt3.googleusercontent.com/channel-image")
+            finished.fulfill()
+        }
+        await fulfillment(of: [finished], timeout: 2)
+    }
+
+    func testYouTubeVideoStillUsesOEmbed() async {
+        PreviewURLProtocol.mimeType = "application/json"
+        PreviewURLProtocol.body = Data(#"{"title":"Video preview"}"#.utf8)
+        let finished = expectation(description: "YouTube oEmbed JSON parsed")
+        let url = URL(string: "https://www.youtube.com/watch?v=QU9kRF9tHPU")!
+        fetchMetaTags(url: url, configuration: configuration()) { result in
+            XCTAssertEqual(try? result.get()["title"], "Video preview")
+            finished.fulfill()
+        }
+        await fulfillment(of: [finished], timeout: 2)
+    }
+
     override func setUp() {
         PreviewURLProtocol.requestCount = 0
         PreviewURLProtocol.mimeType = "text/html"

@@ -18,15 +18,21 @@ func fetchMetaTags(url: URL, configuration: URLSessionConfiguration, completion:
         completion(.success([:]))
         return
     }
-    let youtube = url.host.map { $0 == "youtube.com" || $0.hasSuffix(".youtube.com") || $0 == "youtu.be" } ?? false
+    let host = url.host?.lowercased() ?? ""
+    let isYouTubeWebsite = host == "youtube.com" || host.hasSuffix(".youtube.com")
+    let channelPath = url.pathComponents.dropFirst()
+    let isYouTubeChannel = isYouTubeWebsite && (channelPath.first.map { first in
+        first.hasPrefix("@") || (channelPath.count > 1 && ["channel", "c", "user"].contains(first))
+    } ?? false)
+    let usesYouTubeOEmbed = !isYouTubeChannel && (isYouTubeWebsite || host == "youtu.be")
     var requestURL = url
-    if youtube {
+    if usesYouTubeOEmbed {
         var components = URLComponents(string: "https://youtube.com/oembed")!
         components.queryItems = [URLQueryItem(name: "url", value: url.absoluteString), URLQueryItem(name: "format", value: "json")]
         guard let oembed = components.url else { return }
         requestURL = oembed
     }
-    LinkPreviewResponseLoader(url: url, youtube: youtube, completion: completion)
+    LinkPreviewResponseLoader(url: url, usesYouTubeOEmbed: usesYouTubeOEmbed, isYouTubeChannel: isYouTubeChannel, completion: completion)
         .start(requestURL: requestURL, configuration: configuration)
 }
 
@@ -35,14 +41,16 @@ func fetchMetaTags(url: URL, configuration: URLSessionConfiguration, completion:
 final class LinkPreviewResponseLoader: NSObject, URLSessionDataDelegate, @unchecked Sendable {
     static let maximumBytes = 512 * 1024
     private let url: URL
-    private let youtube: Bool
+    private let usesYouTubeOEmbed: Bool
+    private let isYouTubeChannel: Bool
     private var completion: ((Result<[String: String], Error>) -> Void)?
     private var session: URLSession?
     private var bytes = Data()
 
-    init(url: URL, youtube: Bool, completion: @escaping (Result<[String: String], Error>) -> Void) {
+    init(url: URL, usesYouTubeOEmbed: Bool, isYouTubeChannel: Bool, completion: @escaping (Result<[String: String], Error>) -> Void) {
         self.url = url
-        self.youtube = youtube
+        self.usesYouTubeOEmbed = usesYouTubeOEmbed
+        self.isYouTubeChannel = isYouTubeChannel
         self.completion = completion
     }
 
@@ -57,17 +65,26 @@ final class LinkPreviewResponseLoader: NSObject, URLSessionDataDelegate, @unchec
         configuration.urlCache = nil
         configuration.timeoutIntervalForRequest = 5
         configuration.timeoutIntervalForResource = 8
+        if isYouTubeChannel {
+            // Fetch public metadata without carrying cookies across YouTube's redirects.
+            configuration.httpShouldSetCookies = false
+            configuration.httpCookieStorage = nil
+        }
         let session = URLSession(configuration: configuration, delegate: self, delegateQueue: queue)
         self.session = session
         var request = URLRequest(url: requestURL)
-        request.setValue(youtube ? "application/json" : "text/html,application/xhtml+xml", forHTTPHeaderField: "Accept")
+        request.setValue(usesYouTubeOEmbed ? "application/json" : "text/html,application/xhtml+xml", forHTTPHeaderField: "Accept")
+        if isYouTubeChannel {
+            // Request the desktop HTML, which carries channel Open Graph tags.
+            request.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
+        }
         session.dataTask(with: request).resume()
     }
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode),
               let mime = response.mimeType?.lowercased(),
-              youtube ? (mime == "application/json" || mime.hasSuffix("+json")) : (mime == "text/html" || mime == "application/xhtml+xml") else {
+              usesYouTubeOEmbed ? (mime == "application/json" || mime.hasSuffix("+json")) : (mime == "text/html" || mime == "application/xhtml+xml") else {
             completionHandler(.cancel)
             finish(.success([:]))
             return
@@ -77,8 +94,10 @@ final class LinkPreviewResponseLoader: NSObject, URLSessionDataDelegate, @unchec
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         guard completion != nil else { return }
-        bytes.append(data.prefix(Self.maximumBytes - bytes.count))
-        if bytes.count == Self.maximumBytes {
+        // YouTube channel pages can put their preview tags after a large script.
+        let byteLimit = isYouTubeChannel ? 1024 * 1024 : Self.maximumBytes
+        bytes.append(data.prefix(byteLimit - bytes.count))
+        if bytes.count == byteLimit {
             dataTask.cancel()
             finishParsedBody()
         }
@@ -92,7 +111,13 @@ final class LinkPreviewResponseLoader: NSObject, URLSessionDataDelegate, @unchec
 
     private func finishParsedBody() {
         let body = String(decoding: bytes, as: UTF8.self)
-        finish(.success(youtube ? parseYoutube(json: body) : parseMetaTags(html: body, url: url)))
+        if usesYouTubeOEmbed {
+            finish(.success(parseYoutube(json: body)))
+        }
+        else {
+            let html = isYouTubeChannel ? body : String(body.prefix(300_000))
+            finish(.success(parseMetaTags(html: html, url: url)))
+        }
     }
 
     private func finish(_ result: Result<[String: String], Error>) {
@@ -137,7 +162,6 @@ func parseYoutube(json: String) -> [String: String] {
 func parseMetaTags(html: String, url: URL) -> [String: String] {
 //    15.00 ms    0.1%    11.00 ms            parseMetaTags(html:)
 //    4.00 ms    0.0%    0 s             specialized Collection.prefix(_:)
-    let html = html.count > 300000 ? String(html.prefix(300000)) : html
     var metaTags = [String: String]()
     let matches = LinkPreviewCache.shared.metaTagsRegex.matches(in: html, options: [], range: NSRange(location: 0, length: html.utf16.count))
     
