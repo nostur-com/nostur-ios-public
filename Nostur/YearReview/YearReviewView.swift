@@ -651,7 +651,7 @@ private struct YearReviewHistoryView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     YearReviewMonthCalendarView(collection: model.collection, period: period,
-                        active: model.calendarActivity, activities: model.activeActivities,
+                        active: model.calendarActivity,
                         savedCounts: monthlyCounts,
                         onSelect: { selectedMonth = $0 })
                     if countsFailed {
@@ -674,14 +674,7 @@ private struct YearReviewHistoryView: View {
                         }
                     }
                     if model.isDownloading {
-                        HStack(spacing: 12) {
-                            Button { model.pause() } label: {
-                                Label("Pause collection", systemImage: "pause.fill").labelStyle(.iconOnly)
-                            }
-                            .buttonStyle(.bordered)
-                            ProgressView().controlSize(.small)
-                            Text(model.progressLabel).font(.subheadline.weight(.semibold))
-                        }
+                        YearReviewHistoryDownloadStatus(model: model)
                         Button { dismiss() } label: {
                             Text("Continue in background").frame(maxWidth: .infinity, minHeight: 32)
                         }
@@ -793,6 +786,40 @@ private struct YearReviewHistoryView: View {
 }
 
 @available(iOS 17.0, *)
+private struct YearReviewHistoryDownloadStatus: View {
+    let model: YearReviewModel
+
+    private var activeMonth: YearReviewMonthProgress? {
+        let work = model.calendarActivity
+        guard !work.isEmpty, let collection = model.collection else { return nil }
+        let received = model.activeActivities.filter(\.isReceivingMonth).map { ($0.work, $0.received) }
+        return collection.monthProgress(active: work, received: received)
+            .first { $0.own.active || $0.others.active }
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button { model.pause() } label: {
+                Label("Pause collection", systemImage: "pause.fill").labelStyle(.iconOnly)
+            }
+            .buttonStyle(.bordered)
+            ProgressView().controlSize(.small)
+            VStack(alignment: .leading, spacing: 3) {
+                if let month = activeMonth {
+                    Text("Fetching \(month.date, format: model.currentPeriod.monthFormat)")
+                        .font(.subheadline.weight(.semibold))
+                    Text("\(month.received) received")
+                        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                } else {
+                    Text(model.progressLabel).font(.subheadline.weight(.semibold))
+                }
+            }
+            .accessibilityElement(children: .combine)
+        }
+    }
+}
+
+@available(iOS 17.0, *)
 private struct YearReviewHistoryInfoView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
@@ -805,8 +832,10 @@ private struct YearReviewHistoryInfoView: View {
                     detail: "Tap a month to look for more activity or retry a relay. Some older posts may no longer be available.")
                 YearReviewAboutRow(title: "While gathering history", icon: "iphone",
                     detail: "You can keep using Nostur while it gathers history. If you close the app, continue later from where you left off.")
-                YearReviewAboutRow(title: "What the calendar counts", icon: "number",
-                    detail: "Each month shows unique saved items. While receiving data, its title shows the received count, including repeats.")
+                YearReviewAboutRow(title: "Your content", icon: "text.bubble",
+                    detail: "Posts and replies you wrote, including photos, videos, and polls you shared.")
+                YearReviewAboutRow(title: "Interactions", icon: "heart",
+                    detail: "Activity involving you or your posts, like mentions, replies, reactions, reposts, and zaps.")
                 if model.isDownloading {
                     Section("Download details") {
                         if model.activity == nil { Text(model.zapStatus ?? model.progressLabel) }
@@ -2209,23 +2238,12 @@ private struct YearReviewMonthCalendarView: View {
     let collection: YearReviewCollection?
     let period: YearReviewPeriod
     let active: [YearReviewWork]
-    let activities: [YearReviewActivity]
     let savedCounts: [Int: Int]?
     let onSelect: (YearReviewMonthProgress) -> Void
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
 
-    private var receivingMonths: Set<Int> {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: period.timeZoneIdentifier) ?? .current
-        return Set(activities.compactMap { activity in
-            guard activity.isReceivingMonth,
-                  active.contains(activity.work) else { return nil }
-            return calendar.component(.month, from: Date(timeIntervalSince1970: Double(activity.work.until)))
-        })
-    }
-
     private var months: [YearReviewMonthProgress] {
-        if let collection { return Array(collection.monthProgress(active: active, received: activities.map { ($0.work, $0.received) }).reversed()) }
+        if let collection { return Array(collection.monthProgress(active: active).reversed()) }
         let queued = YearReviewCollection(owner: "", period: period, relays: [], trusted: []).monthProgress(active: [])
             .map { month in
                 var month = month
@@ -2252,13 +2270,11 @@ private struct YearReviewMonthCalendarView: View {
     }
 
     var body: some View {
-        let receiving = receivingMonths
         VStack(alignment: .leading, spacing: 10) {
             LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(months) { month in
                     Button { onSelect(month) } label: {
-                        YearReviewMonthCell(month: month, isReceiving: receiving.contains(month.month),
-                            savedCount: savedCounts?[month.month])
+                        YearReviewMonthCell(month: month, savedCount: savedCounts?[month.month])
                     }
                         .buttonStyle(.plain).disabled(!month.available)
                 }
@@ -2276,15 +2292,11 @@ private struct YearReviewMonthCalendarView: View {
 @available(iOS 17.0, *)
 private struct YearReviewMonthCell: View {
     let month: YearReviewMonthProgress
-    let isReceiving: Bool
     let savedCount: Int?
 
     private var accessibilityCount: Text {
         guard month.available else { return Text("") }
-        let saved = savedCount.map { Text(". Unique saved items: \($0)") }
-            ?? Text("")
-        if isReceiving { return saved + Text(". \(month.received) items received, including duplicates") }
-        return saved
+        return savedCount.map { Text(". Unique saved items: \($0)") } ?? Text("")
     }
 
     private var interactionPass: Bool { month.interactionPass }
@@ -2307,13 +2319,9 @@ private struct YearReviewMonthCell: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Group {
-                if isReceiving { Text("\(month.received) received") }
-                else { Text(month.date, format: monthStyle) }
-            }
-            .font(.caption.weight(.semibold))
-            .monospacedDigit()
-            .lineLimit(1).minimumScaleFactor(0.7)
+            Text(month.date, format: monthStyle)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1).minimumScaleFactor(0.7)
             ZStack {
                 if !month.available {
                     Image(systemName: "minus").foregroundStyle(.tertiary)

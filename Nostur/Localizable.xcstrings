@@ -707,6 +707,7 @@
       "shouldTranslate" : false
     },
     ". %lld items received, including duplicates" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -6109,6 +6110,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gevonden activiteit"
+          }
+        }
+      }
+    },
+    "Activity involving you or your posts, like mentions, replies, reactions, reposts, and zaps." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actividad relacionada contigo o con tus publicaciones, como menciones, respuestas, reacciones, republicaciones y zaps."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivitas yang melibatkan kamu atau postinganmu, seperti sebutan, balasan, reaksi, postingan ulang, dan zap."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activiteit rond jou of je posts, zoals vermeldingen, antwoorden, reacties, reposts en zaps."
           }
         }
       }
@@ -17533,6 +17556,7 @@
       }
     },
     "Each month shows unique saved items. While receiving data, its title shows the received count, including repeats." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -19822,7 +19846,6 @@
       }
     },
     "Fetching %@" : {
-      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -32942,6 +32965,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Berichten"
+          }
+        }
+      }
+    },
+    "Posts and replies you wrote, including photos, videos, and polls you shared." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicaciones y respuestas que escribiste, incluidas las fotos, los vídeos y las encuestas que compartiste."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postingan dan balasan yang kamu tulis, termasuk foto, video, dan jajak pendapat yang kamu bagikan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posts en antwoorden die je schreef, waaronder foto’s, video’s en polls die je deelde."
           }
         }
       }
@@ -50542,6 +50587,7 @@
       }
     },
     "What the calendar counts" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
