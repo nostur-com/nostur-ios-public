@@ -249,7 +249,7 @@ final class NXFeedViewportTests: XCTestCase {
         let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 300, height: 100), collectionViewLayout: layout)
         collection.contentInsetAdjustmentBehavior = .never
         let source = NXFeedAppendTestSource()
-        source.count = 3
+        source.count = posts.count + NXFeedIndexMapping.paginationRowCount
         collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
         collection.dataSource = source
         let window = UIWindow(frame: collection.bounds)
@@ -717,6 +717,174 @@ final class NXFeedViewportTests: XCTestCase {
             XCTAssertTrue(stabilizer.isItemAtVisibleTop(id: "post-10"))
         }
         XCTAssertFalse(stabilizer.hasActivePrependCover)
+        stabilizer.suspendPositionTracking()
+    }
+
+    @MainActor
+    func testUnreadStartUsesFirstVisiblePostBelowLeadingBanner() {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 200)
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 406, height: 1275), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        collection.contentInset.top = 97
+        let source = NXFeedAppendTestSource()
+        source.count = 29
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let window = UIWindow(frame: collection.bounds)
+        window.addSubview(collection)
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = -34
+        collection.layoutIfNeeded()
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        let ids = (0..<28).map { "post-\($0)" }
+        stabilizer.updateItemIDs(ids, leadingNonPostRowCount: 1)
+        stabilizer.rememberAnchor(id: "post-2")
+        let live = stabilizer.liveVisiblePostID()
+        XCTAssertEqual(live, "post-0")
+        let start = NXUnreadNavigation.start(
+            liveVisibleIndex: live.flatMap { ids.firstIndex(of: $0) },
+            readingIndex: 2, fallbackVisibleIndex: 2,
+            isViewportTransitioning: false, postCount: 28
+        )
+        XCTAssertEqual(start, .init(index: 0, source: "live-visible"))
+        XCTAssertNil(NXUnreadNavigation.previousUnreadIndex(from: start.index, postCount: ids.count, isUnread: { $0 == 1 }))
+        XCTAssertFalse(stabilizer.isItemAtOrAboveVisibleTop(id: "post-1"))
+        stabilizer.suspendPositionTracking()
+    }
+
+    func testUnreadSelectionNeverWrapsToAnOlderRowBelowTheStart() {
+        XCTAssertNil(NXUnreadNavigation.previousUnreadIndex(from: 2, postCount: 5, isUnread: { $0 == 3 }))
+        XCTAssertEqual(NXUnreadNavigation.previousUnreadIndex(from: 2, postCount: 5, isUnread: { [0, 1, 3].contains($0) }), 1)
+        XCTAssertNil(NXUnreadNavigation.previousUnreadIndex(from: 0, postCount: 5, isUnread: { $0 == 1 }))
+    }
+
+    @MainActor
+    func testIdleEstimatedLayoutCollapseRestoresReadingPost() async throws {
+        try await assertIdleEstimatedCollapse(userScrolled: false)
+    }
+
+    @MainActor
+    func testUserScrollingCancelsQueuedIdleCollapseRecovery() async throws {
+        try await assertIdleEstimatedCollapse(userScrolled: true)
+    }
+
+    @MainActor
+    private func assertIdleEstimatedCollapse(userScrolled: Bool) async throws {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 200)
+        layout.minimumLineSpacing = 0
+        let collection = NXFeedUnreadLayoutTestCollection(frame: CGRect(x: 0, y: 0, width: 406, height: 1275), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        collection.contentInset.top = 97
+        let source = NXFeedAppendTestSource()
+        source.count = 29
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = 1703
+        collection.layoutIfNeeded()
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        var actions: [String] = []
+#if DEBUG
+        stabilizer.onDebugAction = { actions.append($0) }
+#endif
+        stabilizer.updateItemIDs((0..<28).map { "post-\($0)" }, leadingNonPostRowCount: 1)
+        stabilizer.rememberAnchor(id: "post-8")
+        XCTAssertEqual(stabilizer.liveVisiblePostID(), "post-8")
+        let host = NXFeedSnapshotHostView(frame: collection.convert(collection.bounds, to: window))
+        host.stabilizer = stabilizer
+        window.addSubview(host)
+        // Every row temporarily becomes an estimate; no post IDs changed.
+        layout.itemSize.height = 43
+        layout.invalidateLayout()
+        collection.layoutIfNeeded()
+        collection.contentOffset.y = -34
+        if userScrolled {
+            collection.userIsDragging = true
+            collection.contentOffset.y = -30
+            collection.userIsDragging = false
+        }
+        try await Task.sleep(nanoseconds: 160_000_000)
+        XCTAssertEqual(stabilizer.hasActivePrependCover, !userScrolled,
+            "A clamped estimate cannot count as a successful pin, and a new user scroll must win")
+        layout.itemSize.height = 200
+        layout.invalidateLayout()
+        collection.layoutIfNeeded()
+        if userScrolled {
+            // Exercise an in-content destination after the short estimated
+            // layout ends, rather than UIKit's automatic top-edge bounce.
+            collection.userIsDragging = true
+            collection.contentOffset.y = 400
+            collection.layoutIfNeeded()
+            collection.userIsDragging = false
+        } else {
+            collection.contentOffset.y = -34
+        }
+        try await Task.sleep(nanoseconds: 220_000_000)
+        if userScrolled {
+            // A synthetic drag does not drive UIKit's pan recognizer. UIKit may
+            // finish its own clamp animation, so assert our recovery stayed canceled.
+            XCTAssertFalse(actions.contains { $0.hasPrefix("LAYOUT collapse recovery") || $0.hasPrefix("SETTLE ") },
+                actions.joined(separator: " | "))
+        } else {
+            XCTAssertEqual(collection.contentOffset.y, 1703, accuracy: 0.5,
+                "Size \(collection.contentSize), trace: \(actions.joined(separator: " | "))")
+            XCTAssertEqual(stabilizer.liveVisiblePostID(), "post-8")
+        }
+        XCTAssertFalse(stabilizer.hasActivePrependCover)
+        stabilizer.suspendPositionTracking()
+    }
+
+    @MainActor
+    func testHomeRemainsAtContentTopWhenBannerIsInsertedAndRemoved() async throws {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 200)
+        layout.minimumLineSpacing = 0
+        let collection = UICollectionView(frame: CGRect(x: 0, y: 0, width: 300, height: 600), collectionViewLayout: layout)
+        collection.contentInsetAdjustmentBehavior = .never
+        collection.contentInset.top = 64
+        let source = NXFeedAppendTestSource()
+        source.sections = [15, 2]
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "post")
+        collection.dataSource = source
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = collection.bounds
+        window.addSubview(collection)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        collection.reloadData()
+        collection.layoutIfNeeded()
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: collection)
+        let ids = (0..<15).map { "post-\($0)" }
+        stabilizer.updateItemIDs(ids, leadingNonPostRowCount: 0, trailingNonPostRowCount: 2)
+        let reachedTop = await stabilizer.scrollToContentTop()
+        XCTAssertTrue(reachedTop)
+        for visible in [true, false] {
+            stabilizer.performAnchored(reason: NXFeedViewport.bannerUpdateCoverReason) {
+                stabilizer.updateItemIDs(ids, leadingNonPostRowCount: visible ? 1 : 0, trailingNonPostRowCount: 2)
+            }
+            source.sections = visible ? [1, 15, 2] : [15, 2]
+            collection.reloadData()
+            collection.layoutIfNeeded()
+            try await Task.sleep(nanoseconds: 350_000_000)
+            XCTAssertEqual(collection.contentOffset.y, -64, accuracy: 0.5, "Banner visible: \(visible)")
+            XCTAssertEqual(stabilizer.liveVisiblePostID(), "post-0")
+            XCTAssertFalse(stabilizer.hasActivePrependCover)
+        }
         stabilizer.suspendPositionTracking()
     }
 
@@ -2239,6 +2407,7 @@ final class NXFeedViewportTests: XCTestCase {
 @MainActor
 private final class NXFeedAppendTestSource: NSObject, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     var count = 4
+    var sections: [Int]?
     var rowHeights: [CGFloat] = []
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -2246,7 +2415,9 @@ private final class NXFeedAppendTestSource: NSObject, UICollectionViewDataSource
     }
 
 
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int { count }
+    func numberOfSections(in collectionView: UICollectionView) -> Int { sections?.count ?? 1 }
+
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int { sections?[section] ?? count }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         collectionView.dequeueReusableCell(withReuseIdentifier: "post", for: indexPath)

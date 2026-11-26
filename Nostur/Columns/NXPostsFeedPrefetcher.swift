@@ -14,13 +14,19 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
     weak var columnViewModel: NXColumnViewModel?
     var imageRequestTargetSize: CGSize?
     
-    func collectionView(_: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         guard let columnViewModel, case .posts(let nrPosts) = columnViewModel.viewState else {
             return
         }
         let imageRequestTargetSize = imageRequestTargetSize
         
-        let postsForIndexPaths = indexPaths.compactMap { nrPosts[safe: $0.row] }
+        let counts = (0..<collectionView.numberOfSections).map { collectionView.numberOfItems(inSection: $0) }
+        let postsForIndexPaths = indexPaths.compactMap { path -> NRPost? in
+            guard let index = NXFeedIndexMapping.itemIndex(for: path, sectionCounts: counts,
+                itemCount: nrPosts.count, leadingNonPostRows: columnViewModel.feedLeadingNonPostRowCount,
+                trailingNonPostRows: NXFeedIndexMapping.paginationRowCount) else { return nil }
+            return nrPosts[index]
+        }
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
@@ -124,13 +130,19 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
         }
     }
     
-    func collectionView(_: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
+    func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
         guard let columnViewModel, case .posts(let nrPosts) = columnViewModel.viewState else {
             return
         }
         let imageRequestTargetSize = imageRequestTargetSize
         
-        let postsForIndexPaths = indexPaths.compactMap { nrPosts[safe: $0.row] }
+        let counts = (0..<collectionView.numberOfSections).map { collectionView.numberOfItems(inSection: $0) }
+        let postsForIndexPaths = indexPaths.compactMap { path -> NRPost? in
+            guard let index = NXFeedIndexMapping.itemIndex(for: path, sectionCounts: counts,
+                itemCount: nrPosts.count, leadingNonPostRows: columnViewModel.feedLeadingNonPostRowCount,
+                trailingNonPostRows: NXFeedIndexMapping.paginationRowCount) else { return nil }
+            return nrPosts[index]
+        }
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
@@ -212,13 +224,19 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
     weak var columnViewModel: NXColumnViewModel?
     var imageRequestTargetSize: CGSize?
     
-    func tableView(_: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
+    func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
         guard let columnViewModel, case .posts(let nrPosts) = columnViewModel.viewState else {
             return
         }
         let imageRequestTargetSize = imageRequestTargetSize
         
-        let postsForIndexPaths = indexPaths.compactMap { nrPosts[safe: $0.row] }
+        let counts = (0..<tableView.numberOfSections).map { tableView.numberOfRows(inSection: $0) }
+        let postsForIndexPaths = indexPaths.compactMap { path -> NRPost? in
+            guard let index = NXFeedIndexMapping.itemIndex(for: path, sectionCounts: counts,
+                itemCount: nrPosts.count, leadingNonPostRows: columnViewModel.feedLeadingNonPostRowCount,
+                trailingNonPostRows: NXFeedIndexMapping.paginationRowCount) else { return nil }
+            return nrPosts[index]
+        }
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
@@ -322,13 +340,19 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
         }
     }
     
-    func tableView(_: UITableView, cancelPrefetchingForRowsAt indexPaths: [IndexPath]) {
+    func tableView(_ tableView: UITableView, cancelPrefetchingForRowsAt indexPaths: [IndexPath]) {
         guard let columnViewModel, case .posts(let nrPosts) = columnViewModel.viewState else {
             return
         }
         let imageRequestTargetSize = imageRequestTargetSize
         
-        let postsForIndexPaths = indexPaths.compactMap { nrPosts[safe: $0.row] }
+        let counts = (0..<tableView.numberOfSections).map { tableView.numberOfRows(inSection: $0) }
+        let postsForIndexPaths = indexPaths.compactMap { path -> NRPost? in
+            guard let index = NXFeedIndexMapping.itemIndex(for: path, sectionCounts: counts,
+                itemCount: nrPosts.count, leadingNonPostRows: columnViewModel.feedLeadingNonPostRowCount,
+                trailingNonPostRows: NXFeedIndexMapping.paginationRowCount) else { return nil }
+            return nrPosts[index]
+        }
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in

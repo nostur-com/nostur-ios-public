@@ -1179,7 +1179,8 @@ class NXColumnViewModel: ObservableObject {
                 for: indexPath,
                 sectionCounts: sectionCounts,
                 itemCount: posts.count,
-                leadingNonPostRows: feedLeadingNonPostRowCount
+                leadingNonPostRows: feedLeadingNonPostRowCount,
+                trailingNonPostRows: NXFeedIndexMapping.paginationRowCount
             ), posts.indices.contains(itemIndex) else { return nil }
             return posts[itemIndex].id
         })
@@ -1206,7 +1207,12 @@ class NXColumnViewModel: ObservableObject {
         }
 
         let top = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
-        let candidates: [(IndexPath, CGRect)] = indexPaths.compactMap { indexPath in
+        let candidates: [(Int, CGRect)] = indexPaths.compactMap { indexPath in
+            guard let itemIndex = NXFeedIndexMapping.itemIndex(
+                for: indexPath, sectionCounts: sectionCounts, itemCount: posts.count,
+                leadingNonPostRows: feedLeadingNonPostRowCount,
+                trailingNonPostRows: NXFeedIndexMapping.paginationRowCount
+            ) else { return nil }
             let frame: CGRect?
             if let collectionView {
                 frame = collectionView.layoutAttributesForItem(at: indexPath)?.frame
@@ -1218,7 +1224,7 @@ class NXColumnViewModel: ObservableObject {
                 frame = nil
             }
             guard let frame else { return nil }
-            return (indexPath, frame)
+            return (itemIndex, frame)
         }
         guard let anchorIndex = NXFeedViewport.topEdgeAnchorIndex(
             itemFrames: candidates.map(\.1),
@@ -1227,16 +1233,7 @@ class NXColumnViewModel: ObservableObject {
               let anchor = candidates[safe: anchorIndex] else {
             return allowReadingFallback ? vmInner.readingPostID : nil
         }
-        guard let itemIndex = NXFeedIndexMapping.itemIndex(
-            for: anchor.0,
-            sectionCounts: sectionCounts,
-            itemCount: posts.count,
-            leadingNonPostRows: feedLeadingNonPostRowCount
-        ),
-              posts.indices.contains(itemIndex) else {
-            return allowReadingFallback ? vmInner.readingPostID : nil
-        }
-        return posts[itemIndex].id
+        return posts[anchor.0].id
     }
 
     @MainActor

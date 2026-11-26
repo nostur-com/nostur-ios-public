@@ -233,6 +233,39 @@ final class NXFeedIndexMappingTests: XCTestCase {
         )
     }
 
+    func testBannerAndPaginationSectionsDoNotInventAnExtraHeader() {
+        for counts in [[1, 20, 2], [1, 20, 1, 1], [1, 22], [23]] {
+            let firstPost = NXFeedIndexMapping.indexPath(forItemIndex: 0,
+                sectionCounts: counts, itemCount: 20, leadingNonPostRows: 1, trailingNonPostRows: 2)
+            let expected = counts.count == 1 ? IndexPath(item: 1, section: 0) : IndexPath(item: 0, section: 1)
+            XCTAssertEqual(firstPost, expected, "Sections: \(counts)")
+            for index in 0..<20 {
+                let path = NXFeedIndexMapping.indexPath(forItemIndex: index,
+                    sectionCounts: counts, itemCount: 20, leadingNonPostRows: 1, trailingNonPostRows: 2)!
+                XCTAssertEqual(NXFeedIndexMapping.itemIndex(for: path,
+                    sectionCounts: counts, itemCount: 20, leadingNonPostRows: 1, trailingNonPostRows: 2), index)
+            }
+            let footer = IndexPath(item: counts.last! - 1, section: counts.count - 1)
+            XCTAssertNil(NXFeedIndexMapping.itemIndex(for: footer,
+                sectionCounts: counts, itemCount: 20, leadingNonPostRows: 1, trailingNonPostRows: 2))
+        }
+    }
+
+    func testUncommittedPostsCannotResolveToPaginationRows() {
+        XCTAssertNil(NXFeedIndexMapping.indexPath(forItemIndex: 19,
+            sectionCounts: [1, 19, 2], itemCount: 20, leadingNonPostRows: 1, trailingNonPostRows: 2))
+        XCTAssertNil(NXFeedIndexMapping.itemIndex(for: IndexPath(item: 0, section: 2),
+            sectionCounts: [1, 19, 2], itemCount: 20, leadingNonPostRows: 1, trailingNonPostRows: 2))
+    }
+
+    func testRealHeaderAndBannerStillMapPastBothWithPagination() {
+        for counts in [[1, 1, 20, 2], [1, 21, 2]] {
+            let expected = counts.count == 4 ? IndexPath(item: 0, section: 2) : IndexPath(item: 1, section: 1)
+            XCTAssertEqual(NXFeedIndexMapping.indexPath(forItemIndex: 0,
+                sectionCounts: counts, itemCount: 20, leadingNonPostRows: 1, trailingNonPostRows: 2), expected)
+        }
+    }
+
     func testAlreadySeenBannerAsOwnSectionThenPosts() {
         let sectionCounts = [1, 20]
         let itemCount = 20

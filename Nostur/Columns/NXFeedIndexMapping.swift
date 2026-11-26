@@ -9,16 +9,21 @@
 import Foundation
 
 enum NXFeedIndexMapping {
+    // Tail sentinel and the permanently allocated loading row in NXPostsFeed.
+    static let paginationRowCount = 2
+
     /// Maps a UIKit index path to a `ForEach` item index.
     ///
     /// Extra List rows are skipped rather than counted as posts:
     /// a Mac header section, an already-seen banner (`leadingNonPostRows`),
-    /// and trailing pagination / spinner rows.
+    /// and trailing pagination / spinner rows. Their explicit count prevents a
+    /// footer from being mistaken for evidence of an extra leading header.
     static func itemIndex(
         for indexPath: IndexPath,
         sectionCounts: [Int],
         itemCount: Int,
-        leadingNonPostRows: Int = 0
+        leadingNonPostRows: Int = 0,
+        trailingNonPostRows: Int = 0
     ) -> Int? {
         guard itemCount > 0, sectionCounts.indices.contains(indexPath.section) else { return nil }
         guard indexPath.item >= 0, indexPath.item < sectionCounts[indexPath.section] else { return nil }
@@ -26,11 +31,12 @@ enum NXFeedIndexMapping {
         let cells = flattenedCells(sectionCounts)
         guard let flatIndex = cells.firstIndex(where: {
             $0.section == indexPath.section && $0.item == indexPath.item
-        }) else { return nil }
+        }), flatIndex < cells.count - trailingNonPostRows else { return nil }
         let postIndex = flatIndex - postStart(
             sectionCounts: sectionCounts,
             itemCount: itemCount,
-            leadingNonPostRows: leadingNonPostRows
+            leadingNonPostRows: leadingNonPostRows,
+            trailingNonPostRows: trailingNonPostRows
         )
         return (0..<itemCount).contains(postIndex) ? postIndex : nil
     }
@@ -40,16 +46,18 @@ enum NXFeedIndexMapping {
         forItemIndex itemIndex: Int,
         sectionCounts: [Int],
         itemCount: Int,
-        leadingNonPostRows: Int = 0
+        leadingNonPostRows: Int = 0,
+        trailingNonPostRows: Int = 0
     ) -> IndexPath? {
         guard (0..<itemCount).contains(itemIndex), !sectionCounts.isEmpty else { return nil }
         let cells = flattenedCells(sectionCounts)
         let flatIndex = postStart(
             sectionCounts: sectionCounts,
             itemCount: itemCount,
-            leadingNonPostRows: leadingNonPostRows
+            leadingNonPostRows: leadingNonPostRows,
+            trailingNonPostRows: trailingNonPostRows
         ) + itemIndex
-        guard cells.indices.contains(flatIndex) else { return nil }
+        guard cells.indices.contains(flatIndex), flatIndex < cells.count - trailingNonPostRows else { return nil }
         let cell = cells[flatIndex]
         return IndexPath(item: cell.item, section: cell.section)
     }
@@ -73,14 +81,15 @@ enum NXFeedIndexMapping {
     private static func postStart(
         sectionCounts: [Int],
         itemCount: Int,
-        leadingNonPostRows: Int
+        leadingNonPostRows: Int,
+        trailingNonPostRows: Int
     ) -> Int {
         var headerCells = 0
         if !isOneItemPerSection(sectionCounts),
            let first = sectionCounts.firstIndex(where: { $0 > 0 }),
            sectionCounts[first] == 1 {
             let remainingAfterHeader = flattenedCells(sectionCounts).count - 1
-            if remainingAfterHeader - leadingNonPostRows >= itemCount {
+            if remainingAfterHeader - leadingNonPostRows - trailingNonPostRows >= itemCount {
                 headerCells = 1
             }
         }
