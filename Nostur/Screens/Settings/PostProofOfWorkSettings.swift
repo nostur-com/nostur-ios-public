@@ -41,11 +41,9 @@ struct PostProofOfWorkSettings: View {
                     if let bits = PostProofOfWork.target(for: seconds, hashRate: hashRate) {
                         let estimate = pow(2, Double(bits)) / hashRate
                         let posts = PostProofOfWork.postsPerTimeout(target: bits, hashRate: hashRate)
-                        let timeout = Int(PostProofOfWork.timeoutSeconds)
                         Text("About \(estimate, format: .number.precision(.fractionLength(0...2))) sec per post · \(bits) bits")
-                        if posts >= 1_000_000_000_000 {
-                            Text("Fewer than 1 in a trillion posts might take longer than \(timeout) seconds to post.")
-                        } else {
+                        if posts <= 10_000 {
+                            let timeout = Int(PostProofOfWork.timeoutSeconds)
                             Text("About 1 in \(posts, format: .number.precision(.significantDigits(1...2))) posts might take longer than \(timeout) seconds to post.")
                         }
                     } else if isMeasuring {
