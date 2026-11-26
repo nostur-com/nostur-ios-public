@@ -422,11 +422,34 @@ final class NXFeedLayoutStabilizer: ObservableObject {
                 CGPoint(x: scrollView.contentOffset.x, y: -scrollView.adjustedContentInset.top),
                 animated: true
             )
-            // Await UIKit without blocking the main actor. The target is the
-            // content edge, including leading banners, rather than the first post.
+            // Self-sized rows can expand while a long animation passes them.
+            // UIKit can then finish short of the requested content edge. Continue
+            // with another native animation once motion stops and geometry changed;
+            // never replace an interrupted or stalled animation with a forced snap.
+            var targetContentHeight = scrollView.contentSize.height
+            var targetInsetTop = scrollView.adjustedContentInset.top
+            var previousOffset = scrollView.contentOffset.y
+            var stationarySamples = 0
+            var retargets = 0
             for _ in 0..<40 {
                 if Task.isCancelled || scrollView.isDragging || scrollView.isTracking { break }
-                if abs(scrollView.contentOffset.y + scrollView.adjustedContentInset.top) <= 0.5 { break }
+                let currentOffset = scrollView.contentOffset.y
+                let insetTop = scrollView.adjustedContentInset.top
+                if abs(currentOffset + insetTop) <= 0.5 { break }
+                stationarySamples = abs(currentOffset - previousOffset) <= 0.5 ? stationarySamples + 1 : 0
+                let geometryChanged = abs(scrollView.contentSize.height - targetContentHeight) > 0.5
+                    || abs(insetTop - targetInsetTop) > 0.5
+                if geometryChanged, stationarySamples >= 4, retargets < 3 {
+                    targetContentHeight = scrollView.contentSize.height
+                    targetInsetTop = insetTop
+                    stationarySamples = 0
+                    retargets += 1
+#if DEBUG
+                    onDebugAction?("UNREAD top retarget · \(retargets) · \(viewportDebugSummary())")
+#endif
+                    scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: -insetTop), animated: true)
+                }
+                previousOffset = currentOffset
                 try? await Task.sleep(nanoseconds: 50_000_000)
             }
         }
@@ -2331,27 +2354,17 @@ struct NXPostsFeed: View {
 #endif
     
     private func scrollToTop() {
+#if DEBUG
+        vm.recordFeedAction("UNREAD top requested · counter \(vmInner.unreadCount)")
+#endif
         if vm.hasHeldNewerPosts {
             layoutStabilizer.coverCurrentViewport()
             vm.releaseHeldNewerPostsForNavigation()
             syncLayoutPostIDs()
         }
         scrollToIndex(0)
-        vmInner.readingPostID = nil
-        vmInner.holdUnreadAboveReadingPost = false
-        markAllAsRead(reason: "explicit scroll to top")
-//        
-//        // Regular updateIsAtTop() in onPostAppearOnce { } doesn't catch the first row appearing to set isAtTop to 0, probably because
-//        // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
-//        // so force update here after small delay
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-//            #if DEBUG
-//            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") scrollToFirstUnread -> updateIsAtTop()")
-//            #endif
-//            updateIsAtTop()
-//        }
     }
-    
+
     private func performScrollToIndex(_ scrollToIndex: Int) {
         // While we scroll to previous index here, we are triggering onPostAppearOnce(), which updates markAsRead
         // But it wasn't a real onPostAppearOnce, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
@@ -2490,6 +2503,10 @@ struct NXPostsFeed: View {
                 vmInner.readingPostID = vmInner.isAtTop ? nil
                     : (layoutStabilizer.liveVisiblePostID() ?? vmInner.readingPostID)
                 if vmInner.isAtTop {
+                    // A long press requests the top; it does not prove arrival.
+                    // Keep unread and the reading anchor if UIKit stops short.
+                    vmInner.holdUnreadAboveReadingPost = false
+                    markAllAsRead(reason: "reached content top")
                     Task { @MainActor in vm.prefetch(targetPost) }
                     performIDCollectionUpdates(for: targetPost, vm: vm)
                     performUnreadMarkingUpdates(for: targetPost, vm: vm)

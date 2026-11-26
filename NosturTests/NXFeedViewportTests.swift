@@ -592,6 +592,41 @@ final class NXFeedViewportTests: XCTestCase {
     }
 
     @MainActor
+    func testTopAnimationRetargetsAfterSelfSizingLeavesItShort() async throws {
+        let scrollView = NXFeedAnimatedTopTestScrollView(frame: CGRect(x: 0, y: 0, width: 402, height: 874))
+        scrollView.contentInsetAdjustmentBehavior = .never
+        scrollView.contentInset.top = 118
+        scrollView.contentSize = CGSize(width: 402, height: 10451)
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = scrollView.bounds
+        window.addSubview(scrollView)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        scrollView.contentOffset.y = 8671
+        let stabilizer = NXFeedLayoutStabilizer()
+        stabilizer.attach(to: scrollView)
+        let jump = Task { @MainActor in await stabilizer.scrollToContentTop(animated: true) }
+        await Task.yield()
+        XCTAssertEqual(scrollView.animationRequestCount, 1)
+        // Match the report: self-sizing expands the list during the native
+        // animation and UIKit stops several posts before the requested edge.
+        scrollView.contentSize.height = 15538
+        scrollView.contentOffset.y = 663
+        for _ in 0..<40 {
+            if scrollView.animationRequestCount > 1 { break }
+            try await Task.sleep(nanoseconds: 25_000_000)
+        }
+        XCTAssertEqual(scrollView.animationRequestCount, 2, "Continue the native animation after the layout change")
+        XCTAssertEqual(scrollView.contentOffset.y, 663, accuracy: 0.5, "Retargeting must not force an unanimated snap")
+        scrollView.completeNativeAnimation()
+        let reachedTop = await jump.value
+        XCTAssertTrue(reachedTop)
+        XCTAssertEqual(scrollView.contentOffset.y, -118, accuracy: 0.5)
+        stabilizer.suspendPositionTracking()
+    }
+
+    @MainActor
     func testCancelledFinalUnreadAnimationDoesNotForceAJumpToTop() async throws {
         let scrollView = NXFeedAnimatedTopTestScrollView(frame: CGRect(x: 0, y: 0, width: 320, height: 600))
         scrollView.contentInsetAdjustmentBehavior = .never
@@ -2439,9 +2474,13 @@ private final class NXFeedMissingGeometryCollection: UICollectionView {
 @MainActor
 private final class NXFeedAnimatedTopTestScrollView: UIScrollView {
     private(set) var lastAnimatedTarget: CGPoint?
+    private(set) var animationRequestCount = 0
 
     override func setContentOffset(_ contentOffset: CGPoint, animated: Bool) {
-        if animated { lastAnimatedTarget = contentOffset }
+        if animated {
+            lastAnimatedTarget = contentOffset
+            animationRequestCount += 1
+        }
         else { super.setContentOffset(contentOffset, animated: false) }
     }
 
