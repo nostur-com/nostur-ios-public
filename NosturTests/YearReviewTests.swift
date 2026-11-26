@@ -976,6 +976,26 @@ final class YearReviewTests: XCTestCase {
         XCTAssertTrue(YearReviewPreferences.applyingAuth(to: old.relays.map(\.relayData), configured: [app], overrides: old.relayAuthOverrides ?? [:])[0].auth)
     }
 
+    func testRecentProfilesKeepTheLatestThreeThatAreNotAccounts() throws {
+        let suite = "year-review-recents-" + UUID().uuidString
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        YearReviewRecentProfiles.remember("  ", defaults: defaults)
+        YearReviewRecentProfiles.remember("alice", defaults: defaults)
+        YearReviewRecentProfiles.remember("bob", defaults: defaults)
+        YearReviewRecentProfiles.remember("alice", defaults: defaults)
+        YearReviewRecentProfiles.remember("cara", defaults: defaults)
+        YearReviewRecentProfiles.remember("dee", defaults: defaults)
+        XCTAssertEqual(YearReviewRecentProfiles.pubkeys(defaults: defaults), ["dee", "cara", "alice", "bob"])
+        XCTAssertEqual(YearReviewRecentProfiles.visible(stored: YearReviewRecentProfiles.pubkeys(defaults: defaults),
+            accountPubkeys: ["cara"]), ["dee", "alice", "bob"])
+        YearReviewRecentProfiles.remember("erin", defaults: defaults)
+        XCTAssertEqual(YearReviewRecentProfiles.visible(stored: YearReviewRecentProfiles.pubkeys(defaults: defaults),
+            accountPubkeys: []), ["erin", "dee", "cara"])
+        XCTAssertEqual(YearReviewRecentProfiles.visible(stored: ["erin", "dee", "cara", "alice"],
+            accountPubkeys: ["erin", "dee", "cara", "alice"]), [])
+    }
+
     func testReportPreferencesPersistEmptySelectionsAndStayScopedToAccount() throws {
         let suite = "year-review-preferences-test-" + UUID().uuidString
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))

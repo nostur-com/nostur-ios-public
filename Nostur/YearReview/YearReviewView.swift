@@ -437,42 +437,34 @@ private struct YearReviewProfilePicker: View {
     let onSelectContact: (Contact) -> Void
     let onDismiss: () -> Void
     @State private var accounts: [CloudAccount] = []
+    @State private var recents: [Contact] = []
 
     var body: some View {
         List {
             Section("Your accounts") {
                 ForEach(accounts, id: \.publicKey) { profile in
-                    Button { onSelectAccount(profile) } label: {
-                        HStack(spacing: 12) {
-                            PFP(pubkey: profile.publicKey, account: profile, size: 44)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(profile.anyName)
-                                    .font(.body.weight(.semibold))
-                                    .foregroundStyle(theme.primary)
-                                Text(profile.npub)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                                    .truncationMode(.middle)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            Image(systemName: "checkmark")
-                                .foregroundStyle(theme.accent)
-                                .opacity(profile.publicKey == selectedPubkey ? 1 : 0)
-                                .accessibilityHidden(true)
-                        }
-                        .padding(.vertical, 4)
-                        .contentShape(Rectangle())
+                    profileButton(pubkey: profile.publicKey, name: profile.anyName, npubText: profile.npub, account: profile) {
+                        onSelectAccount(profile)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(profile.publicKey == selectedPubkey ? .isSelected : [])
-                    .listRowBackground(theme.listBackground)
+                }
+            }
+            if !recents.isEmpty {
+                Section("Recents") {
+                    ForEach(recents, id: \.pubkey) { contact in
+                        profileButton(pubkey: contact.pubkey, name: contact.anyName, npubText: contact.npub, contact: contact) {
+                            YearReviewRecentProfiles.remember(contact.pubkey)
+                            onSelectContact(contact)
+                        }
+                    }
                 }
             }
             Section {
                 NavigationLink {
                     ContactsSearch(followingPubkeys: activeAccount.followingPubkeys,
-                        prompt: "Search profiles", onSelectContact: onSelectContact)
+                        prompt: "Search profiles", onSelectContact: { contact in
+                            YearReviewRecentProfiles.remember(contact.pubkey)
+                            onSelectContact(contact)
+                        })
                         .navigationTitle("Find another profile")
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
@@ -492,19 +484,54 @@ private struct YearReviewProfilePicker: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { dismissButton }
         }
-        .onAppear {
-            var available = AccountsState.shared.accounts
-            if !available.contains(where: { $0.publicKey == activeAccount.publicKey }) {
-                available.append(activeAccount)
-            }
-            accounts = available.sorted { lhs, rhs in
-                let leftActive = lhs.publicKey == activeAccount.publicKey
-                let rightActive = rhs.publicKey == activeAccount.publicKey
-                if leftActive != rightActive { return leftActive }
-                if lhs.lastLoginAt != rhs.lastLoginAt { return lhs.lastLoginAt > rhs.lastLoginAt }
-                return lhs.publicKey < rhs.publicKey
-            }
+        .onAppear(perform: loadProfiles)
+    }
+
+    private func loadProfiles() {
+        var available = AccountsState.shared.accounts
+        if !available.contains(where: { $0.publicKey == activeAccount.publicKey }) {
+            available.append(activeAccount)
         }
+        accounts = available.sorted { lhs, rhs in
+            let leftActive = lhs.publicKey == activeAccount.publicKey
+            let rightActive = rhs.publicKey == activeAccount.publicKey
+            if leftActive != rightActive { return leftActive }
+            if lhs.lastLoginAt != rhs.lastLoginAt { return lhs.lastLoginAt > rhs.lastLoginAt }
+            return lhs.publicKey < rhs.publicKey
+        }
+        let wanted = YearReviewRecentProfiles.visible(stored: YearReviewRecentProfiles.pubkeys(),
+            accountPubkeys: Set(accounts.map(\.publicKey)))
+        let found = Contact.fetchByPubkeys(wanted, context: viewContext())
+        let byPubkey = Dictionary(found.map { ($0.pubkey, $0) }, uniquingKeysWith: { first, _ in first })
+        recents = wanted.compactMap { byPubkey[$0] }
+    }
+
+    private func profileButton(pubkey: String, name: String, npubText: String, account: CloudAccount? = nil, contact: Contact? = nil, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                PFP(pubkey: pubkey, contact: contact, account: account, size: 44)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(name)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(theme.primary)
+                    Text(npubText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "checkmark")
+                    .foregroundStyle(theme.accent)
+                    .opacity(pubkey == selectedPubkey ? 1 : 0)
+                    .accessibilityHidden(true)
+            }
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(pubkey == selectedPubkey ? .isSelected : [])
+        .listRowBackground(theme.listBackground)
     }
 
     private var dismissButton: some View {

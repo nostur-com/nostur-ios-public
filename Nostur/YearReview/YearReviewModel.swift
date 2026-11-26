@@ -4,6 +4,37 @@ import Combine
 import NostrEssentials
 import CoreData
 
+enum YearReviewRecentProfiles {
+    static let storageKey = "year-review-recent-profiles"
+    static let displayLimit = 3
+    private static let storageLimit = 12
+
+    static func pubkeys(defaults: UserDefaults = .standard) -> [String] {
+        defaults.stringArray(forKey: storageKey) ?? []
+    }
+
+    /// Most recent first. Profiles already listed under Your accounts are omitted.
+    static func visible(stored: [String], accountPubkeys: Set<String>, limit: Int = displayLimit) -> [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+        for pubkey in stored {
+            guard !pubkey.isEmpty, !accountPubkeys.contains(pubkey), seen.insert(pubkey).inserted else { continue }
+            result.append(pubkey)
+            if result.count == limit { break }
+        }
+        return result
+    }
+
+    static func remember(_ pubkey: String, defaults: UserDefaults = .standard) {
+        let pubkey = pubkey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !pubkey.isEmpty else { return }
+        var stored = pubkeys(defaults: defaults).filter { $0 != pubkey }
+        stored.insert(pubkey, at: 0)
+        if stored.count > storageLimit { stored.removeLast(stored.count - storageLimit) }
+        defaults.set(stored, forKey: storageKey)
+    }
+}
+
 struct YearReviewPreferences: Codable, Equatable {
     var cardSelectionVersion: Int? = 6
     var relayDefaultsVersion: Int? = 1
