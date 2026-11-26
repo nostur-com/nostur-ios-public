@@ -235,9 +235,9 @@ final class SettingsStore: ObservableObject {
             Keys.receiveLocalNotifications: true,
             Keys.receiveLocalNotificationsLimitToFollows: false,
             Keys.followRelayHints: true,
-            Keys.enableOutboxRelays: false,
+            Keys.enableOutboxRelays: true,
             Keys.enableOutboxPreview: false,
-            Keys.enableVPNdetection: true,
+            Keys.enableVPNdetection: false,
             Keys.macTextSize: MacTextSizeOption.standard.rawValue,
             Keys.blossomServerList: []
         ])
