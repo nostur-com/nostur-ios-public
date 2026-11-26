@@ -187,7 +187,7 @@ final class PollViewModel: ObservableObject {
                 event = try await PostProofOfWork.mine(event, target: target)
                 guard AccountsState.shared.activeAccountPublicKey == accountPubkey,
                       !poll.hasEnded(at: Int(Date().timeIntervalSince1970)) else { return false }
-                signed = try await signMinedEvent(event, account: account)
+                signed = try await signPreparedEvent(event, account: account)
             } else {
                 signed = try await PollSigningRequest.sign(event, accountPubkey: accountPubkey)
             }

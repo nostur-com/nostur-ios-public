@@ -91,7 +91,7 @@ class Unpublisher {
         preparingReactions[cancellationId] = Task { @MainActor in
             do {
                 let mined = try await PostProofOfWork.mine(event, target: target)
-                let signed = try await signMinedEvent(mined, account: account)
+                let signed = try await signPreparedEvent(mined, account: account)
                 guard preparingReactions.removeValue(forKey: cancellationId) != nil else { return }
                 _ = publish(signed, cancellationId: cancellationId)
             } catch {

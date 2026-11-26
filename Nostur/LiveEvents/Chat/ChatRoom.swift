@@ -332,7 +332,7 @@ struct ChatRoom: View {
                 defer { isPreparingMessage = false }
                 do {
                     let mined = try await PostProofOfWork.mine(nEvent, target: target)
-                    let signed = try await signMinedEvent(mined, account: account)
+                    let signed = try await signPreparedEvent(mined, account: account)
                     publishMessage(signed)
                     if message == originalMessage, attributedMessage == originalAttributedMessage,
                        (replyingTo?.id ?? quoting?.id) == referenceID {

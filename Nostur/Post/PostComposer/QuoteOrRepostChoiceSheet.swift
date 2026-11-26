@@ -170,7 +170,7 @@ struct QuoteOrRepostChoiceSheet: View {
                 }
                 guard let events else { throw SignError.signingFailure }
                 let mined = try await PostProofOfWork.mine(events.repost, target: target)
-                let signed = try await signMinedEvent(mined, account: account)
+                let signed = try await signPreparedEvent(mined, account: account)
                 queueRepost(signed, original: events.original)
                 dismiss()
             } catch is CancellationError {

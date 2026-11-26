@@ -77,13 +77,13 @@ func localSignNEvent(_ nEvent: NEvent, pk: String) throws -> NEvent {
 }
 
 @MainActor
-func signMinedEvent(_ event: NEvent, account: CloudAccount) async throws -> NEvent {
+func signPreparedEvent(_ event: NEvent, account: CloudAccount) async throws -> NEvent {
     try Task.checkCancellation()
     guard account.isFullAccount, !account.isDeleted, event.publicKey == account.publicKey else {
         throw SignError.accountNotFound
     }
     let signed = if account.isNC {
-        try await MinedEventSignatureRequest().sign(event, account: account)
+        try await PreparedEventSignatureRequest().sign(event, account: account)
     } else {
         try account.signEvent(event)
     }
@@ -95,7 +95,7 @@ func signMinedEvent(_ event: NEvent, account: CloudAccount) async throws -> NEve
 }
 
 @MainActor
-private final class MinedEventSignatureRequest {
+private final class PreparedEventSignatureRequest {
     private let id = "sign-event-\(UUID().uuidString)"
     private var pending: CheckedContinuation<NEvent, Error>?
 
