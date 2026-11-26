@@ -14097,6 +14097,7 @@
       }
     },
     "Conversations" : {
+      "comment" : "Accessibility label for conversations with you on a profile\nFilter for conversations with you on a profile",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -26851,6 +26852,7 @@
       }
     },
     "More" : {
+      "comment" : "Profile tab that opens the menu of additional profile sections",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -26893,6 +26895,9 @@
           }
         }
       }
+    },
+    "More profile sections" : {
+      "comment" : "Accessibility hint for the profile tab that opens additional sections"
     },
     "More responses available" : {
       "localizations" : {
@@ -35082,7 +35087,7 @@
       }
     },
     "Reactions" : {
-      "comment" : "Tab title\nTitle of list of reactions screen",
+      "comment" : "Filter for reactions to your posts on a profile\nTab title\nTitle of list of reactions screen",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -35106,6 +35111,9 @@
     },
     "Reactions could not finish loading. Try again." : {
 
+    },
+    "Reactions to your posts" : {
+      "comment" : "Accessibility label for reactions to your posts on a profile"
     },
     "Reactions to your posts will show up here" : {
       "localizations" : {
@@ -38411,6 +38419,7 @@
       }
     },
     "Reposts" : {
+      "comment" : "Filter for reposts of your posts on a profile",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -38431,6 +38440,9 @@
           }
         }
       }
+    },
+    "Reposts of your posts" : {
+      "comment" : "Accessibility label for reposts of your posts on a profile"
     },
     "Reposts of your posts will show up here" : {
       "localizations" : {
@@ -51186,6 +51198,9 @@
         }
       }
     },
+    "With you" : {
+      "comment" : "Profile menu heading for this person's interactions with the signed-in account"
+    },
     "Worn by" : {
       "localizations" : {
         "es" : {
@@ -53049,7 +53064,7 @@
       }
     },
     "Zaps" : {
-      "comment" : "Tab title\nTitle of list of zaps screen",
+      "comment" : "Filter for zaps to you on a profile\nTab title\nTitle of list of zaps screen",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -53140,6 +53155,9 @@
           }
         }
       }
+    },
+    "Zaps to you" : {
+      "comment" : "Accessibility label for zaps to you on a profile"
     },
     "Zaps you received will show up here" : {
       "localizations" : {

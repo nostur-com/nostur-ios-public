@@ -28,7 +28,8 @@ struct ProfileView: View {
     @ObservedObject private var settings: SettingsStore = .shared
 
 //    @State private var profilePicViewerIsShown = false
-    @State private var selectedSubTab = "Posts"
+    @State private var selectedSection: ProfileContentSection = .posts
+    @State private var interactionKind: ProfileInteractionsView.Kind = .conversations
 
     @State private var editingAccount: CloudAccount?
     
@@ -238,7 +239,7 @@ struct ProfileView: View {
         
         .onAppear {
             if let tab = tab {
-                selectedSubTab = tab
+                selectedSection = ProfileContentSection(rawValue: tab) ?? .posts
             }
             vm.load(nrContact)
             lastSeenVM.checkLastSeen(nrContact.pubkey)
@@ -388,11 +389,21 @@ struct ProfileView: View {
             }
         }    }
     
-    @ViewBuilder
-    var subTabsView: some View {
-        Section(content: {
-            switch selectedSubTab {
-            case "Posts":
+    private var showsPersonalInteractions: Bool {
+        nrContact.pubkey != AccountsState.shared.activeAccountPublicKey
+    }
+
+    private var visibleSection: ProfileContentSection {
+        if selectedSection == .withYou, !showsPersonalInteractions {
+            return .posts
+        }
+        return selectedSection
+    }
+
+    private var subTabsView: some View {
+        Section {
+            switch visibleSection {
+            case .posts:
                 if let pinnedPost = vm.pinnedPost {
                     Box(nrPost: pinnedPost) {
                         VStack(alignment: .leading) {
@@ -416,109 +427,259 @@ struct ProfileView: View {
                 }
                 ProfilePostsView(pubkey: nrContact.pubkey, type: .posts)
                     .background(theme.listBackground)
-            case "Replies":
+            case .replies:
                 ProfilePostsView(pubkey: nrContact.pubkey, type: .replies)
                     .background(theme.listBackground)
-            case "Highlights":
+            case .highlights:
                 ProfileHighlights(pubkey: nrContact.pubkey)
                     .background(theme.listBackground)
-            case "Lists":
+            case .lists:
                 ProfilePostsView(pubkey: nrContact.pubkey, type: .lists)
                     .background(theme.listBackground)
-            case "Articles":
+            case .articles:
                 ProfilePostsView(pubkey: nrContact.pubkey, type: .articles)
                     .background(theme.listBackground)
-            case "Interactions":
-                ProfileInteractionsView(nrContact: nrContact)
+            case .withYou:
+                ProfileInteractionsView(nrContact: nrContact, kind: interactionKind)
+                    .id(AccountsState.shared.activeAccountPublicKey)
                     .background(theme.listBackground)
-            case "Media":
+            case .media:
                 ProfileMediaView(pubkey: nrContact.pubkey)
                     .background(theme.listBackground)
-            case "Reactions":
+            case .reactions:
                 ProfileReactionsView(pubkey: nrContact.pubkey)
                     .background(theme.listBackground)
-            case "Zaps":
+            case .zaps:
                 ProfileZapsView(nrContact: nrContact)
                     .background(theme.listBackground)
-            case "Relays":
+            case .relays:
                 ProfileRelays(pubkey: nrContact.pubkey, name: nrContact.anyName)
                     .background(theme.listBackground)
-            default:
-                Text("🥪")
             }
-        }, header: {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
-                    TabButton(
-                        action: { selectedSubTab = "Posts" },
-                        title: String(localized: "Posts", comment:"Tab title"),
-                        selected: selectedSubTab == "Posts")
-                    Spacer()
-                    TabButton(
-                        action: { selectedSubTab = "Replies" },
-                        title: String(localized: "Replies", comment:"Tab title"),
-                        selected: selectedSubTab == "Replies")
-                    Spacer()
-                    if vm.showHighlightsTab {
-                        TabButton(
-                            action: { selectedSubTab = "Highlights" },
-                            title: String(localized: "Highlights", comment:"Tab title"),
-                            selected: selectedSubTab == "Highlights")
-                        Spacer()
-                    }
-                    if vm.showListsTab {
-                        TabButton(
-                            action: { selectedSubTab = "Lists" },
-                            title: String(localized: "Lists", comment:"Tab title"),
-                            selected: selectedSubTab == "Lists")
-                        Spacer()
-                    }
-                    if vm.showArticlesTab {
-                        TabButton(
-                            action: { selectedSubTab = "Articles" },
-                            title: String(localized: "Articles", comment:"Tab title"),
-                            selected: selectedSubTab == "Articles")
-                        Spacer()
-                    }
-                    if nrContact.pubkey != AccountsState.shared.activeAccountPublicKey {
-                        TabButton(
-                            action: { selectedSubTab = "Interactions" },
-                            title: String(localized: "Interactions", comment:"Tab title"),
-                            selected: selectedSubTab == "Interactions")
-                        Spacer()
-                    }
-                    TabButton(
-                        action: { selectedSubTab = "Media" },
-                        title: String(localized: "Media", comment:"Tab title"),
-                        selected: selectedSubTab == "Media")
-                    Spacer()
-                    TabButton(
-                        action: { selectedSubTab = "Reactions" },
-                        title: String(localized: "Reactions", comment:"Tab title"),
-                        selected: selectedSubTab == "Reactions")
-                    Spacer()
-                    if #available(iOS 16.0, *) {
-                        TabButton(
-                            action: { selectedSubTab = "Zaps" },
-                            title: String(localized: "Zaps", comment:"Tab title"),
-                            selected: selectedSubTab == "Zaps")
-                        Spacer()
-                    }
-                    TabButton(
-                        action: { selectedSubTab = "Relays" },
-                        title: "Relays",
-                        selected: selectedSubTab == "Relays")
+        } header: {
+            VStack(spacing: 0) {
+                ProfileSectionTabs(
+                    selection: visibleSection,
+                    select: { selectedSection = $0 },
+                    showsArticles: vm.showArticlesTab,
+                    showsHighlights: vm.showHighlightsTab,
+                    showsLists: vm.showListsTab,
+                    showsPersonalInteractions: showsPersonalInteractions
+                )
+                if visibleSection == .withYou {
+                    ProfileWithYouFilter(selection: $interactionKind)
                 }
-                .frame(minWidth: availableWidth)
             }
-            .frame(width: availableWidth)
+            .textCase(nil)
             .listRowInsets(.init())
             .listSectionSeparator(.hidden)
             .listRowSeparator(.hidden)
-        })
+        }
         .listRowInsets(EdgeInsets())
         .listSectionSeparator(.hidden)
         .listRowSeparator(.hidden)
+    }
+}
+
+private enum ProfileContentSection: Equatable {
+    case posts, replies, media, articles, highlights, lists, reactions, zaps, relays, withYou
+
+    // Existing profile destinations pass their initial section by name.
+    init?(rawValue: String) {
+        switch rawValue {
+        case "Posts": self = .posts
+        case "Replies": self = .replies
+        case "Media": self = .media
+        case "Articles": self = .articles
+        case "Highlights": self = .highlights
+        case "Lists": self = .lists
+        case "Reactions": self = .reactions
+        case "Zaps": self = .zaps
+        case "Relays": self = .relays
+        case "Interactions": self = .withYou
+        default: return nil
+        }
+    }
+
+    var isInMore: Bool {
+        switch self {
+        case .posts, .replies, .media: false
+        default: true
+        }
+    }
+
+    var title: Text {
+        switch self {
+        case .posts: Text("Posts", comment: "Tab title")
+        case .replies: Text("Replies", comment: "Tab title")
+        case .media: Text("Media", comment: "Tab title")
+        case .articles: Text("Articles", comment: "Tab title")
+        case .highlights: Text("Highlights", comment: "Tab title")
+        case .lists: Text("Lists", comment: "Tab title")
+        case .reactions: Text("Reactions", comment: "Tab title")
+        case .zaps: Text("Zaps", comment: "Tab title")
+        case .relays: Text("Relays")
+        case .withYou: Text("With you", comment: "Profile menu heading for this person's interactions with the signed-in account")
+        }
+    }
+}
+
+private struct ProfileSectionTabs: View {
+    @Environment(\.theme) private var theme
+
+    let selection: ProfileContentSection
+    let select: (ProfileContentSection) -> Void
+    let showsArticles: Bool
+    let showsHighlights: Bool
+    let showsLists: Bool
+    let showsPersonalInteractions: Bool
+
+    var body: some View {
+        HStack(spacing: 0) {
+            tab(.posts)
+            tab(.replies)
+            tab(.media)
+
+            Menu {
+                if showsArticles || showsHighlights || showsLists {
+                    Section {
+                        if showsArticles { menuItem(.articles) }
+                        if showsHighlights { menuItem(.highlights) }
+                        if showsLists { menuItem(.lists) }
+                    }
+                }
+
+                Section {
+                    menuItem(.reactions)
+                    if #available(iOS 16.0, *) {
+                        menuItem(.zaps)
+                    }
+                }
+
+                if showsPersonalInteractions {
+                    Section {
+                        menuItem(.withYou)
+                    }
+                }
+
+                Section {
+                    menuItem(.relays)
+                }
+            } label: {
+                tabLabel(selected: selection.isInMore) {
+                    HStack(spacing: 4) {
+                        menuTabTitle
+                            .font(.subheadline.weight(.semibold))
+                        Image(systemName: "chevron.down")
+                            .font(.caption2.weight(.semibold))
+                            .accessibilityHidden(true)
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
+                }
+            }
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
+            .accessibilityLabel(menuTabTitle)
+            .accessibilityHint(Text("More profile sections", comment: "Accessibility hint for the profile tab that opens additional sections"))
+            .accessibilityAddTraits(selection.isInMore ? .isSelected : [])
+        }
+        .textCase(nil)
+        .background(alignment: .bottom) {
+            Divider()
+        }
+        .background(theme.listBackground)
+    }
+
+    private func tab(_ section: ProfileContentSection) -> some View {
+        Button {
+            select(section)
+        } label: {
+            tabLabel(selected: selection == section) {
+                section.title
+                    .font(.subheadline.weight(.semibold))
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selection == section ? .isSelected : [])
+    }
+
+    private var menuTabTitle: Text {
+        switch selection {
+        case .posts, .replies, .media:
+            Text("More", comment: "Profile tab that opens the menu of additional profile sections")
+        default:
+            selection.title
+        }
+    }
+
+    private func tabLabel(selected: Bool, @ViewBuilder label: () -> some View) -> some View {
+        label()
+            .foregroundStyle(selected ? theme.accent : theme.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 2)
+            .padding(.bottom, 4)
+            .overlay(alignment: .bottom) {
+                Capsule()
+                    .fill(selected ? theme.accent : Color.clear)
+                    .frame(height: 2)
+                    .accessibilityHidden(true)
+            }
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .contentShape(Rectangle())
+    }
+
+    private func menuItem(_ section: ProfileContentSection) -> some View {
+        Button {
+            select(section)
+        } label: {
+            if selection == section {
+                Label {
+                    section.title
+                } icon: {
+                    Image(systemName: "checkmark")
+                }
+            } else {
+                section.title
+            }
+        }
+    }
+}
+
+private struct ProfileWithYouFilter: View {
+    @Environment(\.theme) private var theme
+    @Binding var selection: ProfileInteractionsView.Kind
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(ProfileInteractionsView.Kind.allCases) { kind in
+                Button {
+                    selection = kind
+                } label: {
+                    kind.shortTitle
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(selection == kind ? theme.accent : theme.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background {
+                            Capsule()
+                                .fill(selection == kind ? theme.accent.opacity(0.15) : Color.clear)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(kind.accessibilityTitle)
+                .accessibilityAddTraits(selection == kind ? .isSelected : [])
+            }
+        }
+        .background(alignment: .bottom) {
+            Divider()
+        }
+        .background(theme.listBackground)
     }
 }
 
