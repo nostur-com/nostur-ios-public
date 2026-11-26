@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NavigationBackport
+import CoreData
 
 struct RelayMastery: View {
     @Environment(\.theme) private var theme
@@ -121,31 +122,48 @@ struct AccountRelaySettings: View {
     public var relays: [CloudRelay] = []
     @ObservedObject public var account: CloudAccount
     
+    private struct RelayConfiguration: Equatable {
+        let announcedRelays: [AccountRelayData]
+        let legacyConfiguration: LegacyRelayConfiguration?
+    }
+
     @State private var showWizard = false
-    
-    @StateObject private var vm = FetchVM<[AccountRelayData]>(timeout: 5.5, debounceTime: 1.0)
+    @State private var editLegacyConfiguration: LegacyRelayConfiguration?
+
+    @StateObject private var vm = FetchVM<RelayConfiguration>(timeout: 5.5, debounceTime: 1.0)
     
     var body: some View {
         NXForm {
             switch vm.state {
             case .initializing, .loading, .altLoading:
                 self.loadingView
-            case .ready(let accountRelays):
-                Section("Announced relays for \(account.anyName)") {
-                    ForEach(accountRelays) { relay in
-                        HStack {
-                            Text(relay.url)
-                            Spacer()
-                            Text([relay.read ? "read" : nil,
-                                  relay.write ? "write" : nil,
-                                  relay.dm ? "dm" : nil].compactMap { $0 }
-                                      .joined(separator: " + "))
-                                .foregroundColor(.secondary)
+            case .ready(let configuration):
+                if configuration.announcedRelays.isEmpty {
+                    timeoutView
+                } else {
+                    Section("Announced relays for \(account.anyName)") {
+                        ForEach(configuration.announcedRelays) { relay in
+                            HStack {
+                                Text(relay.url)
+                                Spacer()
+                                Text([relay.read ? "read" : nil,
+                                      relay.write ? "write" : nil,
+                                      relay.dm ? "dm" : nil].compactMap { $0 }.joined(separator: " + "))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Button("Reconfigure announced relays...") {
+                            showWizard = true
                         }
                     }
-                    
-                    Button("Reconfigure announced relays...") {
-                        showWizard = true
+                }
+
+                if let legacyConfiguration = configuration.legacyConfiguration {
+                    Section("Old relays configuration found") {
+                        Button("Edit old relays…") {
+                            editLegacyConfiguration = legacyConfiguration
+                        }
                     }
                 }
             case .timeout:
@@ -154,7 +172,7 @@ struct AccountRelaySettings: View {
                 Text(error)
             }
         }
-        .sheet(isPresented: $showWizard, content: {
+        .sheet(isPresented: $showWizard) {
             NBNavigationStack {
                 Kind10002ConfigurationWizard(account: account, onDismiss: onDismiss)
                     .navigationTitle("Announced relays")
@@ -162,28 +180,44 @@ struct AccountRelaySettings: View {
                     .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-        })
+        }
+        .sheet(item: $editLegacyConfiguration) { configuration in
+            NBNavigationStack {
+                LegacyRelayEditor(account: account, configuration: configuration) { updatedConfiguration in
+                    guard case .ready(let current) = vm.state else { return }
+                    vm.ready(RelayConfiguration(announcedRelays: current.announcedRelays,
+                                                legacyConfiguration: updatedConfiguration))
+                }
+                .environment(\.theme, theme)
+            }
+            .nbUseNavigationStack(.never)
+        }
     }
     
     @ViewBuilder
     private var loadingView: some View {
         Section("Announced relays for \(account.anyName)") {
             Text("\(Image(systemName: "hourglass.circle.fill")) Checking relays...")
-                .onAppear { [weak vm, weak account] in
-                    guard let vm, let account else { return }
+                .onAppear { [weak vm] in
+                    guard let vm else { return }
+                    let pubkey = accountPubkey
                     vm.setFetchParams((
                         prio: false,
                         req: { taskId in
-                            req(RM.getRelays(pubkeys: [accountPubkey], subscriptionId: taskId))
+                            req(RM.getRelays(pubkeys: [pubkey], subscriptionId: taskId))
                         },
-                        onComplete: { [weak vm] relayMessage, _ in
-                            bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
+                        onComplete: { [weak vm] _, _ in
+                            let backgroundContext = bg()
+                            backgroundContext.perform {
                                 guard let vm else { return }
+
+                                let legacyEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: backgroundContext)
+                                let legacyConfiguration = LegacyRelayConfiguration(content: legacyEvent?.content ?? "")
                                 
                                 var rwRelays: [AccountRelayData] = []
                                 var dmRelays: [AccountRelayData] = []
                                 
-                                if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: accountPubkey, context: bg()) {
+                                if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: pubkey, context: backgroundContext) {
                                     let relays: [AccountRelayData] = kind10002.tags().compactMap { tag in
                                         if (tag.type != "r") { return nil }
                                         if (tag.tag.count == 2) {
@@ -202,7 +236,7 @@ struct AccountRelaySettings: View {
                                     rwRelays.append(contentsOf: relays)
                                 }
                                 
-                                if let kind10050 = Event.fetchReplacableEvent(10050, pubkey: accountPubkey, context: bg()) {
+                                if let kind10050 = Event.fetchReplacableEvent(10050, pubkey: pubkey, context: backgroundContext) {
                                     let relays: [AccountRelayData] = kind10050.tags().compactMap { tag in
                                         if (tag.type != "relay") { return nil }
                                         if (tag.tag.count >= 2) {
@@ -225,23 +259,19 @@ struct AccountRelaySettings: View {
                                         return !rwRelays.contains(where: { rwRelay in rwRelay.url == dmRelay.url } )
                                     }
                                 
-                                if !rwAndDmRelays.isEmpty {
-                                    DispatchQueue.main.async { [weak account] in
-                                        guard let account else { return }
+                                DispatchQueue.main.async {
+                                    guard let account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey }) else { return }
+                                    if !rwAndDmRelays.isEmpty {
                                         account.accountRelays = Set(rwAndDmRelays)
                                         DataProvider.shared().saveToDiskNow(.viewContext)
                                         AccountsState.shared.refreshShareExtensionAccountState()
-                                        vm.ready(rwAndDmRelays)
                                     }
-                                } else {
-                                    DispatchQueue.main.async { [weak account] in
-                                        guard let account else { vm.timeout(); return }
-                                        if !account.accountRelays.isEmpty {
-                                            vm.ready(Array(account.accountRelays))
-                                        }
-                                        else {
-                                            vm.timeout()
-                                        }
+
+                                    let announcedRelays = rwAndDmRelays.isEmpty ? Array(account.accountRelays) : rwAndDmRelays
+                                    if announcedRelays.isEmpty && legacyConfiguration == nil {
+                                        vm.timeout()
+                                    } else {
+                                        vm.ready(RelayConfiguration(announcedRelays: announcedRelays, legacyConfiguration: legacyConfiguration))
                                     }
                                 }
                             }
