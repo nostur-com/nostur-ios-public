@@ -1450,7 +1450,16 @@ private struct YearReviewActiveDayContent: View {
     let streak: Int
     let dateFormat: Date.FormatStyle
 
+    private var cadence: (value: Double, unit: LocalizedStringKey) {
+        if average >= 1 { return (average, "posts per day") }
+        let weekly = average * 7
+        if weekly >= 1 { return (weekly, "posts per week") }
+        return (average * (365.2425 / 12), "posts per month")
+    }
+
     var body: some View {
+        let (value, unit) = cadence
+        let format = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(value > 0 && value < 0.1 ? 2 : 1))
         VStack(alignment: .leading, spacing: 4) {
             if streak >= 7 {
                 Text("\(streak) days")
@@ -1465,13 +1474,13 @@ private struct YearReviewActiveDayContent: View {
                 }
                 .padding(.vertical, 5)
                 .accessibilityHidden(true)
-                Text("\(average, format: .number.precision(.fractionLength(1))) posts per day")
+                Text("\(value, format: format) \(Text(unit))")
                     .font(.subheadline)
             } else {
-                Text(average, format: .number.precision(.fractionLength(1)))
-                    .font(.system(.largeTitle, design: .rounded).weight(.black))
+                Text(value, format: format)
+                    .font(posterFont?.font(size: 36, weight: .black) ?? .system(.largeTitle, design: .rounded).weight(.black))
                     .foregroundStyle(theme.accent)
-                Text("posts per day").font(.subheadline.weight(.semibold))
+                Text(unit).font(.subheadline.weight(.semibold))
             }
             Text("Busiest day: \(day.date, format: dateFormat) · \(day.posts) posts")
                 .font(.subheadline).foregroundStyle(.secondary)

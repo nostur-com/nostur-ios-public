@@ -350,6 +350,50 @@
     "Organizing your saved history…" : {
 
     },
+    "posts per month" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "publicaciones por mes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "postingan per bulan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "posts per maand"
+          }
+        }
+      }
+    },
+    "posts per week" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "publicaciones por semana"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "postingan per minggu"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "posts per week"
+          }
+        }
+      }
+    },
     "Saved totals are unavailable." : {
 
     },
@@ -1907,9 +1951,6 @@
           }
         }
       }
-    },
-    "%@ posts per day" : {
-
     },
     "%@ reads posts from" : {
       "localizations" : {
