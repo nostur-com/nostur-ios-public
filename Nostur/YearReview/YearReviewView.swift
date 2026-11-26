@@ -742,8 +742,9 @@ private struct YearReviewHistoryView: View {
                 YearReviewSourcesView(model: model, extraRelay: $extraRelay, invalidRelay: $invalidRelay)
             }
             .sheet(item: $selectedMonth) { month in
-                YearReviewMonthActionsView(model: model, initialMonth: month, savedCounts: $monthlyCounts)
+                YearReviewMonthActionsView(model: model, initialMonth: month)
                     .environment(\.theme, theme)
+                    .presentationBackgroundCompat(theme.listBackground)
             }
             .sheet(isPresented: $showHistoryInfo) {
                 YearReviewHistoryInfoView(model: model)
@@ -2399,7 +2400,6 @@ private struct YearReviewMonthActionsView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var model: YearReviewModel
     let initialMonth: YearReviewMonthProgress
-    @Binding var savedCounts: [Int: Int]?
 
     private var month: YearReviewMonthProgress {
         model.collection?.monthProgress(active: model.calendarActivity, received: model.activeActivities.map { ($0.work, $0.received) })
@@ -2421,11 +2421,8 @@ private struct YearReviewMonthActionsView: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            NXList {
                 Section {
-                    if let count = savedCounts?[month.month] {
-                        LabeledContent("Saved items") { Text(count, format: .number) }
-                    }
                     LabeledContent("Your content") {
                         YearReviewMonthPassStatus(pass: month.own)
                     }
@@ -2449,17 +2446,21 @@ private struct YearReviewMonthActionsView: View {
                         .disabled(model.isRunning)
                     }
                 }
-                if !month.failures.isEmpty {
-                    Section {
-                        NavigationLink("Incomplete source details") { YearReviewIncompleteSourcesView(month: month) }
+                Section {
+                    if !month.failures.isEmpty {
+                        NavigationLink {
+                            YearReviewIncompleteSourcesView(month: month)
+                        } label: {
+                            Label("Incomplete sources", systemImage: "exclamationmark.circle")
+                        }
                     }
-                }
-                DisclosureGroup("Relay details") {
-                    Text("\(month.received) items received, including duplicates").font(.caption).foregroundStyle(.secondary)
-                    let sources = model.isDownloading
-                        ? model.collection?.relays ?? [] : model.selectedHistorySources.map { YearReviewCollection.RelayDataSnapshot(url: $0.url, auth: $0.auth) }
-                    ForEach(sources, id: \.url) { relay in
-                        YearReviewMonthRelayStatus(collection: model.collection, month: month, relay: relay.url)
+                    DisclosureGroup("Relay details") {
+                        Text("\(month.received) items received, including duplicates").font(.caption).foregroundStyle(.secondary)
+                        let sources = model.isDownloading
+                            ? model.collection?.relays ?? [] : model.selectedHistorySources.map { YearReviewCollection.RelayDataSnapshot(url: $0.url, auth: $0.auth) }
+                        ForEach(sources, id: \.url) { relay in
+                            YearReviewMonthRelayStatus(collection: model.collection, month: month, relay: relay.url)
+                        }
                     }
                 }
             }
