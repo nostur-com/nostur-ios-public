@@ -261,8 +261,9 @@ actor YearReviewArchive {
     /// Count unique account-related events, including account/post references. Calendar boundaries
     /// use the report's time zone, independently of its selected fetch months.
     /// This describes saved data rather than the report's changing cutoff time.
-    func monthlyArchivedCounts(year: Int, timeZone: TimeZone) async throws -> [Int: Int] {
-        try await ensureAccountIndex()
+    func monthlyArchivedCounts(year: Int, timeZone: TimeZone,
+                               onIndexProgress: (@MainActor @Sendable (Double) -> Void)? = nil) async throws -> [Int: Int] {
+        try await ensureAccountIndex(onProgress: onIndexProgress)
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
         guard let start = calendar.date(from: DateComponents(year: year, month: 1, day: 1)),
@@ -276,9 +277,9 @@ actor YearReviewArchive {
                 WITH related(id) AS (
                     SELECT id FROM events WHERE pubkey = ?
                     UNION SELECT event_id FROM account_refs WHERE target = ?
-                    UNION SELECT r.event_id FROM account_refs r
-                        JOIN account_posts p ON p.target = r.target
-                        JOIN events own ON own.id = p.event_id WHERE own.pubkey = ?
+                    UNION SELECT r.event_id FROM account_posts p
+                        CROSS JOIN events own ON own.id = p.event_id
+                        CROSS JOIN account_refs r ON r.target = p.target WHERE own.pubkey = ?
                 )
                 SELECT CASE \(monthCases) ELSE 12 END AS month, COUNT(*)
                 FROM events e JOIN related r ON r.id = e.id
@@ -315,6 +316,10 @@ actor YearReviewArchive {
             let insert = try statement(database, "INSERT INTO events(id, pubkey, created_at, kind, json) VALUES (?, ?, ?, ?, ?)")
             let provenance = try statement(database, "INSERT OR IGNORE INTO sources(event_id, relay) VALUES (?, ?)")
             defer { sqlite3_finalize(exists); sqlite3_finalize(insert); sqlite3_finalize(provenance) }
+            let accountRefs = try statement(database, "INSERT OR IGNORE INTO account_refs(event_id, target) VALUES (?, ?)")
+            defer { sqlite3_finalize(accountRefs) }
+            let accountPosts = try statement(database, "INSERT OR IGNORE INTO account_posts(event_id, target) VALUES (?, ?)")
+            defer { sqlite3_finalize(accountPosts) }
             try execute(database, "BEGIN IMMEDIATE")
             do {
                 var result = YearReviewImportResult()
@@ -360,7 +365,7 @@ actor YearReviewArchive {
                         else { result.addedFromOthers += 1 }
                     }
                     try indexThread(event, database: database)
-                    try indexAccount(event, database: database)
+                    try indexAccount(event, references: accountRefs, posts: accountPosts)
                     sqlite3_reset(provenance)
                     bind(event.id, at: 1, to: provenance)
                     bind(source, at: 2, to: provenance)
@@ -376,7 +381,7 @@ actor YearReviewArchive {
         }
     }
 
-    private func indexAccount(_ event: YearReviewEvent, database: OpaquePointer) throws {
+    private func indexAccount(_ event: YearReviewEvent, references accountRefs: OpaquePointer, posts accountPosts: OpaquePointer) throws {
         var references = Set<String>()
         for tag in event.tags where tag.count >= 2 {
             switch tag[0] {
@@ -391,9 +396,7 @@ actor YearReviewArchive {
             targets.insert("e:" + event.id)
             if let coordinate = event.coordinate { targets.insert("a:" + coordinate) }
         }
-        for (table, values) in [("account_refs", references), ("account_posts", targets)] where !values.isEmpty {
-            let insert = try statement(database, "INSERT OR IGNORE INTO \(table)(event_id, target) VALUES (?, ?)")
-            defer { sqlite3_finalize(insert) }
+        for (insert, values) in [(accountRefs, references), (accountPosts, targets)] {
             for value in values {
                 sqlite3_reset(insert)
                 bind(event.id, at: 1, to: insert)
@@ -405,32 +408,60 @@ actor YearReviewArchive {
 
     /// Existing archives may contain unrelated feed/cache events. Index their
     /// relationships once in bounded pages without deleting useful context.
-    private func ensureAccountIndex() async throws {
+    private func ensureAccountIndex(onProgress: (@MainActor @Sendable (Double) -> Void)?) async throws {
         if try load(Bool.self, key: "account-index-complete-v1") == true { return }
-        var cursor = try load(String.self, key: "account-index-cursor-v1") ?? ""
+        let cursorKey = "account-index-cursor-v1"
+        var cursor = try load(String.self, key: cursorKey) ?? ""
+        let total = try withDatabase { database in
+            let query = try statement(database, "SELECT COUNT(*) FROM events WHERE id > ?")
+            defer { sqlite3_finalize(query) }
+            bind(cursor, at: 1, to: query)
+            guard sqlite3_step(query) == SQLITE_ROW else { throw YearReviewError.database("account index count") }
+            return Int(sqlite3_column_int64(query, 0))
+        }
+        if total > 0 { await onProgress?(0) }
+        var processed = 0
+        var lastPercent = 0
+        let decoder = JSONDecoder()
         while true {
             try Task.checkCancellation()
-            let last: String? = try withDatabase { database in
-                let query = try statement(database, "SELECT json FROM events WHERE id > ? ORDER BY id LIMIT 200")
+            let page: (last: String, count: Int) = try withDatabase { database in
+                let query = try statement(database, "SELECT json FROM events WHERE id > ? ORDER BY id LIMIT 500")
                 defer { sqlite3_finalize(query) }
+                let accountRefs = try statement(database, "INSERT OR IGNORE INTO account_refs(event_id, target) VALUES (?, ?)")
+                defer { sqlite3_finalize(accountRefs) }
+                let accountPosts = try statement(database, "INSERT OR IGNORE INTO account_posts(event_id, target) VALUES (?, ?)")
+                defer { sqlite3_finalize(accountPosts) }
                 bind(cursor, at: 1, to: query)
                 try execute(database, "BEGIN IMMEDIATE")
                 defer { try? execute(database, "ROLLBACK") }
-                var last: String?
+                var last = cursor
+                var count = 0
                 var status = sqlite3_step(query)
                 while status == SQLITE_ROW {
-                    let event = try JSONDecoder().decode(YearReviewEvent.self, from: Data(text(query, 0).utf8))
-                    try indexAccount(event, database: database)
+                    try Task.checkCancellation()
+                    let event = try decoder.decode(YearReviewEvent.self, from: Data(text(query, 0).utf8))
+                    try indexAccount(event, references: accountRefs, posts: accountPosts)
                     last = event.id
+                    count += 1
                     status = sqlite3_step(query)
                 }
                 guard status == SQLITE_DONE else { throw YearReviewError.database("account index migration") }
+                if count > 0 { try save(last, key: cursorKey, database: database) }
                 try execute(database, "COMMIT")
-                return last
+                return (last, count)
             }
-            guard let last else { break }
-            cursor = last
-            try save(cursor, key: "account-index-cursor-v1")
+            guard page.count > 0 else { break }
+            cursor = page.last
+            processed += page.count
+            if total > 0 {
+                // Keep space for the final count query and avoid publishing hundreds of UI updates.
+                let percent = min(99, processed * 100 / total)
+                if percent > lastPercent {
+                    lastPercent = percent
+                    await onProgress?(Double(percent) / 100)
+                }
+            }
             await Task.yield()
         }
         try save(true, key: "account-index-complete-v1")
@@ -816,14 +847,18 @@ actor YearReviewArchive {
     }
 
     func save<T: Encodable & Sendable>(_ value: T, key: String) throws {
-        let data = try JSONEncoder().encode(value)
         try withDatabase { database in
-            let request = try statement(database, "INSERT OR REPLACE INTO metadata(key, json) VALUES (?, ?)")
-            defer { sqlite3_finalize(request) }
-            bind(key, at: 1, to: request)
-            bind(String(decoding: data, as: UTF8.self), at: 2, to: request)
-            guard sqlite3_step(request) == SQLITE_DONE else { throw YearReviewError.database("save") }
+            try save(value, key: key, database: database)
         }
+    }
+
+    private func save<T: Encodable>(_ value: T, key: String, database: OpaquePointer) throws {
+        let data = try JSONEncoder().encode(value)
+        let request = try statement(database, "INSERT OR REPLACE INTO metadata(key, json) VALUES (?, ?)")
+        defer { sqlite3_finalize(request) }
+        bind(key, at: 1, to: request)
+        bind(String(decoding: data, as: UTF8.self), at: 2, to: request)
+        guard sqlite3_step(request) == SQLITE_DONE else { throw YearReviewError.database("save") }
     }
 
     func load<T: Decodable & Sendable>(_ type: T.Type, key: String) throws -> T? {

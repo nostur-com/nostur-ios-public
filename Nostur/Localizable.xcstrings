@@ -347,6 +347,12 @@
     "-%@" : {
       "shouldTranslate" : false
     },
+    "Organizing your saved history…" : {
+
+    },
+    "Saved totals are unavailable." : {
+
+    },
     "–" : {
 
     },
@@ -391,9 +397,6 @@
         }
       },
       "shouldTranslate" : false
-    },
-    ". " : {
-
     },
     ". %lld items received, including duplicates" : {
       "localizations" : {

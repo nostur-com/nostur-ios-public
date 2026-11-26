@@ -697,18 +697,23 @@ private struct YearReviewHistoryView: View {
     @State private var invalidRelay = false
     @State private var monthlyCounts: [Int: Int]? = nil
 
+    @State private var countIndexProgress: Double?
+    @State private var countsFailed = false
+    @State private var countAttempt = 0
+
     private struct CountsRequest: Hashable {
         let owner: String
         let year: Int
         let timeZone: String
         let busy: Bool
+        let attempt: Int
     }
 
     var body: some View {
         let period = model.currentPeriod
         let countsRequest = CountsRequest(owner: model.owner, year: period.year,
             timeZone: period.timeZoneIdentifier,
-            busy: model.isConfiguring || model.isDeleting)
+            busy: model.isConfiguring || model.isDeleting, attempt: countAttempt)
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
@@ -716,6 +721,25 @@ private struct YearReviewHistoryView: View {
                         active: model.calendarActivity, activities: model.activeActivities,
                         savedCounts: monthlyCounts,
                         onSelect: { selectedMonth = $0 })
+                    if countsFailed {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Saved totals are unavailable.").font(.subheadline)
+                            Button("Try again") { countAttempt += 1 }
+                                .buttonStyle(.bordered)
+                        }
+                    } else if monthlyCounts == nil, !countsRequest.busy {
+                        if let countIndexProgress {
+                            ProgressView(value: countIndexProgress) {
+                                Text("Organizing your saved history…")
+                            } currentValueLabel: {
+                                Text(countIndexProgress, format: .percent.precision(.fractionLength(0)))
+                                    .monospacedDigit()
+                            }
+                            .font(.subheadline)
+                        } else {
+                            ProgressView("Reading saved history…").font(.subheadline)
+                        }
+                    }
                     if model.isDownloading {
                         HStack(spacing: 12) {
                             Button { model.pause() } label: {
@@ -790,6 +814,8 @@ private struct YearReviewHistoryView: View {
         }
         .task(id: countsRequest) {
             monthlyCounts = nil
+            countIndexProgress = nil
+            countsFailed = false
             guard !countsRequest.busy, YearReviewEvent.isHex(countsRequest.owner, length: 64) else { return }
             let archive = await YearReviewArchives.shared.archive(owner: countsRequest.owner)
             var lastRevision: YearReviewReportRevision?
@@ -798,7 +824,10 @@ private struct YearReviewHistoryView: View {
                     let revision = try await archive.reportRevision()
                     if revision != lastRevision {
                         let counts = try await archive.monthlyArchivedCounts(year: countsRequest.year,
-                            timeZone: TimeZone(identifier: countsRequest.timeZone) ?? .current)
+                            timeZone: TimeZone(identifier: countsRequest.timeZone) ?? .current) { fraction in
+                            guard !Task.isCancelled else { return }
+                            countIndexProgress = fraction
+                        }
                         try Task.checkCancellation()
                         monthlyCounts = counts
                         lastRevision = revision
@@ -808,7 +837,11 @@ private struct YearReviewHistoryView: View {
                     try await Task.sleep(nanoseconds: 5_000_000_000)
                 }
             } catch is CancellationError { }
-            catch { L.maintenance.error("History month counts unavailable: \(error.localizedDescription)") }
+            catch {
+                guard !Task.isCancelled else { return }
+                countsFailed = true
+                L.maintenance.error("History month counts unavailable: \(error.localizedDescription)")
+            }
         }
     }
 }
@@ -2010,7 +2043,7 @@ private struct YearReviewMonthCell: View {
     private var accessibilityCount: Text {
         guard month.available else { return Text("") }
         let saved = savedCount.map { Text(". Unique saved items: \($0)") }
-            ?? (Text(". ") + Text("Reading saved history…"))
+            ?? Text("")
         if isReceiving { return saved + Text(". \(month.received) items received, including duplicates") }
         return saved
     }
@@ -2104,11 +2137,7 @@ private struct YearReviewSavedMonthCount: View {
                         Capsule()
                             .fill(.secondary)
                             .frame(width: 52, height: 7)
-                            .phaseAnimator(reduceMotion ? [false] : [false, true]) { content, dimmed in
-                                content.opacity(dimmed ? 0.12 : 0.28)
-                            } animation: { _ in
-                                .easeInOut(duration: 1.1)
-                            }
+                            .opacity(0.18)
                     }
                     .transition(.opacity)
             }

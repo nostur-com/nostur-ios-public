@@ -1907,6 +1907,7 @@ final class YearReviewTests: XCTestCase {
         XCTAssertNil(manualDeletion)
     }
 
+    @MainActor
     func testMonthlySavedCountsOnlyIncludeAccountAndPostReferencesIncludingLegacyArchives() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -1927,6 +1928,9 @@ final class YearReviewTests: XCTestCase {
         let unrelatedReaction = try signedEvent(kind: 7, tags: [["e", unrelated.id]])
         _ = try await archive.ingest([oldPost, article, unrelated, context, ownReply, mention,
             reaction, quote, comment, zap, oldReference, unrelatedReaction, reaction], source: "local-cache")
+        let otherKeys = try Keys.newKeys()
+        let unrelatedFeed = try (0..<510).map { try signedEvent(content: "Feed post \($0)", keys: otherKeys) }
+        _ = try await archive.ingest(unrelatedFeed, source: "local-cache")
         let counts = try await archive.monthlyArchivedCounts(year: period.year, timeZone: TimeZone(secondsFromGMT: 0)!)
         XCTAssertEqual(counts.values.reduce(0, +), 8)
         // Simulate an archive written before the relationship index existed.
@@ -1935,8 +1939,20 @@ final class YearReviewTests: XCTestCase {
         XCTAssertEqual(sqlite3_exec(database, "DROP TABLE account_refs; DROP TABLE account_posts; DELETE FROM metadata WHERE key LIKE 'account-index-%'", nil, nil, nil), SQLITE_OK)
         sqlite3_close(database)
         let reopened = YearReviewArchive(owner: keys.publicKeyHex, fileURL: file)
-        let migrated = try await reopened.monthlyArchivedCounts(year: period.year, timeZone: TimeZone(secondsFromGMT: 0)!)
+        var progress: [Double] = []
+        let zone = TimeZone(secondsFromGMT: 0)!
+        let migrated = try await reopened.monthlyArchivedCounts(year: period.year, timeZone: zone) {
+            progress.append($0)
+        }
         XCTAssertEqual(migrated, counts)
+        XCTAssertEqual(progress.first, 0)
+        XCTAssertTrue(progress.contains { $0 > 0 && $0 < 0.99 })
+        XCTAssertEqual(progress, progress.sorted())
+        progress.removeAll()
+        _ = try await reopened.monthlyArchivedCounts(year: period.year, timeZone: zone) {
+            progress.append($0)
+        }
+        XCTAssertTrue(progress.isEmpty)
         let retained = try await reopened.event(id: unrelated.id)
         XCTAssertEqual(retained, unrelated) // Counting does not delete archive context.
     }
