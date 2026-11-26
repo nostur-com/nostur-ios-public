@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 import NostrEssentials
 import CryptoKit
 import CoreData
@@ -11,6 +12,43 @@ final class YearReviewTests: XCTestCase {
     private let bob = String(repeating: "c", count: 64)
     private var period: YearReviewPeriod {
         YearReviewPeriod(year: 2026, now: Date(timeIntervalSince1970: 1_800_000_000), timeZone: TimeZone(secondsFromGMT: 0)!)
+    }
+
+    @MainActor
+    func testMonthPassStatusRowsHaveCompactHeights() async throws {
+        guard #available(iOS 17.0, *) else { throw XCTSkip("Month sheet requires iOS 17") }
+        let passes: [YearReviewMonthProgress.Pass] = [
+            .init(failed: 1), .init(active: true), .init(completed: 1),
+            .init(completed: 1, pending: 1), .init(pending: 1)
+        ]
+        for pass in passes {
+            let content = NavigationStack {
+                NXList {
+                    Section {
+                        LabeledContent("Your content") { YearReviewMonthPassStatus(pass: pass) }
+                        LabeledContent("Interactions") { YearReviewMonthPassStatus(pass: pass) }
+                    }
+                    Section { Button("Retry failed sources") {} }
+                }
+                .navigationTitle("June")
+                .navigationBarTitleDisplayMode(.inline)
+            }.environment(\.theme, Themes.default.theme)
+            let controller = UIHostingController(rootView: content)
+            let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 402, height: 874))
+            window.rootViewController = controller
+            window.makeKeyAndVisible()
+            defer { window.isHidden = true }
+            controller.view.layoutIfNeeded()
+            try await Task.sleep(nanoseconds: 350_000_000)
+            controller.view.layoutIfNeeded()
+            func cells(in view: UIView) -> [UIView] {
+                if view is UICollectionViewCell || view is UITableViewCell { return [view] }
+                return view.subviews.flatMap { cells(in: $0) }
+            }
+            let rows = cells(in: controller.view).filter { $0.bounds.height > 1 }
+            XCTAssertGreaterThanOrEqual(rows.count, 3)
+            for row in rows { XCTAssertLessThan(row.bounds.height, 120, "Month row height: \(row.bounds.height)") }
+        }
     }
 
     func testYearToDateLabelEndsDecember15InReportTimeZone() {

@@ -2474,14 +2474,23 @@ private struct YearReviewMonthActionsView: View {
     }
 }
 
-private struct YearReviewMonthPassStatus: View {
+struct YearReviewMonthPassStatus: View {
     let pass: YearReviewMonthProgress.Pass
     var body: some View {
-        if pass.active { Text("Fetching") }
-        else if pass.failed > 0 { Text("Incomplete sources").foregroundStyle(.orange) }
-        else if pass.finished { Text("All selected sources finished").foregroundStyle(.green) }
-        else if pass.completed > 0 { Text("Partly fetched") }
-        else { Text("Not fetched") }
+        Group {
+            if pass.active {
+                Label("Fetching", systemImage: "arrow.down.circle")
+            } else if pass.failed > 0 {
+                Label("Incomplete sources", systemImage: "exclamationmark.circle").foregroundStyle(.orange)
+            } else if pass.finished {
+                Label("Checked", systemImage: "checkmark.circle").foregroundStyle(.green)
+            } else if pass.completed > 0 {
+                Text("Partly fetched")
+            } else {
+                Text("Not fetched")
+            }
+        }
+        .labelStyle(.titleAndIcon)
     }
 }
 
