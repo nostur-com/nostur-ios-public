@@ -128,6 +128,28 @@ struct DMExpirationTests {
         }
     }
 
+    @Test func mined_gift_wrap_preserves_the_encrypted_message_and_expiration() async throws {
+        let sender = try Keys.newKeys()
+        let receiver = try Keys.newKeys()
+        let rumor = createRumor(NostrEssentials.Event(pubkey: sender.publicKeyHex, content: "secret", kind: 14,
+                                                      tags: [Tag(["p", receiver.publicKeyHex])]))
+        let expiresAt = 1_900_000_000
+        let delivery = try await createMinedDMGiftWrap(rumor, receiverPubkey: receiver.publicKeyHex, keys: sender,
+                                                       expiresAt: expiresAt, target: 8)
+        let wrap = NEvent.fromNostrEssentialsEvent(delivery.giftWrap)
+        let (opened, seal) = try unwrapGift(delivery.giftWrap, ourKeys: receiver)
+
+        #expect(try wrap.verified())
+        #expect((PostProofOfWork.difficulty(of: wrap) ?? 0) >= 8)
+        #expect(wrap.tagNamed("expiration") == String(expiresAt))
+        #expect(wrap.publicKey != sender.publicKeyHex)
+        #expect(opened.id == rumor.id)
+        #expect(opened.content == "secret")
+        #expect(seal.id == delivery.seal.id)
+        #expect(!opened.tags.contains { $0.type == "nonce" })
+        #expect(!seal.tags.contains { $0.type == "nonce" })
+    }
+
     @Test func nip17_without_a_duration_has_no_expiration_tag() throws {
         let sender = try Keys.newKeys()
         let receiver = try Keys.newKeys()

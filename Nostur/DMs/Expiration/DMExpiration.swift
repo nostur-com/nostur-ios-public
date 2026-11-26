@@ -90,6 +90,24 @@ func createGiftWrapWithExpiration(_ rumor: NostrEssentials.Event, receiverPubkey
         return try createGiftWrap(rumor, receiverPubkey: receiverPubkey, keys: keys)
     }
 
+    let (unsignedWrap, seal, oneTimeUseKeys) = try prepareDMGiftWrap(rumor, receiverPubkey: receiverPubkey, keys: keys, expiresAt: expiresAt)
+    var giftWrap = unsignedWrap
+    let signedWrap = try giftWrap.sign(oneTimeUseKeys)
+    onSeal?(seal)
+    return signedWrap
+}
+
+func createMinedDMGiftWrap(_ rumor: NostrEssentials.Event, receiverPubkey: String, keys: NostrEssentials.Keys,
+                           expiresAt: Int?, target: Int) async throws -> DMGiftWrapDetails {
+    let (unsignedWrap, seal, oneTimeUseKeys) = try prepareDMGiftWrap(rumor, receiverPubkey: receiverPubkey, keys: keys, expiresAt: expiresAt)
+    var mined = try await PostProofOfWork.mine(NEvent.fromNostrEssentialsEvent(unsignedWrap), target: target)
+    try Task.checkCancellation()
+    let signed = try mined.sign(oneTimeUseKeys)
+    return DMGiftWrapDetails(giftWrap: signed.toNostrEssentialsEvent(), seal: seal, rumor: rumor)
+}
+
+private func prepareDMGiftWrap(_ rumor: NostrEssentials.Event, receiverPubkey: String, keys: NostrEssentials.Keys,
+                               expiresAt: Int?) throws -> (NostrEssentials.Event, NostrEssentials.Event, NostrEssentials.Keys) {
     guard rumor.isRumor() else { throw GiftWrapError.InvalidRumorError }
     guard let oneTimeUseKeys = try? NostrEssentials.Keys.newKeys() else { throw GiftWrapError.OneOffKeyGenerationError }
     guard let seal = try? createSignedSeal(rumor, ourKeys: keys, receiverPubkey: receiverPubkey) else { throw GiftWrapError.SignSealError }
@@ -101,14 +119,12 @@ func createGiftWrapWithExpiration(_ rumor: NostrEssentials.Event, receiverPubkey
         tags.append(Tag(["expiration", String(expiresAt)]))
     }
 
-    var giftWrap = NostrEssentials.Event(
+    let giftWrap = NostrEssentials.Event(
         pubkey: oneTimeUseKeys.publicKeyHex,
         content: sealJsonEncrypted,
         kind: 1059,
         created_at: nip59CreatedAt(),
         tags: tags
     )
-    let signedWrap = try giftWrap.sign(oneTimeUseKeys)
-    onSeal?(seal)
-    return signedWrap
+    return (giftWrap, seal, oneTimeUseKeys)
 }

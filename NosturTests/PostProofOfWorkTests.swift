@@ -39,6 +39,19 @@ final class PostProofOfWorkTests: XCTestCase {
         XCTAssertGreaterThan(oddsAtLowerTarget, oddsAtMaximum)
     }
 
+    func testDMProofRequiresOptInAndAnEnabledDuration() throws {
+        let suite = "dm-proof-of-work-\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(1.0, forKey: PostProofOfWork.secondsKey)
+        defaults.set(900_000.0, forKey: PostProofOfWork.hashRateKey)
+        XCTAssertNil(PostProofOfWork.configuredDMTarget(in: defaults))
+        defaults.set(true, forKey: PostProofOfWork.enabledForDMsKey)
+        XCTAssertEqual(PostProofOfWork.configuredDMTarget(in: defaults), 19)
+        defaults.set(0.0, forKey: PostProofOfWork.secondsKey)
+        XCTAssertNil(PostProofOfWork.configuredDMTarget(in: defaults))
+    }
+
     func testBenchmarkReturnsAUsableRate() async throws {
         let rate = try await PostProofOfWork.benchmark()
         XCTAssertGreaterThan(rate, 0)

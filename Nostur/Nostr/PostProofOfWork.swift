@@ -5,6 +5,7 @@ import NostrEssentials
 enum PostProofOfWork {
     static let secondsKey = "post_proof_of_work_duration"
     static let hashRateKey = "post_proof_of_work_hash_rate"
+    static let enabledForDMsKey = "post_proof_of_work_enabled_for_dms"
     static let timeRange = 0.0...2.5
     static let defaultSeconds = 0.25
     static let timeoutSeconds: Double = 25
@@ -25,6 +26,11 @@ enum PostProofOfWork {
 
     static var configuredTarget: Int? {
         let defaults = UserDefaults.standard
+        return target(for: savedSeconds(in: defaults), hashRate: defaults.double(forKey: hashRateKey))
+    }
+
+    static func configuredDMTarget(in defaults: UserDefaults = .standard) -> Int? {
+        guard defaults.bool(forKey: enabledForDMsKey) else { return nil }
         return target(for: savedSeconds(in: defaults), hashRate: defaults.double(forKey: hashRateKey))
     }
 

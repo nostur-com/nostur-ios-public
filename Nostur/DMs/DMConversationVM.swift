@@ -764,11 +764,20 @@ class ConversionVM: ObservableObject {
         let rumorEvent = createRumor(reactionEvent)
         let rumorNEvent = NEvent.fromNostrEssentialsEvent(rumorEvent)
 
+        let minedWraps: [String: DMGiftWrapDetails]
+        do {
+            minedWraps = try await prepareMinedDMWraps(rumorEvent, keys: ourkeys, expiresAt: nil)
+        } catch {
+            sendNotification(.anyStatus, (String(localized: "Couldn’t send your reaction. Try again."), "APP_NOTICE"))
+            return
+        }
+        guard !message.reactions.contains(where: { $0.authorPubkey == ourAccountPubkey && $0.content == normalizedReaction }) else { return }
+
         message.addReaction(rumorNEvent)
 
         for receiverPubkey in participants {
             do {
-                let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
+                let giftWrap = try minedWraps[receiverPubkey]?.giftWrap ?? createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
                 let giftWrapId = giftWrap.fallbackId()
 
                 if receiverPubkey == ourAccountPubkey {
@@ -819,6 +828,17 @@ class ConversionVM: ObservableObject {
             nEvent.tags.append(NostrTag(["expiration", String(expiresAt)]))
         }
 
+        if let target = PostProofOfWork.configuredDMTarget() {
+            nEvent.publicKey = keys.publicKeyHex
+            do {
+                nEvent = try await PostProofOfWork.mine(nEvent, target: target)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                throw DMError.proofOfWorkFailed
+            }
+        }
+
         if let signedEvent = try? nEvent.sign(keys) {
             Unpublisher.shared.publishNow(signedEvent)
             _ = addToView(signedEvent, keys, messageDate)
@@ -865,6 +885,7 @@ class ConversionVM: ObservableObject {
             tags: tags
         )
         let rumorEvent = createRumor(message) // makes sure sig is removed and adds id
+        let minedWraps = try await prepareMinedDMWraps(rumorEvent, keys: ourkeys, expiresAt: expiresAt)
         
         let rumorNEvent = NEvent.fromNostrEssentialsEvent(rumorEvent)
         let addedChatMessage = addToView(rumorNEvent, ourkeys, messageDate)
@@ -875,9 +896,8 @@ class ConversionVM: ObservableObject {
         for (n, receiverPubkey) in participants.enumerated() {
             // wrap message
             do {
-                var capturedSeal: NostrEssentials.Event?
-                let giftWrap = try createGiftWrapWithExpiration(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys, expiresAt: expiresAt, onSeal: { capturedSeal = $0 })
-                let details = capturedSeal.map { DMGiftWrapDetails(giftWrap: giftWrap, seal: $0, rumor: createRumor(rumorEvent)) }
+                let details = try minedWraps[receiverPubkey] ?? makeOutgoingDMWrap(rumorEvent, receiver: receiverPubkey, keys: ourkeys, expiresAt: expiresAt)
+                let giftWrap = details.giftWrap
                 let giftWrapId = giftWrap.fallbackId()
                 if receiverPubkey == ourAccountPubkey {
                     // save message to local db and giftwrap to ourselve (relay backup)  (we can't unwrap sent to receipents, can only unwrap received to our pubkey)
@@ -936,6 +956,32 @@ class ConversionVM: ObservableObject {
         for job in sendJobs {
             sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: job.relays, rumorId: rumorEventId, addedChatMessage: addedChatMessage)
         }
+    }
+
+    @MainActor
+    private func prepareMinedDMWraps(_ rumor: NostrEssentials.Event, keys: NostrEssentials.Keys,
+                                     expiresAt: Int?) async throws -> [String: DMGiftWrapDetails] {
+        guard let target = PostProofOfWork.configuredDMTarget() else { return [:] }
+        var wraps: [String: DMGiftWrapDetails] = [:]
+        do {
+            for receiver in participants {
+                wraps[receiver] = try await createMinedDMGiftWrap(rumor, receiverPubkey: receiver, keys: keys,
+                                                                  expiresAt: expiresAt, target: target)
+            }
+            return wraps
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw DMError.proofOfWorkFailed
+        }
+    }
+
+    private func makeOutgoingDMWrap(_ rumor: NostrEssentials.Event, receiver: String, keys: NostrEssentials.Keys,
+                                    expiresAt: Int?) throws -> DMGiftWrapDetails {
+        var seal: NostrEssentials.Event?
+        let wrap = try createGiftWrapWithExpiration(rumor, receiverPubkey: receiver, keys: keys, expiresAt: expiresAt, onSeal: { seal = $0 })
+        guard let seal else { throw DMError.Unknown }
+        return DMGiftWrapDetails(giftWrap: wrap, seal: seal, rumor: rumor)
     }
     
     // MARK: - File Message Sending (Kind 15)
@@ -998,6 +1044,7 @@ class ConversionVM: ObservableObject {
             tags: tags
         )
         let rumorEvent = createRumor(message)
+        let minedWraps = try await prepareMinedDMWraps(rumorEvent, keys: ourkeys, expiresAt: expiresAt)
         
         let rumorNEvent = NEvent.fromNostrEssentialsEvent(rumorEvent)
         let addedChatMessage = addToView(rumorNEvent, ourkeys, messageDate)
@@ -1006,9 +1053,8 @@ class ConversionVM: ObservableObject {
         var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>, details: DMGiftWrapDetails?)] = []
         for (n, receiverPubkey) in participants.enumerated() {
             do {
-                var capturedSeal: NostrEssentials.Event?
-                let giftWrap = try createGiftWrapWithExpiration(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys, expiresAt: expiresAt, onSeal: { capturedSeal = $0 })
-                let details = capturedSeal.map { DMGiftWrapDetails(giftWrap: giftWrap, seal: $0, rumor: createRumor(rumorEvent)) }
+                let details = try minedWraps[receiverPubkey] ?? makeOutgoingDMWrap(rumorEvent, receiver: receiverPubkey, keys: ourkeys, expiresAt: expiresAt)
+                let giftWrap = details.giftWrap
                 let giftWrapId = giftWrap.fallbackId()
                 if receiverPubkey == ourAccountPubkey {
                     await bg().perform {
@@ -1334,7 +1380,15 @@ struct BalloonSuccess: Identifiable, Equatable, Hashable {
     let relay: String
 }
 
-public enum DMError: Error {
+public enum DMError: LocalizedError {
     case Unknown
     case PrivateKeyMissing
+    case proofOfWorkFailed
+
+    public var errorDescription: String? {
+        if case .proofOfWorkFailed = self {
+            return String(localized: "Couldn’t prepare this message. Try again.")
+        }
+        return nil
+    }
 }

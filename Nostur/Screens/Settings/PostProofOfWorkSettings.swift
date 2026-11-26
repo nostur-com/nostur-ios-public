@@ -5,6 +5,7 @@ struct PostProofOfWorkSettings: View {
     @Environment(\.theme) private var theme
     @AppStorage(PostProofOfWork.secondsKey) private var savedSeconds = PostProofOfWork.savedSeconds()
     @AppStorage(PostProofOfWork.hashRateKey) private var hashRate = 0.0
+    @AppStorage(PostProofOfWork.enabledForDMsKey) private var enabledForDMs = false
     @State private var isMeasuring = true
 
     private var seconds: Double { PostProofOfWork.clampedSeconds(savedSeconds) }
@@ -54,6 +55,10 @@ struct PostProofOfWorkSettings: View {
                         Text("Some relays require Proof of Work to accept your posts.")
                     }
                 }
+            }
+            Section {
+                Toggle("Enable for DMs", isOn: $enabledForDMs)
+                    .disabled(seconds == 0 || hashRate == 0)
             }
         }
         .navigationTitle("Proof of Work")

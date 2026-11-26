@@ -52,6 +52,9 @@ struct PostingAndUploadingSettings: View {
             
             Section(header: Text("Posting", comment:"Setting heading on settings screen")) {
                 PostingToggle()
+            }
+
+            Section {
                 Button {
                     proofOfWorkShown = true
                 } label: {
