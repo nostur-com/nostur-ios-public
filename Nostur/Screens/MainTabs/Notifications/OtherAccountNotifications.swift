@@ -22,7 +22,7 @@ final class OtherAccountNotifications: ObservableObject {
 
     private func inactiveAccounts(excluding activePubkey: String) -> [CloudAccount] {
         accounts.accounts.filter {
-            !$0.isDeleted && $0.managedObjectContext != nil &&
+            !$0.isDeleted && $0.managedObjectContext != nil && $0.isFullAccount &&
             !$0.publicKey.isEmpty && $0.publicKey != activePubkey && $0.publicKey != GUEST_ACCOUNT_PUBKEY
         }
     }
