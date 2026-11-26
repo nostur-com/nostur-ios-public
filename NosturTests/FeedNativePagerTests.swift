@@ -51,6 +51,37 @@ final class FeedNativePagerTests: XCTestCase {
     }
 
     @available(iOS 18.0, *)
+    func testInitialSelectedFeedReceivesAppearanceAtEveryPagePosition() async throws {
+        for selected in 0..<3 {
+            let state = NativePagerTestState()
+            state.selected = selected
+            let window = try host(state: state, pageCount: 3)
+            defer { window.isHidden = true }
+            try await settle(window)
+            XCTAssertTrue(state.appeared.contains(selected),
+                          "The selected column must appear so its initial feed load can start")
+        }
+    }
+
+    func testLegacyPagerAppearsAndKeepsSelectedPageCenteredAfterSwitching() async throws {
+        let state = NativePagerTestState()
+        let window = try host(state: state, pageCount: 3, legacy: true)
+        defer { window.isHidden = true }
+        for selected in [1, 2, 0] {
+            state.selected = selected
+            try await settle(window)
+            XCTAssertTrue(state.appeared.contains(selected))
+            let marker = try XCTUnwrap(descendants(window).first {
+                $0.accessibilityIdentifier == "native-page-\(selected)"
+            })
+            XCTAssertEqual(marker.convert(.zero, to: window).x, 0, accuracy: 1)
+        }
+        XCTAssertTrue(descendants(window).flatMap { $0.gestureRecognizers ?? [] }.contains {
+            $0.delegate is FeedPanAttachment.Coordinator
+        }, "This check must exercise the pre-iOS-18 pager")
+    }
+
+    @available(iOS 18.0, *)
     func testSingleFeedKeepsItsVerticalListEnabled() async throws {
         let state = NativePagerTestState()
         state.selected = 0
@@ -62,12 +93,11 @@ final class FeedNativePagerTests: XCTestCase {
         XCTAssertTrue(lists.allSatisfy(\.isScrollEnabled), "Disabling horizontal paging must not disable the feed")
     }
 
-    @available(iOS 18.0, *)
-    private func host(state: NativePagerTestState, pageCount: Int) throws -> UIWindow {
+    private func host(state: NativePagerTestState, pageCount: Int, legacy: Bool = false) throws -> UIWindow {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let window = UIWindow(windowScene: scene)
         window.frame = .init(x: 0, y: 0, width: 390, height: 700)
-        window.rootViewController = UIHostingController(rootView: NativePagerTestHost(state: state, pageCount: pageCount))
+        window.rootViewController = UIHostingController(rootView: NativePagerTestHost(state: state, pageCount: pageCount, legacy: legacy))
         window.makeKeyAndVisible()
         return window
     }
@@ -90,12 +120,13 @@ final class FeedNativePagerTests: XCTestCase {
 @MainActor
 private final class NativePagerTestState: ObservableObject {
     @Published var selected = 1
+    var appeared = Set<Int>()
 }
 
-@available(iOS 18.0, *)
 private struct NativePagerTestHost: View {
     @ObservedObject var state: NativePagerTestState
     let pageCount: Int
+    var legacy = false
     @State private var motion = FeedSwipeMotion()
 
     var body: some View {
@@ -104,15 +135,23 @@ private struct NativePagerTestHost: View {
                 List {
                     Text(verbatim: "Feed \(page)")
                 }
+                .onAppear { state.appeared.insert(page) }
                 .background(NativePageMarker(page: page))
                 .modifier(FeedPagePosition(relativeIndex: page - state.selected, motion: motion))
             }
         }
-        .modifier(FeedSwipeModifier(motion: motion, isEnabled: true,
-                                   canSwipeBackward: state.selected > 0,
-                                   canSwipeForward: state.selected + 1 < pageCount,
-                                   onSwipe: { state.selected += $0 }, pageCount: pageCount,
-                                   selectedIndex: state.selected, selectionID: String(state.selected)))
+        .modifier { content in
+            if legacy {
+                content.modifier(FeedLegacySwipeModifier(motion: motion, isEnabled: true,
+                    canSwipeBackward: state.selected > 0, canSwipeForward: state.selected + 1 < pageCount,
+                    onSwipe: { state.selected += $0 }))
+            } else {
+                content.modifier(FeedSwipeModifier(motion: motion, isEnabled: true,
+                    canSwipeBackward: state.selected > 0, canSwipeForward: state.selected + 1 < pageCount,
+                    onSwipe: { state.selected += $0 }, pageCount: pageCount,
+                    selectedIndex: state.selected, selectionID: String(state.selected)))
+            }
+        }
     }
 }
 

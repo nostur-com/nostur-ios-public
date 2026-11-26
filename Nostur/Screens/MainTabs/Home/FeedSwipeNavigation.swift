@@ -73,7 +73,6 @@ struct FeedPagePosition: ViewModifier {
 }
 
 struct FeedSwipeModifier: ViewModifier {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let motion: FeedSwipeMotion
     let isEnabled: Bool
     let canSwipeBackward: Bool
@@ -88,6 +87,22 @@ struct FeedSwipeModifier: ViewModifier {
             FeedNativePager(content: content, isEnabled: isEnabled, pageCount: pageCount,
                             selectedIndex: selectedIndex, selectionID: selectionID, onSwipe: onSwipe)
         } else {
+            content.modifier(FeedLegacySwipeModifier(motion: motion, isEnabled: isEnabled,
+                                                     canSwipeBackward: canSwipeBackward,
+                                                     canSwipeForward: canSwipeForward, onSwipe: onSwipe))
+        }
+    }
+}
+
+struct FeedLegacySwipeModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let motion: FeedSwipeMotion
+    let isEnabled: Bool
+    let canSwipeBackward: Bool
+    let canSwipeForward: Bool
+    let onSwipe: (Int) -> Void
+
+    func body(content: Content) -> some View {
         content
             .background {
                 FeedPanAttachment(isEnabled: isEnabled, onChanged: dragChanged,
@@ -99,7 +114,6 @@ struct FeedSwipeModifier: ViewModifier {
             }
         .clipped()
         .onDisappear { motion.updateTranslation(0) }
-        }
     }
 
     private func canSwipe(_ direction: Int) -> Bool {

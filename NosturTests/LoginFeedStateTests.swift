@@ -51,7 +51,68 @@ final class LoginFeedStateTests: XCTestCase {
                        [account.publicKey, privateFollow, String(repeating: "c", count: 64)])
     }
 
-    func testExploreRestartsWhenItsContactListArrives() async throws {
+    private func activationConfig(_ name: String) -> NXColumnConfig {
+        let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        let entity = DataProvider.shared().container.managedObjectModel.entitiesByName["CloudFeed"]!
+        let feed = CloudFeed(entity: entity, insertInto: context)
+        return NXColumnConfig(id: name, columnType: .following(feed),
+                              accountPubkey: EXPLORER_PUBKEY, name: name)
+    }
+
+    func testQueuedActivationUsesCurrentConfiguration() async {
+        let vm = ActivationTestColumn()
+        vm.config = activationConfig("old")
+        vm.speedTest = NXSpeedTest()
+        vm.isVisible = true
+        vm.config = activationConfig("current")
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        XCTAssertEqual(vm.initializedIDs, ["current"])
+    }
+
+    func testAppearanceDoesNotRestartAnAlreadyStartedLoad() async {
+        let vm = ActivationTestColumn()
+        let config = activationConfig("Following")
+        vm.config = config
+        vm.speedTest = NXSpeedTest()
+        vm.isVisible = true
+        vm.initialize(config, speedTest: vm.speedTest!)
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        XCTAssertEqual(vm.initializedIDs, ["Following"], "Queued activation must preserve the in-flight load")
+    }
+
+    func testOffscreenConfigReplacementPausesThePreviousLoad() {
+        let vm = OffscreenInitializationTestColumn()
+        vm.config = activationConfig("old")
+        vm.initialize(activationConfig("replacement"), speedTest: NXSpeedTest())
+        XCTAssertTrue(vm.isPaused)
+        XCTAssertEqual(vm.pausedConfigID, "old", "Pause the old request before replacing its config")
+        XCTAssertEqual(vm.config?.id, "replacement")
+    }
+
+    func testDeselectedLoadingFeedDoesNotStartWhileImporterIsBusy() async {
+        let releaseImport = DispatchSemaphore(value: 0)
+        defer { releaseImport.signal() }
+        await withCheckedContinuation { (started: CheckedContinuation<Void, Never>) in
+            bg().perform {
+                started.resume()
+                _ = releaseImport.wait(timeout: .now() + 5)
+            }
+        }
+        let vm = ActivationTestColumn()
+        vm.config = activationConfig("Following")
+        vm.speedTest = NXSpeedTest()
+        let start = Date()
+        vm.isVisible = true
+        vm.isVisible = false
+        XCTAssertLessThan(Date().timeIntervalSince(start), 0.1)
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        XCTAssertTrue(vm.initializedIDs.isEmpty, "A stale activation must not start a hidden feed")
+        vm.isVisible = true
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        XCTAssertEqual(vm.initializedIDs, ["Following"], "Activation must run without waiting for the importer")
+    }
+
+    func testExploreRefreshesWhenItsContactListArrivesWithoutClearingFeedState() async throws {
         let previousPubkeys = AppState.shared.rawExplorePubkeys
         defer { AppState.shared.rawExplorePubkeys = previousPubkeys }
         AppState.shared.rawExplorePubkeys = []
@@ -61,18 +122,18 @@ final class LoginFeedStateTests: XCTestCase {
         feed.id = UUID()
         feed.accountPubkey = EXPLORER_PUBKEY
         let config = NXColumnConfig(id: "Explore-login-test", columnType: .following(feed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
-        let vm = NXColumnViewModel()
+        let vm = ExploreRefreshTestColumn()
         vm.isVisible = true
         vm.initialize(config, speedTest: NXSpeedTest())
         defer { vm.isVisible = false }
         vm.viewState = .timeout
-        let restarted = expectation(description: "Explore restarted after contact list import")
-        let subscription = vm.$viewState.dropFirst().sink { state in
-            if case .loading = state { restarted.fulfill() }
-        }
+        let refreshed = expectation(description: "Explore refreshes after contact list import")
+        vm.onLocalRefresh = { refreshed.fulfill() }
         AppState.shared.rawExplorePubkeys = [String(repeating: "d", count: 64)]
-        await fulfillment(of: [restarted], timeout: 1.0)
-        subscription.cancel()
+        await fulfillment(of: [refreshed], timeout: 1.0)
+        guard case .timeout = vm.viewState else {
+            return XCTFail("Contact discovery must refresh incrementally without resetting the feed")
+        }
     }
 
     func testExploreLeavesSpinnerWhenNoContactListArrives() async {
@@ -90,5 +151,42 @@ final class LoginFeedStateTests: XCTestCase {
         vm.scheduleInitialFeedTimeout(for: config, timeoutNanoseconds: 1_000_000)
         await fulfillment(of: [finished], timeout: 1.0)
         subscription.cancel()
+    }
+}
+
+private final class ActivationTestColumn: NXColumnViewModel {
+    var initializedIDs: [String] = []
+    // Read only by the main-actor activation task and these main-actor tests.
+    nonisolated(unsafe) private var testPaused = true
+    override var isPaused: Bool { testPaused }
+
+    @MainActor
+    override func initialize(_ config: NXColumnConfig, speedTest: NXSpeedTest) {
+        initializedIDs.append(config.id)
+        self.config = config
+        self.speedTest = speedTest
+        testPaused = false
+    }
+}
+
+private final class ExploreRefreshTestColumn: NXColumnViewModel {
+    var onLocalRefresh: (() -> Void)?
+
+    @MainActor
+    override func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
+        onLocalRefresh?()
+        completion?()
+    }
+}
+
+private final class OffscreenInitializationTestColumn: NXColumnViewModel {
+    nonisolated(unsafe) private var testPaused = false
+    var pausedConfigID: String?
+    override var isPaused: Bool { testPaused }
+
+    @MainActor
+    override func pause() {
+        pausedConfigID = config?.id
+        testPaused = true
     }
 }

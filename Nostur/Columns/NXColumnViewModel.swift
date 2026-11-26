@@ -606,25 +606,25 @@ class NXColumnViewModel: ObservableObject {
     // isVisible should actually be isActiveTab (can still be not visible on navigate to detail)
     public var isVisible: Bool = false {
         didSet {
-            guard let config, let speedTest else { return }
             guard isVisible != oldValue else { return }
-            if isVisible {
-                if case .loading = viewState {
-                    Task { @MainActor in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                // Appearance, selection and config changes can arrive together on
+                // older SwiftUI versions. Reconcile the latest state once here;
+                // never restart a load with the config captured before that change.
+                if self.isVisible {
+                    guard let config = self.config, let speedTest = self.speedTest else { return }
+                    if case .loading = self.viewState {
+                        // onAppear/config changes may already have started this load.
+                        guard self.isPaused else { return }
                         self.initialize(config, speedTest: speedTest)
                     }
-                }
-                else if case .posts(_) = viewState {
-                    Task { @MainActor in
-                        guard self.isVisible else { return }
+                    else if case .posts = self.viewState {
                         FeedsCoordinator.shared.registerColumn(self)
                         self.resume()
                     }
                 }
-            }
-            else if !isPaused {
-                Task { @MainActor in
-                    guard !self.isVisible else { return }
+                else if !self.isPaused {
                     FeedsCoordinator.shared.unregisterColumn(self)
                     self.pause()
                 }
@@ -1370,6 +1370,12 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     public func initialize(_ config: NXColumnConfig, speedTest: NXSpeedTest) {
+        // Replacing an offscreen config must leave it paused, so selecting it
+        // later starts the new load rather than treating it as already active.
+        if !isVisible, !isPaused {
+            FeedsCoordinator.shared.unregisterColumn(self)
+            pause()
+        }
         attachRestoreCoverIfNeeded()
         var config = config
         refreshMediaSnapshots(in: &config)
